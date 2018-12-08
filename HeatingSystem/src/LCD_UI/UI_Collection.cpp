@@ -74,9 +74,11 @@ namespace LCD_UI {
 
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
-		getCollection().filter(selectable()); // getCollection() returns the _objectHndl, cast as a collection.
-		set_focus(getCollection().nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
-		move_focus_by(0); // recycle if allowed. 
+		if (auto collection = get()->collection()) {
+			collection->filter(selectable()); // getCollection() returns the _objectHndl, cast as a collection.
+			set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+			move_focus_by(0); // recycle if allowed. 
+		}
 	}
 
 	CursorMode Collection_Hndl::cursorMode(const Object_Hndl * activeElement) const {
@@ -301,7 +303,7 @@ namespace LCD_UI {
 				if (i < shortColl->firstVisibleItem()) continue;
 				if (i > lastVisibleIndex) break;
 			}
-			if (element->isCollection() && element->behaviour().is_viewOne()) {
+			if (element->collection() && element->behaviour().is_viewOne()) {
 				auto collHndl = static_cast<const Collection_Hndl *>(item(i));
 				auto active = collHndl->activeUI();
 				if (active) active->streamElement(buffer, activeElement, shortColl, streamIndex);

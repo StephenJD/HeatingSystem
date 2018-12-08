@@ -94,7 +94,7 @@ namespace LCD_UI {
 	class Permitted_Vals : public I_SafeCollection {
 	public:
 		Permitted_Vals() :I_SafeCollection(0,viewOneUpDn()), _oneVal(this) {}
-		bool isCollection() const override { return true;}
+		//bool isCollection() const override { return true;}
 		Collection_Hndl * select(Collection_Hndl * from) override;
 
 		Object_Hndl * item(int index) override {return &_oneVal;} // returns object reference at index.
