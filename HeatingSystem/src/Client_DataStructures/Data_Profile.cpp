@@ -94,6 +94,12 @@ namespace Client_DataStructures {
 	bool Dataset_ProfileDays::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
 		// Every Profile needs at least one TT
 		// The collection of profiles for this Program/Zone must include all days just once
+		// The first missing day up to that profile must be the first included day in the next profile.
+		// To keep profiles in day-order:
+		//	a) don't allow edit cursor on first included day
+		//  b) If a day is stolen from a later profile the next missing day must be found and moved to the next profile.
+		// Empty profiles must delete their TT's
+		// New profiles must be given a copy of it's parent TTs.
 		switch (fieldID) {
 		case e_days: {
 			auto oldDays = unsigned char(_days.val);
