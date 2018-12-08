@@ -1,0 +1,35 @@
+#######################################
+# Syntax Coloring Map For RDB
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Times_Dates	       KEYWORD1
+TimeOnly	   KEYWORD1
+Time10Mins    KEYWORD1
+TimeMins	   KEYWORD1
+TimeSecs  KEYWORD1
+DateOnly KEYWORD1
+
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+asInt	KEYWORD2
+mins	KEYWORD2
+hrs	KEYWORD2
+day	KEYWORD2
+month KEYWORD2
+year	KEYWORD2
+set_month	KEYWORD2
+set_day	KEYWORD2
+set_year	KEYWORD2
+weekDayNo	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

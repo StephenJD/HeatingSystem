@@ -1,0 +1,131 @@
+#include "RDB_Answer_Locator.h"
+#include "RDB_TableNavigator.h"
+#include "RDB_Query.h"
+#include "RDB_Table.h"
+
+namespace RelationalDatabase {
+
+	////////////////////////////////////////////////////////////////////////////
+	// *************************** Answer_Locator *************************************//
+	////////////////////////////////////////////////////////////////////////////
+
+	Answer_Locator::Answer_Locator(TableNavigator & tableNav)
+		: AnswerID(tableNav.answerID()),
+		_lastRead(0),
+		_tb(&tableNav.table())
+	{
+		if (_tb) {
+			_recordAddress = tableNav.recordAddress();
+			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
+			_validRecordIndex = tableNav.getValidRecordIndex();
+		}
+	}
+
+	Answer_Locator::Answer_Locator(RecordSelector & rs)
+		: AnswerID(rs),
+		_lastRead(0),
+		_tb(rs.status() == TB_INVALID_TABLE ? 0 : &rs.tableNavigator().table())
+	{
+		if (_tb) {
+			_recordAddress = rs.tableNavigator().recordAddress();
+			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
+			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
+			statusOnly();
+		}
+	}
+
+	Answer_Locator::Answer_Locator(const Answer_Locator & al) 
+		: AnswerID(al)
+		, _tb(al._tb)
+		, _recordAddress(al._recordAddress)
+		, _validRecordByteAddress(al._validRecordByteAddress)
+		, _validRecordIndex(al._validRecordIndex) 
+	{}
+
+	//Answer_Locator::Answer_Locator(Query & query) : 
+	//	AnswerID(query.currentPos())
+	//	, _lastRead(0)
+	//	, _tb(&query.tableNavigator().table())
+	//{
+	//	if (_tb) {
+	//		query.next(query.current(), 0);
+	//		_recordAddress = query.tableNavigator().recordAddress();
+	//		_validRecordByteAddress = query.tableNavigator().getAvailabilityByteAddress();
+	//		_validRecordIndex = query.tableNavigator().getValidRecordIndex();
+	//	}
+	//}
+
+	Answer_Locator & Answer_Locator::operator = (const TableNavigator & tableNav) {
+		AnswerID::setID(tableNav.id());
+		AnswerID::setStatus(tableNav.status());
+		if (tableNav.status() != TB_INVALID_TABLE) {
+			_lastRead = 0;
+			_recordAddress = tableNav.recordAddress();
+			_tb = &const_cast<TableNavigator &>(tableNav).table();
+			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
+			_validRecordIndex = tableNav.getValidRecordIndex();
+		}
+		return *this;
+	}
+
+	Answer_Locator & Answer_Locator::operator = (const RecordSelector & rs) {
+		AnswerID::setID(rs.id());
+		AnswerID::setStatus(rs.status());
+		if (rs.status() != TB_INVALID_TABLE) {
+			_lastRead = 0;
+			_recordAddress = rs.tableNavigator().recordAddress();
+			_tb = &const_cast<TableNavigator &>(rs.tableNavigator()).table();
+			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
+			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
+		}
+		return *this;
+
+	}
+
+	void Answer_Locator::rec(void * rec) {
+		if (_tb->outOfDate(_lastRead)) {
+			statusOnly();
+			if (_status == TB_OK) _tb->db()._readByte(_recordAddress, rec, _tb->recordSize());
+			_lastRead = micros();
+		}
+	}
+
+	TB_Status Answer_Locator::status(void * thisRec) {
+		if (_status != TB_INVALID_TABLE) rec(thisRec);
+		return _status;
+	}
+
+	TB_Status Answer_Locator::statusOnly() {
+		if (_tb->outOfDate(_lastRead)) {
+			if (_id == RecordID(-1)) _status = TB_BEFORE_BEGIN;
+			else if (_id < _tb->maxRecordsInTable()) {
+				ValidRecord_t usedRecords;
+				_tb->db()._readByte(_validRecordByteAddress, &usedRecords, sizeof(ValidRecord_t));
+				if (usedRecords & (1 << _validRecordIndex)) {
+					_status = TB_OK;
+				}
+				else if (_status != TB_END_STOP) { _status = TB_RECORD_UNUSED; }
+			}
+			else _status = TB_END_STOP;
+		}
+		return _status;
+	}
+
+	void Answer_Locator::deleteRecord() {
+		ValidRecord_t usedRecords;
+		_tb->db()._readByte(_validRecordByteAddress, &usedRecords, sizeof(ValidRecord_t));
+		usedRecords &= ~(1 << _validRecordIndex);
+		_tb->db()._writeByte(_validRecordByteAddress, &usedRecords, sizeof(ValidRecord_t));
+		_lastRead = micros();
+		_tb->tableIsChanged(true);
+		_status = TB_RECORD_UNUSED;
+	}
+
+	void Answer_Locator::update(const void * rec) {
+		if (statusOnly() == TB_OK) {
+			_tb->db()._writeByte(_recordAddress, rec, _tb->recordSize());
+			_lastRead = micros();
+			_tb->tableIsChanged(false);
+		}
+	}
+}

@@ -1,0 +1,102 @@
+#include "Initialiser.h"
+#include "FactoryDefaults.h"
+#include "..\HeatingSystem.h"
+#include "..\HardwareInterfaces\Relay.h"
+#include "..\HardwareInterfaces\I2C_Comms.h"
+#include "..\HardwareInterfaces\A__Constants.h"
+#include "..\HardwareInterfaces\Logging.h"
+#include "..\Client_DataStructures\Data_Relay.h"
+#include <RDB.h>
+
+using namespace Client_DataStructures;
+using namespace RelationalDatabase;
+
+namespace Assembly {
+	using namespace RelationalDatabase;
+
+	Initialiser::Initialiser(HeatingSystem & hs) 
+		: _hs(hs),
+		_resetI2C(_iniFunctor, _testDevices),
+		_iniFunctor(*this),
+		_testDevices(*this)
+	{
+		HardwareInterfaces::tempSensors = _hs.tempSensorArr;
+		HardwareInterfaces::relays = _hs.relayArr;
+		Relay::_relayRegister = &_hs.relaysPort._relayRegister;
+		setFactoryDefaults(_hs.db);
+		loadRelays();
+		loadtempSensors();
+		iniI2C();
+		_hs.mixValveController.setResetTimePtr(&_resetI2C.hardReset.timeOfReset_mS);
+		//_testDevices.speedTestDevices();
+		//_testDevices.testRelays();
+		postI2CResetInitialisation();
+		Serial.println("Initialiser Constructed");
+	}
+
+	void Initialiser::loadRelays() {
+		auto q_relays = TableQuery(_hs.db.tableQuery(TB_Relay));
+		int i = 0;
+		for (Answer_R<R_Relay>thisRelay : q_relays) {
+			relays[i].setPort(thisRelay->rec().port);
+			++i;
+		}
+		//Serial.println("loadRelays Completed");
+	}
+
+	void Initialiser::loadtempSensors() {
+		auto q_tempSensors = TableQuery(_hs.db.table(TB_TempSensor));
+		int i = 0;
+		for (Answer_R<R_TempSensor>thisTempSensor : q_tempSensors) {
+			tempSensors[i].setAddress(thisTempSensor->rec().address);
+			++i;
+		}
+		//Serial.println("loadtempSensors Completed");
+	}
+
+	void Initialiser::iniI2C() {
+		_hs.relaysPort.setup(_hs.i2C, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN);
+	}
+
+	uint8_t Initialiser::postI2CResetInitialisation() {
+		return initialiseTempSensors()
+			| _hs.relaysPort.initialiseDevice()
+			| initialiseRemoteDisplays();
+	}
+
+	uint8_t Initialiser::initialiseTempSensors() {
+		// Set room-sensors to high-res
+		Serial.println("Set room-sensors to high-res");
+		return	_hs.tempSensorArr[T_DR].setHighRes()
+			| _hs.tempSensorArr[T_FR].setHighRes()
+			| _hs.tempSensorArr[T_UR].setHighRes();
+	}
+
+	uint8_t Initialiser::initialiseRemoteDisplays() {
+		uint8_t failed = 0;
+		for (auto & rd : _hs.remDispl) {
+			failed |= rd.initialiseDevice();
+		}
+		Serial.println("initialiseRemoteDisplays() done");
+		return failed;
+	}
+
+	I2C_Helper::I_I2Cdevice & Initialiser::getDevice(uint8_t deviceAddr) {
+		if (deviceAddr == IO8_PORT_OptCoupl) return hs().relaysPort;
+		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs().mixValveController;
+		else if (deviceAddr >= 0x24 && deviceAddr <= 0x26) {
+			return hs().remDispl[deviceAddr-0x24];
+		}
+		else {
+			for (auto & ts : hs().tempSensorArr) {
+				if (ts.getAddress() == deviceAddr) return ts;
+			}
+			return hs().tempSensorArr[0];
+		}
+	}
+
+	uint8_t IniFunctor:: operator()() {
+		return _ini->postI2CResetInitialisation();
+	}
+}
+

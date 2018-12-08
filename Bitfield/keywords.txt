@@ -1,0 +1,23 @@
+#######################################
+# Syntax Coloring Map For Bitfield
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+UBitField	       KEYWORD1
+SmallestType	   KEYWORD1
+GetBitMask	   KEYWORD1
+SetBitMask  KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+asBase	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

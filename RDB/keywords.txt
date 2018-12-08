@@ -1,0 +1,55 @@
+#######################################
+# Syntax Coloring Map For RDB
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+RDB	       KEYWORD1
+RDB_B	   KEYWORD1	 RDB_Base
+Table	   KEYWORD1
+DB_Size_t  KEYWORD1
+TableID    KEYWORD1
+ValidRecord_t    KEYWORD1
+RecordID    KEYWORD1
+NoOf_Recs_t KEYWORD1
+TB_Status   KEYWORD1
+TB_OK   KEYWORD1
+TB_RECORD_DELETED   KEYWORD1
+TB_END_STOP   KEYWORD1
+TB_RECORD_INDEX_OUT_OF_RANGE   KEYWORD1
+TB_TABLE_NOT_OPENED   KEYWORD1
+TB_TABLE_FULL   KEYWORD1
+TB_INVALID_TABLE   KEYWORD1
+Query_B  KEYWORD1
+Record_Selector   KEYWORD1
+Answer   KEYWORD1
+Answer_R   KEYWORD1
+Record_Selector_T    KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+table	KEYWORD2
+getTable	KEYWORD2
+getTables	KEYWORD2
+createTable	KEYWORD2
+insertRecords KEYWORD2
+count	KEYWORD2
+execute	KEYWORD2
+next	KEYWORD2
+prev	KEYWORD2
+Query	KEYWORD2
+begin	KEYWORD2
+end	    KEYWORD2
+field    KEYWORD2
+status    KEYWORD2
+rec    KEYWORD2
+update    KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
