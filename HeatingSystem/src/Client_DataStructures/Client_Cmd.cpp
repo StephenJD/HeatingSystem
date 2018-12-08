@@ -13,7 +13,7 @@ namespace Client_DataStructures {
 
 	Collection_Hndl &  InsertSpell_Cmd::enableInsert(bool enable) {
 		enum { _dwellingCalendarCmd, _insert, _fromCmd, dwellSpellUI_c, spellProgUI_c};
-		auto & subPage = target()->getCollection();
+		auto & subPage = *target()->get()->collection();
 		auto & spellUIcoll = *subPage.item(dwellSpellUI_c);
 		if (enable) {
 			subPage.item(_dwellingCalendarCmd)->get()->behaviour().make_hidden();
@@ -64,8 +64,8 @@ namespace Client_DataStructures {
 
 	Collection_Hndl * InsertTimeTemp_Cmd::enableCmds(int enable) {
 		auto ttSubPageHndl = target();
-		auto & ttListHndl = *ttSubPageHndl->getCollection().item(e_TTs);
-		auto & ttDeleteHndl = *ttSubPageHndl->getCollection().item(e_DelCmd);
+		auto & ttListHndl = *ttSubPageHndl->get()->collection()->item(e_TTs);
+		auto & ttDeleteHndl = *ttSubPageHndl->get()->collection()->item(e_DelCmd);
 		if (enable) {
 			behaviour().make_visible();
 			ttListHndl->behaviour().removeBehaviour(Behaviour::b_NewLine);

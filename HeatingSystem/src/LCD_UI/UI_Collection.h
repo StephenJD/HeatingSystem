@@ -136,7 +136,7 @@ namespace LCD_UI {
 
 	/// <summary>
 	/// An Object_Hndl pointing to an I_SafeCollection - possibly a nested collection of Collection_Hndl
-	/// Provides getCollection(), atEnd(int pos) and getItem()
+	/// Provides atEnd(int pos) and getItem()
 	/// Adds backUI.
 	/// </summary>
 	class Collection_Hndl : public Object_Hndl {
@@ -157,7 +157,6 @@ namespace LCD_UI {
 		// New Queries
 		const I_SafeCollection & operator*() const { return const_cast<Collection_Hndl *>(this)->operator*(); }
 		const I_SafeCollection * operator->() const { return const_cast<Collection_Hndl *>(this)->operator->(); }
-		const I_SafeCollection & getCollection() const { return const_cast<Collection_Hndl *>(this)->getCollection(); }
 		UI_Object * getItem(int index) const { return const_cast<Collection_Hndl*>(this)->getItem(index); } // Must return polymorphicly		
 		int	focusIndex() const;
 		int endIndex() const;
@@ -177,9 +176,8 @@ namespace LCD_UI {
 
 		// New Modifiers
 		UI_Object * getItem(int index); // Must return polymorphicly
-		I_SafeCollection & operator*() { return getCollection(); }
-		I_SafeCollection * operator->() { return &getCollection(); }
-		I_SafeCollection & getCollection();
+		I_SafeCollection & operator*() { return *get()->collection(); }
+		I_SafeCollection * operator->() { return get()->collection(); }
 		void focusHasChanged(bool hasFocus);
 		void setFocusIndex(int index);
 
@@ -303,17 +301,16 @@ namespace LCD_UI {
 	inline UI_Object * Collection_Hndl::getItem(int index)  // Must return polymorphicly
 	{
 		if (get()) {
-			auto object = getCollection().item(index);
+			auto object = get()->collection()->item(index);
 			if (object) return object->get();
 		}
 		return 0;
-		//return (get() == 0) ? 0 : getCollection().item(index)->get();
 	}
 
-	inline bool Collection_Hndl::atEnd(int pos) const { return empty() ? 0 : getCollection().atEnd(pos); }
-	inline int Collection_Hndl::focusIndex() const { return getCollection().focusIndex(); }
-	inline void Collection_Hndl::setFocusIndex(int index) { getCollection().setFocusIndex(index); }
-	inline int Collection_Hndl::endIndex() const { return getCollection().endIndex(); }
+	inline bool Collection_Hndl::atEnd(int pos) const { return empty() ? 0 : get()->collection()->atEnd(pos); }
+	inline int Collection_Hndl::focusIndex() const { return get()->collection()->focusIndex(); }
+	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->setFocusIndex(index); }
+	inline int Collection_Hndl::endIndex() const { return get()->collection()->endIndex(); }
 
 	/////////////////////////////////////////////////////////////////////////
 	//         Short List decorator for any I_SafeCollection derivative 
@@ -356,8 +353,8 @@ namespace LCD_UI {
 		int endVisibleItem() const override { return _endShow; }
 
 		// Polymorphic Modifiers
-		I_SafeCollection * collection() override { return _nestedCollection.getCollection().collection(); }
-		const I_SafeCollection * collection() const override { return _nestedCollection.getCollection().collection(); }
+		I_SafeCollection * collection() override { return _nestedCollection->collection(); }
+		const I_SafeCollection * collection() const override { return _nestedCollection->collection(); }
 
 		Object_Hndl * item(int newIndex) override { return collection()->item(newIndex); }
 		//Object_Hndl * item(int newIndex) override { return &_nestedCollection; }

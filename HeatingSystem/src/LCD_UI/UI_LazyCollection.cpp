@@ -6,7 +6,7 @@ namespace LCD_UI {
 	//void UI_MenuCollection::focusHasChanged(bool hasFocus) {
 	//	setCount(_collection->count());
 	//	if (_cmd_c_hndl->get() != 0) {
-	//		auto & collection  = _hidden_pages_hndl.getCollection();
+	//		auto & collection  = _hidden_pages_hndl.get()->collection();
 	//		collection.filter(hidden());
 	//		for (int i = collection.nextActionableIndex(0); i < count(); i = collection.nextActionableIndex(++i)) { // need to check all elements on the page
 	//			collection.item(i).get()->removeBehaviour(Behaviour::b_Viewable);

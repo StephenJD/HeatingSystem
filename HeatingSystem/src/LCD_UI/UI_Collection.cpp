@@ -58,24 +58,17 @@ namespace LCD_UI {
 	Collection_Hndl::Collection_Hndl(const UI_Object & object) : Object_Hndl(object) {}
 	Collection_Hndl::Collection_Hndl(const UI_Object * object) : Object_Hndl(object) {}
 
-	I_SafeCollection & Collection_Hndl::getCollection() {
-		// Called when dereferencing an iterator.
-		// cast the pointer as a safe collection
-		return *get()->collection();
-		//return *static_cast<I_SafeCollection *>(const_cast<UI_Object *>(_objectHndl));
-	}
-
 	Collection_Hndl::Collection_Hndl(const UI_ShortCollection & shortList_Hndl, int default_focus)
 		: Object_Hndl(shortList_Hndl) {
-		getCollection().filter(selectable()); // getCollection() returns the _objectHndl, cast as a collection.
-		set_focus(getCollection().nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+		get()->collection()->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
+		set_focus(get()->collection()->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
 		move_focus_by(0); // recycle if allowed. 
 	}
 
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
 		if (auto collection = get()->collection()) {
-			collection->filter(selectable()); // getCollection() returns the _objectHndl, cast as a collection.
+			collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
 			set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
 			move_focus_by(0); // recycle if allowed. 
 		}
@@ -117,7 +110,7 @@ namespace LCD_UI {
 	Collection_Hndl * Collection_Hndl::move_focus_to(int index) {
 		auto newObject = this;
 		if (!empty()) {
-			newObject = getCollection().move_focus_to(index);
+			newObject = get()->collection()->move_focus_to(index);
 			bool wasSelected = (_backUI == activeUI());
 			newObject = activeUI();
 			if (wasSelected) {
@@ -136,8 +129,8 @@ namespace LCD_UI {
 		const bool wantToCheckCurrentPosIsOK = { nth == 0 };
 		auto wantToMoveForward = [](auto nth) {return nth > 0; };
 		auto wantToMoveBackwards = [](auto nth) {return nth < 0; };
-		auto firstValidIndexLookingForwards = [this](auto index) {return getCollection().nextActionableIndex(index); };
-		auto firstValidIndexLookingBackwards = [this](auto index) {return getCollection().prevActionableIndex(index); };
+		auto firstValidIndexLookingForwards = [this](auto index) {return get()->collection()->nextActionableIndex(index); };
+		auto firstValidIndexLookingBackwards = [this](auto index) {return get()->collection()->prevActionableIndex(index); };
 		auto needToRecycle = [this](auto index) {return atEnd(index) && behaviour().is_recycle_on_next(); };
 		auto tryMovingForwardByOne = [this](auto index) {/*if (!atEnd(index)) */++index; return index; };
 		auto tryMovingBackwardByOne = [this](auto index) {if (index > -1)  --index; return index; };
@@ -146,7 +139,7 @@ namespace LCD_UI {
 		////////////////////////////////////////////////////////////////////
 		//************************  Algorithm ****************************//
 		////////////////////////////////////////////////////////////////////
-		getCollection().filter(selectable());
+		get()->collection()->filter(selectable());
 		if (wantToCheckCurrentPosIsOK) {
 			setFocusIndex(firstValidIndexLookingForwards(startFocus));
 			if (needToRecycle(focusIndex())) setFocusIndex(firstValidIndexLookingForwards(0));
@@ -393,7 +386,7 @@ namespace LCD_UI {
 	I_SafeCollection & Coll_Iterator::operator*() { // index must be in-range
 		//auto & collectibleHndl = _collection->at(_index); // returns the element as a collectibleHndl
 		//auto & collection_Proxy = static_cast<const Collection_Hndl&>(collectibleHndl); // Interpret it as a Proxy
-		//auto & safeCollection = collection_Proxy.getCollection(); // return its pointer as a safeCollection reference
-		return static_cast<Collection_Hndl&>(*_collection->item(_index)).getCollection();
+		//auto & safeCollection = collection_Proxy.get()->collection(); // return its pointer as a safeCollection reference
+		return *static_cast<Collection_Hndl&>(*_collection->item(_index)).get()->collection();
 	}
 }

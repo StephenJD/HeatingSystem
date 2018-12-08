@@ -82,11 +82,11 @@ namespace LCD_UI {
 		if (original.formatIs(e_edOneShort) || original.formatIs(e_fixedWidth)) return;
 
 		int digitPlaces = original.spaceForDigits(_currValue.val);
-		int currentWidth = backUI()->getCollection().endIndex();
+		int currentWidth = backUI()->get()->collection()->endIndex();
 
 		int moveFocusBy = digitPlaces - currentWidth;
 		if (moveFocusBy != 0) {
-			backUI()->getCollection().setCount(digitPlaces);
+			backUI()->get()->collection()->setCount(digitPlaces);
 			backUI()->move_focus_by(moveFocusBy);
 			cursorFromFocus();
 		}
