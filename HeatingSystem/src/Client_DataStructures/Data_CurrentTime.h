@@ -5,7 +5,7 @@
 #include <RDB.h>
 #include <Date_Time.h>
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace Date_Time;
 	using namespace LCD_UI;
 

@@ -2,7 +2,7 @@
 //#include "Clock.h"
 //#include "Data_Spell.h"
 //
-//namespace Client_DataStructures {
+//namespace client_data_structures {
 //	using namespace Date_Time;
 //	using namespace HardwareInterfaces;
 //	using namespace LCD_UI;

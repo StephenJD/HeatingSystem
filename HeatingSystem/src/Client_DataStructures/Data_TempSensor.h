@@ -2,7 +2,7 @@
 #include "..\HardwareInterfaces\Temp_Sensor.h"
 #include "..\LCD_UI\I_Record_Interface.h"
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace HardwareInterfaces;
 	//***************************************************

@@ -1,7 +1,7 @@
 #pragma once
 #include "..\LCD_UI\UI_Cmd.h"
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 
 	class InsertSpell_Cmd : public LCD_UI::UI_Cmd
 	{

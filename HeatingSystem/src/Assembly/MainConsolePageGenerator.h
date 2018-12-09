@@ -29,29 +29,29 @@ namespace Assembly {
 	private:
 		RelationalDatabase::RDB<TB_NoOfTables> * _db;
 		// Run-time data arrays
-		Client_DataStructures::Zone _zoneArr[4] = { { 17,18 },{ 20,19 },{ 45,55 },{ 21,21 } };
+		client_data_structures::Zone _zoneArr[4] = { { 17,18 },{ 20,19 },{ 45,55 },{ 21,21 } };
 		// RDB Queries
 		RelationalDatabase::TableQuery _q_dwellings;
 		RelationalDatabase::TableQuery _q_zones;
-		RelationalDatabase::QueryL_T<Client_DataStructures::R_DwellingZone, Client_DataStructures::R_Zone> _q_dwellingZones;
-		RelationalDatabase::QueryF_T<Client_DataStructures::R_Program> _q_dwellingProgs;
-		RelationalDatabase::QueryLF_T<Client_DataStructures::R_Spell, Client_DataStructures::R_Program> _q_dwellingSpells;
-		RelationalDatabase::QueryIJ_T<Client_DataStructures::R_Spell> _q_spellProg;
-		RelationalDatabase::QueryF_T<Client_DataStructures::R_Profile> _q_progProfiles;
-		RelationalDatabase::QueryF_T<Client_DataStructures::R_Profile> _q_zoneProfiles;
-		RelationalDatabase::QueryF_T<Client_DataStructures::R_Profile> _q_profile;
-		RelationalDatabase::QueryF_T<Client_DataStructures::R_TimeTemp> _q_timeTemps;
+		RelationalDatabase::QueryL_T<client_data_structures::R_DwellingZone, client_data_structures::R_Zone> _q_dwellingZones;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_dwellingProgs;
+		RelationalDatabase::QueryLF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_dwellingSpells;
+		RelationalDatabase::QueryIJ_T<client_data_structures::R_Spell> _q_spellProg;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_progProfiles;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_zoneProfiles;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_profile;
+		RelationalDatabase::QueryF_T<client_data_structures::R_TimeTemp> _q_timeTemps;
 		
 		// DB Record Interfaces
-		Client_DataStructures::Dataset_WithoutQuery _rec_currTime;
-		Client_DataStructures::Dataset_Dwelling _rec_dwelling;
-		Client_DataStructures::Dataset_Zone _rec_zones;
-		Client_DataStructures::Dataset_Zone _rec_dwZones;
-		Client_DataStructures::Dataset_Program _rec_dwProgs;
-		Client_DataStructures::Dataset_Spell _rec_dwSpells;
-		Client_DataStructures::Dataset_Program _rec_spellProg;
-		Client_DataStructures::Dataset_ProfileDays _rec_profile;
-		Client_DataStructures::Dataset_TimeTemp _rec_timeTemps;
+		client_data_structures::Dataset_WithoutQuery _rec_currTime;
+		client_data_structures::Dataset_Dwelling _rec_dwelling;
+		client_data_structures::Dataset_Zone _rec_zones;
+		client_data_structures::Dataset_Zone _rec_dwZones;
+		client_data_structures::Dataset_Program _rec_dwProgs;
+		client_data_structures::Dataset_Spell _rec_dwSpells;
+		client_data_structures::Dataset_Program _rec_spellProg;
+		client_data_structures::Dataset_ProfileDays _rec_profile;
+		client_data_structures::Dataset_TimeTemp _rec_timeTemps;
 
 
 		// DB UIs (Lazy-Collections)
@@ -75,10 +75,10 @@ namespace Assembly {
 		LCD_UI::UI_Label _dst, _prog, _zone;
 		LCD_UI::UI_Cmd _dwellingZoneCmd, _dwellingCalendarCmd, _dwellingProgCmd;
 		LCD_UI::UI_Cmd _profileDaysCmd;
-		Client_DataStructures::InsertSpell_Cmd _fromCmd;
+		client_data_structures::InsertSpell_Cmd _fromCmd;
 		LCD_UI::UI_Label _insert;
-		Client_DataStructures::InsertTimeTemp_Cmd _newTTCmd;
-		Client_DataStructures::InsertTimeTemp_Cmd _deleteTTCmd;
+		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
+		client_data_structures::InsertTimeTemp_Cmd _deleteTTCmd;
 		
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _page_currTime_c;

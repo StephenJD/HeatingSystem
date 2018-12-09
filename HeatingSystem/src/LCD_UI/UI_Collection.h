@@ -252,7 +252,7 @@ namespace LCD_UI {
 		Coll_Iterator end() const { return const_cast<I_SafeCollection*>(this)->end(); }
 
 		const I_SafeCollection & filter(Behaviour behaviour) const { return const_cast<I_SafeCollection*>(this)->filter(behaviour); }
-		bool isActionableObjectAt(int index) const {
+		virtual bool isActionableObjectAt(int index) const {
 			auto object = item(index);
 			if (object) return object->get()->behaviour().is(_filter);
 			else return false;

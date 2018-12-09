@@ -3,7 +3,7 @@
 #include "..\LCD_UI\\I_Record_Interface.h"
 #include <iostream>
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 
 	InsertSpell_Cmd::InsertSpell_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)

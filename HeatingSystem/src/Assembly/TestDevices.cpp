@@ -11,7 +11,7 @@
 
 namespace HardwareInterfaces {
 	using namespace RelationalDatabase;
-	using namespace Client_DataStructures;
+	using namespace client_data_structures;
 	using namespace Assembly;
 
 	TestDevices::TestDevices(Initialiser & ini)

@@ -3,7 +3,7 @@
 #include "..\LCD_UI\ValRange.h"
 #include "..\LCD_UI\UI_Primitives.h"
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace Date_Time;
 	using namespace LCD_UI;
 	enum {e_hours, e_10Mins, e_am_pm, e_10Days, e_day, e_month, e_NO_OF_DT_EDIT_POS};

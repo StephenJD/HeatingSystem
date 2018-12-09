@@ -10,7 +10,7 @@
 #include <ostream>
 
 namespace Assembly {
-	using namespace Client_DataStructures;
+	using namespace client_data_structures;
 
 	constexpr R_Relay relays[] = {
 		{ "Flat",6 << 1 }

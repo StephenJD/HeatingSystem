@@ -4,7 +4,7 @@
 
 namespace Assembly {
 	using namespace RelationalDatabase;
-	using namespace Client_DataStructures;
+	using namespace client_data_structures;
 	using namespace LCD_UI;
 
 	MainConsolePageGenerator::MainConsolePageGenerator(RDB<TB_NoOfTables> & db) :

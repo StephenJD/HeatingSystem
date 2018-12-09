@@ -2,7 +2,7 @@
 //#include "Date_Time.h"
 //#include <RDB.h>
 //
-//namespace Client_DataStructures {
+//namespace client_data_structures {
 //	using namespace RelationalDatabase;
 //	using namespace LCD_UI;
 //	class Dataset_Spell;

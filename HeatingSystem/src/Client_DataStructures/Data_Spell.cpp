@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace Date_Time;
 	//***************************************************

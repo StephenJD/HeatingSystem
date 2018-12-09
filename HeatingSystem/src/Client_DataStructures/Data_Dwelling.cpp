@@ -1,6 +1,6 @@
 #include "Data_Dwelling.h"
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 
 	//***************************************************

@@ -6,7 +6,7 @@
 
 #include <ostream>
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 	struct R_Profile {
 		// Each Program has a weeks-worth of Profiles for each Zone belonging to the Program's Dwelling
@@ -57,7 +57,9 @@ namespace Client_DataStructures {
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
 		I_UI_Wrapper & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
+		int firstIncludedDay() const;
 	private:
+
 		ProfileDaysWrapper _currValue; // copy value for editing
 		Permitted_Vals editVal;
 
@@ -73,9 +75,11 @@ namespace Client_DataStructures {
 	public:
 		using I_Field_Interface::editItem;
 		const char * streamData(const Object_Hndl * activeElement) const override;
+		bool isActionableObjectAt(int index) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	protected:
 		Edit_ProfileDays_h _editItem;
+	private:
 	};
 
 	//***************************************************

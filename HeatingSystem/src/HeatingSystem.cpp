@@ -6,7 +6,7 @@
 #include "LCD_UI\A_Top_UI.h"
 #include "EEPROM.h"
 
-using namespace Client_DataStructures;
+using namespace client_data_structures;
 using namespace RelationalDatabase;
 
 //extern Remote_display * hall_display;

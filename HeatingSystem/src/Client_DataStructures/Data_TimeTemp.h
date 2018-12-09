@@ -6,7 +6,7 @@
 #include <ostream>
 #include "Time_Only.h"
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 
 	//***************************************************

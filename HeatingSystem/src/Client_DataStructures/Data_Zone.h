@@ -7,7 +7,7 @@
 
 #include <ostream>
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 	//***************************************************
 	//              Zone UI Edit

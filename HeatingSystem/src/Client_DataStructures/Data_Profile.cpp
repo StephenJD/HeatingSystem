@@ -2,7 +2,7 @@
 #include "Data_Zone.h"
 #include <ostream>
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 
 	namespace { // restrict to local linkage
@@ -36,7 +36,17 @@ namespace Client_DataStructures {
 	int Edit_ProfileDays_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(6); // initial cursorPos when selected (not in edit)
-		return 0;
+		return firstIncludedDay()+1;
+	}
+
+	int Edit_ProfileDays_h::firstIncludedDay() const {
+		auto _firstIncludedDay = 0;
+		int myDays = currValue().val;
+		while (myDays && !(myDays & 64)) {
+			myDays <<= 1;
+			++_firstIncludedDay;
+		}
+		return _firstIncludedDay;
 	}
 
 	//*************ProfileDays_Interface****************
@@ -53,6 +63,15 @@ namespace Client_DataStructures {
 		if (myDays & 1) strcat(scratch, "S"); else strcat(scratch, EDIT_SPC_CHAR);
 		return scratch;
 	}
+
+	bool ProfileDays_Interface::isActionableObjectAt(int index) const {
+		auto firstDay = _editItem.firstIncludedDay();
+		if (index <= firstDay) return false;
+		return true;
+	}
+
+	
+
 
 	//*************Dataset_ProfileDays****************
 	Dataset_ProfileDays::Dataset_ProfileDays(Query & query, VolatileData * runtimeData, I_Record_Interface * dwellProgs, I_Record_Interface * dwellZone)
@@ -184,9 +203,6 @@ namespace Client_DataStructures {
 			R_Profile profile{ record().rec() };
 			profile.days = days;
 			query().insert(&profile);
-			//for (Answer_R<R_Profile> profile : query()) {
-			//	std::cout << profile.rec() << std::endl;
-			//}
 		}
 	}
 

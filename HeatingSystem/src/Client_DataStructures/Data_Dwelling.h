@@ -5,7 +5,7 @@
 
 #include <ostream>
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 	//***************************************************
 	//              Dwelling UI Edit

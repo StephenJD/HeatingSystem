@@ -8,7 +8,7 @@
 #include "..\Client_DataStructures\Data_Relay.h"
 #include <RDB.h>
 
-using namespace Client_DataStructures;
+using namespace client_data_structures;
 using namespace RelationalDatabase;
 
 namespace Assembly {

@@ -2,7 +2,7 @@
 #include "Convertions.h"
 
 //#include <iostream>
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;
 	using namespace Date_Time;       

@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-namespace Client_DataStructures {
+namespace client_data_structures {
 	using namespace HardwareInterfaces;
 	using namespace GP_LIB;
 
