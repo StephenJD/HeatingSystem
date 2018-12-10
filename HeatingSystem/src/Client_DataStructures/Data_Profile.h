@@ -57,7 +57,6 @@ namespace client_data_structures {
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
 		I_UI_Wrapper & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
-		int firstIncludedDay() const;
 	private:
 
 		ProfileDaysWrapper _currValue; // copy value for editing
@@ -100,12 +99,15 @@ namespace client_data_structures {
 		int resetCount() override;
 		I_UI_Wrapper * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override;
+		static int firstIncludedDay(int days, int * pos = 0);
+		static int firstIncludedDayPosition(int days);
+		static int firstMissingDay(int days);
 
 	private:
+		void addDays(Answer_R<R_Profile> & profile, unsigned char days);
 		void addDaysToNextProfile(int daysToAdd);
-		void stealFromOtherProfile(int daysToRemove);
-		void ensureProfilesCoverWholeWeek();
-		unsigned char findMissingDaysInProfiles();
+		void stealFromOtherProfile(int thisProfile, int daysToRemove);
+		void promoteOutOfOrderDays();
 		void createProfile(unsigned char days);
 
 		ProfileDaysWrapper _days; // size is 32 bits.

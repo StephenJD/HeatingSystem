@@ -69,7 +69,7 @@ namespace Assembly {
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _progAllNameUI_c).set(viewAllUpDn()) }
 		, _page_dwellingMembers_subpage_c{ makeCollection(_zone_subpage_c, _calendar_subpage_c, _prog_subpage_c).set(viewOneUpDnRecycle()) }
-		, _tt_SubPage_c{ makeCollection(_newTTCmd, _deleteTTCmd, _timeTempUI_c) }
+		, _tt_SubPage_c{ makeCollection(_newTTCmd, _deleteTTCmd, _timeTempUI_sc) }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 

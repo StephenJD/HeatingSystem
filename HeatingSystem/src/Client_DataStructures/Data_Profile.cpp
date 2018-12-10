@@ -36,17 +36,7 @@ namespace client_data_structures {
 	int Edit_ProfileDays_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(6); // initial cursorPos when selected (not in edit)
-		return firstIncludedDay()+1;
-	}
-
-	int Edit_ProfileDays_h::firstIncludedDay() const {
-		auto _firstIncludedDay = 0;
-		int myDays = currValue().val;
-		while (myDays && !(myDays & 64)) {
-			myDays <<= 1;
-			++_firstIncludedDay;
-		}
-		return _firstIncludedDay;
+		return Dataset_ProfileDays::firstIncludedDayPosition(currValue().val)+1;
 	}
 
 	//*************ProfileDays_Interface****************
@@ -65,7 +55,7 @@ namespace client_data_structures {
 	}
 
 	bool ProfileDays_Interface::isActionableObjectAt(int index) const {
-		auto firstDay = _editItem.firstIncludedDay();
+		auto firstDay = Dataset_ProfileDays::firstIncludedDayPosition(_editItem.currValue().val);
 		if (index <= firstDay) return false;
 		return true;
 	}
@@ -128,8 +118,8 @@ namespace client_data_structures {
 			record().rec().days = newDays;
 			setRecordID(record().update());
 			addDaysToNextProfile(removedDays);
-			stealFromOtherProfile(addedDays);
-			ensureProfilesCoverWholeWeek();
+			stealFromOtherProfile(record().id(), addedDays);
+			promoteOutOfOrderDays();
 			break;
 			}
 		default: ;
@@ -137,23 +127,25 @@ namespace client_data_structures {
 		return false;
 	}
 
-	void Dataset_ProfileDays::addDaysToNextProfile(int daysToAdd) {
-		// Lambdas
-		auto addDays = [](unsigned char days, Answer_R<R_Profile> & profile) {
-			profile.rec().days |= days;
-			profile.update();
-		};
+	void Dataset_ProfileDays::addDays(Answer_R<R_Profile> & profile, unsigned char days) {
+		profile.rec().days |= days;
+		profile.update();
+	};
 
+	void Dataset_ProfileDays::addDaysToNextProfile(int daysToAdd) {
 		// Algorithm
 		if (daysToAdd) {
 			Answer_R<R_Profile> profile = *(++_recSel);
 			if (profile.status() == TB_OK) {
-				addDays(daysToAdd, profile);
+				addDays(profile, daysToAdd );
+			}
+			else {
+				createProfile(daysToAdd);
 			}
 		}
 	}
 
-	void Dataset_ProfileDays::stealFromOtherProfile(int daysToRemove) {
+	void Dataset_ProfileDays::stealFromOtherProfile(int thisProfile, int daysToRemove) {
 		// Lambdas
 		auto removeDays = [](unsigned char days, Answer_R<R_Profile> & profile) {
 			if (days) {
@@ -165,37 +157,53 @@ namespace client_data_structures {
 		// Algorithm
 		for (Answer_R<R_Profile> profile : query()) {
 			auto duplicateDays = daysToRemove & profile.rec().days;
-			if (duplicateDays && profile.id() != record().id()) {
+			if (duplicateDays && profile.id() != thisProfile) {
 				removeDays(duplicateDays, profile);
 				break;
 			}
 		}
 	}
 
-	void Dataset_ProfileDays::ensureProfilesCoverWholeWeek() {
-		auto missingDays = findMissingDaysInProfiles();
-		createProfile(missingDays);
+	int Dataset_ProfileDays::firstIncludedDayPosition(int days) {
+		int pos = 0;
+		firstIncludedDay(days, &pos);
+		return pos;
 	}
 
-	unsigned char Dataset_ProfileDays::findMissingDaysInProfiles() {
-		// Lambdas
-		auto removeDays = [](unsigned char days, Answer_R<R_Profile> & profile) {
-			if (days) {
-				profile.rec().days &= ~days;
-				profile.update();
-			}
-		};
-
-		// Algorithm
-		unsigned char foundDays = 128;
-		for (Answer_R<R_Profile> profile : query()) {
-			auto duplicateDays = foundDays & profile.rec().days;
-			removeDays(duplicateDays, profile);
-			auto profileDays = profile.rec().days;
-			if (profileDays) foundDays |= profileDays;
-			else profile.deleteRecord();
+	int Dataset_ProfileDays::firstIncludedDay(int days, int * pos) {
+		auto _firstIncludedDay = 64;
+		if (days == 0) return 0;
+		while (!(days & _firstIncludedDay)) {
+			_firstIncludedDay >>= 1;
+			if (pos) ++(*pos);
 		}
-		return ~(foundDays);
+		return _firstIncludedDay;
+	}
+
+	int Dataset_ProfileDays::firstMissingDay(int days) {
+		auto _firstMissingDay = 64;
+		if (days == 127) return 0;
+		while (!(~days & _firstMissingDay)) {
+			_firstMissingDay >>= 1;
+		}
+		return _firstMissingDay;
+	}
+
+	void Dataset_ProfileDays::promoteOutOfOrderDays() {
+		auto _firstMissingDay = 64;
+		auto _foundDays = 0;
+		// Algorithm
+		for (Answer_R<R_Profile> profile : query()) {
+			auto _firstIncludedDay = firstIncludedDay(profile.rec().days);
+			if (_firstIncludedDay != _firstMissingDay) {
+				addDays(profile, _firstMissingDay);
+				stealFromOtherProfile(profile.id(), _firstMissingDay);
+			}
+			auto days = profile.rec().days;
+			if (days == 0) profile.deleteRecord();
+			else _foundDays |= days;
+			_firstMissingDay = firstMissingDay(_foundDays);
+		}
 	}
 
 	void Dataset_ProfileDays::createProfile(unsigned char days) {
