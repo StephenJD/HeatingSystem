@@ -25,6 +25,7 @@ namespace HardwareInterfaces {
 		using Print::print;
 		void print(const char * str, uint32_t val);
 		void reset();
+		void truncate(int newEnd);
 		virtual char * buff() = 0;
 		void setCursorPos(int pos) { *(buff() - 2) = pos; }
 		void setCursorMode(CursorMode mode) { *(buff() - 1) = mode; }

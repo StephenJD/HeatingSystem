@@ -156,6 +156,7 @@ namespace LCD_UI {
 	}
 
 	void A_Top_UI::notifyAllOfFocusChange(Collection_Hndl * top) {
+		top->get()->focusHasChanged(top == _upDownUI);
 		for (int i = top->get()->collection()->nextActionableIndex(0); !top->atEnd(i); i = top->get()->collection()->nextActionableIndex(++i)) { // need to check all elements on the page
 			auto element_h = static_cast<Collection_Hndl *>(top->get()->collection()->item(i));
 			if (element_h->get()->isCollection()) {

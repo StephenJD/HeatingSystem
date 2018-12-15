@@ -132,8 +132,8 @@ namespace LCD_UI {
 		auto firstValidIndexLookingForwards = [this](auto index) {return get()->collection()->nextActionableIndex(index); };
 		auto firstValidIndexLookingBackwards = [this](auto index) {return get()->collection()->prevActionableIndex(index); };
 		auto needToRecycle = [this](auto index) {return atEnd(index) && behaviour().is_recycle_on_next(); };
-		auto tryMovingForwardByOne = [this](auto index) {/*if (!atEnd(index)) */++index; return index; };
-		auto tryMovingBackwardByOne = [this](auto index) {if (index > -1)  --index; return index; };
+		auto tryMovingForwardByOne = [this](auto index) {++index; return index; };
+		auto tryMovingBackwardByOne = [this](auto index) {if (index > -1) { --index; } return index; };
 		auto weHaveMoved = [startFocus](auto index) {return startFocus != index; };
 		const auto weCouldNotMove = startFocus;
 		////////////////////////////////////////////////////////////////////
@@ -191,10 +191,10 @@ namespace LCD_UI {
 					if (ith_objectPtr->get()->behaviour().is_OnNewLine())
 						buffer.newLine();
 					//std::cout << "Streaming ViewAll at: " << (long long)(collHndl) << std::endl;
-					auto lastVisibleIndex = collectionPtr->endVisibleItem();
-					if (lastVisibleIndex) {
+					auto endVisibleIndex = collectionPtr->endVisibleItem();
+					if (endVisibleIndex) {
 						if (i < collectionPtr->firstVisibleItem()) continue;
-						if (i > lastVisibleIndex) break;
+						if (i > endVisibleIndex) break;
 					}
 
 					if (ith_collectionPtr && ith_collectionPtr->behaviour().is_viewAll()) { // get the handle pointing to the nested collection
@@ -287,14 +287,13 @@ namespace LCD_UI {
 	const char * I_SafeCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.
 		filter(viewable());
-		auto focus_index = focusIndex();
 		for (int i = nextActionableIndex(0); !atEnd(i); i = nextActionableIndex(++i)) { // need to check all elements on the page
 			auto element = item(i)->get();
 			if (item(i)->get()->behaviour().is_OnNewLine()) buffer.newLine();
-			auto lastVisibleIndex = shortColl->endVisibleItem();
-			if (lastVisibleIndex) {
+			auto endVisibleIndex = shortColl->endVisibleItem();
+			if (endVisibleIndex) {
 				if (i < shortColl->firstVisibleItem()) continue;
-				if (i > lastVisibleIndex) break;
+				if (i > endVisibleIndex) break;
 			}
 			if (element->collection() && element->behaviour().is_viewOne()) {
 				auto collHndl = static_cast<const Collection_Hndl *>(item(i));
@@ -327,17 +326,34 @@ namespace LCD_UI {
 		std::cout << "Sort_Coll at: " << (long long)this << " with collHdl at " << (long long)&_nestedCollection << " to: " << (long long)collection() << std::endl;
 	}
 
+	const char * UI_ShortCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+		_bufferStart = strlen(buffer.toCStr());
+		auto newLine = buffer.toCStr()[_bufferStart-1] == '~';
+		if (newLine) --_bufferStart;
+
+		auto hasFocus = false;
+		auto focus = collection()->focusIndex();
+		if (focus >= 0 && focus < endIndex()) hasFocus = true;
+
+		do {
+			buffer.truncate(_bufferStart);
+			if (newLine) buffer.newLine();
+			collection()->streamElement(buffer, activeElement, this, streamIndex);
+		} while (hasFocus && (focus < _beginIndex || focus >= _endShow));
+
+		return 0;
+	}
+
+
 	void UI_ShortCollection::focusHasChanged(bool hasFocus) {
 		collection()->focusHasChanged(hasFocus);
 		collection()->begin();
-		_beginIndex = objectIndex();
+		_beginIndex = collection()->objectIndex();
 		setCount(collection()->endIndex());
-		auto end = _beginIndex + 1;
-		_endShow = end;
-		if (_beginIndex > _beginShow) _beginShow = _beginIndex;
-		if (_beginShow >= end) {
-			_beginShow = end - 1;
-			_endShow = end;
+		_endShow = endIndex();
+		_beginShow = _beginIndex;
+		if (_beginShow >= _endShow) {
+			_beginShow = collection()->prevActionableIndex(_endShow);
 		}
 	}
 

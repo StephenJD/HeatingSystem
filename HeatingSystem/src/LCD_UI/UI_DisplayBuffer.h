@@ -15,10 +15,12 @@ namespace LCD_UI {
 		const char * toCStr() const { return _lcd->buff(); }
 		CursorMode cursorMode() { return _lcd->cursorMode(); }
 		int cursorPos() { return _lcd->cursorPos(); }
+		//bool requestingNewLine() {return toCStr()[strlen(toCStr()) - 1] == '~';}
 		// Modifiers
 		bool hasAdded(const char * stream, CursorMode cursorMode, int cursorOffset, int endPos, ListStatus listStatus);
 		void newLine();
 		void reset() {_lcd->reset();}
+		void truncate(int newEnd) { _lcd->truncate(newEnd); }
 		HardwareInterfaces::DisplayBuffer_I * _lcd;
 	};
 }

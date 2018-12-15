@@ -31,13 +31,15 @@ namespace LCD_UI {
 	    setCount(_data->resetCount());
 		setObjectIndex(_data->recordID());
 		objectAtFocus = _data->query()[focusIndex()];
-		bool focusStillInRange = objectAtFocus.status() == TB_OK;;
+		bool focusStillInRange = objectAtFocus.status() == TB_OK;
 		if (hasFocus || (focusWasInRange && !focusStillInRange))
 			setFocusIndex(objectIndex());
 	}
 
 	int UI_FieldData::nextIndex(int id) const {
-		return _data->move_to(++id);
+		_data->move_to(id);
+		++id;
+		return _data->move_to(id);
 	}
 
 	Collection_Hndl * UI_FieldData::item(int elementIndex) { // return 0 if record invalid
@@ -49,11 +51,8 @@ namespace LCD_UI {
 				// get selectionField of parentRecord pointing to its child object
 				// used by SpellProgram UI which depends upon the Spell RecordInterface.
 				auto selectedID = _parentRecord->recordField(_selectFieldID);
-				auto oldElementID = elementIndex;
 				elementIndex = _data->move_to(selectedID);
 			}
-		}
-		else {
 		}
 		
 		auto wrapper = _data->getFieldAt(fieldID(), elementIndex);
@@ -67,11 +66,11 @@ namespace LCD_UI {
 		// only called for viewall.	
 		auto focus_index = focusIndex();
 		for (auto & element : *this) {
-			auto lastVisibleIndex = shortColl->endVisibleItem();
+			auto endVisibleIndex = shortColl->endVisibleItem();
 			auto objIndex = objectIndex();
-			if (lastVisibleIndex) {
+			if (endVisibleIndex) {
 				if (objIndex < shortColl->firstVisibleItem()) continue;
-				if (objIndex > lastVisibleIndex) break;
+				if (objIndex > endVisibleIndex) break;
 			}
 
 			auto activeEl = activeElement;
@@ -99,7 +98,6 @@ namespace LCD_UI {
 
 	void UI_FieldData::moveToSavedRecord() {
 		auto newFocus = _data->recordID();
-		auto currFocus = _field_Interface_h.backUI()->focusIndex();
 		setFocusIndex(newFocus);
 		_field_Interface_h.setCursorPos();
 	}

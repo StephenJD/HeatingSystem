@@ -339,17 +339,12 @@ namespace LCD_UI {
 		int objectIndex() const override { return collection()->objectIndex(); }
 
 		bool isCollection() const override { return collection()->isCollection(); }
-		const char * streamElement(UI_DisplayBuffer & buffer
-			, const Object_Hndl * activeElement
-			, const I_SafeCollection * shortColl
-			, int streamIndex) const override {
-			return collection()->streamElement(buffer, activeElement, this, streamIndex);
-		}
+		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override;
 
 		int firstVisibleItem() const override;
 		int fieldEndPos() const override { return _endPos; }
 		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override;
-		void endVisibleItem(bool thisWasShown, int streamIndex) const override;
+		void endVisibleItem(bool thisWasShown, int streamIndex) const override; // endShow is 1st element NOT to show.
 		int endVisibleItem() const override { return _endShow; }
 
 		// Polymorphic Modifiers
@@ -357,7 +352,6 @@ namespace LCD_UI {
 		const I_SafeCollection * collection() const override { return _nestedCollection->collection(); }
 
 		Object_Hndl * item(int newIndex) override { return collection()->item(newIndex); }
-		//Object_Hndl * item(int newIndex) override { return &_nestedCollection; }
 		void focusHasChanged(bool hasFocus) override;
 		void setObjectIndex(int index) const override { I_SafeCollection::setObjectIndex(index); collection()->setObjectIndex(index); }
 		void setFocusIndex(int focus) override { I_SafeCollection::setFocusIndex(focus); collection()->I_SafeCollection::setFocusIndex(focus); }
@@ -369,6 +363,7 @@ namespace LCD_UI {
 		mutable int _beginShow = 0;
 		mutable int _endShow;
 		int _beginIndex = 0;
+		mutable int _bufferStart = 0;
 	};
 
 	//////////////////////////////////////////////////////////////////////

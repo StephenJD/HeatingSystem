@@ -26,6 +26,10 @@ namespace HardwareInterfaces {
 		setCursorMode(e_unselected);
 	}
 
+	void DisplayBuffer_I::truncate(int newEnd) {
+		if (newEnd <= size()) buff()[newEnd] = 0;
+	}
+
 
 	//void iniPrint(char * msg) {
 	//	if (lineNo >= MAX_NO_OF_ROWS) lineNo = 0;
