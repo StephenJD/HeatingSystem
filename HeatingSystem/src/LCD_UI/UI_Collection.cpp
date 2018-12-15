@@ -194,7 +194,7 @@ namespace LCD_UI {
 					auto endVisibleIndex = collectionPtr->endVisibleItem();
 					if (endVisibleIndex) {
 						if (i < collectionPtr->firstVisibleItem()) continue;
-						if (i > endVisibleIndex) break;
+						if (i > collectionPtr->endVisibleItem()) break;
 					}
 
 					if (ith_collectionPtr && ith_collectionPtr->behaviour().is_viewAll()) { // get the handle pointing to the nested collection
@@ -293,7 +293,7 @@ namespace LCD_UI {
 			auto endVisibleIndex = shortColl->endVisibleItem();
 			if (endVisibleIndex) {
 				if (i < shortColl->firstVisibleItem()) continue;
-				if (i > endVisibleIndex) break;
+				if (i > shortColl->endVisibleItem()) break;
 			}
 			if (element->collection() && element->behaviour().is_viewOne()) {
 				auto collHndl = static_cast<const Collection_Hndl *>(item(i));
@@ -350,6 +350,7 @@ namespace LCD_UI {
 		collection()->begin();
 		_beginIndex = collection()->objectIndex();
 		setCount(collection()->endIndex());
+		collection()->setCount(endIndex());
 		_endShow = endIndex();
 		_beginShow = _beginIndex;
 		if (_beginShow >= _endShow) {

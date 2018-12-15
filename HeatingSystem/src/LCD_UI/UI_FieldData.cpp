@@ -70,7 +70,7 @@ namespace LCD_UI {
 			auto objIndex = objectIndex();
 			if (endVisibleIndex) {
 				if (objIndex < shortColl->firstVisibleItem()) continue;
-				if (objIndex > endVisibleIndex) break;
+				if (objIndex > shortColl->endVisibleItem()) break;
 			}
 
 			auto activeEl = activeElement;

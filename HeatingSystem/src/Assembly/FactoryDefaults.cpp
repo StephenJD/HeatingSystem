@@ -78,7 +78,7 @@ namespace Assembly {
 
 	R_TimeTemp timeTemps[] = { // profileID,TT
 		{0, makeTT(7,40,15)}
-		,{0, makeTT(22,30,18)}
+		,{0, makeTT(10,30,18)}
 		,{1, makeTT(7,30,15)}
 		,{1, makeTT(22,40,18)}
 		,{2, makeTT(8,30,15)}
