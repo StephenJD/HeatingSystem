@@ -37,6 +37,7 @@ namespace LCD_UI {
 		Behaviour make_visible() { _behaviour |= b_Viewable; return *this; }
 		Behaviour make_visible(bool show) {return show ? make_visible() : make_hidden(); }
 		Behaviour make_newLine() { _behaviour |= b_NewLine; return *this; }
+		Behaviour make_newLine(bool newLine) { return newLine ? make_newLine() : make_sameLine(); }
 		Behaviour make_sameLine() { _behaviour &= ~b_NewLine; return *this; }
 		Behaviour make_viewAll() { _behaviour |= b_ViewAll; return *this; }
 		Behaviour make_viewOne() { _behaviour &= ~b_ViewAll; return *this; }

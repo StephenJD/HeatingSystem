@@ -308,7 +308,7 @@ namespace LCD_UI {
 	}
 
 	inline bool Collection_Hndl::atEnd(int pos) const { return empty() ? 0 : get()->collection()->atEnd(pos); }
-	inline int Collection_Hndl::focusIndex() const { return get()->collection()->focusIndex(); }
+	inline int Collection_Hndl::focusIndex() const { return /*get()->collection() ? */get()->collection()->focusIndex()/* : 0*/; }
 	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->setFocusIndex(index); }
 	inline int Collection_Hndl::endIndex() const { return get()->collection()->endIndex(); }
 
@@ -363,7 +363,6 @@ namespace LCD_UI {
 		mutable int _beginShow = 0;
 		mutable int _endShow;
 		int _beginIndex = 0;
-		mutable int _bufferStart = 0;
 	};
 
 	//////////////////////////////////////////////////////////////////////

@@ -54,6 +54,7 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * A_Top_UI::set_leftRightUI_from(Collection_Hndl * topUI, int direction) {
+		if (!topUI->behaviour().is_viewAll()) topUI = topUI->backUI();
 		_leftRightBackUI = topUI;
 		auto this_UI_h = topUI->activeUI();
 		do {
@@ -63,6 +64,8 @@ namespace LCD_UI {
 			}
 			this_UI_h = this_UI_h->activeUI();
 		} while (this_UI_h->get()->isCollection());
+		if (this_UI_h->behaviour().is_viewAll()) 
+			_leftRightBackUI = this_UI_h;
 		return topUI;
 	}
 

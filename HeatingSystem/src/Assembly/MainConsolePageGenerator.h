@@ -77,8 +77,9 @@ namespace Assembly {
 		LCD_UI::UI_Cmd _profileDaysCmd;
 		client_data_structures::InsertSpell_Cmd _fromCmd;
 		LCD_UI::UI_Label _insert;
-		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
 		client_data_structures::InsertTimeTemp_Cmd _deleteTTCmd;
+		client_data_structures::InsertTimeTemp_Cmd _editTTCmd;
+		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
 		
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _page_currTime_c;
@@ -87,7 +88,7 @@ namespace Assembly {
 		LCD_UI::Collection<5, LCD_UI::Collection_Hndl> _calendar_subpage_c;
 		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _prog_subpage_c;
 		LCD_UI::Collection<3, LCD_UI::Collection_Hndl> _page_dwellingMembers_subpage_c;
-		LCD_UI::Collection<3, LCD_UI::Collection_Hndl> _tt_SubPage_c;
+		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _tt_SubPage_c;
 		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _page_dwellingMembers_c;
 		LCD_UI::Collection<8, LCD_UI::Collection_Hndl> _page_profile_c;
 

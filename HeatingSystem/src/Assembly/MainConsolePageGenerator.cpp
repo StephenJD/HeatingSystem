@@ -46,7 +46,7 @@ namespace Assembly {
 		, _dwellSpellUI_c{ &_rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle() }
 		, _spellProgUI_c{ &_rec_dwProgs, Dataset_Program::e_name,&_rec_dwSpells,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
 		, _profileDaysUI_c{ &_rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() }
-		, _timeTempUI_c{ &_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds),1 } }
+		, _timeTempUI_c{ &_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _timeTempUI_sc{ UI_ShortCollection{ 80, _timeTempUI_c } }
 
 		// Basic UI Elements
@@ -59,8 +59,9 @@ namespace Assembly {
 		, _profileDaysCmd{ "Ds:",0}
 		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, viewOneUpDnRecycle().make_newLine() }
 		, _insert{ "Insert-Event", hidden().make_sameLine() }
-		, _newTTCmd{ "New", 0, viewOneUpDn().make_hidden().make_newLine() }
-		, _deleteTTCmd{ "Delete", 0, viewOneUpDn().make_hidden() }
+		, _deleteTTCmd{ "Delete", 0, viewOneUpDn().make_hidden().make_newLine() }
+		, _editTTCmd{ "Edit", 0, viewOneUpDn().make_hidden().make_viewAll() }
+		, _newTTCmd{ "New", 0, viewOneUpDn().make_hidden() }
 
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection(_currTimeUI_c, _currDateUI_c, _dst, _dstUI_c) }
@@ -69,7 +70,7 @@ namespace Assembly {
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _progAllNameUI_c).set(viewAllUpDn()) }
 		, _page_dwellingMembers_subpage_c{ makeCollection(_zone_subpage_c, _calendar_subpage_c, _prog_subpage_c).set(viewOneUpDnRecycle()) }
-		, _tt_SubPage_c{ makeCollection(_newTTCmd, _deleteTTCmd, _timeTempUI_sc) }
+		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _timeTempUI_sc) }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 
@@ -83,9 +84,10 @@ namespace Assembly {
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));
 		_fromCmd.set_UpDn_Target(_calendar_subpage_c.item(3));
 		_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(1));
-		_timeTempUI_c.set_OnSelFn_TargetUI(&_newTTCmd);
-		_newTTCmd.set_OnSelFn_TargetUI(_page_profile_c.item(7));
-		_deleteTTCmd.set_OnSelFn_TargetUI(&_newTTCmd);
+		_deleteTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
+		_editTTCmd.set_OnSelFn_TargetUI(_page_profile_c.item(7));
+		_newTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
+		_timeTempUI_c.set_OnSelFn_TargetUI(&_editTTCmd);
 		//UI_DisplayBuffer mainDisplayBuffer(mainDisplay);
 		// Create infinite loop
 		//display1_h.stream(mainDisplayBuffer);

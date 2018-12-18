@@ -109,8 +109,9 @@ namespace LCD_UI {
 
 	Collection_Hndl * Collection_Hndl::move_focus_to(int index) {
 		auto newObject = this;
-		if (!empty()) {
-			newObject = get()->collection()->move_focus_to(index);
+		auto collection = get()->collection();
+		if (!empty() && collection) {
+			newObject = collection->move_focus_to(index);
 			bool wasSelected = (_backUI == activeUI());
 			newObject = activeUI();
 			if (wasSelected) {
@@ -121,60 +122,67 @@ namespace LCD_UI {
 	}
 
 	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
-		move_focus_to(focusIndex());
-		const int startFocus = focusIndex(); // might be endIndex()
-		////////////////////////////////////////////////////////////////////
-		//************* Lambdas evaluating algorithm *********************//
-		////////////////////////////////////////////////////////////////////
-		const bool wantToCheckCurrentPosIsOK = { nth == 0 };
-		auto wantToMoveForward = [](auto nth) {return nth > 0; };
-		auto wantToMoveBackwards = [](auto nth) {return nth < 0; };
-		auto firstValidIndexLookingForwards = [this](auto index) {return get()->collection()->nextActionableIndex(index); };
-		auto firstValidIndexLookingBackwards = [this](auto index) {return get()->collection()->prevActionableIndex(index); };
-		auto needToRecycle = [this](auto index) {return atEnd(index) && behaviour().is_recycle_on_next(); };
-		auto tryMovingForwardByOne = [this](auto index) {++index; return index; };
-		auto tryMovingBackwardByOne = [this](auto index) {if (index > -1) { --index; } return index; };
-		auto weHaveMoved = [startFocus](auto index) {return startFocus != index; };
-		const auto weCouldNotMove = startFocus;
-		////////////////////////////////////////////////////////////////////
-		//************************  Algorithm ****************************//
-		////////////////////////////////////////////////////////////////////
-		get()->collection()->filter(selectable());
-		if (wantToCheckCurrentPosIsOK) {
-			setFocusIndex(firstValidIndexLookingForwards(startFocus));
-			if (needToRecycle(focusIndex())) setFocusIndex(firstValidIndexLookingForwards(0));
-			else if (atEnd(focusIndex()))
-				Collection_Hndl::move_focus_by(-1);
+		auto collection = get()->collection();
+		if (collection) {
+			move_focus_to(focusIndex());
+			const int startFocus = focusIndex(); // might be endIndex()
+			////////////////////////////////////////////////////////////////////
+			//************* Lambdas evaluating algorithm *********************//
+			////////////////////////////////////////////////////////////////////
+			const bool wantToCheckCurrentPosIsOK = { nth == 0 };
+			auto wantToMoveForward = [](auto nth) {return nth > 0; };
+			auto wantToMoveBackwards = [](auto nth) {return nth < 0; };
+			auto firstValidIndexLookingForwards = [this](auto index) {return get()->collection()->nextActionableIndex(index); };
+			auto firstValidIndexLookingBackwards = [this](auto index) {return get()->collection()->prevActionableIndex(index); };
+			auto needToRecycle = [this](auto index) {return atEnd(index) && behaviour().is_recycle_on_next(); };
+			auto tryMovingForwardByOne = [this](auto index) {++index; return index; };
+			auto tryMovingBackwardByOne = [this](auto index) {if (index > -1) { --index; } return index; };
+			auto weHaveMoved = [startFocus](auto index) {return startFocus != index; };
+			const auto weCouldNotMove = startFocus;
+			////////////////////////////////////////////////////////////////////
+			//************************  Algorithm ****************************//
+			////////////////////////////////////////////////////////////////////
+			get()->collection()->filter(selectable());
+			if (wantToCheckCurrentPosIsOK) {
+				setFocusIndex(firstValidIndexLookingForwards(startFocus));
+				if (needToRecycle(focusIndex())) setFocusIndex(firstValidIndexLookingForwards(0));
+				else if (atEnd(focusIndex()))
+					Collection_Hndl::move_focus_by(-1);
+			}
+			else {
+				while (wantToMoveForward(nth)) {
+					setFocusIndex(tryMovingForwardByOne(focusIndex()));
+					setFocusIndex(firstValidIndexLookingForwards(focusIndex()));
+					if (!weHaveMoved(focusIndex()))  break;
+					else if (!atEnd(focusIndex())) --nth; // We have a valid element
+					else if (behaviour().is_recycle_on_next()) setFocusIndex(-1);
+					else { // at end, can't recycle
+						if (behaviour().is_viewOneUpDn()) setFocusIndex(weCouldNotMove);
+						break;
+					}
+				}
+				while (wantToMoveBackwards(nth)) {  // Assume move-back from a valid start-point or focusIndex() of -1 (no actionable elements)
+					setFocusIndex(tryMovingBackwardByOne(focusIndex()));
+					setFocusIndex(firstValidIndexLookingBackwards(focusIndex())); // if no prev, is now -1.
+					if (!weHaveMoved(focusIndex())) break;
+					else if (focusIndex() >= 0) ++nth; // We found one!
+					else if (behaviour().is_recycle_on_next()) {
+						setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
+						move_focus_to(endIndex());
+						if (focusIndex() == 0) break;
+					}
+					else {
+						if (behaviour().is_viewOneUpDn() || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
+						break;
+					}
+				}
+			}
+			return weHaveMoved(focusIndex()) && !atEnd(focusIndex()) && focusIndex() > -1;
 		}
 		else {
-			while (wantToMoveForward(nth)) {
-				setFocusIndex(tryMovingForwardByOne(focusIndex()));
-				setFocusIndex(firstValidIndexLookingForwards(focusIndex()));
-				if (!weHaveMoved(focusIndex()))  break;
-				else if (!atEnd(focusIndex())) --nth; // We have a valid element
-				else if (behaviour().is_recycle_on_next()) setFocusIndex(-1);
-				else { // at end, can't recycle
-					if (behaviour().is_viewOneUpDn()) setFocusIndex(weCouldNotMove);
-					break;
-				}
-			}
-			while (wantToMoveBackwards(nth)) {  // Assume move-back from a valid start-point or focusIndex() of -1 (no actionable elements)
-				setFocusIndex(tryMovingBackwardByOne(focusIndex()));
-				setFocusIndex(firstValidIndexLookingBackwards(focusIndex())); // if no prev, is now -1.
-				if (!weHaveMoved(focusIndex())) break;
-				else if (focusIndex() >= 0) ++nth; // We found one!
-				else if (behaviour().is_recycle_on_next()) {
-					setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
-					move_focus_to(endIndex());
-					if (focusIndex() == 0) break;
-				}
-				else {
-					if (behaviour().is_viewOneUpDn() || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
-					break;
-				}
-			}
+			if (nth) get()->focusHasChanged(nth > 0);
+			return true;
 		}
-		return weHaveMoved(focusIndex()) && !atEnd(focusIndex()) && focusIndex() > -1;
 	}
 
 	const char * Collection_Hndl::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
@@ -327,16 +335,16 @@ namespace LCD_UI {
 	}
 
 	const char * UI_ShortCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		_bufferStart = strlen(buffer.toCStr());
-		auto newLine = buffer.toCStr()[_bufferStart-1] == '~';
-		if (newLine) --_bufferStart;
+		auto bufferStart = strlen(buffer.toCStr());
+		auto newLine = buffer.toCStr()[bufferStart -1] == '~';
+		if (newLine) --bufferStart;
 
 		auto hasFocus = false;
 		auto focus = collection()->focusIndex();
 		if (focus >= 0 && focus < endIndex()) hasFocus = true;
 
 		do {
-			buffer.truncate(_bufferStart);
+			buffer.truncate(bufferStart);
 			if (newLine) buffer.newLine();
 			collection()->streamElement(buffer, activeElement, this, streamIndex);
 		} while (hasFocus && (focus < _beginIndex || focus >= _endShow));

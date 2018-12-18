@@ -6,6 +6,8 @@
 namespace client_data_structures {
 	using namespace LCD_UI;
 
+	///////////////// InsertSpell_Cmd /////////////////////////
+
 	InsertSpell_Cmd::InsertSpell_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
 		: UI_Cmd(label_text, onSelect, behaviour)/*, Collection_Hndl(this)*/ {
 		std::cout << "InsertSpell_Cmd at: " << std::hex << (long long)this << std::endl;
@@ -55,77 +57,97 @@ namespace client_data_structures {
 		return backUI()->on_back(); 
 	}
 
+	///////////////// InsertTimeTemp_Cmd /////////////////////////
+
 	InsertTimeTemp_Cmd::InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
 		: UI_Cmd(label_text, onSelect, behaviour)/*, Collection_Hndl(this)*/ {
 		std::cout << "InsertTimeTemp_Cmd at: " << std::hex << (long long)this << std::endl;
+	}	
+	
+	void InsertTimeTemp_Cmd::focusHasChanged(bool moveRight) {
+		if (moveRight) {
+			enableCmds(e_NewCmd);
+		}
+		else {
+			enableCmds(e_DelCmd);
+		}
 	}
 
-	/////////////////////////////////////////////////////////////////
-
-	Collection_Hndl * InsertTimeTemp_Cmd::enableCmds(int enable) {
+	Collection_Hndl * InsertTimeTemp_Cmd::enableCmds(int cmd_to_show) {
 		auto ttSubPageHndl = target();
 		auto & ttListHndl = *ttSubPageHndl->get()->collection()->item(e_TTs);
 		auto & ttDeleteHndl = *ttSubPageHndl->get()->collection()->item(e_DelCmd);
-		if (enable) {
-			behaviour().make_visible();
-			ttListHndl->behaviour().removeBehaviour(Behaviour::b_NewLine);
-			ttListHndl->behaviour().make_viewOne();
-			ttDeleteHndl->behaviour().make_visible();
-			ttSubPageHndl->move_focus_to(e_NewCmd);
-			insertCommandForEdit(ttListHndl);
-		}
-		else {
-			behaviour().make_hidden();
-			ttListHndl->behaviour().addBehaviour(Behaviour::b_NewLine);
+		auto & ttNewHndl = *ttSubPageHndl->get()->collection()->item(e_NewCmd);
+		auto newFocus = cmd_to_show == e_allCmds ? e_EditCmd : e_TTs;
+		if (cmd_to_show == e_DelCmd) {
+			newFocus = e_DelCmd;
+			_hasInsertedNew = true;
+			//ttListHndl->behaviour().removeBehaviour(Behaviour::b_Selectable);
+			//ttDeleteHndl->behaviour().make_viewAll();
+		} else if (cmd_to_show != e_none) _hasInsertedNew = false;
+		behaviour().make_visible(cmd_to_show & e_EditCmd);
+		behaviour().make_newLine(cmd_to_show == e_EditCmd);
+		ttDeleteHndl->behaviour().make_visible((cmd_to_show == e_allCmds) | (cmd_to_show == e_DelCmd));
+		ttNewHndl->behaviour().make_visible(cmd_to_show & e_NewCmd);
+		ttNewHndl->behaviour().make_newLine(cmd_to_show == e_NewCmd);
+		ttSubPageHndl->move_focus_to(newFocus);
+
+		if (cmd_to_show == e_none) {
 			ttListHndl->behaviour().make_viewAll();
-			ttDeleteHndl->behaviour().make_hidden();
-			ttSubPageHndl->move_focus_to(e_TTs);
+			//ttListHndl->behaviour().addBehaviour(Behaviour::b_Selectable);
+			behaviour().make_viewAll();
 			removeCommandForEdit(ttListHndl);
+		} else {
+			if (cmd_to_show != e_allCmds) behaviour().make_viewOne();
+			ttListHndl->behaviour().make_viewOne();
+			insertCommandForEdit(ttListHndl);
+			if (cmd_to_show == e_NewCmd) select(this);
 		}
 		return static_cast<Collection_Hndl*>(&ttListHndl);
 	}
 
-	Collection_Hndl * InsertTimeTemp_Cmd::select(Collection_Hndl * from) {
+	Collection_Hndl * InsertTimeTemp_Cmd::select(Collection_Hndl * from) { // start insert new
 		auto ttSubPageHndl = target();
 		if (get()->collection()) {
-			auto & _tt_SubPage_c = *ttSubPageHndl->get()->collection();
 			ttSubPageHndl->move_focus_to(e_TTs);
 			auto tt_UI_FieldData = ttSubPageHndl->activeUI()->get();
 			auto tt_field_interface_h = ttSubPageHndl->activeUI()->activeUI();
 			tt_field_interface_h->setCursorPos();
-			auto  ttData = static_cast<UI_FieldData *>(tt_UI_FieldData->collection());
-			ttData->insertNewData();
+			if (behaviour().is_viewAll()) { // must be "Edit" command 
+				enableCmds(e_EditCmd);
+			}
+			else {// must be "New" command 
+				auto  ttData = static_cast<UI_FieldData *>(tt_UI_FieldData->collection());
+				ttData->insertNewData();
+				_hasInsertedNew = true;
+			}
 			tt_field_interface_h->get()->edit(tt_field_interface_h);
 			static_cast<Field_Interface_h*>(tt_field_interface_h)->setEditFocus(0);
 		}
-		else // is delete command
+		else {// is delete command
 			target()->on_back();
+		}
 		return 0;
 	}
 
 	Collection_Hndl * InsertTimeTemp_Cmd::on_select() { // Save insert
-		enableCmds(0);
+		enableCmds(e_none);
 		return  backUI()->on_select();
 	}
 
 	bool InsertTimeTemp_Cmd::back() {
 		if (get()->isCollection()) {
-			enableCmds(0);
-		} else static_cast<InsertTimeTemp_Cmd*>(target())->enableCmds(0);
+			enableCmds(e_none);
+		} else static_cast<InsertTimeTemp_Cmd*>(target())->enableCmds(e_none);
 		return false;
 	}
 
-	Collection_Hndl * InsertTimeTemp_Cmd::on_back() { // Cancel insert
-		auto ttUI_h = enableCmds(0);
+	Collection_Hndl * InsertTimeTemp_Cmd::on_back() { // Cancel insert/edit
+		auto ttUI_h = enableCmds(e_none);
 		auto ttData = static_cast<UI_FieldData *>(ttUI_h->get()->collection());
-		ttData->deleteData();
+		if (_hasInsertedNew)
+			ttData->deleteData();
 		ttData->setFocusIndex(ttData->data()->recordID());
 		return backUI()->on_back();
 	}
-	
-	Collection_Hndl * InsertTimeTemp_Cmd::deleteTT(int) {
-		on_back();
-		return 0;
-	}
-	
 }
