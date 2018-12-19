@@ -1,7 +1,10 @@
 #include "Client_Cmd.h"
 #include "..\LCD_UI\UI_FieldData.h"
 #include "..\LCD_UI\\I_Record_Interface.h"
-#include <iostream>
+
+#ifdef ZSIM
+	#include <iostream>
+#endif
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -9,8 +12,10 @@ namespace client_data_structures {
 	///////////////// InsertSpell_Cmd /////////////////////////
 
 	InsertSpell_Cmd::InsertSpell_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
-		: UI_Cmd(label_text, onSelect, behaviour)/*, Collection_Hndl(this)*/ {
+		: UI_Cmd(label_text, onSelect, behaviour) {
+#ifdef ZSIM
 		std::cout << "InsertSpell_Cmd at: " << std::hex << (long long)this << std::endl;
+#endif
 	}
 
 	Collection_Hndl &  InsertSpell_Cmd::enableInsert(bool enable) {
@@ -60,8 +65,10 @@ namespace client_data_structures {
 	///////////////// InsertTimeTemp_Cmd /////////////////////////
 
 	InsertTimeTemp_Cmd::InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
-		: UI_Cmd(label_text, onSelect, behaviour)/*, Collection_Hndl(this)*/ {
+		: UI_Cmd(label_text, onSelect, behaviour) {
+#ifdef ZSIM
 		std::cout << "InsertTimeTemp_Cmd at: " << std::hex << (long long)this << std::endl;
+#endif
 	}	
 	
 	void InsertTimeTemp_Cmd::focusHasChanged(bool moveRight) {
@@ -145,8 +152,14 @@ namespace client_data_structures {
 	Collection_Hndl * InsertTimeTemp_Cmd::on_back() { // Cancel insert/edit
 		auto ttUI_h = enableCmds(e_none);
 		auto ttData = static_cast<UI_FieldData *>(ttUI_h->get()->collection());
-		if (_hasInsertedNew)
-			ttData->deleteData();
+		if (_hasInsertedNew) {
+			auto thisTT = ttData->data()->recordID();
+			bool isOnlyTT = ttData->data()->last() == ttData->data()->query().begin().id();
+			if (!isOnlyTT) {
+				ttData->data()->move_to(thisTT);
+				ttData->deleteData();
+			}
+		}
 		ttData->setFocusIndex(ttData->data()->recordID());
 		return backUI()->on_back();
 	}

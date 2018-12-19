@@ -1,11 +1,12 @@
 #pragma once
+#include "Arduino.h"
 
 namespace LCD_UI {
 	extern const char NEW_LINE_CHR;
 
 	class Behaviour {
 	public:
-		enum BehaviourFlags : unsigned char { b_Hidden, b_NewLine, b_Viewable = 2, b_Selectable = 4, b_ViewAll = 8, b_NextItemOnUpDown = 16, b_EditOnUpDn = 32, b_RecycleInList = 64, b_NotEditable = 128 };
+		enum BehaviourFlags : uint8_t { b_Hidden, b_NewLine, b_Viewable = 2, b_Selectable = 4, b_ViewAll = 8, b_NextItemOnUpDown = 16, b_EditOnUpDn = 32, b_RecycleInList = 64, b_NotEditable = 128 };
 		// 110 :view, sel, ViewAll, EditOnNextItem, Recycle
 		// 94 : view, sel, ViewAll, UpDn, Recycle
 		// 86 : view, sel, ViewOne, UpDn, Recycle
@@ -18,8 +19,8 @@ namespace LCD_UI {
 		explicit Behaviour(int b) : _behaviour(b) {}
 
 		// Queries
-		explicit operator unsigned char() const { return _behaviour; }
-		bool is(Behaviour b) const { return (_behaviour & unsigned char(b)) == unsigned char(b); }
+		explicit operator uint8_t() const { return _behaviour; }
+		bool is(Behaviour b) const { return (_behaviour & uint8_t(b)) == uint8_t(b); }
 
 		bool is_viewable() const		{ return is(Behaviour{ b_Viewable }); }
 		bool is_UpDnAble() const		{ return (_behaviour & b_Viewable)!=0 && ((_behaviour & b_NextItemOnUpDown) != 0 || (_behaviour & b_EditOnUpDn) != 0); }
@@ -46,7 +47,7 @@ namespace LCD_UI {
 		Behaviour addBehaviour(BehaviourFlags b) { _behaviour |= b; return *this;  }
 		Behaviour removeBehaviour(BehaviourFlags b) { _behaviour &= ~b; return *this;  }
 	private:
-		unsigned char _behaviour = b_Viewable;
+		uint8_t _behaviour = b_Viewable;
 	};
 	// Select Behaviours
 	inline Behaviour hidden() { return Behaviour{ Behaviour::b_Hidden }; }
@@ -66,6 +67,6 @@ namespace LCD_UI {
 	inline Behaviour editRecycle() { return Behaviour{ Behaviour::b_Viewable | Behaviour::b_Selectable | Behaviour::b_ViewAll | Behaviour::b_RecycleInList }; }
 
 	inline Behaviour operator + (Behaviour lhs, Behaviour rhs) {
-		return Behaviour{ unsigned char(lhs) + unsigned char(rhs) };
+		return Behaviour{ uint8_t(lhs) + uint8_t(rhs) };
 	}
 }

@@ -1,6 +1,6 @@
 #include "Data_CurrentTime.h"
 #include "Convertions.h"
-#include "Clock.h"
+#include "..\HardwareInterfaces\Clock.h"
 
 namespace client_data_structures {
 	using namespace HardwareInterfaces;
@@ -181,7 +181,7 @@ namespace client_data_structures {
 			break;
 		case e_dst:
 			_dst.val = newValue->val;
-			clock_().setAutoDSThours(unsigned char(newValue->val));
+			clock_().setAutoDSThours(uint8_t(newValue->val));
 			break;
 		}
 		return false;

@@ -27,7 +27,7 @@ namespace Date_Time {
 	class DateOnly {
 	public:
 		// Constructors
-		constexpr DateOnly() = default;
+		/*constexpr */DateOnly() = default;
 		constexpr DateOnly(const DateOnly & rhs) : _dateInt(rhs._dateInt) {} // required in VS! Default is not constexpr
 		constexpr DateOnly(int day, int month, int year) : _dateInt(getIni(day, month, year)) {}
 		explicit constexpr DateOnly(uint32_t intRepr) : _dateInt(static_cast<uint16_t>(intRepr)) {}

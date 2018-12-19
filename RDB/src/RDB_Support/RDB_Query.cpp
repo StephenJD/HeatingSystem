@@ -1,4 +1,7 @@
 #include "RDB_Query.h"
+#include "RDB_Table.h"
+
+
 namespace RelationalDatabase {
 	Null_Query nullQuery{};
 
@@ -48,6 +51,10 @@ namespace RelationalDatabase {
 		return result;
 	}
 
+	RDB_B * Query::getDB() { return incrementTableQ().getDB(); }
+
+	//Answer_Locator  Query::getMatch(RecordSelector & recSel, int direction, int id) { return recSel; }
+
 	/////////////////////////////////////////////////////////
 	//                      TableQuery                     //
 	/////////////////////////////////////////////////////////
@@ -90,6 +97,9 @@ namespace RelationalDatabase {
 		moveTo(atRS, index);
 		return *atRS;
 	}
+
+	RDB_B * TableQuery::getDB() { return _table ? &_table->db() : 0; }
+
 
 	/////////////////////////////////////////////////////////
 	//                    CustomQuery                      //

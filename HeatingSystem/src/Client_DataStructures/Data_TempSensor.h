@@ -21,9 +21,11 @@ namespace client_data_structures {
 		bool operator == (R_TempSensor rhs) const { return true; }
 	};
 
+#ifdef ZSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_TempSensor & tempSensor) {
 		return stream << "TempSensor: " << tempSensor.name << " Addr: " << (int)tempSensor.address;
 	}
+#endif
 
 	//***************************************************
 	//              TempSensor LCD_UI

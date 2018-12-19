@@ -2,8 +2,7 @@
 #include "Arduino.h"
 #include "RDB_Table.h"
 #include "RDB_B.h"
-//#include <ostream>
-//#include <bitset>
+
 using namespace std;
 
 namespace RelationalDatabase {
@@ -12,14 +11,7 @@ namespace RelationalDatabase {
 	// *************************** TableNavigator *************************************//
 	////////////////////////////////////////////////////////////////////////////
 
-	TableNavigator::TableNavigator() : _currRecord{ 0, TB_INVALID_TABLE } {
-		//cout << "Default TableNavigator : " << _currRecord.status() << endl;
-	}
-
-	//TableNavigator::TableNavigator(const Table & t) :
-	//	_t(&t)
-	//	, _currRecord { -1, TB_BEFORE_BEGIN }
-	//	{}
+	TableNavigator::TableNavigator() : _currRecord{ 0, TB_INVALID_TABLE } {}
 
 	TableNavigator::TableNavigator(Table * t) :
 		 _t(t)
@@ -38,6 +30,18 @@ namespace RelationalDatabase {
 		, _currRecord(id, status)
 	{}
 
+	bool TableNavigator::operator==(const TableNavigator & other) const { return _currRecord.id() == other._currRecord.id(); }
+	bool TableNavigator::operator<(const TableNavigator & other) const { return _currRecord.id() < other._currRecord.id(); }
+	TB_Status TableNavigator::status() const { return _currRecord.status(); }
+	int TableNavigator::id() const { return status() == TB_BEFORE_BEGIN ? -1 : _currRecord.id(); }
+	void TableNavigator::setStatus(TB_Status status) { _currRecord.setStatus(status); }
+	void TableNavigator::setID(int id) { _currRecord.setID(id); }
+	DB_Size_t TableNavigator::firstRecordInChunk() const { return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }
+	bool TableNavigator::tableInvalid() { return _t ? _t->dbInvalid() : true; }
+	RDB_B & TableNavigator::db() const { return _t->db(); }
+	Record_Size_t TableNavigator::recordSize() const { return _t->_rec_size; }
+	NoOf_Recs_t TableNavigator::chunkCapacity() const { return _t->maxRecordsInChunk(); }
+	NoOf_Recs_t TableNavigator::endStopID() const { return _t->maxRecordsInTable(); }
 
 	// *************** Insert, Update & Delete ***************
 
@@ -173,7 +177,7 @@ namespace RelationalDatabase {
 		return withinChunk;
 	}
 
-	bool TableNavigator::haveMovedToUsedRecord(ValidRecord_t usedRecords, unsigned char initialVRindex, int direction) {
+	bool TableNavigator::haveMovedToUsedRecord(ValidRecord_t usedRecords, uint8_t initialVRindex, int direction) {
 		auto VRcapacity = thisVRcapacity();
 
 		// Lambdas
@@ -394,7 +398,7 @@ namespace RelationalDatabase {
 		return vrIndex;
 	}
 
-	TB_Size_t  TableNavigator::getAvailabilityBytesForThisRecord(ValidRecord_t & usedRecords, unsigned char & vrIndex) const {
+	TB_Size_t  TableNavigator::getAvailabilityBytesForThisRecord(ValidRecord_t & usedRecords, uint8_t & vrIndex) const {
 		// Assumes we are in the correct chunk. Returns the availabilityByteAddr or 0 for byte(0)
 		uint8_t old_VR_Byte_No = _VR_Byte_No;
 		vrIndex = getValidRecordIndex();
@@ -499,7 +503,7 @@ namespace RelationalDatabase {
 		moveToThisRecord(insertionPos);
 		//cout << "      InsertPos " << dec << (int)insertionPos << status() << endl;
 		ValidRecord_t validRecords;
-		unsigned char vrIndex;
+		uint8_t vrIndex;
 		getAvailabilityBytesForThisRecord(validRecords, vrIndex);
 		auto insertPosTaken = recordIsUsed(validRecords, vrIndex);
 		//cout << "      validRecords " << std::bitset<8>(validRecords) << endl;

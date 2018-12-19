@@ -1,9 +1,10 @@
 #include "UI_Collection.h"
 #include "UI_LazyCollection.h"
 
-// For debugging
-#include <ostream>
-//#include <iomanip>
+#ifdef ZSIM
+	#include <ostream>
+	#include <iomanip>
+#endif
 
 namespace LCD_UI {
 	using namespace std;
@@ -331,7 +332,9 @@ namespace LCD_UI {
 		, _endPos(endPos)
 		, _endShow(endIndex())
 	{
+#ifdef ZSIM
 		std::cout << "Sort_Coll at: " << (long long)this << " with collHdl at " << (long long)&_nestedCollection << " to: " << (long long)collection() << std::endl;
+#endif
 	}
 
 	const char * UI_ShortCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {

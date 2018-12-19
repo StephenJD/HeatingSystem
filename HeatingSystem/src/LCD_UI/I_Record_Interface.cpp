@@ -1,7 +1,9 @@
 #include "I_Record_Interface.h"
 #include <RDB.h>
 
-#include <ostream>
+#ifdef ZSIM
+	#include <ostream>
+#endif
 
 namespace LCD_UI {
 	using namespace RelationalDatabase;

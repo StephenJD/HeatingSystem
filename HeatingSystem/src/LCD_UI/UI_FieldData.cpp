@@ -16,8 +16,10 @@ namespace LCD_UI {
 	{
 		setFocusIndex(_data->recordID());
 		setObjectIndex(focusIndex());
+#ifdef ZSIM
 		std::cout << "LazyCollection UI_FieldData Addr: " << std::hex << long long(this) << std::endl;
 		std::cout << "   Field_Interface_h Addr: " << std::hex << long long(&_field_Interface_h) << std::endl << std::endl;
+#endif
 	} 
 
 	void UI_FieldData::set_OnSelFn_TargetUI(Collection_Hndl * obj) {

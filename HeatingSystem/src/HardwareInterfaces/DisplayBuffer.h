@@ -6,7 +6,7 @@ namespace HardwareInterfaces {
 	class DisplayBuffer_I : public Print
 	{
 	public:
-		enum CursorMode : unsigned char { e_unselected, e_selected, e_inEdit};
+		enum CursorMode : uint8_t { e_unselected, e_selected, e_inEdit};
 		// Queries
 		uint8_t cursorPos() const { return *(buff() - 2); }
 		uint8_t cursorCol() const { return cursorPos() % cols(); }

@@ -5,7 +5,13 @@
 
 namespace RelationalDatabase {
 	
-	enum InsertionStrategy { i_retainOrder, i_reverseOrder, i_09_orderedInsert, i_09_reverseInsert, i_09_randomInsert, i_90_randomInsert, i_90_orderedInsert, i_90_reverseInsert  };
+	inline bool isSorted(InsertionStrategy strategy) {
+		return (strategy > i_reverseOrder);
+	}
+
+	inline bool isSmallestFirst(InsertionStrategy strategy) {
+		return (strategy < i_90_randomInsert);
+	}
 
 	class TableNavigator;
 	class Table;
@@ -25,7 +31,7 @@ namespace RelationalDatabase {
 	/// </summary>
 	class RDB_B {
 	public:
-		enum DB_Status : unsigned char {
+		enum DB_Status : uint8_t {
 			DB_OK,
 			DB_LOAD_ERROR,
 			DB_TABLE_INDEX_OUT_OF_RANGE,

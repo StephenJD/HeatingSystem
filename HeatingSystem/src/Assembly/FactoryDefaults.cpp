@@ -7,7 +7,9 @@
 #include "..\Client_DataStructures\Data_Profile.h"
 #include "..\Client_DataStructures\Data_Zone.h"
 
-#include <ostream>
+#ifdef ZSIM
+ #include <ostream>
+#endif
 
 namespace Assembly {
 	using namespace client_data_structures;
@@ -55,13 +57,6 @@ namespace Assembly {
 		,{ "Empty",1 }
 		,{ "Away",0 }
 	};
-	//constexpr R_Program programs[] = {
-	//	{ "At Home",0 }
-	//	,{ "At Work",0 }
-	//	,{ "Away",0 }
-	//	,{ "Occupied",1 }
-	//	,{ "Empty",1 }
-	//};
 
 	constexpr R_DwellingZone dwellingZones[] = {
 		{ 1,3 }
@@ -87,6 +82,26 @@ namespace Assembly {
 		,{3, makeTT(10,00,30)}
 		,{3, makeTT(16,00,45)}
 		,{3, makeTT(23,00,30)}
+		,{4, makeTT(07,00,18)}
+		,{5, makeTT(07,00,18)}
+		,{6, makeTT(07,00,18)}
+		,{7, makeTT(07,00,45)}
+
+		,{8, makeTT(07,00,10)}
+		,{9, makeTT(07,00,10)}
+		,{10, makeTT(07,00,10)}
+		,{11, makeTT(07,00,10)}
+		,{12, makeTT(07,00,45)}
+		,{13, makeTT(07,00,18)}
+		,{14, makeTT(07,00,18)}
+		,{15, makeTT(07,00,45)}
+
+		,{16, makeTT(07,00,45)}
+		,{17, makeTT(07,00,45)}
+		,{18, makeTT(07,00,18)}
+		,{19, makeTT(07,00,18)}
+		,{20, makeTT(07,00,10)}
+
 	};
 
 	constexpr R_Spell spells[] = {
@@ -101,88 +116,30 @@ namespace Assembly {
 	constexpr R_Profile profiles[] = {
 		//ProgID, ZnID, Days
 		{ 0,0,100 } // At Home US MT--F--
-		,{ 2,0,108 } // At Work US MT-TF--
-		,{ 0,0,27 } // US --WT-SS
-		,{ 0,2,114 }// DHW MTW--S-
-		,{ 0,1,85}  // DS M-W-F-S
-		,{ 2,0,19 } // US --W--SS
-		,{ 0,1,42 } // DS -T-T-S-
-		,{ 0,2,13 } // DHW ---TF-S
+		,{ 2,0,108 }// At Work US MT-TF--
+		,{ 0,0,27 } // At Home US --WT-SS
+		,{ 0,2,114 }// At Home DHW MTW--S-
+		,{ 0,1,85}  // At Home DS M-W-F-S
+		,{ 2,0,19 } // At Work US --W--SS
+		,{ 0,1,42 } // At Home DS -T-T-S-
+		,{ 0,2,13 } // At Home DHW ---TF-S
 
-		,{ 4,0,255 } // Away MTWTFSS
-		,{ 3,2,255 } // Empty
-		,{ 4,1,255 }
-		,{ 4,2,255 }
-		,{ 1,2,125 } // Occupied MTWTF-S
+		,{ 4,0,255 } // Away US MTWTFSS
+		,{ 3,2,255 } // Empty DHW 
+		,{ 4,1,255 } // Away DS
+		,{ 4,2,255 } // Away DHW 
+		,{ 1,2,125 } // Occupied DHW MTWTF-S
+		,{ 2,1,108 } // At Work DS MT-TF--
+		,{ 2,1,19 }  // At Work DS --W--SS
+		,{ 2,2,108 } // At Work DHW MT-TF--
 
-		,{ 2,1,108 }
-		,{ 2,1,19 }
-		,{ 2,2,108 }
-		,{ 2,2,19 }
-
-
-		,{ 1,2,2 }   // -----S-
-		,{ 1,3,125}   
-		,{ 1,3,2 }   
-		,{ 3,3,255} 
+		,{ 2,2,19 }  // At Work DHW --W--SS
+		,{ 1,2,2 }   // Occupied DHW -----S-
+		,{ 1,3,125}  // Occupied Flat MTWTF-S
+		,{ 1,3,2 }   // Occupied Flat -----S- 
+		,{ 3,3,255}  // Empty Flat 
 	};	
 		
-	//constexpr R_Profile profiles[] = {
-	//	//ProgID, ZnID, Days
-	//	{ 0,0,100 } // At Home US MT--F--
-	//	,{ 0,0,27 } // US --WT-SS
-	//	,{ 0,1,85}  // DS M-W-F-S
-	//	,{ 0,1,42 } // DS -T-T-S-
-	//	,{ 0,2,114 }// DHW MTW--S-
-	//	,{ 0,2,13 } // DHW ---TF-S
-	//	,{ 2,0,108 } // At Work US MT-TF--
-	//	,{ 2,0,19 } // US --W--SS
-
-	//	,{ 2,1,108 }
-	//	,{ 2,1,19 }
-	//	,{ 2,2,108 }
-	//	,{ 2,2,19 }
-
-	//	,{ 4,0,255 } // Away MTWTFSS
-	//	,{ 4,1,255 }
-	//	,{ 4,2,255 }
-	//	,{ 1,2,125 } // Occupied MTWTF-S
-
-	//	,{ 1,2,2 }   // -----S-
-	//	,{ 1,3,125}   
-	//	,{ 1,3,2 }   
-	//	,{ 3,2,255 } // Empty
-	//	,{ 3,3,255} 
-	//};	
-	
-	//constexpr R_Profile profiles[] = {
-	//	//ProgID, ZnID, Days
-	//	{ 0,0,100 } // At Home US MT--F--
-	//	,{ 0,0,27 } // US --WT-SS
-	//	,{ 0,1,85}  // DS M-W-F-S
-	//	,{ 0,1,42 } // DS -T-T-S-
-	//	,{ 0,2,114 }// DHW MTW--S-
-	//	,{ 0,2,13 } // DHW ---TF-S
-	//	,{ 1,0,108 } // At Work US MT-TF--
-	//	,{ 1,0,19 } // US --W--SS
-
-	//	,{ 1,1,108 }
-	//	,{ 1,1,19 }
-	//	,{ 1,2,108 }
-	//	,{ 1,2,19 }
-
-	//	,{ 2,0,255 } // Away MTWTFSS
-	//	,{ 2,1,255 }
-	//	,{ 2,2,255 }
-	//	,{ 3,2,125 } // Occupied MTWTF-S
-
-	//	,{ 3,2,2 }   // -----S-
-	//	,{ 3,3,125}   
-	//	,{ 3,3,2 }   
-	//	,{ 4,2,255 } // Empty
-	//	,{ 4,3,255} 
-	//};
-
 	constexpr R_Zone zones[] = { 
 		{ "UpStrs","US",1,1,1,0,25,12,1,60 }
 		,{ "DnStrs","DS",1,1,1,0,25,12,1,60 }
@@ -194,25 +151,25 @@ namespace Assembly {
 		//enum tableIndex { TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
 
 		//Serial.println("setFactoryDefaults Started");
-		std::cout << "\nRelays Table ";
+		//std::cout << "\nRelays Table ";
 		db.createTable(relays);
-		std::cout << "\nTempSensors Table ";
+		//std::cout << "\nTempSensors Table ";
 		db.createTable(tempSensors);
-		std::cout << "\nDwellings Table ";
+		//std::cout << "\nDwellings Table ";
 		db.createTable(dwellings);
-		std::cout << "\nZones Table ";
+		//std::cout << "\nZones Table ";
 		db.createTable(zones);
-		std::cout << "\nDwellingZones Table ";
+		//std::cout << "\nDwellingZones Table ";
 		db.createTable(dwellingZones);
-		std::cout << "\nPrograms Table ";
+		//std::cout << "\nPrograms Table ";
 		db.createTable(programs);
-		std::cout << "\nProfiles Table ";
+		//std::cout << "\nProfiles Table ";
 		db.createTable(profiles);
-		std::cout << "\nTimeTemps Table ";
+		//std::cout << "\nTimeTemps Table ";
 		db.createTable(timeTemps, i_09_orderedInsert);
-		std::cout << "\nSpells Table ";
+		//std::cout << "\nSpells Table ";
 		db.createTable(spells, i_09_orderedInsert);
-		std::cout << "\nAll Tables Created\n ";
+		//std::cout << "\nAll Tables Created\n ";
 
 		//Serial.println("setFactoryDefaults Completed");
 	}

@@ -5,7 +5,9 @@
 #include <RDB.h>
 #include <Date_Time.h>
 
-#include <ostream>
+#ifdef ZSIM
+	#include <ostream>
+#endif
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -26,7 +28,7 @@ namespace client_data_structures {
 		I_Field_Interface & ui() override;
 
 		char name[7];
-		unsigned char isTemp;
+		uint8_t isTemp;
 		bool isHeating;
 	};
 
@@ -113,9 +115,11 @@ namespace client_data_structures {
 		bool operator == (R_Zone rhs) const { return true; }
 	};
 
+#ifdef ZSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Zone & zone) {
 		return stream << "Zone: " << zone.name;
 	}
+#endif
 
 	struct R_DwellingZone {
 		RecordID dwellingID;
@@ -127,9 +131,11 @@ namespace client_data_structures {
 		bool operator == (R_DwellingZone rhs) const { return true; }
 	};
 
+#ifdef ZSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_DwellingZone & dwellingZone) {
 		return stream << "DwellingZone DwID: " << std::dec << (int)dwellingZone.dwellingID << " ZnID: " << (int)dwellingZone.zoneID;
 	}
+#endif
 
 	//***************************************************
 	//              Zone DB Interface

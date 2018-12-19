@@ -1,6 +1,9 @@
 #include "Data_Spell.h"
-#include <iostream>
-using namespace std;
+
+#ifdef ZSIM
+	#include <iostream>
+	using namespace std;
+#endif
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -33,7 +36,7 @@ namespace client_data_structures {
 				auto newDate = DateTime(_startDate.val);;
 				//cout << "Insert date: Was: ID:" << dec << (int)recordID() << ": " << record().rec().date.day() << record().rec().date.getMonthStr() << " Now: " << newDate.day() << newDate.getMonthStr() << endl;
 				record().rec().date = DateTime(_startDate.val);
-				cout << "\nDelete original date: ID:" << dec << (int)record().id();
+				//cout << "\nDelete original date: ID:" << dec << (int)record().id();
 				auto newRecordID = record().update();
 				//cout << "          New RecID: " << (int)newRecordID << ": Date is:  " << record().rec().date.day() << record().rec().date.getMonthStr() << record().rec().date.year() << endl;
 				if (newRecordID != recordID()) {

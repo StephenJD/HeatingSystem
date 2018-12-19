@@ -142,7 +142,7 @@ namespace client_data_structures {
 			break; 
 		case e_reqIsTemp: {
 			Zone & z = zone(record().id());
-			z.setCurrTempRequest(unsigned char(newValue->val));
+			z.setCurrTempRequest(uint8_t(newValue->val));
 			break;
 			}
 		}

@@ -1,5 +1,4 @@
 #include "UI_LazyCollection.h"
-#include <ostream>
 
 namespace LCD_UI {
 

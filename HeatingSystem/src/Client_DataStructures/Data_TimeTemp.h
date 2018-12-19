@@ -3,8 +3,11 @@
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
-#include <ostream>
 #include "Time_Only.h"
+
+#ifdef ZSIM
+	#include <ostream>
+#endif
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -22,6 +25,7 @@ namespace client_data_structures {
 		bool operator == (R_TimeTemp rhs) const { return time_temp == rhs.time_temp; }
 	};
 
+#ifdef ZSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_TimeTemp & timeTemp) {
 		using namespace Date_Time;
 
@@ -30,7 +34,7 @@ namespace client_data_structures {
 		return stream << "TimeTemp for ProfileID: " << std::dec << (int)timeTemp.profileID << " time: " 
 			<< intToString(time.hrs(), 2, '0') << (int)time.mins10() << "0  Temp: " << (int)temp;
 	}
-
+#endif
 	//***************************************************
 	//              TimeTemp UI Edit
 	//***************************************************

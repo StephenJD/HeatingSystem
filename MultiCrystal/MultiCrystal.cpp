@@ -15,8 +15,8 @@ using namespace std;
 using namespace GP_LIB;
 
 //#if defined (ZPSIM)
-//void digitalWrite (unsigned char, unsigned char){;}
-//void pinMode (unsigned char, unsigned char){;}
+//void digitalWrite (uint8_t, uint8_t){;}
+//void pinMode (uint8_t, uint8_t){;}
 //void delayMicroseconds(unsigned int us){};
 //#endif
 

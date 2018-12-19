@@ -1,6 +1,9 @@
 #include "Data_Profile.h"
 #include "Data_Zone.h"
-#include <ostream>
+#include "Data_TimeTemp.h"
+#include "Time_Only.h"
+#include "..\Assembly\HeatingSystemEnums.h"
+
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -60,9 +63,6 @@ namespace client_data_structures {
 		return true;
 	}
 
-	
-
-
 	//*************Dataset_ProfileDays****************
 	Dataset_ProfileDays::Dataset_ProfileDays(Query & query, VolatileData * runtimeData, I_Record_Interface * dwellProgs, I_Record_Interface * dwellZone)
 		: Record_Interface(query, runtimeData, dwellProgs)
@@ -111,8 +111,8 @@ namespace client_data_structures {
 		// New profiles must be given a copy of it's parent TTs.
 		switch (fieldID) {
 		case e_days: {
-			auto oldDays = unsigned char(_days.val);
-			auto newDays = unsigned char(newValue->val);
+			auto oldDays = uint8_t(_days.val);
+			auto newDays = uint8_t(newValue->val);
 			auto removedDays = oldDays & ~newDays;
 			auto addedDays = newDays & ~oldDays;
 			record().rec().days = newDays;
@@ -127,7 +127,7 @@ namespace client_data_structures {
 		return false;
 	}
 
-	void Dataset_ProfileDays::addDays(Answer_R<R_Profile> & profile, unsigned char days) {
+	void Dataset_ProfileDays::addDays(Answer_R<R_Profile> & profile, uint8_t days) {
 		profile.rec().days |= days;
 		profile.update();
 	};
@@ -147,7 +147,7 @@ namespace client_data_structures {
 
 	void Dataset_ProfileDays::stealFromOtherProfile(int thisProfile, int daysToRemove) {
 		// Lambdas
-		auto removeDays = [](unsigned char days, Answer_R<R_Profile> & profile) {
+		auto removeDays = [](uint8_t days, Answer_R<R_Profile> & profile) {
 			if (days) {
 				profile.rec().days &= ~days;
 				profile.update();
@@ -206,11 +206,26 @@ namespace client_data_structures {
 		}
 	}
 
-	void Dataset_ProfileDays::createProfile(unsigned char days) {
+	void Dataset_ProfileDays::createProfile(uint8_t days) {
 		if (days) {
 			R_Profile profile{ record().rec() };
 			profile.days = days;
-			query().insert(&profile);
+			auto newProfile = query().insert(&profile);
+			createProfileTT(newProfile.id());
+		}
+	}
+
+	void Dataset_ProfileDays::createProfileTT(int profileID) {
+		auto rdb_b = query().getDB();
+		auto _db = static_cast<RDB<Assembly::TB_NoOfTables>*>(rdb_b);
+		auto tt_tableQ = _db->tableQuery(Assembly::TB_TimeTemp);
+		auto tt_FilterQ = QueryF_T<R_TimeTemp>{ tt_tableQ , 0 };
+		tt_FilterQ.setMatchArg(profileID);
+		auto gotTT = tt_FilterQ.begin();
+		if (gotTT.status() != TB_OK) {
+			uint16_t newTime = Date_Time::TimeOnly{ 7,0 }.asInt() << 8;
+			R_TimeTemp newTT{ RecordID(profileID), newTime + uint16_t(28) };
+			tt_tableQ.insert(&newTT);
 		}
 	}
 

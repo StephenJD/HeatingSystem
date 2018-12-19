@@ -4,9 +4,11 @@
 #include "I_Edit_Hndl.h"
 #include "UI_LazyCollection.h"
 
-//#include <string>
-//#include <iostream>
-//#include <iomanip>
+#ifdef ZSIM
+	#include <string>
+	#include <iostream>
+	#include <iomanip>
+#endif
 
 namespace LCD_UI {
 
@@ -75,8 +77,10 @@ namespace LCD_UI {
 	class OneVal : public Collection_Hndl, public UI_Object {
 	public:
 		OneVal(I_SafeCollection * parent) : Collection_Hndl((const UI_Object*)this), _parent(parent) {
+#ifdef ZSIM
 			std::cout << "oneVal at: " << std::hex << (long long)this << std::endl;
 			std::cout << "\tas UI_Object at: " << std::hex << (long long)(UI_Object*)this << std::endl;
+#endif
 		};
 		Collection_Hndl * select(Collection_Hndl * from) { return _parent->select(backUI()); }
 		Collection_Hndl * on_back() override { return backUI()->on_back(); }

@@ -4,7 +4,9 @@
 #include <Date_Time.h>
 #include "DateTimeWrapper.h"
 
-#include <ostream>
+#ifdef ZSIM
+	#include <ostream>
+#endif
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -23,9 +25,11 @@ namespace client_data_structures {
 		bool operator == (R_Spell rhs) const { return date == rhs.date; }
 	};
 
+#ifdef ZSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Spell & spell) {
 		return stream << "Spell Date: " << std::dec << spell.date.day() << "/" << spell.date.getMonthStr() << "/" << spell.date.year() << " with ProgID: " << (int)spell.programID;
 	}
+#endif
 
 	//***************************************************
 	//              Spell DB Interface

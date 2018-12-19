@@ -1,7 +1,9 @@
 #pragma once
 #include "Behaviour.h"
 #include "UI_DisplayBuffer.h"
-#include <iostream>
+#ifdef ZPSIM 
+	#include <iostream> 
+#endif
 //using namespace std;
 
 namespace LCD_UI {
@@ -393,10 +395,12 @@ namespace LCD_UI {
 		using I_SafeCollection::item;
 
 		Collection(ArrayWrapper<noOfObjects, ObjectType> arrayWrp, Behaviour behaviour) :I_SafeCollection(noOfObjects, behaviour), _array(arrayWrp) {
+#ifdef ZSIM
 			std::cout << "Collection at : " << std::hex << (long long)(this) << std::endl;
 			for (int i = 0; i < noOfObjects; ++i)
 				std::cout << "   Has Element at : " << (long long)&_array[i] << " Pointing to : " << (long long)_array[i].get() << std::endl;
 			std::cout << std::endl;
+#endif
 		}
 		ObjectType * item(int index) override {
 			setObjectIndex(index);

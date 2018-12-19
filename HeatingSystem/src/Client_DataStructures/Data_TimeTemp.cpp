@@ -1,6 +1,9 @@
 #include "Data_TimeTemp.h"
 #include "Time_Only.h"
-#include <ostream>
+
+#ifdef ZSIM
+	#include <ostream>
+#endif
 
 namespace client_data_structures {
 	using namespace LCD_UI;

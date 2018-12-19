@@ -1,6 +1,9 @@
 #include "UI_Cmd.h"
 #include "Convertions.h"
-#include <iostream>
+
+#ifdef ZSIM
+	#include <iostream>
+#endif
 
 namespace LCD_UI {
 	using namespace std;
@@ -8,8 +11,10 @@ namespace LCD_UI {
 	// ********************* Concrete UI_Cmd *******************
 	UI_Cmd::UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour)
 		: Collection_Hndl(this), Custom_Select(onSelect, behaviour), text(label_text) {
+#ifdef ZSIM
 		cout << "UI_Cmd " << label_text << " Addr:" << hex << long long(this) << endl;
 		//cout << " behaviour: " << dec << _behaviour << endl;
+#endif
 	}
 
 	void UI_Cmd::insertCommandForEdit(Object_Hndl & ui_fieldData_collection) {
@@ -33,8 +38,10 @@ namespace LCD_UI {
 	// ********************* Concrete UI_Label *******************
 
 	UI_Label::UI_Label(const char * label_text, Behaviour behaviour)
-		: /*UI_Object(behaviour),*/ text(label_text), _behaviour(behaviour) {
+		: text(label_text), _behaviour(behaviour) {
+#ifdef ZSIM
 		cout << "UI_Label " << label_text << " Addr:" << hex << long long(this) << endl;
+#endif
 	}
 
 	const char * UI_Label::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {

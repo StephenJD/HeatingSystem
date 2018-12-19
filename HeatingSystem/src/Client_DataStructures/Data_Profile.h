@@ -4,7 +4,9 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
 
-#include <ostream>
+#ifdef ZSIM
+	#include <ostream>
+#endif
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -20,9 +22,11 @@ namespace client_data_structures {
 		bool operator == (R_Profile rhs) const { return days == rhs.days; }
 	};
 
+#ifdef ZSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Profile & profile) {
 		return stream << "Profile for ProgID: " << std::dec << (int)profile.programID << " ZoneID: " << (int)profile.zoneID << " Days: " << (int)profile.days;
 	}
+#endif
 
 	//***************************************************
 	//              ProfileDays UI Edit
@@ -104,11 +108,12 @@ namespace client_data_structures {
 		static int firstMissingDay(int days);
 
 	private:
-		void addDays(Answer_R<R_Profile> & profile, unsigned char days);
+		void addDays(Answer_R<R_Profile> & profile, uint8_t days);
 		void addDaysToNextProfile(int daysToAdd);
 		void stealFromOtherProfile(int thisProfile, int daysToRemove);
 		void promoteOutOfOrderDays();
-		void createProfile(unsigned char days);
+		void createProfile(uint8_t days);
+		void createProfileTT(int profileID);
 
 		ProfileDaysWrapper _days; // size is 32 bits.
 		I_Record_Interface * _dwellZone;

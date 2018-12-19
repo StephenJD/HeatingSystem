@@ -1,7 +1,11 @@
 #pragma once
 #include "RDB_RecordSelector.h"
 #include "RDB_TableNavigator.h"
-#include <ostream>
+#include "RDB_Answer_Locator.h"
+
+#ifdef ZSIM
+	#include <ostream>
+#endif
 
 namespace RelationalDatabase {
 
@@ -42,19 +46,7 @@ namespace RelationalDatabase {
 		virtual RecordSelector findMatch(RecordSelector & recSel);
 		
 		template <typename Record_T>
-		RecordSelector insert(const Record_T * record) {
-			return incrementTableQ().insert(record);
-		}
-
-		//template <typename Record_T>
-		//RecordSelector insert(const Record_T * record, int noOfRecords) {
-		//	auto rs = RecordSelector{ *this, *_table };
-		//	for (int i = 0; i < noOfRecords; ++i) {
-		//		incrementTableQ().insert(record);
-		//		++record;
-		//	}
-		//	return rs;
-		//}
+		RecordSelector insert(const Record_T * record);
 
 		// Access
 		const Query & incrementQ() const { return const_cast<Query*>(this)->resultsQ(); }
@@ -63,6 +55,7 @@ namespace RelationalDatabase {
 		const Query & resultsQ() const { return const_cast<Query *>(this)->resultsQ(); }
 		virtual Query & resultsQ() {return *this;}
 		virtual int matchArg() const { return 0; }
+		RDB_B * getDB();
 
 		virtual ~Query() = default;
 		virtual Answer_Locator getMatch(RecordSelector & recSel, int direction, int id) { return recSel; }
@@ -99,11 +92,15 @@ namespace RelationalDatabase {
 	public:
 		TableQuery() = default;
 		TableQuery(Table & table) : _table(&table) {
+#ifdef ZSIM
 			std::cout << " TableQuery at: " << std::hex << (long long)this << " TableID : " << std::dec << (int)_table->tableID() << std::endl;
+#endif
 		}
 
 		TableQuery(const TableQuery & tableQ) : _table(tableQ._table) {
+#ifdef ZSIM
 			std::cout << " Copy TableQuery at: " << std::hex << (long long)this << " TableID : " << std::dec << (int)_table->tableID() << std::endl;
+#endif
 		}
 
 		RecordSelector begin() override;
@@ -130,24 +127,25 @@ namespace RelationalDatabase {
 			}
 			return rs;
 		}
-
+		RDB_B * getDB();
 	private:
 		Table * _table = 0;
 	};
+
+	template <typename Record_T>
+	RecordSelector Query::insert(const Record_T * record) {
+		return incrementTableQ().insert(record);
+	}
+
 
 	class CustomQuery : public Query {
 	public:
 		CustomQuery(Query & source) : _incrementQ(&source) {}
 		CustomQuery(const TableQuery & tableQ) : _incrementQ(&_tableQ), _tableQ(tableQ) {
+#ifdef ZSIM
 			std::cout << " Custom Query at : " << std::hex << (long long)this << "\n";
 			std::cout << "    Nested Table Query at : " << std::hex << (long long)&_tableQ << "\n";
-		}
-
-		// Modify Query	
-		template<typename Record_T>
-		RecordSelector insert(const Record_T * record) { 
-			tableNavigator().insert(record); 
-			return current(); 
+#endif
 		}
 
 		// Access
@@ -182,7 +180,9 @@ namespace RelationalDatabase {
 	public:
 		QueryF_T(Query & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {}
 		QueryF_T(const TableQuery & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {
+#ifdef ZSIM
 			std::cout << " Filter Query at : " << std::hex << (long long)this << "\n";
+#endif
 		}
 
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int id) override {
@@ -224,16 +224,16 @@ namespace RelationalDatabase {
 	class QueryL_T : public CustomQuery {
 		// base-class holds the match argument for the Filter.
 	public:
-		using type = typename ReturnedRecordType;
-
 		QueryL_T(
 			Query & link_Query,
 			Query & result_Query,
 			int filter_f,
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
+#ifdef ZSIM
 			std::cout << " Link Query and results at : " << std::hex <<(long long)this << "\n";
 			std::cout << "    nested Filter Query at : " << std::hex <<(long long)&_linkQ << "\n";
+#endif
 		}
 
 		QueryL_T(
@@ -242,8 +242,10 @@ namespace RelationalDatabase {
 			int filter_f,
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
+#ifdef ZSIM
 			std::cout << " Link Query and results at : " << std::hex << (long long)this << "\n";
 			std::cout << "    nested Filter Query at : " << std::hex << (long long)&_linkQ << "\n";
+#endif
 		}
 		void setMatchArg(int matchArg) override { _linkQ.setMatchArg(matchArg); }
 		int matchArg() const override { return _linkQ.matchArg(); }
@@ -288,8 +290,6 @@ namespace RelationalDatabase {
 	class QueryLF_T : public CustomQuery {
 		// all derived queries inherit from the root, rather from each other, so the virtual return-types can be derived-type.
 	public:
-		using type = typename ReturnedRecordType;
-
 		QueryLF_T(
 			Query & result_query
 			, Query & filter_query

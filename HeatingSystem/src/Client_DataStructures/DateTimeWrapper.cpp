@@ -1,7 +1,10 @@
 #include "DateTimeWrapper.h"
 #include "Convertions.h"
-#include "Clock.h"
-#include <iostream>
+#include "..\HardwareInterfaces\Clock.h"
+
+#ifdef ZSIM
+	#include <iostream>
+#endif
 
 
 namespace client_data_structures {
@@ -18,16 +21,20 @@ namespace client_data_structures {
 
 	DateTimeWrapper::DateTimeWrapper(DateTime dateVal, ValRange valRangeArg)
 		: I_UI_Wrapper(dateVal.asInt(), valRangeArg) {
+#ifdef ZSIM
 		std::cout << "DateTimeWrapper at: " << (long long)(this) << std::endl;
+#endif
 	}
 
 	I_Field_Interface & DateTimeWrapper::ui() { return datetime_UI; }
 
 	Edit_DateTime_h::Edit_DateTime_h() : 
 		I_Edit_Hndl(&editVal) { 
+#ifdef ZSIM
 		std::cout << "Edit_DateTime_h at: " << std::hex << (long long)this << std::endl; 
 		std::cout << "   Edit Copy DateTimeWrapper at: " << (long long)(&_currValue) << std::endl;
 		std::cout << "   Edit Copy Permitted_Vals at: " << (long long)(&editVal) << std::endl;
+#endif
 	}
 
 	bool Edit_DateTime_h::move_focus_by(int moveBy) { // Change character at the cursor. Modify copy held by currValue

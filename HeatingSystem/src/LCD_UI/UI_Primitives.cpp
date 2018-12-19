@@ -2,8 +2,11 @@
 #include "Convertions.h"
 #include "UI_FieldData.h"
 #include "I_Record_Interface.h"
-#include <iostream>
-using namespace std;
+
+#ifdef ZSIM
+	#include <iostream>
+	using namespace std;
+#endif
 
 namespace LCD_UI {
 	using namespace GP_LIB;
@@ -135,8 +138,10 @@ namespace LCD_UI {
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	Edit_Char_h::Edit_Char_h() : I_Edit_Hndl(&editChar) {
+#ifdef ZSIM
 		std::cout << "** Edit_Char_h Addr:" << std::hex << long long(this) << std::endl;
 		std::cout << "** editChar Addr:" << std::hex << long long(&editChar) << std::endl;
+#endif
 	}
 
 	int Edit_Char_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus

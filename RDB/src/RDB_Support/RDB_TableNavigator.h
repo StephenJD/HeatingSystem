@@ -1,16 +1,22 @@
 #pragma once
-#include "RDB_Table.h"
 #include "RDB_B.h"
+#include "RDB_AnswerID.h"
+#include "RDB_ChunkHeader.h"
+#include "RDB_Table.h"
 #include "RDB_Answer_Locator.h"
 #include "RDB_Capacities.h"
 #include "..\Sum_Operators\Sum_Operators.h"
-#include <ostream>
-#include <iomanip>
+
+#ifdef ZSIM
+	#include <ostream>
+	#include <iomanip>
+#endif
 
 
 namespace RelationalDatabase {
 	class RDB_B;
-
+	class Answer_Locator;
+#ifdef ZSIM
 	inline std::ostream & operator << (std::ostream & stream, const TB_Status & status) {
 		return stream << " Status: " << std::dec << 
 			(status == TB_OK ? "OK" : 
@@ -19,17 +25,57 @@ namespace RelationalDatabase {
 		    (status == TB_BEFORE_BEGIN ? "before_begin" :
 			(status == TB_INVALID_TABLE ? "invalid_table" : "TB_something else")))));
 	}
+#endif
 
 	using namespace Rel_Ops;
-	//namespace {
-	inline bool isSorted(InsertionStrategy strategy) {
-		return (strategy > i_reverseOrder);
-	}
 
-	inline bool isSmallestFirst(InsertionStrategy strategy) {
-		return (strategy < i_90_randomInsert);
-	}
-	//}
+	/// <summary>
+/// Template class holding a copy record
+/// Provides interface accessing fields
+/// </summary>
+	template <typename Record_T>
+	class Answer_R : public Answer_Locator {
+	public:
+		Answer_R(RecordSelector & rs) : Answer_Locator(rs) {}
+		Answer_R(TableNavigator & tableNaviagator) : Answer_Locator(tableNaviagator) {}
+		Answer_R(Answer_Locator & answerLocator) : Answer_Locator(answerLocator) {}
+		Answer_R() = default;
+
+		Answer_R & operator =(const RecordSelector_T<Record_T> & rs) {
+			Answer_Locator::operator=(rs);
+			return *this;
+		}
+
+		Answer_R & operator =(const RecordSelector & rs) {
+			Answer_Locator::operator=(rs);
+			return *this;
+		}
+
+		// Queries
+		// Modifiers
+		RecordID field(int fieldIndex) { return rec().field(fieldIndex); }
+		Answer_R * operator->() { return this; }
+
+		TB_Status status() {
+			return Answer_Locator::status(&_rec);
+		};
+
+		const Record_T & rec() const { return const_cast<Answer_R *>(this)->rec(); }
+
+		Record_T & rec() {
+			Answer_Locator::rec(&_rec);
+			return _rec;
+		}
+
+		Record_T & get() {
+			return _rec;
+		}
+
+		RecordID update();
+
+	private:
+		Record_T _rec;
+	};
 
 	/// <summary>
 	/// Manages Chunk-Chaining and Record insertion and Retrieval
@@ -37,7 +83,6 @@ namespace RelationalDatabase {
 	class TableNavigator {
 	public:
 		TableNavigator();
-		//TableNavigator(const Table & t);
 		TableNavigator(Table * t);
 		TableNavigator(int id, TB_Status status);
 		
@@ -45,10 +90,10 @@ namespace RelationalDatabase {
 
 		// Queries
 		const AnswerID & answerID() const { return _currRecord; }
-		bool operator==(const TableNavigator & other) const { return _currRecord.id() == other._currRecord.id(); }
-		bool operator<(const TableNavigator & other) const { return _currRecord.id() < other._currRecord.id(); }
-		TB_Status status() const { return _currRecord.status(); }
-		int id() const { return status() == TB_BEFORE_BEGIN ? -1 : _currRecord.id(); }
+		bool operator==(const TableNavigator & other) const /*{ return _currRecord.id() == other._currRecord.id(); }*/;
+		bool operator<(const TableNavigator & other) const /*{ return _currRecord.id() < other._currRecord.id(); }*/;
+		TB_Status status() const /*{ return _currRecord.status(); }*/;
+		int id() const /*{ return status() == TB_BEFORE_BEGIN ? -1 : _currRecord.id(); }*/;
 		
 		// Modifiers
 		template<typename Record_T>
@@ -64,8 +109,8 @@ namespace RelationalDatabase {
 		TableNavigator & operator--() { return (*this) += -1; }
 		TableNavigator & operator+=(int offset);
 		TableNavigator & operator-=(int offset) { return (*this) += -offset; }
-		void setStatus(TB_Status status) { _currRecord.setStatus(status); }
-		void setID(int id) { _currRecord.setID(id); }
+		void setStatus(TB_Status status) /*{ _currRecord.setStatus(status); }*/;
+		void setID(int id) /*{ _currRecord.setID(id); }*/;
 		void setCurrent(AnswerID current) { _currRecord = current; }
 		void next(RecordSelector & recSel, int moveBy);
 
@@ -76,26 +121,26 @@ namespace RelationalDatabase {
 			, void(*swapRecords)(TableNavigator *original, void * recToInsert));
 
 		// Queries
-		DB_Size_t firstRecordInChunk() const { return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }
+		DB_Size_t firstRecordInChunk() const /*{ return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }*/;
 		static int validRecordByteNo(int chunkCapacity) { return chunkCapacity / RDB_B::ValidRecord_t_Capacity; }
 		int noOfvalidRecordBytes() const { return validRecordByteNo(_chunk_header.chunkSize() - 1); }
-		bool tableInvalid() { return _t ? _t->dbInvalid() : true; }
-		RDB_B & db() const {return _t->db();}
-		Record_Size_t recordSize() const { return _t->_rec_size; }
-		NoOf_Recs_t chunkCapacity() const { return _t->maxRecordsInChunk(); }
-		NoOf_Recs_t endStopID() const { return _t->maxRecordsInTable(); }
+		bool tableInvalid() /*{ return _t ? _t->dbInvalid() : true; }*/;
+		RDB_B & db() const /*{return _t->db();}*/;
+		Record_Size_t recordSize() const /*{ return _t->_rec_size; }*/;
+		NoOf_Recs_t chunkCapacity() const /*{ return _t->maxRecordsInChunk(); }*/;
+		NoOf_Recs_t endStopID() const /*{ return _t->maxRecordsInTable(); }*/;
 		NoOf_Recs_t thisVRcapacity() const;
 		bool isStartOfATable() const { return _chunk_header.isFirstChunk(); }
 		bool chunkIsExtended() const { return !_chunk_header.isFinalChunk(); }
 		bool recordIsUsed(ValidRecord_t usedRecords, int vrIndex) const;
 		DB_Size_t recordAddress() const;
-		bool haveMovedToUsedRecord(ValidRecord_t usedRecords, unsigned char vrIndex, int direction);
+		bool haveMovedToUsedRecord(ValidRecord_t usedRecords, uint8_t vrIndex, int direction);
 		bool lastUsedRecord(ValidRecord_t usedRecords, RecordID & usedRecID, RecordID & vr_start) const;
 		bool haveReservedUnusedRecord(ValidRecord_t & usedRecords, RecordID & unusedRecID) const;
 		TB_Size_t getAvailabilityByteAddress() const;
-		TB_Size_t getAvailabilityBytesForThisRecord(ValidRecord_t & usedRecords, unsigned char & vrIndex) const;
+		TB_Size_t getAvailabilityBytesForThisRecord(ValidRecord_t & usedRecords, uint8_t & vrIndex) const;
 		ValidRecord_t getFirstValidRecordByte() const;
-		unsigned char getValidRecordIndex() const;
+		uint8_t getValidRecordIndex() const;
 
 		//Modifiers
 		bool haveMovedToNextChunck();
@@ -122,7 +167,7 @@ namespace RelationalDatabase {
 		AnswerID _currRecord;
 		TableID _chunkAddr = 0;
 		RecordID _chunk_start_recordID = 0;
-		mutable unsigned char _VR_Byte_No = 0;
+		mutable uint8_t _VR_Byte_No = 0;
 	};
 
 	template <typename Record_T>
@@ -154,5 +199,19 @@ namespace RelationalDatabase {
 		}
 		else
 			return insertRecord(newRecord);
+	}
+
+	template <typename Record_T>
+	RecordID Answer_R<Record_T>::update() {
+		if (isSorted(_tb->insertionStrategy())) {
+			deleteRecord();
+			auto tableNav = TableNavigator(_tb);
+			auto insertPos = tableNav.insert(&get());
+			*this = tableNav;
+		}
+		else {
+			Answer_Locator::update(&get());
+		}
+		return id();
 	}
 }

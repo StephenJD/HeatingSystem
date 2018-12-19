@@ -107,7 +107,7 @@ namespace RelationalDatabase {
 
 	int RDB_B::moveRecords(int fromAddress, int toAddress, int noOfBytes) {
 		while (noOfBytes > 0) {
-			unsigned char readValue;
+			uint8_t readValue;
 			_readByte(fromAddress, &readValue, 1);
 			_writeByte(toAddress, &readValue, 1);
 			++fromAddress;
