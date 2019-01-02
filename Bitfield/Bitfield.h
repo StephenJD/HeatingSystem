@@ -4,7 +4,7 @@
 //====================================================================
 #pragma once
 #include <Arduino.h>
-#include <..\Sum_Operators\Sum_Operators.h>
+#include "..\Sum_Operators\Sum_Operators.h"
 //#include <type_traits.h>
 //#include <numeric_limits.h>
 //#ifdef max
@@ -48,7 +48,7 @@ namespace BitFields {
 		//static_assert(is_integral< IntType >::value && is_unsigned< IntType >::value, "IntType must be an unsigned integer type");
 
 	public:
-		constexpr UBitField() = default;
+		/*constexpr*/ UBitField() = default;
 		constexpr UBitField(IntType val) : base((base & ~(mask << start)) | ((val & mask) << start)) {}
 		constexpr UBitField(IntType val, bool zeroed) : base(IntType{0} | ((val & mask) << start)) {}
 

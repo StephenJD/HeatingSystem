@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClockExample", "ClockExample.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Logger", "..\..\..\Logging\examples\Logger\Logger.vcxproj", "{9E9DEACF-9579-4BF7-8D93-DA83F6699066}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestI2C", "..\..\..\I2C_Helper\examples\TestI2C\TestI2C.vcxproj", "{5EAC1B45-E5A9-441C-A24C-893AC2090926}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoSpeed", "..\..\..\I2C_Helper\examples\AutoSpeed\AutoSpeed.vcxproj", "{61608D54-7D6D-4F7B-BD75-A88CBD0783C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.ActiveCfg = Debug|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.Build.0 = Debug|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.ActiveCfg = Release|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.Build.0 = Release|Win32
+		{9E9DEACF-9579-4BF7-8D93-DA83F6699066}.Debug|x86.ActiveCfg = Debug|Win32
+		{9E9DEACF-9579-4BF7-8D93-DA83F6699066}.Debug|x86.Build.0 = Debug|Win32
+		{9E9DEACF-9579-4BF7-8D93-DA83F6699066}.Release|x86.ActiveCfg = Release|Win32
+		{9E9DEACF-9579-4BF7-8D93-DA83F6699066}.Release|x86.Build.0 = Release|Win32
+		{5EAC1B45-E5A9-441C-A24C-893AC2090926}.Debug|x86.ActiveCfg = Debug|Win32
+		{5EAC1B45-E5A9-441C-A24C-893AC2090926}.Debug|x86.Build.0 = Debug|Win32
+		{5EAC1B45-E5A9-441C-A24C-893AC2090926}.Release|x86.ActiveCfg = Release|Win32
+		{5EAC1B45-E5A9-441C-A24C-893AC2090926}.Release|x86.Build.0 = Release|Win32
+		{61608D54-7D6D-4F7B-BD75-A88CBD0783C8}.Debug|x86.ActiveCfg = Debug|Win32
+		{61608D54-7D6D-4F7B-BD75-A88CBD0783C8}.Debug|x86.Build.0 = Debug|Win32
+		{61608D54-7D6D-4F7B-BD75-A88CBD0783C8}.Release|x86.ActiveCfg = Release|Win32
+		{61608D54-7D6D-4F7B-BD75-A88CBD0783C8}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7C99EC2C-DC6C-4C42-8C04-01AD033EA65F}
+	EndGlobalSection
+EndGlobal

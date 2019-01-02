@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
-#include <Sum_Operators.h>
+#include "..\..\Conversions\Conversions.h"
+#include "..\..\Sum_Operators\Sum_Operators.h"
 //====================================================================
 // File:        TimeOnly.h
 // Description: Declaration of TimeOnly class and its literal opeartors

@@ -10,7 +10,7 @@ namespace RelationalDatabase {
 	class AnswerID {
 	public:
 		AnswerID() : _id(0), _status(TB_END_STOP) {}
-		AnswerID(RecordSelector & rs);
+		AnswerID(const RecordSelector & rs);
 		AnswerID(RecordID id, TB_Status status) : _id(id), _status(status) {}
 		// Queries
 		RecordID id() const { return _id; } // faster when it is known to be >=0

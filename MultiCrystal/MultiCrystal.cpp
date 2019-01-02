@@ -4,7 +4,7 @@
 #include <string.h>
 #include "Arduino.h"
 #include <I2C_Helper.h>
-#include <Convertions.h>
+#include <Conversions.h>
 
 #ifdef LOG_TO_SD
 	//static_assert(false,"LOG_TO_SD defined");
@@ -150,7 +150,7 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 		}
 		_key_mask[0] = ~_data[0];
 		_key_mask[1] = ~_data[1];
-		//logToSD("MultiCrystal::init for",_address," _key_mask_16", _key_mask_16);
+		//log("MultiCrystal::init for",_address," _key_mask_16", _key_mask_16);
 	} else {  
 		pinMode(_rs_pin, OUTPUT);
 		// we can save 1 pin by not using RW. Indicate by passing -1 instead of pin#
@@ -309,7 +309,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 /********** Simulator commands, for the user! */
 #if defined (ZPSIM)
 
-void MultiCrystal::print(char oneChar, byte size){ // ignores size
+void MultiCrystal::print(char oneChar, uint8_t size){ // ignores size
 	lcd_Arr[lcdPos] = oneChar;
 	nextCol();
 }
@@ -608,22 +608,22 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	uint8_t readFailed = _i2C->read(_address, INTCAP, 2, _data); // Read INTCAP to get key-pressed and clear for next read
 	if (readFailed) {
 		if (_i2C->getThisI2CFrequency(_address) != 0) {
-			//logToSD("MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C->getI2CFrequency());
+			//log("MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C->getI2CFrequency());
 		}
 		return 0;
 	}
 
 	uint16_t keyPressed = data & _key_mask_16;
-	//logToSD("MultiCrystal::readI2C_keypad() _keyCleared:",_keyCleared, "keyPressed",keyPressed);
+	//log("MultiCrystal::readI2C_keypad() _keyCleared:",_keyCleared, "keyPressed",keyPressed);
 	if (keyPressed == 0) {
 		if (!_keyCleared) _keyCleared = true;
 	} else if (_keyCleared) {
 		_keyCleared = false;
 		if (checkI2C_Failed()) {
 			keyPressed = 0;
-			//logToSD("MultiCrystal::readI2C_keypad() Check failed for:",_address);
+			//log("MultiCrystal::readI2C_keypad() Check failed for:",_address);
 		} else {
-			//logToSD("MultiCrystal::readI2C_keypad() got Key:", keyPressed, " for:",_address);
+			//log("MultiCrystal::readI2C_keypad() got Key:", keyPressed, " for:",_address);
 		}
 	} else keyPressed = 0;
 	return keyPressed;

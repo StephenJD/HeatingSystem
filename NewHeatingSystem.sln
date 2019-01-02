@@ -3,31 +3,31 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Arduino", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\Arduino\Arduino.vcxproj", "{638772E8-0D64-4264-AE4B-AE75E36A1DE9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Arduino", "..\..\VS_Projects\NewHeatingSystem\Arduino\Arduino.vcxproj", "{638772E8-0D64-4264-AE4B-AE75E36A1DE9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client_DataStructures", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\Client_DataStructures\Client_DataStructures.vcxproj", "{ACE0D219-6D9F-47B1-895B-6238345D866C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client_DataStructures", "..\..\VS_Projects\NewHeatingSystem\Client_DataStructures\Client_DataStructures.vcxproj", "{ACE0D219-6D9F-47B1-895B-6238345D866C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Emulator2", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\Emulator2\Emulator2.vcxproj", "{9DAD749E-3BD1-4D6E-9F65-52E66DDF0E82}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Emulator2", "..\..\VS_Projects\NewHeatingSystem\Emulator2\Emulator2.vcxproj", "{9DAD749E-3BD1-4D6E-9F65-52E66DDF0E82}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "General_Purpose_Library", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\General_Purpose_Library\General_Purpose_Library.vcxproj", "{7775C75D-B1E9-4813-90A1-0B5E60A300EC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "General_Purpose_Library", "..\..\VS_Projects\NewHeatingSystem\General_Purpose_Library\General_Purpose_Library.vcxproj", "{7775C75D-B1E9-4813-90A1-0B5E60A300EC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HardwareInterfaces", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\HardwareInterfaces\HardwareInterfaces.vcxproj", "{BAD9A3B2-A0EE-4490-A1F2-D41049683732}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HardwareInterfaces", "..\..\VS_Projects\NewHeatingSystem\HardwareInterfaces\HardwareInterfaces.vcxproj", "{BAD9A3B2-A0EE-4490-A1F2-D41049683732}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HeatingSystemAssembly", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\HeatingSystemAssembly\HeatingSystemAssembly.vcxproj", "{97164891-2135-45B6-8DF9-5119E0910784}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HeatingSystemAssembly", "..\..\VS_Projects\NewHeatingSystem\HeatingSystemAssembly\HeatingSystemAssembly.vcxproj", "{97164891-2135-45B6-8DF9-5119E0910784}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCD_UI", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\LCD_UI\LCD_UI.vcxproj", "{761C4E75-30A3-4E30-BBB3-5BBFE402CAD1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCD_UI", "..\..\VS_Projects\NewHeatingSystem\LCD_UI\LCD_UI.vcxproj", "{761C4E75-30A3-4E30-BBB3-5BBFE402CAD1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RelationalDatabase", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\RelationalDatabase\RelationalDatabase.vcxproj", "{E0568737-FF34-4467-A29C-44FBCCECCC00}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RelationalDatabase", "..\..\VS_Projects\NewHeatingSystem\RelationalDatabase\RelationalDatabase.vcxproj", "{E0568737-FF34-4467-A29C-44FBCCECCC00}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SJD_NewHeatingSystem", "..\..\MyData\Arduino\Sketches\SJD_NewHeatingSystem\SJD_NewHeatingSystem.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SJD_NewHeatingSystem", "..\SJD_NewHeatingSystem\SJD_NewHeatingSystem.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Collections", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\Test Collections\Test Collections.vcxproj", "{9816E000-1E25-42EC-8CB7-871144713A05}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Collections", "..\..\VS_Projects\NewHeatingSystem\Test Collections\Test Collections.vcxproj", "{9816E000-1E25-42EC-8CB7-871144713A05}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test RDB", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\Test RDB\Test RDB.vcxproj", "{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test RDB", "..\..\VS_Projects\NewHeatingSystem\Test RDB\Test RDB.vcxproj", "{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\Test UI Basics\Test UI Basics.vcxproj", "{8981DC8C-78CE-4EE2-A149-7AA870265467}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics", "..\..\VS_Projects\NewHeatingSystem\Test UI Basics\Test UI Basics.vcxproj", "{8981DC8C-78CE-4EE2-A149-7AA870265467}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics with DB", "..\..\Visual Studio 2017\Projects\NewHeatingSystem\Test UI Basics with DB\Test UI Basics with DB.vcxproj", "{5767823B-227A-4F07-8A36-2C6AF30B862E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics with DB", "..\..\VS_Projects\NewHeatingSystem\Test UI Basics with DB\Test UI Basics with DB.vcxproj", "{5767823B-227A-4F07-8A36-2C6AF30B862E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

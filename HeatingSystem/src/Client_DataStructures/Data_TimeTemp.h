@@ -1,11 +1,11 @@
 #pragma once
-#include <RDB.h>
+#include "..\..\..\RDB\src\RDB.h"
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
-#include "Time_Only.h"
+#include "..\..\..\DateTime\src\Time_Only.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -18,14 +18,14 @@ namespace client_data_structures {
 
 	struct R_TimeTemp {
 		// Each Profile has one or more TimeTemps defining the temperature for times throughout a day
-		RecordID profileID = 0;
+		RecordID profileID;
 		uint16_t time_temp;
 		RecordID field(int fieldIndex) const { return profileID; }
 		bool operator < (R_TimeTemp rhs) const { return time_temp < rhs.time_temp; }
 		bool operator == (R_TimeTemp rhs) const { return time_temp == rhs.time_temp; }
 	};
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_TimeTemp & timeTemp) {
 		using namespace Date_Time;
 

@@ -1,7 +1,8 @@
 #include "UI_Collection.h"
 #include "UI_LazyCollection.h"
+#include "UI_Cmd.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 	#include <iomanip>
 #endif
@@ -57,6 +58,8 @@ namespace LCD_UI {
 	///////////////////////////////////////////
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection) : Collection_Hndl(safeCollection, safeCollection.focusIndex()) {}
 	Collection_Hndl::Collection_Hndl(const UI_Object & object) : Object_Hndl(object) {}
+	Collection_Hndl::Collection_Hndl(const UI_Cmd & object) : Object_Hndl(object.get()) {}
+
 	Collection_Hndl::Collection_Hndl(const UI_Object * object) : Object_Hndl(object) {}
 
 	Collection_Hndl::Collection_Hndl(const UI_ShortCollection & shortList_Hndl, int default_focus)
@@ -131,14 +134,14 @@ namespace LCD_UI {
 			//************* Lambdas evaluating algorithm *********************//
 			////////////////////////////////////////////////////////////////////
 			const bool wantToCheckCurrentPosIsOK = { nth == 0 };
-			auto wantToMoveForward = [](auto nth) {return nth > 0; };
-			auto wantToMoveBackwards = [](auto nth) {return nth < 0; };
-			auto firstValidIndexLookingForwards = [this](auto index) {return get()->collection()->nextActionableIndex(index); };
-			auto firstValidIndexLookingBackwards = [this](auto index) {return get()->collection()->prevActionableIndex(index); };
-			auto needToRecycle = [this](auto index) {return atEnd(index) && behaviour().is_recycle_on_next(); };
-			auto tryMovingForwardByOne = [this](auto index) {++index; return index; };
-			auto tryMovingBackwardByOne = [this](auto index) {if (index > -1) { --index; } return index; };
-			auto weHaveMoved = [startFocus](auto index) {return startFocus != index; };
+			auto wantToMoveForward = [](int nth) {return nth > 0; };
+			auto wantToMoveBackwards = [](int nth) {return nth < 0; };
+			auto firstValidIndexLookingForwards = [this](int index) {return get()->collection()->nextActionableIndex(index); };
+			auto firstValidIndexLookingBackwards = [this](int index) {return get()->collection()->prevActionableIndex(index); };
+			auto needToRecycle = [this](int index) {return atEnd(index) && behaviour().is_recycle_on_next(); };
+			auto tryMovingForwardByOne = [this](int index) {++index; return index; };
+			auto tryMovingBackwardByOne = [this](int index) {if (index > -1) { --index; } return index; };
+			auto weHaveMoved = [startFocus](int index) {return startFocus != index; };
 			const auto weCouldNotMove = startFocus;
 			////////////////////////////////////////////////////////////////////
 			//************************  Algorithm ****************************//
@@ -274,8 +277,8 @@ namespace LCD_UI {
 	int I_SafeCollection::prevActionableIndex(int index) const { // index must in valid range including endIndex()
 		// Returns -1 of not found
 		// Lambdas
-		auto tryAnotherMatch = [index, this](auto index, auto match) {return !(objectIndex() <= index && match) && objectIndex() >= 0; };
-		auto leastOf = [](auto index, auto objectIndex) { return index < objectIndex ? index : objectIndex; };
+		auto tryAnotherMatch = [index, this](int index, bool match) {return !(objectIndex() <= index && match) && objectIndex() >= 0; };
+		auto leastOf = [](int index, int objectIndex) { return index < objectIndex ? index : objectIndex; };
 		// Algorithm
 		setObjectIndex(index);
 		auto match = isActionableObjectAt(index);
@@ -332,7 +335,7 @@ namespace LCD_UI {
 		, _endPos(endPos)
 		, _endShow(endIndex())
 	{
-#ifdef ZSIM
+#ifdef ZPSIM
 		std::cout << "Sort_Coll at: " << (long long)this << " with collHdl at " << (long long)&_nestedCollection << " to: " << (long long)collection() << std::endl;
 #endif
 	}

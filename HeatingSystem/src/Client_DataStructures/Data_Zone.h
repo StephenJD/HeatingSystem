@@ -2,10 +2,10 @@
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
-#include <RDB.h>
-#include <Date_Time.h>
+#include "..\..\..\RDB\src\RDB.h"
+#include "..\..\..\DateTime\src\Date_Time.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -115,7 +115,7 @@ namespace client_data_structures {
 		bool operator == (R_Zone rhs) const { return true; }
 	};
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Zone & zone) {
 		return stream << "Zone: " << zone.name;
 	}
@@ -131,7 +131,7 @@ namespace client_data_structures {
 		bool operator == (R_DwellingZone rhs) const { return true; }
 	};
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_DwellingZone & dwellingZone) {
 		return stream << "DwellingZone DwID: " << std::dec << (int)dwellingZone.dwellingID << " ZnID: " << (int)dwellingZone.zoneID;
 	}

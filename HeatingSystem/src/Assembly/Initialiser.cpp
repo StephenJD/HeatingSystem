@@ -20,6 +20,7 @@ namespace Assembly {
 		_iniFunctor(*this),
 		_testDevices(*this)
 	{
+		logger().log("Initialiser Started...");
 		HardwareInterfaces::tempSensors = _hs.tempSensorArr;
 		HardwareInterfaces::relays = _hs.relayArr;
 		Relay::_relayRegister = &_hs.relaysPort._relayRegister;
@@ -31,7 +32,7 @@ namespace Assembly {
 		//_testDevices.speedTestDevices();
 		//_testDevices.testRelays();
 		postI2CResetInitialisation();
-		Serial.println("Initialiser Constructed");
+		logger().log("Initialiser Constructed");
 	}
 
 	void Initialiser::loadRelays() {
@@ -41,17 +42,17 @@ namespace Assembly {
 			relays[i].setPort(thisRelay->rec().port);
 			++i;
 		}
-		//Serial.println("loadRelays Completed");
+		logger().log("loadRelays Completed");
 	}
 
 	void Initialiser::loadtempSensors() {
-		auto q_tempSensors = TableQuery(_hs.db.table(TB_TempSensor));
+		auto q_tempSensors = TableQuery(_hs.db.tableQuery(TB_TempSensor));
 		int i = 0;
 		for (Answer_R<R_TempSensor>thisTempSensor : q_tempSensors) {
 			tempSensors[i].setAddress(thisTempSensor->rec().address);
 			++i;
 		}
-		//Serial.println("loadtempSensors Completed");
+		logger().log("loadtempSensors Completed");
 	}
 
 	void Initialiser::iniI2C() {
@@ -66,7 +67,7 @@ namespace Assembly {
 
 	uint8_t Initialiser::initialiseTempSensors() {
 		// Set room-sensors to high-res
-		Serial.println("Set room-sensors to high-res");
+		logger().log("Set room-sensors to high-res");
 		return	_hs.tempSensorArr[T_DR].setHighRes()
 			| _hs.tempSensorArr[T_FR].setHighRes()
 			| _hs.tempSensorArr[T_UR].setHighRes();
@@ -77,7 +78,7 @@ namespace Assembly {
 		for (auto & rd : _hs.remDispl) {
 			failed |= rd.initialiseDevice();
 		}
-		Serial.println("initialiseRemoteDisplays() done");
+		logger().log("initialiseRemoteDisplays() done");
 		return failed;
 	}
 

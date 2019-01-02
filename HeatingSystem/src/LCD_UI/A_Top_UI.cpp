@@ -1,6 +1,6 @@
 #include "A_Top_UI.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <iostream>
 	#include <iomanip>
 #endif
@@ -17,7 +17,7 @@ namespace LCD_UI {
 		setBackUI(this);
 		set_CursorUI_from(this);
 		notifyAllOfFocusChange(this);
-#ifdef ZSIM
+#ifdef ZPSIM
 		cout << "A_Top_UI is a Collection_Hndl at Addr:" << hex << long long(this) << " pointing at : " << (long long)get() << endl;
 #endif
 	}

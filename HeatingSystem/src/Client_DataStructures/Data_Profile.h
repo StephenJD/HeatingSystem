@@ -1,10 +1,10 @@
 #pragma once
-#include <RDB.h>
+#include "..\..\..\RDB\src\RDB.h"
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -22,7 +22,7 @@ namespace client_data_structures {
 		bool operator == (R_Profile rhs) const { return days == rhs.days; }
 	};
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Profile & profile) {
 		return stream << "Profile for ProgID: " << std::dec << (int)profile.programID << " ZoneID: " << (int)profile.zoneID << " Days: " << (int)profile.days;
 	}

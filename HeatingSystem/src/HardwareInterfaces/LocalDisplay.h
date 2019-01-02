@@ -1,5 +1,5 @@
 #pragma once
-#include <MultiCrystal.h>
+#include "..\..\..\MultiCrystal\MultiCrystal.h"
 #include "DisplayBuffer.h"
 
 namespace HardwareInterfaces {

@@ -9,7 +9,7 @@ namespace RelationalDatabase {
 	// *************************** Answer_Locator *************************************//
 	////////////////////////////////////////////////////////////////////////////
 
-	Answer_Locator::Answer_Locator(TableNavigator & tableNav)
+	Answer_Locator::Answer_Locator(const TableNavigator & tableNav)
 		: AnswerID(tableNav.answerID()),
 		_lastRead(0),
 		_tb(&tableNav.table())
@@ -21,7 +21,7 @@ namespace RelationalDatabase {
 		}
 	}
 
-	Answer_Locator::Answer_Locator(RecordSelector & rs)
+	Answer_Locator::Answer_Locator(const RecordSelector & rs)
 		: AnswerID(rs),
 		_lastRead(0),
 		_tb(rs.status() == TB_INVALID_TABLE ? 0 : &rs.tableNavigator().table())

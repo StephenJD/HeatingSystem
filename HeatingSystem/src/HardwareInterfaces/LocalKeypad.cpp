@@ -1,4 +1,5 @@
 #include "LocalKeypad.h"
+#include "Logging.h"
 
 namespace HardwareInterfaces {
 	LocalKeypad * localKeypad;
@@ -7,7 +8,7 @@ namespace HardwareInterfaces {
 	LocalKeypad::LocalKeypad() { //Display_Stream & displ) : Keypad(displ) 
 		digitalWrite(LOCAL_INT_PIN, HIGH); // turn ON pull-up 
 		attachInterrupt(digitalPinToInterrupt(LOCAL_INT_PIN), localKeyboardInterrupt, FALLING); // attachInterrupt(KEYINT, localKeyboardInterrupt, CHANGE);
-		//logToSD("LocalKey Done");
+		logger().log("LocalKeypad Constructed");
 	}
 
 #if defined (ZPSIM)

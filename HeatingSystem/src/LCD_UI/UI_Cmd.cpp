@@ -1,7 +1,7 @@
 #include "UI_Cmd.h"
-#include "Convertions.h"
+#include "Conversions.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <iostream>
 #endif
 
@@ -11,7 +11,7 @@ namespace LCD_UI {
 	// ********************* Concrete UI_Cmd *******************
 	UI_Cmd::UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour)
 		: Collection_Hndl(this), Custom_Select(onSelect, behaviour), text(label_text) {
-#ifdef ZSIM
+#ifdef ZPSIM
 		cout << "UI_Cmd " << label_text << " Addr:" << hex << long long(this) << endl;
 		//cout << " behaviour: " << dec << _behaviour << endl;
 #endif
@@ -39,7 +39,7 @@ namespace LCD_UI {
 
 	UI_Label::UI_Label(const char * label_text, Behaviour behaviour)
 		: text(label_text), _behaviour(behaviour) {
-#ifdef ZSIM
+#ifdef ZPSIM
 		cout << "UI_Label " << label_text << " Addr:" << hex << long long(this) << endl;
 #endif
 	}

@@ -5,9 +5,9 @@
 #include "RDB_Table.h"
 #include "RDB_Answer_Locator.h"
 #include "RDB_Capacities.h"
-#include "..\Sum_Operators\Sum_Operators.h"
+#include "..\..\..\Sum_Operators\Sum_Operators.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 	#include <iomanip>
 #endif
@@ -16,7 +16,7 @@
 namespace RelationalDatabase {
 	class RDB_B;
 	class Answer_Locator;
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const TB_Status & status) {
 		return stream << " Status: " << std::dec << 
 			(status == TB_OK ? "OK" : 
@@ -36,9 +36,9 @@ namespace RelationalDatabase {
 	template <typename Record_T>
 	class Answer_R : public Answer_Locator {
 	public:
-		Answer_R(RecordSelector & rs) : Answer_Locator(rs) {}
-		Answer_R(TableNavigator & tableNaviagator) : Answer_Locator(tableNaviagator) {}
-		Answer_R(Answer_Locator & answerLocator) : Answer_Locator(answerLocator) {}
+		Answer_R(const RecordSelector & rs) : Answer_Locator(rs) {}
+		Answer_R(const TableNavigator & tableNaviagator) : Answer_Locator(tableNaviagator) {}
+		Answer_R(const Answer_Locator & answerLocator) : Answer_Locator(answerLocator) {}
 		Answer_R() = default;
 
 		Answer_R & operator =(const RecordSelector_T<Record_T> & rs) {
@@ -48,6 +48,16 @@ namespace RelationalDatabase {
 
 		Answer_R & operator =(const RecordSelector & rs) {
 			Answer_Locator::operator=(rs);
+			return *this;
+		}
+
+		Answer_R & operator =(const Answer_Locator & answerLocator) {
+			Answer_Locator::operator=(answerLocator);
+			return *this;
+		}
+
+		Answer_R & operator =(const TableNavigator & tableNaviagator) {
+			Answer_Locator::operator=(tableNaviagator);
 			return *this;
 		}
 
@@ -78,6 +88,7 @@ namespace RelationalDatabase {
 	};
 
 	/// <summary>
+	/// Knows how to locate a record and how to move to the next/prev record.
 	/// Manages Chunk-Chaining and Record insertion and Retrieval
 	/// </summary>
 	class TableNavigator {
@@ -86,21 +97,20 @@ namespace RelationalDatabase {
 		TableNavigator(Table * t);
 		TableNavigator(int id, TB_Status status);
 		
-		const Table & table() const { return *_t; }
-
 		// Queries
 		const AnswerID & answerID() const { return _currRecord; }
 		bool operator==(const TableNavigator & other) const /*{ return _currRecord.id() == other._currRecord.id(); }*/;
 		bool operator<(const TableNavigator & other) const /*{ return _currRecord.id() < other._currRecord.id(); }*/;
 		TB_Status status() const /*{ return _currRecord.status(); }*/;
 		int id() const /*{ return status() == TB_BEFORE_BEGIN ? -1 : _currRecord.id(); }*/;
+		Table & table() const { return *_t; }
 		
 		// Modifiers
 		template<typename Record_T>
 		RecordID insert(const Record_T * newRecord);
 
 		RecordID insertRecord(const void * record);
-		Table & table() { return *_t; }
+		//Table & table() { return *_t; }
 		bool moveToFirstRecord();
 		void moveToLastRecord();
 		void moveToThisRecord(int recordID);

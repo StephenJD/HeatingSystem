@@ -1,7 +1,7 @@
 #pragma once
 //#include "RDB_B.h"
 #include "RDB_Capacities.h"
-#include <..\Bitfield\Bitfield.h>
+#include "..\..\..\Bitfield\Bitfield.h"
 
 namespace RelationalDatabase {
 	using namespace BitFields;

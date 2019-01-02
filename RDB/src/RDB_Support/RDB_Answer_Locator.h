@@ -16,8 +16,8 @@ namespace RelationalDatabase {
 	public:
 		using AnswerID::status;
 		Answer_Locator() = default;
-		Answer_Locator(TableNavigator & rs);
-		Answer_Locator(RecordSelector & rs);
+		Answer_Locator(const TableNavigator & rs);
+		Answer_Locator(const RecordSelector & rs);
 		Answer_Locator(const Answer_Locator & al);
 		void deleteRecord();
 		Answer_Locator & operator = (const TableNavigator & rs);

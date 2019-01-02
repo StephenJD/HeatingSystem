@@ -58,7 +58,7 @@ namespace RelationalDatabase {
 		}
 
 		Table createTable(size_t recsize, int initialNoOfRecords, InsertionStrategy strategy);
-		TableNavigator extendTable(TableNavigator & rec_sel);
+		bool extendTable(TableNavigator & rec_sel);
 	private:
 		friend class Answer_Locator;
 		friend class TableNavigator;

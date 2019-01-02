@@ -15,7 +15,7 @@ namespace RelationalDatabase {
 
 	TableNavigator::TableNavigator(Table * t) :
 		 _t(t)
-		, _currRecord { -1, TB_BEFORE_BEGIN }
+		, _currRecord {RecordID(-1), TB_BEFORE_BEGIN }
 
 	{ 
 		if (t) {
@@ -55,8 +55,7 @@ namespace RelationalDatabase {
 		} else targetRecordID = unusedRecordID;
 		_currRecord.setID(unusedRecordID);
 		if (_currRecord.id() >= _t->_max_NoOfRecords_in_table) {
-			TableNavigator rec_sel = _t->_db->extendTable(*this);
-			if (rec_sel._chunkAddr != 0) {
+			if (_t->_db->extendTable(*this)) {
 				haveMovedToNextChunck();
 			}
 			else {
@@ -72,7 +71,7 @@ namespace RelationalDatabase {
 
 	void TableNavigator::shuffleRecordsBack(RecordID start, RecordID end) {
 		// lambda
-		auto inThisVRbyte = [this](auto currVRbyte_addr) -> bool {
+		auto inThisVRbyte = [this](TB_Size_t currVRbyte_addr) -> bool {
 			return getAvailabilityByteAddress() == currVRbyte_addr;
 		};
 		--end;

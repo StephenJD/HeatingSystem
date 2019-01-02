@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "UI_Collection.h"
-#include "Convertions.h" // for client use of formatting enum
+#include "..\..\..\Conversions\Conversions.h" // for client use of formatting enum
 
 namespace LCD_UI {
 	using namespace GP_LIB; // for client use of formatting enum

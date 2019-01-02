@@ -26,7 +26,6 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	const short EEPROMsize = 4096;
 #define VERSION  "07.6" // max size 6 characters. #defined to allow concatenation of adjacent literals
 #define VERSION_SIZE 6
 	////////////////// EVENT CODES ////////////////////////

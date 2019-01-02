@@ -1,4 +1,5 @@
 #include "LocalDisplay.h"
+#include "Logging.h"
 
 namespace HardwareInterfaces {
 
@@ -7,7 +8,7 @@ namespace HardwareInterfaces {
 		_lcd.begin(20, 4);
 		_lcd.clear();
 		print("Heating Controller");
-		Serial.println("LocalDisplay Constructed");
+		logger().log("LocalDisplay Constructed");
 	}
 
 	void LocalDisplay::sendToDisplay() {

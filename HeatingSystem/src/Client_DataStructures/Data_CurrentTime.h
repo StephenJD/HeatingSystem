@@ -2,8 +2,8 @@
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
-#include <RDB.h>
-#include <Date_Time.h>
+#include "..\..\..\RDB\src\RDB.h"
+#include "..\..\..\DateTime\src\Date_Time.h"
 
 namespace client_data_structures {
 	using namespace Date_Time;

@@ -1,9 +1,9 @@
 #include "UI_Primitives.h"
-#include "Convertions.h"
+#include "Conversions.h"
 #include "UI_FieldData.h"
 #include "I_Record_Interface.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <iostream>
 	using namespace std;
 #endif
@@ -45,14 +45,14 @@ namespace LCD_UI {
 	int Edit_Int_h::cursorFromFocus(int focus) { // focus passed through but not used. Sets CursorPos
 		auto & original = _currValue.valRange;
 		// Lambdas
-		auto focusIsAfterDP = [original](auto focus, auto spaceForDigits)->int {
+		auto focusIsAfterDP = [original](int focus, int spaceForDigits)->int {
 			if (original.formatIs(e_editAll)) {
 				if (spaceForDigits - focus <= original.noOfDecPlaces) return 1;
 			} else if (original.noOfDecPlaces > 0) return 1;
 			return 0;
 		};
 
-		auto spaceForSign = [original](auto val) -> int {
+		auto spaceForSign = [original](int val) -> int {
 			if (original.formatIs(e_showSign) || val < 0) return 1; else return 0;
 		};
 
@@ -138,7 +138,7 @@ namespace LCD_UI {
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	Edit_Char_h::Edit_Char_h() : I_Edit_Hndl(&editChar) {
-#ifdef ZSIM
+#ifdef ZPSIM
 		std::cout << "** Edit_Char_h Addr:" << std::hex << long long(this) << std::endl;
 		std::cout << "** editChar Addr:" << std::hex << long long(&editChar) << std::endl;
 #endif

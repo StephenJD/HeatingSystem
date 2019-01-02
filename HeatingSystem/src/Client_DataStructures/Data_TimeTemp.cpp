@@ -1,7 +1,7 @@
 #include "Data_TimeTemp.h"
-#include "Time_Only.h"
+#include "..\..\..\DateTime\src\Time_Only.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -130,7 +130,7 @@ namespace client_data_structures {
 	}
 
 	void Dataset_TimeTemp::insertNewData() {
-		auto newTT = R_TimeTemp{ record().rec() };
+		auto newTT = record().rec();
 		record() = query().insert(&newTT);
 		setRecordID(record().id());
 	}

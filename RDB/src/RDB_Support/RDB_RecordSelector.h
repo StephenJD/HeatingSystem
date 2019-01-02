@@ -2,7 +2,7 @@
 #include "RDB_TableNavigator.h"
 #include "RDB_AnswerID.h"
 #include "RDB_Capacities.h"
-#include "..\Sum_Operators\Sum_Operators.h"
+#include "..\..\..\Sum_Operators\Sum_Operators.h"
 
 namespace RelationalDatabase {
 	using namespace Rel_Ops;

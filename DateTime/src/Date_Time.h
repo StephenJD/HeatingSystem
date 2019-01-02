@@ -6,7 +6,7 @@
 #pragma once
 #include "Date_Only.h"
 #include "Time_Only.h"
-#include <Sum_Operators.h>
+#include "..\..\Sum_Operators\Sum_Operators.h"
 #include <Arduino.h>
 
 namespace Date_Time {
@@ -23,21 +23,21 @@ namespace Date_Time {
 	{
 	public:
 		// Constructors
-		constexpr DateTime() = default;
+		/*constexpr*/ DateTime() = default;
 		explicit constexpr DateTime(const DateOnly & rhs) : TimeOnly(0),DateOnly(rhs) {}
 		explicit constexpr DateTime(const TimeOnly & rhs) : TimeOnly(rhs),DateOnly(0) {}
 		explicit constexpr DateTime(uint32_t dateTime) : TimeOnly(dateTime % 256), DateOnly(dateTime >> 8) {}
 		constexpr DateTime(DateOnly date, TimeOnly time) : TimeOnly{ time }, DateOnly{ date } {}
 
 		// Queries
-		explicit constexpr operator bool() const { return TimeOnly::operator bool() | DateOnly::operator bool(); }
-		constexpr uint32_t asInt() const { return (uint32_t(DateOnly::asInt()) << 8) | TimeOnly::asInt(); };
-		constexpr DateOnly date() const { return *this; }
-		constexpr TimeOnly time() const { return *this;}
+		explicit /*constexpr*/ operator bool() const { return TimeOnly::operator bool() | DateOnly::operator bool(); }
+		/*constexpr*/ uint32_t asInt() const { return (uint32_t(DateOnly::asInt()) << 8) | TimeOnly::asInt(); };
+		/*constexpr*/ DateOnly date() const { return *this; }
+		/*constexpr*/ TimeOnly time() const { return *this;}
 
-		constexpr bool operator==(const DateTime & rhs) const { return asInt() == rhs.asInt(); }
-		constexpr bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
-		constexpr bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
+		/*constexpr*/ bool operator==(const DateTime & rhs) const { return asInt() == rhs.asInt(); }
+		/*constexpr*/ bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
+		/*constexpr*/ bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
 		//DateTime operator~ () const {return ~this->asInt();}
 		// obtain other boolean operators via Rel_Ops
 

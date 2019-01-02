@@ -1,6 +1,6 @@
 #include "Data_Spell.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <iostream>
 	using namespace std;
 #endif
@@ -60,7 +60,7 @@ namespace client_data_structures {
 	}
 
 	void Dataset_Spell::insertNewData() {
-		auto newSpell = R_Spell{ record().rec() };
+		auto newSpell = record().rec();
 		query().insert(&newSpell);
 	}
 }

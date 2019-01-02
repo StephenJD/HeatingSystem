@@ -1,7 +1,7 @@
 #include "I_Record_Interface.h"
 #include <RDB.h>
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 

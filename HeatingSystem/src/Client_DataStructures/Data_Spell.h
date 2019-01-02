@@ -1,10 +1,10 @@
 #pragma once
 #include "..\LCD_UI\I_Record_Interface.h"
-#include <RDB.h>
-#include <Date_Time.h>
+#include "..\..\..\RDB\src\RDB.h"
+#include "..\..\..\DateTime\src\Date_Time.h"
 #include "DateTimeWrapper.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -19,13 +19,13 @@ namespace client_data_structures {
 		// Spells can be filtered for a Dwelling via their Program
 		// When a new Spell is created, it is offered only those for a particular Dwelling 
 		Date_Time::DateTime date;
-		RecordID programID = 0;
+		RecordID programID;
 		RecordID field(int fieldIndex) const { return programID; }
 		bool operator < (R_Spell rhs) const { return date < rhs.date ; }
 		bool operator == (R_Spell rhs) const { return date == rhs.date; }
 	};
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Spell & spell) {
 		return stream << "Spell Date: " << std::dec << spell.date.day() << "/" << spell.date.getMonthStr() << "/" << spell.date.year() << " with ProgID: " << (int)spell.programID;
 	}

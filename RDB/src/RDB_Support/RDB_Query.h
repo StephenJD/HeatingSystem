@@ -3,7 +3,7 @@
 #include "RDB_TableNavigator.h"
 #include "RDB_Answer_Locator.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -92,13 +92,13 @@ namespace RelationalDatabase {
 	public:
 		TableQuery() = default;
 		TableQuery(Table & table) : _table(&table) {
-#ifdef ZSIM
+#ifdef ZPSIM
 			std::cout << " TableQuery at: " << std::hex << (long long)this << " TableID : " << std::dec << (int)_table->tableID() << std::endl;
 #endif
 		}
 
 		TableQuery(const TableQuery & tableQ) : _table(tableQ._table) {
-#ifdef ZSIM
+#ifdef ZPSIM
 			std::cout << " Copy TableQuery at: " << std::hex << (long long)this << " TableID : " << std::dec << (int)_table->tableID() << std::endl;
 #endif
 		}
@@ -142,7 +142,7 @@ namespace RelationalDatabase {
 	public:
 		CustomQuery(Query & source) : _incrementQ(&source) {}
 		CustomQuery(const TableQuery & tableQ) : _incrementQ(&_tableQ), _tableQ(tableQ) {
-#ifdef ZSIM
+#ifdef ZPSIM
 			std::cout << " Custom Query at : " << std::hex << (long long)this << "\n";
 			std::cout << "    Nested Table Query at : " << std::hex << (long long)&_tableQ << "\n";
 #endif
@@ -180,7 +180,7 @@ namespace RelationalDatabase {
 	public:
 		QueryF_T(Query & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {}
 		QueryF_T(const TableQuery & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {
-#ifdef ZSIM
+#ifdef ZPSIM
 			std::cout << " Filter Query at : " << std::hex << (long long)this << "\n";
 #endif
 		}
@@ -230,7 +230,7 @@ namespace RelationalDatabase {
 			int filter_f,
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
-#ifdef ZSIM
+#ifdef ZPSIM
 			std::cout << " Link Query and results at : " << std::hex <<(long long)this << "\n";
 			std::cout << "    nested Filter Query at : " << std::hex <<(long long)&_linkQ << "\n";
 #endif
@@ -242,7 +242,7 @@ namespace RelationalDatabase {
 			int filter_f,
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
-#ifdef ZSIM
+#ifdef ZPSIM
 			std::cout << " Link Query and results at : " << std::hex << (long long)this << "\n";
 			std::cout << "    nested Filter Query at : " << std::hex << (long long)&_linkQ << "\n";
 #endif

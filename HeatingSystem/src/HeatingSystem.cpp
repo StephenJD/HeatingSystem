@@ -4,7 +4,8 @@
 #include "HardwareInterfaces\A__Constants.h"
 #include "HardwareInterfaces\Logging.h"
 #include "LCD_UI\A_Top_UI.h"
-#include "EEPROM.h"
+#include <EEPROM.h>
+//#include "..\..\EEPROM_Due\EEPROM_Due.h"
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
@@ -37,7 +38,7 @@ using namespace	Assembly;
 
 HeatingSystem::HeatingSystem() 
 	: 
-	db(RDB_START_ADDR, 4096, writer, reader)
+	db(RDB_START_ADDR, EEPROM_SIZE, writer, reader)
 	,mixValveController(MIX_VALVE_I2C_ADDR)
 	,remDispl{ { i2C ,US_REMOTE_ADDRESS },{i2C ,FL_REMOTE_ADDRESS },{i2C ,DS_REMOTE_ADDRESS } }
 	,_initialiser(*this)

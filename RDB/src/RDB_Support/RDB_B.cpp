@@ -69,8 +69,9 @@ namespace RelationalDatabase {
 		return -1 << noOfRecords;
 	}
 
-	TableNavigator RDB_B::extendTable(TableNavigator & rec_sel) {
-		TableNavigator newChunk = &createTable(rec_sel.recordSize(), rec_sel.chunkCapacity(), i_retainOrder);
+	bool RDB_B::extendTable(TableNavigator & rec_sel) {
+		auto extension = createTable(rec_sel.recordSize(), rec_sel.chunkCapacity(), i_retainOrder);
+		TableNavigator newChunk = &extension;
 		if (newChunk._chunkAddr != 0) {
 			// We only extend if we are trying to insert a record, so set first record-bit as used.
 			newChunk._t = rec_sel._t;
@@ -81,8 +82,9 @@ namespace RelationalDatabase {
 			newChunk.saveHeader();
 			rec_sel._t->_max_NoOfRecords_in_table += rec_sel.chunkCapacity();
 			rec_sel.extendChunkTo(newChunk._chunkAddr);
+			return true;
 		}
-		return newChunk;
+		return false;
 	}
 
 	Table  RDB_B::getTable(int tablePosition) {

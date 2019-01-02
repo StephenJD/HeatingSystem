@@ -10,7 +10,7 @@ I2C_Helper.h
 
 /**
 Using this library requires a modified wire.cpp (Sam) or twi.c (AVR)
-found in C:\Users\[UserName]\AppData\Roaming [ or Local] \Arduino15\packages\arduino\hardware\sam\1.6.4\libraries\Wire
+found in C:\Users\[UserName]\AppData\Roaming [ or Local] \Arduino15\packages\arduino\hardware\sam\1.6.4\libraries\Wire\src
 or C:\Program Files (x86)\Arduino1.5\hardware\arduino\avr\libraries\Wire\
 Small mods required so that in the event of a time-out Wire.endTransmission() returns error 1
 and requestFrom() returns 0.
@@ -24,6 +24,11 @@ It should make a call to I2C_Helper.timeout_reset().
 	#define VARIANT_MCK F_CPU
 #endif
 
+// The DEFAULT page size for I2C EEPROM.
+// I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
+// 24LC256 -> 64 bytes
+#define I2C_EEPROM_PAGESIZE 32
+
 class I2C_Helper {
 public:
 	class I_I2Cdevice {
@@ -32,13 +37,11 @@ public:
 		I_I2Cdevice(uint8_t addr) : _address(addr) {}
 		I_I2Cdevice(I2C_Helper & i2C, uint8_t addr) : _address(addr) {_i2C = &i2C;}
 		virtual uint8_t initialiseDevice() { return 0; }
-		/// <summary>
-		/// Function Operator performs device test
-		/// </summary>	
 		virtual uint8_t testDevice(I2C_Helper & i2c, int addr) = 0;
 		uint8_t getAddress() const { return _address; }
 		void setAddress(uint8_t addr) { _address = addr; }
 
+		static I2C_Helper & i2c_helper() { return *_i2C; }
 		static void setI2Chelper(I2C_Helper & i2C) { _i2C = &i2C; }
 	protected:
 		static I2C_Helper * _i2C;
@@ -58,27 +61,31 @@ public:
 
 	I2C_Helper(TwoWire &wire_port = Wire, int32_t i2cFreq = 100000);
 	
-	uint8_t read(uint8_t deviceAddr, uint8_t registerAddress, uint8_t numberBytes, uint8_t *dataBuffer); // Return errCode. dataBuffer may not be written to if read fails.
-	uint8_t read(uint8_t deviceAddr, uint8_t registerAddress, uint8_t numberBytes, char *dataBuffer) {return read(deviceAddr, registerAddress, numberBytes, (uint8_t *) dataBuffer);}
-	uint8_t readEP(uint8_t deviceAddr, int pageAddress, uint8_t numberBytes, uint8_t *dataBuffer); // Return errCode. dataBuffer may not be written to if read fails.
-	uint8_t write(const uint8_t *dataBuffer, uint8_t numberBytes); // Called by slave in response to request from a Master. Return errCode.
+	uint8_t read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer); // Return errCode. dataBuffer may not be written to if read fails.
+	uint8_t read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, char *dataBuffer) {return read(deviceAddr, registerAddress, numberBytes, (uint8_t *) dataBuffer);}
+	uint8_t readEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, uint8_t *dataBuffer); // Return errCode. dataBuffer may not be written to if read fails.
+	uint8_t readEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, char *dataBuffer) { return readEP(deviceAddr, pageAddress, numberBytes, (uint8_t *)dataBuffer); }
+	uint8_t write(const uint8_t *dataBuffer, uint16_t numberBytes); // Called by slave in response to request from a Master. Return errCode.
 	uint8_t write(const char *dataBuffer) {return write((const uint8_t*)dataBuffer, (uint8_t)strlen(dataBuffer)+1);}// Called by slave in response to request from a Master. Return errCode.
-	uint8_t write(uint8_t deviceAddr, uint8_t registerAddress, uint8_t numberBytes, const uint8_t *dataBuffer); // Return errCode.
-	uint8_t write(uint8_t deviceAddr, uint8_t registerAddress, uint8_t data); // Return errCode.
-	uint8_t writeEP(uint8_t deviceAddr, int pageAddress, uint8_t data); // Return errCode.
+	uint8_t write(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer); // Return errCode.
+	uint8_t write(uint16_t deviceAddr, uint8_t registerAddress, uint8_t data); // Return errCode.
+	uint8_t write_verify(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer); // Return errCode.
+	uint8_t writeEP(uint16_t deviceAddr, int pageAddress, uint8_t data); // Return errCode. Writes 32-byte pages. #define I2C_EEPROM_PAGESIZE
+	uint8_t writeEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, const uint8_t *dataBuffer); // Return errCode.
+	uint8_t writeEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, char *dataBuffer) {return writeEP(deviceAddr, pageAddress, numberBytes, (const uint8_t *)dataBuffer); }
 	
 	static uint8_t notExists(I2C_Helper & i2c, int deviceAddr);
 	uint8_t notExists(int deviceAddr);
 	
 	// Enhanced Usage //
 	I2C_Helper(TwoWire &wire_port, int8_t zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction = 0, int32_t i2cFreq = 100000);
-	uint8_t write_at_zero_cross(uint8_t deviceAddr, uint8_t registerAddress, uint8_t data); // Return errCode.
+	uint8_t write_at_zero_cross(uint16_t deviceAddr, uint8_t registerAddress, uint8_t data); // Return errCode.
 	
 	int32_t setI2CFrequency(int32_t i2cFreq); // turns auto-speed off
-	int32_t getI2CFrequency(); // returns current Frequency
+	int32_t getI2CFrequency() const { return _i2cFreq; }
 	void useAutoFrequency() {_useAutoSpeed = true;}
 	virtual int32_t setThisI2CFrequency(int8_t devAddr, int32_t i2cFreq) {return setI2Cfreq_retainAutoSpeed(i2cFreq);}
-	virtual int32_t getThisI2CFrequency(int8_t devAddr) {return getI2CFrequency();}
+	virtual int32_t getThisI2CFrequency(int8_t devAddr) const {return getI2CFrequency();}
 
 	void setNoOfRetries(uint8_t retries);
 	uint8_t getNoOfRetries();
@@ -128,7 +135,7 @@ public:
 	bool scan();
 
 	template<bool non_stop, bool serial_out>
-	uint32_t speedTest(I_I2Cdevice * deviceFailTest = 0);
+	uint32_t speedTest_T(I_I2Cdevice * deviceFailTest = 0);
 	
 //typedef bool (*scanFnType)(scanResult);
 //scanFnType const scanNext = & scan<false,false>;
@@ -138,9 +145,9 @@ public:
 #define scanAll scan<true,true>
 #define scanNext scan<false,false> // returns false when no more found
 #define scanNextS scan<false,true> // returns false when no more found
-#define speedTestAll speedTest<true,true>
-#define speedTestNext speedTest<false,false>
-#define speedTestNextS speedTest<false,true>
+#define speedTestAll speedTest_T<true,true>
+#define speedTest speedTest_T<false,false>
+#define speedTestS speedTest_T<false,true>
 /** Usage:
 	I2C_Helper i2C;
 	i2C.scanAll(); // scan all addresses and print results to serial port
@@ -158,18 +165,20 @@ public:
 	uint8_t successAfterRetries;
 protected:
 	int32_t setI2Cfreq_retainAutoSpeed(int32_t i2cFreq);
-	bool _useAutoSpeed;
+	bool _useAutoSpeed = false;
 private:
 	bool restart(const char * name, int addr);
 	uint8_t check_endTransmissionOK(int addr);
 	void waitForZeroCross();
 	void callTime_OutFn(int addr);
-	uint8_t beginTransmission(uint8_t deviceAddr); // return false to inhibit access
-	signed char testDevice(I_I2Cdevice * deviceFailTest, uint8_t addr, int noOfTests);
+	uint8_t beginTransmission(uint16_t deviceAddr); // return false to inhibit access
+	signed char testDevice(I_I2Cdevice * deviceFailTest, uint8_t addr, int noOfTestsMustPass);
 	signed char findAworkingSpeed(I_I2Cdevice * deviceFailTest);
 	signed char findOptimumSpeed(I_I2Cdevice * deviceFailTest, int32_t & bestSpeed, int32_t limitSpeed);
 	void useAutoSpeed(bool set) {_useAutoSpeed = set;}
-
+	void waitForDeviceReady(uint16_t deviceAddr);
+	uint8_t getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *dataBuffer);
+	uint8_t getTWIbufferSize();
 	TwoWire & wire_port;
 	uint8_t noOfRetries;
 
@@ -189,12 +198,13 @@ private:
 	uint32_t relayStart;
 	static int8_t s_zeroCrossPin;
 	static uint16_t s_zxSigToXdelay;
+	static int8_t TWI_BUFFER_SIZE;
 	int32_t _i2cFreq;
 	int32_t _lastGoodi2cFreq;
 	uint8_t _myAddress;
 	bool _canWrite;
 	unsigned long _lastRestartTime;
-
+	unsigned long _lastWrite = 0;
 };
 
 class I2C_Helper_Auto_Speed_Hoist : public I2C_Helper {
@@ -204,8 +214,8 @@ public:
 	I2C_Helper_Auto_Speed_Hoist(TwoWire &wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000) : I2C_Helper(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){}
 
 protected:
+	int32_t _getI2CFrequency(int8_t devAddr, const int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) const;
 	int32_t _setI2CFrequency(int8_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices);
-	int32_t _getI2CFrequency(int8_t devAddr, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices);
 };
 
 template<int noOfDevices>
@@ -215,9 +225,12 @@ public:
 	I2C_Helper_Auto_Speed(int multiMaster_MyAddress, TwoWire & wire_port = Wire, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(multiMaster_MyAddress, wire_port, i2cFreq){resetAddresses();}
 	I2C_Helper_Auto_Speed(TwoWire & wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){resetAddresses();}
 	
-
-	virtual int32_t setThisI2CFrequency(int8_t devAddr, int32_t i2cFreq) {return _setI2CFrequency(devAddr, i2cFreq, devAddrArr, i2c_speedArr, noOfDevices);}
-	virtual int32_t getThisI2CFrequency(int8_t devAddr) {if (_useAutoSpeed) return _getI2CFrequency(devAddr, devAddrArr, i2c_speedArr, noOfDevices); else return getI2CFrequency();}
+	int8_t getAddress(int index) const { return devAddrArr[index]; }
+	int32_t getThisI2CFrequency(int8_t devAddr) const override {
+		if (_useAutoSpeed) return _getI2CFrequency(devAddr, devAddrArr, i2c_speedArr, noOfDevices); 
+		else return getI2CFrequency();
+	}
+	int32_t setThisI2CFrequency(int8_t devAddr, int32_t i2cFreq) override {return _setI2CFrequency(devAddr, i2cFreq, devAddrArr, i2c_speedArr, noOfDevices);}
 private:
 	void resetAddresses();
 	int8_t devAddrArr[noOfDevices];
@@ -237,7 +250,7 @@ void I2C_Helper_Auto_Speed<noOfDevices>::resetAddresses() {
 template<bool non_stop, bool serial_out>
 bool I2C_Helper::scan(){ 
 	if (serial_out) {
-		Serial.println("Start Scan");
+		Serial.println("Resume Scan");
 	}
 	while(scan<false,false>()) {
 		if (serial_out) {
@@ -266,10 +279,10 @@ template<> // specialization implemented in .cpp
 bool I2C_Helper::scan<false,false>();
 
 template<> // specialization implemented in .cpp
-uint32_t I2C_Helper::speedTest<false,false>(I_I2Cdevice * deviceFailTest);
+uint32_t I2C_Helper::speedTest_T<false,false>(I_I2Cdevice * deviceFailTest);
 
 template<bool non_stop, bool serial_out>
-uint32_t I2C_Helper::speedTest(I_I2Cdevice * deviceFailTest) {
+uint32_t I2C_Helper::speedTest_T(I_I2Cdevice * deviceFailTest) {
 	if (serial_out) {
 		if (non_stop) {
 			Serial.println("Start Speed Test...");
@@ -286,7 +299,7 @@ uint32_t I2C_Helper::speedTest(I_I2Cdevice * deviceFailTest) {
 	}
 
 	do  {
-		speedTest<false,false>(deviceFailTest);
+		speedTest_T<false,false>(deviceFailTest);
 	} while(non_stop && scan<false,serial_out>());
 
 	if (serial_out) {

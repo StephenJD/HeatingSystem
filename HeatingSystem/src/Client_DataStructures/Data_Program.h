@@ -4,7 +4,7 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include <RDB.h>
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -24,14 +24,14 @@ namespace client_data_structures {
 
 	struct R_Program {
 		// Each Dwelling has a set of program names
-		char name[8] = { 0 };
-		RecordID dwellingID = 0; // Owning Dwelling
+		char name[8];
+		RecordID dwellingID; // Owning Dwelling
 		RecordID field(int fieldIndex) { return dwellingID; }
 		bool operator < (R_Program rhs) const { return false; }
 		bool operator == (R_Program rhs) const { return true; }
 	};
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Program & program) {
 		return stream << "Program: " << program.name << " for DwellingID: " << std::dec << (int)program.dwellingID;
 	}

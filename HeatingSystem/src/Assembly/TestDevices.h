@@ -1,5 +1,5 @@
 #pragma once
-#include "I2C_Helper.h"
+#include "..\..\..\I2C_Helper\I2C_Helper.h"
 #include "..\HardwareInterfaces\I2C_Comms.h"
 
 namespace Assembly {

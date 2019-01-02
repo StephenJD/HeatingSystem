@@ -7,14 +7,10 @@
 #include "..\Client_DataStructures\Data_Profile.h"
 #include "..\Client_DataStructures\Data_Zone.h"
 
-#ifdef ZSIM
- #include <ostream>
-#endif
-
 namespace Assembly {
 	using namespace client_data_structures;
 
-	constexpr R_Relay relays[] = {
+	constexpr R_Relay relays_f[] = {
 		{ "Flat",6 << 1 }
 		,{ "FlTR",1 << 1 }
 		,{ "HsTR",0 << 1 }
@@ -24,7 +20,7 @@ namespace Assembly {
 		,{ "DnSt",4 << 1 }
 	};
 
-	constexpr R_TempSensor tempSensors[] = {
+	constexpr R_TempSensor tempSensors_f[] = {
 		{ "Flat",0x70 },
 		{ "FlTR",0x72 },
 		{ "HsTR",0x71 },
@@ -45,12 +41,12 @@ namespace Assembly {
 		{ "MFBF",0x2F }
 	};
 
-	constexpr R_Dwelling dwellings[] = {
+	constexpr R_Dwelling dwellings_f[] = {
 		{ "House" }
 		,{ "HolAppt" }
 	};
 
-	constexpr R_Program programs[] = {
+	constexpr R_Program programs_f[] = {
 		{ "At Home",0 }
 		,{ "Occup'd",1 }
 		,{ "At Work",0 }
@@ -58,7 +54,7 @@ namespace Assembly {
 		,{ "Away",0 }
 	};
 
-	constexpr R_DwellingZone dwellingZones[] = {
+	constexpr R_DwellingZone dwellingZones_f[] = {
 		{ 1,3 }
 		,{ 0,0 }
 		,{ 0,1 }
@@ -67,11 +63,10 @@ namespace Assembly {
 	};
 
 	constexpr uint16_t makeTT(int hrs, int mins, int temp) {
-		auto timeOnly = TimeOnly{ hrs,mins }.asInt() << 8;
-		return timeOnly + temp + 10;
+		return (TimeOnly{ hrs,mins }.asInt() << 8) + temp + 10;
 	}
 
-	R_TimeTemp timeTemps[] = { // profileID,TT
+	R_TimeTemp timeTemps_f[] = { // profileID,TT
 		{0, makeTT(7,40,15)}
 		,{0, makeTT(10,30,18)}
 		,{1, makeTT(7,30,15)}
@@ -104,7 +99,7 @@ namespace Assembly {
 
 	};
 
-	constexpr R_Spell spells[] = {
+	constexpr R_Spell spells_f[] = {
 		{ DateTime({ 31,7,19, },{ 15,20 }),0 }
 		,{ DateTime({ 12,9,19, },{ 7,30 }),1 }
 		,{ DateTime({ 3,9,19, },{ 17,30 }),2 }
@@ -113,7 +108,7 @@ namespace Assembly {
 		,{ DateTime({ 30,9,19, },{ 10,0 }),4 } 
 	};
 
-	constexpr R_Profile profiles[] = {
+	constexpr R_Profile profiles_f[] = {
 		//ProgID, ZnID, Days
 		{ 0,0,100 } // At Home US MT--F--
 		,{ 2,0,108 }// At Work US MT-TF--
@@ -140,7 +135,7 @@ namespace Assembly {
 		,{ 3,3,255}  // Empty Flat 
 	};	
 		
-	constexpr R_Zone zones[] = { 
+	constexpr R_Zone zones_f[] = { 
 		{ "UpStrs","US",1,1,1,0,25,12,1,60 }
 		,{ "DnStrs","DS",1,1,1,0,25,12,1,60 }
 		,{ "DHW","DHW",1,1,1,0,60,12,1,3 }
@@ -150,28 +145,28 @@ namespace Assembly {
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db) {
 		//enum tableIndex { TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
 
-		//Serial.println("setFactoryDefaults Started");
-		//std::cout << "\nRelays Table ";
-		db.createTable(relays);
-		//std::cout << "\nTempSensors Table ";
-		db.createTable(tempSensors);
-		//std::cout << "\nDwellings Table ";
-		db.createTable(dwellings);
-		//std::cout << "\nZones Table ";
-		db.createTable(zones);
-		//std::cout << "\nDwellingZones Table ";
-		db.createTable(dwellingZones);
-		//std::cout << "\nPrograms Table ";
-		db.createTable(programs);
-		//std::cout << "\nProfiles Table ";
-		db.createTable(profiles);
-		//std::cout << "\nTimeTemps Table ";
-		db.createTable(timeTemps, i_09_orderedInsert);
-		//std::cout << "\nSpells Table ";
-		db.createTable(spells, i_09_orderedInsert);
-		//std::cout << "\nAll Tables Created\n ";
+		logger().log("setFactoryDefaults Started...");
+		logger().log("\nRelays Table ");
+		db.createTable(relays_f);
+		logger().log("\nTempSensors Table ");
+		db.createTable(tempSensors_f);
+		logger().log("\nDwellings Table ");
+		db.createTable(dwellings_f);
+		logger().log("\nZones Table ");
+		db.createTable(zones_f);
+		logger().log("\nDwellingZones Table ");
+		db.createTable(dwellingZones_f);
+		logger().log("\nPrograms Table ");
+		db.createTable(programs_f);
+		logger().log("\nProfiles Table ");
+		db.createTable(profiles_f);
+		logger().log("\nTimeTemps Table ");
+		db.createTable(timeTemps_f, i_09_orderedInsert);
+		logger().log("\nSpells Table ");
+		db.createTable(spells_f, i_09_orderedInsert);
+		logger().log("\nAll Tables Created\n ");
 
-		//Serial.println("setFactoryDefaults Completed");
+		logger().log("setFactoryDefaults Completed");
 	}
 	
 }

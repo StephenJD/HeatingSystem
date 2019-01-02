@@ -41,7 +41,7 @@ namespace LCD_UI {
 		Collection_Hndl * set_leftRightUI_from(Collection_Hndl * topUI, int direction);
 		void enter_nested_ViewAll(Collection_Hndl * topUI, int direction);
 		void set_UpDownUI_from(Collection_Hndl * topUI);
-		void A_Top_UI::notifyAllOfFocusChange(Collection_Hndl * topUI);
+		void notifyAllOfFocusChange(Collection_Hndl * topUI);
 
 		Collection_Hndl * _leftRightBackUI;
 		Collection_Hndl * _upDownUI;

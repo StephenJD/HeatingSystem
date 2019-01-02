@@ -1,5 +1,5 @@
 #include "ValRange.h"
-#include "Convertions.h"
+#include "Conversions.h"
 
 namespace LCD_UI {
 	using namespace GP_LIB;

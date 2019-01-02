@@ -13,9 +13,9 @@ namespace HardwareInterfaces {
 		for (auto & key : keyQue) {
 			key = -1;
 		}
-		//logToSD("I_Keypad Constructor");
+		//log("I_Keypad Constructor");
 		//	DateTime_Run::secondsSinceLastCheck(lastTick); // set lastTick for the keypad to now.
-		//logToSD("I_Keypad Base Done");
+		//log("I_Keypad Base Done");
 	}
 
 	bool I_Keypad::isTimeToRefresh() {

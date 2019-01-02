@@ -2,6 +2,12 @@
 #include "Logging.h"
 #include "A__Constants.h"
 
+#if defined(__SAM3X8E__)
+I2C_Helper i2C_EEPROM{ Wire1 };
+EEPROMClass eeprom_obj{ i2C_EEPROM, 0x50, 0x68 };
+EEPROMClass & EEPROM = eeprom_obj;
+#endif
+
 namespace HardwareInterfaces {
 
 	/////////////////////////////////////////////////////
@@ -28,17 +34,17 @@ namespace HardwareInterfaces {
 		i2c.setTimeoutFn(&hardReset);
 
 		do {
-			log().logToSD("ResetI2C... for ", addr, "try:", NO_OF_TRIES - count + 1);
+			logger().log("ResetI2C... for ", addr, "try:", NO_OF_TRIES - count + 1);
 			hardReset(i2c, addr);
 
 			if (addr != 0) {
 				I2C_Helper::I_I2Cdevice & device = _testDevices->getDevice(addr);
 				if (device.testDevice(i2c, addr)) {
-					log().logToSD(" Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
+					logger().log(" Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
 					hasFailed = speedTestDevice(i2c, addr, device);
-					log().logToSD(" Re-test Speed Done at:", i2c.getThisI2CFrequency(addr), i2c.getError(hasFailed));
+					logger().log(" Re-test Speed Done at:", i2c.getThisI2CFrequency(addr), i2c.getError(hasFailed));
 				}
-				else log().logToSD(" Re-test was OK");
+				else logger().log(" Re-test was OK");
 			}
 
 			if (hardReset.initialisationRequired) {
@@ -57,7 +63,7 @@ namespace HardwareInterfaces {
 		i2c.setTimeoutFn(&hardReset);
 		i2c.result.reset();
 		i2c.result.foundDeviceAddr = addr;
-		i2c.speedTestNextS(&device);
+		i2c.speedTestS(&device);
 		uint8_t failedTest = i2c.result.error;
 		i2c.result.reset();
 		i2c.setTimeoutFn(origFn);
@@ -90,7 +96,7 @@ namespace HardwareInterfaces {
 			} while (!i2C_is_released() && downTime < 512000);
 			i2c.restart();
 			timeOfReset_mS = millis();
-			log().logToSD(" Hard Reset... for ", addr, " took uS:", downTime);
+			logger().log(" Hard Reset... for ", addr, " took uS:", downTime);
 			delayMicroseconds(50000); // delay to light LED
 			digitalWrite(RESET_LED_PIN_N, HIGH);
 		}

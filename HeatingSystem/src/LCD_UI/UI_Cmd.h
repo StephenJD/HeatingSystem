@@ -2,7 +2,7 @@
 #include "UI_Collection.h"
 
 namespace LCD_UI {
-	class UI_Cmd : public LCD_UI::Collection_Hndl, public Custom_Select
+	class UI_Cmd : public Collection_Hndl, public Custom_Select
 	{
 	public:
 		using Custom_Select::behaviour;
@@ -11,6 +11,7 @@ namespace LCD_UI {
 
 		void insertCommandForEdit(Object_Hndl & ui_fieldData_collection);
 		void removeCommandForEdit(Object_Hndl & ui_fieldData_collection);
+
 	private:
 		const char * text;
 	};

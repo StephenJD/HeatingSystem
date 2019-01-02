@@ -135,7 +135,7 @@ namespace LCD_UI {
 	//                   Collection Handle Base Class                   //
 	//////////////////////////////////////////////////////////////////////
 	class I_SafeCollection;
-
+	class UI_Cmd;
 	/// <summary>
 	/// An Object_Hndl pointing to an I_SafeCollection - possibly a nested collection of Collection_Hndl
 	/// Provides atEnd(int pos) and getItem()
@@ -147,6 +147,7 @@ namespace LCD_UI {
 		Collection_Hndl() = default;
 		Collection_Hndl(const UI_Object * object);
 		explicit Collection_Hndl(const UI_Object & object);
+		explicit Collection_Hndl(const UI_Cmd & object); // required to avoid ambiguous construction due to dual-base-types.
 		explicit Collection_Hndl(const I_SafeCollection & safeCollection);
 		explicit Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus);
 		explicit Collection_Hndl(const UI_ShortCollection & shortList_Hndl, int default_focus = 0);
@@ -395,7 +396,7 @@ namespace LCD_UI {
 		using I_SafeCollection::item;
 
 		Collection(ArrayWrapper<noOfObjects, ObjectType> arrayWrp, Behaviour behaviour) :I_SafeCollection(noOfObjects, behaviour), _array(arrayWrp) {
-#ifdef ZSIM
+#ifdef ZPSIM
 			std::cout << "Collection at : " << std::hex << (long long)(this) << std::endl;
 			for (int i = 0; i < noOfObjects; ++i)
 				std::cout << "   Has Element at : " << (long long)&_array[i] << " Pointing to : " << (long long)_array[i].get() << std::endl;

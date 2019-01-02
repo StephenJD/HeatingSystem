@@ -1,8 +1,8 @@
 #include "DateTimeWrapper.h"
-#include "Convertions.h"
+#include "Conversions.h"
 #include "..\HardwareInterfaces\Clock.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <iostream>
 #endif
 
@@ -21,7 +21,7 @@ namespace client_data_structures {
 
 	DateTimeWrapper::DateTimeWrapper(DateTime dateVal, ValRange valRangeArg)
 		: I_UI_Wrapper(dateVal.asInt(), valRangeArg) {
-#ifdef ZSIM
+#ifdef ZPSIM
 		std::cout << "DateTimeWrapper at: " << (long long)(this) << std::endl;
 #endif
 	}
@@ -30,7 +30,7 @@ namespace client_data_structures {
 
 	Edit_DateTime_h::Edit_DateTime_h() : 
 		I_Edit_Hndl(&editVal) { 
-#ifdef ZSIM
+#ifdef ZPSIM
 		std::cout << "Edit_DateTime_h at: " << std::hex << (long long)this << std::endl; 
 		std::cout << "   Edit Copy DateTimeWrapper at: " << (long long)(&_currValue) << std::endl;
 		std::cout << "   Edit Copy Permitted_Vals at: " << (long long)(&editVal) << std::endl;

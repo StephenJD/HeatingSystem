@@ -1,7 +1,7 @@
 #include "Data_Profile.h"
 #include "Data_Zone.h"
 #include "Data_TimeTemp.h"
-#include "Time_Only.h"
+#include "..\..\..\DateTime\src\Time_Only.h"
 #include "..\Assembly\HeatingSystemEnums.h"
 
 
@@ -208,7 +208,7 @@ namespace client_data_structures {
 
 	void Dataset_ProfileDays::createProfile(uint8_t days) {
 		if (days) {
-			R_Profile profile{ record().rec() };
+			auto profile = record().rec();
 			profile.days = days;
 			auto newProfile = query().insert(&profile);
 			createProfileTT(newProfile.id());

@@ -25,13 +25,13 @@ namespace LCD_UI {
 		////////////////////////////////////////////////////////////////////
 		//************* Lambdas evaluating algorithm *********************//
 		////////////////////////////////////////////////////////////////////
-		auto insertSpaces = [buffer](auto noOf , auto appendPos) -> decltype(appendPos)  {
+		auto insertSpaces = [buffer](int noOf , int appendPos) -> int {
 			while (noOf > 0) { buffer[appendPos] = ' '; ++appendPos; --noOf; }
 			return appendPos;
 		};
-		auto notAtStartOfLine = [this](auto appendPos) -> bool { return appendPos % _lcd->cols() != 0; };
-		auto spaceFor_char = [endPos](auto appendPos) -> bool {return appendPos < endPos; };
-		auto inserted_a_fieldSeparator = [onNewLine,buffer,addLen,this,insertSpaces] (auto appendPos) -> decltype(appendPos)  {
+		auto notAtStartOfLine = [this](int appendPos) -> bool { return appendPos % _lcd->cols() != 0; };
+		auto spaceFor_char = [endPos](int appendPos) -> bool {return appendPos < endPos; };
+		auto inserted_a_fieldSeparator = [onNewLine,buffer,addLen,this,insertSpaces] (int appendPos) -> decltype(appendPos)  {
 			buffer[appendPos] = ' ';
 			auto spacesToEndOfLine = _lcd->cols() - (appendPos % _lcd->cols()) -1;
 			++appendPos;
@@ -44,22 +44,22 @@ namespace LCD_UI {
 			return appendPos;
 		};
 
-		auto inserted_a_list_start_char = [buffer](auto appendPos) -> decltype(appendPos) {
+		auto inserted_a_list_start_char = [buffer](int appendPos) -> int {
 			buffer[appendPos] = '<';
 			++appendPos;
 			return appendPos;
 		};
 
-		auto nextFieldFits = [listStatus, addLen, endPos](auto appendPos) -> bool {
+		auto nextFieldFits = [listStatus, addLen, endPos](int appendPos) -> bool {
 			return (appendPos + addLen  + (listStatus & e_not_showingEnd ? 1 : 0)) <= endPos; 
 		};
 
-		auto setCursor = [cursorMode, cursorOffset, this](auto appendPos) -> void {
+		auto setCursor = [cursorMode, cursorOffset, this](int appendPos) -> void {
 			_lcd->setCursorMode(cursorMode);
 			_lcd->setCursorPos(appendPos + cursorOffset); 
 		};
 
-		auto appendField = [stream, buffer](auto appendPos) -> decltype(appendPos) {
+		auto appendField = [stream, buffer](int appendPos) -> int {
 			int i = 0;
 			while (stream[i] != 0) {
 				buffer[appendPos] = stream[i];

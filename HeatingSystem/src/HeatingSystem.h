@@ -14,6 +14,9 @@
 #include "HardwareInterfaces\LocalDisplay.h"
 #include "HardwareInterfaces\LocalKeypad.h"
 #include "HardwareInterfaces\Console.h"
+#include "HardwareInterfaces\Clock.h"
+#include "HardwareInterfaces/LocalDisplay.h"
+#include "HardwareInterfaces/logging.h"
 
 #include <I2C_Helper.h>
 #include <RDB.h>
@@ -41,11 +44,9 @@
 		HardwareInterfaces::Relay relayArr[Assembly::NO_OF_RELAYS]; // Array of Relay provided by client
 		HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 	private:
-		HardwareInterfaces::Null_Logger * _log;
 		Assembly::Initialiser _initialiser;
 		Assembly::MainConsolePageGenerator _mainPages;
 		HardwareInterfaces::Console _mainConsole;
-
 	};
 //}
 //using HeatingSystemN::HeatingSystem;

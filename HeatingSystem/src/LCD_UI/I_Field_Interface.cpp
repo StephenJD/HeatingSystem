@@ -2,7 +2,7 @@
 #include "I_Record_Interface.h"
 #include "UI_Primitives.h"
 #include "UI_FieldData.h"
-#include "Convertions.h"
+#include "Conversions.h"
 
 namespace LCD_UI {
 	using namespace GP_LIB;

@@ -2,7 +2,7 @@
 #include "..\LCD_UI\UI_FieldData.h"
 #include "..\LCD_UI\\I_Record_Interface.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <iostream>
 #endif
 
@@ -13,7 +13,7 @@ namespace client_data_structures {
 
 	InsertSpell_Cmd::InsertSpell_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
 		: UI_Cmd(label_text, onSelect, behaviour) {
-#ifdef ZSIM
+#ifdef ZPSIM
 		std::cout << "InsertSpell_Cmd at: " << std::hex << (long long)this << std::endl;
 #endif
 	}
@@ -66,7 +66,7 @@ namespace client_data_structures {
 
 	InsertTimeTemp_Cmd::InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
 		: UI_Cmd(label_text, onSelect, behaviour) {
-#ifdef ZSIM
+#ifdef ZPSIM
 		std::cout << "InsertTimeTemp_Cmd at: " << std::hex << (long long)this << std::endl;
 #endif
 	}	

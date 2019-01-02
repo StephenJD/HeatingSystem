@@ -1,5 +1,5 @@
 #include "RemoteKeypad.h"
-
+#include "Logging.h"
 namespace HardwareInterfaces {
 
 #if defined (ZPSIM)
@@ -14,10 +14,10 @@ namespace HardwareInterfaces {
 	int RemoteKeypad::readKey() {
 		auto myKey = getKeyCode(_lcd->readI2C_keypad());
 		if (myKey == -2) {
-			logToSD("Remote Keypad: multiple keys detected");
+			logger().log("Remote Keypad: multiple keys detected");
 		}
 		if (putInKeyQue(keyQue, keyQuePos, myKey)) {
-			logToSD("Remote Keypad Read Key. Add : ", myKey);
+			logger().log("Remote Keypad Read Key. Add : ", myKey);
 		}
 		return myKey;
 	}

@@ -1,9 +1,9 @@
 #pragma once
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
-#include <RDB.h>
+#include "..\..\..\RDB\src\\RDB.h"
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	#include <ostream>
 #endif
 
@@ -27,7 +27,7 @@ namespace client_data_structures {
 		bool operator == (R_Dwelling rhs) const { return true; }
 	};
 
-#ifdef ZSIM
+#ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Dwelling & dwelling) {
 		return stream << "Dwelling: " << dwelling.name;
 	}

@@ -1,6 +1,6 @@
 #pragma once
 #include "ValRange.h" // likely to be needed by all inheriting classes
-#include <RDB.h>
+#include "..\..\..\RDB\src\RDB.h"
 
 namespace RelationalDatabase {
 	class Answer_Locator;

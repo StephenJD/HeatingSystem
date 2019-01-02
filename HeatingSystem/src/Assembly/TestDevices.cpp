@@ -31,20 +31,20 @@ namespace HardwareInterfaces {
 		hs().mainDisplay.print(hs().i2C.result.foundDeviceAddr, HEX);
 		hs().mainDisplay.print("    ");
 		hs().mainDisplay.sendToDisplay();
-		hs().i2C.speedTestNextS(&testFn);
+		hs().i2C.speedTestS(&testFn);
 		hs().mainDisplay.setCursor(17, 2);
 		if (!hs().i2C.result.error == 0) {
 			hs().mainDisplay.print("Bad");
 			hs().mainDisplay.sendToDisplay();
-			log().logToSD("TestDevices::speedTestDevices for ", hs().i2C.result.foundDeviceAddr, " Failed");
+			logger().log("TestDevices::speedTestDevices for ", hs().i2C.result.foundDeviceAddr, " Failed");
 			delay(2000);
 		}
 		else {
 			hs().mainDisplay.print(" OK");
 			hs().mainDisplay.sendToDisplay();
-			log().logToSD("TestDevices::speedTestDevices for ", hs().i2C.result.foundDeviceAddr, " OK at ", hs().i2C.result.thisHighestFreq);
+			logger().log("TestDevices::speedTestDevices for ", hs().i2C.result.foundDeviceAddr, " OK at ", hs().i2C.result.thisHighestFreq);
 		}
-		log().logToSD();
+		logger().log();
 		return hs().i2C.result.error;
 	}
 
@@ -56,17 +56,17 @@ namespace HardwareInterfaces {
 		int8_t returnVal = 0;
 		hs().mainDisplay.setCursor(0, 2);
 		hs().mainDisplay.print("Test ");
-		log().logToSD("\nTestDevices::speedTestDevices has been called");
+		logger().log("\nTestDevices::speedTestDevices has been called");
 		hs().i2C.result.reset();
 
-		log().logToSD("TestDevices::speedTestDevices\tTry Relay Port");
+		logger().log("TestDevices::speedTestDevices\tTry Relay Port");
 		hs().i2C.result.foundDeviceAddr = hs().relaysPort.getAddress();
 		if (showSpeedTestFailed(hs().relaysPort, "Relay")) {
 			//f->eventS().newEvent(ERR_PORTS_FAILED, 0);
 			returnVal = ERR_PORTS_FAILED;
 		}
 
-		log().logToSD("TestDevices::speedTestDevices\tTry Remotes");
+		logger().log("TestDevices::speedTestDevices\tTry Remotes");
 		hs().i2C.result.foundDeviceAddr = DS_REMOTE_ADDRESS;
 		if (showSpeedTestFailed(hs().remDispl[D_Hall], "DS Rem")) {
 			//f->eventS().newEvent(ERR_I2C_READ_FAILED, 0);
@@ -85,7 +85,7 @@ namespace HardwareInterfaces {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
-		log().logToSD("TestDevices::speedTestDevices\tTry Mix Valve");
+		logger().log("TestDevices::speedTestDevices\tTry Mix Valve");
 		hs().i2C.result.foundDeviceAddr = MIX_VALVE_I2C_ADDR;
 		if (showSpeedTestFailed(hs().mixValveController, "Mix V")) {
 		//	//f->eventS().newEvent(ERR_MIX_ARD_FAILED, 0);
@@ -93,7 +93,7 @@ namespace HardwareInterfaces {
 		}
 		
 		for (auto & ts : hs().tempSensorArr) {
-			log().logToSD("TestDevices::speedTestDevices\tTry TS", ts.getAddress());
+			logger().log("TestDevices::speedTestDevices\tTry TS", ts.getAddress());
 			hs().i2C.result.foundDeviceAddr = ts.getAddress();
 			showSpeedTestFailed(ts, "TS");
 		}
@@ -101,7 +101,7 @@ namespace HardwareInterfaces {
 		hs().mainDisplay.setCursor(12, 2);
 		hs().mainDisplay.print(hs().i2C.result.maxSafeSpeed);
 		hs().mainDisplay.sendToDisplay();
-		log().logToSD("I2C Max Speed is ", hs().i2C.result.maxSafeSpeed);
+		logger().log("I2C Max Speed is ", hs().i2C.result.maxSafeSpeed);
 		hs().i2C.setTimeoutFn(&_ini._resetI2C);
 		hs().i2C.result.reset();
 		return returnVal;
@@ -111,10 +111,10 @@ namespace HardwareInterfaces {
 		/////////////////////// Cycle through ports /////////////////////////
 		uint8_t returnVal = 0;
 		uint8_t numberFailed = 0;
-		log().logToSD("Relay_Run::testRelays");
+		logger().log("Relay_Run::testRelays");
 		if (hs().relaysPort.testDevice(hs().i2C, IO8_PORT_OptCoupl)) {
 			//f->eventS().newEvent(ERR_PORTS_FAILED, 0);
-			log().logToSD("Relay_Run::testRelays\tNo Relays\tERR_PORTS_FAILED");
+			logger().log("Relay_Run::testRelays\tNo Relays\tERR_PORTS_FAILED");
 			return NO_OF_RELAYS;
 		}
 		hs().mainDisplay.setCursor(0, 3);
@@ -130,7 +130,7 @@ namespace HardwareInterfaces {
 			hs().mainDisplay.print(relayNo, DEC);
 			if (returnVal) {
 				//f->eventS().newEvent(ERR_PORTS_FAILED, relayNo);
-				log().logToSD("Relay_Run::testRelays\tRelay Failed\tERR_PORTS_FAILED", relayNo);
+				logger().log("Relay_Run::testRelays\tRelay Failed\tERR_PORTS_FAILED", relayNo);
 				hs().mainDisplay.print(" Fail");
 			}
 			else {
@@ -142,12 +142,12 @@ namespace HardwareInterfaces {
 		}
 		hs().mainDisplay.setCursor(12, 3);
 		if (numberFailed > 0) {
-			log().logToSD("Failed :",numberFailed);
+			logger().log("Failed :",numberFailed);
 			hs().mainDisplay.print(numberFailed);
 			hs().mainDisplay.print("Failed");
 		}
 		else {
-			log().logToSD("All OK");
+			logger().log("All OK");
 			hs().mainDisplay.print("All OK  ");
 			//I2C_OK = true;
 		}

@@ -16,12 +16,11 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
-#ifndef EEPROM_h
-#define EEPROM_h
+#pragma once
 
 #include <inttypes.h>
 
+#if defined(__SAM3X8E__)
 class I2C_Helper;
 
 class EEPROMClass
@@ -30,13 +29,13 @@ class EEPROMClass
     EEPROMClass(I2C_Helper & i2C, uint8_t eepromAddr, uint8_t rtcAddr = 0);
     uint8_t read(int iAddr);
     uint8_t write(int iAddr, uint8_t iVal);
-    uint8_t update(int iAddr, uint8_t iVal);
+    uint8_t update(int iAddr, uint8_t iVal);	
  private:
    I2C_Helper & _i2C;
    uint8_t _eepromAddr;
    uint8_t _rtcAddr;
 };
 
-extern EEPROMClass * EEPROM;
-#endif
+extern EEPROMClass & EEPROM;
 
+#endif
