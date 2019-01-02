@@ -84,8 +84,8 @@ public:
 	int32_t setI2CFrequency(int32_t i2cFreq); // turns auto-speed off
 	int32_t getI2CFrequency() const { return _i2cFreq; }
 	void useAutoFrequency() {_useAutoSpeed = true;}
-	virtual int32_t setThisI2CFrequency(int8_t devAddr, int32_t i2cFreq) {return setI2Cfreq_retainAutoSpeed(i2cFreq);}
-	virtual int32_t getThisI2CFrequency(int8_t devAddr) const {return getI2CFrequency();}
+	virtual int32_t setThisI2CFrequency(int16_t devAddr, int32_t i2cFreq) {return setI2Cfreq_retainAutoSpeed(i2cFreq);}
+	virtual int32_t getThisI2CFrequency(int16_t devAddr) const {return getI2CFrequency();}
 
 	void setNoOfRetries(uint8_t retries);
 	uint8_t getNoOfRetries();
@@ -214,8 +214,8 @@ public:
 	I2C_Helper_Auto_Speed_Hoist(TwoWire &wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000) : I2C_Helper(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){}
 
 protected:
-	int32_t _getI2CFrequency(int8_t devAddr, const int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) const;
-	int32_t _setI2CFrequency(int8_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices);
+	int32_t _getI2CFrequency(int16_t devAddr, const int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) const;
+	int32_t _setI2CFrequency(int16_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices);
 };
 
 template<int noOfDevices>
@@ -226,11 +226,11 @@ public:
 	I2C_Helper_Auto_Speed(TwoWire & wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){resetAddresses();}
 	
 	int8_t getAddress(int index) const { return devAddrArr[index]; }
-	int32_t getThisI2CFrequency(int8_t devAddr) const override {
+	int32_t getThisI2CFrequency(int16_t devAddr) const override {
 		if (_useAutoSpeed) return _getI2CFrequency(devAddr, devAddrArr, i2c_speedArr, noOfDevices); 
 		else return getI2CFrequency();
 	}
-	int32_t setThisI2CFrequency(int8_t devAddr, int32_t i2cFreq) override {return _setI2CFrequency(devAddr, i2cFreq, devAddrArr, i2c_speedArr, noOfDevices);}
+	int32_t setThisI2CFrequency(int16_t devAddr, int32_t i2cFreq) override {return _setI2CFrequency(devAddr, i2cFreq, devAddrArr, i2c_speedArr, noOfDevices);}
 private:
 	void resetAddresses();
 	int8_t devAddrArr[noOfDevices];

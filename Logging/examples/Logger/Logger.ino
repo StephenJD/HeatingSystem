@@ -23,16 +23,6 @@ Clock & clock_() {
 	return _clock;
 }
 
-uint8_t resetRTC(I2C_Helper & i2c, int) {
-	Serial.println("Reset RTC...");
-	digitalWrite(RTC_RESET, HIGH);
-	delayMicroseconds(10000);
-	digitalWrite(RTC_RESET, LOW);
-	delayMicroseconds(10000);
-	i2c.restart();
-	return i2c.result.error;
-}
-
 Logger & logger() {
 	static Serial_Logger _log(9600, clock_());
 	return _log;
@@ -41,6 +31,16 @@ Logger & logger() {
 Logger & sdlogger() {
 	static SD_Logger _log("testlog.txt", 9600, clock_());
 	return _log;
+}
+
+uint8_t resetRTC(I2C_Helper & i2c, int) {
+	Serial.println("Reset RTC...");
+	digitalWrite(RTC_RESET, HIGH);
+	delayMicroseconds(10000);
+	digitalWrite(RTC_RESET, LOW);
+	delayMicroseconds(10000);
+	i2c.restart();
+	return i2c.result.error;
 }
 
 //////////////////////////////// Start execution here ///////////////////////////////

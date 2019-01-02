@@ -4,8 +4,8 @@
 #include "..\HardwareInterfaces\Relay.h"
 #include "..\HardwareInterfaces\I2C_Comms.h"
 #include "..\HardwareInterfaces\A__Constants.h"
-#include "..\HardwareInterfaces\Logging.h"
 #include "..\Client_DataStructures\Data_Relay.h"
+#include <Logging.h>
 #include <RDB.h>
 
 using namespace client_data_structures;

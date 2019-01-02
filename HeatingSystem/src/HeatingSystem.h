@@ -10,14 +10,13 @@
 #include "HardwareInterfaces\Relay.h"
 #include "HardwareInterfaces\RemoteDisplay.h"
 #include "HardwareInterfaces\I2C_Comms.h"
-#include "HardwareInterfaces\Logging.h"
 #include "HardwareInterfaces\LocalDisplay.h"
 #include "HardwareInterfaces\LocalKeypad.h"
 #include "HardwareInterfaces\Console.h"
-#include "HardwareInterfaces\Clock.h"
 #include "HardwareInterfaces/LocalDisplay.h"
-#include "HardwareInterfaces/logging.h"
 
+#include <Logging.h>
+#include <Clock.h>
 #include <I2C_Helper.h>
 #include <RDB.h>
 

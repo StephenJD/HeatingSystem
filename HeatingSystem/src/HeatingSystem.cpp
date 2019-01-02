@@ -2,8 +2,8 @@
 #include "Assembly\FactoryDefaults.h"
 #include "HardwareInterfaces\I2C_Comms.h"
 #include "HardwareInterfaces\A__Constants.h"
-#include "HardwareInterfaces\Logging.h"
 #include "LCD_UI\A_Top_UI.h"
+#include <Logging.h>
 #include <EEPROM.h>
 //#include "..\..\EEPROM_Due\EEPROM_Due.h"
 
@@ -36,7 +36,7 @@ namespace HeatingSystemSupport {
 using namespace	HeatingSystemSupport;
 using namespace	Assembly;
 
-HeatingSystem::HeatingSystem() 
+HeatingSystem::HeatingSystem()
 	: 
 	db(RDB_START_ADDR, EEPROM_SIZE, writer, reader)
 	,mixValveController(MIX_VALVE_I2C_ADDR)

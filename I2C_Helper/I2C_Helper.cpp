@@ -166,7 +166,7 @@ uint8_t I2C_Helper::write(uint16_t deviceAddr, uint8_t registerAddress, uint16_t
 		returnStatus = beginTransmission(deviceAddr);
 		if (returnStatus == _OK) {
 			wire_port.write(registerAddress);
-			wire_port.write(dataBuffer, numberBytes);
+			wire_port.write(dataBuffer, uint8_t(numberBytes));
 			returnStatus = check_endTransmissionOK(deviceAddr);
 			_lastWrite = micros();
 			if (returnStatus) {
@@ -201,7 +201,7 @@ uint8_t I2C_Helper::write(uint16_t deviceAddr, uint8_t registerAddress, uint8_t 
 
 uint8_t I2C_Helper::write(const uint8_t *dataBuffer, uint16_t numberBytes) {
 	//Serial.println("Slave Write");
-	return (uint8_t) wire_port.write(dataBuffer, numberBytes);
+	return (uint8_t) wire_port.write(dataBuffer, uint8_t(numberBytes));
 }
 
 uint8_t I2C_Helper::writeEP(uint16_t deviceAddr, int pageAddress, uint8_t data) {
@@ -398,7 +398,7 @@ bool I2C_Helper::slowdown_and_reset(int addr) { // called by timoutFunction
 
 uint8_t I2C_Helper::getTWIbufferSize() {
 	uint8_t junk[1];
-	return wire_port.write(junk, 100);
+	return uint8_t(wire_port.write(junk, 100));
 }
 
 // I2C Testing //
@@ -588,13 +588,13 @@ signed char I2C_Helper::adjustSpeedTillItWorksAgain(I_I2Cdevice * deviceFailTest
 // ***************************   I2C_Helper_Auto_Speed_Hoist  ******************************
 // *****************************************************************************************
 
-int32_t I2C_Helper_Auto_Speed_Hoist::_setI2CFrequency(int8_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices) {
+int32_t I2C_Helper_Auto_Speed_Hoist::_setI2CFrequency(int16_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices) {
 	int index = 0;
 	do {
 		if (devAddrArr[index] == 0) {
-			devAddrArr[index] = devAddr;
+			devAddrArr[index] = uint8_t(devAddr);
 		}
-		if (devAddrArr[index] == devAddr) {
+		if (devAddrArr[index] == uint8_t(devAddr)) {
 			i2c_speedArr[index] = i2cFreq;
 			break;
 		} else {++index;}
@@ -602,7 +602,7 @@ int32_t I2C_Helper_Auto_Speed_Hoist::_setI2CFrequency(int8_t devAddr, int32_t i2
 	return setI2Cfreq_retainAutoSpeed(i2cFreq);
 }
 
-int32_t I2C_Helper_Auto_Speed_Hoist::_getI2CFrequency(int8_t devAddr, const int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) const {
+int32_t I2C_Helper_Auto_Speed_Hoist::_getI2CFrequency(int16_t devAddr, const int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) const {
 	int index = 0;
 	do {
 		if (devAddrArr[index] == devAddr) {
