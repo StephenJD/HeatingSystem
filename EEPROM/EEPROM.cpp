@@ -28,11 +28,12 @@
 /******************************************************************************
  * Constructors
  ******************************************************************************/
-EEPROMClass::EEPROMClass(I2C_Helper & i2C, uint8_t eepromAddr, uint8_t rtcAddr) : _i2C(i2C), _eepromAddr(eepromAddr), _rtcAddr(rtcAddr) {
-	_i2C.result.foundDeviceAddr = _eepromAddr;
-	_i2C.speedTest();
-	_i2C.result.foundDeviceAddr = _rtcAddr;
-	_i2C.speedTest();
+EEPROMClass::EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr) : _i2C(i2C), _eepromAddr(eepromAddr){
+	//_i2C.result.reset();
+	//_i2C.result.foundDeviceAddr = _eepromAddr;
+	//_i2C.speedTest();
+	//_i2C.result.foundDeviceAddr = _rtcAddr;
+	//_i2C.speedTest();
 	//_i2C.setI2CFrequency(_i2C.result.safestSpeed);
 }
 
@@ -43,13 +44,13 @@ EEPROMClass::EEPROMClass(I2C_Helper & i2C, uint8_t eepromAddr, uint8_t rtcAddr) 
 uint8_t EEPROMClass::read(int iAddr)
 {
     uint8_t result;
-	_i2C.readEP(_eepromAddr,iAddr,1,&result);
+	_i2C->readEP(_eepromAddr,iAddr,1,&result);
 	return result;
 }
 
 uint8_t EEPROMClass::write(int iAddr, uint8_t iVal)
 {
-  uint8_t iRC = _i2C.writeEP(_eepromAddr,iAddr,iVal);
+  uint8_t iRC = _i2C->writeEP(_eepromAddr,iAddr,iVal);
   //delay(5);  // Give the EEPROM time to write its data  
   return(iRC);
 }

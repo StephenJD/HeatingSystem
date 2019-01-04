@@ -37,7 +37,6 @@ I2C_Helper::I2C_Helper(TwoWire &wire_port, int32_t i2cFreq)
 	_myAddress(_single_master),
 	_canWrite(true),
 	_useAutoSpeed(false) {
-	//Serial.println("Create I2C_Helper - singleMaster");
 	TWI_BUFFER_SIZE = getTWIbufferSize();
 	restart();
 	setI2CFrequency(i2cFreq);
@@ -386,7 +385,7 @@ bool I2C_Helper::slowdown_and_reset(int addr) { // called by timoutFunction
 		} else {
 			setThisI2CFrequency(addr, getI2CFrequency() - getI2CFrequency()/10);
 		}
-		Serial.print("slowdown_and_reset() New speed: "); Serial.println(_i2cFreq,DEC);
+		//Serial.print("slowdown_and_reset() New speed: "); Serial.println(_i2cFreq,DEC);
 	} else {
 		_lastGoodi2cFreq = _i2cFreq;
 		setThisI2CFrequency(addr, getI2CFrequency() + getI2CFrequency()/10); // speed up again.
@@ -449,7 +448,7 @@ void I2C_Helper::callTime_OutFn(int addr) {
 	if (timeoutFunctor != 0) {
 		//Serial.println("call Time_OutFn");
 		(*timeoutFunctor)(*this, addr);
-	} else Serial.println("... no Time_OutFn set");
+	} else //Serial.println("... no Time_OutFn set");
 	restart(); // restart i2c in case this is called after an i2c failure
 	delayMicroseconds(5000);
 }

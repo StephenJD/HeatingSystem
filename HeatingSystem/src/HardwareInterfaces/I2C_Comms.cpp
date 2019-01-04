@@ -2,12 +2,6 @@
 #include "Logging.h"
 #include "A__Constants.h"
 
-#if defined(__SAM3X8E__)
-I2C_Helper i2C_EEPROM{ Wire1 };
-EEPROMClass eeprom_obj{ i2C_EEPROM, 0x50, 0x68 };
-EEPROMClass & EEPROM = eeprom_obj;
-#endif
-
 namespace HardwareInterfaces {
 
 	/////////////////////////////////////////////////////

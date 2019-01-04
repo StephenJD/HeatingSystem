@@ -35,7 +35,7 @@ public:
 	public:
 		I_I2Cdevice() = default;
 		I_I2Cdevice(uint8_t addr) : _address(addr) {}
-		I_I2Cdevice(I2C_Helper & i2C, uint8_t addr) : _address(addr) {_i2C = &i2C;}
+		I_I2Cdevice(I2C_Helper * i2C, uint8_t addr) : _address(addr) {_i2C = i2C;}
 		virtual uint8_t initialiseDevice() { return 0; }
 		virtual uint8_t testDevice(I2C_Helper & i2c, int addr) = 0;
 		uint8_t getAddress() const { return _address; }

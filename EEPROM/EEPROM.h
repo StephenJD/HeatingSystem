@@ -26,14 +26,14 @@ class I2C_Helper;
 class EEPROMClass
 {
   public:
-    EEPROMClass(I2C_Helper & i2C, uint8_t eepromAddr, uint8_t rtcAddr = 0);
+    EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr);
     uint8_t read(int iAddr);
     uint8_t write(int iAddr, uint8_t iVal);
-    uint8_t update(int iAddr, uint8_t iVal);	
+    uint8_t update(int iAddr, uint8_t iVal);
+	void setI2Chelper(I2C_Helper & i2C) { _i2C = &i2C; }
  private:
-   I2C_Helper & _i2C;
+   I2C_Helper * _i2C;
    uint8_t _eepromAddr;
-   uint8_t _rtcAddr;
 };
 
 extern EEPROMClass & EEPROM;

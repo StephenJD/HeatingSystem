@@ -3,13 +3,6 @@
 #include "Arduino.h"
 #include <I2C_Helper.h>
 
-#if defined(__SAM3X8E__)
-	#include "eeprom.h"
-    extern I2C_Helper i2C_EEPROM;
-	extern EEPROMClass & EEPROM;
-#endif
-
-
 namespace HardwareInterfaces {
 
 	class I_IniFunctor {

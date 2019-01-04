@@ -19,8 +19,9 @@ using namespace std;
 	char decTempStr[7];
 
 	Serial_Logger::Serial_Logger(int baudRate, Clock & clock) : Logger(clock) {
+		Serial.flush();
 		Serial.begin(baudRate);
-		Serial.println(" Serial Begun");
+		Serial.println(" Serial_Logger Begun");
 	}
 
 	const char * Serial_Logger::logTime() {
@@ -41,6 +42,7 @@ using namespace std;
 			strcat(logTimeStr, intToString(_clock.mins10(), 1));
 			strcat(logTimeStr, intToString(_clock.minUnits(), 1));
 		}
+		Serial.flush();
 		//Serial.println("... got logTime()");
 		return logTimeStr;
 	}
@@ -129,22 +131,23 @@ using namespace std;
 	////////////////////////////////////
 
 	SD_Logger::SD_Logger(const char * fileName, int baudRate, Clock & clock) : Serial_Logger(baudRate, clock), _fileName(fileName) {
+		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		openSD();
-		logger().log("Logger Constructed");
+		Serial.println("SD_Logger Begun");
 	}
 
 	File SD_Logger::openSD() {
 		static auto SD_OK = SD.begin();
 		static auto nextTry = millis(); 
-		//Serial_Logger::log("openSD()");
+		//Serial.println("openSD()");
 
 		if (millis() >= nextTry) { // every 10 secs.
-			//Serial_Logger::log("... check if card present.");
+			//Serial.println("... check if card present.");
 			if (SD.cardMissing()) {
-				//Serial_Logger::log("... try SD.begin()");
+				//Serial.println("... try SD.begin()");
 				SD_OK = SD.begin();
 				if (!SD_OK) {
-					Serial_Logger::log("SD Card Missing");
+					Serial.println("SD Card Missing");
 				}
 			}
 			nextTry = millis() + 10000;
@@ -153,7 +156,7 @@ using namespace std;
 			_dataFile = SD.open(_fileName, FILE_WRITE);
 		} 
 		if (!_dataFile) {
-			Serial_Logger::log("Unable to open file");
+			Serial.println("Unable to open file");
 		}
 		return _dataFile;
 	}

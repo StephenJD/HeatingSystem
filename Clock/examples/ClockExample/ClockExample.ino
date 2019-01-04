@@ -40,7 +40,7 @@ uint8_t resetRTC(I2C_Helper & i2c, int) {
 
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(9600); // NOTE! Serial.begin must be called before i2c_clock is constructed.
 	Serial.println(" Serial Begun");
 	pinMode(RTC_RESET, OUTPUT);
 	digitalWrite(RTC_RESET, LOW); // reset pin

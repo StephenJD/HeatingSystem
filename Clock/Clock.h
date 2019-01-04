@@ -80,7 +80,7 @@
 
 	class I2C_Clock : public Clock , public I2C_Helper::I_I2Cdevice {
 	public:
-		I2C_Clock(I2C_Helper & i2C, int addr);
+		I2C_Clock(I2C_Helper * i2C, int addr);
 		uint8_t i2C_speedTest();
 		void saveTime() override;
 		void loadTime() override;

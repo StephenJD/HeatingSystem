@@ -30,7 +30,7 @@ namespace HardwareInterfaces {
 		if (wake) _timeSince = DISPLAY_WAKE_TIME;
 		return _timeSince > 0;
 	}
-
+}
 	// Functions supporting local interrupt
 	namespace { volatile bool keyQueueMutex = false; }
 
@@ -62,4 +62,4 @@ namespace HardwareInterfaces {
 		return retKey;
 	}
 
-}
+

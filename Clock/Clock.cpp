@@ -147,7 +147,13 @@
 	//                     I2C_Clock                             //
 	///////////////////////////////////////////////////////////////
 
-	I2C_Clock::I2C_Clock(I2C_Helper & i2C, int addr) : I_I2Cdevice(i2C, addr) {
+	I2C_Clock::I2C_Clock(I2C_Helper * i2C, int addr) : I_I2Cdevice(i2C, addr) {
+		if (i2C == 0) {
+			if (Serial) {
+				Serial.println("Clock initialised before I2C Helper!");
+				Serial.println("Call setI2Chelper() before using the clock");
+			}
+		} 
 		loadTime(); 
 	}
 	
@@ -156,6 +162,7 @@
 		i2c_helper().result.foundDeviceAddr = 0x68;
 		i2c_helper().speedTestS(this);
 		//i2c_helper().setThisI2CFrequency(0x68, 100000);
+		loadTime(); 
 		return i2c_helper().result.error;
 	}
 
@@ -179,21 +186,24 @@
 
 			errCode = _i2C->read(_address, 0, 9, data);
 			if ((errCode != I2C_Helper::_OK || data[6] == 255) && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
-				Serial.print("Error reading RTC : "); Serial.print(_i2C->getError(errCode)); Serial.print(" Year : "); Serial.println((int)data[6]);
-				for (int val : data) { Serial.print(" data[] : "); Serial.println(fromBCD(val)); }
+				if (Serial) {
+					Serial.print("Error reading RTC : "); Serial.print(_i2C->getError(errCode));
+					Serial.print(" Year : "); Serial.println((int)data[6]);
+				}
+				if (Serial) { for (int val : data) { Serial.print(" data[] : "); Serial.println(fromBCD(val)); } }
 				//_i2C->slowdown_and_reset(0);
 				data[6] = 0;
 				errCode = _i2C->read(_address, 0, 9, data);
 			}
 			if (errCode != I2C_Helper::_OK) {
-				Serial.print("RTC Unreadable. "); Serial.println(_i2C->getError(errCode));
+				if (Serial) { Serial.print("RTC Unreadable. "); Serial.println(_i2C->getError(errCode)); }
 			}
 			else if (data[6] == 0) {
-				Serial.println("RTC set from Compiler");
+				if (Serial) { Serial.println("RTC set from Compiler"); }
 				_setFromCompiler();
 			}
 			else {
-				//Serial.println("Set from RTC");
+				//if (Serial) Serial.println("Set from RTC");
 				_now.setMins10(data[1] >> 4);
 				_now.setHrs(fromBCD(data[2]));
 				_now.setDay(fromBCD(data[4]));
@@ -206,7 +216,7 @@
 			}
 		}
 		else {
-			Serial.println("No i2c: Set from Compiler");
+			if (Serial) { Serial.println("No i2c: Set from Compiler"); }
 			_setFromCompiler();
 			errCode = I2C_Helper::_I2C_Device_Not_Found;
 		}
@@ -214,6 +224,7 @@
 	}
 
 	void I2C_Clock::saveTime() {
+		if (_i2C == 0) return;
 		//Serial.print("Save CurrDateTime... at "); Serial.println(_i2C->getThisI2CFrequency(0x68), DEC);
 
 		uint8_t data[9];
@@ -230,15 +241,15 @@
 		auto errCode = _i2C->write(_address, 0, 9, data);
 
 		if (errCode != I2C_Helper::_OK && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
-			Serial.print("Error writing RTC : ");  Serial.println(_i2C->getError(errCode));
+			if (Serial) { Serial.print("Error writing RTC : ");  Serial.println(_i2C->getError(errCode)); }
 			//_i2C->slowdown_and_reset(0);
 			errCode = _i2C->write(_address, 0, 9, data);
 		}
 		if (errCode != I2C_Helper::_OK) {
-			Serial.print("Unable to write RTC:");  Serial.println(_i2C->getError(errCode));
+			if (Serial) { Serial.print("Unable to write RTC:");  Serial.println(_i2C->getError(errCode)); }
 		}
 		else {
-			//Serial.println("Saved CurrDateTime");
+			//if (Serial) Serial.println("Saved CurrDateTime");
 		}
 		//#if defined ZPSIM
 		//	CURR_TIME = currentTime();

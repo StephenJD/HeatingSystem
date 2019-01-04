@@ -13,7 +13,7 @@
 #include "HardwareInterfaces\LocalDisplay.h"
 #include "HardwareInterfaces\LocalKeypad.h"
 #include "HardwareInterfaces\Console.h"
-#include "HardwareInterfaces/LocalDisplay.h"
+#include "HardwareInterfaces\LocalDisplay.h"
 
 #include <Logging.h>
 #include <Clock.h>
@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////
 //    Single Responsibility is to connect the parts     //
 //////////////////////////////////////////////////////////
-//namespace HeatingSystemN {
+
 	class HeatingSystem {
 	public:
 
@@ -47,5 +47,3 @@
 		Assembly::MainConsolePageGenerator _mainPages;
 		HardwareInterfaces::Console _mainConsole;
 	};
-//}
-//using HeatingSystemN::HeatingSystem;

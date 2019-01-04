@@ -1,14 +1,18 @@
 #include "LocalKeypad.h"
 #include "Logging.h"
+extern byte LOCAL_INT_PIN;
+extern byte KEY_ANALOGUE;
 
 namespace HardwareInterfaces {
 	LocalKeypad * localKeypad;
-	int16_t LocalKeypad::adc_LocalKey_val[] = { 874,798,687,612,551,501,440 }; // for analogue keypad
+	constexpr int16_t LocalKeypad::adc_LocalKey_val[]; // for analogue keypad
 
 	LocalKeypad::LocalKeypad() { //Display_Stream & displ) : Keypad(displ) 
+		logger().log("LocalKeypad Start...");
+		localKeypad = this;
 		digitalWrite(LOCAL_INT_PIN, HIGH); // turn ON pull-up 
-		attachInterrupt(digitalPinToInterrupt(LOCAL_INT_PIN), localKeyboardInterrupt, FALLING); // attachInterrupt(KEYINT, localKeyboardInterrupt, CHANGE);
-		logger().log("LocalKeypad Constructed");
+		//attachInterrupt(digitalPinToInterrupt(LOCAL_INT_PIN), localKeyboardInterrupt, FALLING); 
+		 attachInterrupt(LOCAL_INT_PIN, localKeyboardInterrupt, CHANGE);
 	}
 
 #if defined (ZPSIM)
@@ -41,22 +45,7 @@ namespace HardwareInterfaces {
 		return analogRead(an_pin);   // read the value from the keypad
 	}
 
-	void localKeyboardInterrupt() { // static or global interrupt handler, no arguments
-		
-		// lastTime check required to prevent multiple interrupts from each key press.
-		static unsigned long lastTime = millis();
-		if (millis() < lastTime) return;
-		lastTime = millis() + 2;
 
-		auto & keypad = *localKeypad;
-		auto myKey = keypad.readKey();
-		auto newKey = myKey;
-		while (myKey == 1 && newKey == myKey) {
-			newKey = keypad.readKey(); // see if a second key is pressed
-			if (newKey >= 0) myKey = newKey;
-		}
-		putInKeyQue(keypad.keyQue, keypad.keyQuePos, myKey);
-	}
 
 	int LocalKeypad::getKey() {
 		auto returnKey = getFromKeyQue(keyQue, keyQuePos);
@@ -77,3 +66,20 @@ namespace HardwareInterfaces {
 	}
 
 }
+
+void localKeyboardInterrupt() { // static or global interrupt handler, no arguments
+		
+		// lastTime check required to prevent multiple interrupts from each key press.
+		static unsigned long lastTime = millis();
+		if (millis() < lastTime) return;
+		lastTime = millis() + 2;
+
+		auto & keypad = *HardwareInterfaces::localKeypad;
+		auto myKey = keypad.readKey();
+		auto newKey = myKey;
+		while (myKey == 1 && newKey == myKey) {
+			newKey = keypad.readKey(); // see if a second key is pressed
+			if (newKey >= 0) myKey = newKey;
+		}
+		putInKeyQue(keypad.keyQue, keypad.keyQuePos, myKey);
+	}
