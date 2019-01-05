@@ -73,6 +73,7 @@ namespace Assembly {
 
 		// Basic UI Elements
 		LCD_UI::UI_Label _dst, _prog, _zone;
+		LCD_UI::UI_Cmd _contrastCmd, _backlightCmd;
 		LCD_UI::UI_Cmd _dwellingZoneCmd, _dwellingCalendarCmd, _dwellingProgCmd;
 		LCD_UI::UI_Cmd _profileDaysCmd;
 		client_data_structures::InsertSpell_Cmd _fromCmd;
@@ -82,7 +83,7 @@ namespace Assembly {
 		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
 		
 		// Pages & sub-pages - Collections of UI handles
-		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _page_currTime_c;
+		LCD_UI::Collection<6, LCD_UI::Collection_Hndl> _page_currTime_c;
 		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_zoneReqTemp_c;
 		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _zone_subpage_c;
 		LCD_UI::Collection<5, LCD_UI::Collection_Hndl> _calendar_subpage_c;

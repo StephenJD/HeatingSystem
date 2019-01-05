@@ -1,5 +1,5 @@
 #include "Clock.h"
-#include "EEPROM.h"
+#include <EEPROM\EEPROM.h>
 
 
 

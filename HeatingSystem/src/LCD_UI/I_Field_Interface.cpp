@@ -6,7 +6,7 @@
 
 namespace LCD_UI {
 	using namespace GP_LIB;
-	using HI_BD = HardwareInterfaces::DisplayBuffer_I;
+	using HI_BD = HardwareInterfaces::LCD_Display;
 	// *********************************************
 	//             I_Field_Interface 
 	// *********************************************
@@ -67,7 +67,7 @@ namespace LCD_UI {
 		auto streamVal = _wrapper->val;
 		if (activeElement) {
 			auto fieldInterface_h = parent();
-			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::DisplayBuffer_I::e_inEdit) { // any item may be in edit
+			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
 			}
 			else const_cast<I_Edit_Hndl&>(editItem()).currValue().val = streamVal;

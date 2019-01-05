@@ -18,21 +18,30 @@
 */
 #pragma once
 
-#include <inttypes.h>
+#if defined(__SAM3X8E__) || defined ZPSIM
 
-#if defined(__SAM3X8E__)
+#include "Arduino.h"
+#define LOAD_EEPROM
+
 class I2C_Helper;
 
 class EEPROMClass
 {
+#if defined (ZPSIM)
+public:
+	static uint8_t myEEProm[4096]; // EEPROM object may not get created until after it is used! So ensure array exists by making it static
+	EEPROMClass() {}
+	~EEPROMClass();
+#endif
+
   public:
     EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr);
     uint8_t read(int iAddr);
     uint8_t write(int iAddr, uint8_t iVal);
     uint8_t update(int iAddr, uint8_t iVal);
-	void setI2Chelper(I2C_Helper & i2C) { _i2C = &i2C; }
+	void setI2Chelper(I2C_Helper & i2C);
  private:
-   I2C_Helper * _i2C;
+   I2C_Helper * _i2C = 0;
    uint8_t _eepromAddr;
 };
 

@@ -59,7 +59,7 @@ namespace LCD_UI {
 			return f_interface().editItem().currValue().valRange._cursorPos;
 		}
 		const Behaviour behaviour() const override { 
-			bool inEdit = (_cursorMode == HardwareInterfaces::DisplayBuffer_I::e_inEdit);
+			bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
 			return inEdit ? _editBehaviour : Collection_Hndl::behaviour(); 
 			//return Collection_Hndl::behaviour(); 
 		}
@@ -84,7 +84,7 @@ namespace LCD_UI {
 		const I_Field_Interface & f_interface() const { return static_cast<const I_Field_Interface&>(*get()); }
 		I_Field_Interface & f_interface() { return static_cast<I_Field_Interface&>(*get()); }
 	private:
-		CursorMode _cursorMode = HardwareInterfaces::DisplayBuffer_I::e_unselected;
+		CursorMode _cursorMode = HardwareInterfaces::LCD_Display::e_unselected;
 		Behaviour _editBehaviour;
 		const uint8_t _fieldID; // placed here to reduce padding
 		UI_FieldData * _data;

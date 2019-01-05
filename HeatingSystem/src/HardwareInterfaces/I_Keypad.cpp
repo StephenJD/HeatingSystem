@@ -1,5 +1,5 @@
 #include "I_Keypad.h"
-#include "Clock.h"
+#include <Clock/Clock.h>
 #include "A__Constants.h"
 
 namespace HardwareInterfaces {
@@ -13,9 +13,6 @@ namespace HardwareInterfaces {
 		for (auto & key : keyQue) {
 			key = -1;
 		}
-		//log("I_Keypad Constructor");
-		//	DateTime_Run::secondsSinceLastCheck(lastTick); // set lastTick for the keypad to now.
-		//log("I_Keypad Base Done");
 	}
 
 	bool I_Keypad::isTimeToRefresh() {

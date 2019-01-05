@@ -6,7 +6,7 @@
 #include "..\HardwareInterfaces\Relay.h"
 #include "..\HardwareInterfaces\Temp_Sensor.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
-#include <Logging.h>
+#include <Logging/Logging.h>
 #include <RDB.h>
 
 namespace HardwareInterfaces {

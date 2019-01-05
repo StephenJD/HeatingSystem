@@ -15,8 +15,6 @@
 #include "HardwareInterfaces\Console.h"
 #include "HardwareInterfaces\LocalDisplay.h"
 
-#include <Logging.h>
-#include <Clock.h>
 #include <I2C_Helper.h>
 #include <RDB.h>
 
@@ -32,9 +30,9 @@
 		void serviceMainConsole();
 
 		// Public Data Members
+		RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
 		HardwareInterfaces::LocalDisplay mainDisplay;
 		HardwareInterfaces::LocalKeypad localKeypad;
-		RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
 		HardwareInterfaces::RelaysPort relaysPort;
 		HardwareInterfaces::MixValveController mixValveController;
 		I2C_Helper_Auto_Speed<27> i2C;
@@ -43,6 +41,7 @@
 		HardwareInterfaces::Relay relayArr[Assembly::NO_OF_RELAYS]; // Array of Relay provided by client
 		HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 	private:
+		RelationalDatabase::TableQuery _q_displays;
 		Assembly::Initialiser _initialiser;
 		Assembly::MainConsolePageGenerator _mainPages;
 		HardwareInterfaces::Console _mainConsole;

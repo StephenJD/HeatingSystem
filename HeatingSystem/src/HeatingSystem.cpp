@@ -3,9 +3,7 @@
 #include "HardwareInterfaces\I2C_Comms.h"
 #include "HardwareInterfaces\A__Constants.h"
 #include "LCD_UI\A_Top_UI.h"
-#include <Logging.h>
-#include <EEPROM.h>
-//#include "..\..\EEPROM_Due\EEPROM_Due.h"
+#include <EEPROM\EEPROM.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
@@ -39,11 +37,13 @@ using namespace	Assembly;
 HeatingSystem::HeatingSystem()
 	: 
 	db(RDB_START_ADDR, EEPROM_SIZE, writer, reader)
-	,mixValveController(MIX_VALVE_I2C_ADDR)
-	,remDispl{ { i2C ,US_REMOTE_ADDRESS },{i2C ,FL_REMOTE_ADDRESS },{i2C ,DS_REMOTE_ADDRESS } }
-	,_initialiser(*this)
-	,_mainPages{db}
-	,_mainConsole(localKeypad, mainDisplay, _mainPages.pages())
+	, mainDisplay(&_q_displays)
+	, mixValveController(MIX_VALVE_I2C_ADDR)
+	, remDispl{ { i2C ,US_REMOTE_ADDRESS },{i2C ,FL_REMOTE_ADDRESS },{i2C ,DS_REMOTE_ADDRESS } }
+	, _q_displays(db.getTable(TB_Display))
+	, _initialiser(*this)
+	, _mainPages{db}
+	, _mainConsole(localKeypad, mainDisplay, _mainPages.pages())
 	{
 	HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 	}

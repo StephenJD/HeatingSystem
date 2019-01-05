@@ -9,7 +9,7 @@
 
 namespace LCD_UI {
 	using namespace std;
-	using HI_BD = HardwareInterfaces::DisplayBuffer_I;
+	using HI_BD = HardwareInterfaces::LCD_Display;
 	using ListStatus = UI_DisplayBuffer::ListStatus;
 
 	///////////////////////////////////////////
@@ -79,7 +79,7 @@ namespace LCD_UI {
 	}
 
 	CursorMode Collection_Hndl::cursorMode(const Object_Hndl * activeElement) const {
-		using HI_BD = HardwareInterfaces::DisplayBuffer_I;
+		using HI_BD = HardwareInterfaces::LCD_Display;
 		if (activeElement) {
 			if (this == reinterpret_cast<const Collection_Hndl*>(activeElement->get())) return HI_BD::e_selected;
 		}

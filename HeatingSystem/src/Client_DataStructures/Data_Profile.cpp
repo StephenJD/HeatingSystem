@@ -224,7 +224,7 @@ namespace client_data_structures {
 		auto gotTT = tt_FilterQ.begin();
 		if (gotTT.status() != TB_OK) {
 			uint16_t newTime = Date_Time::TimeOnly{ 7,0 }.asInt() << 8;
-			R_TimeTemp newTT{ RecordID(profileID), newTime + uint16_t(28) };
+			R_TimeTemp newTT{ RecordID(profileID), newTime + (uint16_t)28 };
 			tt_tableQ.insert(&newTT);
 		}
 	}

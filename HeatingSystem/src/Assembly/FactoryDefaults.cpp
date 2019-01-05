@@ -6,9 +6,18 @@
 #include "..\Client_DataStructures\Data_Spell.h"
 #include "..\Client_DataStructures\Data_Profile.h"
 #include "..\Client_DataStructures\Data_Zone.h"
+#include "..\HardwareInterfaces\LCD_Display.h"
+#include <Logging/Logging.h>
 
 namespace Assembly {
 	using namespace client_data_structures;
+
+	constexpr R_Display displays_f[] = {
+		{"Main", 0, 10, 5, 2, 2, 20, 10}
+		,{"DS", 0x26, 0, 0, 0, 0, 0, 0}
+		,{"US", 0x24, 0, 0, 0, 0, 0, 0}
+		,{"Flat", 0x25, 0, 0, 0, 0, 0, 0}
+	};
 
 	constexpr R_Relay relays_f[] = {
 		{ "Flat",6 << 1 }
@@ -146,6 +155,8 @@ namespace Assembly {
 		//enum tableIndex { TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
 
 		logger().log("setFactoryDefaults Started...");
+		logger().log("\nDisplay Table ");
+		db.createTable(displays_f);
 		logger().log("\nRelays Table ");
 		db.createTable(relays_f);
 		logger().log("\nTempSensors Table ");

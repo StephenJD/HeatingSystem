@@ -1,6 +1,6 @@
 #include "Data_CurrentTime.h"
 #include "..\..\..\Conversions\Conversions.h"
-#include "Clock.h"
+#include <Clock/Clock.h>
 
 namespace client_data_structures {
 	using namespace HardwareInterfaces;

@@ -11,7 +11,7 @@ namespace HardwareInterfaces {
 	class Console
 	{
 	public:
-		Console(I_Keypad & keyPad, DisplayBuffer_I & lcd_buffer, LCD_UI::A_Top_UI & pageGenerator);
+		Console(I_Keypad & keyPad, LCD_Display & lcd_display, LCD_UI::A_Top_UI & pageGenerator);
 		bool processKeys();
 	private:
 		I_Keypad & _keyPad;

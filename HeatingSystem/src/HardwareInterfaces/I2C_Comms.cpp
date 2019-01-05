@@ -1,5 +1,5 @@
 #include "I2C_Comms.h"
-#include "Logging.h"
+#include <Logging/Logging.h>
 #include "A__Constants.h"
 
 namespace HardwareInterfaces {
@@ -67,8 +67,8 @@ namespace HardwareInterfaces {
 	bool HardReset::i2C_is_released() {
 		//Serial.println("HardReset::i2C_is_released()");
 		unsigned long downTime = micros() + 20L;
-		while (digitalRead(I2C_DATA) == LOW && micros() < downTime);
-		return (digitalRead(I2C_DATA) == HIGH);
+		while (digitalRead(I2C_DATA_PIN) == LOW && micros() < downTime);
+		return (digitalRead(I2C_DATA_PIN) == HIGH);
 	}
 
 	uint8_t HardReset::operator()(I2C_Helper & i2c, int addr) {

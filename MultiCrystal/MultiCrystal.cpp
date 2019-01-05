@@ -6,11 +6,6 @@
 #include <I2C_Helper.h>
 #include <Conversions.h>
 
-#ifdef LOG_TO_SD
-	//static_assert(false,"LOG_TO_SD defined");
-	#include "A__Constants.h" // for LogToSD
-#endif
-
 using namespace std;
 using namespace GP_LIB;
 

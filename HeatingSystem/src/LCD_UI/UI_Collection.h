@@ -22,7 +22,7 @@ namespace LCD_UI {
 		virtual bool isCollection() const { return false; }
 		virtual const I_SafeCollection * collection() const { return 0; }
 		// Queries supporting streaming
-		using HI_BD = HardwareInterfaces::DisplayBuffer_I;
+		using HI_BD = HardwareInterfaces::LCD_Display;
 		virtual const char *		streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const { return 0; }
 		virtual HI_BD::CursorMode	cursorMode(const Object_Hndl * activeElement) const;
 		virtual int					cursorOffset(const char * data) const;
@@ -65,7 +65,7 @@ namespace LCD_UI {
 	}
 
 	/// <summary>
-	/// The Base-class for selectible UI_Objects.
+	/// The Base-class for UI_Objects that perform a special action on select or up/dn.
 	/// </summary>
 	class Custom_Select : public UI_Object {
 	public:

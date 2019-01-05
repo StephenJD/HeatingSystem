@@ -1,6 +1,6 @@
 #include "DateTimeWrapper.h"
 #include "Conversions.h"
-#include "Clock.h"
+#include <Clock\Clock.h>
 
 #ifdef ZPSIM
 	#include <iostream>

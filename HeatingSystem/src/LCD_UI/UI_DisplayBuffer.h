@@ -1,15 +1,15 @@
 #pragma once
-#include "..\HardwareInterfaces\DisplayBuffer.h"
+#include "..\HardwareInterfaces\LCD_Display.h"
 
 namespace LCD_UI {
 
-	using CursorMode = HardwareInterfaces::DisplayBuffer_I::CursorMode;
+	using CursorMode = HardwareInterfaces::LCD_Display::CursorMode;
 
-	class UI_DisplayBuffer { // cannot derive from DisplayBuffer_I, because it needs to be a polymorphic pointer
+	class UI_DisplayBuffer { // cannot derive from LCD_Display, because it needs to be a polymorphic pointer
 	public:
 		enum ListStatus { e_showingAll, e_notShowingStart, e_not_showingEnd = e_notShowingStart * 2, e_this_not_showing = e_not_showingEnd * 2 };
 		
-		UI_DisplayBuffer(HardwareInterfaces::DisplayBuffer_I & displayBuffer) : _lcd(&displayBuffer) {}
+		UI_DisplayBuffer(HardwareInterfaces::LCD_Display & displayBuffer) : _lcd(&displayBuffer) {}
 		
 		//Queries
 		const char * toCStr() const { return _lcd->buff(); }
@@ -21,6 +21,6 @@ namespace LCD_UI {
 		void newLine();
 		void reset() {_lcd->reset();}
 		void truncate(int newEnd) { _lcd->truncate(newEnd); }
-		HardwareInterfaces::DisplayBuffer_I * _lcd;
+		HardwareInterfaces::LCD_Display * _lcd;
 	};
 }

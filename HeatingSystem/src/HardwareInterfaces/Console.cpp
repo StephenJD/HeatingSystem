@@ -1,14 +1,15 @@
 #include "Console.h"
 #include "I_Keypad.h"
-#include "DisplayBuffer.h"
+#include "LCD_Display.h"
 #include "..\LCD_UI\A_Top_UI.h"
+#include "A__Constants.h"
 
 namespace HardwareInterfaces {
 	using namespace LCD_UI;
 
-	Console::Console(I_Keypad & keyPad, DisplayBuffer_I & lcd_buffer, A_Top_UI & pageGenerator) :
+	Console::Console(I_Keypad & keyPad, LCD_Display & lcd_display, A_Top_UI & pageGenerator) :
 		_keyPad(keyPad)
-		, _lcd_UI(lcd_buffer)
+		, _lcd_UI(lcd_display)
 		, _pageGenerator(pageGenerator)
 	{}
 
@@ -46,6 +47,10 @@ namespace HardwareInterfaces {
 			case 6:
 				//Serial.println("GotKey Select");
 				_pageGenerator.rec_select();
+				break;
+			case NUM_LOCAL_KEYS + 1:
+				// Set backlight to bright.
+				_lcd_UI._lcd->setBackLight(true);
 				break;
 			default:
 				doRefresh = _keyPad.isTimeToRefresh();

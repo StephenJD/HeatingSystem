@@ -94,7 +94,7 @@ namespace LCD_UI {
 	}
 
 	void A_Top_UI::rec_left_right(int move) { // left-right movement
-		using HI_BD = HardwareInterfaces::DisplayBuffer_I;
+		using HI_BD = HardwareInterfaces::LCD_Display;
 
 		if (selectedPage_h() == this) {
 			setBackUI(activeUI());

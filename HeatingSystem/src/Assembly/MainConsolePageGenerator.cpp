@@ -53,6 +53,8 @@ namespace Assembly {
 		, _dst{"DST Hours:"}
 		, _prog{"Prg:", viewable().make_sameLine() }
 		, _zone{"Zne:"}
+		, _contrastCmd{"Contrast",0, viewOneUpDn().make_newLine() }
+		, _backlightCmd{"Backlight",0, viewOneUpDn() }
 		, _dwellingZoneCmd{"Zones",0 }
 		, _dwellingCalendarCmd{ "Calendar",0 }
 		, _dwellingProgCmd{ "Programs",0 }
@@ -64,7 +66,7 @@ namespace Assembly {
 		, _newTTCmd{ "New", 0, viewOneUpDn().make_hidden() }
 
 		// Pages & sub-pages - Collections of UI handles
-		, _page_currTime_c{ makeCollection(_currTimeUI_c, _currDateUI_c, _dst, _dstUI_c) }
+		, _page_currTime_c{ makeCollection(_currTimeUI_c, _currDateUI_c, _dst, _dstUI_c, _contrastCmd, _backlightCmd) }
 		, _page_zoneReqTemp_c{ makeCollection(_zoneIsReq_UI_c) }
 		, _zone_subpage_c{ makeCollection(_dwellingZoneCmd, _zoneNameUI_c).set(viewAllUpDn())}
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
@@ -78,6 +80,8 @@ namespace Assembly {
 		, _display_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _display_h{_display_c}
 	{
+		_contrastCmd.set_UpDn_Target(&_contrastCmd);
+		_backlightCmd.set_UpDn_Target(&_backlightCmd);
 		_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 		_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 		_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));

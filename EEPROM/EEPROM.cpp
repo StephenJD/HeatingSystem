@@ -20,7 +20,7 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
-#if defined(__SAM3X8E__)
+#if defined(__SAM3X8E__) || defined ZPSIM
 
 #include "EEPROM.h"
 #include "I2C_Helper.h"
@@ -28,31 +28,60 @@
 /******************************************************************************
  * Constructors
  ******************************************************************************/
-EEPROMClass::EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr) : _i2C(i2C), _eepromAddr(eepromAddr){
-	//_i2C.result.reset();
-	//_i2C.result.foundDeviceAddr = _eepromAddr;
-	//_i2C.speedTest();
-	//_i2C.result.foundDeviceAddr = _rtcAddr;
-	//_i2C.speedTest();
-	//_i2C.setI2CFrequency(_i2C.result.safestSpeed);
-}
 
+#if defined (ZPSIM)
+	using namespace std;
+	#include <iostream>
+	#include <fstream>
+	uint8_t EEPROMClass::myEEProm[4096];
+	EEPROMClass fileEEPROM;
+
+	EEPROMClass::EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr) : _i2C(i2C), _eepromAddr(eepromAddr) {
+	#if defined LOAD_EEPROM
+		ifstream myfile("EEPROM.dat", ios::binary);	// Input file stream
+		if (myfile.is_open()) {
+			myfile.read((char*)myEEProm, 4096);
+			myfile.close();
+		}
+		else cout << "Unable to open file";
+	#endif
+	}
+
+#else
+	EEPROMClass::EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr) : _eepromAddr(eepromAddr) {
+		if(i2C) setI2Chelper(*i2C) 
+	}
+#endif
 /******************************************************************************
  * User API
  ******************************************************************************/
 
+void EEPROMClass::setI2Chelper(I2C_Helper & i2C) {
+	_i2C = &i2C;
+	_i2C->result.reset();
+	_i2C->result.foundDeviceAddr = 0x50;
+	_i2C->speedTestS();
+}
+
 uint8_t EEPROMClass::read(int iAddr)
 {
-    uint8_t result;
-	_i2C->readEP(_eepromAddr,iAddr,1,&result);
-	return result;
+	#if defined (ZPSIM)
+		return myEEProm[iAddr];
+	#else
+		uint8_t result;
+		_i2C->readEP(_eepromAddr,iAddr,1,&result);
+		return result;
+	#endif
 }
 
 uint8_t EEPROMClass::write(int iAddr, uint8_t iVal)
 {
-  uint8_t iRC = _i2C->writeEP(_eepromAddr,iAddr,iVal);
-  //delay(5);  // Give the EEPROM time to write its data  
-  return(iRC);
+	#if defined (ZPSIM)
+		myEEProm[iAddr] = iVal;
+		return 0;
+	#else
+	  return _i2C->writeEP(_eepromAddr, iAddr, iVal);;
+	#endif
 }
 
 uint8_t EEPROMClass::update(int iAddr, uint8_t iVal) {
@@ -60,6 +89,19 @@ uint8_t EEPROMClass::update(int iAddr, uint8_t iVal) {
 	else return ++iAddr;
 }
 
-//EEPROMClass & EEPROM;
+#if defined (ZPSIM)
 
+EEPROMClass::~EEPROMClass() {
+	#if defined LOAD_EEPROM
+		ofstream myfile("EEPROM.dat", ios::binary);	// Output file stream
+		if (myfile.is_open()) {
+			myfile.write((char*)myEEProm, 4096);
+			myfile.close();
+		}
+		else cout << "Unable to open file";
+	#endif
+}
+
+EEPROMClass & EEPROM(fileEEPROM);
+#endif
 #endif

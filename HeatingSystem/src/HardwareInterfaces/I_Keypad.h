@@ -15,8 +15,7 @@ namespace HardwareInterfaces {
 		volatile int8_t keyQue[10];
 		volatile int8_t keyQuePos; // points to last entry in KeyQue
 		bool wakeDisplay(bool wake);
-		//void setdisplayStream(Display_Stream *);
-		//Display_Stream * displayStream() { return _displayStream; }
+
 	protected:
 		I_Keypad();
 		int8_t		_timeSince;

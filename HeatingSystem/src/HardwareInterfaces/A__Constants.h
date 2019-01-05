@@ -6,18 +6,6 @@
 
 namespace HardwareInterfaces {
 
-#define LOCAL_INT_PIN 18
-#define RTC_RESET 4
-#define REF_ANALOGUE 3
-#define I2C_DATA 20
-
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-	//Code in here will only be compiled if an Arduino Mega is used.
-#define KEYINT 5
-#elif defined(__SAM3X8E__)
-#define KEYINT LOCAL_INT_PIN
-#endif
-
 	extern long actualLoopTime;
 	extern long mixCheckTime;
 	extern long zoneCheckTime;
@@ -57,7 +45,6 @@ namespace HardwareInterfaces {
 
 	const uint8_t I2C_MASTER_ADDR = 0x11;
 	const uint8_t MIX_VALVE_I2C_ADDR = 0x10;
-	const uint8_t I2C_DATA_PIN = 10;
 	const uint8_t RTC_ADDRESS = 0x68;
 	const uint8_t EEPROM_ADDRESS = 0x50;
 	const uint8_t US_REMOTE_ADDRESS = 0x24;
@@ -84,6 +71,8 @@ namespace HardwareInterfaces {
 	const uint8_t DS75LX_LIMIT_REG = 0x03;
 
 	// Pin assignments & misc.
+	const uint8_t PHOTO_ANALOGUE = A1;
+	const uint8_t I2C_DATA_PIN = 20;
 	const int8_t ZERO_CROSS_PIN = -15; // -ve = active falling edge.
 	const int8_t RESET_OUT_PIN = -14;  // -ve = active low.
 	const int8_t RESET_LED_PIN_P = 16;
@@ -95,6 +84,7 @@ namespace HardwareInterfaces {
 	const uint8_t VALVE_WAIT_TIME = 40;
 
 	//////////////////// Display ////////////////////////////////
+	const uint8_t NUM_LOCAL_KEYS = 7;
 	const uint8_t SECONDS_ON_VERSION_PAGE = 5;
 	const char NEW_LINE_CHR = '~'; // character used to indicate this field to start on a new line
 	const char CONTINUATION = '_'; // character used to indicate where a field can split over lines
