@@ -4,6 +4,8 @@
 #include <I2C_Helper.h>
 #include <Conversions.h>
 
+//#pragma message( "Clock.h loaded" )
+
 	/// <summary>
 	/// A Monostate class representing current time/date.
 	/// Date/Time obtained by explicit outward conversion to a Date_Time object.

@@ -14,8 +14,11 @@ namespace RelationalDatabase {
 	class Table {
 	public:
 		Table(RDB_B & db, TableID tableID, ChunkHeader & tableHdr);
+		Table(const Table & rhs);
+		//Table & operator =(const Table & rhs);
 		
 		// Queries
+		TB_Status readRecord(RecordID recordID, void * result) const;
 		//TableNavigator begin() const;
 
 		TableID tableID() const { return _tableID; }
@@ -30,7 +33,6 @@ namespace RelationalDatabase {
 		NoOf_Recs_t maxRecordsInTable() const { return _max_NoOfRecords_in_table; }
 
 	protected:
-		TB_Status readRecord(RecordID recordID, void * result) const;
 
 	private:
 		friend TableNavigator;

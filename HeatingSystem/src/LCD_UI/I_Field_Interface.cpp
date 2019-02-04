@@ -3,6 +3,7 @@
 #include "UI_Primitives.h"
 #include "UI_FieldData.h"
 #include "Conversions.h"
+#include <Logging/Logging.h>
 
 namespace LCD_UI {
 	using namespace GP_LIB;
@@ -62,13 +63,14 @@ namespace LCD_UI {
 		return _wrapper->valRange;
 	}
 
-	decltype(I_UI_Wrapper::val) I_Field_Interface::getData(const Object_Hndl * activeElement) const {
+	decltype(I_UI_Wrapper::val) I_Field_Interface::getData(bool isActiveElement) const {
 		if (_wrapper == 0) return 0;
 		auto streamVal = _wrapper->val;
-		if (activeElement) {
+		if (isActiveElement) {
 			auto fieldInterface_h = parent();
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
+				//logger().log("edit value", streamVal);
 			}
 			else const_cast<I_Edit_Hndl&>(editItem()).currValue().val = streamVal;
 		}

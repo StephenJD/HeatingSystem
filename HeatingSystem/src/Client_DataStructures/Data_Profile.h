@@ -77,7 +77,7 @@ namespace client_data_structures {
 	class ProfileDays_Interface : public I_Field_Interface {
 	public:
 		using I_Field_Interface::editItem;
-		const char * streamData(const Object_Hndl * activeElement) const override;
+		const char * streamData(bool isActiveElement) const override;
 		bool isActionableObjectAt(int index) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	protected:

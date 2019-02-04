@@ -4,6 +4,7 @@
 #include "..\LCD_UI\ValRange.h"
 #include "..\..\..\RDB\src\RDB.h"
 #include "..\..\..\DateTime\src\Date_Time.h"
+#include "..\HardwareInterfaces\Zone.h"
 
 #ifdef ZPSIM
 	#include <ostream>
@@ -56,42 +57,51 @@ namespace client_data_structures {
 	class ReqIsTemp_Interface : public I_Field_Interface {
 	public:
 		using I_Field_Interface::editItem;
-		const char * streamData(const Object_Hndl * activeElement) const override;
+		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	protected:
 		Edit_ReqIsTemp_h _editItem;
 	};
 
-	//***************************************************
-	//              Zone Dynamic Class
-	//***************************************************
+	////***************************************************
+	////              Zone Dynamic Class
+	////***************************************************
 
-	class Zone : public LCD_UI::VolatileData {
-	public:
-		Zone(int tempReq, int currTemp);
-		uint8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
-		//int8_t getFlowSensTemp() const;
-		uint8_t getCurrProgTempRequest() const { return _currProgTempRequest; }
-		uint8_t getCurrTempRequest() const { return _currTempRequest; }
-		uint8_t getCurrTemp() const { return _currTemp; }
-		bool isCallingHeat() const { return _currTemp < _currTempRequest; }
-		// Modifier
-		void setCurrTempRequest(uint8_t val) { _currTempRequest = val; }
-
-	private:
-		int8_t _currProgTempRequest;
-		int8_t _currTempRequest;
-		int8_t _currTemp;
-		int8_t _nextTemp;
-		Date_Time::DateTime _ttEndDateTime;
-		uint8_t _callFlowTemp;		// Programmed flow temp, modified by zoffset
-		uint8_t _tempRatio;
-		long _aveError; // in 1/16 degrees
-		long _aveFlow;  // in degrees
-		//startTime * _sequence;
-		bool _isHeating; // just for logging
-		//GetExpCurveConsts _getExpCurve;
-	};
+	//class Zone : public LCD_UI::VolatileData {
+	//public:
+	//	//Zone(RecordID zoneID, int tempReq, int currTemp);
+	//	// Queries
+	//	RecordID record() const { return _recID; }
+	//	uint8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
+	//	//int8_t getFlowSensTemp() const;
+	//	uint8_t getCurrProgTempRequest() const { return _currProgTempRequest; }
+	//	uint8_t getCurrTempRequest() const { return _currTempRequest; }
+	//	uint8_t getCurrTemp() const { return _currTemp; }
+	//	bool isCallingHeat() const { return _currTemp < _currTempRequest; }
+	//	bool operator== (const Zone & rhs) { return _recID == rhs._recID; }
+	//	
+	//	// Modifier
+	//	void initialise(RecordID zoneID, int tempReq, int currTemp);
+	//	void setCurrTempRequest(uint8_t val) { _currTempRequest = val; }
+	//	void setCurrTemp(uint8_t val) { _currTemp = val; }
+	//private:
+	//	RecordID _recID = 0;
+	//	int8_t _callTempSensIndex = 0;
+	//	int8_t _relayIndex = 0;
+	//	int8_t _mixValveIndex = 0;
+	//	int8_t _currProgTempRequest = 0;
+	//	int8_t _currTempRequest = 0;
+	//	int8_t _currTemp = 0;
+	//	int8_t _nextTemp = 0;
+	//	Date_Time::DateTime _ttEndDateTime;
+	//	uint8_t _callFlowTemp = 0;		// Programmed flow temp, modified by zoffset
+	//	uint8_t _tempRatio = 0;
+	//	long _aveError = 0; // in 1/16 degrees
+	//	long _aveFlow = 0;  // in degrees
+	//	//startTime * _sequence;
+	//	bool _isHeating = false; // just for logging
+	//	//GetExpCurveConsts _getExpCurve;
+	//};
 
 	//extern Zone * zones; // Array of Zones provided by client
 
@@ -110,7 +120,7 @@ namespace client_data_structures {
 		int8_t autoTimeC;
 		int8_t autoMode;
 		int8_t manHeatTime;
-		//Zone & obj(int objID) { return zones[objID]; }
+		//Zone & obj(int objID) { return HardwareInterfaces::zones[objID]; }
 		bool operator < (R_Zone rhs) const { return false; }
 		bool operator == (R_Zone rhs) const { return true; }
 	};
@@ -153,7 +163,7 @@ namespace client_data_structures {
 		Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		I_UI_Wrapper * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;
-		Zone & zone(int index) { return static_cast<Zone*>(runTimeData())[index]; }
+		HardwareInterfaces::Zone & zone(int index) { return static_cast<HardwareInterfaces::Zone*>(runTimeData())[index]; }
 	private:
 		StrWrapper _name;
 		StrWrapper _abbrev;

@@ -21,7 +21,7 @@ using namespace Date_Time;
 
 Clock & clock_() {
 #if defined(__SAM3X8E__)
-	static I2C_Clock _clock(*rtc, RTC_ADDRESS);
+	static I2C_Clock _clock(rtc, RTC_ADDRESS);
 #else
 	static EEPROM_Clock _clock(EEPROM_CLOCK_ADDR);
 #endif

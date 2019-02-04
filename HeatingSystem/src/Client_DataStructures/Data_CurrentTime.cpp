@@ -63,9 +63,9 @@ namespace client_data_structures {
 		return e_mins;
 	}
 
-	const char * CurrentTime_Interface::streamData(const Object_Hndl * activeElement) const {
+	const char * CurrentTime_Interface::streamData(bool isActiveElement) const {
 		clock_().refresh();
-		auto dt = DateTime(getData(activeElement));
+		auto dt = DateTime(getData(isActiveElement));
 		if (editItem().backUI() == 0) dt = DateTime{ clock_() };
 
 		strcpy(scratch, intToString(dt.displayHrs(), 2));
@@ -133,8 +133,8 @@ namespace client_data_structures {
 		return e_yrs;
 	}
 
-	const char * CurrentDate_Interface::streamData(const Object_Hndl * activeElement) const {
-		auto dt = DateOnly(getData(activeElement));
+	const char * CurrentDate_Interface::streamData(bool isActiveElement) const {
+		auto dt = DateOnly(getData(isActiveElement));
 		strcpy(scratch, dt.getDayStr());
 		strcat(scratch, " ");
 		strcat(scratch, intToString(dt.day(), 2));

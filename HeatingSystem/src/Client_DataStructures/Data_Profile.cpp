@@ -44,9 +44,9 @@ namespace client_data_structures {
 
 	//*************ProfileDays_Interface****************
 	
-	const char * ProfileDays_Interface::streamData(const Object_Hndl * activeElement) const {
+	const char * ProfileDays_Interface::streamData(bool isActiveElement) const {
 		constexpr char EDIT_SPC_CHAR[] = "-";
-		int myDays = getData(activeElement);
+		int myDays = getData(isActiveElement);
 		if (myDays & 64) strcpy(scratch, "M"); else strcpy(scratch, EDIT_SPC_CHAR);
 		if (myDays & 32) strcat(scratch, "T"); else strcat(scratch, EDIT_SPC_CHAR);
 		if (myDays & 16) strcat(scratch, "W"); else strcat(scratch, EDIT_SPC_CHAR);

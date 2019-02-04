@@ -34,7 +34,7 @@
 	#include <iostream>
 	#include <fstream>
 	uint8_t EEPROMClass::myEEProm[4096];
-	EEPROMClass fileEEPROM;
+	EEPROMClass fileEEPROM(0,0);
 
 	EEPROMClass::EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr) : _i2C(i2C), _eepromAddr(eepromAddr) {
 	#if defined LOAD_EEPROM
@@ -46,10 +46,25 @@
 		else cout << "Unable to open file";
 	#endif
 	}
+	void EEPROMClass::saveEEPROM() {
+		auto myfile = ofstream("EEPROM.dat", ios::binary);
+		if (myfile) {
+			myfile.write((char*)myEEProm, 4096);
+		}
+		else cout << "Unable to open file";
+	}
+
+	EEPROMClass::~EEPROMClass() {
+#if defined LOAD_EEPROM
+		saveEEPROM();
+#endif
+	}
+
+	EEPROMClass & EEPROM(fileEEPROM);
 
 #else
 	EEPROMClass::EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr) : _eepromAddr(eepromAddr) {
-		if(i2C) setI2Chelper(*i2C) 
+		if (i2C) setI2Chelper(*i2C);
 	}
 #endif
 /******************************************************************************
@@ -59,8 +74,9 @@
 void EEPROMClass::setI2Chelper(I2C_Helper & i2C) {
 	_i2C = &i2C;
 	_i2C->result.reset();
-	_i2C->result.foundDeviceAddr = 0x50;
+	_i2C->result.foundDeviceAddr = _eepromAddr;
 	_i2C->speedTestS();
+	_i2C->setThisI2CFrequency(_eepromAddr, 400000);
 }
 
 uint8_t EEPROMClass::read(int iAddr)
@@ -89,19 +105,4 @@ uint8_t EEPROMClass::update(int iAddr, uint8_t iVal) {
 	else return ++iAddr;
 }
 
-#if defined (ZPSIM)
-
-EEPROMClass::~EEPROMClass() {
-	#if defined LOAD_EEPROM
-		ofstream myfile("EEPROM.dat", ios::binary);	// Output file stream
-		if (myfile.is_open()) {
-			myfile.write((char*)myEEProm, 4096);
-			myfile.close();
-		}
-		else cout << "Unable to open file";
-	#endif
-}
-
-EEPROMClass & EEPROM(fileEEPROM);
-#endif
 #endif

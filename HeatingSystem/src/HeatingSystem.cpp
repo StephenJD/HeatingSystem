@@ -36,19 +36,44 @@ using namespace	Assembly;
 
 HeatingSystem::HeatingSystem()
 	: 
-	db(RDB_START_ADDR, EEPROM_SIZE, writer, reader)
+	db(RDB_START_ADDR, writer, reader, VERSION)
 	, mainDisplay(&_q_displays)
 	, mixValveController(MIX_VALVE_I2C_ADDR)
 	, remDispl{ { i2C ,US_REMOTE_ADDRESS },{i2C ,FL_REMOTE_ADDRESS },{i2C ,DS_REMOTE_ADDRESS } }
-	, _q_displays(db.getTable(TB_Display))
+	, _q_displays(db.tableQuery(TB_Display))
 	, _initialiser(*this)
 	, _mainPages{db}
 	, _mainConsole(localKeypad, mainDisplay, _mainPages.pages())
 	{
-	HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
+		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
+		_mainPages.setDisplay(mainDisplay);
+		localKeypad.wakeDisplay(true);
+		//int zoneIndex = Z_UpStairs;
+		//for (Answer_R<R_Zone> zoneRec : db.tableQuery(TB_Zone)) {
+		//	zoneArr[zoneIndex].initialise(zoneRec.id(), 0, 0);
+		//}
 	}
 
-void HeatingSystem::serviceMainConsole() { _mainConsole.processKeys(); }
+void HeatingSystem::serviceConsoles() {
+	_mainConsole.processKeys(); 
+}
+
+void HeatingSystem::serviceProfiles() {}
+
+void HeatingSystem::serviceTemperatureController() {
+	// get curr temps
+	//for (auto zone : zoneArr) {
+	//	auto zoneID = zone.record();
+	//	R_Zone thisZone;
+	//	db.table(TB_Zone).readRecord(zoneID, &thisZone);
+	//	auto callTempSensorID = thisZone.callTempSens;
+	//	R_TempSensor thisTS;
+	//	db.table(TB_TempSensor).readRecord(callTempSensorID, &thisTS);
+	//	//auto TSAddr = thisTS.obj(0);
+	//	zone.setCurrTemp(tempSensorArr[0].get_temp());
+	//}
+	// check mixer temps
+}
 
 
 

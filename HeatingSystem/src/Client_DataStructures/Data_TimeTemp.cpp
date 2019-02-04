@@ -1,5 +1,6 @@
 #include "Data_TimeTemp.h"
 #include "..\..\..\DateTime\src\Time_Only.h"
+#include <Logging/Logging.h>
 
 #ifdef ZPSIM
 	#include <ostream>
@@ -75,8 +76,9 @@ namespace client_data_structures {
 
 	//*************ProfileDays_Interface****************
 
-	const char * TimeTemp_Interface::streamData(const Object_Hndl * activeElement) const {
-		int tt = getData(activeElement);
+	const char * TimeTemp_Interface::streamData(bool isActiveElement) const {
+		auto tt = (uint16_t)getData(isActiveElement);
+		//logger().log("TimeTemp : ", tt, "IsActive:", isActiveElement);
 		auto time = TimeOnly{tt >> 8};
 		auto temp = (tt & 255) - 10;
 		strcpy(scratch, intToString(time.displayHrs(), 2, '0'));
@@ -97,6 +99,7 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_TimeTemp:
 			_timeTemp = record().rec().time_temp;
+			//logger().log("TimeTemp::getField :", record().rec().time_temp, " ID:", record().id());
 			return &_timeTemp;
 		default: return 0;
 		}

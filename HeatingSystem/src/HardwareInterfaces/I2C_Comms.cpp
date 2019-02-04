@@ -64,37 +64,18 @@ namespace HardwareInterfaces {
 		return failedTest;
 	}
 
-	bool HardReset::i2C_is_released() {
-		//Serial.println("HardReset::i2C_is_released()");
-		unsigned long downTime = micros() + 20L;
-		while (digitalRead(I2C_DATA_PIN) == LOW && micros() < downTime);
-		return (digitalRead(I2C_DATA_PIN) == HIGH);
-	}
-
 	uint8_t HardReset::operator()(I2C_Helper & i2c, int addr) {
-		uint8_t resetPerformed = 0;
-		//Serial.println("HardReset::operator()");
-		if (!i2C_is_released()) {
-			digitalWrite(RESET_LED_PIN_N, LOW);
-			resetPerformed = 1;
-			initialisationRequired = true;
-
-			unsigned long downTime = 2000; // was 64000
-			do {
-				downTime *= 2;
-				pinMode(abs(RESET_OUT_PIN), OUTPUT);
-				digitalWrite(abs(RESET_OUT_PIN), (RESET_OUT_PIN < 0) ? LOW : HIGH);
-				delayMicroseconds(downTime); // was 16000
-				digitalWrite(abs(RESET_OUT_PIN), (RESET_OUT_PIN < 0) ? HIGH : LOW);
-				delayMicroseconds(2000); // required to allow supply to recover before re-testing
-			} while (!i2C_is_released() && downTime < 512000);
-			i2c.restart();
-			timeOfReset_mS = millis();
-			logger().log(" Hard Reset... for ", addr, " took uS:", downTime);
-			delayMicroseconds(50000); // delay to light LED
-			digitalWrite(RESET_LED_PIN_N, HIGH);
-		}
-		return resetPerformed;
+		digitalWrite(RESET_LED_PIN_N, LOW);
+		initialisationRequired = true;
+		digitalWrite(abs(RESET_OUT_PIN), (RESET_OUT_PIN < 0) ? LOW : HIGH);
+		delayMicroseconds(128000); // minimum continuous time required for sucess
+		digitalWrite(abs(RESET_OUT_PIN), (RESET_OUT_PIN < 0) ? HIGH : LOW);
+		delayMicroseconds(2000); // required to allow supply to recover before re-testing
+		if (i2c.i2C_is_frozen(addr)) logger().log("*** Reset I2C is stuck at I2c freq:", i2c.getI2CFrequency(), "for addr:",addr);
+		else logger().log("Done Reset for addr:", addr);
+		timeOfReset_mS = millis();
+		digitalWrite(RESET_LED_PIN_N, HIGH);
+		return true;
 	}
 
 }

@@ -1,5 +1,5 @@
 #include "Logging.h"
-#include <Clock\Clock.h>
+#include <Clock.h>
 #include <Date_Time.h>
 #include <Conversions.h>
 #include <Arduino.h>
@@ -10,7 +10,7 @@ using namespace std;
 #endif
 	using namespace GP_LIB;
 
-	Logger::Logger(Clock & clock) : _clock(clock) {}
+	Logger::Logger(Clock & clock) : _clock(&clock) {}
 
 	////////////////////////////////////
 	//            Serial_Logger       //
@@ -18,6 +18,12 @@ using namespace std;
 	char logTimeStr[18];
 	char decTempStr[7];
 
+	Serial_Logger::Serial_Logger(int baudRate) : Logger() {
+		Serial.flush();
+		Serial.begin(baudRate);
+		Serial.println(" Serial_Logger Begun");
+	}	
+	
 	Serial_Logger::Serial_Logger(int baudRate, Clock & clock) : Logger(clock) {
 		Serial.flush();
 		Serial.begin(baudRate);
@@ -25,42 +31,37 @@ using namespace std;
 	}
 
 	const char * Serial_Logger::logTime() {
-		//Serial.println("logTime()");
-		_clock.refresh();
-		if (_clock.day() == 0) {
-			strcpy(logTimeStr, "No Time: ");
-		}
-		else {
-			strcpy(logTimeStr, intToString(_clock.day(), 2));
-			strcat(logTimeStr, "/");
-			strcat(logTimeStr, intToString(_clock.month(), 2));
-			strcat(logTimeStr, "/");
-			strcat(logTimeStr, intToString(_clock.year(), 2));
-			strcat(logTimeStr, " ");
-			strcat(logTimeStr, intToString(_clock.hrs(), 2));
-			strcat(logTimeStr, ":");
-			strcat(logTimeStr, intToString(_clock.mins10(), 1));
-			strcat(logTimeStr, intToString(_clock.minUnits(), 1));
-		}
-		Serial.flush();
-		//Serial.println("... got logTime()");
+		if (_clock) {
+			_clock->refresh();
+			if (_clock->day() == 0) {
+				strcpy(logTimeStr, "No Time: ");
+			}
+			else {
+				strcpy(logTimeStr, intToString(_clock->day(), 2));
+				strcat(logTimeStr, "/");
+				strcat(logTimeStr, intToString(_clock->month(), 2));
+				strcat(logTimeStr, "/");
+				strcat(logTimeStr, intToString(_clock->year(), 2));
+				strcat(logTimeStr, " ");
+				strcat(logTimeStr, intToString(_clock->hrs(), 2));
+				strcat(logTimeStr, ":");
+				strcat(logTimeStr, intToString(_clock->mins10(), 1));
+				strcat(logTimeStr, intToString(_clock->minUnits(), 1));
+			}
+			Serial.flush();
+			//Serial.println("... got logTime()");
+		} else strcpy(logTimeStr, "");
 		return logTimeStr;
 	}
 
 	void Serial_Logger::log() {
 		Serial.println();
-#ifdef ZPSIM
-		cout << endl;
-#endif
 	}
 
 	void Serial_Logger::log(const char * msg) {
 		Serial.print(logTime());
 		Serial.print("\t");
 		Serial.println(msg);
-#ifdef ZPSIM
-		cout << msg << endl;
-#endif
 	}
 
 	void Serial_Logger::log(const char * msg, long val) {
@@ -69,9 +70,6 @@ using namespace std;
 		Serial.print(msg);
 		Serial.print("\t");
 		Serial.println(val);
-#ifdef ZPSIM
-		cout << msg << "\t" << val << endl;
-#endif
 	}
 
 	void Serial_Logger::log_notime(const char * msg, long val) {
@@ -79,9 +77,6 @@ using namespace std;
 		Serial.print(msg);
 		Serial.print("\t");
 		Serial.println(val);
-#ifdef ZPSIM
-		cout << msg << "\t" << val << endl;
-#endif
 	}
 
 	void Serial_Logger::log(const char * msg, long val, const char * name, long val2) {
@@ -130,6 +125,12 @@ using namespace std;
 	//            SD_Logger           //
 	////////////////////////////////////
 
+	SD_Logger::SD_Logger(const char * fileName, int baudRate) : Serial_Logger(baudRate), _fileName(fileName) {
+		// Avoid calling Serial_Logger during construction, in case clock is broken.
+		openSD();
+		Serial.println("SD_Logger Begun");
+	}	
+	
 	SD_Logger::SD_Logger(const char * fileName, int baudRate, Clock & clock) : Serial_Logger(baudRate, clock), _fileName(fileName) {
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		openSD();

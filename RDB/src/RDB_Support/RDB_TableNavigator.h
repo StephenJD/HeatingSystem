@@ -6,6 +6,7 @@
 #include "RDB_Answer_Locator.h"
 #include "RDB_Capacities.h"
 #include "..\..\..\Sum_Operators\Sum_Operators.h"
+#include "..\..\..\Logging/Logging.h"
 
 #ifdef ZPSIM
 	#include <ostream>
@@ -182,6 +183,7 @@ namespace RelationalDatabase {
 
 	template <typename Record_T>
 	RecordID TableNavigator::insert(const Record_T * newRecord) {
+
 		if (isSorted(table().insertionStrategy())) {
 			Record_T recordToInsert = *newRecord;
 			auto compareRecords = [](TableNavigator * left, const void * right, bool lhsIsGreater)->bool {
@@ -195,20 +197,22 @@ namespace RelationalDatabase {
 				currRec.Answer_Locator::update(recToInsert);
 				*reinterpret_cast<Record_T*>(recToInsert) = currRec.get();
 			};
-			//std::cout << "\n Try Inserting " << recordToInsert << std::endl;
+			//logger().log("Try Inserting ", recordToInsert);
 
 			auto insertPos = sortedInsert(&recordToInsert, compareRecords, swapRecords);
-			//std::cout << "\n Now Inserting " << recordToInsert << " at: " << std::dec << (int)id() << std::endl;
+			//logger().log("  Now Inserting at: " , insertPos); // ", recordToInsert ,"
 
 			auto unusedRec = insertRecord(&recordToInsert);
-			//std::cout << "\n Inserted at " << std::dec << (int)unusedRec << std::endl;
+			//logger().log("    Inserted at ", unusedRec);
 
 			if (unusedRec < insertPos) --insertPos;
 			moveToThisRecord(insertPos);
 			return insertPos;
 		}
-		else
+		else {
+			//logger().log("  Unsorted Insert Strategy", table().insertionStrategy());
 			return insertRecord(newRecord);
+		}
 	}
 
 	template <typename Record_T>

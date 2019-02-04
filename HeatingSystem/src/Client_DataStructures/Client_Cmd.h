@@ -1,6 +1,10 @@
 #pragma once
 #include "..\LCD_UI\UI_Cmd.h"
 
+namespace HardwareInterfaces {
+	class LocalDisplay;
+}
+
 namespace client_data_structures {
 
 	class InsertSpell_Cmd : public LCD_UI::UI_Cmd
@@ -12,6 +16,21 @@ namespace client_data_structures {
 		Collection_Hndl * on_select() override;
 	private:
 		Collection_Hndl & enableInsert(bool enable);
+	};
+
+	class Contrast_Brightness_Cmd : public LCD_UI::UI_Cmd
+	{
+	public:
+		enum e_function {e_contrast, e_backlight };
+		Contrast_Brightness_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour = LCD_UI::viewOneUpDn());
+		bool move_focus_by(int moveBy) override;
+		LCD_UI::Collection_Hndl * function(e_function fn) { _function = fn; return _self; }
+
+		void setDisplay(HardwareInterfaces::LocalDisplay & lcd);
+	private:
+		e_function _function = e_contrast;
+		HardwareInterfaces::LocalDisplay * _lcd = 0;
+		LCD_UI::Collection_Hndl * _self = this;
 	};
 
 	class InsertTimeTemp_Cmd : public LCD_UI::UI_Cmd

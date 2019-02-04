@@ -24,15 +24,15 @@ namespace Assembly {
 		HardwareInterfaces::tempSensors = _hs.tempSensorArr;
 		HardwareInterfaces::relays = _hs.relayArr;
 		Relay::_relayRegister = &_hs.relaysPort._relayRegister;
-		setFactoryDefaults(_hs.db);
+		if (!_hs.db.checkPW(VERSION)) setFactoryDefaults(_hs.db, VERSION);
 		loadRelays();
 		loadtempSensors();
 		iniI2C();
 		_hs.mixValveController.setResetTimePtr(&_resetI2C.hardReset.timeOfReset_mS);
-		//_testDevices.speedTestDevices();
-		//_testDevices.testRelays();
-		postI2CResetInitialisation();
-		logger().log("Initialiser Constructed");
+		_testDevices.speedTestDevices();
+		_testDevices.testRelays();
+		if (postI2CResetInitialisation() != I2C_Helper::_OK) logger().log("  Initialiser failed");
+		logger().log("  Initialiser Constructed");
 	}
 
 	void Initialiser::loadRelays() {

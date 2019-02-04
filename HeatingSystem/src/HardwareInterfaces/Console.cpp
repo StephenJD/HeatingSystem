@@ -50,10 +50,11 @@ namespace HardwareInterfaces {
 				break;
 			case NUM_LOCAL_KEYS + 1:
 				// Set backlight to bright.
-				_lcd_UI._lcd->setBackLight(true);
+				_keyPad.wakeDisplay(true);
+				doRefresh = true;
 				break;
 			default:
-				doRefresh = _keyPad.isTimeToRefresh();
+				doRefresh = _keyPad.isTimeToRefresh(); // true every second
 #if defined (NO_TIMELINE) && defined (ZPSIM)
 				{static bool test = true;// for testing, prevent refresh after first time through unless key pressed
 				doRefresh = test;
@@ -62,6 +63,11 @@ namespace HardwareInterfaces {
 #endif
 			}
 			if (doRefresh) {
+				auto displayIsAwake = _keyPad.wakeDisplay(false);
+#ifndef ZPSIM
+				_lcd_UI._lcd->blinkCursor(displayIsAwake);
+#endif
+				_lcd_UI._lcd->setBackLight(displayIsAwake);
 				//Edit::checkTimeInEdit(keyPress);
 				//U4_byte	lastTick = micros();
 				_pageGenerator.stream(_lcd_UI);

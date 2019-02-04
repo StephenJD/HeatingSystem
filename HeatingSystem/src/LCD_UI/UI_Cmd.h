@@ -2,6 +2,7 @@
 #include "UI_Collection.h"
 
 namespace LCD_UI {
+
 	class UI_Cmd : public Collection_Hndl, public Custom_Select
 	{
 	public:

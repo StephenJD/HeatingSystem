@@ -17,6 +17,9 @@ namespace LCD_UI {
 		String_Interface string_UI;
 	}
 
+	//OneVal Permitted_Vals::_oneVal(0);
+
+
 	char I_Field_Interface::scratch[81]; // Buffer for constructing strings of wrapped values
 
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -125,12 +128,12 @@ namespace LCD_UI {
 	//                 Int & Dec Interface 
 	/////////////////////////////////////////////////////////////////////////////////////////
 
-	const char * Int_Interface::streamData(const Object_Hndl * activeElement) const {
-		return intToString(getData(activeElement), _wrapper->valRange.editablePlaces,'0',_wrapper->valRange.format);
+	const char * Int_Interface::streamData(bool isActiveElement) const {
+		return intToString(getData(isActiveElement), _wrapper->valRange.editablePlaces,'0',_wrapper->valRange.format);
 	}
 
-	const char * Decimal_Interface::streamData(const Object_Hndl * activeElement) const {
-		return decToString(getData(activeElement),_wrapper->valRange.editablePlaces, _wrapper->valRange.noOfDecPlaces,_wrapper->valRange.format);
+	const char * Decimal_Interface::streamData(bool isActiveElement) const {
+		return decToString(getData(isActiveElement),_wrapper->valRange.editablePlaces, _wrapper->valRange.noOfDecPlaces,_wrapper->valRange.format);
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -277,11 +280,11 @@ namespace LCD_UI {
 	//                 String Interface
 	/////////////////////////////////////////////////////////////////////////////////////////
 
-	const char * String_Interface::streamData(const Object_Hndl * activeElement) const {
+	const char * String_Interface::streamData(bool isActiveElement) const {
 		if (_wrapper == 0) return 0;
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(_wrapper));
 
-		if (activeElement) {
+		if (isActiveElement) {
 			auto fieldInterface_h = parent();
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				if (fieldInterface_h->editBehaviour().is_Editable()) {

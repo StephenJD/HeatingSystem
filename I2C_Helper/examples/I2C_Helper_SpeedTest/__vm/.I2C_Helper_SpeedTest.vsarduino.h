@@ -12,6 +12,7 @@
 
 #ifndef _VSARDUINO_H_
 #define _VSARDUINO_H_
+#define _VMDEBUG 1
 #define printf iprintf
 #define F_CPU 84000000L
 #define ARDUINO 10808
@@ -233,6 +234,6 @@ __attribute__((always_inline)) static __INLINE void __set_PRIMASK(uint32_t priMa
 }
 
 
-#include "AutoSpeed.ino"
+#include "I2C_Helper_SpeedTest.ino"
 #endif
 #endif

@@ -2,7 +2,6 @@
 #include <Logging.h>
 #include <Date_Time.h>
 #include <I2C_Helper.h>
-#include <EEPROM.h>
 #include <Conversions.h>
 #include <SD.h>
 #include <SPI.h>
@@ -16,6 +15,17 @@
 #define RTC_RESET 4
 using namespace Date_Time;
 
+#if defined(__SAM3X8E__)
+#include <EEPROM.h>
+EEPROMClass & eeprom() {
+	static EEPROMClass _eeprom_obj{ 0, 0x50 };
+	return _eeprom_obj;
+}
+
+
+EEPROMClass & EEPROM = eeprom();
+#endif
+
 I2C_Helper & rtc() {
   static I2C_Helper_Auto_Speed<2> _rtc{ Wire1 };
   return _rtc;
@@ -24,6 +34,11 @@ I2C_Helper & rtc() {
 Clock & clock_() {
   static I2C_Clock _clock(&rtc(), RTC_ADDRESS);
   return _clock;
+}
+
+Logger & timelessLogger() {
+  static Serial_Logger _log(9600);
+  return _log;
 }
 
 Logger & logger() {
@@ -66,4 +81,5 @@ void loop()
 {
   delay(5000);
   sdlogger().log("SD Timed Logger...");
+  timelessLogger().log("timelessLogger");
 }

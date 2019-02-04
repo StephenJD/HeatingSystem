@@ -9,7 +9,7 @@
 #include "..\Client_DataStructures\Data_TimeTemp.h"
 #include "..\Client_DataStructures\Data_CurrentTime.h"
 #include "..\Client_DataStructures\Client_Cmd.h"
-
+#include "..\HardwareInterfaces\Zone.h"
 #include "..\LCD_UI\A_Top_UI.h"
 #include "..\LCD_UI\UI_DisplayBuffer.h"
 #include "..\LCD_UI\UI_FieldData.h"
@@ -25,11 +25,11 @@ namespace Assembly {
 		enum { e_zones, e_calendars, e_programs, e_towelRails, e_NO_OF_CMDS };
 		MainConsolePageGenerator(RelationalDatabase::RDB<TB_NoOfTables> & db);
 		LCD_UI::A_Top_UI & pages() { return _display_h; }
-	
+		void setDisplay(HardwareInterfaces::LocalDisplay & lcd) { _contrastCmd.setDisplay(lcd); _backlightCmd.setDisplay(lcd); }
+		HardwareInterfaces::Zone _zoneArr[Assembly::NO_OF_ZONES]; // = { { 17,18 },{ 20,19 },{ 45,55 },{ 21,21 } };
+
 	private:
 		RelationalDatabase::RDB<TB_NoOfTables> * _db;
-		// Run-time data arrays
-		client_data_structures::Zone _zoneArr[4] = { { 17,18 },{ 20,19 },{ 45,55 },{ 21,21 } };
 		// RDB Queries
 		RelationalDatabase::TableQuery _q_dwellings;
 		RelationalDatabase::TableQuery _q_zones;
@@ -73,7 +73,7 @@ namespace Assembly {
 
 		// Basic UI Elements
 		LCD_UI::UI_Label _dst, _prog, _zone;
-		LCD_UI::UI_Cmd _contrastCmd, _backlightCmd;
+		client_data_structures::Contrast_Brightness_Cmd  _backlightCmd, _contrastCmd;
 		LCD_UI::UI_Cmd _dwellingZoneCmd, _dwellingCalendarCmd, _dwellingProgCmd;
 		LCD_UI::UI_Cmd _profileDaysCmd;
 		client_data_structures::InsertSpell_Cmd _fromCmd;

@@ -43,9 +43,9 @@ namespace client_data_structures {
 	
 	//************ReqIsTemp_Interface***********************
 
-	const char * ReqIsTemp_Interface::streamData(const Object_Hndl * activeElement) const {
+	const char * ReqIsTemp_Interface::streamData(bool isActiveElement) const {
 		const ReqIsTemp_Wrapper * reqIsTemp = static_cast<const ReqIsTemp_Wrapper *>(_wrapper);
-		int streamVal = getData(activeElement);
+		int streamVal = getData(isActiveElement);
 		strcpy(scratch, reqIsTemp->name);
 		int nameLen = strlen(scratch);
 		while (nameLen < sizeof(reqIsTemp->name)) {
@@ -61,17 +61,6 @@ namespace client_data_structures {
 		strcat(scratch, reqIsTemp->isHeating ? "!" : " ");
 		return scratch;
 	}
-
-	//***************************************************
-	//              Zone Dynamic Class
-	//***************************************************
-
-	Zone::Zone(int tempReq, int currTemp)
-		: _currProgTempRequest(tempReq),
-		_currTempRequest(tempReq),
-		_currTemp(currTemp),
-		_isHeating(tempReq > currTemp ? true : false)
-	{}
 
 	//***************************************************
 	//             Dataset_Zone
@@ -104,7 +93,7 @@ namespace client_data_structures {
 			return &_factor;
 		case e_reqIsTemp:
 		{
-			Zone & z = zone(record().id());
+			HardwareInterfaces::Zone & z = zone(record().id());
 			strcpy(_reqIsTemp.name, record().rec().name);
 			_reqIsTemp.isTemp = z.getCurrTemp();
 			_reqIsTemp.isHeating = z.isCallingHeat();
@@ -141,9 +130,9 @@ namespace client_data_structures {
 			setRecordID(record().update());
 			break; 
 		case e_reqIsTemp: {
-			Zone & z = zone(record().id());
-			z.setCurrTempRequest(uint8_t(newValue->val));
-			break;
+				HardwareInterfaces::Zone & z = zone(record().id());
+				z.setCurrTempRequest(uint8_t(newValue->val));
+				break;
 			}
 		}
 		return false;

@@ -1,6 +1,5 @@
+#include <EEPROM.h>
 #include "Clock.h"
-#include <EEPROM\EEPROM.h>
-
 
 
 	int writer(int address, const void * data, int noOfBytes) {
@@ -159,9 +158,9 @@
 	
 	uint8_t I2C_Clock::i2C_speedTest() {
 		i2c_helper().result.reset();
-		i2c_helper().result.foundDeviceAddr = 0x68;
+		i2c_helper().result.foundDeviceAddr = _address;
 		i2c_helper().speedTestS(this);
-		//i2c_helper().setThisI2CFrequency(0x68, 100000);
+		i2c_helper().setThisI2CFrequency(_address, 100000);
 		loadTime(); 
 		return i2c_helper().result.error;
 	}

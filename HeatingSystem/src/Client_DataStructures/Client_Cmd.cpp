@@ -1,6 +1,7 @@
 #include "Client_Cmd.h"
 #include "..\LCD_UI\UI_FieldData.h"
 #include "..\LCD_UI\\I_Record_Interface.h"
+#include "..\HardwareInterfaces\LocalDisplay.h"
 
 #ifdef ZPSIM
 	#include <iostream>
@@ -60,6 +61,26 @@ namespace client_data_structures {
 		auto & spellData = static_cast<UI_FieldData &>(*dwellSpellUI_h.get());
 		spellData.deleteData();
 		return backUI()->on_back(); 
+	}
+
+	///////////////// Contrast_Brightness_Cmd /////////////////////////
+
+	Contrast_Brightness_Cmd::Contrast_Brightness_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
+		: UI_Cmd(label_text, onSelect, behaviour) {
+#ifdef ZPSIM
+		std::cout << "Contrast_Brightness_Cmd at: " << std::hex << (long long)this /*<< " innerHdl at: " << (long long)&_collHdl */<< std::endl;
+#endif
+	}
+
+	bool Contrast_Brightness_Cmd::move_focus_by(int moveBy) {
+		if (_function == e_backlight) _lcd->changeBacklight(moveBy);
+		else _lcd->changeContrast(moveBy);
+		return true;
+	}
+
+	void Contrast_Brightness_Cmd::setDisplay(HardwareInterfaces::LocalDisplay & lcd) {
+		_lcd = &lcd;
+		_lcd->setBackLight(true);
 	}
 
 	///////////////// InsertTimeTemp_Cmd /////////////////////////

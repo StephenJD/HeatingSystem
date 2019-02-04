@@ -73,13 +73,12 @@ public:
 	uint8_t writeEP(uint16_t deviceAddr, int pageAddress, uint8_t data); // Return errCode. Writes 32-byte pages. #define I2C_EEPROM_PAGESIZE
 	uint8_t writeEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, const uint8_t *dataBuffer); // Return errCode.
 	uint8_t writeEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, char *dataBuffer) {return writeEP(deviceAddr, pageAddress, numberBytes, (const uint8_t *)dataBuffer); }
-	
+	void writeAtZeroCross() { _waitForZeroCross = true; }
 	static uint8_t notExists(I2C_Helper & i2c, int deviceAddr);
 	uint8_t notExists(int deviceAddr);
 	
 	// Enhanced Usage //
 	I2C_Helper(TwoWire &wire_port, int8_t zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction = 0, int32_t i2cFreq = 100000);
-	uint8_t write_at_zero_cross(uint16_t deviceAddr, uint8_t registerAddress, uint8_t data); // Return errCode.
 	
 	int32_t setI2CFrequency(int32_t i2cFreq); // turns auto-speed off
 	int32_t getI2CFrequency() const { return _i2cFreq; }
@@ -89,6 +88,7 @@ public:
 
 	void setNoOfRetries(uint8_t retries);
 	uint8_t getNoOfRetries();
+	bool i2C_is_frozen(int addr);
 	void setTimeoutFn (I_I2CresetFunctor * timeoutFnPtr);
 	void setTimeoutFn (TestFnPtr timeoutFnPtr);
 	I_I2CresetFunctor * getTimeoutFn() {return timeoutFunctor;}
@@ -160,7 +160,7 @@ public:
 	}
 */
 	// required by template, may as well be publicly available
-	static const int32_t MAX_I2C_FREQ = VARIANT_MCK / 40; //100000; // 
+	static const int32_t MAX_I2C_FREQ = (VARIANT_MCK / 40) > 400000 ? 400000 : (VARIANT_MCK / 40); //100000; // 
 	static const int32_t MIN_I2C_FREQ = VARIANT_MCK / 65288; //32644; //VARIANT_MCK / 65288; //36000; //
 	uint8_t successAfterRetries;
 protected:
@@ -181,6 +181,7 @@ private:
 	uint8_t getTWIbufferSize();
 	TwoWire & wire_port;
 	uint8_t noOfRetries;
+	bool _waitForZeroCross = false;
 
 	I_I2CresetFunctor * timeoutFunctor;
 	
@@ -205,6 +206,7 @@ private:
 	bool _canWrite;
 	unsigned long _lastRestartTime;
 	unsigned long _lastWrite = 0;
+	const uint8_t _I2C_DATA_PIN = 20;
 };
 
 class I2C_Helper_Auto_Speed_Hoist : public I2C_Helper {
@@ -306,12 +308,12 @@ uint32_t I2C_Helper::speedTest_T(I_I2Cdevice * deviceFailTest) {
 		if (non_stop) {
 			Serial.print("Overall Best Frequency: "); 
 			Serial.println(result.maxSafeSpeed); Serial.println();
-			Serial.print("Overall Min Frequency: "); 
-			Serial.println(result.minSafeSpeed); Serial.println();
+			//Serial.print("Overall Min Frequency: "); 
+			//Serial.println(result.minSafeSpeed); Serial.println();
 		} else {
 			if (result.error == 0) {
 				Serial.print(" Final Max Frequency: "); Serial.println(result.thisHighestFreq);
-				Serial.print(" Final Min Frequency: "); Serial.println(result.thisLowestFreq); Serial.println();
+				//Serial.print(" Final Min Frequency: "); Serial.println(result.thisLowestFreq); Serial.println();
 			} else {
 				Serial.println(" Test Failed");
 				Serial.println(getError(result.error));

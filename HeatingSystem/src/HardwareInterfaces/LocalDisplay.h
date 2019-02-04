@@ -12,13 +12,13 @@ namespace HardwareInterfaces {
 	{
 	public:
 		LocalDisplay(RelationalDatabase::Query * query = 0);
+		void blinkCursor(bool isAwake) override;
 		void sendToDisplay() override;
 		void setBackLight(bool wake) override;
 		uint8_t ambientLight() const override;
 
-		void saveContrast(int contrast);
-		void saveBrightBacklight(int backlight);
-		void saveDimBacklight(int backlight);
+		void changeContrast(int changeBy);
+		void changeBacklight(int changeBy);
 
 #if defined (ZPSIM)
 		MultiCrystal & lcd() { return _lcd; }

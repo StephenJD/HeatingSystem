@@ -26,6 +26,7 @@ namespace HardwareInterfaces {
 		virtual void setBackLight(bool wake) {}
 		virtual char * buff() = 0;
 		void setCursor(int col, int row);
+		virtual void blinkCursor(bool isAwake) {}
 		size_t write(uint8_t) override;
 		using Print::print;
 		void print(const char * str, uint32_t val);

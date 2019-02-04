@@ -62,33 +62,28 @@ namespace HardwareInterfaces {
 		logger().log("TestDevices::speedTestDevices\tTry Relay Port");
 		hs().i2C.result.foundDeviceAddr = hs().relaysPort.getAddress();
 		if (showSpeedTestFailed(hs().relaysPort, "Relay")) {
-			//f->eventS().newEvent(ERR_PORTS_FAILED, 0);
 			returnVal = ERR_PORTS_FAILED;
 		}
 
 		logger().log("TestDevices::speedTestDevices\tTry Remotes");
 		hs().i2C.result.foundDeviceAddr = DS_REMOTE_ADDRESS;
 		if (showSpeedTestFailed(hs().remDispl[D_Hall], "DS Rem")) {
-			//f->eventS().newEvent(ERR_I2C_READ_FAILED, 0);
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
 		hs().i2C.result.foundDeviceAddr = US_REMOTE_ADDRESS;
 		if (showSpeedTestFailed(hs().remDispl[D_Bedroom], "US Rem")) {
-			//f->eventS().newEvent(ERR_I2C_READ_FAILED, 0);
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
 		hs().i2C.result.foundDeviceAddr = FL_REMOTE_ADDRESS;
 		if (showSpeedTestFailed(hs().remDispl[D_Flat], "FL Rem")) {
-			//f->eventS().newEvent(ERR_I2C_READ_FAILED, 0);
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
 		logger().log("TestDevices::speedTestDevices\tTry Mix Valve");
 		hs().i2C.result.foundDeviceAddr = MIX_VALVE_I2C_ADDR;
 		if (showSpeedTestFailed(hs().mixValveController, "Mix V")) {
-		//	//f->eventS().newEvent(ERR_MIX_ARD_FAILED, 0);
 			returnVal = ERR_MIX_ARD_FAILED;
 		}
 		
@@ -113,7 +108,6 @@ namespace HardwareInterfaces {
 		uint8_t numberFailed = 0;
 		logger().log("Relay_Run::testRelays");
 		if (hs().relaysPort.testDevice(hs().i2C, IO8_PORT_OptCoupl)) {
-			//f->eventS().newEvent(ERR_PORTS_FAILED, 0);
 			logger().log("Relay_Run::testRelays\tNo Relays\tERR_PORTS_FAILED");
 			return NO_OF_RELAYS;
 		}
@@ -129,7 +123,6 @@ namespace HardwareInterfaces {
 			hs().mainDisplay.setCursor(12, 3);
 			hs().mainDisplay.print(relayNo, DEC);
 			if (returnVal) {
-				//f->eventS().newEvent(ERR_PORTS_FAILED, relayNo);
 				logger().log("Relay_Run::testRelays\tRelay Failed\tERR_PORTS_FAILED", relayNo);
 				hs().mainDisplay.print(" Fail");
 			}

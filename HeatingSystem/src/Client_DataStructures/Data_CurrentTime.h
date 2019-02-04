@@ -56,7 +56,7 @@ namespace client_data_structures {
 		using  I_Field_Interface::editItem;
 		// Queries
 
-		const char * streamData(const Object_Hndl * activeElement) const override;
+		const char * streamData(bool isActiveElement) const override;
 		DateTime valAsDate() const { return DateTime(_editItem.currValue().val); }
 		// Modifiers
 		I_Edit_Hndl & editItem() { return _editItem; }
@@ -111,7 +111,7 @@ namespace client_data_structures {
 	public:
 		using  I_Field_Interface::editItem;
 		// Queries
-		const char * streamData(const Object_Hndl * activeElement) const override;
+		const char * streamData(bool isActiveElement) const override;
 		DateTime valAsDate() const { return DateTime(_editItem.currValue().val); }
 		// Modifiers
 		I_Edit_Hndl & editItem() { return _editItem; }

@@ -5,7 +5,8 @@
 namespace LCD_UI {
 
 	// *************** Int_Interface : Class that modifies state of edited value  ******************
-
+	//Permitted_Vals I_Edit_Hndl::_editVal;
+	
 	I_Edit_Hndl::I_Edit_Hndl(UI_Object * permittedVals) : Collection_Hndl(*permittedVals) {}
 
 	Collection_Hndl * I_Edit_Hndl::on_back() {// function is called on the focus() object to notify it has been cancelled.

@@ -14,7 +14,7 @@
 #include "HardwareInterfaces\LocalKeypad.h"
 #include "HardwareInterfaces\Console.h"
 #include "HardwareInterfaces\LocalDisplay.h"
-
+#include "HardwareInterfaces\Zone.h"
 #include <I2C_Helper.h>
 #include <RDB.h>
 
@@ -27,7 +27,9 @@
 	public:
 
 		HeatingSystem();
-		void serviceMainConsole();
+		void serviceConsoles();
+		void serviceProfiles();
+		void serviceTemperatureController();
 
 		// Public Data Members
 		RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
@@ -37,6 +39,7 @@
 		HardwareInterfaces::MixValveController mixValveController;
 		I2C_Helper_Auto_Speed<27> i2C;
 
+		// Run-time data arrays
 		HardwareInterfaces::I2C_Temp_Sensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS]; // Array of TempSensor provided by client
 		HardwareInterfaces::Relay relayArr[Assembly::NO_OF_RELAYS]; // Array of Relay provided by client
 		HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];

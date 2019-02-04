@@ -20,7 +20,7 @@ namespace LCD_UI {
 		const I_Edit_Hndl & editItem() const { return const_cast<I_Field_Interface *>(this)->editItem(); }
 		
 		// Polymorphic Queries
-		virtual const char * streamData(const Object_Hndl * activeElement) const = 0;
+		virtual const char * streamData(bool isActiveElement) const = 0;
 		bool isCollection() const override { return behaviour().is_viewAll(); }
 
 		// Polymorphic Modifiers
@@ -33,7 +33,7 @@ namespace LCD_UI {
 		int getFieldWidth() const;
 		int setInitialCount(Field_Interface_h * parent);
 		ValRange getValRange() const;
-		decltype(I_UI_Wrapper::val) getData(const Object_Hndl * activeElement) const;
+		decltype(I_UI_Wrapper::val) getData(bool isActiveElement) const;
 		const I_UI_Wrapper * getWrapper() const { return _wrapper; }
 		
 		// New modifiers

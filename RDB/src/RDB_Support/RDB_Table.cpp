@@ -1,6 +1,7 @@
 #include "RDB_Table.h"
 #include "RDB_TableNavigator.h"
 #include "Arduino.h" // for micros()
+#include "..\..\..\Logging\Logging.h"
 
 //extern bool debugStop;
 
@@ -19,7 +20,9 @@ namespace RelationalDatabase {
 		, _rec_size(tableHdr.rec_size())
 		, _insertionStrategy(tableHdr.insertionStrategy())
 		, _max_NoOfRecords_in_table(_recordsPerChunk)
-	{}
+	{
+		//logger().log("Table::Table _insertionStrategy:", _insertionStrategy);
+	}
 
 	Table::Table(RDB_B & db, TableID tableID) :
 		// used when loading an existing table
@@ -30,15 +33,47 @@ namespace RelationalDatabase {
 		openTable();
 	}
 
+	Table::Table(const Table & rhs) :_timeOfLastChange(micros())
+	{
+		//logger().log("Table::Table copy  _insertionStrategy:", _insertionStrategy);
+	}
+
+	//Table & Table::operator =(const Table & rhs) {
+	//	_timeOfLastChange = micros();
+	//	_db = rhs._db;
+	//	_table_header = rhs._table_header;
+	//	_tableID = rhs._tableID;
+	//	_recordsPerChunk = rhs._recordsPerChunk;
+	//	_rec_size = rhs._rec_size;
+	//	_insertionStrategy = rhs._insertionStrategy;
+	//	_max_NoOfRecords_in_table = rhs._max_NoOfRecords_in_table;
+	//	//logger().log("Table::Table assignment  _insertionStrategy:", _insertionStrategy);
+	//	return *this;
+	//}
+
+
 	void  Table::openNextTable() {
 		TableNavigator rec_sel(this);
 
-		do { // Move to next chunk in the DB
+		do { // Move to next chunk in the DB - might be the extention to an earlier table.
 			rec_sel._chunkAddr = rec_sel.firstRecordInChunk() + chunkSize();
 			if (rec_sel._chunkAddr < _db->_dbSize) {
 				_db->_readByte(rec_sel._chunkAddr, &rec_sel._chunk_header, HeaderSize);
+				logger().log("Table::openNextTable() chunk at:", rec_sel._chunkAddr);
 			}
 			else {
+				logger().log("Table::openNextTable() no more Tables");
+				markAsInvalid();
+				return;
+			}
+			if (!rec_sel._chunk_header.isFinalChunk() && rec_sel._chunk_header.nextChunk() == rec_sel._chunkAddr) {
+				//logger().log("Table::openNextTable() read from", rec_sel._chunkAddr, "Size is :", _db->_dbSize);
+				//logger().log(" A table-extention? :", !rec_sel.isStartOfATable(), "Chunk _isFinalChunk", rec_sel._chunk_header.isFinalChunk());
+				//logger().log(" if Final: chunk _recSize", rec_sel._chunk_header._recSize, " ELSE NextChunk :", rec_sel._chunk_header.nextChunk());
+				//logger().log(" IsfirstChunk :", rec_sel._chunk_header.isFirstChunk(), "  chunk noOfRecords", rec_sel._chunk_header.chunkSize());
+				logger().log(" Corrupt Table found. Database Truncated.");
+				_db->_dbSize = rec_sel._chunkAddr;
+				_db->setDB_Header();
 				markAsInvalid();
 				return;
 			}
@@ -56,14 +91,18 @@ namespace RelationalDatabase {
 	}
 
 	bool Table::getRecordSize(TableNavigator rec_sel) {
+
 		_recordsPerChunk = rec_sel._chunk_header.chunkSize();
 		_max_NoOfRecords_in_table = _recordsPerChunk;
+		//logger().log(" getRecordSize. recPerCh:", _recordsPerChunk, "Rec Size:", rec_sel._chunk_header.rec_size());
+		//logger().log("   Addr:", rec_sel._chunkAddr, "NextChunk at:", rec_sel._chunk_header.nextChunk());
 
 		while (rec_sel.haveMovedToNextChunck()) {
 			_max_NoOfRecords_in_table += _recordsPerChunk;
 		}
 		_rec_size = rec_sel._chunk_header.rec_size();
 		_insertionStrategy = rec_sel._chunk_header.insertionStrategy();
+		//logger().log("Table::getRecordSize _insertionStrategy:", _insertionStrategy);
 		return true;
 	}
 

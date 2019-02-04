@@ -158,32 +158,32 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 	} else {
 	_displayfunction = LCD_8BITMODE | LCD_1LINE | LCD_5x8DOTS;
 	}
-	_numcols = 0;
-	_numlines = 0;
+	_numCols = 0;
+	_numChars = 0;
+	cursor_pos = 0;
 	#if defined (ZPSIM) // for simulator
 	lcdPos = 0;
 	cursor_on = false;
 	blink_on = false;
-	cursorPos = 0;
 	dirty = false;
 	#endif
 }
 
 uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 	if (lines > 1) _displayfunction |= LCD_2LINE;
-	_numlines = lines;
-	_numcols = cols;
-	_currline = 0;
+	_numChars = lines * cols;
+	_numCols = cols;
+	//_currline = 0;
 	_keyCleared = true;
 	//_lastKeyPress = 0;
 	//_time_since_keychange = micros();
+	cursor_pos = 0;
 	
 	#if defined (ZPSIM) // for simulator
-	lcd_Arr[_numcols * _numlines] = 0;
+	lcd_Arr[_numChars] = 0;
 	cursor_on = false;
 	blink_on = false;
 	lcdPos =0;
-	cursorPos = 0;
 	#endif
 	
 	// for some 1 line displays you can select a 10 pixel high font
@@ -310,21 +310,12 @@ void MultiCrystal::print(char oneChar, uint8_t size){ // ignores size
 }
 
 void MultiCrystal::nextCol(){
-	if (_numcols==0) {return;}
+	if (_numCols==0) {return;}
 	lcdPos++;
-	if (lcdPos % _numcols == (lcdPos/_numcols)-1){
+	if (lcdPos % _numCols == (lcdPos/_numCols)-1){
 		lcd_Arr[lcdPos++] = ' '; //'\n';
 	}
-	if (lcdPos >= _numlines * _numcols + _numlines)	lcdPos = 0;
-}
-
-void MultiCrystal::print(const char *word){
-	for (size_t i =0;i < strlen(word);i++){
-		lcd_Arr[lcdPos]= word[i];
-		write(word[i]);
-		nextCol();
-	}
-	dirty=true;
+	if (lcdPos >= _numChars + _numChars/_numCols)	lcdPos = 0;
 }
 
 void MultiCrystal::print (int number){
@@ -351,23 +342,21 @@ void MultiCrystal::print (unsigned long number, int){
 	dirty=true;
 }
 
-void MultiCrystal::print (char chr) {
-	lcd_Arr[lcdPos] = chr;
-	dirty=true;
-	nextCol();
-}
 #endif
 
 uint8_t MultiCrystal::setCursor(uint8_t col, uint8_t row) {
 #if defined (ZPSIM)
-	lcdPos = row * _numcols + col + row;
-	if (lcdPos >= _numlines * _numcols + _numlines) lcdPos = _numlines * _numcols + _numlines - 1;
-	cursorPos = lcdPos;
+	lcdPos = row * _numCols + col + row;
+	if (lcdPos >= _numChars + _numChars /_numCols) lcdPos = _numChars + _numChars / _numCols - 1;
+	cursor_pos = lcdPos;
+#else
+	cursor_pos = row * _numCols + col;
 #endif
 
   int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-  if ( row >= _numlines ) {
-    row = _numlines-1;    // we count rows starting w/
+  auto noOfRows = _numChars / _numCols;
+  if ( row >= noOfRows) {
+    row = noOfRows -1;    // we count rows starting w/
   } 
   return command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
 }
@@ -408,18 +397,51 @@ uint8_t MultiCrystal::blink() {
 
 uint8_t MultiCrystal::clear() {
 #if defined (ZPSIM)
-	for (int i = 0;i<_numlines * _numcols + _numlines;i++){
+	for (int i = 0; i < _numChars + _numChars / _numCols;  i++) {
 		lcd_Arr[i]= ' ';
 	}
 	lcdPos = 0;
 	dirty=true;
-#endif    
+#endif 
+	cursor_pos = 0;
 	command(LCD_CLEARDISPLAY);  // clear display, set cursor position to zero
     delayMicroseconds(2000);  // this command takes a long time!
 	return errorCode;
 }
 
 /********** high level commands, for the user! */
+size_t MultiCrystal::print(char chr) {
+#ifdef ZPSIM
+		lcd_Arr[lcdPos] = chr;
+		dirty = true;
+		nextCol();
+#endif
+	Print::print(chr);
+	if (chr) ++cursor_pos;
+	if (cursor_pos >= _numChars) cursor_pos = 0;
+	if (cursor_pos % _numCols == 0) {
+		auto lineNo = cursor_pos / _numCols;
+		setCursor(0, lineNo);
+	}
+	return 1;
+}
+
+size_t MultiCrystal::print(const char buffer[] ) {
+#ifdef ZPSIM
+	for (size_t i = 0; i < strlen(buffer); i++) {
+		lcd_Arr[lcdPos] = buffer[i];
+		write(buffer[i]);
+		nextCol();
+	}
+	dirty = true;
+#endif
+	auto noOfChars = strlen(buffer); 
+	auto endChar = buffer + noOfChars;
+	for (auto nextChar = buffer; nextChar < endChar; ++nextChar) {
+		print(*nextChar);
+	}
+	return noOfChars;
+}
 
 uint8_t MultiCrystal::home()
 {

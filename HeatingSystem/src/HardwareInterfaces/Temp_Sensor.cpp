@@ -50,15 +50,9 @@ namespace HardwareInterfaces {
 	}
 
 	uint8_t I2C_Temp_Sensor::testDevice(I2C_Helper & i2c, int addr) {
-		uint8_t hasFailed;
-		uint8_t temp[2];
+		uint8_t temp[2] = {75,0};
 		//Serial.print("Temp_Sensor::testDevice : "); Serial.println(addr);
-		hasFailed = _i2C->read(_address, DS75LX_HYST_REG, 2, temp);
-		hasFailed |= (temp[0] != 75);
-		if (!hasFailed) hasFailed = (temp[0] == 75 ? I2C_Helper::_OK : I2C_Helper::_I2C_ReadDataWrong);
-		if (!hasFailed) hasFailed = _i2C->read(_address, DS75LX_LIMIT_REG, 2, temp);
-		if (!hasFailed) hasFailed = (temp[0] == 80 ? I2C_Helper::_OK : I2C_Helper::_I2C_ReadDataWrong);
-		return hasFailed;
+		return _i2C->write_verify(_address, DS75LX_HYST_REG, 2, temp);
 	}
 
 }

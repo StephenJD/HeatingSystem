@@ -82,6 +82,7 @@ namespace LCD_UI {
 			std::cout << "\tas UI_Object at: " << std::hex << (long long)(UI_Object*)this << std::endl;
 #endif
 		};
+		void setParent(I_SafeCollection * parent) { _parent = parent; }
 		Collection_Hndl * select(Collection_Hndl * from) { return _parent->select(backUI()); }
 		Collection_Hndl * on_back() override { return backUI()->on_back(); }
 		using UI_Object::behaviour;
@@ -97,13 +98,12 @@ namespace LCD_UI {
 	/// </summary>
 	class Permitted_Vals : public I_SafeCollection {
 	public:
-		Permitted_Vals() :I_SafeCollection(0,viewOneUpDn()), _oneVal(this) {}
-		//bool isCollection() const override { return true;}
+		Permitted_Vals() :I_SafeCollection(0, viewOneUpDn()), _oneVal(this) { /*_oneVal.setParent(this);*/ }
 		Collection_Hndl * select(Collection_Hndl * from) override;
 
 		Object_Hndl * item(int index) override {return &_oneVal;} // returns object reference at index.
 	private:
-		OneVal _oneVal;
+		/*static*/ OneVal _oneVal;
 	};
 
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ namespace LCD_UI {
 
 	private:
 		IntWrapper _currValue; // copy value for editing
-		Permitted_Vals editVal;
+		Permitted_Vals /*&*/ editVal /*= _editVal*/;
 		int _decade;
 	};
 
@@ -150,7 +150,7 @@ namespace LCD_UI {
 	private:
 		friend String_Interface;
 		StrWrapper _currValue; // copy of data for editing which is saved when finished
-		Permitted_Vals editChar;
+		Permitted_Vals /*&*/ editChar /*= _editVal*/;
 		char stream_edited_copy[15]; // copy of _currValue for streaming when in edit - includes |||
 	};
 
@@ -169,7 +169,7 @@ namespace LCD_UI {
 		using I_Field_Interface::editItem;
 		void haveMovedTo(int currFocus) override;
 
-		const char * streamData(const Object_Hndl * activeElement) const override;
+		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() override { return _editItem; }
 	protected:
 		Edit_Int_h _editItem;
@@ -183,7 +183,7 @@ namespace LCD_UI {
 	/// </summary>
 	class Decimal_Interface : public Int_Interface {
 	public:
-		const char * streamData(const Object_Hndl * activeElement) const override;
+		const char * streamData(bool isActiveElement) const override;
 	};
 
 	/// <summary>
@@ -195,7 +195,7 @@ namespace LCD_UI {
 	class String_Interface : public I_Field_Interface {
 	public:
 		using I_Field_Interface::editItem;
-		const char * streamData(const Object_Hndl * activeElement) const override;
+		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	private:
 		Edit_Char_h _editItem;

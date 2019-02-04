@@ -1,6 +1,6 @@
 #include "Relay.h"
 #include "A__Constants.h"
-//#include "I2C_Helper.h"
+#include <Logging.h>
 
 namespace HardwareInterfaces {
 
@@ -10,7 +10,7 @@ namespace HardwareInterfaces {
 
 	void RelaysPort::setup(I2C_Helper & i2C, int i2cAddress, int zeroCrossPin, int resetPin)
 		{
-		Serial.println("RelaysPort::setup()");
+		logger().log("RelaysPort::setup()");
 		I2C_Helper::I_I2Cdevice::setI2Chelper(i2C);
 		setAddress(i2cAddress);
 		_zeroCrossPin = zeroCrossPin;
@@ -22,31 +22,36 @@ namespace HardwareInterfaces {
 	}
 
 	uint8_t RelaysPort::initialiseDevice() {
-		uint8_t dataBuffa[1];
-		uint8_t hasFailed = _i2C->write_at_zero_cross(_address, REG_8PORT_OLAT, _relayRegister); // set latches
-		hasFailed |= _i2C->write(_address, REG_8PORT_PullUp, 0x00); // clear all pull-up resistors
-		hasFailed |= _i2C->write_at_zero_cross(_address, REG_8PORT_IODIR, 0x00); // set all as outputs
-
-		hasFailed |= _i2C->read(_address, REG_8PORT_PullUp, 1, dataBuffa);
-		if (!hasFailed) hasFailed = (dataBuffa[0] == 0 ? I2C_Helper::_OK : I2C_Helper::_I2C_ReadDataWrong);
-		hasFailed |= _i2C->read(_address, REG_8PORT_IODIR, 1, dataBuffa);
-		if (!hasFailed) hasFailed = (dataBuffa[0] == 0 ? I2C_Helper::_OK : I2C_Helper::_I2C_ReadDataWrong);
-		Serial.println("RelaysPort::initialiseDevice()");
+		uint8_t pullUp_out[] = { 0 };
+		uint8_t hasFailed = _i2C->i2C_is_frozen(_address);
+		if (hasFailed) {
+			logger().log("  Initialise RelaysPort() is stuck - call hard reset...");
+			//bareResetI2C(*i_2C, _address);
+		}
+		else {
+			hasFailed = _i2C->write_verify(_address, REG_8PORT_PullUp, 1, pullUp_out); // clear all pull-up resistors
+			if (hasFailed) {
+				logger().log("Initialise RelaysPort() write-verify failed at Freq:", _i2C->getI2CFrequency());
+			}
+			else {
+				hasFailed = _i2C->write_verify(_address, REG_8PORT_OLAT, 1, &_relayRegister); // set latches
+				_i2C->writeAtZeroCross();
+				hasFailed |= _i2C->write_verify(_address, REG_8PORT_IODIR, 1, pullUp_out); // set all as outputs
+				if (hasFailed) logger().log("Initialise RelaysPort() lat-write failed at Freq:", _i2C->getI2CFrequency());
+				else logger().log("Initialise RelaysPort() succeeded at Freq:", _i2C->getI2CFrequency());
+			}
+		}
 		return hasFailed;
 	}
 
 	uint8_t RelaysPort::setAndTestRegister() {
-		uint8_t gotData, ANDmask = 0xFF;
+		uint8_t ANDmask = 0x7F;
 		if (_i2C == 0) _error = I2C_Helper::_I2C_not_created;
 		else if (_i2C->notExists(_address)) _error = I2C_Helper::_I2C_Device_Not_Found;
 		else {
-			_error = _i2C->write_at_zero_cross(_address, REG_8PORT_OLAT, _relayRegister);
-			if (_error == I2C_Helper::_OK) {
-				_error = _i2C->read(_address, REG_8PORT_OLAT, 1, &gotData);
-				if ((_error == I2C_Helper::_OK) && ((gotData & ANDmask) != (_relayRegister & ANDmask))) {
-					_error = I2C_Helper::_I2C_ReadDataWrong;
-				}
-			}
+			//logger().log("RelaysPort::setAndTestRegister()");
+			_i2C->writeAtZeroCross();
+			_error = _i2C->write_verify(_address, REG_8PORT_OLAT & ANDmask, 1, &_relayRegister);
 		}
 		return _error;
 	}

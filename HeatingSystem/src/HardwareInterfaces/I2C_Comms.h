@@ -22,7 +22,6 @@ namespace HardwareInterfaces {
 		bool initialisationRequired = true;
 		unsigned long timeOfReset_mS = 0;
 	private:
-		bool i2C_is_released();
 	};	
 	
 	class ResetI2C : public I2C_Helper::I_I2CresetFunctor {

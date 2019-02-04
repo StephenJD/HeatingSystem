@@ -14,8 +14,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-#define VERSION  "07.6" // max size 6 characters. #defined to allow concatenation of adjacent literals
-#define VERSION_SIZE 6
+	constexpr uint8_t VERSION = 13;
 	////////////////// EVENT CODES ////////////////////////
 	extern bool temp_sense_hasError;
 	//const S1_err TEMP_SENS_ERR_TEMP		= -30;
@@ -71,7 +70,6 @@ namespace HardwareInterfaces {
 	const uint8_t DS75LX_LIMIT_REG = 0x03;
 
 	// Pin assignments & misc.
-	const uint8_t PHOTO_ANALOGUE = A1;
 	const uint8_t I2C_DATA_PIN = 20;
 	const int8_t ZERO_CROSS_PIN = -15; // -ve = active falling edge.
 	const int8_t RESET_OUT_PIN = -14;  // -ve = active low.
@@ -88,7 +86,7 @@ namespace HardwareInterfaces {
 	const uint8_t SECONDS_ON_VERSION_PAGE = 5;
 	const char NEW_LINE_CHR = '~'; // character used to indicate this field to start on a new line
 	const char CONTINUATION = '_'; // character used to indicate where a field can split over lines
-	const uint8_t DISPLAY_WAKE_TIME = 60;
+	const uint8_t DISPLAY_WAKE_TIME = 30;
 	const uint8_t MAX_LINE_LENGTH = 20;
 	const uint8_t MAX_NO_OF_ROWS = 4;
 	const uint8_t ADDITIONAL_BUFFER_SPACE = 3; // 1st char is cursor position, allow for space following string, last is a null.
@@ -149,7 +147,7 @@ namespace HardwareInterfaces {
 	//const uint8_t EDITABLE = 16;
 
 	////////////////// Strings //////////////////
-	const char NEW_DP_NAME[] = "New Prog";
+	//const char NEW_DP_NAME[] = "New Prog";
 
 	//extern MultiCrystal * mainLCD;
 	//extern MultiCrystal * hallLCD;

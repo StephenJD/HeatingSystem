@@ -135,8 +135,8 @@ namespace client_data_structures {
 		return cursorFromFocus(focusIndex());
 	}
 
-	const char * DateTime_Interface::streamData(const Object_Hndl * activeElement) const {
-		auto dt = DateTime(getData(activeElement));
+	const char * DateTime_Interface::streamData(bool isActiveElement) const {
+		auto dt = DateTime(getData(isActiveElement));
 
 		auto now = DateTime{ clock_() };
 		if (now >= dt) {

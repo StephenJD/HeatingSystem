@@ -76,22 +76,23 @@ public:
 	uint8_t control_pos_is_port_B, uint8_t data_pos_is_port_B); // bits must be set for any data on port-B
 
 	uint8_t begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS); // returns >0 if failed
+	using Print::print;
+	size_t print(const char[]);
+	size_t print(char);
 
 #if defined (ZPSIM) // for simulator
 	void print(char oneChar, byte size);
-	void print(const char *word);
+
 	void print (int);
 	void print(unsigned long, int = DEC);
-	void print (char chr);
 	void nextCol();
 	char lcd_Arr[255];
 	byte lcdPos;
 	bool cursor_on,blink_on;
-	char cursorPos;
 	bool dirty;
 #endif
 
-	uint8_t _numlines,_numcols;
+	uint8_t cursor_pos;
 	uint8_t clear();
 	uint8_t home();
 
@@ -136,6 +137,7 @@ private:
 
 	void debug();
 	
+	uint8_t _numChars, _numCols;
 	I2C_Helper * _i2C;
 	uint8_t _address;
 	uint8_t _control_pos_is_port_B;
@@ -151,7 +153,7 @@ private:
 	uint8_t _displaymode;
 
 	uint8_t _initialized;
-	uint8_t _currline;
+	//uint8_t _currline;
 	
 	// For I2C keypad
 

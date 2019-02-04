@@ -39,6 +39,7 @@ namespace LCD_UI {
 		// Modifiers
 		virtual void setInRangeValue();
 	protected:
+		//static Permitted_Vals _editVal;
 		// derived classes provide copy wrapper for editing the data
 	};
 }

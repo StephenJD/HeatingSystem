@@ -3,6 +3,7 @@
 #include "RDB_Support/RDB_TableNavigator.h"
 #include "RDB_Support/RDB_Table.h"
 #include "RDB_Support/RDB_B.h"
+#include "RDB_Support/RDB_Capacities.h"
 #include <Arduino.h>
 
 namespace RelationalDatabase {
@@ -16,13 +17,15 @@ namespace RelationalDatabase {
 		/// <summary>
 		/// For creating a new Database
 		/// </summary>	
-		RDB(int dbStart, int dbEnd, WriteByte_Handler * wbh, ReadByte_Handler * rbh) : RDB_B(dbStart, dbEnd, wbh, rbh) {};
+		RDB(int dbStart, int dbEnd, WriteByte_Handler * wbh, ReadByte_Handler * rbh, uint8_t password) : RDB_B(dbStart, dbEnd, wbh, rbh, password) {};
 
 		/// <summary>
 		/// For opening an existing Database
 		/// </summary>	
-		RDB(int dbStart, WriteByte_Handler * wbh, ReadByte_Handler * rbh) : RDB_B(dbStart, wbh, rbh) {
-			getTables(tables, maxNoOfTables);
+		RDB(int dbStart, WriteByte_Handler * wbh, ReadByte_Handler * rbh, uint8_t password) : RDB_B(dbStart, wbh, rbh, password) {
+			if (checkPW(password)) {
+				getTables(tables, maxNoOfTables);
+			}
 		}
 
 		template <typename Record_T>
@@ -39,7 +42,10 @@ namespace RelationalDatabase {
 
 		template<typename Record_T, int noOfRecords>
 		const TableQuery createTable(Record_T(&array)[noOfRecords], InsertionStrategy strategy = i_retainOrder) {
-			TableQuery newTable = registerTable(RDB_B::createTable(sizeof(array[0]), noOfRecords, strategy));;
+			//auto & table = RDB_B::createTable(sizeof(array[0]), noOfRecords, strategy);
+			auto & tableR = registerTable(RDB_B::createTable(sizeof(array[0]), noOfRecords, strategy));
+
+			TableQuery newTable = tableR;
 			newTable.insert(array, noOfRecords);
 			return newTable;
 		}
@@ -57,13 +63,23 @@ namespace RelationalDatabase {
 
 	private:
 		Table & registerTable(const Table & t) {
-			for (int i = 0; i < maxNoOfTables; ++i) {
-				if (tables[i]._tableID == 0) { tables[i] = t; return tables[i]; }
+			for (auto & tbl : tables) {
+				if (tbl._tableID == t._tableID) {
+					//logger().log(" Registered Table found ", t._tableID, " strategy:", t.insertionStrategy());
+					return tbl;
+				}
+				else if (tbl._tableID == 0) {
+					//logger().log(" Register Table at ", t._tableID, " strategy:", t.insertionStrategy());
+					tbl = t; 
+					return tbl; 
+				}
 			}
-			return tables[0];
+			//logger().log(" Register of Table failed at addr ", t._tableID);
+			tables[maxNoOfTables] = Table{};
+			return tables[maxNoOfTables];
 		}
 
-		Table tables[maxNoOfTables];
+		Table tables[maxNoOfTables+1];
 	};
 
 }

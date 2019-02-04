@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{C5F80730-F44F-4478-BDAE-6634EFC2CA88}</ProjectGuid>
+    <ProjectGuid>{8A08AEA9-0EF1-47B0-9489-5D42E3749574}</ProjectGuid>
     <RootNamespace>
     </RootNamespace>
     <ProjectName>RDB_Example</ProjectName>
@@ -37,7 +37,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset />
     <CharacterSet>MultiByte</CharacterSet>
-	<WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+    <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -53,7 +53,7 @@
     <PlatformToolset />
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-	<WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
+    <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

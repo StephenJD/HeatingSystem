@@ -1,4 +1,5 @@
 #include "I2C_Helper.h"
+#include <Logging.h>
 
 #ifndef VARIANT_MCK
 #define VARIANT_MCK F_CPU
@@ -36,7 +37,9 @@ I2C_Helper::I2C_Helper(TwoWire &wire_port, int32_t i2cFreq)
 	relayStart(0),
 	_myAddress(_single_master),
 	_canWrite(true),
-	_useAutoSpeed(false) {
+	_useAutoSpeed(false)
+	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
+	{
 	TWI_BUFFER_SIZE = getTWIbufferSize();
 	restart();
 	setI2CFrequency(i2cFreq);
@@ -90,7 +93,6 @@ uint8_t I2C_Helper::notExists(I2C_Helper & i2c, int deviceAddr) {
 uint8_t I2C_Helper::notExists(int deviceAddr) {
 	uint8_t result = beginTransmission(deviceAddr);
 	if (result == _OK) {
-		//wire_port.write(1);
 		return check_endTransmissionOK(deviceAddr);
 	} else return result;
 }
@@ -136,7 +138,7 @@ uint8_t I2C_Helper::getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *
 	uint8_t returnStatus = check_endTransmissionOK(deviceAddr);
 	//retuns 0=_OK, 1=_Insufficient_data_returned, 2=_NACK_during_address_send, 3=_NACK_during_data_send, 4=_NACK_during_complete, 5=_NACK_receiving_data, 6=_Timeout, 7=_slave_shouldnt_write, 8=_I2C_not_created
 	if (returnStatus == _OK) {
-		returnStatus = (wire_port.requestFrom(deviceAddr, numberBytes) != numberBytes);
+		returnStatus = (wire_port.requestFrom((int)deviceAddr, (int)numberBytes) != numberBytes);
 		if (returnStatus != _OK) { // returned error
 			returnStatus = wire_port.read(); // retrieve error code
 			//log("I2C_Helper::read err: for ", long(deviceAddr), getError(returnStatus),long(i));
@@ -176,6 +178,7 @@ uint8_t I2C_Helper::write(uint16_t deviceAddr, uint8_t registerAddress, uint16_t
 				//Serial.print(registerAddress,HEX);
 				//Serial.println(getError(returnStatus));
 			}
+			relayDelay = g_timeSince(relayStart);	
 		} else return returnStatus;
 	} while (returnStatus && ++i < noOfRetries && restart("write 0x",deviceAddr) && g_delayTrue(i));// create an increasing delay if we are going to loop
 	if (i < noOfRetries && i > successAfterRetries) successAfterRetries = i;
@@ -238,33 +241,6 @@ void I2C_Helper::waitForDeviceReady(uint16_t deviceAddr)
 		beginTransmission(deviceAddr);
 		if (check_endTransmissionOK(deviceAddr) == _OK) break;
 	}
-}
-
-uint8_t I2C_Helper::write_at_zero_cross(uint16_t deviceAddr, uint8_t registerAddress, uint8_t data) {
-	uint8_t i = 0, returnStatus;
-	do {
-		returnStatus = beginTransmission(deviceAddr);
-		if (returnStatus == _OK) {
-			wire_port.write(registerAddress);
-			wire_port.write(data);
-			waitForZeroCross();
-			returnStatus = check_endTransmissionOK(deviceAddr);
-			_lastWrite = micros();
-			if (returnStatus) {
-				//log(" I2C_Helper::write_at_zero_cross Error Writing addr: ",long(deviceAddr), getError(returnStatus),long(i)); 
-				//Serial.print(i,DEC); 
-				//Serial.print(" Error Writing@Zero addr:0x"); 
-				//Serial.print(deviceAddr,HEX); 
-				//Serial.print(" Reg:0x"); 
-				//Serial.print(registerAddress,HEX);
-				//Serial.println(getError(returnStatus));
-			}
-			//delay(2);
-			relayDelay = g_timeSince(relayStart);	
-		} else return returnStatus;
-	} while (returnStatus && ++i < noOfRetries && restart("writeZX 0x",deviceAddr) && g_delayTrue(i));// create an increasing delay if we are going to loop
-	if (i < noOfRetries && i > successAfterRetries) successAfterRetries = i;
-	return(returnStatus);
 }
 
 int32_t I2C_Helper::setI2Cfreq_retainAutoSpeed(int32_t i2cFreq) {
@@ -331,13 +307,13 @@ uint8_t I2C_Helper::beginTransmission(uint16_t deviceAddr) { // return false to 
 		setI2Cfreq_retainAutoSpeed(getThisI2CFrequency(deviceAddr)); // set device-specific frequency if available
 		//Serial.print("Speed for addr: 0x"); Serial.print(deviceAddr, HEX); Serial.print(" Freq: "); Serial.println(getI2CFrequency());
 	}
-	wire_port.beginTransmission(deviceAddr);
+	wire_port.beginTransmission((uint8_t)deviceAddr);
 	return _OK;
 }
 
 uint8_t I2C_Helper::check_endTransmissionOK(int addr) { // returns 0=OK, 1=Timeout, 2 = Error during send, 3= NACK during transmit, 4=NACK during complete.
 	//Serial.println("endTransmission()");
-	
+	if (_waitForZeroCross) waitForZeroCross();
 	uint8_t error = wire_port.endTransmission();
 	if (error == _Timeout) {
 		//log("check_endTransmissionOK()_Timeout: calling timeoutFn for: dec",addr);
@@ -362,7 +338,24 @@ void I2C_Helper::waitForZeroCross(){
 		while (micros() < fireTime); // wait for fireTime.
 		relayStart = micros(); // time relay delay
 	}
+	_waitForZeroCross = false;
 #endif
+}
+
+bool I2C_Helper::i2C_is_frozen(int addr) {
+	restart();
+	if (addr) {
+		uint8_t err = beginTransmission(addr);
+		if (err == _OK) err = wire_port.endTransmission();
+		if (err == _OK) {
+			//logger().log("****  i2C_is_frozen recovered with endTrans()  ****");
+			return false;
+		}
+	}
+	unsigned long downTime = micros() + 20L;
+	while (digitalRead(_I2C_DATA_PIN) == LOW && micros() < downTime);
+	restart();
+	return (digitalRead(_I2C_DATA_PIN) == LOW);
 }
 
 bool I2C_Helper::restart() {
@@ -430,9 +423,11 @@ bool I2C_Helper::scan<false,false>() { // returns false when no more found
 	useAutoSpeed(false);
 	if (result.foundDeviceAddr == -1) {
 		result.totalDevicesFound = 0;
+		result.foundDeviceAddr = 0;
 	}
 	//callTime_OutFn(0);
 	while(++result.foundDeviceAddr >= 0) {
+		//Serial.println(result.foundDeviceAddr, HEX);
 		result.error = findAworkingSpeed(0);
 		if (result.error == _OK) {
 		  ++result.totalDevicesFound;
@@ -445,12 +440,15 @@ bool I2C_Helper::scan<false,false>() { // returns false when no more found
 }
 
 void I2C_Helper::callTime_OutFn(int addr) {
-	if (timeoutFunctor != 0) {
-		//Serial.println("call Time_OutFn");
-		(*timeoutFunctor)(*this, addr);
-	} else //Serial.println("... no Time_OutFn set");
-	restart(); // restart i2c in case this is called after an i2c failure
-	delayMicroseconds(5000);
+	if (i2C_is_frozen(addr)) {
+		if (timeoutFunctor != 0) {
+			//Serial.println("call Time_OutFn");
+			(*timeoutFunctor)(*this, addr);
+		}
+		else //Serial.println("... no Time_OutFn set");
+			restart(); // restart i2c in case this is called after an i2c failure
+		delayMicroseconds(5000);
+	}
 }
 
 template<> // implementation of fully specialized template to test one device
@@ -460,12 +458,15 @@ uint32_t I2C_Helper::speedTest_T<false,false>(I_I2Cdevice * deviceFailTest) {
 	uint8_t restoreNoOfRetries = getNoOfRetries();
 	setNoOfRetries(0);
 	uint8_t tryAgain = 0;
-	signed char hasFailed = findAworkingSpeed(0);
+	setI2Cfreq_retainAutoSpeed(MAX_I2C_FREQ);
+	result.thisHighestFreq = MAX_I2C_FREQ;
+	signed char hasFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 1);
+	if (hasFailed) hasFailed = findAworkingSpeed(deviceFailTest);
 	if (!hasFailed) {
 		//Serial.println(" ** findMaxSpeed **");
 		hasFailed = findOptimumSpeed(deviceFailTest, result.thisHighestFreq, MAX_I2C_FREQ /*result.maxSafeSpeed*/);
 		//Serial.println(" ** findMinSpeed **");
-		hasFailed = hasFailed | findOptimumSpeed(deviceFailTest, result.thisLowestFreq, MIN_I2C_FREQ /*result.minSafeSpeed*/);
+		//hasFailed = hasFailed | findOptimumSpeed(deviceFailTest, result.thisLowestFreq, MIN_I2C_FREQ /*result.minSafeSpeed*/);
 	}
 
 	if (hasFailed) {
@@ -475,7 +476,7 @@ uint32_t I2C_Helper::speedTest_T<false,false>(I_I2Cdevice * deviceFailTest) {
 		setThisI2CFrequency(result.foundDeviceAddr, result.thisHighestFreq);
 		//setThisI2CFrequency(result.foundDeviceAddr, (result.thisHighestFreq + result.thisLowestFreq) / 2);
 		if (result.thisHighestFreq < result.maxSafeSpeed) result.maxSafeSpeed = result.thisHighestFreq;
-		if (result.thisLowestFreq > result.minSafeSpeed) result.minSafeSpeed = result.thisLowestFreq; 
+		//if (result.thisLowestFreq > result.minSafeSpeed) result.minSafeSpeed = result.thisLowestFreq; 
 	}
 	setNoOfRetries(restoreNoOfRetries);
 	useAutoSpeed(true);
@@ -506,25 +507,32 @@ signed char I2C_Helper::testDevice(I_I2Cdevice * deviceFailTest, uint8_t addr, i
 
 signed char I2C_Helper::findAworkingSpeed(I_I2Cdevice * deviceFailTest) {
 	// Must test MAX_I2C_FREQ and MIN_I2C_FREQ as these are skipped in later tests
-	uint32_t tryFreq[] = { 52000,8200,330000,3200,21000,1300000,830000,2000,5100,13000,33000,83000,210000,520000,1300000 };
-	result.thisHighestFreq = setI2Cfreq_retainAutoSpeed(MAX_I2C_FREQ/2);
-	int highFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 1);
+	uint32_t tryFreq[] = {MIN_I2C_FREQ, 52000,8200,330000,3200,21000,2000,5100,13000,33000,83000,210000};
+	result.thisHighestFreq = setI2Cfreq_retainAutoSpeed(MAX_I2C_FREQ);
+	setI2Cfreq_retainAutoSpeed(MAX_I2C_FREQ);
+	//callTime_OutFn(0);
+	int highFailed = testDevice(0, result.foundDeviceAddr, 1);
 	if (highFailed == _I2C_AddressOutOfRange) return highFailed;
-	result.thisLowestFreq = setI2Cfreq_retainAutoSpeed(MIN_I2C_FREQ*2);
-	int lowFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 1);
-	int testFailed = highFailed || lowFailed;
+	if (!highFailed) highFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 1);
+	//result.thisLowestFreq = setI2Cfreq_retainAutoSpeed(MIN_I2C_FREQ*2);
+	//int lowFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 1);
+	int testFailed = highFailed /*|| lowFailed*/;
 	if (testFailed) {
 		for (auto freq : tryFreq) {
 			setI2Cfreq_retainAutoSpeed(freq);
-			testFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 1);
-			//Serial.print("Trying addr: 0x"); Serial.print(result.foundDeviceAddr, HEX); Serial.print(" at freq: "); Serial.println(freq, DEC);
-			if (testFailed == _OK) 	break;
-			else if (testFailed == _Timeout) callTime_OutFn(0);
+			testFailed = testDevice(0, result.foundDeviceAddr, 1);
+			Serial.print("Trying addr: 0x"); Serial.print(result.foundDeviceAddr, HEX); Serial.print(" at freq: "); Serial.print(freq, DEC); Serial.print(" Success: "); Serial.println(getError(testFailed));
+			if (testFailed == _OK) {
+				testFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 1);
+				if (testFailed == _OK) break;
+			}
+			//else if (testFailed == _Timeout) 
+				//callTime_OutFn(0);
 		}
 	}
 	_lastGoodi2cFreq = getI2CFrequency();
 	if (highFailed) result.thisHighestFreq = _lastGoodi2cFreq;
-	if (lowFailed) result.thisLowestFreq = _lastGoodi2cFreq;
+	//if (lowFailed) result.thisLowestFreq = _lastGoodi2cFreq;
 	return testFailed;
 }
 
@@ -532,35 +540,35 @@ signed char I2C_Helper::findOptimumSpeed(I_I2Cdevice * deviceFailTest, int32_t &
 	// enters function at a working frequency
 	//callTime_OutFn(0);
 	int32_t adjustBy = (limitSpeed - bestSpeed) /3;
-	//Serial.print("\n ** findOptimumSpeed start:"); Serial.print(bestSpeed, DEC); Serial.print(" limit: "); Serial.print(limitSpeed, DEC); Serial.print(" adjustBy: "); Serial.println(adjustBy, DEC);
-	setI2Cfreq_retainAutoSpeed(limitSpeed);
-	signed char hasFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 5); 
+	Serial.print("\n ** findOptimumSpeed start:"); Serial.print(bestSpeed, DEC); Serial.print(" limit: "); Serial.print(limitSpeed, DEC); Serial.print(" adjustBy: "); Serial.println(adjustBy, DEC);
+	//setI2Cfreq_retainAutoSpeed(limitSpeed);
+	signed char hasFailed = bestSpeed < limitSpeed; // testDevice(deviceFailTest, result.foundDeviceAddr, 5);
 	if (hasFailed) {
 		bestSpeed = setI2Cfreq_retainAutoSpeed(limitSpeed - adjustBy);
 		hasFailed = 0;
 		do {
-			//Serial.print("\n Try best speed: "); Serial.print(bestSpeed, DEC); Serial.print(" adjustBy : "); Serial.println(adjustBy, DEC);
+			Serial.print("\n Try best speed: "); Serial.print(bestSpeed, DEC); Serial.print(" adjustBy : "); Serial.println(adjustBy, DEC);
 			while (!hasFailed && (adjustBy > 0 ? bestSpeed < limitSpeed : bestSpeed > limitSpeed)) { // adjust speed 'till it breaks	
-				//Serial.print(" Try at: "); Serial.println(getI2CFrequency(), DEC);
+				Serial.print(" Try at: "); Serial.println(getI2CFrequency(), DEC);
 				hasFailed = testDevice(deviceFailTest, result.foundDeviceAddr, 2);
 				if (hasFailed) {
 					limitSpeed = bestSpeed - adjustBy / 100;
-					//Serial.print("\n Failed. NewLimit:"); Serial.println(limitSpeed, DEC);
+					Serial.print("\n Failed. NewLimit:"); Serial.println(limitSpeed, DEC);
 					//callTime_OutFn(0);
 					if (hasFailed == _Timeout) callTime_OutFn(0);
 				}
 				else {
-					//Serial.print(" OK. BestSpeed was:"); Serial.println(bestSpeed, DEC);
+					Serial.print(" OK. BestSpeed was:"); Serial.println(bestSpeed, DEC);
 					bestSpeed = setI2Cfreq_retainAutoSpeed(bestSpeed + adjustBy);
 				}
 			}
 			bestSpeed = setI2Cfreq_retainAutoSpeed(bestSpeed - adjustBy);
 			hasFailed = 0;
-			adjustBy /= 3;
-		} while (abs(adjustBy) > bestSpeed / 20);
+			adjustBy /= 2;
+		} while (abs(adjustBy) > bestSpeed/5);
 		if (hasFailed == _Timeout) callTime_OutFn(0);
-		hasFailed = adjustSpeedTillItWorksAgain(deviceFailTest, (adjustBy > 0 ? -10 : 10));
 	}
+	hasFailed = adjustSpeedTillItWorksAgain(deviceFailTest, (adjustBy > 0 ? -10 : 10));
 	bestSpeed = getI2CFrequency();
 	return hasFailed;
 }
@@ -573,13 +581,14 @@ signed char I2C_Helper::adjustSpeedTillItWorksAgain(I_I2Cdevice * deviceFailTest
 	do { // Adjust speed 'till it works reliably
 		hasFailed = testDevice(deviceFailTest,result.foundDeviceAddr, noOfTestsMustPass);
 		if (hasFailed) {
-			setI2Cfreq_retainAutoSpeed(getI2CFrequency() + (getI2CFrequency() / incrementRatio));
+			auto increment = getI2CFrequency() / incrementRatio;
+			setI2Cfreq_retainAutoSpeed(getI2CFrequency() + increment > 2000 ? increment : 2000);
 			//Serial.print(" Adjust I2C_Speed: "); Serial.print(getI2CFrequency(),DEC); Serial.print(" increment :"); Serial.println(getI2CFrequency() / incrementRatio,DEC);
 			//callTime_OutFn(0);
 			if (hasFailed == _Timeout) callTime_OutFn(0);
 		}
 	} while (hasFailed && getI2CFrequency() > MIN_I2C_FREQ && getI2CFrequency() < MAX_I2C_FREQ);
-	//Serial.print(" Adjust I2C_Speed finished at: "); Serial.println(getI2CFrequency(),DEC);
+	Serial.print(" Adjust I2C_Speed "); Serial.print(hasFailed ? "failed at : " : "finished at : "); Serial.println(getI2CFrequency(),DEC);
 	return hasFailed;
 }
 

@@ -8,12 +8,13 @@
 #include "..\Client_DataStructures\Data_Zone.h"
 #include "..\HardwareInterfaces\LCD_Display.h"
 #include <Logging/Logging.h>
+#include <EEPROM.h>
 
 namespace Assembly {
 	using namespace client_data_structures;
 
 	constexpr R_Display displays_f[] = {
-		{"Main", 0, 10, 5, 2, 2, 20, 10}
+		{"Main", 0, 16, 20, 16, 250, 70, 30}
 		,{"DS", 0x26, 0, 0, 0, 0, 0, 0}
 		,{"US", 0x24, 0, 0, 0, 0, 0, 0}
 		,{"Flat", 0x25, 0, 0, 0, 0, 0, 0}
@@ -76,8 +77,8 @@ namespace Assembly {
 	}
 
 	R_TimeTemp timeTemps_f[] = { // profileID,TT
-		{0, makeTT(7,40,15)}
-		,{0, makeTT(10,30,18)}
+		{0, makeTT(7,40,15)}   // 11801
+		,{0, makeTT(10,30,18)} // 16156
 		,{1, makeTT(7,30,15)}
 		,{1, makeTT(22,40,18)}
 		,{2, makeTT(8,30,15)}
@@ -105,7 +106,6 @@ namespace Assembly {
 		,{18, makeTT(07,00,18)}
 		,{19, makeTT(07,00,18)}
 		,{20, makeTT(07,00,10)}
-
 	};
 
 	constexpr R_Spell spells_f[] = {
@@ -151,9 +151,9 @@ namespace Assembly {
 		,{ "Flat","Flt",1,1,1,0,25,12,1,60 } 
 	};
 
-	void setFactoryDefaults(RDB<TB_NoOfTables> & db) {
-		//enum tableIndex { TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
-
+	void setFactoryDefaults(RDB<TB_NoOfTables> & db, uint8_t password) {
+		//enum tableIndex {TB_Display, TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
+		db.reset(EEPROM_SIZE, password);
 		logger().log("setFactoryDefaults Started...");
 		logger().log("\nDisplay Table ");
 		db.createTable(displays_f);
@@ -172,11 +172,19 @@ namespace Assembly {
 		logger().log("\nProfiles Table ");
 		db.createTable(profiles_f);
 		logger().log("\nTimeTemps Table ");
-		db.createTable(timeTemps_f, i_09_orderedInsert);
+		auto ttQuery = db.createTable(timeTemps_f, i_09_orderedInsert);
 		logger().log("\nSpells Table ");
 		db.createTable(spells_f, i_09_orderedInsert);
 		logger().log("\nAll Tables Created\n ");
+		//for (auto tt : timeTemps_f) {
+		//	logger().log("TT:", tt.time_temp);
+		//}
+		//logger().log("TT All Requested");
+		//logger().log("TT try to read...");
 
+		//for (Answer_R< R_TimeTemp> tt : ttQuery) {
+		//	logger().log("tt ID:",tt.id(), "TT:", tt.rec().time_temp);
+		//}
 		logger().log("setFactoryDefaults Completed");
 	}
 	

@@ -315,6 +315,24 @@ namespace LCD_UI {
 	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->setFocusIndex(index); }
 	inline int Collection_Hndl::endIndex() const { return get()->collection()->endIndex(); }
 
+	////////////////////////////////////////////////////////////////////////
+	////                        Dummy-Collection                          //
+	////////////////////////////////////////////////////////////////////////
+
+	///// <summary>
+	///// Dummy Collection of Collection_Hndl.
+	///// </summary>
+	//class DummyCollection : public I_SafeCollection {
+	//public:
+	//	DummyCollection(int count, Behaviour behaviour) : I_SafeCollection(count, behaviour), _handle(this) {}
+	//	using I_SafeCollection::item;
+	//	// Modifiers
+	//	Collection_Hndl * item(int newIndex) { return &_handle; }
+	//	Collection_Hndl & object() { return _handle; }
+	//private:
+	//	Collection_Hndl _handle;
+	//};
+
 	/////////////////////////////////////////////////////////////////////////
 	//         Short List decorator for any I_SafeCollection derivative 
 	/////////////////////////////////////////////////////////////////////////

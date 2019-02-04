@@ -17,6 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #pragma once
+//#pragma message( "I2C EEPROM header loaded" )
 
 #if defined(__SAM3X8E__) || defined ZPSIM
 
@@ -30,8 +31,8 @@ class EEPROMClass
 #if defined (ZPSIM)
 public:
 	static uint8_t myEEProm[4096]; // EEPROM object may not get created until after it is used! So ensure array exists by making it static
-	EEPROMClass() {}
 	~EEPROMClass();
+	void saveEEPROM();
 #endif
 
   public:
@@ -47,4 +48,6 @@ public:
 
 extern EEPROMClass & EEPROM;
 
+#else
+//#pragma message( "__SAM3X8E__ not defined" )
 #endif

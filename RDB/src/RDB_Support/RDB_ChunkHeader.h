@@ -71,7 +71,7 @@ namespace RelationalDatabase {
 			//UBitField<TableID, sizeof(TableID) * 8 - 2, 1> _orderedByLargestFirst;
 		};
 		union {
-			NoOf_Recs_t _chunk_Size;	// If top-bit is clear, this the first chunk. The rest is the chunkSize in noOfRecords (0-127). Required in every chunk for getRecordSize().
+			NoOf_Recs_t _chunk_Size;	// If top-bit is clear, this is the first chunk. The rest is the chunkSize in noOfRecords (0-127). Required in every chunk for getRecordSize().
 			UBitField<NoOf_Recs_t, 0, sizeof(NoOf_Recs_t) * 8 - 1> _chunkSize;
 			UBitField<NoOf_Recs_t, sizeof(NoOf_Recs_t) * 8 - 1, 1> _firstChunk;
 		};
