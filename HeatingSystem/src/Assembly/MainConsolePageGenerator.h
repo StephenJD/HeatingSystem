@@ -18,18 +18,19 @@
 #include <RDB.h>
 
 namespace Assembly {
+	class TemperatureController;
 
 	class MainConsolePageGenerator
 	{
 	public:
 		enum { e_zones, e_calendars, e_programs, e_towelRails, e_NO_OF_CMDS };
-		MainConsolePageGenerator(RelationalDatabase::RDB<TB_NoOfTables> & db);
+		MainConsolePageGenerator(RelationalDatabase::RDB<TB_NoOfTables> & db, TemperatureController & tc);
 		LCD_UI::A_Top_UI & pages() { return _display_h; }
 		void setDisplay(HardwareInterfaces::LocalDisplay & lcd) { _contrastCmd.setDisplay(lcd); _backlightCmd.setDisplay(lcd); }
-		HardwareInterfaces::Zone _zoneArr[Assembly::NO_OF_ZONES]; // = { { 17,18 },{ 20,19 },{ 45,55 },{ 21,21 } };
 
 	private:
 		RelationalDatabase::RDB<TB_NoOfTables> * _db;
+		TemperatureController * _tc;
 		// RDB Queries
 		RelationalDatabase::TableQuery _q_dwellings;
 		RelationalDatabase::TableQuery _q_zones;

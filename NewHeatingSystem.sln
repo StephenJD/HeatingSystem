@@ -27,10 +27,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics", "..\..\VS_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics with DB", "..\..\VS_Projects\NewHeatingSystem\Test UI Basics with DB\Test UI Basics with DB.vcxproj", "{5767823B-227A-4F07-8A36-2C6AF30B862E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RDB_Example", "RDB\examples\RDB_Example\RDB_Example.vcxproj", "{8A08AEA9-0EF1-47B0-9489-5D42E3749574}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test RDB", "..\..\VS_Projects\NewHeatingSystem\Test RDB\Test RDB.vcxproj", "{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -175,26 +171,6 @@ Global
 		{5767823B-227A-4F07-8A36-2C6AF30B862E}.Release|x64.Build.0 = Release|x64
 		{5767823B-227A-4F07-8A36-2C6AF30B862E}.Release|x86.ActiveCfg = Release|Win32
 		{5767823B-227A-4F07-8A36-2C6AF30B862E}.Release|x86.Build.0 = Release|Win32
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Debug|ARM.ActiveCfg = Debug|ARM
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Debug|ARM.Build.0 = Debug|ARM
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Debug|x64.ActiveCfg = Debug|Win32
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Debug|x86.ActiveCfg = Debug|Win32
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Debug|x86.Build.0 = Debug|Win32
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Release|ARM.ActiveCfg = Release|ARM
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Release|ARM.Build.0 = Release|ARM
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Release|x64.ActiveCfg = Release|Win32
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Release|x86.ActiveCfg = Release|Win32
-		{8A08AEA9-0EF1-47B0-9489-5D42E3749574}.Release|x86.Build.0 = Release|Win32
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Debug|ARM.ActiveCfg = Debug|Win32
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Debug|x64.ActiveCfg = Debug|x64
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Debug|x64.Build.0 = Debug|x64
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Debug|x86.ActiveCfg = Debug|Win32
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Debug|x86.Build.0 = Debug|Win32
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|ARM.ActiveCfg = Release|Win32
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x64.ActiveCfg = Release|x64
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x64.Build.0 = Release|x64
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x86.ActiveCfg = Release|Win32
-		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

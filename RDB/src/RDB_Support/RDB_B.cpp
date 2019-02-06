@@ -4,7 +4,7 @@
 #include <Logging\Logging.h>
 
 namespace RelationalDatabase {
-	RDB_B::RDB_B(int dbStart, int dbEnd, WriteByte_Handler * w, ReadByte_Handler * r, uint8_t password )
+	RDB_B::RDB_B(int dbStart, int dbEnd, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
 		: _writeByte(w),
 		_readByte(r),
 		_dbStart(dbStart),
@@ -16,7 +16,7 @@ namespace RelationalDatabase {
 		logger().log("RDB_B(create) Constructed");
 	}
 
-	RDB_B::RDB_B(int dbStart, WriteByte_Handler * w, ReadByte_Handler * r, uint8_t password )
+	RDB_B::RDB_B(int dbStart, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
 		: _writeByte(w),
 		_readByte(r),
 		_dbStart(dbStart)
@@ -30,20 +30,26 @@ namespace RelationalDatabase {
 		}
 	}
 
-	void RDB_B::reset(int dbEnd, uint8_t password) {
+	void RDB_B::reset(int dbEnd, size_t password) {
 		savePW(password);
 		_dbEnd = dbEnd;
 		_dbSize = _dbStart + DB_HeaderSize;
 		setDB_Header();
 	}
 
-	void RDB_B::savePW(uint8_t password) {
+	void RDB_B::savePW(size_t password) {
+		//constexpr auto pwStart = sizeof(size_t) - SIZE_OF_PASSWORD;
+		//const uint8_t * pwAddr = reinterpret_cast<const uint8_t * >(&password) + pwStart;
 		_writeByte(_dbStart, &password, SIZE_OF_PASSWORD);
 	}
 
-	bool RDB_B::checkPW(uint8_t password) const {
-		auto pw = password;
+	bool RDB_B::checkPW(size_t password) const {
+		size_t pw = 0;
+		//constexpr auto pwStart = sizeof(size_t) - SIZE_OF_PASSWORD;
+		//uint8_t * pwAddr = reinterpret_cast<uint8_t *>(&pw);
+		//pwAddr += pwStart;
 		_readByte(_dbStart, &pw, SIZE_OF_PASSWORD);
+		logger().log("PW was", pw, "Should be", password);
 		return pw == password;
 	}
 

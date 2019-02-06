@@ -78,7 +78,7 @@ namespace client_data_structures {
 	}
 
 	I_UI_Wrapper * Dataset_Zone::getField(int fieldID) {
-		if (recordID() == -1) return 0;
+		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_name:
 			_name = record().rec().name;
@@ -93,11 +93,12 @@ namespace client_data_structures {
 			return &_factor;
 		case e_reqIsTemp:
 		{
+			//auto recID = record();
 			HardwareInterfaces::Zone & z = zone(record().id());
 			strcpy(_reqIsTemp.name, record().rec().name);
 			_reqIsTemp.isTemp = z.getCurrTemp();
 			_reqIsTemp.isHeating = z.isCallingHeat();
-			_reqIsTemp.val = z.getCurrTempRequest();
+			_reqIsTemp.val = z.currTempRequest();
 			return &_reqIsTemp;
 		}
 		default: return 0;
@@ -131,7 +132,9 @@ namespace client_data_structures {
 			break; 
 		case e_reqIsTemp: {
 				HardwareInterfaces::Zone & z = zone(record().id());
-				z.setCurrTempRequest(uint8_t(newValue->val));
+				z.offsetCurrTempRequest(uint8_t(newValue->val));
+				record().rec().offsetT = z.offset();
+				setRecordID(record().update());
 				break;
 			}
 		}

@@ -34,10 +34,10 @@ namespace Date_Time {
 		/*constexpr*/ uint32_t asInt() const { return (uint32_t(DateOnly::asInt()) << 8) | TimeOnly::asInt(); };
 		/*constexpr*/ DateOnly date() const { return *this; }
 		/*constexpr*/ TimeOnly time() const { return *this;}
+	 /*constexpr*/ bool operator==(const DateTime & rhs) const { return asInt() == rhs.asInt(); }
+	 /*constexpr*/ bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
+	 /*constexpr*/ bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
 
-		/*constexpr*/ bool operator==(const DateTime & rhs) const { return asInt() == rhs.asInt(); }
-		/*constexpr*/ bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
-		/*constexpr*/ bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
 		//DateTime operator~ () const {return ~this->asInt();}
 		// obtain other boolean operators via Rel_Ops
 
@@ -48,6 +48,10 @@ namespace Date_Time {
 		DateTime & addOffset(incDTfld offset);
 		// sum operators are only provided for DateOnly and TimeOnly
 	};
+
+	//inline /*constexpr*/ bool operator==(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() == rhs.asInt(); }
+	//inline /*constexpr*/ bool operator<(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() < rhs.asInt(); }
+	//inline /*constexpr*/ bool operator>(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() > rhs.asInt(); }
 
 	const DateTime JUDGEMEMT_DAY({ 31, 15, 127 }, {});
 }

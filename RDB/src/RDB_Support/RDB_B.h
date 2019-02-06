@@ -43,14 +43,14 @@ namespace RelationalDatabase {
 		typedef int WriteByte_Handler(int address, const void * data, int noOfBytes);
 		typedef int ReadByte_Handler(int address, void * result, int noOfBytes);
 
-		RDB_B(int dbStart, int dbEnd, WriteByte_Handler *, ReadByte_Handler *, uint8_t password);
-		RDB_B(int dbStart, WriteByte_Handler *, ReadByte_Handler *, uint8_t password);
+		RDB_B(int dbStart, int dbEnd, WriteByte_Handler *, ReadByte_Handler *, size_t password);
+		RDB_B(int dbStart, WriteByte_Handler *, ReadByte_Handler *, size_t password);
 
 		// Queries
-		bool checkPW(uint8_t password) const;
+		bool checkPW(size_t password) const;
 
 		// Modifiers
-		void reset(int dbEnd, uint8_t password);
+		void reset(int dbEnd, size_t password);
 		int getTables(Table * table, int maxNoOfTables);
 		int moveRecords(int fromAddress, int toAddress, int noOfBytes);
 
@@ -67,13 +67,12 @@ namespace RelationalDatabase {
 		void setDB_Header();
 		void updateDB_Header() { _writeByte(_dbStart+ SIZE_OF_PASSWORD, &_dbSize, sizeof(DB_Size_t)); }
 		void loadDB_Header();
-		void savePW(uint8_t password);
+		void savePW(size_t password);
 
 		// Data
 		WriteByte_Handler *_writeByte;
 		ReadByte_Handler *_readByte;
 		DB_Size_t _dbStart;
-		static constexpr uint8_t SIZE_OF_PASSWORD = 1;
 		// The next items are the DB Header, saved in the DB
 		// the password
 		DB_Size_t _dbSize;

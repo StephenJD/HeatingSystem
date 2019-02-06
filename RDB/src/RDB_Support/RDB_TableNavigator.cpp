@@ -455,7 +455,7 @@ namespace RelationalDatabase {
 	}
 
 	void TableNavigator::loadHeader() {
-		db()._readByte(_chunkAddr, &_chunk_header, Table::HeaderSize);
+		if (!table().dbInvalid()) db()._readByte(_chunkAddr, &_chunk_header, Table::HeaderSize);
 		_timeValidRecordLastRead = micros();
 	}
 

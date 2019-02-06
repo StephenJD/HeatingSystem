@@ -60,8 +60,8 @@ namespace HardwareInterfaces {
 		hs().i2C.result.reset();
 
 		logger().log("TestDevices::speedTestDevices\tTry Relay Port");
-		hs().i2C.result.foundDeviceAddr = hs().relaysPort.getAddress();
-		if (showSpeedTestFailed(hs().relaysPort, "Relay")) {
+		hs().i2C.result.foundDeviceAddr = hs()._tempController.relaysPort.getAddress();
+		if (showSpeedTestFailed(hs()._tempController.relaysPort, "Relay")) {
 			returnVal = ERR_PORTS_FAILED;
 		}
 
@@ -83,11 +83,11 @@ namespace HardwareInterfaces {
 
 		logger().log("TestDevices::speedTestDevices\tTry Mix Valve");
 		hs().i2C.result.foundDeviceAddr = MIX_VALVE_I2C_ADDR;
-		if (showSpeedTestFailed(hs().mixValveController, "Mix V")) {
+		if (showSpeedTestFailed(hs()._tempController.mixValveControllerArr[0], "Mix V")) {
 			returnVal = ERR_MIX_ARD_FAILED;
 		}
 		
-		for (auto & ts : hs().tempSensorArr) {
+		for (auto & ts : hs()._tempController.tempSensorArr) {
 			logger().log("TestDevices::speedTestDevices\tTry TS", ts.getAddress());
 			hs().i2C.result.foundDeviceAddr = ts.getAddress();
 			showSpeedTestFailed(ts, "TS");
@@ -107,18 +107,18 @@ namespace HardwareInterfaces {
 		uint8_t returnVal = 0;
 		uint8_t numberFailed = 0;
 		logger().log("Relay_Run::testRelays");
-		if (hs().relaysPort.testDevice(hs().i2C, IO8_PORT_OptCoupl)) {
+		if (hs()._tempController.relaysPort.testDevice(hs().i2C, IO8_PORT_OptCoupl)) {
 			logger().log("Relay_Run::testRelays\tNo Relays\tERR_PORTS_FAILED");
 			return NO_OF_RELAYS;
 		}
 		hs().mainDisplay.setCursor(0, 3);
 		hs().mainDisplay.print("Relay Test: ");
 		for (int relayNo = 0; relayNo < NO_OF_RELAYS; ++relayNo) { // 12 relays, but 1 is mix enable.
-			hs().relayArr[RELAY_ORDER[relayNo]].setRelay(1);
-			returnVal = hs().relaysPort.setAndTestRegister();
+			hs()._tempController.relayArr[RELAY_ORDER[relayNo]].setRelay(1);
+			returnVal = hs()._tempController.relaysPort.setAndTestRegister();
 			delay(200);
-			hs().relayArr[RELAY_ORDER[relayNo]].setRelay(0);
-			returnVal |= hs().relaysPort.setAndTestRegister();
+			hs()._tempController.relayArr[RELAY_ORDER[relayNo]].setRelay(0);
+			returnVal |= hs()._tempController.relaysPort.setAndTestRegister();
 			numberFailed = numberFailed + (returnVal != 0);
 			hs().mainDisplay.setCursor(12, 3);
 			hs().mainDisplay.print(relayNo, DEC);

@@ -19,16 +19,13 @@ namespace Assembly {
 	class Initialiser {
 	public:
 		Initialiser(HeatingSystem & hs);
+		uint8_t i2C_Test();
 		uint8_t postI2CResetInitialisation();
 		HeatingSystem & hs() { return _hs; }
 		I2C_Helper::I_I2Cdevice & getDevice(uint8_t deviceAddr);
 
 		::HardwareInterfaces::ResetI2C _resetI2C;
 	private:
-		void loadRelays();
-		void loadtempSensors();
-
-		void iniI2C();
 		uint8_t initialiseTempSensors();
 		uint8_t initialiseRemoteDisplays();
 

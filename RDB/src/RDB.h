@@ -17,12 +17,12 @@ namespace RelationalDatabase {
 		/// <summary>
 		/// For creating a new Database
 		/// </summary>	
-		RDB(int dbStart, int dbEnd, WriteByte_Handler * wbh, ReadByte_Handler * rbh, uint8_t password) : RDB_B(dbStart, dbEnd, wbh, rbh, password) {};
+		RDB(int dbStart, int dbEnd, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStart, dbEnd, wbh, rbh, password) {};
 
 		/// <summary>
 		/// For opening an existing Database
 		/// </summary>	
-		RDB(int dbStart, WriteByte_Handler * wbh, ReadByte_Handler * rbh, uint8_t password) : RDB_B(dbStart, wbh, rbh, password) {
+		RDB(int dbStart, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStart, wbh, rbh, password) {
 			if (checkPW(password)) {
 				getTables(tables, maxNoOfTables);
 			}

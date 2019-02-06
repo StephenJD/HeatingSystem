@@ -30,6 +30,7 @@
 		// Modifiers
 		// Reading the time triggers an update-check which might modify the time
 		explicit operator Date_Time::DateTime() { return _dateTime(); }
+		Date_Time::DateTime now() { return  _dateTime(); }
 		Date_Time::DateOnly date() { return _dateTime(); }
 		Date_Time::TimeOnly time() { return _dateTime(); }
 		uint32_t asInt() { return _dateTime().asInt(); }

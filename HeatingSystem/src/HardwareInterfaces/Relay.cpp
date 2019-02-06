@@ -8,10 +8,9 @@ namespace HardwareInterfaces {
 	//       RelaysPort Functions      //
 	/////////////////////////////////////
 
-	void RelaysPort::setup(I2C_Helper & i2C, int i2cAddress, int zeroCrossPin, int resetPin)
+	void RelaysPort::setup(int i2cAddress, int zeroCrossPin, int resetPin)
 		{
 		logger().log("RelaysPort::setup()");
-		I2C_Helper::I_I2Cdevice::setI2Chelper(i2C);
 		setAddress(i2cAddress);
 		_zeroCrossPin = zeroCrossPin;
 		_resetPin = resetPin;
@@ -60,26 +59,24 @@ namespace HardwareInterfaces {
 	//       Relay Functions      //
 	/////////////////////////////////////
 
-	Relay * relays;
-
-	uint8_t * Relay::_relayRegister;
+	uint8_t Relay::relayRegister;
 
 	bool Relay::getRelayState() const {
-		uint8_t myBit = *_relayRegister & (1 << port());
+		uint8_t myBit = relayRegister & (1 << port());
 		return !(myBit^activeState()); // Relay state
 	}
 
 	bool Relay::setRelay(uint8_t state) { // returns true if state is changed
 		uint8_t myBitMask = 1 << port();
-		uint8_t myBit = (*_relayRegister  & myBitMask) != 0;
+		uint8_t myBit = (relayRegister  & myBitMask) != 0;
 		uint8_t currState = !(myBit^activeState());
 
 		myBit = !(state^activeState()); // Required bit state 
 		if (!myBit) { // clear bit
-			*_relayRegister &= ~myBitMask;
+			relayRegister &= ~myBitMask;
 		}
 		else { // set this bit
-			*_relayRegister |= myBitMask;
+			relayRegister |= myBitMask;
 		}
 		return currState != state; // returns true if state is changed
 	}

@@ -15,7 +15,7 @@ namespace client_data_structures {
 
 	struct R_TempSensor {
 		char name[5];
-		uint8_t address; // includes port and active state
+		uint8_t address;
 		//I2C_Temp_Sensor & obj(int objID) { return HardwareInterfaces::tempSensors[objID]; }
 		bool operator < (R_TempSensor rhs) const { return false; }
 		bool operator == (R_TempSensor rhs) const { return true; }

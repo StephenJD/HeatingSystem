@@ -1,5 +1,6 @@
 #include "MainConsolePageGenerator.h"
 #include "..\HeatingSystem.h"
+#include "TemperatureController.h"
 
 
 namespace Assembly {
@@ -7,8 +8,9 @@ namespace Assembly {
 	using namespace client_data_structures;
 	using namespace LCD_UI;
 
-	MainConsolePageGenerator::MainConsolePageGenerator(RDB<TB_NoOfTables> & db) :
+	MainConsolePageGenerator::MainConsolePageGenerator(RDB<TB_NoOfTables> & db, TemperatureController & tc) :
 		_db(&db)
+		, _tc(&tc)
 		// RDB Queries
 		, _q_dwellings{ _db->tableQuery(TB_Dwelling) }
 		, _q_zones{ _db->tableQuery(TB_Zone) }
@@ -24,8 +26,8 @@ namespace Assembly {
 		// DB Record Interfaces
 		, _rec_currTime{ Dataset_WithoutQuery() }
 		, _rec_dwelling{ Dataset_Dwelling(_q_dwellings, noVolData, 0) }
-		, _rec_zones{ _q_zones, _zoneArr, 0 }
-		, _rec_dwZones{ _q_dwellingZones, _zoneArr, &_rec_dwelling }
+		, _rec_zones{ _q_zones, _tc->zoneArr, 0 }
+		, _rec_dwZones{ _q_dwellingZones,  _tc->zoneArr, &_rec_dwelling }
 		, _rec_dwProgs{ _q_dwellingProgs, noVolData, &_rec_dwelling }
 		, _rec_dwSpells{ _q_dwellingSpells, noVolData, &_rec_dwelling }
 		, _rec_spellProg{ _q_spellProg, noVolData, &_rec_dwSpells }

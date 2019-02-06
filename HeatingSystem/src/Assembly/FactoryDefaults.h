@@ -4,5 +4,5 @@
 
 namespace Assembly {
 	using namespace RelationalDatabase;
-	void setFactoryDefaults(RDB<TB_NoOfTables> & db, uint8_t password);
+	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password);
 }

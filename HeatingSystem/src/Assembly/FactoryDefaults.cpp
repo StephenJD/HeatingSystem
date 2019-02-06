@@ -1,4 +1,7 @@
 #include "FactoryDefaults.h"
+
+#include "..\Client_DataStructures\Data_ThermalStore.h"
+#include "..\Client_DataStructures\Data_MixValveControl.h"
 #include "..\Client_DataStructures\Data_Relay.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\Client_DataStructures\Data_Program.h"
@@ -12,6 +15,24 @@
 
 namespace Assembly {
 	using namespace client_data_structures;
+
+	constexpr R_ThermalStore thermalStore_f[] = {
+		{R_Gas
+		,T_GasF
+		,T_TkTop
+		,T_TkUs
+		,T_TkDs
+		,T_CWin
+		,T_Pdhw
+		,T_DHW
+		,T_OS
+		,85,21,75,25,60,180,169,138,97,25}
+	};
+
+	constexpr R_MixValveControl mixValveControl_f[] = {
+		{"DnS", T_DUfh, T_TkDs}
+	, {"UpS", T_UUfh, T_TkUs}
+	};
 
 	constexpr R_Display displays_f[] = {
 		{"Main", 0, 16, 20, 16, 250, 70, 30}
@@ -145,16 +166,20 @@ namespace Assembly {
 	};	
 		
 	constexpr R_Zone zones_f[] = { 
-		{ "UpStrs","US",1,1,1,0,25,12,1,60 }
-		,{ "DnStrs","DS",1,1,1,0,25,12,1,60 }
-		,{ "DHW","DHW",1,1,1,0,60,12,1,3 }
-		,{ "Flat","Flt",1,1,1,0,25,12,1,60 } 
+		{ "UpStrs","US",T_UR,R_UpSt,M_UpStrs,55,0,25,12,1,60 }
+		,{ "DnStrs","DS",T_DR,R_DnSt,M_DownStrs,45,0,25,12,1,60 }
+		,{ "DHW","DHW",T_GasF,R_Gas,M_UpStrs,80,0,60,12,1,3 }
+		,{ "Flat","Flt",T_FR,R_Flat,M_UpStrs,55,0,25,12,1,60 }
 	};
 
-	void setFactoryDefaults(RDB<TB_NoOfTables> & db, uint8_t password) {
+	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {
 		//enum tableIndex {TB_Display, TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
 		db.reset(EEPROM_SIZE, password);
 		logger().log("setFactoryDefaults Started...");
+		logger().log("\nThermalStore Table ");
+		db.createTable(thermalStore_f);
+		logger().log("\nMixValveContr Table ");
+		db.createTable(mixValveControl_f);
 		logger().log("\nDisplay Table ");
 		db.createTable(displays_f);
 		logger().log("\nRelays Table ");
@@ -172,19 +197,11 @@ namespace Assembly {
 		logger().log("\nProfiles Table ");
 		db.createTable(profiles_f);
 		logger().log("\nTimeTemps Table ");
-		auto ttQuery = db.createTable(timeTemps_f, i_09_orderedInsert);
+		db.createTable(timeTemps_f, i_09_orderedInsert);
 		logger().log("\nSpells Table ");
 		db.createTable(spells_f, i_09_orderedInsert);
 		logger().log("\nAll Tables Created\n ");
-		//for (auto tt : timeTemps_f) {
-		//	logger().log("TT:", tt.time_temp);
-		//}
-		//logger().log("TT All Requested");
-		//logger().log("TT try to read...");
 
-		//for (Answer_R< R_TimeTemp> tt : ttQuery) {
-		//	logger().log("tt ID:",tt.id(), "TT:", tt.rec().time_temp);
-		//}
 		logger().log("setFactoryDefaults Completed");
 	}
 	

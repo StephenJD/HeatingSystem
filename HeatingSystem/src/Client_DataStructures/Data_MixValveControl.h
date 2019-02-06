@@ -15,10 +15,17 @@ namespace client_data_structures {
 
 	struct R_MixValveControl {
 		char name[5];
-		uint8_t address;
-		//MixValveController & obj(int objID) { return *HardwareInterfaces::mixValveController; }
+		RecordID flowTempSens;
+		RecordID storeTempSens;
+		bool operator < (R_MixValveControl rhs) const { return false; }
+		bool operator == (R_MixValveControl rhs) const { return true; }
 	};
 
+#ifdef ZPSIM
+inline std::ostream & operator << (std::ostream & stream, const R_MixValveControl & profile) {
+	return stream << "R_MixValveControl";
+}
+#endif
 	//***************************************************
 	//              MixValveController LCD_UI
 	//***************************************************

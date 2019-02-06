@@ -20,57 +20,32 @@ namespace Assembly {
 		_iniFunctor(*this),
 		_testDevices(*this)
 	{
-		logger().log("Initialiser Started...");
-		HardwareInterfaces::tempSensors = _hs.tempSensorArr;
-		HardwareInterfaces::relays = _hs.relayArr;
-		Relay::_relayRegister = &_hs.relaysPort._relayRegister;
+		logger().log("  Initialiser PW check. req:", VERSION);
 		if (!_hs.db.checkPW(VERSION)) setFactoryDefaults(_hs.db, VERSION);
-		loadRelays();
-		loadtempSensors();
-		iniI2C();
-		_hs.mixValveController.setResetTimePtr(&_resetI2C.hardReset.timeOfReset_mS);
-		_testDevices.speedTestDevices();
-		_testDevices.testRelays();
-		if (postI2CResetInitialisation() != I2C_Helper::_OK) logger().log("  Initialiser failed");
 		logger().log("  Initialiser Constructed");
 	}
 
-	void Initialiser::loadRelays() {
-		auto q_relays = TableQuery(_hs.db.tableQuery(TB_Relay));
-		int i = 0;
-		for (Answer_R<R_Relay>thisRelay : q_relays) {
-			relays[i].setPort(thisRelay->rec().port);
-			++i;
-		}
-		logger().log("loadRelays Completed");
-	}
-
-	void Initialiser::loadtempSensors() {
-		auto q_tempSensors = TableQuery(_hs.db.tableQuery(TB_TempSensor));
-		int i = 0;
-		for (Answer_R<R_TempSensor>thisTempSensor : q_tempSensors) {
-			tempSensors[i].setAddress(thisTempSensor->rec().address);
-			++i;
-		}
-		logger().log("loadtempSensors Completed");
-	}
-
-	void Initialiser::iniI2C() {
-		_hs.relaysPort.setup(_hs.i2C, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN);
+	uint8_t Initialiser::i2C_Test() {
+		auto err = _testDevices.speedTestDevices();
+		if (!err) err = _testDevices.testRelays();
+		if (!err) err = postI2CResetInitialisation();
+		if (err != I2C_Helper::_OK) logger().log("  Initialiser::i2C_Test failed");
+		else logger().log("  Initialiser::i2C_Test OK");
+		return err;
 	}
 
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		return initialiseTempSensors()
-			| _hs.relaysPort.initialiseDevice()
+			| _hs._tempController.relaysPort.initialiseDevice()
 			| initialiseRemoteDisplays();
 	}
 
 	uint8_t Initialiser::initialiseTempSensors() {
 		// Set room-sensors to high-res
 		logger().log("Set room-sensors to high-res");
-		return	_hs.tempSensorArr[T_DR].setHighRes()
-			| _hs.tempSensorArr[T_FR].setHighRes()
-			| _hs.tempSensorArr[T_UR].setHighRes();
+		return	_hs._tempController.tempSensorArr[T_DR].setHighRes()
+			| _hs._tempController.tempSensorArr[T_FR].setHighRes()
+			| _hs._tempController.tempSensorArr[T_UR].setHighRes();
 	}
 
 	uint8_t Initialiser::initialiseRemoteDisplays() {
@@ -83,16 +58,16 @@ namespace Assembly {
 	}
 
 	I2C_Helper::I_I2Cdevice & Initialiser::getDevice(uint8_t deviceAddr) {
-		if (deviceAddr == IO8_PORT_OptCoupl) return hs().relaysPort;
-		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs().mixValveController;
+		if (deviceAddr == IO8_PORT_OptCoupl) return hs()._tempController.relaysPort;
+		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs()._tempController.mixValveControllerArr[0];
 		else if (deviceAddr >= 0x24 && deviceAddr <= 0x26) {
 			return hs().remDispl[deviceAddr-0x24];
 		}
 		else {
-			for (auto & ts : hs().tempSensorArr) {
+			for (auto & ts : hs()._tempController.tempSensorArr) {
 				if (ts.getAddress() == deviceAddr) return ts;
 			}
-			return hs().tempSensorArr[0];
+			return hs()._tempController.tempSensorArr[0];
 		}
 	}
 

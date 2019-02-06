@@ -3,18 +3,18 @@
 #include "Assembly\TestDevices.h"
 #include "Assembly\Initialiser.h"
 #include "Assembly\MainConsolePageGenerator.h"
+#include "Assembly\TemperatureController.h"
 
-#include "Client_DataStructures\Data_TempSensor.h"
-#include "Client_DataStructures\Data_MixValveControl.h"
+//#include "Client_DataStructures\Data_TempSensor.h"
+//#include "Client_DataStructures\Data_MixValveControl.h"
 
-#include "HardwareInterfaces\Relay.h"
 #include "HardwareInterfaces\RemoteDisplay.h"
 #include "HardwareInterfaces\I2C_Comms.h"
 #include "HardwareInterfaces\LocalDisplay.h"
 #include "HardwareInterfaces\LocalKeypad.h"
 #include "HardwareInterfaces\Console.h"
 #include "HardwareInterfaces\LocalDisplay.h"
-#include "HardwareInterfaces\Zone.h"
+#include "Assembly/Sequencer.h"
 #include <I2C_Helper.h>
 #include <RDB.h>
 
@@ -29,23 +29,23 @@
 		HeatingSystem();
 		void serviceConsoles();
 		void serviceProfiles();
-		void serviceTemperatureController();
+		void serviceTemperatureController() { _tempController.checkAndAdjust(); }
 
+	private:
 		// Public Data Members
 		RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
-		HardwareInterfaces::LocalDisplay mainDisplay;
+		Assembly::Initialiser _initialiser;
+	public:	HardwareInterfaces::LocalDisplay mainDisplay;
 		HardwareInterfaces::LocalKeypad localKeypad;
-		HardwareInterfaces::RelaysPort relaysPort;
-		HardwareInterfaces::MixValveController mixValveController;
-		I2C_Helper_Auto_Speed<27> i2C;
+	private: I2C_Helper_Auto_Speed<27> i2C;
 
 		// Run-time data arrays
-		HardwareInterfaces::I2C_Temp_Sensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS]; // Array of TempSensor provided by client
-		HardwareInterfaces::Relay relayArr[Assembly::NO_OF_RELAYS]; // Array of Relay provided by client
 		HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
-	private:
+		friend Assembly::Initialiser;
+		friend HardwareInterfaces::TestDevices;
 		RelationalDatabase::TableQuery _q_displays;
-		Assembly::Initialiser _initialiser;
+		Assembly::TemperatureController _tempController;
 		Assembly::MainConsolePageGenerator _mainPages;
+		Assembly::Sequencer _sequencer;
 		HardwareInterfaces::Console _mainConsole;
 	};

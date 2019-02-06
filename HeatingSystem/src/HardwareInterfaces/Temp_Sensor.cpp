@@ -3,9 +3,34 @@
 #include "A__Constants.h"
 
 namespace HardwareInterfaces {
-	I2C_Temp_Sensor * tempSensors;
+	//I2C_Temp_Sensor * tempSensors;
 
 	int I2C_Temp_Sensor::_error;
+
+	void I2C_Temp_Sensor::initialise(int recID, int address) {
+		_recID = recID; 
+		setAddress(address);
+		readTemperature();
+	}
+
+
+	int8_t I2C_Temp_Sensor::readTemperature() {
+		uint8_t temp[2];
+		if (_i2C != 0) {
+			_error = _i2C->read(_address, DS75LX_Temp, 2, temp);
+		}
+		else _error = I2C_Helper::_I2C_not_created;
+#ifdef ZPSIM
+		lastGood += change;
+		temp[0] = lastGood / 256;
+		if (lastGood < 7680) change = 256;
+		if (lastGood > 17920) change = -256;
+		temp[1] = 0;
+#endif
+		lastGood = (temp[0] << 8) | temp[1];
+		return _error;
+	}
+
 
 	uint8_t I2C_Temp_Sensor::setHighRes() {
 		if (_i2C != 0) {
@@ -21,31 +46,11 @@ namespace HardwareInterfaces {
 	}
 
 	int16_t I2C_Temp_Sensor::get_fractional_temp() const {
-		uint8_t temp[2];
-		if (_i2C != 0) {
-			_error = _i2C->read(_address, DS75LX_Temp, 2, temp);
-		}
-		else _error = I2C_Helper::_I2C_not_created;
-#ifdef ZPSIM
-		lastGood += change;
-		temp[0] = lastGood / 256;
-		if (lastGood < 7680) change = 256;
-		if (lastGood > 17920) change = -256;
-		temp[1] = 0;
-#endif
-		int16_t returnVal;
-		if (_error) {
-			returnVal = lastGood;
-		}
-		else {
-			returnVal = (temp[0] << 8) | temp[1];
-			lastGood = returnVal;
-		}
 #ifdef TEST_MIX_VALVE_CONTROLLER
 		extern S2_byte tempSensors[2];
 		return tempSensors[address];
 #else
-		return returnVal;
+		return lastGood;
 #endif
 	}
 
