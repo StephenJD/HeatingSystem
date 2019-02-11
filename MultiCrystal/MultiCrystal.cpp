@@ -169,7 +169,7 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 	#endif
 }
 
-uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
+uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I2C display
 	if (lines > 1) _displayfunction |= LCD_2LINE;
 	_numChars = lines * cols;
 	_numCols = cols;

@@ -11,6 +11,7 @@ namespace HardwareInterfaces {
 		// Virtual Functions
 		uint8_t testDevice(I2C_Helper & i2c, int addr) override;
 		uint8_t initialiseDevice() override;
+		MultiCrystal & displ() { return _lcd; }
 	private:
 		MultiCrystal _lcd;
 	};

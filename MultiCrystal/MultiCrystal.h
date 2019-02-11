@@ -75,6 +75,8 @@ public:
 	I2C_Helper * i2C, uint8_t address,
 	uint8_t control_pos_is_port_B, uint8_t data_pos_is_port_B); // bits must be set for any data on port-B
 
+	//void setI2C_Helper(I2C_Helper & i2C) { _i2C = &i2C; }
+
 	uint8_t begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS); // returns >0 if failed
 	using Print::print;
 	size_t print(const char[]);

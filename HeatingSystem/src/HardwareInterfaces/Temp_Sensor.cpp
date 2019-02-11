@@ -35,7 +35,6 @@ namespace HardwareInterfaces {
 	uint8_t I2C_Temp_Sensor::setHighRes() {
 		if (_i2C != 0) {
 			_i2C->write(_address, DS75LX_Config, 0x60);
-			Serial.println("I2C_Temp_Sensor created");
 		}
 		else _error = I2C_Helper::_I2C_not_created;
 		return _error;

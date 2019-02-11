@@ -11,8 +11,6 @@ namespace HardwareInterfaces {
 #ifdef ZPSIM
 		I2C_Temp_Sensor(int16_t temp) { lastGood = temp << 8; }
 #endif
-		//explicit I2C_Temp_Sensor(int address) : I2C_Helper::I_I2Cdevice(address) {}
-		//I2C_Temp_Sensor() = default;
 		// Queries
 		int8_t get_temp() const;
 		int16_t get_fractional_temp() const;
@@ -28,7 +26,7 @@ namespace HardwareInterfaces {
 		void initialise(int recID, int address);
 
 	protected:
-		int16_t lastGood = 100 * 256;
+		int16_t lastGood = 20 * 256;
 		static int _error;
 		#ifdef ZPSIM
 			mutable int16_t change = 256;

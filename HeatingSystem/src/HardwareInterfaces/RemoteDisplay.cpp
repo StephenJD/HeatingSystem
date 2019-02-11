@@ -1,5 +1,6 @@
 #include "RemoteDisplay.h"
 #include "MultiCrystal.h"
+#include <Logging.h>
 
 namespace HardwareInterfaces {
 
@@ -20,7 +21,12 @@ namespace HardwareInterfaces {
 	}
 
 	uint8_t RemoteDisplay::initialiseDevice() {
-		return _lcd.begin(16, 2);	
+		uint8_t rem_error = _lcd.begin(16, 2);
+		if (rem_error) {
+			logger().log(" Remote.begin() for display [", _address, "] failed with:", rem_error);
+		}
+		else displ().print("Start");
+		return rem_error;
 	}
 
 }

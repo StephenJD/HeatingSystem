@@ -12,11 +12,10 @@ namespace HardwareInterfaces {
 		// Virtual Functions
 		uint8_t initialiseDevice() override;
 		uint8_t testDevice(I2C_Helper & i2c, int addr) override { return initialiseDevice(); }
-		uint8_t _relayRegister = 0xFF;
+		static uint8_t relayRegister;
 	private:
 		uint8_t _zeroCrossPin = 0;
 		uint8_t _resetPin = 0;
-		int _error = 0;
 	};
 
 	class Relay {
@@ -29,7 +28,6 @@ namespace HardwareInterfaces {
 		void initialise(int recID, int port) { _recID = recID; _port = port;}
 
 	private:
-		static uint8_t relayRegister;
 		RelationalDatabase::RecordID _recID = 0;
 		uint8_t activeState() const { return _port & 1;}
 		uint8_t port() const { return _port >> 1;}

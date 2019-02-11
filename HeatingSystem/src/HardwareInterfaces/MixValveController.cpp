@@ -29,6 +29,7 @@ namespace HardwareInterfaces {
 		uint8_t dataBuffa[1] = { 55 };
 		do hasFailed = _i2C->write_verify(_address, 7, 1, dataBuffa); // write request temp
 		while (hasFailed && millis() < waitTime);
+		if (hasFailed)logger().log(" MixValveController::testDevice failed. Addr:", _address);
 		return hasFailed;
 	}
 

@@ -17,35 +17,39 @@ namespace HardwareInterfaces {
 		//Serial.println("ResetI2C::operator()");
 		const uint8_t NO_OF_TRIES = 2;
 		static bool isInReset = false;
-		static unsigned long nextAllowableResetTime = millis() + 600000ul; // resets every 10 mins for failed speed-test
-		if (isInReset) return 0;
-		bool thisAddressFailedSpeedTest = (i2c.getThisI2CFrequency(addr) == 0);
-		if (thisAddressFailedSpeedTest && millis() < nextAllowableResetTime) return 0;
+		//static unsigned long nextAllowableResetTime = millis() + 600000ul; // resets every 10 mins for failed speed-test
+		if (isInReset) {
+			logger().log("Test: Recursive Reset... for", addr);
+			return 0;
+		}
+
+		//bool thisAddressFailedSpeedTest = (i2c.getThisI2CFrequency(addr) == 0);
+		//if (thisAddressFailedSpeedTest && millis() < nextAllowableResetTime) return 0;
 		isInReset = true;
-		nextAllowableResetTime = millis() + 600000ul;
+		//nextAllowableResetTime = millis() + 600000ul;
 		uint8_t hasFailed = 0, iniFailed = 0, count = NO_OF_TRIES;
-		I2C_Helper::I_I2CresetFunctor * origFn = i2c.getTimeoutFn();
+		auto origFn = i2c.getTimeoutFn();
 		i2c.setTimeoutFn(&hardReset);
 
-		do {
+		//do {
 			logger().log("ResetI2C... for ", addr, "try:", NO_OF_TRIES - count + 1);
 			hardReset(i2c, addr);
 
-			if (addr != 0) {
-				I2C_Helper::I_I2Cdevice & device = _testDevices->getDevice(addr);
-				if (device.testDevice(i2c, addr)) {
-					logger().log(" Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
-					hasFailed = speedTestDevice(i2c, addr, device);
-					logger().log(" Re-test Speed Done at:", i2c.getThisI2CFrequency(addr), i2c.getError(hasFailed));
-				}
-				else logger().log(" Re-test was OK");
-			}
+			//if (addr != 0) {
+			//	I2C_Helper::I_I2Cdevice & device = _testDevices->getDevice(addr);
+			//	if (device.testDevice(i2c, addr)) {
+			//		logger().log(" Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
+			//		hasFailed = speedTestDevice(i2c, addr, device);
+			//		logger().log(" Re-test Speed Done at:", i2c.getThisI2CFrequency(addr), i2c.getError(hasFailed));
+			//	}
+			//	else logger().log(" Re-test was OK");
+			//}
 
-			if (hardReset.initialisationRequired) {
+			if (!i2c.isInScanOrSpeedTest() && hardReset.initialisationRequired) {
 				iniFailed = (*_postI2CResetInitialisation)();
 				hardReset.initialisationRequired = (iniFailed == 0);
 			}
-		} while ((hasFailed || iniFailed) && --count > 0);
+		//} while ((hasFailed || iniFailed) && --count > 0);
 
 		i2c.setTimeoutFn(origFn);
 		isInReset = false;

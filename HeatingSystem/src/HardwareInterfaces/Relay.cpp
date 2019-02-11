@@ -8,6 +8,8 @@ namespace HardwareInterfaces {
 	//       RelaysPort Functions      //
 	/////////////////////////////////////
 
+	uint8_t RelaysPort::relayRegister = 0xFF;
+
 	void RelaysPort::setup(int i2cAddress, int zeroCrossPin, int resetPin)
 		{
 		logger().log("RelaysPort::setup()");
@@ -33,7 +35,7 @@ namespace HardwareInterfaces {
 				logger().log("Initialise RelaysPort() write-verify failed at Freq:", _i2C->getI2CFrequency());
 			}
 			else {
-				hasFailed = _i2C->write_verify(_address, REG_8PORT_OLAT, 1, &_relayRegister); // set latches
+				hasFailed = _i2C->write_verify(_address, REG_8PORT_OLAT, 1, &relayRegister); // set latches
 				_i2C->writeAtZeroCross();
 				hasFailed |= _i2C->write_verify(_address, REG_8PORT_IODIR, 1, pullUp_out); // set all as outputs
 				if (hasFailed) logger().log("Initialise RelaysPort() lat-write failed at Freq:", _i2C->getI2CFrequency());
@@ -45,38 +47,37 @@ namespace HardwareInterfaces {
 
 	uint8_t RelaysPort::setAndTestRegister() {
 		uint8_t ANDmask = 0x7F;
-		if (_i2C == 0) _error = I2C_Helper::_I2C_not_created;
-		else if (_i2C->notExists(_address)) _error = I2C_Helper::_I2C_Device_Not_Found;
+		uint8_t error;
+		if (_i2C == 0) error = I2C_Helper::_I2C_not_created;
+		else if (_i2C->notExists(_address)) error = I2C_Helper::_I2C_Device_Not_Found;
 		else {
 			//logger().log("RelaysPort::setAndTestRegister()");
 			_i2C->writeAtZeroCross();
-			_error = _i2C->write_verify(_address, REG_8PORT_OLAT & ANDmask, 1, &_relayRegister);
+			error = _i2C->write_verify(_address, REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
 		}
-		return _error;
+		return error;
 	}
 
 	/////////////////////////////////////
 	//       Relay Functions      //
 	/////////////////////////////////////
 
-	uint8_t Relay::relayRegister;
-
 	bool Relay::getRelayState() const {
-		uint8_t myBit = relayRegister & (1 << port());
+		uint8_t myBit = RelaysPort::relayRegister & (1 << port());
 		return !(myBit^activeState()); // Relay state
 	}
 
 	bool Relay::setRelay(uint8_t state) { // returns true if state is changed
 		uint8_t myBitMask = 1 << port();
-		uint8_t myBit = (relayRegister  & myBitMask) != 0;
+		uint8_t myBit = (RelaysPort::relayRegister  & myBitMask) != 0;
 		uint8_t currState = !(myBit^activeState());
 
 		myBit = !(state^activeState()); // Required bit state 
 		if (!myBit) { // clear bit
-			relayRegister &= ~myBitMask;
+			RelaysPort::relayRegister &= ~myBitMask;
 		}
 		else { // set this bit
-			relayRegister |= myBitMask;
+			RelaysPort::relayRegister |= myBitMask;
 		}
 		return currState != state; // returns true if state is changed
 	}

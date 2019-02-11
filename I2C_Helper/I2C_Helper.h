@@ -81,10 +81,9 @@ public:
 	I2C_Helper(TwoWire &wire_port, int8_t zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction = 0, int32_t i2cFreq = 100000);
 	
 	int32_t setI2CFrequency(int32_t i2cFreq); // turns auto-speed off
-	int32_t getI2CFrequency() const { return _i2cFreq; }
-	void useAutoFrequency() {_useAutoSpeed = true;}
+	int32_t getI2CFrequency() { return _i2cFreq; }
 	virtual int32_t setThisI2CFrequency(int16_t devAddr, int32_t i2cFreq) {return setI2Cfreq_retainAutoSpeed(i2cFreq);}
-	virtual int32_t getThisI2CFrequency(int16_t devAddr) const {return getI2CFrequency();}
+	virtual int32_t getThisI2CFrequency(int16_t devAddr) {return getI2CFrequency();}
 
 	void setNoOfRetries(uint8_t retries);
 	uint8_t getNoOfRetries();
@@ -94,6 +93,9 @@ public:
 	I_I2CresetFunctor * getTimeoutFn() {return timeoutFunctor;}
 
 	bool restart();
+	void useAutoSpeed(bool set = true) {_useAutoSpeed = set;}
+	bool usingAutoSpeed() { return _useAutoSpeed; }
+	bool isInScanOrSpeedTest(){ return _inScanOrSpeedTest; }
 	bool slowdown_and_reset(int addr); // called by timoutFunction. Reduces I2C speed by 10% if last called within one second. Returns true if speed was reduced
 	signed char adjustSpeedTillItWorksAgain(I_I2Cdevice * deviceFailTest, int32_t increment);
 	
@@ -161,10 +163,13 @@ public:
 */
 	// required by template, may as well be publicly available
 	static const int32_t MAX_I2C_FREQ = (VARIANT_MCK / 40) > 400000 ? 400000 : (VARIANT_MCK / 40); //100000; // 
-	static const int32_t MIN_I2C_FREQ = VARIANT_MCK / 65288; //32644; //VARIANT_MCK / 65288; //36000; //
+	static const int32_t MIN_I2C_FREQ = VARIANT_MCK / 65288 * 2; //32644; //VARIANT_MCK / 65288; //36000; //
 	uint8_t successAfterRetries;
 protected:
 	int32_t setI2Cfreq_retainAutoSpeed(int32_t i2cFreq);
+	virtual unsigned long getFailedTime(int16_t devAddr) { return 0; }
+	virtual void setFailedTime(int16_t devAddr) {}
+
 	bool _useAutoSpeed = false;
 private:
 	bool restart(const char * name, int addr);
@@ -175,13 +180,13 @@ private:
 	signed char testDevice(I_I2Cdevice * deviceFailTest, uint8_t addr, int noOfTestsMustPass);
 	signed char findAworkingSpeed(I_I2Cdevice * deviceFailTest);
 	signed char findOptimumSpeed(I_I2Cdevice * deviceFailTest, int32_t & bestSpeed, int32_t limitSpeed);
-	void useAutoSpeed(bool set) {_useAutoSpeed = set;}
 	void waitForDeviceReady(uint16_t deviceAddr);
 	uint8_t getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *dataBuffer);
 	uint8_t getTWIbufferSize();
 	TwoWire & wire_port;
 	uint8_t noOfRetries;
 	bool _waitForZeroCross = false;
+	bool _inScanOrSpeedTest = false;
 
 	I_I2CresetFunctor * timeoutFunctor;
 	
@@ -216,8 +221,12 @@ public:
 	I2C_Helper_Auto_Speed_Hoist(TwoWire &wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000) : I2C_Helper(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){}
 
 protected:
-	int32_t _getI2CFrequency(int16_t devAddr, const int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) const;
+	int32_t _getI2CFrequency(int16_t devAddr, int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices);
+	unsigned long _getFailedTime(int16_t devAddr, int8_t * devAddrArr, const unsigned long * failedTimeArr, int noOfDevices);
 	int32_t _setI2CFrequency(int16_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices);
+	void _setFailedTime(int16_t devAddr, int8_t * devAddrArr, unsigned long * failedTimeArr, int noOfDevices);
+private:
+	int _findDevice(int16_t devAddr, int8_t * devAddrArr, int noOfDevices);
 };
 
 template<int noOfDevices>
@@ -228,22 +237,26 @@ public:
 	I2C_Helper_Auto_Speed(TwoWire & wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){resetAddresses();}
 	
 	int8_t getAddress(int index) const { return devAddrArr[index]; }
-	int32_t getThisI2CFrequency(int16_t devAddr) const override {
+	unsigned long getFailedTime(int16_t devAddr) override { return _getFailedTime(devAddr, devAddrArr, lastFailedTimeArr, noOfDevices);}
+	int32_t getThisI2CFrequency(int16_t devAddr) override {
 		if (_useAutoSpeed) return _getI2CFrequency(devAddr, devAddrArr, i2c_speedArr, noOfDevices); 
 		else return getI2CFrequency();
 	}
 	int32_t setThisI2CFrequency(int16_t devAddr, int32_t i2cFreq) override {return _setI2CFrequency(devAddr, i2cFreq, devAddrArr, i2c_speedArr, noOfDevices);}
+	void setFailedTime(int16_t devAddr) override { _setFailedTime(devAddr, devAddrArr, lastFailedTimeArr, noOfDevices);}
 private:
 	void resetAddresses();
 	int8_t devAddrArr[noOfDevices];
 	int32_t i2c_speedArr[noOfDevices];
+	unsigned long lastFailedTimeArr[noOfDevices];
 };
 
 template<int noOfDevices>
 void I2C_Helper_Auto_Speed<noOfDevices>::resetAddresses() {
 	for (int i=0; i< noOfDevices; ++i) {
 		devAddrArr[i] = 0;
-		i2c_speedArr[i] = 0;
+		i2c_speedArr[i] = 400000;
+		lastFailedTimeArr[i] = millis();
 	}
 }
 
@@ -252,7 +265,7 @@ void I2C_Helper_Auto_Speed<noOfDevices>::resetAddresses() {
 template<bool non_stop, bool serial_out>
 bool I2C_Helper::scan(){ 
 	if (serial_out) {
-		Serial.println("Resume Scan");
+		Serial.println("\nResume Scan");
 	}
 	while(scan<false,false>()) {
 		if (serial_out) {
@@ -269,10 +282,6 @@ bool I2C_Helper::scan(){
 	if (serial_out) {
 		Serial.print("Total I2C Devices: "); 
 		Serial.println(result.totalDevicesFound,DEC);
-		if (result.error != _OK) {
-			Serial.print("Error: ");
-			Serial.println(getError(result.error));
-		}
 	}
 	return false;
 }
@@ -294,7 +303,7 @@ uint32_t I2C_Helper::speedTest_T(I_I2Cdevice * deviceFailTest) {
 			//	Serial.print("Device address out of range: 0x");
 			//}
 			//else {
-				Serial.print("Test Device at: 0x");
+				Serial.print("\nTest Device at: 0x");
 			//}
 			Serial.println(result.foundDeviceAddr,HEX);
 		}
