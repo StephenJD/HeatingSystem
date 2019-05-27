@@ -38,19 +38,15 @@ namespace RelationalDatabase {
 	}
 
 	void RDB_B::savePW(size_t password) {
-		//constexpr auto pwStart = sizeof(size_t) - SIZE_OF_PASSWORD;
-		//const uint8_t * pwAddr = reinterpret_cast<const uint8_t * >(&password) + pwStart;
 		_writeByte(_dbStart, &password, SIZE_OF_PASSWORD);
 	}
 
 	bool RDB_B::checkPW(size_t password) const {
 		size_t pw = 0;
-		//constexpr auto pwStart = sizeof(size_t) - SIZE_OF_PASSWORD;
-		//uint8_t * pwAddr = reinterpret_cast<uint8_t *>(&pw);
-		//pwAddr += pwStart;
 		_readByte(_dbStart, &pw, SIZE_OF_PASSWORD);
 		logger().log("PW was", pw, "Should be", password);
 		return pw == password;
+		//return false;
 	}
 
 	void RDB_B::setDB_Header() {
@@ -79,7 +75,6 @@ namespace RelationalDatabase {
 			th.chunkSize(initialNoOfRecords);
 			th.insertionStrategy(strategy);
 			th.validRecords(unvacantRecords(initialNoOfRecords));	// set all bits to "Used"
-			//logger().log("createTable validRecords:", th.validRecords());
 			addr = _writeByte(addr, &th, Table::HeaderSize);
 			for (int i = 0; i < extraValidRecordBytes; ++i) {
 				// unset bits up to initialNoOfRecords
@@ -89,6 +84,7 @@ namespace RelationalDatabase {
 			}
 			_dbSize += table_size;
 			updateDB_Header();
+			logger().log("RDB_B::createTable() New DB_Size:", _dbSize);
 		}
 		return { *this, tableID, th };
 	}
@@ -126,7 +122,7 @@ namespace RelationalDatabase {
 			*tableArr = table;
 			table.openNextTable();
 		}
-		logger().log(" RDB_B::getTables loaded tables.");
+		logger().log(" RDB_B::getTables loaded", i, "tables.");
 		return i;
 	}
 

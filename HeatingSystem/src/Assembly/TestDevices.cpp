@@ -31,7 +31,8 @@ namespace HardwareInterfaces {
 		hs().mainDisplay.print(hs().i2C.result.foundDeviceAddr, HEX);
 		hs().mainDisplay.print("    ");
 		hs().mainDisplay.sendToDisplay();
-		hs().i2C.speedTestS(&testFn);
+		//hs().i2C.speedTestS(&testFn);
+		hs().i2C.speedTestS(0);
 		hs().mainDisplay.setCursor(17, 2);
 		if (!hs().i2C.result.error == 0) {
 			hs().mainDisplay.print("Bad");

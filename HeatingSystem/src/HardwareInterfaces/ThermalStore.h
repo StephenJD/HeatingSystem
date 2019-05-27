@@ -22,7 +22,7 @@ namespace HardwareInterfaces {
 		uint8_t calcCurrDeliverTemp(int callTemp) const;
 
 		// Modifier
-		void initialise(client_data_structures::R_ThermalStore thermStoreData) { _thermStoreData = thermStoreData; }
+		void initialise(client_data_structures::R_ThermalStore thermStoreData);
 		//bool check(); // checks zones, twl rads & thm store for heat requirement and sets relays accordingly
 		void setLowestCWtemp(bool isFlowing);
 		//void adjustHeatRate(byte change);

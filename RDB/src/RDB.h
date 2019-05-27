@@ -60,22 +60,23 @@ namespace RelationalDatabase {
 				return {};
 			}
 		}
+		Table * begin() { return tables; }
+		Table * end() { return tables + maxNoOfTables; }
 
 	private:
 		Table & registerTable(const Table & t) {
 			for (auto & tbl : tables) {
 				if (tbl._tableID == t._tableID) {
-					//logger().log(" Registered Table found ", t._tableID, " strategy:", t.insertionStrategy());
+					logger().log(" Registered Table found ID:", t._tableID, " pos", &tbl - tables);
 					return tbl;
 				}
 				else if (tbl._tableID == 0) {
-					//logger().log(" Register Table at ", t._tableID, " strategy:", t.insertionStrategy());
+					logger().log(" Register Table ID: ", t._tableID, " pos", &tbl - tables);
 					tbl = t; 
 					return tbl; 
 				}
 			}
 			//logger().log(" Register of Table failed at addr ", t._tableID);
-			tables[maxNoOfTables] = Table{};
 			return tables[maxNoOfTables];
 		}
 

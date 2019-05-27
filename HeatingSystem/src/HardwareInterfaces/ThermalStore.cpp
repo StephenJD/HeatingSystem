@@ -12,6 +12,11 @@ namespace HardwareInterfaces {
 		, _backBoiler(backBoiler)
 	{}
 
+	void ThermalStore::initialise(client_data_structures::R_ThermalStore thermStoreData) { 
+		_thermStoreData = thermStoreData;
+		calcCapacities();
+	}
+
 	//int16_t ThermalStore::getFractionalOutsideTemp() const {
 	//	return f->tempSensorR(getVal(OutsideTS)).getFractionalSensTemp();
 	//}

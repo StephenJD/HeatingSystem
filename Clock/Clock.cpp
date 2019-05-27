@@ -152,7 +152,10 @@
 				Serial.println("Clock initialised before I2C Helper!");
 				Serial.println("Call setI2Chelper() before using the clock");
 			}
-		} 
+		}
+		else {
+			i2C_speedTest();
+		}
 		loadTime(); 
 	}
 	

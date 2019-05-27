@@ -39,7 +39,7 @@ HeatingSystem::HeatingSystem()
 	db(RDB_START_ADDR, writer, reader, VERSION)
 	, _initialiser(*this)
 	, mainDisplay(&_q_displays)
-	, remDispl{ { i2C ,US_REMOTE_ADDRESS },{i2C ,FL_REMOTE_ADDRESS },{i2C ,DS_REMOTE_ADDRESS } }
+	, remDispl{ { i2C, US_REMOTE_ADDRESS },{i2C, FL_REMOTE_ADDRESS },{i2C, DS_REMOTE_ADDRESS } }
 	, _q_displays(db.tableQuery(TB_Display))
 	, _tempController(db, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
 	, _mainPages{db, _tempController}

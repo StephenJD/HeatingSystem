@@ -2,6 +2,7 @@
 #include "Relay.h"
 #include "A__Constants.h"
 #include "..\Assembly\HeatingSystemEnums.h"
+#include <Logging.h>
 
 namespace HardwareInterfaces {
 	using namespace Assembly;
@@ -59,7 +60,7 @@ namespace HardwareInterfaces {
 		errCode |= writeToValve(Mix_Valve::temp_i2c_addr, _tempSensorArr[_flowTempSens].getAddress());
 		errCode |= writeToValve(Mix_Valve::max_ontime, VALVE_FULL_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::wait_time, VALVE_WAIT_TIME);
-		//errCode |= writeToValve(Mix_Valve::max_flow_temp, VALVE_WAIT_TIME);
+		logger().log( "MixValveController::sendSetup()", errCode, _i2C->getError(errCode));
 		return errCode;
 	}
 

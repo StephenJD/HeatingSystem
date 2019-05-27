@@ -19,6 +19,7 @@ namespace RelationalDatabase {
 		
 		// Queries
 		TB_Status readRecord(RecordID recordID, void * result) const;
+		bool isOpen() const { return _rec_size != 0; }
 		//TableNavigator begin() const;
 
 		TableID tableID() const { return _tableID; }
@@ -41,7 +42,7 @@ namespace RelationalDatabase {
 		template<int maxNoOfTables> friend class RDB;
 
 		enum { HeaderSize = sizeof(ChunkHeader), ValidRecordStart = offsetof(ChunkHeader, _validRecords), NoUnusedRecords = -1 };
-		Table() : _timeOfLastChange(0), _db(0), _tableID(0), _recordsPerChunk(0), _rec_size(0), _max_NoOfRecords_in_table(0) {};
+		Table() = default;
 
 
 		/// <summary>	
@@ -52,7 +53,6 @@ namespace RelationalDatabase {
 		//Queries
 		const ChunkHeader & table_header() const { return _table_header; }
 		NoOf_Recs_t chunkSize() const { return _rec_size * _recordsPerChunk; }
-		bool isOpen() const { return _rec_size != 0; }
 		Record_Size_t recordSize() const { return _rec_size; } // return type must be same as sizeof()
 		NoOf_Recs_t maxRecordsInChunk() const { return _recordsPerChunk; }
 		bool dbInvalid() const { return _db == 0; }
@@ -63,14 +63,14 @@ namespace RelationalDatabase {
 		void tableIsChanged(bool reloadHeader);
 
 		// Data
-		mutable unsigned long _timeOfLastChange;
-		RDB_B * _db;
+		mutable unsigned long _timeOfLastChange = 0;
+		RDB_B * _db = 0;
 		ChunkHeader _table_header;		// Header of First Chunk
-		TableID _tableID;				// Address of first chunk
-		NoOf_Recs_t _recordsPerChunk;		  // Copy of maxRecords from last Chunk
-		Record_Size_t _rec_size;			  // Copy of rec_size from last Chunk
-		InsertionStrategy _insertionStrategy; // Copy from last Chunk
-		NoOf_Recs_t _max_NoOfRecords_in_table;
+		TableID _tableID = 0;				// Address of first chunk
+		NoOf_Recs_t _recordsPerChunk = 0;		  // Copy of maxRecords from last Chunk
+		Record_Size_t _rec_size = 0;			  // Copy of rec_size from last Chunk
+		InsertionStrategy _insertionStrategy = i_retainOrder; // Copy from last Chunk
+		NoOf_Recs_t _max_NoOfRecords_in_table = 0;
 	};
 
 	template <typename Record_T>

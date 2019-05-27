@@ -66,14 +66,13 @@ namespace RelationalDatabase {
 				markAsInvalid();
 				return;
 			}
-			if (!rec_sel._chunk_header.isFinalChunk() && rec_sel._chunk_header.nextChunk() == rec_sel._chunkAddr) {
+			if (!rec_sel._chunk_header.isFinalChunk() && (rec_sel._chunk_header.nextChunk() == rec_sel._chunkAddr || rec_sel._chunk_header.nextChunk() > _db->_dbSize)) {
 				//logger().log("Table::openNextTable() read from", rec_sel._chunkAddr, "Size is :", _db->_dbSize);
 				//logger().log(" A table-extention? :", !rec_sel.isStartOfATable(), "Chunk _isFinalChunk", rec_sel._chunk_header.isFinalChunk());
 				//logger().log(" if Final: chunk _recSize", rec_sel._chunk_header._recSize, " ELSE NextChunk :", rec_sel._chunk_header.nextChunk());
 				//logger().log(" IsfirstChunk :", rec_sel._chunk_header.isFirstChunk(), "  chunk noOfRecords", rec_sel._chunk_header.chunkSize());
-				logger().log(" Corrupt Table found. Database Truncated.");
-				_db->_dbSize = rec_sel._chunkAddr;
-				_db->setDB_Header();
+				logger().log(" Corrupt Table found. Database Reset.");
+				_db->reset(0,0);
 				markAsInvalid();
 				return;
 			}
@@ -94,11 +93,12 @@ namespace RelationalDatabase {
 
 		_recordsPerChunk = rec_sel._chunk_header.chunkSize();
 		_max_NoOfRecords_in_table = _recordsPerChunk;
-		//logger().log(" getRecordSize. recPerCh:", _recordsPerChunk, "Rec Size:", rec_sel._chunk_header.rec_size());
-		//logger().log("   Addr:", rec_sel._chunkAddr, "NextChunk at:", rec_sel._chunk_header.nextChunk());
+		logger().log(" getRecordSize. recPerCh:", _recordsPerChunk, "Rec Size:", rec_sel._chunk_header.rec_size());
+		logger().log("   Addr:", rec_sel._chunkAddr, "NextChunk at:", rec_sel._chunk_header.nextChunk());
 
 		while (rec_sel.haveMovedToNextChunck()) {
 			_max_NoOfRecords_in_table += _recordsPerChunk;
+			logger().log("     _max_NoOfRecords_in_table:", _max_NoOfRecords_in_table);
 		}
 		_rec_size = rec_sel._chunk_header.rec_size();
 		_insertionStrategy = rec_sel._chunk_header.insertionStrategy();

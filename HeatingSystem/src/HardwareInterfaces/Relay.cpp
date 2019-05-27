@@ -51,10 +51,10 @@ namespace HardwareInterfaces {
 		if (_i2C == 0) error = I2C_Helper::_I2C_not_created;
 		else if (_i2C->notExists(_address)) error = I2C_Helper::_I2C_Device_Not_Found;
 		else {
-			//logger().log("RelaysPort::setAndTestRegister()");
 			_i2C->writeAtZeroCross();
 			error = _i2C->write_verify(_address, REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
 		}
+		logger().log("RelaysPort::setAndTestRegister() addr:", _address,_i2C->getError(error));
 		return error;
 	}
 

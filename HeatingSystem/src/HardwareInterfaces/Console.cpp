@@ -3,6 +3,7 @@
 #include "LCD_Display.h"
 #include "..\LCD_UI\A_Top_UI.h"
 #include "A__Constants.h"
+#include <Logging.h>
 
 namespace HardwareInterfaces {
 	using namespace LCD_UI;
@@ -17,7 +18,7 @@ namespace HardwareInterfaces {
 		bool doRefresh;
 		auto keyPress = _keyPad.getKey();
 		do {
-			//Serial.print("Main processKeys: "); Serial.println(keyPress);
+			Logger().log("Main processKeys:", keyPress);
 			doRefresh = true;
 			switch (keyPress) {
 			case 0:

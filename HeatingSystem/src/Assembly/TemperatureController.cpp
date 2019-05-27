@@ -5,6 +5,7 @@
 #include "..\Client_DataStructures\Data_Relay.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\HardwareInterfaces\A__Constants.h"
+#include <Clock.h>
 
 namespace Assembly {
 	using namespace RelationalDatabase;
@@ -68,10 +69,15 @@ namespace Assembly {
 	}
 
 	void TemperatureController::checkAndAdjust() {
-		for (auto & ts : tempSensorArr) { ts.readTemperature(); }
-		for (auto & zone : zoneArr) zone.setFlowTemp();
-		for (auto & mixValveControl : mixValveControllerArr) mixValveControl.check();
-		backBoiler.check();
-		thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(),zoneArr[Z_DHW].nextTempRequest());
+		// once per second
+		static auto lastCheck = millis();
+		if (clock_().secondsSinceLastCheck(lastCheck)) {
+			for (auto & ts : tempSensorArr) { ts.readTemperature(); }
+			for (auto & zone : zoneArr) zone.setFlowTemp();
+			for (auto & mixValveControl : mixValveControllerArr) mixValveControl.check();
+			backBoiler.check();
+			thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(), zoneArr[Z_DHW].nextTempRequest());
+			relaysPort.setAndTestRegister();
+		}
 	}
 }

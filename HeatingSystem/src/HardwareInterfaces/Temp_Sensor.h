@@ -1,6 +1,7 @@
 #pragma once
 #include "Arduino.h"
-#include <I2C_Helper.h>
+//#include <I2C_Helper.h>
+#include <I2C_Talk\I2C_Talk.h>
 #include <RDB\src\RDB.h>
 
 namespace HardwareInterfaces {

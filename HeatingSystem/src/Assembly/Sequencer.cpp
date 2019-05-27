@@ -14,6 +14,7 @@ namespace Assembly {
 
 	void Sequencer::getNextEvent() {
 		if (clock_().now() > _ttEndDateTime) {
+			logger().log("Sequencer::getNextEvent()");
 			_ttEndDateTime = clock_().now();
 			_ttEndDateTime.addOffset({ m10,1 });
 			_tc->zoneArr[Z_UpStairs].setProfileTempRequest(18);

@@ -21,16 +21,31 @@ namespace Assembly {
 		_testDevices(*this)
 	{
 		logger().log("  Initialiser PW check. req:", VERSION);
-		if (!_hs.db.checkPW(VERSION)) setFactoryDefaults(_hs.db, VERSION);
+		if (!_hs.db.checkPW(VERSION)) {
+			logger().log("  Initialiser PW Failed");
+			setFactoryDefaults(_hs.db, VERSION);
+		}
+		auto dbFailed = false;
+		for (auto & table : _hs.db) {
+			if (!table.isOpen()) {
+				logger().log("  Table not open at", (long)table.tableID());
+				dbFailed = true;
+				break;
+			}
+		}
+		if (dbFailed) {
+			logger().log("  dbFailed");
+			setFactoryDefaults(_hs.db, VERSION);
+		}
 		logger().log("  Initialiser Constructed");
 	}
 
 	uint8_t Initialiser::i2C_Test() {
 		auto err = _testDevices.speedTestDevices();
-		if (!err) err = _testDevices.testRelays();
-		if (!err) err = postI2CResetInitialisation();
-		if (err != I2C_Helper::_OK) logger().log("  Initialiser::i2C_Test failed");
-		else logger().log("  Initialiser::i2C_Test OK");
+		/*if (!err) err = */_testDevices.testRelays();
+		/*if (!err)*/ err = postI2CResetInitialisation();
+		if (err != I2C_Helper::_OK) logger().log("  Initialiser::i2C_Test postI2CResetInitialisation failed");
+		//else logger().log("  Initialiser::i2C_Test OK");
 		return err;
 	}
 

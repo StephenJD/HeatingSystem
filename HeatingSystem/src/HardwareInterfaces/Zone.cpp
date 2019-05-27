@@ -29,7 +29,7 @@ namespace HardwareInterfaces {
 	}
 
 	void Zone::offsetCurrTempRequest(uint8_t val) {
-		_offsetT += (val - _currProfileTempRequest);
+		_offsetT = (val - _currProfileTempRequest);
 	}
 
 	bool Zone::isDHWzone() const {
