@@ -8,8 +8,8 @@
 #include "Arduino.h"
 //#include "inttypes.h"
 #include "Print.h"
-class I2C_Helper;
-
+//class I2C_Helper;
+class I2C_Talk;
 // commands
 #define LCD_CLEARDISPLAY 0x01
 #define LCD_RETURNHOME 0x02
@@ -72,10 +72,10 @@ public:
 	MultiCrystal(uint8_t rs, uint8_t rw, uint8_t enable,
 	uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 	uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7,
-	I2C_Helper * i2C, uint8_t address,
+	I2C_Talk * i2C, uint8_t address,
 	uint8_t control_pos_is_port_B, uint8_t data_pos_is_port_B); // bits must be set for any data on port-B
 
-	//void setI2C_Helper(I2C_Helper & i2C) { _i2C = &i2C; }
+	//void setI2C_Helper(I2C_Talk & i2C) { _i2C = &i2C; }
 
 	uint8_t begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS); // returns >0 if failed
 	using Print::print;
@@ -140,7 +140,7 @@ private:
 	void debug();
 	
 	uint8_t _numChars, _numCols;
-	I2C_Helper * _i2C;
+	I2C_Talk * _i2C;
 	uint8_t _address;
 	uint8_t _control_pos_is_port_B;
 	uint8_t _data_pos_is_port_B;

@@ -23,20 +23,23 @@
 #if defined(__SAM3X8E__) || defined ZPSIM
 
 #include "EEPROM.h"
-#include "I2C_Helper.h"
+//#include "I2C_Helper.h"
+#include "I2C_Talk.h"
 
 /******************************************************************************
  * Constructors
  ******************************************************************************/
+	EEPROMClass::EEPROMClass(I_I2Cdevice base) : I_I2Cdevice(base) {}
 
 #if defined (ZPSIM)
 	using namespace std;
 	#include <iostream>
 	#include <fstream>
-	uint8_t EEPROMClass::myEEProm[4096];
-	EEPROMClass fileEEPROM(0,0);
 
-	EEPROMClass::EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr) : _i2C(i2C), _eepromAddr(eepromAddr) {
+	uint8_t EEPROMClass::myEEProm[4096];
+	auto i2c = I2C_Talk();
+
+	EEPROMClass fileEEPROM(i2c.makeDevice(0)) {
 	#if defined LOAD_EEPROM
 		ifstream myfile("EEPROM.dat", ios::binary);	// Input file stream
 		if (myfile.is_open()) {
@@ -46,6 +49,7 @@
 		else cout << "Unable to open file";
 	#endif
 	}
+
 	void EEPROMClass::saveEEPROM() {
 		auto myfile = ofstream("EEPROM.dat", ios::binary);
 		if (myfile) {
@@ -71,13 +75,13 @@
  * User API
  ******************************************************************************/
 
-void EEPROMClass::setI2Chelper(I2C_Helper & i2C) {
-	_i2C = &i2C;
-	_i2C->result.reset();
-	_i2C->result.foundDeviceAddr = _eepromAddr;
-	_i2C->speedTestS();
-	_i2C->setThisI2CFrequency(_eepromAddr, 400000);
-}
+//void EEPROMClass::setI2Chelper(I2C_Helper & i2C) {
+//	_i2C = &i2C;
+//	_i2C->result.reset();
+//	_i2C->result.foundDeviceAddr = _eepromAddr;
+//	_i2C->speedTestS();
+//	_i2C->setThisI2CFrequency(_eepromAddr, 400000);
+//}
 
 uint8_t EEPROMClass::read(int iAddr)
 {
@@ -85,7 +89,7 @@ uint8_t EEPROMClass::read(int iAddr)
 		return myEEProm[iAddr];
 	#else
 		uint8_t result;
-		_i2C->readEP(_eepromAddr,iAddr,1,&result);
+		readEP(iAddr,1,&result);
 		return result;
 	#endif
 }
@@ -96,7 +100,7 @@ uint8_t EEPROMClass::write(int iAddr, uint8_t iVal)
 		myEEProm[iAddr] = iVal;
 		return 0;
 	#else
-	  return _i2C->writeEP(_eepromAddr, iAddr, iVal);;
+	  return writeEP(iAddr, iVal);;
 	#endif
 }
 

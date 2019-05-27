@@ -1,7 +1,8 @@
 #pragma once
 #include <Date_Time.h>
 #include <Arduino.h>
-#include <I2C_Helper.h>
+#include <I2C_Talk/I2C_Talk.h>
+#include <I2C_Talk/I2C_Device.h>
 #include <Conversions.h>
 
 //#pragma message( "Clock.h loaded" )
@@ -81,13 +82,13 @@
 		unsigned int _addr;
 	};
 
-	class I2C_Clock : public Clock , public I2C_Helper::I_I2Cdevice {
+	class I2C_Clock : public Clock , public I_I2Cdevice {
 	public:
-		I2C_Clock(I2C_Helper * i2C, int addr);
+		I2C_Clock(I2C_Talk * i2C, int addr);
 		uint8_t i2C_speedTest();
 		void saveTime() override;
 		void loadTime() override;
-		uint8_t testDevice(I2C_Helper & i2c, int addr) override;
+		uint8_t testDevice() override;
 
 	private:
 		void _update() override; // called every 10 minutes - reads from RTC

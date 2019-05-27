@@ -13,7 +13,7 @@ namespace Assembly {
 	class TemperatureController
 	{
 	public:
-		TemperatureController(RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS);
+		TemperatureController(I2C_Talk & i2c, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS);
 		
 		// Modifiers
 		void checkAndAdjust();

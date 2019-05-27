@@ -22,7 +22,7 @@ namespace HardwareInterfaces {
 
 	HeatingSystem & TestDevices::hs() { return _ini.hs(); }
 
-	int8_t TestDevices::showSpeedTestFailed(I2C_Helper::I_I2Cdevice & testFn, const char * device) {
+	int8_t TestDevices::showSpeedTestFailed(I_I2Cdevice & testFn, const char * device) {
 		hs().mainDisplay.setCursor(5, 2);
 		hs().mainDisplay.print("       0x");
 		hs().mainDisplay.setCursor(5, 2);
@@ -49,7 +49,7 @@ namespace HardwareInterfaces {
 		return hs().i2C.result.error;
 	}
 
-	I2C_Helper::I_I2Cdevice & TestDevices::getDevice(uint8_t deviceAddr) { return _ini.getDevice(deviceAddr); }
+	I_I2Cdevice & TestDevices::getDevice(uint8_t deviceAddr) { return _ini.getDevice(deviceAddr); }
 
 	uint8_t TestDevices::speedTestDevices(uint8_t deviceAddr) {// returns 0 for success or returns ERR_PORTS_FAILED / ERR_I2C_SPEED_FAIL
 		enum { e_allPassed, e_mixValve, e_relays = 2, e_US_Remote = 4, e_FL_Remote = 8, e_DS_Remote = 16, e_TempSensors = 32 };

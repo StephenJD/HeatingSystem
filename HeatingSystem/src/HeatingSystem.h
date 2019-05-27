@@ -15,7 +15,7 @@
 #include "HardwareInterfaces\Console.h"
 #include "HardwareInterfaces\LocalDisplay.h"
 #include "Assembly/Sequencer.h"
-#include <I2C_Helper.h>
+#include <I2C_Talk/I2C_Talk.h>
 #include <RDB.h>
 
 
@@ -37,7 +37,8 @@
 		Assembly::Initialiser _initialiser;
 	public:	HardwareInterfaces::LocalDisplay mainDisplay;
 		HardwareInterfaces::LocalKeypad localKeypad;
-	private: I2C_Helper_Auto_Speed<27> i2C;
+	private: 
+		I2C_Helper_Auto_Speed<27> i2C;
 
 		// Run-time data arrays
 		HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];

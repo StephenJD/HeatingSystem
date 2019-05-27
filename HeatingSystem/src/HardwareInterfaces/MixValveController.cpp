@@ -23,14 +23,14 @@ namespace HardwareInterfaces {
 	}
 
 
-	uint8_t MixValveController::testDevice(I2C_Helper & i2c, int addr) {
+	uint8_t MixValveController::testDevice() {
 		unsigned long waitTime = 3000UL + *_timeOfReset_mS;
 		//Serial.println("MixValveController.testDevice");
 		uint8_t hasFailed;
 		uint8_t dataBuffa[1] = { 55 };
-		do hasFailed = _i2C->write_verify(_address, 7, 1, dataBuffa); // write request temp
+		do hasFailed = write_verify(7, 1, dataBuffa); // write request temp
 		while (hasFailed && millis() < waitTime);
-		if (hasFailed)logger().log(" MixValveController::testDevice failed. Addr:", _address);
+		if (hasFailed)logger().log(" MixValveController::testDevice failed. Addr:", getAddress());
 		return hasFailed;
 	}
 
@@ -60,7 +60,7 @@ namespace HardwareInterfaces {
 		errCode |= writeToValve(Mix_Valve::temp_i2c_addr, _tempSensorArr[_flowTempSens].getAddress());
 		errCode |= writeToValve(Mix_Valve::max_ontime, VALVE_FULL_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::wait_time, VALVE_WAIT_TIME);
-		logger().log( "MixValveController::sendSetup()", errCode, _i2C->getError(errCode));
+		logger().log( "MixValveController::sendSetup()", errCode, i2c_Talk().getError(errCode));
 		return errCode;
 	}
 
@@ -157,7 +157,7 @@ namespace HardwareInterfaces {
 			if (attempts == NO_OF_ATTEMPTS / 2) {
 				//speedTestDevice(MIX_VALVE_I2C_ADDR);
 			}
-			hasFailed = _i2C->write(MIX_VALVE_I2C_ADDR, reg + _index * 16, value);
+			hasFailed = write(uint8_t(reg + _index * 16), value);
 		} while (hasFailed && (--attempts > 0 || millis() < waitTime));
 
 		if (NO_OF_ATTEMPTS - attempts > 0) {
@@ -181,7 +181,7 @@ namespace HardwareInterfaces {
 			if (attempts == NO_OF_ATTEMPTS / 2) {
 				//speedTestDevice(MIX_VALVE_I2C_ADDR);
 			}
-			hasFailed = _i2C->read(MIX_VALVE_I2C_ADDR, reg + _index * 16, 1, &value);
+			hasFailed = read( reg + _index * 16, 1, &value);
 		} while (hasFailed && (--attempts > 0 || millis() < waitTime));
 
 		if (NO_OF_ATTEMPTS - attempts > 0) {

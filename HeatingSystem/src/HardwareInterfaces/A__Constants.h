@@ -177,8 +177,8 @@ namespace HardwareInterfaces {
 
 /* Globals
 Name	Meaning									Declared			Initialised
-rtc		I2C_Helper for Real-Time_Clock/EEprom	Setup_Loop			setup()
-i2C		I2C_Helper for Relays/Temp Sensors		Relay_Run			Factory::initialiseProgrammer()
+rtc		I2C_Talk for Real-Time_Clock/EEprom	Setup_Loop			setup()
+i2C		I2C_Talk for Relays/Temp Sensors		Relay_Run			Factory::initialiseProgrammer()
 mainLCD	MultiCrystal for LCD					A__Constants		A__Constants
 f		factoryObjects							D_Factory			createFactObject()
 */

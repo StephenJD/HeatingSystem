@@ -1,6 +1,6 @@
 #pragma once
 #include "Arduino.h"
-#include <I2C_Helper.h>
+#include <I2C_Talk/I2C_Talk.h>
 #include <Mix_Valve/Mix_Valve.h>
 #include "Temp_Sensor.h"
 #include <RDB/src/RDB.h>
@@ -12,15 +12,18 @@
 
 namespace HardwareInterfaces {
 
-	class MixValveController : public I2C_Helper::I_I2Cdevice {
+	class MixValveController : public I_I2Cdevice {
 	public:
+		MixValveController() : I_I2Cdevice(i2c_Talk()) {}
+		MixValveController(I2C_Talk & i2C) : I_I2Cdevice(i2C) {}
+
 		// Queries
 		bool needHeat(bool isHeating) const; // used by ThermStore.needHeat	
 		uint8_t sendSetup() const;
 		uint8_t readFromValve(Mix_Valve::Registers reg) const;
 
 		// Virtual Functions
-		uint8_t testDevice(I2C_Helper & i2c, int addr) override;
+		uint8_t testDevice() override;
 		//uint8_t initialiseDevice() override;
 
 		void setResetTimePtr(unsigned long * timeOfReset_mS) { _timeOfReset_mS = timeOfReset_mS; }

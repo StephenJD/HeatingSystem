@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Arduino.h"
-#include <I2C_Helper.h>
+#include <I2C_Talk/I2C_Talk.h>
 
 namespace HardwareInterfaces {
 
@@ -12,24 +12,24 @@ namespace HardwareInterfaces {
 
 	class I_TestDevices {
 	public:
-		virtual I2C_Helper::I_I2Cdevice & getDevice(uint8_t deviceAddr) = 0;
+		virtual I_I2Cdevice & getDevice(uint8_t deviceAddr) = 0;
 	};
 
-	class HardReset : public I2C_Helper::I_I2CresetFunctor {
+	class HardReset : public I2C_Talk::I_I2CresetFunctor {
 	public:
-		uint8_t operator()(I2C_Helper & i2c, int addr) override;
+		uint8_t operator()(I2C_Talk & i2c, int addr) override;
 
 		bool initialisationRequired = true;
 		unsigned long timeOfReset_mS = 0;
 	private:
 	};	
 	
-	class ResetI2C : public I2C_Helper::I_I2CresetFunctor {
+	class ResetI2C : public I2C_Talk::I_I2CresetFunctor {
 	public:
 		ResetI2C(I_IniFunctor & resetFn, I_TestDevices & testDevices);
 
-		uint8_t operator()(I2C_Helper & i2c, int addr) override;
-		uint8_t speedTestDevice(I2C_Helper & i2c, int addr, I2C_Helper::I_I2Cdevice & device);
+		uint8_t operator()(I2C_Talk & i2c, int addr) override;
+		uint8_t speedTestDevice(I2C_Talk & i2c, int addr, I_I2Cdevice & device);
 		unsigned long timeOfReset_mS() { return hardReset.timeOfReset_mS; }
 		HardReset hardReset;
 	private:

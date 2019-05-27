@@ -1,5 +1,5 @@
 #pragma once
-#include "..\..\..\I2C_Helper\I2C_Helper.h"
+#include "..\..\..\I2C_Talk\I2C_Talk.h"
 #include "..\HardwareInterfaces\I2C_Comms.h"
 
 namespace Assembly {
@@ -13,12 +13,12 @@ namespace HardwareInterfaces {
 	public:
 		TestDevices(Assembly::Initialiser & ini);
 		uint8_t speedTestDevices(uint8_t deviceAddr = 255);
-		I2C_Helper::I_I2Cdevice & getDevice(uint8_t deviceAddr) override;
+		I_I2Cdevice & getDevice(uint8_t deviceAddr) override;
 		HeatingSystem & hs();
 		uint8_t testRelays();
 	private:
 		Assembly::Initialiser & _ini;
-		int8_t showSpeedTestFailed(I2C_Helper::I_I2Cdevice & testFn, const char * device);
+		int8_t showSpeedTestFailed(I_I2Cdevice & testFn, const char * device);
 	};
 
 }

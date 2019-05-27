@@ -1,10 +1,7 @@
 #include "Temp_Sensor.h"
-//#include "I2C_Helper.h"
 #include "A__Constants.h"
 
 namespace HardwareInterfaces {
-	//I2C_Temp_Sensor * tempSensors;
-
 	int I2C_Temp_Sensor::_error;
 
 	void I2C_Temp_Sensor::initialise(int recID, int address) {
@@ -16,10 +13,8 @@ namespace HardwareInterfaces {
 
 	int8_t I2C_Temp_Sensor::readTemperature() {
 		uint8_t temp[2];
-		if (_i2C != 0) {
-			_error = _i2C->read(_address, DS75LX_Temp, 2, temp);
-		}
-		else _error = I2C_Helper::_I2C_not_created;
+		_error = read(DS75LX_Temp, 2, temp);
+
 #ifdef ZPSIM
 		lastGood += change;
 		temp[0] = lastGood / 256;
@@ -33,10 +28,7 @@ namespace HardwareInterfaces {
 
 
 	uint8_t I2C_Temp_Sensor::setHighRes() {
-		if (_i2C != 0) {
-			_i2C->write(_address, DS75LX_Config, 0x60);
-		}
-		else _error = I2C_Helper::_I2C_not_created;
+		_error = write(DS75LX_Config, 0x60);
 		return _error;
 	}
 
@@ -53,10 +45,10 @@ namespace HardwareInterfaces {
 #endif
 	}
 
-	uint8_t I2C_Temp_Sensor::testDevice(I2C_Helper & i2c, int addr) {
+	uint8_t I2C_Temp_Sensor::testDevice() {
 		uint8_t temp[2] = {75,0};
 		//Serial.print("Temp_Sensor::testDevice : "); Serial.println(addr);
-		return _i2C->write_verify(_address, DS75LX_HYST_REG, 2, temp);
+		return write_verify(DS75LX_HYST_REG, 2, temp);
 	}
 
 }

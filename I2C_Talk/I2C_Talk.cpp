@@ -1,4 +1,5 @@
 #include "I2C_Talk.h"
+#include "I2C_Device.h"
 //#include <Logging.h>
 
 #ifndef VARIANT_MCK
@@ -24,11 +25,10 @@ uint32_t g_timeSince(uint32_t startTime);
 int8_t I2C_Talk::s_zeroCrossPin;
 uint16_t I2C_Talk::s_zxSigToXdelay; // microseconds
 
-I2C_Talk * I2C_Talk::I_I2Cdevice::_i2C = 0;
 int8_t I2C_Talk::TWI_BUFFER_SIZE = 32;
 
 // Public I2C_Talk functions
-I_I2Cdevice I2C_Talk::makeDevice(uint8_t addr) { return I_I2Cdevice(this, addr); }
+I_I2Cdevice I2C_Talk::makeDevice(uint8_t addr) { return I_I2Cdevice(*this, addr); }
 
 
 I2C_Talk::I2C_Talk(TwoWire &wire_port, int32_t i2cFreq)

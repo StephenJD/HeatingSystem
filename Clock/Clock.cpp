@@ -146,7 +146,7 @@
 	//                     I2C_Clock                             //
 	///////////////////////////////////////////////////////////////
 
-	I2C_Clock::I2C_Clock(I2C_Helper * i2C, int addr) : I_I2Cdevice(i2C, addr) {
+	I2C_Clock::I2C_Clock(I2C_Talk * i2C, int addr) : I_I2Cdevice(i2C, addr) {
 		if (i2C == 0) {
 			if (Serial) {
 				Serial.println("Clock initialised before I2C Helper!");
@@ -168,12 +168,12 @@
 		return i2c_helper().result.error;
 	}
 
-	uint8_t I2C_Clock::testDevice(I2C_Helper & i2c, int addr) {
+	uint8_t I2C_Clock::testDevice() {
 		//Serial.print(" RTC testDevice at "); Serial.println(i2c.getI2CFrequency(),DEC);
 		uint8_t data[1] = { 0 };
 		auto errCode = _i2C->write_verify(_address, 9, 1, data);
 		data[0] = 255;
-		if (errCode != I2C_Helper::_OK) errCode = _i2C->write_verify(_address, 9, 1, data);
+		if (errCode != I2C_Talk::_OK) errCode = _i2C->write_verify(_address, 9, 1, data);
 		return errCode;
 	}
 
@@ -187,7 +187,7 @@
 			data[6] = 0; // year
 
 			errCode = _i2C->read(_address, 0, 9, data);
-			if ((errCode != I2C_Helper::_OK || data[6] == 255) && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
+			if ((errCode != I2C_Talk::_OK || data[6] == 255) && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
 				if (Serial) {
 					Serial.print("Error reading RTC : "); Serial.print(_i2C->getError(errCode));
 					Serial.print(" Year : "); Serial.println((int)data[6]);
@@ -197,7 +197,7 @@
 				data[6] = 0;
 				errCode = _i2C->read(_address, 0, 9, data);
 			}
-			if (errCode != I2C_Helper::_OK) {
+			if (errCode != I2C_Talk::_OK) {
 				if (Serial) { Serial.print("RTC Unreadable. "); Serial.println(_i2C->getError(errCode)); }
 			}
 			else if (data[6] == 0) {
@@ -220,7 +220,7 @@
 		else {
 			if (Serial) { Serial.println("No i2c: Set from Compiler"); }
 			_setFromCompiler();
-			errCode = I2C_Helper::_I2C_Device_Not_Found;
+			errCode = I2C_Talk::_I2C_Device_Not_Found;
 		}
 #endif	
 	}
@@ -242,12 +242,12 @@
 
 		auto errCode = _i2C->write(_address, 0, 9, data);
 
-		if (errCode != I2C_Helper::_OK && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
+		if (errCode != I2C_Talk::_OK && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
 			if (Serial) { Serial.print("Error writing RTC : ");  Serial.println(_i2C->getError(errCode)); }
 			//_i2C->slowdown_and_reset(0);
 			errCode = _i2C->write(_address, 0, 9, data);
 		}
-		if (errCode != I2C_Helper::_OK) {
+		if (errCode != I2C_Talk::_OK) {
 			if (Serial) { Serial.print("Unable to write RTC:");  Serial.println(_i2C->getError(errCode)); }
 		}
 		else {

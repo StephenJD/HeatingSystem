@@ -12,9 +12,12 @@ namespace Assembly {
 	using namespace HardwareInterfaces;
 	using namespace client_data_structures;
 
-	TemperatureController::TemperatureController(RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS) :
+	TemperatureController::TemperatureController(I2C_Talk & i2c, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS) :
 		thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
+		, tempSensorArr{ i2c }
+		, relaysPort{ i2c.makeDevice(IO8_PORT_OptCoupl), ZERO_CROSS_PIN, RESET_OUT_PIN}
+		, mixValveControllerArr{ i2c }
 	{
 		int index = 0;
 		auto tempSensors = db.tableQuery(TB_TempSensor);
@@ -23,8 +26,6 @@ namespace Assembly {
 			++index;
 		}
 		logger().log("loadtempSensors Completed");
-
-		relaysPort.setup(IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN);
 
 		index = 0;
 		auto relays = db.tableQuery(TB_Relay);

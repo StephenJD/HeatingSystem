@@ -13,7 +13,7 @@ namespace HardwareInterfaces {
 		_testDevices(&testDevices)
 		 {}
 
-	uint8_t ResetI2C::operator()(I2C_Helper & i2c, int addr) {
+	uint8_t ResetI2C::operator()(I2C_Talk & i2c, int addr) {
 		//Serial.println("ResetI2C::operator()");
 		const uint8_t NO_OF_TRIES = 2;
 		static bool isInReset = false;
@@ -36,7 +36,7 @@ namespace HardwareInterfaces {
 			hardReset(i2c, addr);
 
 			//if (addr != 0) {
-			//	I2C_Helper::I_I2Cdevice & device = _testDevices->getDevice(addr);
+			//	I2C_Talk::I_I2Cdevice & device = _testDevices->getDevice(addr);
 			//	if (device.testDevice(i2c, addr)) {
 			//		logger().log(" Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
 			//		hasFailed = speedTestDevice(i2c, addr, device);
@@ -56,8 +56,8 @@ namespace HardwareInterfaces {
 		return hasFailed;
 	}
 
-	uint8_t ResetI2C::speedTestDevice(I2C_Helper & i2c, int addr, I2C_Helper::I_I2Cdevice & device) {
-		I2C_Helper::I_I2CresetFunctor * origFn = i2c.getTimeoutFn();
+	uint8_t ResetI2C::speedTestDevice(I2C_Talk & i2c, int addr, I_I2Cdevice & device) {
+		I2C_Talk::I_I2CresetFunctor * origFn = i2c.getTimeoutFn();
 		i2c.setTimeoutFn(&hardReset);
 		i2c.result.reset();
 		i2c.result.foundDeviceAddr = addr;
@@ -68,7 +68,7 @@ namespace HardwareInterfaces {
 		return failedTest;
 	}
 
-	uint8_t HardReset::operator()(I2C_Helper & i2c, int addr) {
+	uint8_t HardReset::operator()(I2C_Talk & i2c, int addr) {
 		digitalWrite(RESET_LED_PIN_N, LOW);
 		initialisationRequired = true;
 		digitalWrite(abs(RESET_OUT_PIN), (RESET_OUT_PIN < 0) ? LOW : HIGH);

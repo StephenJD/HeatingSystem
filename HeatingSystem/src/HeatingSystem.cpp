@@ -39,14 +39,13 @@ HeatingSystem::HeatingSystem()
 	db(RDB_START_ADDR, writer, reader, VERSION)
 	, _initialiser(*this)
 	, mainDisplay(&_q_displays)
-	, remDispl{ { i2C, US_REMOTE_ADDRESS },{i2C, FL_REMOTE_ADDRESS },{i2C, DS_REMOTE_ADDRESS } }
+	, remDispl{ i2C.makeDevice(US_REMOTE_ADDRESS), i2C.makeDevice(FL_REMOTE_ADDRESS), i2C.makeDevice(DS_REMOTE_ADDRESS) }
 	, _q_displays(db.tableQuery(TB_Display))
-	, _tempController(db, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
+	, _tempController(i2C, db, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
 	, _mainPages{db, _tempController}
 	, _mainConsole(localKeypad, mainDisplay, _mainPages.pages())
 	, _sequencer(db, _tempController)
 	{
-		I2C_Helper::I_I2Cdevice::setI2Chelper(i2C);
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 		_mainPages.setDisplay(mainDisplay);
 		localKeypad.wakeDisplay(true);

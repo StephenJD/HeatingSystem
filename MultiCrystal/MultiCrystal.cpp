@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "Arduino.h"
-#include <I2C_Helper.h>
+#include <I2C_Talk/I2C_Talk.h>
 #include <Conversions.h>
 
 using namespace std;
@@ -106,7 +106,7 @@ MultiCrystal::MultiCrystal(uint8_t pinset[11])
 MultiCrystal::MultiCrystal(uint8_t rs, uint8_t rw, uint8_t enable,
 	uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 	uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7,
-	I2C_Helper * i2C, uint8_t address,
+	I2C_Talk * i2C, uint8_t address,
 	uint8_t control_pos_is_port_B, uint8_t data_pos_is_port_B) // bits must be set for any data on port-B
 	: _key_mask_16(reinterpret_cast<const uint16_t &>(_key_mask[0])),
 	_i2C(i2C), _address(address),

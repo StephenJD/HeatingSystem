@@ -1,28 +1,29 @@
 #pragma once
 #include "Arduino.h"
-//#include <I2C_Helper.h>
 #include <I2C_Talk\I2C_Talk.h>
+#include <I2C_Talk/I2C_Device.h>
 #include <RDB\src\RDB.h>
 
 namespace HardwareInterfaces {
 
-	class I2C_Temp_Sensor : public I2C_Helper::I_I2Cdevice {
+	class I2C_Temp_Sensor : public I_I2Cdevice {
 	public:
-		I2C_Temp_Sensor() = default;
+		I2C_Temp_Sensor() : I_I2Cdevice(i2c_Talk()) {}
+		I2C_Temp_Sensor(I2C_Talk & i2C) : I_I2Cdevice(i2C) {}
 #ifdef ZPSIM
 		I2C_Temp_Sensor(int16_t temp) { lastGood = temp << 8; }
 #endif
 		// Queries
 		int8_t get_temp() const;
 		int16_t get_fractional_temp() const;
-		static bool hasError() { return _error != I2C_Helper::_OK; }
+		static bool hasError() { return _error != I2C_Talk::_OK; }
 		bool operator== (const I2C_Temp_Sensor & rhs) const { return _recID == rhs._recID; }
 
 		// Modifiers
 		int8_t readTemperature();
 		uint8_t setHighRes();
 		// Virtual Functions
-		uint8_t testDevice(I2C_Helper & i2c, int addr) override;
+		uint8_t testDevice() override;
 
 		void initialise(int recID, int address);
 

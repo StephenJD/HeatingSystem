@@ -22,11 +22,12 @@
 #if defined(__SAM3X8E__) || defined ZPSIM
 
 #include "Arduino.h"
+#include "I2C_Talk/I2C_Device.h"
 #define LOAD_EEPROM
 
-class I2C_Helper;
+class I2C_Talk;
 
-class EEPROMClass
+class EEPROMClass : public I_I2Cdevice
 {
 #if defined (ZPSIM)
 public:
@@ -36,14 +37,11 @@ public:
 #endif
 
   public:
-    EEPROMClass(I2C_Helper * i2C, uint8_t eepromAddr);
+    EEPROMClass(I_I2Cdevice base);
     uint8_t read(int iAddr);
     uint8_t write(int iAddr, uint8_t iVal);
     uint8_t update(int iAddr, uint8_t iVal);
-	void setI2Chelper(I2C_Helper & i2C);
  private:
-   I2C_Helper * _i2C = 0;
-   uint8_t _eepromAddr;
 };
 
 extern EEPROMClass & EEPROM;

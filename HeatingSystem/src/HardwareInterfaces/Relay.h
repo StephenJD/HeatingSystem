@@ -1,18 +1,20 @@
 #pragma once
 #include "Arduino.h"
-#include "I2C_Helper.h"
+#include <I2C_Talk\I2C_Talk.h>
+#include <I2C_Talk/I2C_Device.h>
 #include <RDB\src\RDB.h>
 
 namespace HardwareInterfaces {
 
-	class RelaysPort : public I2C_Helper::I_I2Cdevice {
+	class RelaysPort : public I_I2Cdevice {
 	public:
-		void setup(int i2cAddress, int zeroCrossPin, int resetPin);
+		RelaysPort(I_I2Cdevice base, int zeroCrossPin, int resetPin );
+
 		uint8_t setAndTestRegister();
 		// Virtual Functions
 		uint8_t initialiseDevice() override;
-		uint8_t testDevice(I2C_Helper & i2c, int addr) override { return initialiseDevice(); }
-		static uint8_t relayRegister;
+		uint8_t testDevice() override { return initialiseDevice(); }
+		inline static uint8_t relayRegister = 0xff;
 	private:
 		uint8_t _zeroCrossPin = 0;
 		uint8_t _resetPin = 0;
