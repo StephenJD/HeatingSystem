@@ -262,7 +262,7 @@ void I2C_Helper_Auto_Speed<noOfDevices>::resetAddresses() {
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+//*******************************
 // Template Function implementations //
 template<bool non_stop, bool serial_out>
 bool I2C_Helper::scan(){ 

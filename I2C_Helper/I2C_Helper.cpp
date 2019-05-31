@@ -645,7 +645,7 @@ signed char I2C_Helper::adjustSpeedTillItWorksAgain(I_I2Cdevice * deviceFailTest
 int I2C_Helper_Auto_Speed_Hoist::_findDevice(int16_t devAddr, int8_t * devAddrArr, int noOfDevices) {
 	int index = 0;
 	do {
-		if (devAddrArr[index] == 0) { devAddrArr[index] = devAddr; break; }
+		if (devAddrArr[index] == 0) { devAddrArr[index] = signed char(devAddr); break; }
 		if (devAddrArr[index] == devAddr) break;
 	} while (++index < noOfDevices) ;
 

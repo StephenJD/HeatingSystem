@@ -3,6 +3,8 @@
 
 class I_I2Cdevice {
 public:
+	I_I2Cdevice(I2C_Talk & i2C, uint8_t addr) : _address(addr) { _i2C = &i2C; }
+
 	virtual uint8_t initialiseDevice() { return 0; }
 	virtual uint8_t testDevice() { return 0; }
 	uint8_t getAddress() const { return _address; }
@@ -28,11 +30,10 @@ public:
 	static I2C_Talk & i2c_Talk() { return *_i2C; }
 	//static void setI2Chelper(I2C_Talk & i2C) { _i2C = &i2C; }
 protected:
-	I_I2Cdevice() = delete; // Must be constructed by I2C_Talk::makeDevice(addr)
+	I_I2Cdevice() = delete; 
 	I_I2Cdevice(I2C_Talk & i2C) : I_I2Cdevice(i2C, 255) {} // Use to initialise an array of devices
 private:
-	friend class I2C_Talk;
-	I_I2Cdevice(I2C_Talk & i2C, uint8_t addr) : _address(addr) { _i2C = &i2C; }
+	//friend class I2C_Talk;
 	inline static I2C_Talk * _i2C = 0;
 	uint8_t _address = 255;
 };

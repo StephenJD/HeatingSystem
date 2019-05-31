@@ -98,9 +98,9 @@ MultiCrystal::MultiCrystal(uint8_t pinset[11])
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////
+//*******************************************************************
 // Any register initialization required must be done prior to calling this constructor //
-/////////////////////////////////////////////////////////////////////////////////////////
+//*******************************************************************
 
 // Constructors for I2C LCD
 MultiCrystal::MultiCrystal(uint8_t rs, uint8_t rw, uint8_t enable,

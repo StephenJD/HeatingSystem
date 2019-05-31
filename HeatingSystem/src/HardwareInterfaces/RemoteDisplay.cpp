@@ -4,8 +4,8 @@
 
 namespace HardwareInterfaces {
 
-	RemoteDisplay::RemoteDisplay(I_I2Cdevice base) 
-		: I_I2Cdevice(base),
+	RemoteDisplay::RemoteDisplay(I2C_Talk & i2C, int addr)
+		: I_I2Cdevice(i2C, addr),
 		_lcd(7, 6, 5,
 		4, 3, 2, 1,
 		0, 4, 3, 2,

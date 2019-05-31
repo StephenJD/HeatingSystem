@@ -1,6 +1,6 @@
 // MultiCrystal.h: interface for the MultiCrystal class.
 // Modified to include LCD via I2C
-//////////////////////////////////////////////////////////////////////
+//*******************************
 
 #ifndef MultiCrystal_h
 #define MultiCrystal_h

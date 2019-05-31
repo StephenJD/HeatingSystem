@@ -104,7 +104,7 @@ namespace HardwareInterfaces {
 	}
 
 	uint8_t TestDevices::testRelays() {
-		/////////////////////// Cycle through ports /////////////////////////
+		//******************** Cycle through ports *************************
 		uint8_t returnVal = 0;
 		uint8_t numberFailed = 0;
 		logger().log("Relay_Run::testRelays");

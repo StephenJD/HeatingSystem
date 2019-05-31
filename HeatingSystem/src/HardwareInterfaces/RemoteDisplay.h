@@ -8,7 +8,7 @@ namespace HardwareInterfaces {
 
 	class RemoteDisplay : public I_I2Cdevice {
 	public:
-		RemoteDisplay(I_I2Cdevice base);
+		RemoteDisplay(I2C_Talk & i2C, int addr);
 		// Virtual Functions
 		uint8_t testDevice() override;
 		uint8_t initialiseDevice() override;

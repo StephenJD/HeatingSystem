@@ -37,7 +37,7 @@ public:
 #endif
 
   public:
-    EEPROMClass(I_I2Cdevice base);
+    EEPROMClass(I2C_Talk & i2C, int addr);
     uint8_t read(int iAddr);
     uint8_t write(int iAddr, uint8_t iVal);
     uint8_t update(int iAddr, uint8_t iVal);

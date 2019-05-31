@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <inttypes.h>
 #include <Wire.h>
+#include <I2C_Recover.h>
 
 /**
 Using this library requires a modified wire.cpp (Sam) or twi.c (AVR)
@@ -24,24 +25,21 @@ It should make a call to I2C_Talk.timeout_reset().
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
 // 24LC256 -> 64 bytes
 #define I2C_EEPROM_PAGESIZE 32
-class I_I2Cdevice;
 
 class I2C_Talk {
 public:
-	class I_I2CresetFunctor {
-	public:
-		virtual uint8_t operator()(I2C_Talk & i2c, int addr) = 0;
-	};
+	//class I_I2CresetFunctor {
+	//public:
+	//	virtual uint8_t operator()(I2C_Talk & i2c, int addr) = 0;
+	//};
 
-	typedef uint8_t (*TestFnPtr)(I2C_Talk &, int);
+	//typedef uint8_t (*TestFnPtr)(I2C_Talk &, int);
 	
 	// Basic Usage //
 	enum error_codes {_OK, _Insufficient_data_returned, _NACK_during_address_send, _NACK_during_data_send, _NACK_during_complete, _NACK_receiving_data, _Timeout, _speedError, _slave_shouldnt_write, _I2C_not_created, _I2C_Device_Not_Found, _I2C_ReadDataWrong, _I2C_AddressOutOfRange};
 	enum {_single_master = 255, _no_address = 255};
 
 	I2C_Talk(TwoWire &wire_port = Wire, int32_t i2cFreq = 100000);
-	
-	I_I2Cdevice makeDevice(uint8_t addr);
 	
 	uint8_t read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer); // Return errCode. dataBuffer may not be written to if read fails.
 	uint8_t read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, char *dataBuffer) {return read(deviceAddr, registerAddress, numberBytes, (uint8_t *) dataBuffer);}
@@ -62,18 +60,19 @@ public:
 	uint8_t notExists(int deviceAddr);
 	
 	// Enhanced Usage //
-	I2C_Talk(TwoWire &wire_port, int8_t zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction = 0, int32_t i2cFreq = 100000);
+	//I2C_Talk(TwoWire &wire_port, int8_t zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction = 0, int32_t i2cFreq = 100000);
+	I2C_Talk(TwoWire &wire_port, int8_t zxPin, uint16_t zxDelay, I2C_Recover * recovery = 0, int32_t i2cFreq = 100000);
 	
 	int32_t setI2CFrequency(int32_t i2cFreq); // turns auto-speed off
 	int32_t getI2CFrequency() { return _i2cFreq; }
 	virtual int32_t setThisI2CFrequency(int16_t devAddr, int32_t i2cFreq) {return setI2Cfreq_retainAutoSpeed(i2cFreq);}
 	virtual int32_t getThisI2CFrequency(int16_t devAddr) {return getI2CFrequency();}
 
-	void setNoOfRetries(uint8_t retries);
-	uint8_t getNoOfRetries();
-	void setTimeoutFn (I_I2CresetFunctor * timeoutFnPtr);
-	void setTimeoutFn (TestFnPtr timeoutFnPtr);
-	I_I2CresetFunctor * getTimeoutFn() {return timeoutFunctor;}
+	//void setNoOfRetries(uint8_t retries);
+	//uint8_t getNoOfRetries();
+	//void setTimeoutFn (I_I2CresetFunctor * timeoutFnPtr);
+	//void setTimeoutFn (TestFnPtr timeoutFnPtr);
+	//I_I2CresetFunctor * getTimeoutFn() {return timeoutFunctor;}
 
 	bool restart();
 	virtual void useAutoSpeed(bool set = true) {}
@@ -102,36 +101,36 @@ public:
 	// required by template, may as well be publicly available
 	static const int32_t MAX_I2C_FREQ = (VARIANT_MCK / 40) > 400000 ? 400000 : (VARIANT_MCK / 40); //100000; // 
 	static const int32_t MIN_I2C_FREQ = VARIANT_MCK / 65288 * 2; //32644; //VARIANT_MCK / 65288; //36000; //
-	uint8_t successAfterRetries;
+	//uint8_t successAfterRetries;
 protected:
 	int32_t setI2Cfreq_retainAutoSpeed(int32_t i2cFreq);
 	virtual unsigned long getFailedTime(int16_t devAddr) { return 0; }
 	virtual void setFailedTime(int16_t devAddr) {}
 
 private:
-	bool restart(const char * name, int addr);
+	friend class I2C_Recover;
 	uint8_t check_endTransmissionOK(int addr);
 	void waitForZeroCross();
-	void callTime_OutFn(int addr);
+	//void callTime_OutFn(int addr);
+	void wireBegin() { wire_port.begin(_myAddress); }
 	uint8_t beginTransmission(uint16_t deviceAddr); // return false to inhibit access
 	void waitForDeviceReady(uint16_t deviceAddr);
 	uint8_t getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *dataBuffer);
 	uint8_t getTWIbufferSize();
 	TwoWire & wire_port;
-	uint8_t noOfRetries;
+	//uint8_t noOfRetries;
 	bool _waitForZeroCross = false;
 
-	I_I2CresetFunctor * timeoutFunctor;
-	
-	class I2Creset_Functor : public I_I2CresetFunctor {
-	public:
-		void set(TestFnPtr tfn) {_tfn = tfn;}
-		uint8_t operator()(I2C_Talk & i2c, int addr) /*override*/ {return _tfn(i2c,addr);}
-	private:
-		TestFnPtr _tfn;
-	};
-	I2Creset_Functor _i2CresetFunctor; // data member functor to wrap free reset function
-	//TestFnPtr timeoutFn;
+	//I_I2CresetFunctor * timeoutFunctor;
+	//
+	//class I2Creset_Functor : public I_I2CresetFunctor {
+	//public:
+	//	void set(TestFnPtr tfn) {_tfn = tfn;}
+	//	uint8_t operator()(I2C_Talk & i2c, int addr) /*override*/ {return _tfn(i2c,addr);}
+	//private:
+	//	TestFnPtr _tfn;
+	//};
+	//I2Creset_Functor _i2CresetFunctor; // data member functor to wrap free reset function
 
 	uint32_t relayDelay;
 	uint32_t relayStart;
@@ -139,19 +138,20 @@ private:
 	static uint16_t s_zxSigToXdelay;
 	static int8_t TWI_BUFFER_SIZE;
 	int32_t _i2cFreq;
-	int32_t _lastGoodi2cFreq;
 	uint8_t _myAddress;
 	bool _canWrite;
-	unsigned long _lastRestartTime;
 	unsigned long _lastWrite = 0;
-	const uint8_t _I2C_DATA_PIN = 20;
+	friend class I2C_Recover;
+	I2C_Recover * _recovery;
+	I2C_Recover _nullRecover;
 };
 
 class I2C_Helper_Auto_Speed_Hoist : public I2C_Talk {
 public:
 	I2C_Helper_Auto_Speed_Hoist(TwoWire &wire_port = Wire, int32_t i2cFreq = 100000) : I2C_Talk(wire_port, i2cFreq){}
 	I2C_Helper_Auto_Speed_Hoist(int multiMaster_MyAddress, TwoWire &wire_port = Wire, int32_t i2cFreq = 100000) : I2C_Talk(multiMaster_MyAddress, wire_port, i2cFreq){}
-	I2C_Helper_Auto_Speed_Hoist(TwoWire &wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000) : I2C_Talk(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){}
+	//I2C_Helper_Auto_Speed_Hoist(TwoWire &wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000) : I2C_Talk(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){}
+	I2C_Helper_Auto_Speed_Hoist(TwoWire &wire_port, signed char zxPin, uint16_t zxDelay, I2C_Recover * recovery = 0, int32_t i2cFreq = 100000) : I2C_Talk(wire_port, zxPin, zxDelay, recovery, i2cFreq){}
 	void useAutoSpeed(bool set = true) override { _useAutoSpeed = set; }
 	bool usingAutoSpeed() const override { return _useAutoSpeed; }
 
@@ -170,7 +170,8 @@ class I2C_Helper_Auto_Speed : public I2C_Helper_Auto_Speed_Hoist {
 public:
 	I2C_Helper_Auto_Speed(TwoWire & wire_port = Wire, int32_t i2cFreq = 100000) : I2C_Helper_Auto_Speed_Hoist(wire_port, i2cFreq){resetAddresses();}
 	I2C_Helper_Auto_Speed(int multiMaster_MyAddress, TwoWire & wire_port = Wire, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(multiMaster_MyAddress, wire_port, i2cFreq){resetAddresses();}
-	I2C_Helper_Auto_Speed(TwoWire & wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){resetAddresses();}
+	//I2C_Helper_Auto_Speed(TwoWire & wire_port, signed char zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeoutFunction, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(wire_port, zxPin, retries, zxDelay, timeoutFunction, i2cFreq){resetAddresses();}
+	I2C_Helper_Auto_Speed(TwoWire & wire_port, signed char zxPin, uint16_t zxDelay, I2C_Recover * recovery = 0, int32_t i2cFreq = 100000): I2C_Helper_Auto_Speed_Hoist(wire_port, zxPin, zxDelay, recovery, i2cFreq){resetAddresses();}
 	
 	int8_t getAddress(int index) const { return devAddrArr[index]; }
 	unsigned long getFailedTime(int16_t devAddr) override { return _getFailedTime(devAddr, devAddrArr, lastFailedTimeArr, noOfDevices);}

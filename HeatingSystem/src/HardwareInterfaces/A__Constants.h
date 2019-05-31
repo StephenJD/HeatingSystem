@@ -34,7 +34,7 @@ namespace HardwareInterfaces {
 	const S1_err ERR_RTC_FAILED = 13;
 	const S1_err EVT_GAS_TEMP = 15;
 
-	//////////////////////////////////////////////////////
+	//*******************************
 	enum modes { e_onChange_read_LATafter, e_onChange_read_OUTafter, e_alwaysWrite_read_LATafter, e_alwaysCheck_read_OUTafter, e_alwaysCheck_read_latBeforeWrite, e_alwaysCheck_read_OutBeforeWrite, noOfSwModes };
 
 	////////////////////////// I2C Setup /////////////////////////////////////

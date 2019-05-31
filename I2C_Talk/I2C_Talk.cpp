@@ -1,5 +1,4 @@
 #include "I2C_Talk.h"
-#include "I2C_Device.h"
 //#include <Logging.h>
 
 #ifndef VARIANT_MCK
@@ -17,9 +16,6 @@
 static const uint16_t HALF_MAINS_PERIOD = 10000; // in microseconds. 10000 for 50Hz, 8333 for 60Hz
 
 //void log(const char * msg);
-
-// Private free function prototypes
-bool g_delayTrue(uint8_t millisecs);
 uint32_t g_timeSince(uint32_t startTime);
 
 int8_t I2C_Talk::s_zeroCrossPin;
@@ -27,19 +23,15 @@ uint16_t I2C_Talk::s_zxSigToXdelay; // microseconds
 
 int8_t I2C_Talk::TWI_BUFFER_SIZE = 32;
 
-// Public I2C_Talk functions
-I_I2Cdevice I2C_Talk::makeDevice(uint8_t addr) { return I_I2Cdevice(*this, addr); }
-
-
 I2C_Talk::I2C_Talk(TwoWire &wire_port, int32_t i2cFreq)
-	: successAfterRetries(0),
+	:
 	wire_port(wire_port),
-	noOfRetries(5),
-	timeoutFunctor(0),
 	relayDelay(0),
 	relayStart(0),
 	_myAddress(_single_master),
-	_canWrite(true)
+	_canWrite(true),
+	_recovery(&_nullRecover),
+	_nullRecover(*this)
 	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
 	{
 	TWI_BUFFER_SIZE = getTWIbufferSize();
@@ -47,18 +39,17 @@ I2C_Talk::I2C_Talk(TwoWire &wire_port, int32_t i2cFreq)
 	setI2CFrequency(i2cFreq);
 	s_zeroCrossPin = 0;
 	s_zxSigToXdelay = 700;
-	_lastRestartTime = micros();
 	}
 	
 I2C_Talk::I2C_Talk(int multiMaster_MyAddress, TwoWire &wire_port, int32_t i2cFreq) 
-	: successAfterRetries(0),
+	: 
 	wire_port(wire_port),
-	noOfRetries(5),
-	timeoutFunctor(0),
 	relayDelay(0),
 	relayStart(0),
 	_myAddress(multiMaster_MyAddress),
-	_canWrite(true)
+	_canWrite(true),
+	_recovery(&_nullRecover),
+	_nullRecover(*this)
 	{
 	//Serial.println("Create I2C_Talk - multiMaster");
 	TWI_BUFFER_SIZE = getTWIbufferSize();
@@ -66,18 +57,17 @@ I2C_Talk::I2C_Talk(int multiMaster_MyAddress, TwoWire &wire_port, int32_t i2cFre
 	setI2CFrequency(i2cFreq);
 	s_zeroCrossPin = 0;
 	s_zxSigToXdelay = 700;
-	_lastRestartTime = micros();
     }
 
-I2C_Talk::I2C_Talk(TwoWire &wire_port, int8_t zxPin, uint8_t retries, uint16_t zxDelay, I_I2CresetFunctor * timeOutFn, int32_t i2cFreq)
-	: successAfterRetries(0),
+I2C_Talk::I2C_Talk(TwoWire &wire_port, int8_t zxPin, uint16_t zxDelay, I2C_Recover * recovery, int32_t i2cFreq)
+	: 
 	wire_port(wire_port),
-	noOfRetries(retries),
-	timeoutFunctor(timeOutFn),
 	relayDelay(0),
 	relayStart(0),
 	_myAddress(_single_master),
-	_canWrite(true)
+	_canWrite(true),
+	_recovery(recovery),
+	_nullRecover(*this)
 	{
 	//log("Construct I2C_Talk - singleMaster");
 	TWI_BUFFER_SIZE = getTWIbufferSize();
@@ -85,7 +75,6 @@ I2C_Talk::I2C_Talk(TwoWire &wire_port, int8_t zxPin, uint8_t retries, uint16_t z
 	setI2CFrequency(i2cFreq);
 	s_zeroCrossPin = zxPin;
 	s_zxSigToXdelay = zxDelay;
-	_lastRestartTime = micros();
 	}
 
 uint8_t I2C_Talk::notExists(I2C_Talk & i2c, int deviceAddr) {
@@ -100,11 +89,12 @@ uint8_t I2C_Talk::notExists(int deviceAddr) {
 }
 
 uint8_t I2C_Talk::read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) {
-	uint8_t i = 0, returnStatus;
 	if (!_canWrite) {
 		//Serial.println("I2C_Talk::read slave_shouldnt_write");
 		return _slave_shouldnt_write;
 	}
+	uint8_t returnStatus;
+	TryAgain tryAgain(_recovery, deviceAddr);
 	do {
 		waitForDeviceReady(deviceAddr);
 		returnStatus = beginTransmission(deviceAddr);
@@ -112,13 +102,12 @@ uint8_t I2C_Talk::read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t nu
 			wire_port.write(registerAddress);
 			returnStatus = getData(deviceAddr, numberBytes, dataBuffer);
 		} else return returnStatus;
-	} while (returnStatus && ++i < noOfRetries && restart("read 0x",deviceAddr) && g_delayTrue(i));// create an increasing delay if we are going to loop
-	if (i < noOfRetries && i > successAfterRetries) successAfterRetries = i;
+	} while (tryAgain(returnStatus));
 	return returnStatus;
 }
 
 uint8_t I2C_Talk::readEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, uint8_t *dataBuffer) {
-	uint8_t returnStatus;
+	uint8_t returnStatus = _OK;
 	while (numberBytes > 0) {
 		uint8_t bytesOnThisPage = min(numberBytes, TWI_BUFFER_SIZE);
 		waitForDeviceReady(deviceAddr);
@@ -144,7 +133,7 @@ uint8_t I2C_Talk::getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *da
 		if (returnStatus != _OK) { // returned error
 			returnStatus = wire_port.read(); // retrieve error code
 			//log("I2C_Talk::read err: for ", long(deviceAddr), getError(returnStatus),long(i));
-			if (returnStatus == _Timeout) { callTime_OutFn(deviceAddr); }
+			_recovery->checkForTimeout(returnStatus, deviceAddr);
 		}
 		else {
 			for (uint8_t i = 0; wire_port.available(); ++i) {
@@ -163,9 +152,10 @@ uint8_t I2C_Talk::getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *da
 }
 
 uint8_t I2C_Talk::write(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, const uint8_t * dataBuffer) {
-	uint8_t i = 0, returnStatus;
+	uint8_t returnStatus;
 	if (!_canWrite) return _slave_shouldnt_write;
-	do{
+	TryAgain tryAgain(_recovery, deviceAddr);
+	do {
 		returnStatus = beginTransmission(deviceAddr);
 		if (returnStatus == _OK) {
 			wire_port.write(registerAddress);
@@ -182,8 +172,7 @@ uint8_t I2C_Talk::write(uint16_t deviceAddr, uint8_t registerAddress, uint16_t n
 			}
 			relayDelay = g_timeSince(relayStart);	
 		} else return returnStatus;
-	} while (returnStatus && ++i < noOfRetries && restart("write 0x",deviceAddr) && g_delayTrue(i));// create an increasing delay if we are going to loop
-	if (i < noOfRetries && i > successAfterRetries) successAfterRetries = i;
+	} while (tryAgain(returnStatus));
 	return(returnStatus);
 }
 
@@ -213,7 +202,7 @@ uint8_t I2C_Talk::writeEP(uint16_t deviceAddr, int pageAddress, uint8_t data) {
 }
 
 uint8_t I2C_Talk::writeEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, const uint8_t *dataBuffer) {
-	uint8_t returnStatus;
+	uint8_t returnStatus = _OK;
 	while (numberBytes > 0) {
 		uint8_t bytesUntilPageBoundary = I2C_EEPROM_PAGESIZE - pageAddress % I2C_EEPROM_PAGESIZE;
 		uint8_t bytesOnThisPage = min(numberBytes, bytesUntilPageBoundary);
@@ -234,7 +223,7 @@ uint8_t I2C_Talk::writeEP(uint16_t deviceAddr, int pageAddress, uint16_t numberB
 
 void I2C_Talk::waitForDeviceReady(uint16_t deviceAddr)
 {
-#define I2C_WRITEDELAY  5000
+	constexpr decltype(micros()) I2C_WRITEDELAY = 5000;
 
 	// Wait until EEPROM gives ACK again.
 	// this is a bit faster than the hardcoded 5 milliSeconds
@@ -259,15 +248,6 @@ int32_t I2C_Talk::setI2CFrequency(int32_t i2cFreq) { // turns auto-speed off
 	useAutoSpeed(false);
 	return setI2Cfreq_retainAutoSpeed(i2cFreq);
 }
-
-void I2C_Talk::setNoOfRetries(uint8_t retries) {noOfRetries = retries;}
-uint8_t I2C_Talk::getNoOfRetries() {return noOfRetries;}
-void I2C_Talk::setTimeoutFn (I_I2CresetFunctor * timeOutFn) {timeoutFunctor = timeOutFn;} // Timeout function pointer
-
-void I2C_Talk::setTimeoutFn (TestFnPtr timeOutFn) { // convert function into functor
-	_i2CresetFunctor.set(timeOutFn);
-	timeoutFunctor = &_i2CresetFunctor;
-} // Timeout function pointer
 
 void I2C_Talk::setZeroCross(int8_t zxPin) {s_zeroCrossPin = zxPin;} // Arduino pin signalling zero-cross detected. 0 = disable, +ve = signal on rising edge, -ve = signal on falling edge
 void I2C_Talk::setZeroCrossDelay(uint16_t zxDelay) {s_zxSigToXdelay = zxDelay;} // microseconds delay between signal on zero_cross_pin to next true zero-cross.
@@ -304,14 +284,12 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 // Private Functions
 uint8_t I2C_Talk::beginTransmission(uint16_t deviceAddr) { // return false to inhibit access
 	if (deviceAddr > 127) return _I2C_AddressOutOfRange;
-	if (getThisI2CFrequency(deviceAddr) == 0) {
-		if (millis() - getFailedTime(deviceAddr) > 600000) {
-			setThisI2CFrequency(deviceAddr, 400000);
-		}
-		else return _speedError;
+	uint8_t error = _recovery->speedOK(deviceAddr);
+
+	if (error == _OK) {
+		wire_port.beginTransmission((uint8_t)deviceAddr);
 	}	
-	wire_port.beginTransmission((uint8_t)deviceAddr);
-	return _OK;
+	return error;
 }
 
 uint8_t I2C_Talk::check_endTransmissionOK(int addr) { // returns 0=OK, 1=Timeout, 2 = Error during send, 3= NACK during transmit, 4=NACK during complete.
@@ -322,18 +300,8 @@ uint8_t I2C_Talk::check_endTransmissionOK(int addr) { // returns 0=OK, 1=Timeout
 	}
 	if (_waitForZeroCross) waitForZeroCross();
 	uint8_t error = wire_port.endTransmission();
-	if (error && usingAutoSpeed()) /*slowdown_and_reset(addr)*/;
-	//if (error) {
-	//	logger().log("check_endTransmissionOK() error:", error, "Auto:",  usingAutoSpeed());
-	//	logger().log("Time since error:", millis() - getFailedTime(addr), "Addr:", addr);
-	//}
-	if (error == _Timeout) {
-		//log("check_endTransmissionOK()_Timeout: calling timeoutFn for: dec",addr);
-		callTime_OutFn(addr);
-	} 
-	//else if (error != _OK) {
-		//Serial.print("check_endTransmissionOK() failure: "); Serial.println(getError(error));
-	//}
+	_recovery->endTransmissionError(error, addr);
+	_recovery->checkForTimeout(error, addr);
 	return error;
 }
 
@@ -356,12 +324,6 @@ void I2C_Talk::waitForZeroCross(){
 
 bool I2C_Talk::restart() {
 	wire_port.begin(_myAddress);
-	return true;
-}
-
-bool I2C_Talk::restart(const char * name,int addr) {
-	restart();
-	//Serial.print("I2C::restart() "); Serial.print(name);Serial.println(addr, HEX);
 	return true;
 }
 
@@ -409,16 +371,9 @@ void I2C_Helper_Auto_Speed_Hoist::_setFailedTime(int16_t devAddr, int8_t * devAd
 	failedTimeArr[index] = millis();
 }
 
-// ************** Private Free Functions ************
-bool g_delayTrue(uint8_t millisecs){ // wrapper to get a return true for use in short-circuited test
-	delay(millisecs);
-	return true;
-}
-
-uint32_t g_timeSince(uint32_t startTime){
+uint32_t g_timeSince(uint32_t startTime) {
 	uint32_t endTime = micros();
 	if (endTime < startTime) // Roll-over to zero has occurred - approx every 70 mins.
-	return (uint32_t)-1 - startTime + endTime; // +1 to be strictly accurate - but who cares?
+		return (uint32_t)-1 - startTime + endTime; // +1 to be strictly accurate - but who cares?
 	else return endTime - startTime;
 }
-

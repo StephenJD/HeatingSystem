@@ -16,7 +16,7 @@ namespace Assembly {
 		thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, tempSensorArr{ i2c }
-		, relaysPort{ i2c.makeDevice(IO8_PORT_OptCoupl), ZERO_CROSS_PIN, RESET_OUT_PIN}
+		, relaysPort{ i2c, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN}
 		, mixValveControllerArr{ i2c }
 	{
 		int index = 0;

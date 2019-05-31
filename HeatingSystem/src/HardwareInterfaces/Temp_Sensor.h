@@ -8,10 +8,10 @@ namespace HardwareInterfaces {
 
 	class I2C_Temp_Sensor : public I_I2Cdevice {
 	public:
-		I2C_Temp_Sensor() : I_I2Cdevice(i2c_Talk()) {}
-		I2C_Temp_Sensor(I2C_Talk & i2C) : I_I2Cdevice(i2C) {}
+		I2C_Temp_Sensor(I2C_Talk & i2C) : I_I2Cdevice(i2C) {} // initialiser for first array element 
+		I2C_Temp_Sensor() : I_I2Cdevice(i2c_Talk()) {} // allow array to be constructed
 #ifdef ZPSIM
-		I2C_Temp_Sensor(int16_t temp) { lastGood = temp << 8; }
+		I2C_Temp_Sensor(I2C_Talk & i2C, int16_t temp) : I_I2Cdevice(i2C) { lastGood = temp << 8; }
 #endif
 		// Queries
 		int8_t get_temp() const;
