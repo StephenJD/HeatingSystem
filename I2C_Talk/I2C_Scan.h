@@ -1,5 +1,8 @@
 #pragma once
 #include <Arduino.h>
+#include <I2C_Talk.h>
+
+class I_I2Cdevice;
 
 /// <summary>
 /// Usage:
@@ -22,7 +25,7 @@ public:
 	bool show_all() { return next_T<true, true>(); }
 	bool show_next() { return next_T<false, true>(); }
 	
-	uint8_t	error = I2C_Talk::_OK;
+	uint8_t	error = 0;
 	int8_t foundDeviceAddr = -1;	// -1 to 127
 	uint8_t totalDevicesFound = 0;	
 
@@ -31,31 +34,33 @@ private:
 	bool next_T();
 
 	bool nextDevice();
+
 	I2C_Talk * _i2C;
+	bool _inScanOrSpeedTest = false;
 };
 
 //*************************************************************************************
 // Template Function implementations //
 template<bool non_stop, bool serial_out>
 bool I2C_Scan::next_T(){
-	if constexpr(serial_out) {
-		Serial.println("\nResume Scan");
+	if /*constexpr*/(serial_out) {
+		Serial.println("\nScan");
 	}
 	while(nextDevice()) {
-		if constexpr(serial_out) {
-			if (result.error == _OK) {
-				Serial.print("I2C Device at: 0x"); Serial.println(result.foundDeviceAddr,HEX);
+		if /*constexpr*/(serial_out) {
+			if (error == I2C_Talk::_OK) {
+				Serial.print("I2C Device at: 0x"); Serial.println(foundDeviceAddr,HEX);
 			} else {
 				Serial.print("I2C Error at: 0x"); 
-				Serial.print(result.foundDeviceAddr, HEX);
-				Serial.println(getError(result.error));
+				Serial.print(foundDeviceAddr, HEX);
+				Serial.println(I2C_Talk::getError(error));
 			}
 		}
-		if constexpr(!non_stop) return true;
+		if /*constexpr*/(!non_stop) return true;
 	}
-	if constexpr(serial_out) {
+	if /*constexpr*/(serial_out) {
 		Serial.print("Total I2C Devices: "); 
-		Serial.println(result.totalDevicesFound,DEC);
+		Serial.println(totalDevicesFound,DEC);
 	}
 	return false;
 }

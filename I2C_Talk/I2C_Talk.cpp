@@ -133,7 +133,7 @@ uint8_t I2C_Talk::getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *da
 		if (returnStatus != _OK) { // returned error
 			returnStatus = wire_port.read(); // retrieve error code
 			//log("I2C_Talk::read err: for ", long(deviceAddr), getError(returnStatus),long(i));
-			_recovery->checkForTimeout(returnStatus, deviceAddr);
+			_recovery->checkForTimeout(returnStatus);
 		}
 		else {
 			for (uint8_t i = 0; wire_port.available(); ++i) {
@@ -284,7 +284,7 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 // Private Functions
 uint8_t I2C_Talk::beginTransmission(uint16_t deviceAddr) { // return false to inhibit access
 	if (deviceAddr > 127) return _I2C_AddressOutOfRange;
-	uint8_t error = _recovery->speedOK(deviceAddr);
+	uint8_t error = _recovery->speedOK();
 
 	if (error == _OK) {
 		wire_port.beginTransmission((uint8_t)deviceAddr);
@@ -300,8 +300,8 @@ uint8_t I2C_Talk::check_endTransmissionOK(int addr) { // returns 0=OK, 1=Timeout
 	}
 	if (_waitForZeroCross) waitForZeroCross();
 	uint8_t error = wire_port.endTransmission();
-	_recovery->endTransmissionError(error, addr);
-	_recovery->checkForTimeout(error, addr);
+	_recovery->endTransmissionError(error);
+	_recovery->checkForTimeout(error);
 	return error;
 }
 
@@ -336,7 +336,7 @@ uint8_t I2C_Talk::getTWIbufferSize() {
 // ***************************   I2C_Helper_Auto_Speed_Hoist  ******************************
 // *****************************************************************************************
 
-int I2C_Helper_Auto_Speed_Hoist::_findDevice(int16_t devAddr, int8_t * devAddrArr, int noOfDevices) {
+int I2C_Talk_Auto_Speed_Hoist::_findDevice(int16_t devAddr, int8_t * devAddrArr, int noOfDevices) {
 	int index = 0;
 	do {
 		if (devAddrArr[index] == 0) { devAddrArr[index] = static_cast<signed char>(devAddr); break; }
@@ -346,26 +346,26 @@ int I2C_Helper_Auto_Speed_Hoist::_findDevice(int16_t devAddr, int8_t * devAddrAr
 	return index;
 }
 
-int32_t I2C_Helper_Auto_Speed_Hoist::_getI2CFrequency(int16_t devAddr, int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) {
+int32_t I2C_Talk_Auto_Speed_Hoist::_getI2CFrequency(int16_t devAddr, int8_t * devAddrArr, const int32_t * i2c_speedArr, int noOfDevices) {
 	int index = _findDevice(devAddr, devAddrArr, noOfDevices);
 	if (index == noOfDevices) return getI2CFrequency();
 	return i2c_speedArr[index];
 }
 
-unsigned long I2C_Helper_Auto_Speed_Hoist::_getFailedTime(int16_t devAddr, int8_t * devAddrArr, const unsigned long * failedTimeArr, int noOfDevices) {
+unsigned long I2C_Talk_Auto_Speed_Hoist::_getFailedTime(int16_t devAddr, int8_t * devAddrArr, const unsigned long * failedTimeArr, int noOfDevices) {
 	int index = _findDevice(devAddr, devAddrArr, noOfDevices);
 	if (index == noOfDevices) return 0;
 	return failedTimeArr[index];
 }
 
-int32_t I2C_Helper_Auto_Speed_Hoist::_setI2CFrequency(int16_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices) {
+int32_t I2C_Talk_Auto_Speed_Hoist::_setI2CFrequency(int16_t devAddr, int32_t i2cFreq, int8_t * devAddrArr, int32_t * i2c_speedArr, int noOfDevices) {
 	int index = _findDevice(devAddr, devAddrArr, noOfDevices);
 	if (index == noOfDevices) return getI2CFrequency();
 	i2c_speedArr[index] = i2cFreq;
 	return setI2Cfreq_retainAutoSpeed(i2cFreq);
 }
 
-void I2C_Helper_Auto_Speed_Hoist::_setFailedTime(int16_t devAddr, int8_t * devAddrArr, unsigned long * failedTimeArr, int noOfDevices) {
+void I2C_Talk_Auto_Speed_Hoist::_setFailedTime(int16_t devAddr, int8_t * devAddrArr, unsigned long * failedTimeArr, int noOfDevices) {
 	int index = _findDevice(devAddr, devAddrArr, noOfDevices);
 	if (index == noOfDevices) return;
 	failedTimeArr[index] = millis();

@@ -25,31 +25,31 @@ public:
 
 	// Polymorphic Functions for I2C_Talk
 	void newReadWrite() override { noOfFailures = 0; }
-	bool tryReadWriteAgain(uint8_t status, uint16_t deviceAddr) override;
+	bool tryReadWriteAgain(uint8_t status) override;
 	void endReadWrite() override;
-	bool checkForTimeout(uint8_t status, uint16_t deviceAddr) override;
-	uint8_t speedOK(uint16_t deviceAddr) override;
-	bool endTransmissionError(uint8_t status, uint16_t deviceAddr) override;
+	bool checkForTimeout(uint8_t status) override;
+	uint8_t speedOK() override;
+	bool endTransmissionError(uint8_t status) override;
 
 	// Modifiers for I2C_Recover_Retest
 	void setNoOfRetries(uint8_t retries) { noOfRetries = retries; }
 	void setTimeoutFn(I_I2CresetFunctor * timeoutFnPtr);
 	void setTimeoutFn(TestFnPtr timeoutFnPtr);
+	void callTime_OutFn() override;
+	signed char findAworkingSpeed(I_I2Cdevice * deviceFailTest) override;
 
 private:
 	// Queries for I2C_Recover_Retest
-	bool restart(const char * name, int addr) const;
+	bool restart(const char * name) const;
 	uint8_t getNoOfRetries() const { return noOfRetries; }
 	I_I2CresetFunctor * getTimeoutFn() const { return timeoutFunctor; }
 	// Modifiers for I2C_Recover_Retest
-	void callTime_OutFn(int addr);
-	bool i2C_is_frozen(int addr);
+	bool i2C_is_frozen();
 
-	signed char testDevice(I_I2Cdevice * deviceFailTest, uint8_t addr, int noOfTestsMustPass);
-	signed char findAworkingSpeed(I_I2Cdevice * deviceFailTest);
+	signed char testDevice(I_I2Cdevice * deviceFailTest, int noOfTestsMustPass);
 
 	bool isInScanOrSpeedTest() { return _inScanOrSpeedTest; }
-	bool slowdown_and_reset(int addr); // called by timoutFunction. Reduces I2C speed by 10% if last called within one second. Returns true if speed was reduced
+	bool slowdown_and_reset(); // called by timoutFunction. Reduces I2C speed by 10% if last called within one second. Returns true if speed was reduced
 	signed char adjustSpeedTillItWorksAgain(I_I2Cdevice * deviceFailTest, int32_t increment);
 
 	unsigned long _lastRestartTime = micros();

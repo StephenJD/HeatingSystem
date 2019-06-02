@@ -1,8 +1,8 @@
 #pragma once
 #include <Date_Time.h>
 #include <Arduino.h>
-#include <I2C_Talk/I2C_Talk.h>
-#include <I2C_Talk/I2C_Device.h>
+#include <I2C_Talk.h>
+#include <I2C_Device.h>
 #include <Conversions.h>
 
 //#pragma message( "Clock.h loaded" )

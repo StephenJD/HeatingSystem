@@ -22,8 +22,11 @@
 #if defined(__SAM3X8E__) || defined ZPSIM
 
 #include "Arduino.h"
-#include "I2C_Talk/I2C_Device.h"
+#include "I2C_Device.h"
+#if !defined __SAM3X8E__
 #define LOAD_EEPROM
+#endif // !(__SAM3X8E__)
+
 
 class I2C_Talk;
 

@@ -15,21 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClockExample.ino" />
+    <None Include="I2C_Helper_AutoSpeed.ino" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="__vm\.ClockExample.vsarduino.h">
+    <ClInclude Include="__vm\.I2C_Helper_AutoSpeed.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Clock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\DateTime\src\Date_Time.h">
+    <ClInclude Include="..\..\I2C_Helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Clock.cpp">
+    <ClCompile Include="..\..\I2C_Helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

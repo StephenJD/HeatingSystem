@@ -175,23 +175,23 @@
 		// called by log so must not recursivly call log
 		int errCode = 0;
 #if !defined (ZPSIM)
-		if (_i2C) {
+		//if (_i2C) {
 			uint8_t data[9];
 			data[6] = 0; // year
 
-			errCode = _i2C->read(_address, 0, 9, data);
-			if ((errCode != I2C_Talk::_OK || data[6] == 255) && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
+			errCode = i2c_Talk().read(getAddress(), 0, 9, data);
+			if ((errCode != I2C_Talk::_OK || data[6] == 255) && i2c_Talk().getI2CFrequency() > i2c_Talk().MIN_I2C_FREQ) {
 				if (Serial) {
-					Serial.print("Error reading RTC : "); Serial.print(_i2C->getError(errCode));
+					Serial.print("Error reading RTC : "); Serial.print(i2c_Talk().getError(errCode));
 					Serial.print(" Year : "); Serial.println((int)data[6]);
 				}
 				if (Serial) { for (int val : data) { Serial.print(" data[] : "); Serial.println(fromBCD(val)); } }
-				//_i2C->slowdown_and_reset(0);
+				//i2c_Talk().slowdown_and_reset(0);
 				data[6] = 0;
-				errCode = _i2C->read(_address, 0, 9, data);
+				errCode = i2c_Talk().read(getAddress(), 0, 9, data);
 			}
 			if (errCode != I2C_Talk::_OK) {
-				if (Serial) { Serial.print("RTC Unreadable. "); Serial.println(_i2C->getError(errCode)); }
+				if (Serial) { Serial.print("RTC Unreadable. "); Serial.println(i2c_Talk().getError(errCode)); }
 			}
 			else if (data[6] == 0) {
 				if (Serial) { Serial.println("RTC set from Compiler"); }
@@ -209,17 +209,17 @@
 				setMinUnits(data[1] & 15);
 				setSeconds(fromBCD(data[0]));
 			}
-		}
-		else {
-			if (Serial) { Serial.println("No i2c: Set from Compiler"); }
-			_setFromCompiler();
-			errCode = I2C_Talk::_I2C_Device_Not_Found;
-		}
+		//}
+		//else {
+		//	if (Serial) { Serial.println("No i2c: Set from Compiler"); }
+		//	_setFromCompiler();
+		//	errCode = I2C_Talk::_I2C_Device_Not_Found;
+		//}
 #endif	
 	}
 
 	void I2C_Clock::saveTime() {
-		//Serial.print("Save CurrDateTime... at "); Serial.println(_i2C->getThisI2CFrequency(0x68), DEC);
+		//Serial.print("Save CurrDateTime... at "); Serial.println(i2c_Talk().getThisI2CFrequency(0x68), DEC);
 
 		uint8_t data[9];
 		data[0] = toBCD(_secs); // seconds
@@ -234,13 +234,13 @@
 
 		auto errCode = write(0, 9, data);
 
-		//if (errCode != I2C_Talk::_OK && _i2C->getI2CFrequency() > _i2C->MIN_I2C_FREQ) {
-		//	if (Serial) { Serial.print("Error writing RTC : ");  Serial.println(_i2C->getError(errCode)); }
-		//	//_i2C->slowdown_and_reset(0);
+		//if (errCode != I2C_Talk::_OK && i2c_Talk().getI2CFrequency() > i2c_Talk().MIN_I2C_FREQ) {
+		//	if (Serial) { Serial.print("Error writing RTC : ");  Serial.println(i2c_Talk().getError(errCode)); }
+		//	//i2c_Talk().slowdown_and_reset(0);
 		//	errCode = write(0, 9, data);
 		//}
 		//if (errCode != I2C_Talk::_OK) {
-		//	if (Serial) { Serial.print("Unable to write RTC:");  Serial.println(_i2C->getError(errCode)); }
+		//	if (Serial) { Serial.print("Unable to write RTC:");  Serial.println(i2c_Talk().getError(errCode)); }
 		//}
 		//else {
 		//	//if (Serial) Serial.println("Saved CurrDateTime");

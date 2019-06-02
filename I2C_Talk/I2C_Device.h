@@ -34,6 +34,6 @@ protected:
 	I_I2Cdevice(I2C_Talk & i2C) : I_I2Cdevice(i2C, 255) {} // Use to initialise an array of devices
 private:
 	//friend class I2C_Talk;
-	inline static I2C_Talk * _i2C = 0;
+	static I2C_Talk * _i2C;
 	uint8_t _address = 255;
 };
