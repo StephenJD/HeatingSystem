@@ -52,7 +52,7 @@ namespace HardwareInterfaces {
 			writeAtZeroCross();
 			error = write_verify(REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
 		//}
-		//logger().log("RelaysPort::setAndTestRegister() addr:", _address,_i2C->getError(error));
+		//logger().log("RelaysPort::setAndTestRegister() addr:", _address,_i2C->getStatusMsg(error));
 		return error;
 	}
 

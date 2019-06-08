@@ -15,19 +15,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="I2C_Helper_AutoSpeed.ino" />
+    <None Include="I2C_SpeedTest_Device.ino" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="__vm\.I2C_Helper_AutoSpeed.vsarduino.h">
+    <ClInclude Include="__vm\.I2C_SpeedTest_Device.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\I2C_Helper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\I2C_Helper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 #include "Logging.h"
-#include <Clock.h>
-#include <Date_Time.h>
+#include <../Clock/Clock.h>
+#include <../DateTime/src/Date_Time.h>
 #include <Conversions.h>
 #include <Arduino.h>
 

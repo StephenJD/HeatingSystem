@@ -451,7 +451,6 @@ bool I2C_Helper::scan<false,false>() { // returns false when no more found
 		startFreq = setI2Cfreq_retainAutoSpeed(startFreq);
 		result.thisHighestFreq = startFreq;
 		//Serial.print(result.foundDeviceAddr, HEX); Serial.print(" at freq: "); Serial.println(startFreq, DEC);
-
 		result.error = findAworkingSpeed(0);
 		if (result.error == _OK) {
 		  ++result.totalDevicesFound;

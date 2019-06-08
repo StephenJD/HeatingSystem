@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "Arduino.h"
-#include <I2C_Talk/I2C_Talk.h>
+#include <I2C_Talk.h>
 #include <Conversions.h>
 
 using namespace std;
@@ -202,8 +202,8 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		digitalWrite(_enable_pin, LOW);
 		if (_rw_pin != -1) digitalWrite(_rw_pin, LOW);
 	} else {
-		uint8_t noOfRetries = _i2C->getNoOfRetries();
-		_i2C->setNoOfRetries(3);
+		//uint8_t noOfRetries = _i2C->getNoOfRetries();
+		//_i2C->setNoOfRetries(3);
 		//Serial.print("Multi-Crystal Begin() Remote at 0x"); Serial.println(_address,HEX);
 		errorCode = 1;
 		hasFailed = _i2C->notExists(_address);
@@ -243,7 +243,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		//setControl(_rw_pin, LOW);
 		errorCode = 8;
 		//hasFailed = pulseEnable();
-		_i2C->setNoOfRetries(noOfRetries);
+		//_i2C->setNoOfRetries(noOfRetries);
 	}
 
 	if (!(_displayfunction & LCD_8BITMODE)) {
@@ -624,9 +624,7 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	data = 0;
 	uint8_t readFailed = _i2C->read(_address, INTCAP, 2, _data); // Read INTCAP to get key-pressed and clear for next read
 	if (readFailed) {
-		if (_i2C->getThisI2CFrequency(_address) != 0) {
-			//log("MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C->getI2CFrequency());
-		}
+		//logging().log("MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C->getI2CFrequency());
 		return 0;
 	}
 

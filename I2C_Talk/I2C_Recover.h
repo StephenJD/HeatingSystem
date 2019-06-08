@@ -7,37 +7,36 @@ class I_I2Cdevice;
 class I2C_Recover {
 public:
 	I2C_Recover(I2C_Talk & i2C) : _i2C(&i2C) {}
+	void registerDevice(I_I2Cdevice & device) { _device = &device; }
+	I_I2Cdevice & device() { return *_device; }
 	// Polymorphic Functions for TryAgain
 	virtual void newReadWrite() {}
 	virtual bool tryReadWriteAgain(uint8_t status) { return false; }
 	virtual void endReadWrite() {}
 	// Polymorphic Functions for I2C_Talk
-	virtual bool checkForTimeout(uint8_t status) { return false; }
-	virtual uint8_t speedOK() { return 0; }
-	virtual bool endTransmissionError(uint8_t status) { return false; }
-	virtual void callTime_OutFn() {}
-	virtual signed char findAworkingSpeed(I_I2Cdevice * deviceFailTest = 0) { return testDevice(deviceFailTest); }
-	void setAddress(uint16_t deviceAddr) { _deviceAddr = deviceAddr; }
-protected:
-	virtual uint8_t testDevice(I_I2Cdevice * deviceFailTest);
-	// Non-Polymorphic Queries for I2C_Recover
+	virtual uint8_t findAworkingSpeed(I_I2Cdevice & device) { registerDevice(device); return testDevice(1,0); }
+	virtual uint8_t testDevice(int noOfTests, int maxNoOfFailures);
 	I2C_Talk & i2C() const { return *_i2C; }
-	unsigned long getFailedTime() const;
-	void setFailedTime() const;
+protected:
+	//I2C_Recover() = default;
+	virtual void set_I2C_Talk(I2C_Talk & i2C) { _i2C = &i2C; }
+	virtual void ensureNotFrozen() {}
+
+	// Non-Polymorphic Queries for I2C_Recover
 	TwoWire & wirePort() const;
 	void wireBegin() const;
-	uint16_t addr() { return _deviceAddr; }
 private:
-	I2C_Talk * _i2C;
-	uint16_t _deviceAddr;
+	friend class I2C_Talk;
+	I2C_Talk * _i2C = 0;
+	I_I2Cdevice * _device = 0;
 };
 
 class TryAgain {
 public:
-	TryAgain(I2C_Recover * recovery, uint16_t deviceAddr) : 
-		_recovery(recovery) 
+	TryAgain(I2C_Recover & recovery, I_I2Cdevice & device) :
+		_recovery(&recovery) 
 	{
-		_recovery->setAddress(deviceAddr);
+		_recovery->registerDevice(device);
 		_recovery->newReadWrite(); 
 	}
 

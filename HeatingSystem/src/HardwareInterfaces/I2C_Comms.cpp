@@ -40,7 +40,7 @@ namespace HardwareInterfaces {
 			//	if (device.testDevice(i2c, addr)) {
 			//		logger().log(" Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
 			//		hasFailed = speedTestDevice(i2c, addr, device);
-			//		logger().log(" Re-test Speed Done at:", i2c.getThisI2CFrequency(addr), i2c.getError(hasFailed));
+			//		logger().log(" Re-test Speed Done at:", i2c.getThisI2CFrequency(addr), i2c.getStatusMsg(hasFailed));
 			//	}
 			//	else logger().log(" Re-test was OK");
 			//}
