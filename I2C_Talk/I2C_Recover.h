@@ -9,13 +9,14 @@ public:
 	I2C_Recover(I2C_Talk & i2C) : _i2C(&i2C) {}
 	void registerDevice(I_I2Cdevice & device) { _device = &device; }
 	I_I2Cdevice & device() { return *_device; }
+	const I_I2Cdevice & device() const { return *_device; }
 	// Polymorphic Functions for TryAgain
 	virtual void newReadWrite() {}
 	virtual bool tryReadWriteAgain(uint8_t status) { return false; }
 	virtual void endReadWrite() {}
 	// Polymorphic Functions for I2C_Talk
-	virtual uint8_t findAworkingSpeed(I_I2Cdevice & device) { registerDevice(device); return testDevice(1,0); }
-	virtual uint8_t testDevice(int noOfTests, int maxNoOfFailures);
+	virtual uint8_t findAworkingSpeed() { return testDevice(1,0); }
+	virtual uint8_t testDevice(int noOfTests, int allowableFailures);
 	I2C_Talk & i2C() const { return *_i2C; }
 protected:
 	//I2C_Recover() = default;

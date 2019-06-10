@@ -156,9 +156,9 @@ using namespace std;
 		if (SD_OK) {
 			_dataFile = SD.open(_fileName, FILE_WRITE);
 		} 
-		if (!_dataFile) {
-			Serial.println("Unable to open file");
-		}
+		//if (!_dataFile) {
+			//Serial.println("Unable to open file");
+		//}
 		return _dataFile;
 	}
 

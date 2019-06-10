@@ -18,7 +18,8 @@ int8_t I2C_Scan::nextDevice() { // returns address of next device found or zero
 	while((error = _i2C->addressOutOfRange(++foundDeviceAddr)) == _OK) {
 		//Serial.print(foundDeviceAddr, HEX); Serial.print(" at freq: "); Serial.println(startFreq, DEC);
 		auto device = I2Cdevice(recovery(), foundDeviceAddr);
-		error = recovery().findAworkingSpeed(device);
+		recovery().registerDevice(device);
+		error = recovery().findAworkingSpeed();
 		if (error == _OK) {
 		  ++totalDevicesFound;
 		  break;

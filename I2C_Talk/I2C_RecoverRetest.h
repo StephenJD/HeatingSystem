@@ -34,23 +34,25 @@ public:
 	bool tryReadWriteAgain(uint8_t status) override;
 	void endReadWrite() override;
 
+	// Queries 
+	I_I2CresetFunctor * getTimeoutFn() const { return _timeoutFunctor; }
+	bool i2C_is_frozen();
+	
 	// Modifiers for I2C_Recover_Retest
 	void setNoOfRetries(uint8_t retries) { maxRetries = retries; }
 	void setTimeoutFn(I_I2CresetFunctor * timeoutFnPtr);
 	void setTimeoutFn(TestFnPtr timeoutFnPtr);
 	void ensureNotFrozen() override;
-	uint8_t findAworkingSpeed(I_I2Cdevice & deviceFailTest) override;
-	uint8_t testDevice(int noOfTests, int maxNoOfFailures) override;
+	uint8_t findAworkingSpeed() override;
+	uint8_t testDevice(int noOfTests, int allowableFailures) override;
 	enum strategy {S_delay, S_restart, S_SlowDown, S_SpeedTest, S_PowerDown, S_Disable, S_NoOfStrategies };
 
 private:
 	// Queries for I2C_Recover_Retest
 	bool restart(const char * name) const;
 	uint8_t getNoOfRetries() const { return maxRetries; }
-	I_I2CresetFunctor * getTimeoutFn() const { return timeoutFunctor; }
 	uint8_t notExists();
 	// Modifiers for I2C_Recover_Retest
-	bool i2C_is_frozen();
 	
 	void set_I2C_Talk(I2C_Talk & i2C) override {
 		I2C_Recover::set_I2C_Talk(i2C);
@@ -69,7 +71,7 @@ private:
 	void disable() { device().set_runSpeed(0); }
 	unsigned long _lastRestartTime = micros();
 	I2Creset_Functor _i2CresetFunctor; // data member functor to wrap free reset function
-	I_I2CresetFunctor * timeoutFunctor = 0;
+	I_I2CresetFunctor * _timeoutFunctor = 0;
 	int32_t _lastGoodi2cFreq = 0;
 	uint8_t noOfFailures = 0;
 	uint8_t maxRetries = 5;

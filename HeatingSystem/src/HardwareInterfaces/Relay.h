@@ -6,9 +6,9 @@
 
 namespace HardwareInterfaces {
 
-	class RelaysPort : public I_I2Cdevice {
+	class RelaysPort : public I2Cdevice {
 	public:
-		RelaysPort(I2C_Talk & i2C, int addr, int zeroCrossPin, int resetPin );
+		RelaysPort(I2C_Recover & recovery, int addr, int zeroCrossPin, int resetPin );
 
 		uint8_t setAndTestRegister();
 		// Virtual Functions

@@ -6,11 +6,11 @@
 
 using namespace I2C_Talk_ErrorCodes;
 
-void I2C_Recover_Retest::setTimeoutFn (I_I2CresetFunctor * timeOutFn) {timeoutFunctor = timeOutFn;} // Timeout function pointer
+void I2C_Recover_Retest::setTimeoutFn (I_I2CresetFunctor * timeOutFn) {_timeoutFunctor = timeOutFn;} // Timeout function pointer
 
 void I2C_Recover_Retest::setTimeoutFn (TestFnPtr timeOutFn) { // convert function into functor
 	_i2CresetFunctor.set(timeOutFn);
-	timeoutFunctor = &_i2CresetFunctor;
+	_timeoutFunctor = &_i2CresetFunctor;
 } // Timeout function pointer
 
 void I2C_Recover_Retest::newReadWrite() { 
@@ -26,34 +26,41 @@ void I2C_Recover_Retest::newReadWrite() {
 
 bool I2C_Recover_Retest::tryReadWriteAgain(uint8_t status) {
 	if (status != _OK) {
+		logger().log("tryReadWriteAgain: ", device().getAddress(), device().getStatusMsg(status));
 		if (status == _Timeout) {
+			logger().log("Unfreeze");
 			ensureNotFrozen();
-			//Serial.print("checkForTimeout() failure: "); Serial.println(getStatusMsg(error));
 			return true;
 		}
 		switch (_strategy) {
 		case S_delay:
+			logger().log("Delay");
 			strategey1();
 			++noOfFailures;
 			if (noOfFailures > maxRetries) ++_strategy;
 			return true;
 		case S_restart:
+			logger().log("Restart");
 			strategey2();
 			++_strategy;
 			return true;
 		case S_SlowDown:
+			logger().log("Slow-down");
 			strategey3();
 			++_strategy;
 			return true;
 		case S_SpeedTest:
+			logger().log("SpeedTest");
 			strategey4();
 			++_strategy;
 			return true;
 		case S_PowerDown:
+			logger().log("Power-Down");
 			strategey5();
 			++_strategy;
 			return true;
 		case S_Disable:
+			logger().log("Disable Device");
 			strategey6();
 			++_strategy;
 			return false;
@@ -67,7 +74,6 @@ void I2C_Recover_Retest::endReadWrite() {
 }
 
 bool I2C_Recover_Retest::restart(const char * name) const {
-	//Serial.print("I2C::restart() "); Serial.print(name);Serial.println(addr(), HEX);
 	return i2C().restart();
 }
 
@@ -90,14 +96,14 @@ bool I2C_Recover_Retest::i2C_is_frozen() {
 	// preventing recusive calls causes multiple hard resets.
 	wireBegin();
 	auto addr = device().getAddress();
-
+	if (I2C_Talk::addressOutOfRange(addr) == _OK) return false;
 	wirePort().beginTransmission((uint8_t)addr);
 	auto timeOut = micros();
 	uint8_t err = wirePort().endTransmission();
 	if (micros() - timeOut > TIMEOUT) {
 		logger().log("****  i2C_is_frozen timed-out  ****");
-		if (timeoutFunctor != 0) {
-			(*timeoutFunctor)(i2C(), addr);
+		if (_timeoutFunctor != 0) {
+			(*_timeoutFunctor)(i2C(), addr);
 		}
 	} else if (err != _Timeout){
 		//logger().log("****  i2C_is_frozen recovered with endTrans()  ****");
@@ -113,14 +119,14 @@ bool I2C_Recover_Retest::i2C_is_frozen() {
 void I2C_Recover_Retest::ensureNotFrozen() {
 	static bool doingTimeOut;
 	if (i2C_is_frozen()) {
-		if (timeoutFunctor != 0) {
+		if (_timeoutFunctor != 0) {
 			if (doingTimeOut) {
 				logger().log("ensureNotFrozen called recursivly");
 				return;
 			}
 			doingTimeOut = true;
 			//Serial.println("call Time_OutFn");
-			(*timeoutFunctor)(i2C(), device().getAddress());
+			(*_timeoutFunctor)(i2C(), device().getAddress());
 		}
 		else //Serial.println("... no Time_OutFn set");
 			i2C().restart(); // restart i2c in case this is called after an i2c failure
@@ -133,40 +139,41 @@ uint8_t I2C_Recover_Retest::notExists() {
 	auto status = device().getStatus();
 	if (status == _OK) {
 		status = i2C().notExists(device().getAddress());
-		ensureNotFrozen();
+		//ensureNotFrozen();
 	}
 	return status;
 }
 
-uint8_t I2C_Recover_Retest::testDevice(int noOfTests, int maxNoOfFailures) {
+uint8_t I2C_Recover_Retest::testDevice(int noOfTests, int allowableFailures) {
 	uint8_t return_status = _OK;
 	uint8_t status;
 	do {
 		status = device().testDevice();
 		if (status != _OK) {
-			--maxNoOfFailures;
+			--allowableFailures;
 			return_status = status;
 		}
 		--noOfTests;
+		logger().log("testDevice Tests/Failures ", noOfTests, "/", allowableFailures);
 		ensureNotFrozen();
-	} while (noOfTests-maxNoOfFailures);
-	if (maxNoOfFailures > 0) return _OK; else return return_status;
+	} while (allowableFailures >= 0 && noOfTests > 0);
+	if (allowableFailures >= 0) return _OK; else return return_status;
 }
 
-uint8_t I2C_Recover_Retest::findAworkingSpeed(I_I2Cdevice & i2c_device) {
-	registerDevice(i2c_device);
-	auto addr = i2c_device.getAddress();
+uint8_t I2C_Recover_Retest::findAworkingSpeed() {
+	auto addr = device().getAddress();
 	// Must test MAX_I2C_FREQ as this is skipped in later tests
 	constexpr uint32_t tryFreq[] = {52000,8200,330000,3200,21000,2000,5100,13000,33000,83000,210000};
-	//Serial.println("findAworkingSpeed-Exists"); Serial.flush();
 	i2C().setI2CFrequency(I2C_Talk::MAX_I2C_FREQ);
+	//logger().log("findAworkingSpeed Try Exists? At:", i2C().getI2CFrequency());
 	auto highFailed = notExists();
-	if (!highFailed) {
-		Serial.print("findAworkingSpeed Test (device) at "); Serial.println(i2C().getI2CFrequency());
+	//logger().log("findAworkingSpeed Exists? At:", i2C().getI2CFrequency(), device().getStatusMsg(highFailed));
+	if (highFailed == _OK) {
 		highFailed = testDevice(2, 1);
+		logger().log("findAworkingSpeed Exists suceeded. Test device at ", i2C().getI2CFrequency(), device().getStatusMsg(highFailed));
 	}
 
-	int testFailed = highFailed;
+	auto testFailed = highFailed;
 	if (testFailed) {
 		for (auto freq : tryFreq) {
 			i2C().setI2CFrequency(freq);
@@ -174,8 +181,8 @@ uint8_t I2C_Recover_Retest::findAworkingSpeed(I_I2Cdevice & i2c_device) {
 			testFailed = notExists();
 
 			if (testFailed == _OK) {
-				Serial.print("findAworkingSpeed Test (device) at "); Serial.println(freq);
 				testFailed = testDevice(2,1);
+				logger().log("findAworkingSpeed Exists suceeded. Test device at ", i2C().getI2CFrequency(), device().getStatusMsg(testFailed));
 				if (testFailed == _OK) break;
 			}
 		}

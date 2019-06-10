@@ -8,8 +8,8 @@ namespace HardwareInterfaces {
 	//       RelaysPort Functions      //
 	/////////////////////////////////////
 
-	RelaysPort::RelaysPort(I2C_Talk & i2C, int addr, int zeroCrossPin, int resetPin)
-		: I_I2Cdevice{ i2C, addr }
+	RelaysPort::RelaysPort(I2C_Recover & recovery, int addr, int zeroCrossPin, int resetPin)
+		: I2Cdevice{ recovery, addr }
 		, _zeroCrossPin( zeroCrossPin )
 		, _resetPin( resetPin )
 	{

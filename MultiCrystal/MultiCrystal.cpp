@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "Arduino.h"
-#include <I2C_Talk.h>
+#include <I2C_Device.h>
 #include <Conversions.h>
 
 using namespace std;
@@ -106,7 +106,7 @@ MultiCrystal::MultiCrystal(uint8_t pinset[11])
 MultiCrystal::MultiCrystal(uint8_t rs, uint8_t rw, uint8_t enable,
 	uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 	uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7,
-	I2C_Talk * i2C, uint8_t address,
+	I2Cdevice * i2C, uint8_t address,
 	uint8_t control_pos_is_port_B, uint8_t data_pos_is_port_B) // bits must be set for any data on port-B
 	: _key_mask_16(reinterpret_cast<const uint16_t &>(_key_mask[0])),
 	_i2C(i2C), _address(address),
@@ -202,48 +202,45 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		digitalWrite(_enable_pin, LOW);
 		if (_rw_pin != -1) digitalWrite(_rw_pin, LOW);
 	} else {
-		//uint8_t noOfRetries = _i2C->getNoOfRetries();
-		//_i2C->setNoOfRetries(3);
 		//Serial.print("Multi-Crystal Begin() Remote at 0x"); Serial.println(_address,HEX);
 		errorCode = 1;
-		hasFailed = _i2C->notExists(_address);
+		//hasFailed = _i2C->notExists();
 		// We use interrupt on GPIO change to record which key has been pressed, ready for retrieval when the keyboard is scanned.
-		if (!hasFailed) {
-			errorCode = 2;
-			hasFailed = _i2C->write(_address,IOCON,1,IOCON_SET);  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading INTCAP
-		}
+		//if (!hasFailed) {
+			//errorCode = 2;
+			hasFailed = _i2C->write(IOCON,1,IOCON_SET);  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading INTCAP
+		//}
 		if (!hasFailed) {
 			errorCode = 3;
-			hasFailed = _i2C->write(_address,IODIR,2,_key_mask);
+			hasFailed = _i2C->write(IODIR,2,_key_mask);
 		}
 		if (!hasFailed) {
 			errorCode = 4;
-			hasFailed = _i2C->write(_address,IPOL,2,_key_mask);
+			hasFailed = _i2C->write(IPOL,2,_key_mask);
 		}
 		if (!hasFailed) {
 			errorCode = 5;
-			hasFailed = _i2C->write(_address,DEFVAL,2,_key_mask); // Default IO state == 1. Interrupt if different.
-			hasFailed |= _i2C->write(_address,INTCON,2,_key_mask); // INTCON_SET); // INTerrupt CONtrol. == CLEAR causes interrupt on GPIO changed.
+			hasFailed = _i2C->write(DEFVAL,2,_key_mask); // Default IO state == 1. Interrupt if different.
+			hasFailed |= _i2C->write(INTCON,2,_key_mask); // INTCON_SET); // INTerrupt CONtrol. == CLEAR causes interrupt on GPIO changed.
 		}
 		if (!hasFailed) {
 			errorCode = 6;
-			hasFailed = _i2C->write(_address,GPPU,2,PULL_UP);
+			hasFailed = _i2C->write(GPPU,2,PULL_UP);
 		}
 		if (!hasFailed) {
 			errorCode = 7;
-			hasFailed = _i2C->write(_address,GPINTEN,2,_key_mask); // enables interrupt for GPIO port.
-			hasFailed |= _i2C->read(_address, INTCAP, 2, _data); // clear interrupt
+			hasFailed = _i2C->write(GPINTEN,2,_key_mask); // enables interrupt for GPIO port.
+			hasFailed |= _i2C->read( INTCAP, 2, _data); // clear interrupt
 		}
 		if (hasFailed) {
 			//Serial.print("Multi-Crystal Failed Begin() at "); Serial.println(errorCode);
-			return errorCode;
+			return hasFailed;
 		} 
 		_data[0] = 0; _data[1] = 0;
 		//setControl(_rs_pin, LOW);
 		//setControl(_rw_pin, LOW);
 		errorCode = 8;
 		//hasFailed = pulseEnable();
-		//_i2C->setNoOfRetries(noOfRetries);
 	}
 
 	if (!(_displayfunction & LCD_8BITMODE)) {
@@ -551,16 +548,16 @@ uint8_t MultiCrystal::pulseEnable(void) { // this function sends the data to the
 	} else {
 		bool isBport = setControl(_enable_pin, HIGH);
 		if (isBport) { // enable after data written
-			error = _i2C->write(_address,GPIOA,2,_data); // 0 = success
+			error = _i2C->write(GPIOA,2,_data); // 0 = success
 		} else {
-			error = _i2C->write(_address,GPIOB,_data[1]); // 0 = success
-			error = error | _i2C->write(_address,GPIOA,_data[0]);
+			error = _i2C->write(GPIOB,_data[1]); // 0 = success
+			error = error | _i2C->write(GPIOA,_data[0]);
 		}
 		setControl(_enable_pin, LOW); // disable
 		if (isBport) {
-			error = error | _i2C->write(_address,GPIOB,_data[1]);
+			error = error | _i2C->write(GPIOB,_data[1]);
 		} else {
-			error = error | _i2C->write(_address,GPIOA,_data[0]);
+			error = error | _i2C->write(GPIOA,_data[0]);
 		}
 	}
 	return error;
@@ -612,9 +609,9 @@ uint8_t MultiCrystal::checkI2C_Failed() {
 	uint16_t & thisData = reinterpret_cast<uint16_t &>(_data[0]);
 	uint8_t error;
 
-	error = _i2C->read(_address, GPINTEN, 2, _data); // Check GPINTEN is correct
+	error = _i2C->read(GPINTEN, 2, _data); // Check GPINTEN is correct
 	error = error | (thisData != _key_mask_16);
-	error = error | _i2C->read(_address, GPPU, 2, _data); // Check GPPU is correct
+	error = error | _i2C->read(GPPU, 2, _data); // Check GPPU is correct
 	error = error | (thisData != PULL_UP_16);
 	return error;
 }
@@ -622,7 +619,7 @@ uint8_t MultiCrystal::checkI2C_Failed() {
 uint16_t MultiCrystal::readI2C_keypad() {	
 	uint16_t & data = reinterpret_cast<uint16_t &>(_data[0]);
 	data = 0;
-	uint8_t readFailed = _i2C->read(_address, INTCAP, 2, _data); // Read INTCAP to get key-pressed and clear for next read
+	uint8_t readFailed = _i2C->read(INTCAP, 2, _data); // Read INTCAP to get key-pressed and clear for next read
 	if (readFailed) {
 		//logging().log("MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C->getI2CFrequency());
 		return 0;
@@ -647,9 +644,9 @@ uint16_t MultiCrystal::readI2C_keypad() {
 void MultiCrystal::debug() {
 	uint8_t dataBuffa[2] = {0};
 	uint8_t failedAt = 0;
-	uint8_t hasFailed = _i2C->write(_address,GPIOA,2,_data);
+	uint8_t hasFailed = _i2C->write(GPIOA,2,_data);
 	if (hasFailed) failedAt = 1;
-	hasFailed = hasFailed | _i2C->read(_address,GPIOA,2,dataBuffa);
+	hasFailed = hasFailed | _i2C->read(GPIOA,2,dataBuffa);
 	if (hasFailed && !failedAt) failedAt = 2;
 	hasFailed = hasFailed | ((dataBuffa[0] & ~0xE3) != (_data[0] & ~_key_mask[0]));
 	if (hasFailed && !failedAt) failedAt = 3;

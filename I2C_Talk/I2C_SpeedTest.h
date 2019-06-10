@@ -38,7 +38,7 @@ public:
 	signed char adjustSpeedTillItWorksAgain(I_I2Cdevice & i2c_device, int32_t increment);
 	int8_t prepareTestAll(); // returns addr 0;
 	void prepareNextTest();
-	const char * getStatusMsg() { return I2C_Talk::getStatusMsg(error); }
+	const char * getStatusMsg() const { return I2C_Talk::getStatusMsg(error); }
 
 	int32_t thisHighestFreq = 0;
 
@@ -49,13 +49,11 @@ private:
 	template<bool non_stop, bool serial_out>
 	uint32_t fastest_T(I_I2Cdevice & i2c_device);
 	
-	uint8_t testDevice(int noOfTests, int maxNoOfFailures) { return recovery().testDevice(noOfTests, maxNoOfFailures); }
+	uint8_t testDevice(int noOfTests, int allowableFailures) { return recovery().testDevice(noOfTests, allowableFailures); }
 	signed char findOptimumSpeed(I_I2Cdevice & i2c_device, int32_t & bestSpeed, int32_t limitSpeed);
 	unsigned long _lastRestartTime;
 	int32_t _i2cFreq;
 	int32_t _lastGoodi2cFreq;
-	uint8_t	error = 0;
-
 	const uint8_t _I2C_DATA_PIN = 20;
 };
 

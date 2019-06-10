@@ -8,7 +8,6 @@
 	class Logger {
 	public:
 		Logger(Clock & clock);
-		Logger() = default;
 		virtual void log() {};
 		virtual void log(const char * msg) {}
 		virtual void log(const char * msg, long val) {}
@@ -16,6 +15,7 @@
 		virtual void log(const char * msg, long val, const char * name, long val2 = 0xFFFFABCD) {}
 		virtual void log(const char * msg, long l1, long l2, long l3 = 0, long l4 = 0, long l5 = 0, long l6 = 0, long l7 = 0, long decimal = 0, bool pling = false) {}
 	protected:
+		Logger() = default;
 		Clock * _clock = 0;
 	};
 

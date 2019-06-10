@@ -32,10 +32,12 @@ public:
 	uint8_t write(const char *dataBuffer) { return write((const uint8_t*)dataBuffer, (uint8_t)strlen(dataBuffer) + 1); }// Called by slave in response to request from a Master. Return errCode.
 
 
+	static const char * getStatusMsg(uint8_t status) { return I2C_Talk::getStatusMsg(status); }
 	static I2C_Talk & i2c_Talk() { return *_i2C; }
 	static void set_I2C_Talk(I2C_Talk & i2C) { _i2C = &i2C; }
 protected:
 	I_I2Cdevice() = delete; 
+	I_I2Cdevice(uint8_t addr) : _address(addr) {}
 	I_I2Cdevice(I2C_Talk & i2C) : I_I2Cdevice(i2C, 0) {} // Use to initialise an array of devices
 	static I2C_Talk * _i2C;
 private:
@@ -47,9 +49,11 @@ public:
 	using I_I2Cdevice::I_I2Cdevice;
 	I2Cdevice(I2C_Recover & recovery, uint8_t addr) : I_I2Cdevice(recovery.i2C(), addr) { _recovery = &recovery; } // initialiser for first array element 
 	I2Cdevice(I2C_Recover & recovery) : I_I2Cdevice(recovery.i2C(), 0) { _recovery = &recovery; } // initialiser for first array element 
-	I2Cdevice() : I_I2Cdevice(i2c_Talk()) { } // allow array to be constructed	unsigned long getFailedTime() {return lastFailedTime;}
+	I2Cdevice(uint8_t addr) : I_I2Cdevice(_recovery ? addr : 0) {} // initialiser for subsequent array elements
+	//I2Cdevice() : I_I2Cdevice(i2c_Talk()) { } // allow array to be constructed	unsigned long getFailedTime() {return lastFailedTime;}
 	uint8_t getStatus() const override {return _i2c_speed == 0 ? I2C_Talk_ErrorCodes::_disabledDevice : I2C_Talk_ErrorCodes::_OK;}
-	
+	using I_I2Cdevice::write;
+	using  I_I2Cdevice::read;
 	uint8_t read(uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) override; // Return errCode. dataBuffer may not be written to if read fails.
 	uint8_t write(uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer) override;  // Return errCode.
 
@@ -58,10 +62,10 @@ public:
 	int32_t set_runSpeed(int32_t i2cFreq) override { return _i2c_speed = i2cFreq; }
 	void setFailedTime() override { _lastFailedTime = millis(); }
 	int32_t getFailedTime() const override { return _lastFailedTime; }
+protected:
 private:
 	static I2C_Recover * _recovery;
 	I2C_Recover & recovery() const { return *_recovery; }
-	
-	int32_t _i2c_speed = 400000;
+	int32_t _i2c_speed = 100000;
 	unsigned long _lastFailedTime = 0;
 };

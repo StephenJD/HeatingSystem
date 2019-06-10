@@ -91,8 +91,7 @@ public:
 	// required by template, may as well be publicly available
 	static const int32_t MAX_I2C_FREQ = (VARIANT_MCK / 40) > 400000 ? 400000 : (VARIANT_MCK / 40); //100000; // 
 	static const int32_t MIN_I2C_FREQ = VARIANT_MCK / 65288 * 2; //32644; //VARIANT_MCK / 65288; //36000; //
-
-	uint8_t addressOutOfRange(int addr) {	return (addr > 127) || (addr < 0) ? I2C_Talk_ErrorCodes::_I2C_AddressOutOfRange : I2C_Talk_ErrorCodes::_OK;}
+	static uint8_t addressOutOfRange(int addr) { return (addr > 127) || (addr < 0) ? I2C_Talk_ErrorCodes::_I2C_AddressOutOfRange : I2C_Talk_ErrorCodes::_OK; }
 protected:
 	virtual unsigned long getFailedTime(int16_t devAddr) { return 0; }
 	virtual void setFailedTime(int16_t devAddr) {}
