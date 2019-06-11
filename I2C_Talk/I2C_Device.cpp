@@ -4,6 +4,7 @@
 using namespace I2C_Talk_ErrorCodes;
 
 I2C_Talk * I_I2Cdevice::_i2C = 0;
+I2C_Talk * I2Cdevice::_i2C = 0;
 I2C_Recover * I2Cdevice::_recovery = 0;
 
 void I_I2Cdevice::setAddress(uint8_t addr) {

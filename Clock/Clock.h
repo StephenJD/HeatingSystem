@@ -83,7 +83,17 @@
 		unsigned int _addr;
 	};
 
-	class I2C_Clock : public Clock , public I_I2Cdevice {
+	class Clock_I2C_Device : public I_I2Cdevice {
+	public:
+		using I_I2Cdevice::I_I2Cdevice;
+		Clock_I2C_Device(I2C_Talk & i2C, uint8_t addr) : I_I2Cdevice(addr) { set_I2C_Talk(i2C); }
+		I2C_Talk & i2c_Talk() const override { return *_i2C; }
+		void set_I2C_Talk(I2C_Talk & i2C) override { _i2C = &i2C; }
+	private:
+		static I2C_Talk * _i2C;
+	};
+
+	class I2C_Clock : public Clock , public Clock_I2C_Device {
 	public:
 		I2C_Clock(I2C_Talk & i2C, int addr);
 		uint8_t i2C_speedTest();

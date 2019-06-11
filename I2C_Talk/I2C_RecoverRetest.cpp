@@ -138,6 +138,7 @@ void I2C_Recover_Retest::ensureNotFrozen() {
 uint8_t I2C_Recover_Retest::notExists() {
 	auto status = device().getStatus();
 	if (status == _OK) {
+		//logger().log("I2C_Recover_Retest::notExists() i2C addr:", long(&i2C()));
 		status = i2C().notExists(device().getAddress());
 		//ensureNotFrozen();
 	}

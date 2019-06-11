@@ -147,8 +147,9 @@ using namespace I2C_Talk_ErrorCodes;
 	///////////////////////////////////////////////////////////////
 	//                     I2C_Clock                             //
 	///////////////////////////////////////////////////////////////
+	I2C_Talk * Clock_I2C_Device::_i2C;
 
-	I2C_Clock::I2C_Clock(I2C_Talk & i2C, int addr) : I_I2Cdevice(i2C, addr) {
+	I2C_Clock::I2C_Clock(I2C_Talk & i2C, int addr) : Clock_I2C_Device(i2C, addr) {
 		i2C_speedTest();
 		loadTime(); 
 	}
