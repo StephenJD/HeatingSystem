@@ -43,8 +43,8 @@ public:
 	// Rated at 100kHz/3v, 400kHz/5v, 0.7*Vdd HI = 3.5v
 	EEPROMClass(int addr);
 	uint8_t read(int iAddr);
-	uint8_t write(int iAddr, uint8_t iVal);
-	uint8_t update(int iAddr, uint8_t iVal);
+	auto write(int iAddr, uint8_t iVal)->I2C_Talk_ErrorCodes::error_codes;
+	auto update(int iAddr, uint8_t iVal)->I2C_Talk_ErrorCodes::error_codes;
 	auto getStatus()-> I2C_Talk_ErrorCodes::error_codes override { i2C().waitForEPready(getAddress()); return i2C().status(getAddress()); }
 
 private:

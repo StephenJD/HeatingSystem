@@ -25,6 +25,7 @@
 
 #include "EEPROM.h"
 #include "I2C_Talk.h"
+using namespace I2C_Talk_ErrorCodes;
 
 /******************************************************************************
  * Constructors
@@ -103,7 +104,7 @@ uint8_t EEPROMClass::read(int iAddr)
 	//#endif
 }
 
-uint8_t EEPROMClass::write(int iAddr, uint8_t iVal)
+error_codes EEPROMClass::write(int iAddr, uint8_t iVal)
 {
 	//#if defined (ZPSIM)
 	//	myEEProm[iAddr] = iVal;
@@ -113,9 +114,9 @@ uint8_t EEPROMClass::write(int iAddr, uint8_t iVal)
 	//#endif
 }
 
-uint8_t EEPROMClass::update(int iAddr, uint8_t iVal) {
+error_codes EEPROMClass::update(int iAddr, uint8_t iVal) {
 	if (iVal != read(iAddr)) return write(iAddr,iVal);
-	else return ++iAddr;
+	else return _OK; // ++iAddr;
 }
 
 #endif

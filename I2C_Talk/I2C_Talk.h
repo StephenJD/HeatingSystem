@@ -99,7 +99,7 @@ private:
 	auto beginTransmission(uint16_t deviceAddr) ->I2C_Talk_ErrorCodes::error_codes; // return false to inhibit access
 	auto getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::error_codes;
 	uint8_t getTWIbufferSize();
-	auto endTransmission()->I2C_Talk_ErrorCodes::error_codes { return static_cast<I2C_Talk_ErrorCodes::error_codes>(_wire_port.endTransmission()); }
+	auto endTransmission()->I2C_Talk_ErrorCodes::error_codes;
 	virtual void setProcessTime() {}
 	virtual void synchroniseWrite() {}
 

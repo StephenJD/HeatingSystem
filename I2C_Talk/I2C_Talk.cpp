@@ -256,6 +256,16 @@ error_codes I2C_Talk::beginTransmission(uint16_t deviceAddr) { // return false t
 	return status;
 }
 
+error_codes I2C_Talk::endTransmission() {
+	auto status = static_cast<I2C_Talk_ErrorCodes::error_codes>(_wire_port.endTransmission());
+	if (status == _Timeout) {
+		//digitalWrite(ptrdiff_t(&_wire_port) == ptrdiff_t(&Wire) ? 20 : 70, HIGH); // Data
+		digitalWrite(ptrdiff_t(&_wire_port) == ptrdiff_t(&Wire) ? 21 : 71, HIGH); // Clock
+		_wire_port.begin(_myAddress);
+	}
+	return status;
+}
+
 bool I2C_Talk::restart() {
 	_wire_port.begin(_myAddress);
 	_wire_port.setClock(_i2cFreq);

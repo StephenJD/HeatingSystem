@@ -4,20 +4,21 @@
 
 using namespace I2C_Talk_ErrorCodes;
 
-	int writer(int address, const void * data, int noOfBytes) {
+	error_codes writer(uint16_t & address, const void * data, int noOfBytes) {
 		const unsigned char * byteData = static_cast<const unsigned char *>(data);
+		auto status = _OK;
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
-			EEPROM.update(address, *byteData);
+			status |= EEPROM.update(address, *byteData);
 		}
-		return address;
+		return status;
 	}
 
-	int reader(int address, void * result, int noOfBytes) {
+	error_codes reader(uint16_t & address, void * result, int noOfBytes) {
 		uint8_t * byteData = static_cast<uint8_t *>(result);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
 			*byteData = EEPROM.read(address);
 		}
-		return address;
+		return _OK;
 	}
 
 	using namespace GP_LIB;
@@ -129,19 +130,23 @@ using namespace I2C_Talk_ErrorCodes;
 		return  _day > 0 && _day < 32;
 	}
 
-	void Clock_EEPROM::saveTime() {
-		auto nextAddr = writer(_addr, &_now, 4);
-		nextAddr = writer(nextAddr, &_autoDST, 1);
-		writer(nextAddr, &_dstHasBeenSet, 1);
+	error_codes Clock_EEPROM::saveTime() {
+		auto nextAddr = _addr;
+		auto status = writer(nextAddr, &_now, 4);
+		status |= writer(nextAddr, &_autoDST, 1);
+		status |= writer(nextAddr, &_dstHasBeenSet, 1);
+		return status;
 	}
 	
-	void Clock_EEPROM::loadTime() {
-		auto nextAddr = reader(_addr, &_now, 4);
-		nextAddr = reader(nextAddr, &_autoDST, 1);
-		nextAddr = reader(nextAddr, &_dstHasBeenSet, 1);
+	error_codes Clock_EEPROM::loadTime() {
+		auto nextAddr = _addr;
+		auto status = reader(nextAddr, &_now, 4);
+		status |= reader(nextAddr, &_autoDST, 1);
+		status |= reader(nextAddr, &_dstHasBeenSet, 1);
 		if (year() == 0) {
 			_setFromCompiler();
 		}
+		return status;
 	}
 
 	void Clock_EEPROM::_update() { // called every 10 minutes
@@ -154,17 +159,17 @@ using namespace I2C_Talk_ErrorCodes;
 
 	//Clock_I2C::Clock_I2C(I2C_Talk & i2C, int addr) : Clock_I2C(i2C, addr) {
 
-	void I_Clock_I2C::loadTime() {
+	error_codes I_Clock_I2C::loadTime() {
 		//Serial.println("Clock_I2C::loadTime()");
 		// called by log so must not recursivly call log
-		int errCode = 0;
+		auto status = _OK;
 #if !defined (ZPSIM)
 
 		uint8_t data[9];
 		data[6] = 0; // year
 
-		errCode = readData(0, 9, data);
-		if (errCode != _OK) {
+		status = readData(0, 9, data);
+		if (status != _OK) {
 			if (Serial) { Serial.print("RTC Unreadable. "); }
 		}
 		else if (data[6] == 0) {
@@ -172,7 +177,10 @@ using namespace I2C_Talk_ErrorCodes;
 			_setFromCompiler();
 		}
 		else {
-			//if (Serial) Serial.println("Set from RTC");
+			//if (Serial) {
+			//	Serial.print("Set from RTC secs: ");
+			//	Serial.println(fromBCD(data[0]), DEC);
+			//}
 			_now.setMins10(data[1] >> 4);
 			_now.setHrs(fromBCD(data[2]));
 			_now.setDay(fromBCD(data[4]));
@@ -184,9 +192,11 @@ using namespace I2C_Talk_ErrorCodes;
 			setSeconds(fromBCD(data[0]));
 		}
 #endif	
+		_lastCheck_mS = millis();
+		return status;
 	}
 
-	void I_Clock_I2C::saveTime() {
+	error_codes I_Clock_I2C::saveTime() {
 		//Serial.print("Save CurrDateTime... at "); Serial.println(i2c_Talk().getThisI2CFrequency(0x68), DEC);
 
 		uint8_t data[9];
@@ -200,7 +210,7 @@ using namespace I2C_Talk_ErrorCodes;
 		data[7] = 0; // disable SQW
 		data[8] = _autoDST << 1 | _dstHasBeenSet; // in RAM
 
-		auto errCode = writeData(0, 9, data);
+		auto status = writeData(0, 9, data);
 
 		//if (errCode == _OK) {
 		//	//if (Serial) Serial.println("Saved CurrDateTime");
@@ -208,6 +218,7 @@ using namespace I2C_Talk_ErrorCodes;
 		//#if defined ZPSIM
 		//	CURR_TIME = currentTime();
 		//#endif
+		return status;
 	}
 
 	void I_Clock_I2C::_update() { // called every 10 minutes

@@ -56,7 +56,7 @@ void setup() {
 
 void loop() {
 	// put your main code here, to run repeatedly:
-	auto dt = DateTime{ clock_() };
+	auto dt = clock_().now();
 	Serial.print(dt.getDayStr());
 	Serial.print(" ");
 	Serial.print(dt.day());
@@ -72,5 +72,4 @@ void loop() {
 	Serial.print(":");
 	Serial.println(clock_().seconds());
 	delay(1000);
-	clock_().refresh();
 }

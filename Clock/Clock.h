@@ -49,8 +49,8 @@
 		void setMinUnits(uint8_t minUnits) { _mins1 = minUnits; }
 		void setSeconds(uint8_t secs) { _secs = secs; }
 		void setAutoDSThours(int set) { _autoDST = set; saveTime(); }
-		virtual void saveTime() {}
-		virtual void loadTime() {}
+		virtual auto saveTime()->I2C_Talk_ErrorCodes::error_codes { return I2C_Talk_ErrorCodes::_OK; }
+		virtual auto loadTime()->I2C_Talk_ErrorCodes::error_codes { return I2C_Talk_ErrorCodes::_OK; }
 		// Public Helper Functions
 		static int secondsSinceLastCheck(uint32_t & lastCheck_mS);
 		static uint32_t millisSince(uint32_t lastCheck_mS) { return millis() - lastCheck_mS; } // Since unsigned ints are used, rollover just works.
@@ -80,24 +80,24 @@
 	class Clock_EEPROM : public Clock {
 	public:
 		Clock_EEPROM(unsigned int addr);
-		void saveTime() override;
+		auto saveTime()->I2C_Talk_ErrorCodes::error_codes override;
 		bool ok() const override;
 	private:
 		void _update() override;  // called every 10 minutes - saves to EEPROM
-		void loadTime() override;
-		unsigned int _addr;
+		auto loadTime()->I2C_Talk_ErrorCodes::error_codes override;
+		uint16_t _addr;
 	};
 	
 	class I_Clock_I2C : public Clock {
 	public:
-		void saveTime() override;
+		auto saveTime()->I2C_Talk_ErrorCodes::error_codes override;
 	protected:
-		void loadTime() override;
+		auto loadTime()->I2C_Talk_ErrorCodes::error_codes override;
 
 	private:
 		void _update() override; // called every 10 minutes - reads from RTC
-		virtual uint8_t readData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) = 0;
-		virtual uint8_t writeData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) = 0;
+		virtual auto readData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
+		virtual auto writeData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
 	};
 
 	template<I2C_Talk & i2c>
@@ -108,6 +108,7 @@
 		Clock_I2C(int addr) : I2Cdevice<i2c>(addr) {
 			loadTime();
 		}
+		
 		bool ok() const override {
 			for (uint32_t t = millis() + 5; millis() < t; ) {
 				if (i2c.status(I2Cdevice<i2c>::getAddress()) == I2C_Talk_ErrorCodes::_OK) return true;
@@ -117,8 +118,8 @@
 		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 
 	private:
-		uint8_t readData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) override { return i2c.read(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
-		uint8_t writeData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) override { return i2c.write(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
+		auto readData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return i2c.read(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
+		auto writeData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return i2c.write(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
 	};
 
 
