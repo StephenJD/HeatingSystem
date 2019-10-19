@@ -12,15 +12,39 @@
 namespace client_data_structures {
 	using namespace LCD_UI;
 
+	class TimeTemp {
+	public:
+		constexpr TimeTemp(uint16_t tt) : _time_temp(tt) {}
+		constexpr TimeTemp(int32_t tt) : _time_temp(uint16_t(tt)) {}
+		constexpr TimeTemp(Date_Time::TimeOnly time, int8_t temp) : _time_temp((uint16_t(time.asInt()) << 8) + temp + 10) {}
+		TimeTemp() = default;
+		Date_Time::TimeOnly time() const { return Date_Time::TimeOnly{ _time_temp >> 8 }; }
+		int8_t temp() const { return (_time_temp & 0xff) - 10; }
+		void setTime(Date_Time::TimeOnly time) { _time_temp = (_time_temp & 0xff) + (uint16_t(time.asInt()) << 8); }
+		void setTemp(int temp) { _time_temp = (_time_temp & 0xff00) + temp + 10; }
+		bool operator < (TimeTemp rhs) const { return _time_temp < rhs._time_temp; }
+		bool operator == (TimeTemp rhs) const { return _time_temp == rhs._time_temp; }
+		explicit operator uint16_t() const { return _time_temp; }
+	private:
+		uint16_t _time_temp = 0;
+	};
+
 	//***************************************************
 	//              TimeTemp RDB Table
 	//***************************************************
 
 	struct R_TimeTemp {
 		// Each Profile has one or more TimeTemps defining the temperature for times throughout a day
-		RecordID profileID;
-		uint16_t time_temp;
+		R_TimeTemp(RecordID id, TimeTemp tt) : profileID(id), time_temp(tt) {}
+		R_TimeTemp() = default;
+		RecordID profileID = 0;
+		TimeTemp time_temp;
 		RecordID field(int fieldIndex) const { return profileID; }
+		Date_Time::TimeOnly time() const { return time_temp.time(); }
+		int8_t temp() const { return time_temp.temp(); }
+		void setTime(Date_Time::TimeOnly time) { time_temp.setTime(time); }
+		void setTemp(int temp) { time_temp.setTemp(temp); }
+
 		bool operator < (R_TimeTemp rhs) const { return time_temp < rhs.time_temp; }
 		bool operator == (R_TimeTemp rhs) const { return time_temp == rhs.time_temp; }
 	};
@@ -29,10 +53,8 @@ namespace client_data_structures {
 	inline std::ostream & operator << (std::ostream & stream, const R_TimeTemp & timeTemp) {
 		using namespace Date_Time;
 
-		auto time = TimeOnly{ timeTemp.time_temp >> 8 };
-		auto temp = (timeTemp.time_temp & 255) - 10;
 		return stream << "TimeTemp for ProfileID: " << std::dec << (int)timeTemp.profileID << " time: " 
-			<< intToString(time.hrs(), 2, '0') << (int)time.mins10() << "0  Temp: " << (int)temp;
+			<< intToString(timeTemp.time_temp.time().hrs(), 2, '0') << (int)timeTemp.time_temp.time().mins10() << "0  Temp: " << (int)timeTemp.time_temp.temp();
 	}
 #endif
 	//***************************************************
@@ -96,7 +118,7 @@ namespace client_data_structures {
 
 	/// <summary>
 	/// DB Interface to all TimeTemp Data
-	/// Provides streamable fields which may be poulated by a database or the runtime-data.
+	/// Provides streamable fields which may be populated by a database or the runtime-data.
 	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>

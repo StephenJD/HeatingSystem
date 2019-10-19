@@ -1,20 +1,22 @@
 #pragma once
 #include "Arduino.h"
-#include <I2C_Talk\I2C_Talk.h>
-#include <I2C_Talk/I2C_Device.h>
-#include <RDB\src\RDB.h>
+#include <I2C_Talk.h>
+#include <I2C_Device.h>
+#include <RDB.h>
+#include <i2c_Device.h>
+#include <I2C_Recover.h>
 
 namespace HardwareInterfaces {
 
-	class RelaysPort : public I2Cdevice {
+	class RelaysPort : public I_I2Cdevice_Recovery {
 	public:
-		RelaysPort(I2C_Recover & recovery, int addr, int zeroCrossPin, int resetPin );
+		RelaysPort(I2C_Recovery::I2C_Recover & recovery, int addr, int zeroCrossPin, int resetPin );
 
-		uint8_t setAndTestRegister();
+		auto setAndTestRegister()->I2C_Talk_ErrorCodes::error_codes;
 		// Virtual Functions
-		uint8_t initialiseDevice() override;
-		uint8_t testDevice() override { return initialiseDevice(); }
-		inline static uint8_t relayRegister = 0xff;
+		auto initialiseDevice()->I2C_Talk_ErrorCodes::error_codes override;
+		auto testDevice()->I2C_Talk_ErrorCodes::error_codes override { return initialiseDevice(); }
+		static uint8_t relayRegister;
 	private:
 		uint8_t _zeroCrossPin = 0;
 		uint8_t _resetPin = 0;

@@ -24,7 +24,7 @@ namespace Date_Time {
 		return overflow;
 	}
 
-	int TimeOnly::displayHrs() {
+	int TimeOnly::displayHrs() const {
 		int hh = hrs();
 		while (hh > 12) hh -= 12;
 		if (hh == 0) hh = 12;

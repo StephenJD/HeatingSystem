@@ -1,5 +1,5 @@
 #include "LocalDisplay.h"
-#include <Logging/Logging.h>
+#include <Logging.h>
 #include "A__Constants.h"
 
 using namespace RelationalDatabase;
@@ -12,6 +12,7 @@ namespace HardwareInterfaces {
 	LocalDisplay::LocalDisplay(RelationalDatabase::Query * query) : LCD_Display_Buffer(query), _lcd(localLCDpins().pins)
 	{
 		_lcd.begin(20, 4);
+		setBackLight(true);
 		logger().log("LocalDisplay Constructed");
 	}
 
@@ -25,6 +26,7 @@ namespace HardwareInterfaces {
 
 
 	void LocalDisplay::sendToDisplay() {
+		//Serial.print(" *** sendToDisplay() *** "); Serial.println(buff());
 		_lcd.clear();
 		//logger().log(buff());
 		///0////////9/////////9/////////9/////////9/////////9/////////9///////////////////////////////////
@@ -50,8 +52,10 @@ namespace HardwareInterfaces {
 	}
 
 	void LocalDisplay::setBackLight(bool wake) {
+		//logger().log("SetBackLight Query set:", (long)_query);
 		if (_query) {
 			auto displayDataRS = _query->begin();
+			//logger().log("\tQuery beginID:", displayDataRS->id());
 			Answer_R<R_Display> displayDataA = *_query->begin();
 			R_Display displayData = displayDataA.rec();
 			uint16_t minBL = displayData.backlight_dim;  // val 0-25
@@ -69,6 +73,7 @@ namespace HardwareInterfaces {
 			if (brightness > MAX_BL) brightness = MAX_BL;
 			if (brightness < MIN_BL) brightness = MIN_BL;
 
+			//logger().log("\t Brightness :", brightness, "Contrast :", displayData.contrast * 3);
 			analogWrite(BRIGHNESS_PWM, brightness); // Useful range is 255 (bright) to 200 (dim)
 			analogWrite(CONTRAST_PWM, displayData.contrast * 3); // Useful range is 0 (max) to 70 (min)
 		}

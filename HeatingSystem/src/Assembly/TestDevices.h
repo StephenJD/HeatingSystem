@@ -12,13 +12,13 @@ namespace HardwareInterfaces {
 	class TestDevices : public I_TestDevices {
 	public:
 		TestDevices(Assembly::Initialiser & ini);
-		uint8_t speedTestDevices(uint8_t deviceAddr = 255);
-		I_I2Cdevice & getDevice(uint8_t deviceAddr) override;
+		uint8_t speedTestDevices();
+		I_I2Cdevice_Recovery & getDevice(uint8_t deviceAddr) override;
 		HeatingSystem & hs();
 		uint8_t testRelays();
 	private:
 		Assembly::Initialiser & _ini;
-		int8_t showSpeedTestFailed(I_I2Cdevice & testFn, const char * device);
+		int8_t showSpeedTestFailed(I_I2Cdevice_Recovery & testFn, const char * device);
 	};
 
 }

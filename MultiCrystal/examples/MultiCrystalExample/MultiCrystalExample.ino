@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <MultiCrystal.h>
-#include <I2C_Helper.h>
+#include <I2C_Talk.h>
 #include <Conversions.h>
 
 MultiCrystal * lcd(0);

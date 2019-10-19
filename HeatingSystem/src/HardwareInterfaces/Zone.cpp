@@ -141,13 +141,13 @@ namespace HardwareInterfaces {
 			}
 			else if (tempError < -8L) {
 				myFlowTemp = _maxFlowTemp;
-				logger().log("Zone_Run::setZFlowTemp\tToo Cool: FlowTemp, MaxFlow,TempError, Zone:", _recID, myFlowTemp, _maxFlowTemp, 0, 0, 0, 0, tempError * 16);
+				logger().log("Zone_Run::setZFlowTemp\tToo Cool: ReqFlowTemp, MaxFlow,TempError, Zone:", _recID, myFlowTemp, _maxFlowTemp, 0, 0, 0, 0, tempError * 16);
 			}
 			else {
 				myFlowTemp = static_cast<long>((_maxFlowTemp + MIN_FLOW_TEMP) / 2. - tempError * (_maxFlowTemp - MIN_FLOW_TEMP) / 16.);
 				//U1_byte errorDivider = flowBoostDueToError > 16 ? 10 : 40; //40; 
 				//myFlowTemp = myTheoreticalFlow + (flowBoostDueToError + errorDivider/2) / errorDivider; // rounded to nearest degree
-				logger().log("Zone_Run::setZFlowTemp\tIn Range FlowTemp, MaxFlow,TempError, Zone:", _recID, myFlowTemp, _maxFlowTemp, 0, 0, 0, 0, tempError * 16);
+				logger().log("Zone_Run::setZFlowTemp\tIn Range ReqFlowTemp, MaxFlow,TempError, Zone:", _recID, myFlowTemp, _maxFlowTemp, 0, 0, 0, 0, tempError * 16);
 			}
 
 			// check limits

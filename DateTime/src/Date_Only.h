@@ -41,7 +41,8 @@ namespace Date_Time {
 		/*constexpr*/ int month() const { return _month; }
 		/*constexpr*/ int year() const { return _yr; }
 		/*constexpr*/ int asInt() const { return _dateInt; }
-		/*constexpr*/ int weekDayNo() const;
+		/*constexpr*/ int weekDayNo() const; // 0-6
+		/*constexpr*/ uint8_t weekDayFlag() const;
 		/*constexpr*/ const char * getDayStr() const { return dayNames[weekDayNo()]; }
 		/*constexpr*/ const char * getMonthStr() const { return monthNames[month()]; }
 		/*constexpr*/ int daysInMnth(DateOnly now = DateOnly()) const;
@@ -84,6 +85,10 @@ namespace Date_Time {
 		int yy = year();
 		int yearStartDay = (yy + 5 + (yy - 1) / 4) % 7;
 		return (dayOfYear() + yearStartDay) % 7;
+	}
+
+	inline /*constexpr*/ uint8_t DateOnly::weekDayFlag() const {
+		return 1 << weekDayNo();
 	}
 
 	inline /*constexpr*/ int DateOnly::dayOfYear() const {

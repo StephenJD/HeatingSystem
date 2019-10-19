@@ -8,6 +8,9 @@
 #include "Time_Only.h"
 #include "..\..\Sum_Operators\Sum_Operators.h"
 #include <Arduino.h>
+#ifdef ZPSIM
+#include <ostream>
+#endif
 
 namespace Date_Time {
 	using namespace Rel_Ops;
@@ -52,6 +55,12 @@ namespace Date_Time {
 	//inline /*constexpr*/ bool operator==(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() == rhs.asInt(); }
 	//inline /*constexpr*/ bool operator<(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() < rhs.asInt(); }
 	//inline /*constexpr*/ bool operator>(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() > rhs.asInt(); }
+
+#ifdef ZPSIM
+	inline std::ostream & operator << (std::ostream & stream, const DateTime & dt) {
+		return stream << std::dec << dt.day() << "/" << dt.getMonthStr() << "/" << dt.year() << " " << dt.displayHrs() << ":" << dt.mins10() << "0" << (dt.isPM() ? "pm" : "am");
+	}
+#endif
 
 	const DateTime JUDGEMEMT_DAY({ 31, 15, 127 }, {});
 }

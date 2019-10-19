@@ -1,35 +1,48 @@
 #include <I2C_Device.h>
-#include <Logging.h>
+#include <I2C_Recover.h>
 
+using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
 
-I2C_Talk * I_I2Cdevice::_i2C = 0;
-I2C_Talk * I2Cdevice::_i2C = 0;
-I2C_Recover * I2Cdevice::_recovery = 0;
+I2C_Recovery::I2C_Recover * I_I2Cdevice_Recovery::set_recover;
 
-void I_I2Cdevice::setAddress(uint8_t addr) {
-	_address = addr; 
-	//if (_i2C == 0)  logger().log_notime("\n\n*** I2Cdevice not initialized! *** at addr ", addr);
+I2C_Talk & I_I2Cdevice_Recovery::i2C() { return recovery().i2C(); }
+
+error_codes I_I2Cdevice_Recovery::getStatus() {
+	if (!isEnabled()) return _disabledDevice;
+	else {
+		i2C().setI2CFrequency(runSpeed());
+		return i2C().status(getAddress());
+	}
 }
 
-uint8_t I2Cdevice::read(uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) {
-	TryAgain tryAgain(recovery(), *this);
-	auto status = getStatus();
+error_codes I_I2Cdevice_Recovery::read(uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) { // dataBuffer may not be written to if read fails.
+	auto status = recovery().newReadWrite(*this);
+	//logger().log(" I2Cdevice::read status:", status);
 	if (status == _OK) {
 		do {
-			status = i2c_Talk().read(getAddress(), registerAddress, numberBytes, dataBuffer);
-		} while (tryAgain(status));
+			status = i2C().read(getAddress(), registerAddress, numberBytes, dataBuffer);
+		} while (recovery().tryReadWriteAgain(status));
 	}
 	return status;
-} // Return errCode. dataBuffer may not be written to if read fails.
+} 
 
-uint8_t I2Cdevice::write(uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer) {
-	TryAgain tryAgain(recovery(), *this);
-	auto status = getStatus();
+error_codes I_I2Cdevice_Recovery::write(uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer) {
+	auto status = recovery().newReadWrite(*this);
 	if (status == _OK) {
 		do {
-			status = i2c_Talk().write(getAddress(), registerAddress, numberBytes, dataBuffer);
-		} while (tryAgain(status));
+			status = i2C().write(getAddress(), registerAddress, numberBytes, dataBuffer);
+		} while (recovery().tryReadWriteAgain(status));
 	}
 	return status;
-}  // Return errCode.
+}
+
+error_codes I_I2Cdevice_Recovery::write_verify(uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer) {
+	auto status = recovery().newReadWrite(*this);
+	if (status == _OK) {
+		do {
+			status = i2C().write_verify(getAddress(), registerAddress, numberBytes, dataBuffer);
+		} while (recovery().tryReadWriteAgain(status));
+	}
+	return status;
+}

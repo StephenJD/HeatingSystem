@@ -3,7 +3,7 @@
 #include "UI_Primitives.h"
 #include "UI_FieldData.h"
 #include "Conversions.h"
-#include <Logging/Logging.h>
+#include <Logging.h>
 
 namespace LCD_UI {
 	using namespace GP_LIB;

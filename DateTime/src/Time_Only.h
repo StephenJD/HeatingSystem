@@ -23,8 +23,8 @@ namespace Date_Time {
 			// Queries
 		constexpr int mins10() const { return _mins % 6; } // 0-5
 		constexpr int hrs() const { return _mins / 6; }; // 0-41
-		int displayHrs(); // 1-12
-		bool isPM() { return hrs() >= 12; }
+		int displayHrs() const; // 1-12
+		bool isPM() const { return hrs() >= 12; }
 
 		constexpr uint8_t asInt() const { return _mins; }
 		constexpr bool operator==(const TimeOnly & rhs) const { return _mins == rhs._mins; }

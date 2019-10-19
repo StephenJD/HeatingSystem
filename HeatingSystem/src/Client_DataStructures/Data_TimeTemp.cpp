@@ -1,6 +1,6 @@
 #include "Data_TimeTemp.h"
 #include "..\..\..\DateTime\src\Time_Only.h"
-#include <Logging/Logging.h>
+#include <Logging.h>
 
 #ifdef ZPSIM
 	#include <ostream>
@@ -27,9 +27,9 @@ namespace client_data_structures {
 		//enum {e_hours, e_10Mins, e_am_pm, e_10Temp, e_temp, e_NO_OF_EDIT_POS };
 
 		if (moveBy == 0) return false;
-		int tt = currValue().val;
-		auto time = TimeOnly{tt >> 8};
-		auto temp = (tt & 255);
+		TimeTemp tt{ currValue().val };
+		auto time = tt.time();
+		auto temp = tt.temp();
 		switch (focusIndex()) {
 		case e_hours:
 			time.setHrs(time.hrs() + moveBy);
@@ -47,7 +47,9 @@ namespace client_data_structures {
 			temp += moveBy;
 			break;
 		}
-		currValue().val = (time.asInt() << 8) + temp;
+		tt.setTemp(temp);
+		tt.setTime(time);
+		currValue().val = uint16_t(tt);
 		setInRangeValue();
 		return true;
 	}
@@ -77,10 +79,10 @@ namespace client_data_structures {
 	//*************ProfileDays_Interface****************
 
 	const char * TimeTemp_Interface::streamData(bool isActiveElement) const {
-		auto tt = (uint16_t)getData(isActiveElement);
+		TimeTemp tt{ getData(isActiveElement) };
 		//logger().log("TimeTemp : ", tt, "IsActive:", isActiveElement);
-		auto time = TimeOnly{tt >> 8};
-		auto temp = (tt & 255) - 10;
+		auto time = tt.time();
+		auto temp = tt.temp();
 		strcpy(scratch, intToString(time.displayHrs(), 2, '0'));
 		strcat(scratch, intToString(time.mins10() * 10, 2, '0'));
 		strcat(scratch, time.isPM() ? "p" : "a");
@@ -98,7 +100,7 @@ namespace client_data_structures {
 		if (recordID() == -1) return 0;
 		switch (fieldID) {
 		case e_TimeTemp:
-			_timeTemp = record().rec().time_temp;
+			_timeTemp = uint16_t(record().rec().time_temp);
 			//logger().log("TimeTemp::getField :", record().rec().time_temp, " ID:", record().id());
 			return &_timeTemp;
 		default: return 0;

@@ -1,54 +1,31 @@
 #include "MainConsolePageGenerator.h"
 #include "..\HeatingSystem.h"
 #include "TemperatureController.h"
-
+#include "Database.h"
 
 namespace Assembly {
 	using namespace RelationalDatabase;
 	using namespace client_data_structures;
 	using namespace LCD_UI;
 
-	MainConsolePageGenerator::MainConsolePageGenerator(RDB<TB_NoOfTables> & db, TemperatureController & tc) :
-		_db(&db)
-		, _tc(&tc)
-		// RDB Queries
-		, _q_dwellings{ _db->tableQuery(TB_Dwelling) }
-		, _q_zones{ _db->tableQuery(TB_Zone) }
-		, _q_dwellingZones{ _db->tableQuery(TB_DwellingZone), _db->tableQuery(TB_Zone), 0, 1 }
-		, _q_dwellingProgs{ _db->tableQuery(TB_Program), 1 }
-		, _q_dwellingSpells{ _db->tableQuery(TB_Spell), _db->tableQuery(TB_Program), 1, 1 }
-		, _q_spellProg{ _db->tableQuery(TB_Spell), _db->tableQuery(TB_Program),0 }
-		, _q_progProfiles{ _db->tableQuery(TB_Profile), 0}
-		, _q_zoneProfiles{ _db->tableQuery(TB_Profile), 1}
-		, _q_profile{ _q_zoneProfiles, 0}
-		, _q_timeTemps{ _db->tableQuery(TB_TimeTemp), 0 }
-
-		// DB Record Interfaces
-		, _rec_currTime{ Dataset_WithoutQuery() }
-		, _rec_dwelling{ Dataset_Dwelling(_q_dwellings, noVolData, 0) }
-		, _rec_zones{ _q_zones, _tc->zoneArr, 0 }
-		, _rec_dwZones{ _q_dwellingZones,  _tc->zoneArr, &_rec_dwelling }
-		, _rec_dwProgs{ _q_dwellingProgs, noVolData, &_rec_dwelling }
-		, _rec_dwSpells{ _q_dwellingSpells, noVolData, &_rec_dwelling }
-		, _rec_spellProg{ _q_spellProg, noVolData, &_rec_dwSpells }
-		, _rec_profile{ _q_profile, noVolData, &_rec_dwProgs, &_rec_dwZones }
-		, _rec_timeTemps{ _q_timeTemps, noVolData, &_rec_profile }
+	MainConsolePageGenerator::MainConsolePageGenerator(Database & db, TemperatureController & tc) :
+		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)
-		, _currTimeUI_c {&_rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editOnNextItem() }
-		, _currDateUI_c{ &_rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editOnNextItem() }
-		, _dstUI_c{ &_rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editOnNextItem() }
-		, _dwellNameUI_c { &_rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneIsReq_UI_c{ &_rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editOnNextItem().make_viewAll() }
-		, _zoneNameUI_c{ &_rec_dwZones, Dataset_Zone::e_name,0,0, viewAllUpDn().make_newLine() }
-		, _zoneAbbrevUI_c{ &_rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneUpDnRecycle() }
+		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editOnNextItem() }
+		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editOnNextItem() }
+		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editOnNextItem() }
+		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
+		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editOnNextItem().make_viewAll() }
+		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name,0,0, viewAllUpDn().make_newLine() }
+		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneUpDnRecycle() }
 		
-		, _progAllNameUI_c{ &_rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn().make_newLine() }
-		, _progNameUI_c{ &_rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDnRecycle() }
-		, _dwellSpellUI_c{ &_rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle() }
-		, _spellProgUI_c{ &_rec_dwProgs, Dataset_Program::e_name,&_rec_dwSpells,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
-		, _profileDaysUI_c{ &_rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() }
-		, _timeTempUI_c{ &_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _progAllNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn().make_newLine() }
+		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDnRecycle() }
+		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle() }
+		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&db._rec_dwSpells,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
+		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() }
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _timeTempUI_sc{ UI_ShortCollection{ 80, _timeTempUI_c } }
 
 		// Basic UI Elements

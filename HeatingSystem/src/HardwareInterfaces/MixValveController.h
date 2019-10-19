@@ -1,9 +1,9 @@
 #pragma once
 #include "Arduino.h"
-#include <I2C_Talk/I2C_Talk.h>
-#include <Mix_Valve/Mix_Valve.h>
+#include <I2C_Talk.h>
+#include <Mix_Valve.h>
 #include "Temp_Sensor.h"
-#include <RDB/src/RDB.h>
+#include <RDB.h>
 #include "Relay.h"
 #include "A__Constants.h"
 #if defined (ZPSIM)
@@ -12,20 +12,18 @@
 
 namespace HardwareInterfaces {
 
-	class MixValveController : public I_I2Cdevice {
+	class MixValveController : public I_I2Cdevice_Recovery {
 	public:
-		MixValveController() : I_I2Cdevice(i2c_Talk()) {}
-		MixValveController(I2C_Talk & i2C) : I_I2Cdevice(i2C) {}
-
-		// Queries
-		bool needHeat(bool isHeating) const; // used by ThermStore.needHeat	
-		uint8_t sendSetup() const;
-		uint8_t readFromValve(Mix_Valve::Registers reg) const;
+		using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
+		MixValveController() = default;
 
 		// Virtual Functions
-		uint8_t testDevice() override;
+		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 		//uint8_t initialiseDevice() override;
 
+		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
+		uint8_t readFromValve(Mix_Valve::Registers reg); // returns value
+		uint8_t sendSetup();
 		void setResetTimePtr(unsigned long * timeOfReset_mS) { _timeOfReset_mS = timeOfReset_mS; }
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t relayID);
 		bool check();
@@ -43,7 +41,7 @@ namespace HardwareInterfaces {
 		void initialise(int index, int addr, Relay * relayArr, I2C_Temp_Sensor * tempSensorArr, int flowTempSens, int storeTempSens);
 	private:
 		bool controlZoneRelayIsOn() const;
-		uint8_t writeToValve(Mix_Valve::Registers reg, uint8_t value) const; // returns I2C Error 
+		I2C_Talk_ErrorCodes::error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
 		uint8_t getStoreTemp() const;
 		//void setLimitZone(int mixValveIndex);
 

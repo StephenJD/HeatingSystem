@@ -2,8 +2,7 @@
 #include <Arduino.h>
 #include <I2C_Talk_ErrorCodes.h>
 #include <I2C_Talk.h>
-
-class I_I2Cdevice;
+#include <I2C_Device.h>
 
 /// <summary>
 /// Usage:
@@ -17,56 +16,54 @@ class I_I2Cdevice;
 ///	<para>	lcd->print(scanner.foundDeviceAddr,HEX); lcd->print(" ");</para>
 ///	<para>}</para>
 ///	</summary>
-class I2C_Scan {
-public:
-	I2C_Scan(I2C_Talk & i2C, I2C_Recover & recover) : _i2C(&i2C), _recover(&recover), _nullRecovery(i2C) {}
-	I2C_Scan(I2C_Talk & i2C) : _i2C(&i2C), _nullRecovery(i2C), _recover(&_nullRecovery) {}
-	
+class I_I2C_Scan {
+public:	
+	I_I2C_Scan(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recovery = I_I2C_Scan::nullRecovery);
 	void scanFromZero();
 	int8_t next() { return next_T<false, false>(); }
 	int8_t show_all() { return next_T<true, true>(); }
 	int8_t show_next() { return next_T<false, true>(); }
-	const char * getStatusMsg() { return I2C_Talk::getStatusMsg(error); }
+	const char * getStatusMsg() { return I2C_Talk::getStatusMsg(error()); }
 	bool isInScanOrSpeedTest() { return _inScanOrSpeedTest; } // to disable post-reset ini during scan/speed tesrt
+	I_I2Cdevice_Recovery & device() { return _device; }
+	uint8_t error() const { return _error; }
 
-	uint8_t	error = 0;
 	int8_t foundDeviceAddr = -1;	// -1 to 127
 	uint8_t totalDevicesFound = 0;	
+	static I2C_Recovery::I2C_Recover nullRecovery;
 protected:
-	I2C_Scan() = default;
-	void set_I2C_Talk(I2C_Talk & i2C) { _i2C = &i2C; }
-	I2C_Talk & i2C_Talk() { return *_i2C; }
-	I2C_Recover & recovery() { return *_recover; }
+	I2C_Talk & i2C() { return _device.i2C(); }
+	I2C_Recovery::I2C_Recover & recovery() { return device().recovery(); }
 	void inScan(bool isInScan) { _inScanOrSpeedTest = isInScan; }
+	uint8_t	_error = 0;
 private:
-	friend class I2C_SpeedTest;
+	friend class I_I2C_SpeedTestAll;
+	
 	template<bool non_stop, bool serial_out>
 	int8_t next_T();
-
+	
 	int8_t nextDevice(); // returns address of next device found or zero
 
-	I2C_Talk * _i2C;
-	I2C_Recover * _recover;
-	I2C_Recover _nullRecovery;
+	I_I2Cdevice_Recovery _device;
 	bool _inScanOrSpeedTest = false;
 };
 
 //*************************************************************************************
 // Template Function implementations //
 template<bool non_stop, bool serial_out>
-int8_t I2C_Scan::next_T(){
+int8_t I_I2C_Scan::next_T(){
 	if /*constexpr*/ (non_stop) {
 		scanFromZero();
 		if /*constexpr*/(serial_out) Serial.println("\nScan");
 	}
 	while(nextDevice()) {
 		if /*constexpr*/(serial_out) {
-			if (error == I2C_Talk_ErrorCodes::_OK) {
+			if (error() == I2C_Talk_ErrorCodes::_OK) {
 				Serial.print("I2C Device at: 0x"); Serial.println(foundDeviceAddr,HEX);
 			} else {
 				Serial.print("I2C Error at: 0x"); 
 				Serial.print(foundDeviceAddr, HEX);
-				Serial.println(I2C_Talk::getStatusMsg(error));
+				Serial.println(I2C_Talk::getStatusMsg(error()));
 			}
 		}
 		if /*constexpr*/(!non_stop) break;

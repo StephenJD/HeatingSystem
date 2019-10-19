@@ -18,7 +18,7 @@ namespace HardwareInterfaces {
 		bool doRefresh;
 		auto keyPress = _keyPad.getKey();
 		do {
-			Logger().log("Main processKeys:", keyPress);
+			//logger().log("Main processKeys:", keyPress);
 			doRefresh = true;
 			switch (keyPress) {
 			case 0:

@@ -48,6 +48,11 @@ namespace RelationalDatabase {
 	// *************** Insert, Update & Delete ***************
 
 	RecordID TableNavigator::insertRecord(const void * newRecord) {
+		//uint8_t vrIndex;
+		//ValidRecord_t usedRecords;
+		//getAvailabilityBytesForThisRecord(usedRecords, vrIndex);
+		//logger().log("    InsertRecordID:", _currRecord.id(), "VRec",usedRecords);
+		
 		auto targetRecordID = _currRecord.id();
 		auto unusedRecordID = reserveUnusedRecordID();
 		if (isSorted(_t->insertionStrategy()) && unusedRecordID < targetRecordID) {
@@ -55,7 +60,6 @@ namespace RelationalDatabase {
 			targetRecordID = unusedRecordID;
 			unusedRecordID = reserveUnusedRecordID();
 		} else targetRecordID = unusedRecordID;
-		//logger().log("    unusedRecordID:", unusedRecordID);
 		_currRecord.setID(unusedRecordID);
 		if (_currRecord.id() >= _t->_max_NoOfRecords_in_table) {
 			if (_t->_db->extendTable(*this)) {

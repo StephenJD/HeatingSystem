@@ -1,7 +1,7 @@
 #include "RDB_B.h"
 #include "RDB_Table.h"
 #include "RDB_TableNavigator.h"
-#include <Logging\Logging.h>
+#include <Logging.h>
 
 namespace RelationalDatabase {
 	RDB_B::RDB_B(int dbStart, int dbEnd, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
@@ -92,7 +92,7 @@ namespace RelationalDatabase {
 	ValidRecord_t RDB_B::unvacantRecords(int noOfRecords) { // static
 		// Bitshifting more than the width is undefined
 		if (noOfRecords >= ValidRecord_t_Capacity) return 0;
-		return -1 << noOfRecords;
+		return ValidRecord_t(-1) << noOfRecords;
 	}
 
 	bool RDB_B::extendTable(TableNavigator & rec_sel) {

@@ -112,6 +112,7 @@ namespace RelationalDatabase {
 	}
 
 	void Answer_Locator::deleteRecord() {
+		if (_tb == 0) return;
 		ValidRecord_t usedRecords;
 		_tb->db()._readByte(_validRecordByteAddress, &usedRecords, sizeof(ValidRecord_t));
 		usedRecords &= ~(1 << _validRecordIndex);

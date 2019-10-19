@@ -91,7 +91,7 @@ namespace client_data_structures {
 
 	/// <summary>
 	/// DB Interface to all Profile Data
-	/// Provides streamable fields which may be poulated by a database or the runtime-data.
+	/// Provides streamable fields which may be populated by a database or the runtime-data.
 	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>

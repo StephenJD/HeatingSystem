@@ -1,10 +1,12 @@
 #pragma once
-//#include <../DateTime/src/Date_Time.h>
-#include <Date_Time.h>
+#include <../DateTime/src/Date_Time.h>
+//#include <Date_Time.h>
 #include <I2C_Talk.h>
 #include <I2C_Device.h>
-#include <Conversions.h>
+//#include <Conversions.h>
+#include <..\Conversions\Conversions.h>
 #include <Arduino.h>
+#include <I2C_Talk_ErrorCodes.h>
 
 //#pragma message( "Clock.h loaded" )
 
@@ -18,6 +20,7 @@
 
 	class Clock { 
 	public:
+		// Rated at 5v/100kHz - NO 3.3v operation, min 2.2v HI.
 		//Clock(const char* date, const char* time);
 		// Queries
 		int minUnits() const { return _mins1; }
@@ -28,6 +31,7 @@
 		int day() const { return _now.day(); }
 		int month() const { return _now.month(); }
 		int year() const { return _now.year(); }
+		virtual bool ok() const { return true; }
 	
 		// Modifiers
 		// Reading the time triggers an update-check which might modify the time
@@ -73,37 +77,54 @@
 		void _adjustForDST();
 	};
 
-	class EEPROM_Clock : public Clock {
+	class Clock_EEPROM : public Clock {
 	public:
-		EEPROM_Clock(unsigned int addr);
+		Clock_EEPROM(unsigned int addr);
 		void saveTime() override;
+		bool ok() const override;
 	private:
 		void _update() override;  // called every 10 minutes - saves to EEPROM
 		void loadTime() override;
 		unsigned int _addr;
 	};
-
-	class Clock_I2C_Device : public I_I2Cdevice {
+	
+	class I_Clock_I2C : public Clock {
 	public:
-		using I_I2Cdevice::I_I2Cdevice;
-		Clock_I2C_Device(I2C_Talk & i2C, uint8_t addr) : I_I2Cdevice(addr) { set_I2C_Talk(i2C); }
-		I2C_Talk & i2c_Talk() const override { return *_i2C; }
-		void set_I2C_Talk(I2C_Talk & i2C) override { _i2C = &i2C; }
-	private:
-		static I2C_Talk * _i2C;
-	};
-
-	class I2C_Clock : public Clock , public Clock_I2C_Device {
-	public:
-		I2C_Clock(I2C_Talk & i2C, int addr);
-		uint8_t i2C_speedTest();
 		void saveTime() override;
+	protected:
 		void loadTime() override;
-		uint8_t testDevice() override;
 
 	private:
 		void _update() override; // called every 10 minutes - reads from RTC
+		virtual uint8_t readData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) = 0;
+		virtual uint8_t writeData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) = 0;
 	};
+
+	template<I2C_Talk & i2c>
+	class Clock_I2C : public I_Clock_I2C, public I2Cdevice<i2c> {
+	public:
+		using I2Cdevice<i2c>::I2Cdevice;
+
+		Clock_I2C(int addr) : I2Cdevice<i2c>(addr) {
+			loadTime();
+		}
+		bool ok() const override {
+			for (uint32_t t = millis() + 5; millis() < t; ) {
+				if (i2c.status(I2Cdevice<i2c>::getAddress()) == I2C_Talk_ErrorCodes::_OK) return true;
+			}
+			return false;
+		}
+		I2C_Talk_ErrorCodes::error_codes testDevice() override;
+
+	private:
+		uint8_t readData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) override { return i2c.read(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
+		uint8_t writeData(uint8_t start, uint16_t numberBytes, uint8_t *dataBuffer) override { return i2c.write(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
+	};
+
+
+///////////////////////////////////////////////////////////////
+//                         Clock                             //
+///////////////////////////////////////////////////////////////
 
 	Clock & clock_();  // to be defined by the client
 
@@ -131,4 +152,22 @@
 		setSeconds(GP_LIB::c2CharsToInt(&__TIME__[6]));
 		saveTime();
 	}
+
+///////////////////////////////////////////////////////////////
+//                     Clock_I2C                             //
+///////////////////////////////////////////////////////////////
+//I2C_Talk * Clock_I2C::_i2C;
+
+//Clock_I2C::Clock_I2C(I2C_Talk & i2C, int addr) : Clock_I2C(i2C, addr) {
+
+	template<I2C_Talk & i2C>
+	I2C_Talk_ErrorCodes::error_codes Clock_I2C<i2C>::testDevice() {
+		//Serial.print(" RTC testDevice at "); Serial.println(i2c.getI2CFrequency(),DEC);
+		uint8_t data[1] = { 0 };
+		auto errCode = I2Cdevice<i2C>::write_verify(9, 1, data);
+		data[0] = 255;
+		if (errCode != I2C_Talk_ErrorCodes::_OK) errCode = I2Cdevice<i2C>::write_verify(9, 1, data);
+		return errCode;
+	}
+
 

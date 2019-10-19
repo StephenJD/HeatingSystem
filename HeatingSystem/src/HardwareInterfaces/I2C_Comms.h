@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Arduino.h"
-#include <I2C_Talk/I2C_Talk.h>
+#include <I2C_Talk.h>
+#include <I2C_RecoverRetest.h>
 
 namespace HardwareInterfaces {
 
@@ -12,29 +13,29 @@ namespace HardwareInterfaces {
 
 	class I_TestDevices {
 	public:
-		virtual I_I2Cdevice & getDevice(uint8_t deviceAddr) = 0;
+		virtual I_I2Cdevice_Recovery & getDevice(uint8_t deviceAddr) = 0;
 	};
 
-	class HardReset : public I2C_Talk::I_I2CresetFunctor {
+	class HardReset : public I2C_Recovery::I2C_Recover_Retest::I_I2CresetFunctor {
 	public:
-		uint8_t operator()(I2C_Talk & i2c, int addr) override;
+		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
 
 		bool initialisationRequired = true;
 		unsigned long timeOfReset_mS = 0;
 	private:
 	};	
 	
-	class ResetI2C : public I2C_Talk::I_I2CresetFunctor {
+	class ResetI2C : public I2C_Recovery::I2C_Recover_Retest::I_I2CresetFunctor {
 	public:
-		ResetI2C(I_IniFunctor & resetFn, I_TestDevices & testDevices);
+		ResetI2C(I2C_Recovery::I2C_Recover_Retest & recover, I_IniFunctor & resetFn, I_TestDevices & testDevices);
 
-		uint8_t operator()(I2C_Talk & i2c, int addr) override;
-		uint8_t speedTestDevice(I2C_Talk & i2c, int addr, I_I2Cdevice & device);
+		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
 		unsigned long timeOfReset_mS() { return hardReset.timeOfReset_mS; }
 		HardReset hardReset;
 	private:
 
 		I_IniFunctor * _postI2CResetInitialisation;
 		I_TestDevices * _testDevices;
+		I2C_Recovery::I2C_Recover_Retest * _recover;
 	};	
 }

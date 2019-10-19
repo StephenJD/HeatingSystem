@@ -2,7 +2,7 @@
 #include "RDB_RecordSelector.h"
 #include "RDB_TableNavigator.h"
 #include "RDB_Answer_Locator.h"
-#include <Logging/Logging.h>
+#include <Logging.h>
 
 #ifdef ZPSIM
 	#include <ostream>
@@ -196,6 +196,7 @@ namespace RelationalDatabase {
 			while (recSel.status() == TB_OK && match.status() == TB_OK && match.field(_match_f) != id) {
 				incrementQ().next(recSel, direction);
 				match = recSel.incrementRecord();
+				//match.rec();
 				//std::cout << "      Try next Match at ID: " << (int)match.id() << " with val " << (int)match.field(_match_f) << std::endl;
 			}
 			return match;

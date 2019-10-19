@@ -2,12 +2,19 @@
 #include <SD.h>
 #include <SPI.h>
 //#pragma message( "Logging.h loaded" )
+/*
+To reduce timeout on missing SD card from 2s to 7mS modify Sd2Card.cpp:
+In Sd2Card::init() on first timeout:  while ((status_ = cardCommand(CMD0, 0)) != R1_IDLE_STATE) {...
+Set timeout to 1mS.
+SD.h/.cpp modified to provide sd_exists();
 
+*/
 	class Clock;
 
 	class Logger {
 	public:
 		Logger(Clock & clock);
+		virtual bool isWorking() { return true; };
 		virtual void log() {};
 		virtual void log(const char * msg) {}
 		virtual void log(const char * msg, long val) {}
@@ -37,6 +44,7 @@
 	public:
 		SD_Logger(const char * fileName, int baudRate, Clock & clock);
 		SD_Logger(const char * fileName, int baudRate);
+		bool isWorking() override;
 		void log() override;
 		void log(const char * msg) override;
 		void log(const char * msg, long val) override;

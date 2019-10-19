@@ -10,7 +10,7 @@
 #include "..\Client_DataStructures\Data_Profile.h"
 #include "..\Client_DataStructures\Data_Zone.h"
 #include "..\HardwareInterfaces\LCD_Display.h"
-#include <Logging/Logging.h>
+#include <Logging.h>
 #include <EEPROM.h>
 
 namespace Assembly {
@@ -93,8 +93,8 @@ namespace Assembly {
 		,{ 0,2 }
 	};
 
-	constexpr uint16_t makeTT(int hrs, int mins, int temp) {
-		return (TimeOnly{ hrs,mins }.asInt() << 8) + temp + 10;
+	constexpr TimeTemp makeTT(int hrs, int mins, int temp) {
+		return { TimeOnly{ hrs, mins }, int8_t(temp) };
 	}
 
 	R_TimeTemp timeTemps_f[] = { // profileID,TT

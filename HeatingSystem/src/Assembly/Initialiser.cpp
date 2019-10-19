@@ -5,20 +5,22 @@
 #include "..\HardwareInterfaces\I2C_Comms.h"
 #include "..\HardwareInterfaces\A__Constants.h"
 #include "..\Client_DataStructures\Data_Relay.h"
-#include <Logging/Logging.h>
+#include <Logging.h>
 #include <RDB.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
+using namespace I2C_Talk_ErrorCodes;
 
 namespace Assembly {
 	using namespace RelationalDatabase;
 
 	Initialiser::Initialiser(HeatingSystem & hs) 
-		: _hs(hs),
-		_resetI2C(_iniFunctor, _testDevices),
-		_iniFunctor(*this),
-		_testDevices(*this)
+		: 
+		_resetI2C(hs._recover, _iniFunctor, _testDevices)
+		, _hs(hs)
+		, _iniFunctor(*this)
+		, _testDevices(*this)
 	{
 		logger().log("  Initialiser PW check. req:", VERSION);
 		if (!_hs.db.checkPW(VERSION)) {
@@ -44,7 +46,7 @@ namespace Assembly {
 		auto err = _testDevices.speedTestDevices();
 		/*if (!err) err = */_testDevices.testRelays();
 		/*if (!err)*/ err = postI2CResetInitialisation();
-		if (err != I2C_Helper::_OK) logger().log("  Initialiser::i2C_Test postI2CResetInitialisation failed");
+		if (err != _OK) logger().log("  Initialiser::i2C_Test postI2CResetInitialisation failed");
 		//else logger().log("  Initialiser::i2C_Test OK");
 		return err;
 	}
@@ -72,7 +74,7 @@ namespace Assembly {
 		return failed;
 	}
 
-	I2C_Helper::I_I2Cdevice & Initialiser::getDevice(uint8_t deviceAddr) {
+	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {
 		if (deviceAddr == IO8_PORT_OptCoupl) return hs()._tempController.relaysPort;
 		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs()._tempController.mixValveControllerArr[0];
 		else if (deviceAddr >= 0x24 && deviceAddr <= 0x26) {

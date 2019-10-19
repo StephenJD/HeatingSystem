@@ -3,13 +3,15 @@
 #include <Logging.h>
 
 namespace HardwareInterfaces {
-
+	using namespace I2C_Recovery;
+	using namespace I2C_Talk_ErrorCodes;
 	/////////////////////////////////////
 	//       RelaysPort Functions      //
 	/////////////////////////////////////
+	uint8_t RelaysPort::relayRegister = 0xFF;
 
 	RelaysPort::RelaysPort(I2C_Recover & recovery, int addr, int zeroCrossPin, int resetPin)
-		: I2Cdevice{ recovery, addr }
+		: I_I2Cdevice_Recovery{ recovery, addr }
 		, _zeroCrossPin( zeroCrossPin )
 		, _resetPin( resetPin )
 	{
@@ -20,40 +22,33 @@ namespace HardwareInterfaces {
 		digitalWrite(abs(_resetPin), (_resetPin < 0) ? HIGH : LOW);
 	}
 
-	uint8_t RelaysPort::initialiseDevice() {
+	error_codes RelaysPort::initialiseDevice() {
 		uint8_t pullUp_out[] = { 0 };
-		uint8_t hasFailed;
-		//uint8_t hasFailed = _i2C->i2C_is_frozen(_address);
-		//if (hasFailed) {
-		//	logger().log("  Initialise RelaysPort() is stuck - call hard reset...");
-		//	//bareResetI2C(*i_2C, _address);
-		//}
-		//else {
-			hasFailed = write_verify(REG_8PORT_PullUp, 1, pullUp_out); // clear all pull-up resistors
-			//if (hasFailed) {
-			//	logger().log("Initialise RelaysPort() write-verify failed at Freq:", _i2C->getI2CFrequency());
-			//}
-			//else {
-				hasFailed = write_verify(REG_8PORT_OLAT, 1, &relayRegister); // set latches
-				writeAtZeroCross();
-				hasFailed |= write_verify(REG_8PORT_IODIR, 1, pullUp_out); // set all as outputs
-				//if (hasFailed) logger().log("Initialise RelaysPort() lat-write failed at Freq:", _i2C->getI2CFrequency());
-				//else logger().log("Initialise RelaysPort() succeeded at Freq:", _i2C->getI2CFrequency());
-			//}
-		//}
-		return hasFailed;
+		auto status = _OK;
+
+		status = write_verify(REG_8PORT_PullUp, 1, pullUp_out); // clear all pull-up resistors
+		if (status) {
+			logger().log("Initialise RelaysPort() write-verify failed at Freq:", i2C().getI2CFrequency());
+		}
+		else {
+			status = write_verify(REG_8PORT_OLAT, 1, &relayRegister); // set latches
+			writeInSync();
+			status |= write_verify(REG_8PORT_IODIR, 1, pullUp_out); // set all as outputs
+			if (status) logger().log("Initialise RelaysPort() lat-write failed at Freq:", i2C().getI2CFrequency());
+			//else logger().log("Initialise RelaysPort() succeeded at Freq:", i2C().getI2CFrequency());
+		}
+		return status;
 	}
 
-	uint8_t RelaysPort::setAndTestRegister() {
+	error_codes RelaysPort::setAndTestRegister() {
 		uint8_t ANDmask = 0x7F;
-		uint8_t error;
-		//if (_i2C->notExists(_address)) error = I2C_Talk::_I2C_Device_Not_Found;
+		//if (i2C().status(_address)) error = I2C_Talk::_I2C_Device_Not_Found;
 		//else {
-			writeAtZeroCross();
-			error = write_verify(REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
+			writeInSync();
+			auto status = write_verify(REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
 		//}
-		//logger().log("RelaysPort::setAndTestRegister() addr:", _address,_i2C->getStatusMsg(error));
-		return error;
+		//logger().log("RelaysPort::setAndTestRegister() addr:", _address,i2C().getStatusMsg(error));
+		return status;
 	}
 
 	/////////////////////////////////////

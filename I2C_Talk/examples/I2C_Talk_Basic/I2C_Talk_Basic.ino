@@ -4,20 +4,20 @@
 #include <I2C_SpeedTest.h>
 
 #include <Wire.h>
-//#include <Logging.h>
-//#include <SD.h>
-//#include <spi.h>
-//#include <Clock.h>
-//#include <Date_Time.h>
-//#include <EEPROM.h>
-//#include <Conversions.h>
+#include <Logging.h>
+#include <SD.h>
+#include <spi.h>
+#include <EEPROM.h>
 
 #define I2C_RESET 14
 
 //////////////////////////////// Start execution here ///////////////////////////////
+using namespace I2C_Recovery;
+
 I2C_Talk i2C{};
-I2C_Scan scanner{i2C};
-I2C_SpeedTest speedTest{i2C};
+I_I2C_Scan scanner{i2C};
+I2C_SpeedTest speedTest{};
+I_I2C_SpeedTestAll speedTestAll{i2C};
 
 void setup() {
 	Serial.begin(9600);
@@ -25,6 +25,8 @@ void setup() {
 	pinMode(I2C_RESET, OUTPUT);
 	digitalWrite(I2C_RESET, HIGH); // reset pin
 	i2C.restart();
+	Serial.print("Wire addr   "); Serial.println((long)&Wire);
+	Serial.print("Wire 1 addr "); Serial.println((long)&Wire1);
 }
 
 void loop() {
@@ -37,21 +39,24 @@ void loop() {
 	Serial.print(" Show-all. Result:"); Serial.println(result, HEX);
 	Serial.print(" Show-all. Addr:"); Serial.println(scanner.foundDeviceAddr, HEX);
 	Serial.print(" Show-all. Count:"); Serial.println(scanner.totalDevicesFound);
+	Serial.println(); Serial.flush();
 
-	Serial.println();
 	scanner.scanFromZero();
 	result = scanner.show_next();
 	Serial.print(" Show-next. Error:"); Serial.println(scanner.getStatusMsg());
 	Serial.print(" Show-next. Result:"); Serial.println(result, HEX);
 	Serial.print(" Show-next. Addr:"); Serial.println(scanner.foundDeviceAddr, HEX);
 	Serial.print(" Show-next. Count:"); Serial.println(scanner.totalDevicesFound);
-	Serial.println();
+	Serial.println(); Serial.flush();
+
 	result = scanner.show_next();
 	Serial.print(" Show-next again. Error:"); Serial.println(scanner.getStatusMsg());
 	Serial.print(" Show-next again. Result:"); Serial.println(result, HEX);
 	Serial.print(" Show-next again. Addr:"); Serial.println(scanner.foundDeviceAddr, HEX);
 	Serial.print(" Show-next again. Count:"); Serial.println(scanner.totalDevicesFound);
+	Serial.println(); Serial.flush();
 	
+
 	scanner.scanFromZero();
 	result = scanner.next();
 	Serial.println();
@@ -59,6 +64,7 @@ void loop() {
 	Serial.print(" next. Result:"); Serial.println(result, HEX);
 	Serial.print(" next. Addr:"); Serial.println(scanner.foundDeviceAddr, HEX);
 	Serial.print(" next. Count:"); Serial.println(scanner.totalDevicesFound);
+	Serial.println(); Serial.flush();
 	auto addr = scanner.foundDeviceAddr;
 
 	result = scanner.next();
@@ -67,24 +73,32 @@ void loop() {
 	Serial.print(" next again. Result:"); Serial.println(result, HEX);
 	Serial.print(" next again. Addr:"); Serial.println(scanner.foundDeviceAddr, HEX);
 	Serial.print(" next again. Count:"); Serial.println(scanner.totalDevicesFound);
+	Serial.println(); Serial.flush();
 
-	speedTest.scanFromZero();
-	addr = speedTest.next();
-	auto speed = speedTest.show_fastest(addr);
+	speedTestAll.scanFromZero();
+	Serial.print(" speedTestAll Addr:"); Serial.println(speedTestAll.foundDeviceAddr, HEX);
+
+	addr = speedTestAll.show_next();
+	auto speed = speedTestAll.show_fastest(addr);
 	Serial.println();	
-	Serial.print(" show_fastest. Error:"); Serial.println(speedTest.getStatusMsg());
+	Serial.print(" show_fastest. Error:"); Serial.println(speedTestAll.getStatusMsg());
 	Serial.print(" show_fastest. Speed:"); Serial.println(speed);
+	Serial.println(); Serial.flush();
 
-
-	speed = speedTest.showAll_fastest();
+	speed = speedTestAll.showAll_fastest();
 	Serial.println();	
-	Serial.print(" showAll_fastest. Error:"); Serial.println(speedTest.getStatusMsg());
+	Serial.print(" showAll_fastest. Error:"); Serial.println(speedTestAll.getStatusMsg());
 	Serial.print(" showAll_fastest. Speed:"); Serial.println(speed);
+	Serial.println(); Serial.flush();
 
-	speed = speedTest.fastest(addr);
+	speedTestAll.scanFromZero();
+	speedTestAll.next();
+	speedTest = speedTestAll.device();
+	speed = speedTest.fastest();
 	Serial.println();	
 	Serial.print(" fastest. Error:"); Serial.println(speedTest.getStatusMsg());
 	Serial.print(" fastest. Speed:"); Serial.println(speed);
+	Serial.println(); Serial.flush();
 
 	delay(1000);
 }

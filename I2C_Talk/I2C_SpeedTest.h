@@ -11,7 +11,7 @@
 ///	<para>auto i2C = I2C_Talk{};</para>
 /// <para>auto device = I2C_Device(i2C, 0x41);</para>
 ///	<para>auto speedTest = I2C_SpeedTest(i2C);</para>
-///	<para>speedTest.show_fastest(0x41)   // Return max speed for this address using notExists()</para>
+///	<para>speedTest.show_fastest(0x41)   // Return max speed for this address using status()</para>
 /// <para>speedTest.fastest(device) // Return max speed for this address using device test function</para>
 ///	
 ///	or to LCD ...
@@ -20,62 +20,105 @@
 ///	<para>	lcd->print(scanner.foundDeviceAddr,HEX); lcd->print(" ");</para>
 ///	<para>}</para>
 ///	</summary>
-class I2C_SpeedTest : public I2C_Scan {
+class I2C_SpeedTest {
 public:
-	static constexpr int NO_OF_TESTS_MUST_PASS = 5;
-
-	I2C_SpeedTest(I2C_Talk & i2C) : I2C_Scan(i2C) {}
-	I2C_SpeedTest(I2C_Talk & i2C, I2C_Recover & recover) : I2C_Scan(i2C, recover) {}
-	
-	uint32_t fastest(I_I2Cdevice & i2c_device);
-	uint32_t fastest(uint8_t devAddr);
-
-	uint32_t show_fastest(I_I2Cdevice & i2c_device);
-	uint32_t show_fastest(uint8_t devAddr);
-	uint32_t show_fastest() { return show_fastest(foundDeviceAddr); }
-	uint32_t showAll_fastest();
-
-	signed char adjustSpeedTillItWorksAgain(I_I2Cdevice & i2c_device, int32_t increment);
-	int8_t prepareTestAll(); // returns addr 0;
-	void prepareNextTest();
-	const char * getStatusMsg() const { return I2C_Talk::getStatusMsg(error); }
-
-	int32_t thisHighestFreq = 0;
-
-	int32_t maxSafeSpeed = 0;
-protected:
 	I2C_SpeedTest() = default;
+	I2C_SpeedTest(I_I2Cdevice_Recovery & i2c_device) : _i2c_device(&i2c_device) {
+		//logger().log("  I2C_SpeedTest setDevice:", i2c_device.getAddress());
+	}
+	static bool doingSpeedTest() { return _is_inSpeedTest; }
+	uint32_t fastest();
+	uint32_t fastest(I_I2Cdevice_Recovery & i2c_device);
+	uint32_t show_fastest();
+	uint32_t show_fastest(I_I2Cdevice_Recovery & i2c_device);
+	auto error() const -> I2C_Talk_ErrorCodes::error_codes{ return _error; }
+	void prepareNextTest();
+	const char * getStatusMsg() const { return I2C_Talk::getStatusMsg(error()); }
+	int32_t thisHighestFreq() const { return _thisHighestFreq; }
+	static constexpr int NO_OF_TESTS_MUST_PASS = 5;
 private:
-	template<bool non_stop, bool serial_out>
-	uint32_t fastest_T(I_I2Cdevice & i2c_device);
+	template<bool serial_out>
+	uint32_t fastest_T();
 	
-	uint8_t testDevice(int noOfTests, int allowableFailures) { return recovery().testDevice(noOfTests, allowableFailures); }
-	signed char findOptimumSpeed(I_I2Cdevice & i2c_device, int32_t & bestSpeed, int32_t limitSpeed);
-	unsigned long _lastRestartTime;
-	int32_t _i2cFreq;
-	int32_t _lastGoodi2cFreq;
-	const uint8_t _I2C_DATA_PIN = 20;
+	static bool _is_inSpeedTest;
+	I2C_Talk_ErrorCodes::error_codes _error = I2C_Talk_ErrorCodes::_OK;
+	auto adjustSpeedTillItWorksAgain(int32_t increment)-> I2C_Talk_ErrorCodes::error_codes;
+	auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::error_codes;
+	auto findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed)->I2C_Talk_ErrorCodes::error_codes;
+	I_I2Cdevice_Recovery * _i2c_device = 0;
+	int32_t _thisHighestFreq = 0;
 };
 
-template<> // specialization implemented in .cpp
-uint32_t I2C_SpeedTest::fastest_T<false,false>(I_I2Cdevice & i2c_device);
+// specialization implemented in .cpp
+template<> 
+uint32_t I2C_SpeedTest::fastest_T<false>();
 
-inline uint32_t I2C_SpeedTest::fastest(I_I2Cdevice & i2c_device) {return fastest_T<false, false>(i2c_device); }
-inline uint32_t I2C_SpeedTest::fastest(uint8_t devAddr) { auto device = I_I2Cdevice(i2C_Talk(), devAddr); return fastest_T<false, false>(device); }
+inline uint32_t I2C_SpeedTest::fastest() {return fastest_T<false>(); }
+inline uint32_t I2C_SpeedTest::show_fastest() { return fastest_T<true>(); }
 
-inline uint32_t I2C_SpeedTest::show_fastest(I_I2Cdevice & i2c_device) { return fastest_T<false, true>(i2c_device); }
-inline uint32_t I2C_SpeedTest::show_fastest(uint8_t devAddr) { auto device = I_I2Cdevice(i2C_Talk(), devAddr); return fastest_T<false, true>(device); }
-inline uint32_t I2C_SpeedTest::showAll_fastest() { auto device = I_I2Cdevice(i2C_Talk(), 0); return fastest_T<true, true>(device); }
+template<bool serial_out>
+uint32_t I2C_SpeedTest::fastest_T() {
+		
+	if /*consexpr*/ (serial_out) {
+			Serial.print("\nTest Device at: 0x");
+			Serial.println(_i2c_device->getAddress(),HEX);
+	}
+		
+	fastest_T<false>();
+	if  /*consexpr*/ (serial_out) {
+		if (error() == I2C_Talk_ErrorCodes::_OK) {
+			Serial.print(" Final Max Frequency: "); Serial.println(thisHighestFreq());
+		}
+		else {
+			Serial.println(" Test Failed");
+			Serial.println(I2C_Talk::getStatusMsg(error()));
+			Serial.println();
+		}
+	}
+	
+	return thisHighestFreq();
+}
 
+///////////////////////  SpeedTestAll ///////////////////////////////
+
+class I_I2C_SpeedTestAll : public I_I2C_Scan {
+public:
+	I_I2C_SpeedTestAll(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recover = I_I2C_Scan::nullRecovery);
+	int8_t prepareTestAll(); // returns addr 0;
+	uint32_t fastest(uint8_t devAddr);
+	uint32_t show_fastest(uint8_t devAddr);
+	uint32_t show_fastest(I_I2Cdevice_Recovery & i2c_device);
+	uint32_t show_fastest() { return show_fastest(scanner().foundDeviceAddr); }
+	uint32_t showAll_fastest();
+	int32_t thisHighestFreq() const { return _speedTester.thisHighestFreq(); }
+	int32_t maxSafeSpeed() const { return _maxSafeSpeed; }
+	uint8_t error() const { return _speedTester.error(); }
+
+protected:
+	I_I2C_Scan & scanner() { return *this; }
+	I_I2Cdevice_Recovery & scan_device() {return device();}
+private:
+	template<bool non_stop, bool serial_out>
+	uint32_t fastest_T();
+
+	int32_t _maxSafeSpeed = 0;
+	I2C_SpeedTest _speedTester;
+};
+
+inline uint32_t I_I2C_SpeedTestAll::fastest(uint8_t devAddr) { scan_device().setAddress(devAddr); return fastest_T<false, false>(); }
+
+inline uint32_t I_I2C_SpeedTestAll::show_fastest(uint8_t devAddr) { scan_device().setAddress(devAddr); return fastest_T<false, true>(); }
+inline uint32_t I_I2C_SpeedTestAll::show_fastest(I_I2Cdevice_Recovery & i2c_device) { _speedTester = i2c_device; return _speedTester.show_fastest(); }
+inline uint32_t I_I2C_SpeedTestAll::showAll_fastest() { scan_device().setAddress(0); return fastest_T<true, true>(); }
 
 template<bool non_stop, bool serial_out>
-uint32_t I2C_SpeedTest::fastest_T(I_I2Cdevice & i2c_device) {
+uint32_t I_I2C_SpeedTestAll::fastest_T() {
 		
 	// Lambda
-	auto testNext = [&i2c_device, this ]() {
+	auto testNext = [this ]() {
 		if /*consexpr*/ (non_stop) {
-			if (next_T<false, serial_out>()) {
-				i2c_device.setAddress(foundDeviceAddr);
+			if (scanner().next_T<false, serial_out>()) {
+				scan_device().setAddress(scanner().foundDeviceAddr);
 				return true;
 			}
 		}
@@ -88,36 +131,34 @@ uint32_t I2C_SpeedTest::fastest_T(I_I2Cdevice & i2c_device) {
 			Serial.println("\nStart Speed Test...");
 		} else {
 			Serial.print("\nTest Device at: 0x");
-			Serial.println(i2c_device.getAddress(),HEX);
+			Serial.println(scan_device().getAddress(),HEX);
 		}
 	}
 	if /*consexpr*/ (non_stop) {
 		prepareTestAll();
-		next_T<false,serial_out>();
-		i2c_device.setAddress(foundDeviceAddr);
+		scanner().next_T<false,serial_out>();
+		scan_device().setAddress(scanner().foundDeviceAddr);
 	}
 
 	do {
-		fastest_T<false, false>(i2c_device);
+		_speedTester.fastest(scan_device());
+		if (_speedTester.thisHighestFreq() < maxSafeSpeed()) _maxSafeSpeed = _speedTester.thisHighestFreq();
 		if  /*consexpr*/ (serial_out) {
-			if (error == I2C_Talk_ErrorCodes::_OK) {
-				Serial.print(" Final Max Frequency: "); Serial.println(thisHighestFreq);
-				//Serial.print(" Final Min Frequency: "); Serial.println(thisLowestFreq); Serial.println();
+			if (_speedTester.error() == I2C_Talk_ErrorCodes::_OK) {
+				Serial.print(" Final Max Frequency: "); Serial.println(_speedTester.thisHighestFreq());
 			}
 			else if /*consexpr*/ (!non_stop) {
 				Serial.println(" Test Failed");
-				Serial.println(I2C_Talk::getStatusMsg(error));
+				Serial.println(I2C_Talk::getStatusMsg(_speedTester.error()));
 				Serial.println();
 			}
 		}
 	} while (testNext());
 
 	if /*consexpr*/ (serial_out && non_stop) {
-		Serial.print("Number of Devices: "); Serial.println(totalDevicesFound);
+		Serial.print("Number of Devices: "); Serial.println(scanner().totalDevicesFound);
 		Serial.print("Overall Best Frequency: ");
-		Serial.println(maxSafeSpeed); Serial.println();
-		//Serial.print("Overall Min Frequency: "); 
-		//Serial.println(minSafeSpeed); Serial.println();
+		Serial.println(maxSafeSpeed()); Serial.println();
 	}
-	return non_stop ? maxSafeSpeed : thisHighestFreq;
+	return non_stop ? maxSafeSpeed() : _speedTester.thisHighestFreq();
 }

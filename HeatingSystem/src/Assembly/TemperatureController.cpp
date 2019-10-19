@@ -11,19 +11,24 @@ namespace Assembly {
 	using namespace RelationalDatabase;
 	using namespace HardwareInterfaces;
 	using namespace client_data_structures;
+	using namespace I2C_Recovery;
 
-	TemperatureController::TemperatureController(I2C_Talk & i2c, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS) :
-		thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
+	TemperatureController::TemperatureController(I2C_Recover & recovery, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS) :
+		tempSensorArr{ recovery }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
-		, tempSensorArr{ i2c }
-		, relaysPort{ i2c, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN}
-		, mixValveControllerArr{ i2c }
+		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
+		, relaysPort{ recovery, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN}
+		, mixValveControllerArr{ recovery }
 	{
 		int index = 0;
 		auto tempSensors = db.tableQuery(TB_TempSensor);
 		for (Answer_R<R_TempSensor> tempSensor : tempSensors) {
-			tempSensorArr[index].initialise(tempSensor.id(), tempSensor.rec().address);
+			//logger().log("Initialise TS[]", index, " Rec ID:" , tempSensor.id());
+
+			tempSensorArr[index].initialise(tempSensor.id(), tempSensor.rec().address); // Reads temp
 			++index;
+			//if (index == 7)
+			//	auto a = true;
 		}
 		logger().log("loadtempSensors Completed");
 
@@ -66,19 +71,23 @@ namespace Assembly {
 			++index;
 		}
 		logger().log("loadZones Completed");
-
 	}
 
 	void TemperatureController::checkAndAdjust() {
 		// once per second
 		static auto lastCheck = millis();
-		if (clock_().secondsSinceLastCheck(lastCheck)) {
-			for (auto & ts : tempSensorArr) { ts.readTemperature(); }
+		static size_t tempSensorIndex = NO_OF_TEMP_SENSORS;
+		if (tempSensorIndex >= size_t(NO_OF_TEMP_SENSORS)) {
+			if (Clock::secondsSinceLastCheck(lastCheck) == 0) return; // all done, wait for next check time.
+			tempSensorIndex = 0;
 			for (auto & zone : zoneArr) zone.setFlowTemp();
 			for (auto & mixValveControl : mixValveControllerArr) mixValveControl.check();
 			backBoiler.check();
 			thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(), zoneArr[Z_DHW].nextTempRequest());
 			relaysPort.setAndTestRegister();
 		}
+		//logger().log(" ReadTemp for", tempSensorIndex);
+		tempSensorArr[tempSensorIndex].readTemperature();		
+		++tempSensorIndex;	
 	}
 }

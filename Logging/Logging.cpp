@@ -1,7 +1,8 @@
 #include "Logging.h"
-#include <../Clock/Clock.h>
 #include <../DateTime/src/Date_Time.h>
-#include <Conversions.h>
+#include <../Clock/Clock.h>
+//#include <Conversions.h>
+#include <..\Conversions\Conversions.h>
 #include <Arduino.h>
 
 #ifdef ZPSIM
@@ -47,6 +48,8 @@ using namespace std;
 				strcat(logTimeStr, ":");
 				strcat(logTimeStr, intToString(_clock->mins10(), 1));
 				strcat(logTimeStr, intToString(_clock->minUnits(), 1));
+				strcat(logTimeStr, ":");
+				strcat(logTimeStr, intToString(_clock->seconds(), 2));
 			}
 			Serial.flush();
 			//Serial.println("... got logTime()");
@@ -124,40 +127,31 @@ using namespace std;
 	////////////////////////////////////
 	//            SD_Logger           //
 	////////////////////////////////////
+	constexpr int chipSelect = 53; // 4; // 53;
 
 	SD_Logger::SD_Logger(const char * fileName, int baudRate) : Serial_Logger(baudRate), _fileName(fileName) {
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
-		openSD();
+		SD.begin(chipSelect);
+		//openSD();
 		Serial.println("SD_Logger Begun");
 	}	
 	
 	SD_Logger::SD_Logger(const char * fileName, int baudRate, Clock & clock) : Serial_Logger(baudRate, clock), _fileName(fileName) {
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
-		openSD();
+		SD.begin(chipSelect);
+		//openSD();
 		Serial.println("SD_Logger Begun");
 	}
 
-	File SD_Logger::openSD() {
-		static auto SD_OK = SD.begin();
-		static auto nextTry = millis(); 
-		//Serial.println("openSD()");
+	bool SD_Logger::isWorking() { return SD.sd_exists(chipSelect); }
 
-		if (millis() >= nextTry) { // every 10 secs.
-			//Serial.println("... check if card present.");
-			if (SD.cardMissing()) {
-				//Serial.println("... try SD.begin()");
-				SD_OK = SD.begin();
-				if (!SD_OK) {
-					Serial.println("SD Card Missing");
-				}
-			}
-			nextTry = millis() + 10000;
-		}
-		if (SD_OK) {
-			_dataFile = SD.open(_fileName, FILE_WRITE);
+	File SD_Logger::openSD() {
+		//Serial.println("openSD()");
+		if (SD.sd_exists(chipSelect)) {
+			_dataFile = SD.open(_fileName, FILE_WRITE); // appends to file
 		} 
 		//if (!_dataFile) {
-			//Serial.println("Unable to open file");
+		//	Serial.println("Unable to open file");
 		//}
 		return _dataFile;
 	}

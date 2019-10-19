@@ -1,6 +1,6 @@
 #pragma once
-#include <RDB/src/RDB.h>
-#include <HeatingSystem/src/LCD_UI/I_Record_Interface.h>
+#include <RDB.h>
+#include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
 #include "Date_Time.h"
 
 //***************************************************
@@ -24,10 +24,11 @@ namespace HardwareInterfaces {
 		uint8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
 		//int8_t getFlowSensTemp() const;
 		uint8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
-		uint8_t nextTempRequest() const { return modifiedCallTemp(_nextTempRequest); }
+		uint8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
 		uint8_t offset() const { return _offsetT; }
 		uint8_t getCurrTemp() const;
 		bool isCallingHeat() const { return getCurrTemp() < modifiedCallTemp(_currProfileTempRequest); }
+		Date_Time::DateTime nextEventTime() { return _ttEndDateTime; }
 		bool operator== (const Zone & rhs) { return _recID == rhs._recID; }
 		bool isDHWzone() const;
 		int16_t getFractionalCallSensTemp() const;
@@ -37,7 +38,7 @@ namespace HardwareInterfaces {
 		void offsetCurrTempRequest(uint8_t val);
 		bool setFlowTemp();
 		void setProfileTempRequest(uint8_t temp) { _currProfileTempRequest = temp; }
-		void setNextTempRequest(uint8_t temp) { _nextTempRequest = temp; }
+		void setNextProfileTempRequest(uint8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
 
 	private:
@@ -52,7 +53,7 @@ namespace HardwareInterfaces {
 		int8_t _maxFlowTemp = 0;
 
 		int8_t _currProfileTempRequest = 0;
-		int8_t _nextTempRequest = 0;
+		int8_t _nextProfileTempRequest = 0;
 		Date_Time::DateTime _ttEndDateTime;
 		uint8_t _callFlowTemp = 0;		// Programmed flow temp, modified by zoffset
 		//uint8_t _tempRatio = 0;

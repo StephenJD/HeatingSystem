@@ -1,17 +1,19 @@
-#include "Mix_Valve.h"
-#include "Temp_Sensor.h"
-#include "Relay.h"
+// This is the Arduino Mini Controller
+
+#include <Mix_Valve.h>
+#include <TempSensor.h>
+#include "RelayM.h"
 #include "TimeLib.h"
 #include <EEPROM.h>
-#include <I2C_Helper.h>
+#include <I2C_Talk.h>
 
 void enableRelays(bool enable); // this function must be defined elsewhere
 extern bool receivingNewData;
-extern I2C_Helper * i2c;
-extern U1_byte version_a;
-extern U1_byte version_b;
+extern I2C_Talk * i2c;
+extern uint8_t version_a;
+extern uint8_t version_b;
 
-const U1_byte I2C_MASTER_ADDR = 0x11;
+const uint8_t I2C_MASTER_ADDR = 0x11;
 
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 
@@ -61,7 +63,7 @@ void sendMsg(const char* msg, long a) {
 }
 
 uint8_t Mix_Valve::saveToEEPROM() const { // returns noOfBytes saved
-	U1_count i = 0;
+	uint8_t i = 0;
 	_ep->update(_eepromAddr, temp_sensr->getAddress());
 	_ep->update(++i + _eepromAddr, _max_on_time);
 	_ep->update(++i + _eepromAddr, _valve_wait_time);
@@ -72,7 +74,7 @@ uint8_t Mix_Valve::saveToEEPROM() const { // returns noOfBytes saved
 }
 
 uint8_t Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
-	U1_count i = 0;
+	uint8_t i = 0;
 #ifdef TEST_MIX_VALVE_CONTROLLER
 	_max_on_time = 140;
 	_valve_wait_time = 10;

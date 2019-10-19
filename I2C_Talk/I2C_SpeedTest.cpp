@@ -1,107 +1,131 @@
 #include "I2C_SpeedTest.h"
-#include <I2C_Talk.h>
-#include <I2C_Device.h>
+#include <I2C_Recover.h>
 #include <Logging.h>
+//#include <..\Logging\Logging.h>
 
 using namespace I2C_Talk_ErrorCodes;
 
-int8_t I2C_SpeedTest::prepareTestAll() {
-	maxSafeSpeed = 0;
-	prepareNextTest();
-	return 0;
+bool I2C_SpeedTest::_is_inSpeedTest = false;
+
+error_codes I2C_SpeedTest::testDevice(int noOfTests, int allowableFailures) {
+	return _i2c_device->recovery().testDevice(noOfTests, allowableFailures); 
 }
 
 void I2C_SpeedTest::prepareNextTest() {
-	error = _OK;
-	if (maxSafeSpeed == 0) {
-		maxSafeSpeed = I2C_Talk::MAX_I2C_FREQ;
-	}
-	thisHighestFreq = I2C_Talk::MAX_I2C_FREQ;
+	_error = _OK;
+	_thisHighestFreq = I2C_Talk::MAX_I2C_FREQ;
 }
 
-template<> // implementation of fully specialized template to test one device
-uint32_t I2C_SpeedTest::fastest_T<false,false>(I_I2Cdevice & i2c_device) {
-	//if (_devAddr < 1 || _devAddr > 127) {
-	//	error = _I2C_AddressOutOfRange;
-	//	return 0;
-	//}
+uint32_t I2C_SpeedTest::fastest(I_I2Cdevice_Recovery & i2c_device) {
+	_i2c_device = &i2c_device;
+	return fastest_T<false>();
+}
 
-	inScan(true);
+uint32_t I2C_SpeedTest::show_fastest(I_I2Cdevice_Recovery & i2c_device) {
+	_i2c_device = &i2c_device;
+	return fastest_T<true>();
+}
+
+// implementation of fully specialized template to test one device
+template<> 
+uint32_t I2C_SpeedTest::fastest_T<false>() {
+	if (!_i2c_device->isEnabled()) {
+		_i2c_device->reset();
+		logger().log("\tRe-enabling disabled device");
+	}	
+	auto startFreq = _i2c_device->runSpeed(); // default 100000
+	if (_is_inSpeedTest) return startFreq;
+	_is_inSpeedTest = true;
 	prepareNextTest();
-	auto startFreq = i2c_device.runSpeed();
-	if (startFreq == 0) startFreq = 400000;
+
 	//Serial.println(startFreq);
 
-	thisHighestFreq = i2C_Talk().setI2CFrequency(startFreq);
-	recovery().registerDevice(i2c_device);
-	int8_t status = recovery().testDevice(2,1);
-	logger().log("fastest_T Device tested result", status,  recovery().device().getStatusMsg(status));
-	if (status != _OK) status = recovery().findAworkingSpeed();
+	_thisHighestFreq = _i2c_device->i2C().setI2CFrequency(startFreq);
+	_i2c_device->recovery().registerDevice(*_i2c_device);
+	auto status = _i2c_device->recovery().testDevice(2,1); // Unfreeze is only Recovery strategy applied during speed-test
+	//logger().log("fastest_T Device tested result", status, _i2c_device->getStatusMsg(status));
+	if (status != _OK) status = _i2c_device->recovery().findAworkingSpeed();
 	if (status == _OK) {
 		//Serial.println(" ** findMaxSpeed **");
-		status = findOptimumSpeed(i2c_device, thisHighestFreq, I2C_Talk::MAX_I2C_FREQ /*result.maxSafeSpeed*/);
+		_thisHighestFreq = _i2c_device->i2C().getI2CFrequency();
+		status = findOptimumSpeed(_thisHighestFreq, I2C_Talk::MAX_I2C_FREQ /*result.maxSafeSpeed*/);
 	}
 
+	_error = status;
 	if (status != _OK) {
-		error = status; // speed fail
-		//Serial.print("fastest_T<false,false> setSpeed 0");
-		//i2c_device.set_runSpeed(0); // inhibit future access
-		//set_runSpeed(_devAddr, 400000);
-	} else {
-		i2c_device.set_runSpeed(thisHighestFreq);
-		if (thisHighestFreq < maxSafeSpeed) maxSafeSpeed = thisHighestFreq;
+		_i2c_device->reset();
+		_thisHighestFreq = _i2c_device->runSpeed();
 	}
-	inScan(false);
+	_i2c_device->set_runSpeed(thisHighestFreq());
+
 	//Serial.print("fastest_T<false,false> Finished");Serial.flush();
-	return thisHighestFreq;
+	_is_inSpeedTest = false;
+	return thisHighestFreq();
 }
 
-signed char I2C_SpeedTest::findOptimumSpeed(I_I2Cdevice & i2c_device, int32_t & bestSpeed, int32_t limitSpeed ) {
+error_codes I2C_SpeedTest::findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed ) {
 	// enters function at a working frequency
-	int32_t adjustBy = (limitSpeed - bestSpeed) /3;
-	//Serial.print("\n ** findOptimumSpeed start:"); Serial.print(i2C_Talk().getI2CFrequency(), DEC); Serial.print(" limit: "); Serial.print(limitSpeed, DEC); Serial.print(" adjustBy: "); Serial.println(adjustBy, DEC); Serial.flush();
-	i2C_Talk().setI2CFrequency(limitSpeed);
-	auto status = recovery().testDevice(2,1);
+	int32_t adjustBy = (limitSpeed - bestSpeed) / 3;
+	if (limitSpeed == bestSpeed) adjustBy = limitSpeed / 10;
+	//Serial.print("\n ** findOptimumSpeed start:"); Serial.print(i2C().getI2CFrequency(), DEC); Serial.print(" limit: "); Serial.print(limitSpeed, DEC); Serial.print(" adjustBy: "); Serial.println(adjustBy, DEC); Serial.flush();
+	_i2c_device->i2C().setI2CFrequency(limitSpeed);
+	auto status = _i2c_device->recovery().testDevice(2,1);
 	//Serial.print("\n ** findOptimumSpeed Check?:"); Serial.println(status);
-	if (status) {
-		bestSpeed = i2C_Talk().setI2CFrequency(limitSpeed - adjustBy);
-		status = 0;
+	if (status != _OK) {
+		auto trySpeed = _i2c_device->i2C().setI2CFrequency(limitSpeed - adjustBy);
+		status = _OK;
 		do {
-			//Serial.print("\n Try best speed: "); Serial.print(bestSpeed, DEC); Serial.print(" adjustBy : "); Serial.println(adjustBy, DEC); Serial.flush();
-			while (!status && (adjustBy > 0 ? bestSpeed < limitSpeed : bestSpeed > limitSpeed)) { // adjust speed 'till it breaks	
-				//Serial.print(" Try at: "); Serial.println(i2C_Talk().getI2CFrequency(), DEC); Serial.flush();
-				status = recovery().testDevice(2, 1);
-				if (status) {
-					limitSpeed = bestSpeed - adjustBy / 100;
+			logger().log("  Try best speed: ", trySpeed, " adjustBy : ", adjustBy);
+			while (status == _OK && (adjustBy > 0 ? trySpeed < limitSpeed : trySpeed > limitSpeed)) { // adjust speed 'till it breaks	
+				logger().log("    Try at: ", _i2c_device->i2C().getI2CFrequency());
+				status = _i2c_device->recovery().testDevice(2, 1);
+				if (status != _OK) {
+					limitSpeed = trySpeed - adjustBy / 100;
 					//Serial.print("\n Failed. NewLimit:"); Serial.println(limitSpeed, DEC); Serial.flush();
 				}
 				else {
 					//Serial.print(" OK. BestSpeed for 0x"); Serial.print(foundDeviceAddr, HEX); Serial.print(" was:"); Serial.println(bestSpeed, DEC); Serial.flush();
-					bestSpeed = i2C_Talk().setI2CFrequency(bestSpeed + adjustBy);
+					bestSpeed = trySpeed;
+					trySpeed = _i2c_device->i2C().setI2CFrequency(trySpeed + adjustBy);
 				}
 			}
-			bestSpeed = i2C_Talk().setI2CFrequency(bestSpeed - adjustBy);
-			status = 0;
+			trySpeed = _i2c_device->i2C().setI2CFrequency(trySpeed - adjustBy);
 			adjustBy /= 2;
-		} while (abs(adjustBy) > bestSpeed/5);
+			status = _OK;
+		} while (abs(adjustBy) > bestSpeed / 7);
 	}
-	status = adjustSpeedTillItWorksAgain(i2c_device, (adjustBy > 0 ? -10 : 10));
-	bestSpeed = i2C_Talk().getI2CFrequency();
-	return status ? _I2C_Device_Not_Found : _OK;
+	status = adjustSpeedTillItWorksAgain((adjustBy > 0 ? -10 : 10));
+	bestSpeed = _i2c_device->i2C().getI2CFrequency();
+	return status != _OK ? _I2C_Device_Not_Found : _OK;
 }
 
-signed char I2C_SpeedTest::adjustSpeedTillItWorksAgain(I_I2Cdevice & i2c_device, int32_t incrementRatio) {
-	signed char status; // success == 0
-	//Serial.print("\n ** Adjust I2C_Speed: "); Serial.println(i2C_Talk().getI2CFrequency(),DEC);Serial.flush();
+error_codes I2C_SpeedTest::adjustSpeedTillItWorksAgain(int32_t incrementRatio) {
+	auto status = _OK;
+	//Serial.print("\n ** Adjust I2C_Speed: "); Serial.println(i2C().getI2CFrequency(),DEC);Serial.flush();
+	auto currFreq = _i2c_device->i2C().getI2CFrequency();
 	do { // Adjust speed 'till it works reliably
-		status = recovery().testDevice(NO_OF_TESTS_MUST_PASS, 1);
-		if (status) {
-			auto increment = i2C_Talk().getI2CFrequency() / incrementRatio;
-			i2C_Talk().setI2CFrequency(i2C_Talk().getI2CFrequency() + increment > 2000 ? increment : 2000);
-			//Serial.print(" Adjust I2C_Speed: "); Serial.print(getI2CFrequency(),DEC); Serial.print(" increment :"); Serial.println(getI2CFrequency() / incrementRatio,DEC);
+		status = _i2c_device->recovery().testDevice(NO_OF_TESTS_MUST_PASS, 1);
+		if (status != _OK) {
+			auto increment = currFreq / incrementRatio;
+			if (increment > 0) {
+				if (increment < 2000) increment = 2000;
+			} else {
+				if (increment > -2000) increment = -2000;
+			}
+			_i2c_device->i2C().setI2CFrequency(currFreq + increment);
+			logger().log(" Adjust I2C_Speed: ", currFreq, " increment :", increment);
 		}
-	} while (status && i2C_Talk().getI2CFrequency() > I2C_Talk::MIN_I2C_FREQ && i2C_Talk().getI2CFrequency() < I2C_Talk::MAX_I2C_FREQ);
-	//Serial.print(" Adjust I2C_Speed "); Serial.print(status ? "failed at : " : "finished at : "); Serial.println(i2C_Talk().getI2CFrequency(),DEC);Serial.flush();
-	return status ? _I2C_Device_Not_Found : _OK;
+		currFreq = _i2c_device->i2C().getI2CFrequency();
+	} while (status != _OK && currFreq > I2C_Talk::MIN_I2C_FREQ && currFreq < I2C_Talk::MAX_I2C_FREQ);
+	//Serial.print(" Adjust I2C_Speed "); Serial.print(status ? "failed at : " : "finished at : "); Serial.println(i2C().getI2CFrequency(),DEC);Serial.flush();
+	return status != _OK ? _I2C_Device_Not_Found : _OK;
 }
 
+I_I2C_SpeedTestAll::I_I2C_SpeedTestAll(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recover) 
+	: I_I2C_Scan(i2c, recover) {}
+
+int8_t I_I2C_SpeedTestAll::prepareTestAll() {
+	_maxSafeSpeed = I2C_Talk::MAX_I2C_FREQ;
+	_speedTester.prepareNextTest();
+	return 0;
+}

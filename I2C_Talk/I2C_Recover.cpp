@@ -3,12 +3,18 @@
 #include <I2C_Device.h>
 #include <I2C_Talk_ErrorCodes.h>
 
-using namespace I2C_Talk_ErrorCodes;
+namespace I2C_Recovery {
 
-TwoWire & I2C_Recover::wirePort() const { return i2C()._wire_port; }
+	using namespace I2C_Talk_ErrorCodes;
 
-void I2C_Recover::wireBegin() const { i2C().wireBegin(); }
+	TwoWire & I2C_Recover::wirePort() const { return i2C()._wire_port; }
 
-uint8_t I2C_Recover::testDevice(int , int ) {
-	return device().testDevice();
+	void I2C_Recover::wireBegin() { 
+		//Serial.print("I2C_Recover::wire: "); Serial.println(long(&i2C())); Serial.flush();
+		i2C().wireBegin(); 
+	}
+
+	error_codes I2C_Recover::testDevice(int, int) {
+		return device().testDevice();
+	}
 }

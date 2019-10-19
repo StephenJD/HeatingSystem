@@ -23,28 +23,40 @@
 
 #include "Arduino.h"
 #include "I2C_Device.h"
-#if !defined __SAM3X8E__
+#if defined ZPSIM
 #define LOAD_EEPROM
-#endif // !(__SAM3X8E__)
+#endif
 
 
 class I2C_Talk;
 
-class EEPROMClass : public I_I2Cdevice
-{
+class EEPROMClass : public I_I2Cdevice {
 #if defined (ZPSIM)
 public:
+	//EEPROMClass();
 	static uint8_t myEEProm[4096]; // EEPROM object may not get created until after it is used! So ensure array exists by making it static
 	~EEPROMClass();
 	void saveEEPROM();
 #endif
 
-  public:
-    EEPROMClass(I2C_Talk & i2C, int addr);
-    uint8_t read(int iAddr);
-    uint8_t write(int iAddr, uint8_t iVal);
-    uint8_t update(int iAddr, uint8_t iVal);
- private:
+public:
+	// Rated at 100kHz/3v, 400kHz/5v, 0.7*Vdd HI = 3.5v
+	EEPROMClass(int addr);
+	uint8_t read(int iAddr);
+	uint8_t write(int iAddr, uint8_t iVal);
+	uint8_t update(int iAddr, uint8_t iVal);
+	auto getStatus()-> I2C_Talk_ErrorCodes::error_codes override { i2C().waitForEPready(getAddress()); return i2C().status(getAddress()); }
+
+private:
+};
+
+template<I2C_Talk & i2c>
+class EEPROMClass_T : public EEPROMClass {
+public:
+	using EEPROMClass::EEPROMClass;
+private:
+	using EEPROMClass::i2C;
+	 I2C_Talk & i2C() override { return i2c; }
 };
 
 extern EEPROMClass & EEPROM;

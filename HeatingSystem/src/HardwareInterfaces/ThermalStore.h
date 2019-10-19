@@ -1,10 +1,10 @@
 #pragma once
-#include "Arduino.h"
-#include <RDB/src/RDB.h>
-#include <HeatingSystem/src/LCD_UI/I_Record_Interface.h>
-#include <HeatingSystem/src/Client_DataStructures/Data_ThermalStore.h>
-#include "Temp_Sensor.h"
-#include "..\Assembly\HeatingSystemEnums.h"
+#include <Arduino.h>
+#include <RDB.h>
+#include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
+#include "..\Client_DataStructures\Data_ThermalStore.h" // relative path required by Arduino
+#include "..\HardwareInterfaces\Temp_Sensor.h" // relative path required by Arduino
+#include "..\Assembly\HeatingSystemEnums.h" // relative path required by Arduino
 
 namespace HardwareInterfaces {
 	class BackBoiler;

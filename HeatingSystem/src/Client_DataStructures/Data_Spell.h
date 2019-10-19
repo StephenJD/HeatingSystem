@@ -21,13 +21,18 @@ namespace client_data_structures {
 		Date_Time::DateTime date;
 		RecordID programID;
 		RecordID field(int fieldIndex) const { return programID; }
-		bool operator < (R_Spell rhs) const { return date < rhs.date ; }
+		//bool operator < (R_Spell rhs) const { return date < rhs.date ; }
+		//bool operator < (Date_Time::DateTime rhs) const { return date < rhs; }
+		//operator Date_Time::DateTime() const { return date; }
 		bool operator == (R_Spell rhs) const { return date == rhs.date; }
 	};
+	inline bool operator < (R_Spell lhs, R_Spell rhs) { return lhs.date < rhs.date ; }
+	inline bool operator < (R_Spell lhs, Date_Time::DateTime rhs) { return lhs.date < rhs ; }
+	inline bool operator < (Date_Time::DateTime lhs, R_Spell rhs) { return lhs < rhs.date ; }
 
 #ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const R_Spell & spell) {
-		return stream << "Spell Date: " << std::dec << spell.date.day() << "/" << spell.date.getMonthStr() << "/" << spell.date.year() << " with ProgID: " << (int)spell.programID;
+		return stream << "Spell Date: " << spell.date << " with ProgID: " << (int)spell.programID;
 	}
 #endif
 
@@ -37,7 +42,7 @@ namespace client_data_structures {
 
 	/// <summary>
 	/// DB Interface to all Spell Data
-	/// Provides streamable fields which may be poulated by a database or the runtime-data.
+	/// Provides streamable fields which may be populated by a database or the runtime-data.
 	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>

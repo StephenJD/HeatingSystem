@@ -1,4 +1,5 @@
 #pragma once
+// This is the Arduino Mini Controller
 #include <Arduino.h>
 
 class EEPROMClass;

@@ -6,19 +6,17 @@
 #include "..\HardwareInterfaces\MixValveController.h"
 #include "..\HardwareInterfaces\Temp_Sensor.h"
 #include "..\Assembly\HeatingSystemEnums.h"
-#include <RDB\src\RDB.h>
+#include <RDB.h>
 
 namespace Assembly {
 
 	class TemperatureController
 	{
 	public:
-		TemperatureController(I2C_Talk & i2c, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS);
+		TemperatureController(I2C_Recovery::I2C_Recover & recovery, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS);
 		
 		// Modifiers
 		void checkAndAdjust();
-
-
 		
 		HardwareInterfaces::I2C_Temp_Sensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS];
 		HardwareInterfaces::BackBoiler backBoiler;

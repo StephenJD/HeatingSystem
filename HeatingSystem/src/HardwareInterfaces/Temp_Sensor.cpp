@@ -2,12 +2,13 @@
 #include "A__Constants.h"
 
 namespace HardwareInterfaces {
+	using namespace I2C_Talk_ErrorCodes;
+
 	int I2C_Temp_Sensor::_error;
 
 	void I2C_Temp_Sensor::initialise(int recID, int address) {
 		_recID = recID; 
 		setAddress(address);
-		readTemperature();
 	}
 
 
@@ -45,7 +46,7 @@ namespace HardwareInterfaces {
 #endif
 	}
 
-	uint8_t I2C_Temp_Sensor::testDevice() {
+	error_codes I2C_Temp_Sensor::testDevice() {
 		uint8_t temp[2] = {75,0};
 		//Serial.print("Temp_Sensor::testDevice : "); Serial.println(addr);
 		return write_verify(DS75LX_HYST_REG, 2, temp);

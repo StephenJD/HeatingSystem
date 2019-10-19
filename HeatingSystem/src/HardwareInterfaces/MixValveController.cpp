@@ -2,11 +2,12 @@
 #include "Relay.h"
 #include "A__Constants.h"
 #include "..\Assembly\HeatingSystemEnums.h"
+#include <I2C_Talk_ErrorCodes.h>
 #include <Logging.h>
 
 namespace HardwareInterfaces {
 	using namespace Assembly;
-
+	using namespace I2C_Talk_ErrorCodes;
 //#if defined (ZPSIM)
 //	using namespace std;
 //	ofstream MixValveController::lf("LogFile.csv");
@@ -22,18 +23,11 @@ namespace HardwareInterfaces {
 		_storeTempSens = storeTempSens;
 	}
 
-
-	uint8_t MixValveController::testDevice() {
-		unsigned long waitTime = 3000UL + *_timeOfReset_mS;
-		//Serial.println("MixValveController.testDevice");
-		uint8_t hasFailed;
-		uint8_t dataBuffa[1] = { 55 };
-		do hasFailed = write_verify(7, 1, dataBuffa); // write request temp
-		while (hasFailed && millis() < waitTime);
-		if (hasFailed)logger().log(" MixValveController::testDevice failed. Addr:", getAddress());
-		return hasFailed;
+	error_codes MixValveController::testDevice() {
+		auto status = writeToValve(Mix_Valve::request_temp, 55);
+		//if (status == 0) logger().log("MixValveController::testDevice() OK");
+		return status;
 	}
-
 
 	//////////////////////////////////////////////////////////////////////
 	// Construction/Destruction
@@ -52,7 +46,7 @@ namespace HardwareInterfaces {
 //	}
 //#endif
 
-	uint8_t MixValveController::sendSetup() const {
+	uint8_t MixValveController::sendSetup() {
 		uint8_t errCode;
 		errCode = writeToValve(Mix_Valve::flow_temp, _tempSensorArr[_flowTempSens].get_temp());
 		errCode |= writeToValve(Mix_Valve::request_temp, _mixCallTemp);
@@ -60,7 +54,7 @@ namespace HardwareInterfaces {
 		errCode |= writeToValve(Mix_Valve::temp_i2c_addr, _tempSensorArr[_flowTempSens].getAddress());
 		errCode |= writeToValve(Mix_Valve::max_ontime, VALVE_FULL_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::wait_time, VALVE_WAIT_TIME);
-		logger().log( "MixValveController::sendSetup()", errCode, i2c_Talk().getStatusMsg(errCode));
+		logger().log( "MixValveController::sendSetup()", errCode, i2C().getStatusMsg(errCode));
 		return errCode;
 	}
 
@@ -121,9 +115,9 @@ namespace HardwareInterfaces {
 				logger().log("MixValveController::amControlZone MixID: ", _index);
 				logger().log(relayName(relayID));
 				logger().log("MixValveController::request_temp was: ", mixValveCallTemp);
-				logger().log("MixValveController::writeToValve::request_temp", _mixCallTemp);
+				logger().log("MixValveController:: new_request_temp", _mixCallTemp);
 				logger().log("MixValveController::Actual flow_temp: ", readFromValve(Mix_Valve::flow_temp));
-				writeToValve(Mix_Valve::request_temp, _mixCallTemp);
+				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
 			}
 			return true;
@@ -138,7 +132,7 @@ namespace HardwareInterfaces {
 		return (_relayArr[_controlZoneRelay].getRelayState() != 0);
 	}
 
-	bool MixValveController::needHeat(bool isHeating) const {
+	bool MixValveController::needHeat(bool isHeating) {
 		if (!controlZoneRelayIsOn()) return false;
 		else if (isHeating) {
 			return (getStoreTemp() < _mixCallTemp + THERM_STORE_HYSTERESIS);
@@ -148,49 +142,35 @@ namespace HardwareInterfaces {
 		}
 	}
 
-	uint8_t MixValveController::writeToValve(Mix_Valve::Registers reg, uint8_t value) const {
+	error_codes  MixValveController::writeToValve(Mix_Valve::Registers reg, uint8_t value) {
 		unsigned long waitTime = 3000UL + *_timeOfReset_mS;
-		int NO_OF_ATTEMPTS = 4;
-		uint8_t hasFailed;
-		int attempts = NO_OF_ATTEMPTS;
-		do {
-			if (attempts == NO_OF_ATTEMPTS / 2) {
-				//speedTestDevice(MIX_VALVE_I2C_ADDR);
-			}
-			hasFailed = write(uint8_t(reg + _index * 16), value);
-		} while (hasFailed && (--attempts > 0 || millis() < waitTime));
+		auto status = recovery().newReadWrite(*this);
+		// Note: Contol register is write-only, so write_verify will fail.
+		if (status == _OK) {
+			do status = I_I2Cdevice::write(uint8_t(reg + _index * 16), 1, &value);
+			while (status && millis() < waitTime);
 
-		if (NO_OF_ATTEMPTS - attempts > 0) {
-			if (attempts > 0) {
-				logger().log("MixArduino write OK after", NO_OF_ATTEMPTS - attempts + 1);
+			if (status) {
+				logger().log(" First try writeToValve failed to Reg:", reg, "Value:", value);
+				status = write(uint8_t(reg + _index * 16), 1, &value);
 			}
-			else {
-				logger().log("MixArduino write Failed after", NO_OF_ATTEMPTS - attempts);
-			}
+
+			if (status) logger().log(" MixValveController::writeToValve failed. Addr:", getAddress(), getStatusMsg(status));
 		}
-		return hasFailed;
+		return status;
 	}
 
-	uint8_t MixValveController::readFromValve(Mix_Valve::Registers reg) const {
+	uint8_t MixValveController::readFromValve(Mix_Valve::Registers reg) {
 		unsigned long waitTime = 3000UL + *_timeOfReset_mS;
-		int NO_OF_ATTEMPTS = 4;
-		uint8_t hasFailed;
-		int attempts = NO_OF_ATTEMPTS;
-		uint8_t value;
-		do {
-			if (attempts == NO_OF_ATTEMPTS / 2) {
-				//speedTestDevice(MIX_VALVE_I2C_ADDR);
-			}
-			hasFailed = read( reg + _index * 16, 1, &value);
-		} while (hasFailed && (--attempts > 0 || millis() < waitTime));
+		uint8_t value = 0;
+		auto status = recovery().newReadWrite(*this);
+		if (status == _OK) {
+			do status = I_I2Cdevice::read(reg + _index * 16, 1, &value);
+			while (status && millis() < waitTime);
 
-		if (NO_OF_ATTEMPTS - attempts > 0) {
-			if (attempts > 0) {
-				logger().log("MixArduino read OK after", NO_OF_ATTEMPTS - attempts + 1);
-			}
-			else {
-				logger().log("MixArduino read Failed after", NO_OF_ATTEMPTS - attempts);
-			}
+			status = read(reg + _index * 16, 1, &value);
+
+			if (status) logger().log(" MixValveController::getPos failed. Addr:", getAddress());
 		}
 		return value;
 	}

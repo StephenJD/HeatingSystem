@@ -1,5 +1,5 @@
-#include <EEPROM.h>
 #include "Clock.h"
+#include <EEPROM.h>
 #include <I2C_Talk_ErrorCodes.h>
 
 using namespace I2C_Talk_ErrorCodes;
@@ -119,18 +119,23 @@ using namespace I2C_Talk_ErrorCodes;
 #endif
 	
 	///////////////////////////////////////////////////////////////
-	//                     EEPROM_Clock                          //
+	//                     Clock_EEPROM                          //
 	///////////////////////////////////////////////////////////////
 
-	EEPROM_Clock::EEPROM_Clock(unsigned int addr) :_addr(addr) { loadTime(); }
+	Clock_EEPROM::Clock_EEPROM(unsigned int addr) :_addr(addr) { loadTime(); }
 
-	void EEPROM_Clock::saveTime() {
+	bool Clock_EEPROM::ok() const {
+		int _day = day();
+		return  _day > 0 && _day < 32;
+	}
+
+	void Clock_EEPROM::saveTime() {
 		auto nextAddr = writer(_addr, &_now, 4);
 		nextAddr = writer(nextAddr, &_autoDST, 1);
 		writer(nextAddr, &_dstHasBeenSet, 1);
 	}
 	
-	void EEPROM_Clock::loadTime() {
+	void Clock_EEPROM::loadTime() {
 		auto nextAddr = reader(_addr, &_now, 4);
 		nextAddr = reader(nextAddr, &_autoDST, 1);
 		nextAddr = reader(nextAddr, &_dstHasBeenSet, 1);
@@ -139,89 +144,49 @@ using namespace I2C_Talk_ErrorCodes;
 		}
 	}
 
-	void EEPROM_Clock::_update() { // called every 10 minutes
+	void Clock_EEPROM::_update() { // called every 10 minutes
 		saveTime();
 	}
 
-
 	///////////////////////////////////////////////////////////////
-	//                     I2C_Clock                             //
+	//                     Clock_I2C                             //
 	///////////////////////////////////////////////////////////////
-	I2C_Talk * Clock_I2C_Device::_i2C;
 
-	I2C_Clock::I2C_Clock(I2C_Talk & i2C, int addr) : Clock_I2C_Device(i2C, addr) {
-		i2C_speedTest();
-		loadTime(); 
-	}
-	
-	uint8_t I2C_Clock::i2C_speedTest() {
-		//i2c_Talk().result.reset();
-		//i2c_Talk().result.foundDeviceAddr = getAddress();
-		//i2c_Talk().speedTestS(this);
-		//i2c_Talk().setThisI2CFrequency(getAddress(), 100000);
-		//loadTime(); 
-		//return i2c_Talk().result.error;
-		return 0;
-	}
+	//Clock_I2C::Clock_I2C(I2C_Talk & i2C, int addr) : Clock_I2C(i2C, addr) {
 
-	uint8_t I2C_Clock::testDevice() {
-		//Serial.print(" RTC testDevice at "); Serial.println(i2c.getI2CFrequency(),DEC);
-		uint8_t data[1] = { 0 };
-		auto errCode = write_verify(9, 1, data);
-		data[0] = 255;
-		if (errCode != _OK) errCode = write_verify(9, 1, data);
-		return errCode;
-	}
-
-	void I2C_Clock::loadTime() {
-		//Serial.println("I2C_Clock::loadTime()");
+	void I_Clock_I2C::loadTime() {
+		//Serial.println("Clock_I2C::loadTime()");
 		// called by log so must not recursivly call log
 		int errCode = 0;
 #if !defined (ZPSIM)
-		//if (_i2C) {
-			uint8_t data[9];
-			data[6] = 0; // year
 
-			errCode = i2c_Talk().read(getAddress(), 0, 9, data);
-			if ((errCode != _OK || data[6] == 255) && i2c_Talk().getI2CFrequency() > i2c_Talk().MIN_I2C_FREQ) {
-				if (Serial) {
-					Serial.print("Error reading RTC : "); Serial.print(i2c_Talk().getStatusMsg(errCode));
-					Serial.print(" Year : "); Serial.println((int)data[6]);
-				}
-				if (Serial) { for (int val : data) { Serial.print(" data[] : "); Serial.println(fromBCD(val)); } }
-				//i2c_Talk().slowdown_and_reset(0);
-				data[6] = 0;
-				errCode = i2c_Talk().read(getAddress(), 0, 9, data);
-			}
-			if (errCode != _OK) {
-				if (Serial) { Serial.print("RTC Unreadable. "); Serial.println(i2c_Talk().getStatusMsg(errCode)); }
-			}
-			else if (data[6] == 0) {
-				if (Serial) { Serial.println("RTC set from Compiler"); }
-				_setFromCompiler();
-			}
-			else {
-				//if (Serial) Serial.println("Set from RTC");
-				_now.setMins10(data[1] >> 4);
-				_now.setHrs(fromBCD(data[2]));
-				_now.setDay(fromBCD(data[4]));
-				_now.setMonth(fromBCD(data[5]));
-				_now.setYear(fromBCD(data[6]));
-				_autoDST = data[8] >> 1;
-				_dstHasBeenSet = data[8] & 1;
-				setMinUnits(data[1] & 15);
-				setSeconds(fromBCD(data[0]));
-			}
-		//}
-		//else {
-		//	if (Serial) { Serial.println("No i2c: Set from Compiler"); }
-		//	_setFromCompiler();
-		//	errCode = _I2C_Device_Not_Found;
-		//}
+		uint8_t data[9];
+		data[6] = 0; // year
+
+		errCode = readData(0, 9, data);
+		if (errCode != _OK) {
+			if (Serial) { Serial.print("RTC Unreadable. "); }
+		}
+		else if (data[6] == 0) {
+			if (Serial) { Serial.println("RTC set from Compiler"); }
+			_setFromCompiler();
+		}
+		else {
+			//if (Serial) Serial.println("Set from RTC");
+			_now.setMins10(data[1] >> 4);
+			_now.setHrs(fromBCD(data[2]));
+			_now.setDay(fromBCD(data[4]));
+			_now.setMonth(fromBCD(data[5]));
+			_now.setYear(fromBCD(data[6]));
+			_autoDST = data[8] >> 1;
+			_dstHasBeenSet = data[8] & 1;
+			setMinUnits(data[1] & 15);
+			setSeconds(fromBCD(data[0]));
+		}
 #endif	
 	}
 
-	void I2C_Clock::saveTime() {
+	void I_Clock_I2C::saveTime() {
 		//Serial.print("Save CurrDateTime... at "); Serial.println(i2c_Talk().getThisI2CFrequency(0x68), DEC);
 
 		uint8_t data[9];
@@ -235,17 +200,9 @@ using namespace I2C_Talk_ErrorCodes;
 		data[7] = 0; // disable SQW
 		data[8] = _autoDST << 1 | _dstHasBeenSet; // in RAM
 
-		auto errCode = write(0, 9, data);
+		auto errCode = writeData(0, 9, data);
 
-		//if (errCode != _OK && i2c_Talk().getI2CFrequency() > i2c_Talk().MIN_I2C_FREQ) {
-		//	if (Serial) { Serial.print("Error writing RTC : ");  Serial.println(i2c_Talk().getStatusMsg(errCode)); }
-		//	//i2c_Talk().slowdown_and_reset(0);
-		//	errCode = write(0, 9, data);
-		//}
-		//if (errCode != _OK) {
-		//	if (Serial) { Serial.print("Unable to write RTC:");  Serial.println(i2c_Talk().getStatusMsg(errCode)); }
-		//}
-		//else {
+		//if (errCode == _OK) {
 		//	//if (Serial) Serial.println("Saved CurrDateTime");
 		//}
 		//#if defined ZPSIM
@@ -253,6 +210,6 @@ using namespace I2C_Talk_ErrorCodes;
 		//#endif
 	}
 
-	void I2C_Clock::_update() { // called every 10 minutes
+	void I_Clock_I2C::_update() { // called every 10 minutes
 		loadTime();
 	}

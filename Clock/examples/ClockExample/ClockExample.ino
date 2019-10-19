@@ -3,7 +3,12 @@
 #include <Conversions.h>
 #include <Date_Time.h>
 #include <I2C_Talk.h>
+#include <I2C_Scan.h>
 #include <Clock.h>
+#include <Logging.h>
+#include <SD.h>
+#include <SPI.h>
+#include <EEPROM.h>
 
 #define RTC_ADDRESS 0x68
 #define EEPROM_ADDR 0x50
@@ -11,7 +16,9 @@
 
 #define RTC_RESET 4
 
-I2C_Talk_Auto_Speed<2> * rtc(0);
+I2C_Talk rtc(Wire1, 100000);
+I_I2C_Scan scanner{ rtc };
+
 using namespace Date_Time;
 
 #if defined(__SAM3X8E__)
@@ -21,22 +28,12 @@ using namespace Date_Time;
 
 Clock & clock_() {
 #if defined(__SAM3X8E__)
-	static I2C_Clock _clock(*rtc, RTC_ADDRESS);
+	static Clock_I2C<rtc> _clock(RTC_ADDRESS);
 #else
-	static EEPROM_Clock _clock(EEPROM_CLOCK_ADDR);
-	#define NO_RTC
+	static Clock_EEPROM _clock(EEPROM_CLOCK_ADDR);
+#define NO_RTC
 #endif
 	return _clock;
-}
-
-uint8_t resetRTC(I2C_Talk & i2c, int) {
-	Serial.println("Reset RTC...");
-	digitalWrite(RTC_RESET, HIGH);
-	delayMicroseconds(10000);
-	digitalWrite(RTC_RESET, LOW);
-	delayMicroseconds(10000);
-	i2c.restart();
-	return I2C_Talk::_OK;
 }
 
 //////////////////////////////// Start execution here ///////////////////////////////
@@ -45,15 +42,14 @@ void setup() {
 	Serial.println(" Serial Begun");
 
 #if !defined NO_RTC
-  pinMode(RTC_RESET, OUTPUT);
-  digitalWrite(RTC_RESET, LOW); // reset pin
-  Serial.println(" Create rtc Helper");
-	rtc = new I2C_Talk_Auto_Speed<2>(Wire1);
-	//rtc->setTimeoutFn(resetRTC);
+	pinMode(RTC_RESET, OUTPUT);
+	digitalWrite(RTC_RESET, LOW); // reset pin
+	rtc.restart();
 
-	static_cast<I2C_Clock&>(clock_()).i2C_speedTest();
 #endif
-  Serial.println(" Save Time");
+	scanner.show_all();
+
+	Serial.println(" Save Time");
 	clock_().saveTime();
 	clock_().loadTime();
 }

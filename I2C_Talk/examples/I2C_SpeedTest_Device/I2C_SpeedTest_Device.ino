@@ -6,18 +6,38 @@
 
 #include <Clock.h>
 #include <Logging.h>
+#include <EEPROM.h>
+#include <Wire.h>
+#include <SD.h>
+#include <SPI.h>
+#include <Conversions.h>
+#include <Date_Time.h>
 
 #define I2C_RESET 14
 #define RTC_RESET 4
+#define RTC_ADDRESS 0x68
+
+int st_index;
+using namespace I2C_Recovery;
+
 const uint8_t DS75LX_Temp = 0x00; // two bytes must be read. Temp is MS 9 bits, in 0.5 deg increments, with MSB indicating -ve temp.
 const uint8_t DS75LX_Config = 0x01;
 const uint8_t DS75LX_HYST_REG = 0x02;
 const uint8_t DS75LX_LIMIT_REG = 0x03;
 const uint8_t EEPROM_CLOCK_ADDR = 0;
 
+I2C_Talk rtc{ Wire1 };
+
+EEPROMClass & eeprom() {
+	static EEPROMClass_T<rtc> _eeprom_obj{ 0x50 };
+	return _eeprom_obj;
+}
+
+EEPROMClass & EEPROM = eeprom();
 
 Clock & clock_() {
-	static Clock _clock;
+	//	static Clock _clock;
+	static Clock_I2C<rtc> _clock(RTC_ADDRESS);
 	return _clock;
 }
 
@@ -26,10 +46,10 @@ Logger & logger() {
 	return _log;
 }
 
-class I2C_Temp_Sensor : public I_I2Cdevice {
+class I2C_Temp_Sensor : public I_I2Cdevice_Recovery {
 public:
-	I2C_Temp_Sensor(I2C_Talk & i2C, int addr) : I_I2Cdevice(i2C, addr) {} // initialiser for first array element 
-	I2C_Temp_Sensor() : I_I2Cdevice(i2c_Talk()) {} // allow array to be constructed
+	I2C_Temp_Sensor(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice_Recovery(recover, addr) {}
+	I2C_Temp_Sensor() = default; // allow array to be constructed
 
 	// Queries
 	int8_t get_temp() const {return (get_fractional_temp() + 128) / 256;}
@@ -69,8 +89,11 @@ private:
 };
 
 I2C_Talk i2C;
-I2C_Recover_Retest recover_retest{ i2C };
+I2C_Recover_Retest recover_retest{};
+I_I2C_SpeedTestAll i2c_test{i2C, recover_retest };
+
 I2C_Temp_Sensor * tempSens = 0;
+I_I2C_SpeedTestAll rtc_test{rtc};
 
 uint8_t resetI2c(I2C_Talk & i2c, int) {
   Serial.println("Power-Down I2C...");
@@ -82,39 +105,74 @@ uint8_t resetI2c(I2C_Talk & i2c, int) {
   return I2C_Talk_ErrorCodes::_OK;
 }
 
+uint8_t resetRTC(I2C_Talk & i2c, int addr) {
+	Serial.println("Power-Down RTC...");
+	digitalWrite(RTC_RESET, HIGH);
+	delayMicroseconds(200000);
+	digitalWrite(RTC_RESET, LOW);
+	i2c.restart();
+	delayMicroseconds(200000);
+	return true;
+}
+
+bool checkEEPROM(const char * msg) {
+	auto functionReturnTime = micros();
+	auto loopTime = functionReturnTime + 1000;
+	auto timeNow = functionReturnTime;
+	bool OK = true;
+	//int loopCount = 1;
+	while (timeNow < loopTime) {
+		//if (EEPROM.getStatus() != 0) {
+		if (rtc.status(0x50) != 0) {
+			resetRTC(rtc, 0x50);
+			logger().log("\nEEPROM error after check uS: ", timeNow - functionReturnTime, msg);
+			OK = false;
+			break;
+		}
+		timeNow = micros();
+		//++loopCount;
+	}
+	return OK;
+}
+
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
 	Serial.begin(9600);
 	Serial.println(" Serial Begun");
 	pinMode(I2C_RESET, OUTPUT);
-	digitalWrite(I2C_RESET, HIGH); // reset pin
 	pinMode(RTC_RESET, OUTPUT);
-	digitalWrite(RTC_RESET, LOW); // reset pin
-	i2C.restart();
+	resetI2c(i2C, 0);
+	resetRTC(rtc, 0);
+
+	Serial.print("Wire addr   "); Serial.println((long)&Wire);
+	Serial.print("Wire 1 addr "); Serial.println((long)&Wire1);
+
+	rtc_test.showAll_fastest();
+
 	recover_retest.setTimeoutFn(resetI2c);
 	
-	tempSens = new I2C_Temp_Sensor(i2C, 0x29);
+	tempSens = new I2C_Temp_Sensor(recover_retest, 0x29);
 
 	Serial.print("TS: "); Serial.println(tempSens->get_temp());
 
 	Serial.println(" Speedtest All Addr");
-	recover_retest.showAll_fastest();
+	i2c_test.showAll_fastest();
 	tempSens->readTemperature();
 	Serial.print("TS: "); Serial.println(tempSens->get_temp());
 
 	Serial.println(" Speedtest Each Adr");
-	auto addr = recover_retest.prepareTestAll();
-	while (addr = recover_retest.next()) {
-		recover_retest.show_fastest();
+	auto addr = i2c_test.prepareTestAll();
+	while (addr = i2c_test.next()) {
+		i2c_test.show_fastest();
 	}
 	tempSens->readTemperature();
 	Serial.print("TS: "); Serial.println(tempSens->get_temp());
 
 	Serial.println(" Speedtest Each Device");
-	addr = recover_retest.prepareTestAll();
-	while (addr = recover_retest.next()) {
+	addr = i2c_test.prepareTestAll();
+	while (addr = i2c_test.next()) {
 		tempSens->setAddress(addr);
-		recover_retest.show_fastest(*tempSens);
+		i2c_test.show_fastest(*tempSens);
 	}
 	tempSens->readTemperature();
 	Serial.print("TS: "); Serial.println(tempSens->get_temp());

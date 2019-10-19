@@ -223,8 +223,8 @@ namespace client_data_structures {
 		tt_FilterQ.setMatchArg(profileID);
 		auto gotTT = tt_FilterQ.begin();
 		if (gotTT.status() != TB_OK) {
-			uint16_t newTime = Date_Time::TimeOnly{ 7,0 }.asInt() << 8;
-			R_TimeTemp newTT{ RecordID(profileID), newTime + (uint16_t)28 };
+			auto newTime = TimeTemp{ {7,0},18 };
+			R_TimeTemp newTT{ RecordID(profileID), newTime};
 			tt_tableQ.insert(&newTT);
 		}
 	}

@@ -77,7 +77,7 @@ namespace BitFields {
 		}
 
 	protected:
-		static constexpr IntType mask = (1u << bits) - 1u;
+		static constexpr IntType mask = (IntType(1) << bits) - IntType(1);
 		//enum :IntType { mask = (1u << bits) - 1u };
 		IntType base; // must not initialise because only one member of a union is allowed to be initialised
 	};

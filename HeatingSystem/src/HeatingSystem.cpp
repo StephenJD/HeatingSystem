@@ -3,7 +3,7 @@
 #include "HardwareInterfaces\I2C_Comms.h"
 #include "HardwareInterfaces\A__Constants.h"
 #include "LCD_UI\A_Top_UI.h"
-#include <EEPROM\EEPROM.h>
+#include <EEPROM.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
@@ -36,19 +36,18 @@ using namespace	Assembly;
 
 HeatingSystem::HeatingSystem()
 	: 
-	db(RDB_START_ADDR, writer, reader, VERSION)
+	_recover(i2C, STACK_TRACE_ADDR)
+	, db(RDB_START_ADDR, writer, reader, VERSION)
 	, _initialiser(*this)
-	, mainDisplay(&_q_displays)
-	, remDispl{ {i2C,US_REMOTE_ADDRESS}, {i2C,FL_REMOTE_ADDRESS}, {i2C,DS_REMOTE_ADDRESS} }
-	, _q_displays(db.tableQuery(TB_Display))
-	, _tempController(i2C, db, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
-	, _mainPages{db, _tempController}
+	, _tempController(_recover, db, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
+	, _hs_db(db, _tempController)
+	, mainDisplay(&_hs_db._q_displays)
+	, remDispl{ {_recover, US_REMOTE_ADDRESS}, FL_REMOTE_ADDRESS, DS_REMOTE_ADDRESS }
+	, _mainPages{ _hs_db, _tempController}
+	, _sequencer(_hs_db, _tempController)
 	, _mainConsole(localKeypad, mainDisplay, _mainPages.pages())
-	, _sequencer(db, _tempController)
 	{
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
-		_mainPages.setDisplay(mainDisplay);
-		localKeypad.wakeDisplay(true);
 		_initialiser.i2C_Test();
 		serviceProfiles();
 	}
