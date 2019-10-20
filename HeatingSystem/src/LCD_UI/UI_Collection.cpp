@@ -341,19 +341,28 @@ namespace LCD_UI {
 	}
 
 	const char * UI_ShortCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		auto bufferStart = strlen(buffer.toCStr());
-		auto newLine = buffer.toCStr()[bufferStart -1] == '~';
-		if (newLine) --bufferStart;
-
-		auto hasFocus = false;
-		auto focus = collection()->focusIndex();
-		if (focus >= 0 && focus < endIndex()) hasFocus = true;
-
-		do {
+		auto focus = collection()->focusIndex();		
+		
+		// lambdas
+		auto endOfBufferSoFar = [&buffer]() {return strlen(buffer.toCStr());};
+		auto thisElementIsOnAnewLine = [&buffer](auto bufferStart) {return buffer.toCStr()[bufferStart -1] == '~';};
+		auto removeNewLineSymbol = [](auto & bufferStart) {--bufferStart; };
+		auto elementHasfocus = [focus, this]() {return (focus >= 0 && focus < endIndex()) ? true : false; };
+		auto startThisField = [&buffer](auto bufferStart, auto newLine) {
 			buffer.truncate(bufferStart);
 			if (newLine) buffer.newLine();
+		};
+
+		// algorithm
+		auto bufferStart = endOfBufferSoFar();
+		auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
+		if (mustStartNewLine) removeNewLineSymbol(bufferStart);
+		auto hasFocus = elementHasfocus();
+
+		do {
+			startThisField(bufferStart, newLine);
 			collection()->streamElement(buffer, activeElement, this, streamIndex);
-		} while (hasFocus && (focus < _beginIndex || focus >= _endShow));
+		} while (hasFocus && (focus < _beginShow || focus >= _endShow));
 
 		return 0;
 	}
@@ -395,7 +404,7 @@ namespace LCD_UI {
 	}
 
 	void UI_ShortCollection::endVisibleItem(bool thisWasShown, int streamIndex) const {
-		// endShow is 1st element NOT to show.
+		// _endShow is streamIndex after the last visible 
 		if (thisWasShown && streamIndex >= _endShow) _endShow = streamIndex + 1;
 		if (!thisWasShown && streamIndex < _endShow) _endShow = streamIndex;
 	}

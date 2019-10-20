@@ -50,13 +50,13 @@ namespace Assembly {
 		, _zone_subpage_c{ makeCollection(_dwellingZoneCmd, _zoneNameUI_c).set(viewAllUpDn())}
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _progAllNameUI_c).set(viewAllUpDn()) }
-		, _page_dwellingMembers_subpage_c{ makeCollection(_zone_subpage_c, _calendar_subpage_c, _prog_subpage_c).set(viewOneUpDnRecycle()) }
+		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _zone_subpage_c, _prog_subpage_c).set(viewOneUpDnRecycle()) }
 		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _timeTempUI_sc) }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 
 		// Display - Collection of Page Handles
-		, _display_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
+		, _display_c{ makeDisplay(_page_currTime_c, _page_profile_c, _page_dwellingMembers_c, _page_zoneReqTemp_c) }
 		, _display_h{_display_c}
 	{
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));

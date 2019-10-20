@@ -39,7 +39,9 @@ namespace HardwareInterfaces {
 			hs().mainDisplay.print("Bad");
 			hs().mainDisplay.sendToDisplay();
 			logger().log("TestDevices::speedTestDevices for ", device.getAddress(), " Failed");
+#ifndef ZPSIM
 			delay(2000);
+#endif
 		}
 		else {
 			hs().mainDisplay.print(" OK");

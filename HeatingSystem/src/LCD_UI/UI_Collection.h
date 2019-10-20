@@ -365,8 +365,8 @@ namespace LCD_UI {
 		int firstVisibleItem() const override;
 		int fieldEndPos() const override { return _endPos; }
 		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override;
-		void endVisibleItem(bool thisWasShown, int streamIndex) const override; // endShow is 1st element NOT to show.
-		int endVisibleItem() const override { return _endShow; }
+		void endVisibleItem(bool thisWasShown, int streamIndex) const override;
+		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
 
 		// Polymorphic Modifiers
 		I_SafeCollection * collection() override { return _nestedCollection->collection(); }
@@ -380,10 +380,10 @@ namespace LCD_UI {
 	private:
 		int endIndex() const { return collection()->endIndex(); }
 		Collection_Hndl _nestedCollection;
-		const int _endPos; // 0-based endIndex on the display for the end of this list; i.e. no of visible chars including < & >.
-		mutable int _beginShow = 0;
-		mutable int _endShow;
-		int _beginIndex = 0;
+		const int _endPos; // 0-based character endIndex on the display for the end of this list; i.e. no of visible chars including end markers: < ... >.
+		mutable int _beginShow = 0; // streamIndex of first visible element
+		mutable int _endShow; // streamIndex after the last visible element
+		int _beginIndex = 0; // streamIndex of first element in collection
 	};
 
 	//////////////////////////////////////////////////////////////////////

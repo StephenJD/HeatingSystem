@@ -102,10 +102,10 @@ namespace I2C_Recovery {
 	bool I2C_Recover_Retest::tryReadWriteAgain(error_codes status) {
 		static uint32_t recoveryTime;
 		uint32_t strategyStartTime;
-		//static int tryAgain;
+		static int tryAgain;
 		//logger().log("tryReadWriteAgain: status", status);
 		if (status == _OK) {
-			//tryAgain = 0;
+			tryAgain = 0;
 			if (recoveryTime > 0) {
 				logger().log("Recovery Time uS:", recoveryTime);
 				strategy().stackTrace(++st_index, "tryReadWriteAgain - recovered");
@@ -200,7 +200,8 @@ namespace I2C_Recovery {
 					}
 				}
 				strategy().stackTrace(++st_index, "S_PowerDown");
-					strategy().tryAgain(S_TryAgain);
+				++tryAgain;
+				if (tryAgain <= 1) strategy().tryAgain(S_TryAgain);
 				break;
 			case S_Disable:
 				logger().log("    S_Disable Device", device().getAddress(), device().getStatusMsg(status));
