@@ -24,7 +24,7 @@ class I2C_SpeedTest {
 public:
 	I2C_SpeedTest() = default;
 	I2C_SpeedTest(I_I2Cdevice_Recovery & i2c_device) : _i2c_device(&i2c_device) {
-		//logger().log("  I2C_SpeedTest setDevice:", i2c_device.getAddress());
+		//logger() << "  I2C_SpeedTest setDevice:", i2c_device.getAddress());
 	}
 	static bool doingSpeedTest() { return _is_inSpeedTest; }
 	uint32_t fastest();

@@ -4,10 +4,7 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
 #include "..\..\..\DateTime\src\Time_Only.h"
-
-#ifdef ZPSIM
-	#include <ostream>
-#endif
+#include <Logging.h>
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -35,7 +32,7 @@ namespace client_data_structures {
 
 	struct R_TimeTemp {
 		// Each Profile has one or more TimeTemps defining the temperature for times throughout a day
-		R_TimeTemp(RecordID id, TimeTemp tt) : profileID(id), time_temp(tt) {}
+		constexpr R_TimeTemp(RecordID id, TimeTemp tt) : profileID(id), time_temp(tt) {}
 		R_TimeTemp() = default;
 		RecordID profileID = 0;
 		TimeTemp time_temp;
@@ -49,14 +46,12 @@ namespace client_data_structures {
 		bool operator == (R_TimeTemp rhs) const { return time_temp == rhs.time_temp; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_TimeTemp & timeTemp) {
+	inline Logger & operator << (Logger & stream, const R_TimeTemp & timeTemp) {
 		using namespace Date_Time;
-
-		return stream << "TimeTemp for ProfileID: " << std::dec << (int)timeTemp.profileID << " time: " 
+		return stream << "TimeTemp for ProfileID: " << (int)timeTemp.profileID << " time: " 
 			<< intToString(timeTemp.time_temp.time().hrs(), 2, '0') << (int)timeTemp.time_temp.time().mins10() << "0  Temp: " << (int)timeTemp.time_temp.temp();
 	}
-#endif
+
 	//***************************************************
 	//              TimeTemp UI Edit
 	//***************************************************

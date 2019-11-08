@@ -48,6 +48,11 @@ Logger & timelessLogger() {
   return _log;
 }
 
+Logger & nullLogger() {
+	static Logger _log{};
+	return _log;
+}
+
 Logger & logger() {
   static Serial_Logger _log(9600, clock_());
   return _log;
@@ -61,15 +66,15 @@ Logger & sdlogger() {
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
   Serial.begin(9600); // NOTE! Serial.begin must be called before i2c_clock is constructed.
-  logger().log(" Setup Start");
+  logger() << " Setup Start\n";
   pinMode(RTC_RESET, OUTPUT);
   digitalWrite(RTC_RESET, LOW); // reset pin
   rtc.restart();
   scanner.show_all();
 
-  logger().log_notime("Notime Logger Message");
-  logger().log("Timed Logger Message");
-  sdlogger().log("SD Timed Logger Started");
+  logger() << "Notime Logger Message\n";
+  logger() << L_time << "Timed Logger Message\n";
+  sdlogger() << L_time << "SD Timed Logger Started\n";
   clock_().saveTime();
   clock_().loadTime();
 }
@@ -77,6 +82,12 @@ void setup() {
 void loop()
 {
   delay(5000);
-  sdlogger().log("SD Timed Logger...");
-  timelessLogger().log("timelessLogger");
+  sdlogger() << "SD Timed Logger...\n";
+  timelessLogger() << "timelessLogger\n";
+  nullLogger() << "Nothing";
+  sdlogger() << L_time << L_tabs << "tabbed" << 5 << L_concat << "untabbed" << 6 << L_endl;
+  sdlogger() << L_time << "not tabbed" << 5 << L_endl;
+  sdlogger() << L_time << "log" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+  sdlogger() << L_cout << "cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+  sdlogger() << "log after cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
 }

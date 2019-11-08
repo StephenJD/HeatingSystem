@@ -4,10 +4,6 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include <RDB.h>
 
-#ifdef ZPSIM
-	#include <ostream>
-#endif
-
 namespace client_data_structures {
 	using namespace LCD_UI;
 	//***************************************************
@@ -25,17 +21,15 @@ namespace client_data_structures {
 	struct R_Program {
 		// Each Dwelling has a set of program names
 		char name[8];
-		RecordID dwellingID; // Owning Dwelling
+		RecordID dwellingID; // Initialisation inhibits aggregate initialisation. Owning Dwelling
 		RecordID field(int fieldIndex) { return dwellingID; }
 		bool operator < (R_Program rhs) const { return false; }
 		bool operator == (R_Program rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_Program & program) {
-		return stream << "Program: " << program.name << " for DwellingID: " << std::dec << (int)program.dwellingID;
+	inline Logger & operator << (Logger & stream, const R_Program & program) {
+		return stream << "Program: " << program.name << " for DwellingID: " << (int)program.dwellingID;
 	}
-#endif
 
 	//***************************************************
 	//              Program LCD_UI

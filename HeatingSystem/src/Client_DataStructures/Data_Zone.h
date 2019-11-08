@@ -6,10 +6,6 @@
 #include "..\..\..\DateTime\src\Date_Time.h"
 #include "..\HardwareInterfaces\Zone.h"
 
-#ifdef ZPSIM
-	#include <ostream>
-#endif
-
 namespace client_data_structures {
 	using namespace LCD_UI;
 	//***************************************************
@@ -83,11 +79,9 @@ namespace client_data_structures {
 		bool operator == (R_Zone rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_Zone & zone) {
+	inline Logger & operator << (Logger & stream, const R_Zone & zone) {
 		return stream << "Zone: " << zone.name;
 	}
-#endif
 
 	struct R_DwellingZone {
 		RecordID dwellingID;
@@ -99,11 +93,9 @@ namespace client_data_structures {
 		bool operator == (R_DwellingZone rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_DwellingZone & dwellingZone) {
-		return stream << "DwellingZone DwID: " << std::dec << (int)dwellingZone.dwellingID << " ZnID: " << (int)dwellingZone.zoneID;
+	inline Logger & operator << (Logger & stream, const R_DwellingZone & dwellingZone) {
+		return stream << "DwellingZone DwID: " << (int)dwellingZone.dwellingID << " ZnID: " << (int)dwellingZone.zoneID;
 	}
-#endif
 
 	//***************************************************
 	//              Zone DB Interface
@@ -129,5 +121,4 @@ namespace client_data_structures {
 		DecWrapper _factor;
 		ReqIsTemp_Wrapper _reqIsTemp;
 	};
-
 }

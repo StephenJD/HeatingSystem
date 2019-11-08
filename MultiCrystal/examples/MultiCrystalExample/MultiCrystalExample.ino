@@ -6,8 +6,18 @@
 #include <MultiCrystal.h>
 #include <I2C_Talk.h>
 #include <Conversions.h>
+#include <Logging.h>
+#include <SD.h>
+#include <SPI.h>
+#include <EEPROM.h>
+#include <MemoryFree.h>
 
 MultiCrystal * lcd(0);
+
+Logger & logger() {
+	static Logger _log{};
+	return _log;
+}
 
 byte PHOTO_ANALOGUE =0;
 byte BRIGHNESS_PWM =5;

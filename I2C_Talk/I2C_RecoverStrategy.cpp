@@ -19,11 +19,11 @@ namespace I2C_Recovery {
 	void I2C_RecoverStrategy::initialise() {
 		if (score(0) != STRATEGY_VERSION) {
 			//checkEEPROM("I2C_RecoverStrategy::initialise()");
-			logger().log("\tI2C_RecoverStrategy::initialise() from", _eeprom_addr);
+			 logger() << "\n\tI2C_RecoverStrategy::initialise() from " << _eeprom_addr;
 			for (int s = 1; s < S_NoOfStrategies; ++s) score(s, 0);
 			score(0, STRATEGY_VERSION);
 		}
-			//logger().log("\t Reset Strategy Version:", score(0));
+			// logger() << "\n\t Reset Strategy Version:", score(0));
 	}
 
 	uint8_t I2C_RecoverStrategy::score(int index) {
@@ -77,15 +77,15 @@ namespace I2C_Recovery {
 		int startAddr = STACKTRACE_MESSAGE_LENGTH;
 		char msg[STACKTRACE_MESSAGE_LENGTH] = { 0 };
 		//char gotTrace = EEPROM.read(startAddr);
-		logger().log("\n***** Start Stack-Trace Log *****");
+		logger() << "\n***** Start Stack-Trace Log *****";
 		
 		for (int s = 1; s <= STACKTRACE_MESSAGE_NO; ++s) {
 			EEPROM.readEP(startAddr, STACKTRACE_MESSAGE_LENGTH, msg);
-			logger().log("Stack-Trace at",startAddr, msg+1);
+			 logger() << "\nStack-Trace at " << startAddr << msg+1;
 			startAddr += STACKTRACE_MESSAGE_LENGTH;
 			if (EEPROM.read(startAddr) != '@') break;
 		}
-		logger().log("\n***** End Stack-Trace Log *****");
+		logger() << "\n***** End Stack-Trace Log *****";
 	}
 
 	void I2C_RecoverStrategy::next() {
@@ -107,7 +107,7 @@ namespace I2C_Recovery {
 		//		}
 		//	}
 		//}
-		logger().log("Next Strategy is", nextStrategy, "Score:", score(nextStrategy));
+		 logger() << "\nNext Strategy is " << nextStrategy << " Score: " << score(nextStrategy);
 		_strategy = static_cast<Strategy>(nextStrategy);
 	}
 
@@ -117,12 +117,12 @@ namespace I2C_Recovery {
 		}
 		score(_strategy, score(_strategy) + 1);
 		if (strategy() == S_Disable) {
-			logger().log("Failed & Disabled with strategy", strategy(), "Score:", score(_strategy));
+			 logger() << "\nFailed & Disabled with strategy " << strategy() << " Score: " << score(_strategy);
 		}
 		else {
-			logger().log("Succeeded with strategy", strategy(), "Score:", score(_strategy));
+			 logger() << "\nSucceeded with strategy " << strategy() << " Score: " << score(_strategy);
 		}
-		logger().log();
+		logger();
 		reset();
 	}
 

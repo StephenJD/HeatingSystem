@@ -74,24 +74,25 @@ namespace HardwareInterfaces {
 			// Only call for heat if mixing valve is below temp
 			needHeat = needHeat | mixV.needHeat(_isHeating);
 		}
-		if (!_isHeating && needHeat) logger().log("ThermalStore::needHeat?\tMixValve Needs Heat  Curr DHW temp:", _currDeliverTemp);
+		logger() << "\nThermalStore::needHeat?";
+		if (!_isHeating && needHeat) logger() << "\n\tMixValve Needs Heat  Curr DHW temp: " << _currDeliverTemp;
 		bool tsNeedHeat = dhwNeedsHeat(currRequest, nextRequest);
 		//std::cout << "ThmStore::NeedHeat?" << '\n';
-		if (!_isHeating && tsNeedHeat) logger().log("ThermalStore::needHeat?\tStore Needs Heat  Curr DHW temp:", _currDeliverTemp);
+		if (!_isHeating && tsNeedHeat) logger() << "\n\tStore Needs Heat  Curr DHW temp: " << _currDeliverTemp;
 		needHeat = needHeat | tsNeedHeat;
 		if (_isHeating && !needHeat) {
 			//f->eventS().newEvent(EVT_GAS_TEMP, f->tempSensorR(getVal(GasTS)).getSensTemp());
-			logger().log("ThermalStore::needHeat?\tGas Turned OFF   Gas Flow Temp:", _tempSensorArr[_thermStoreData.GasTS].get_temp());
-			logger().log("ThermalStore::needHeat?\tCurr DHW temp:", _currDeliverTemp);
+			logger() << "\n\tGas Turned OFF   Gas Flow Temp: " << _tempSensorArr[_thermStoreData.GasTS].get_temp();
+			logger() << "\n\tCurr DHW temp: " << _currDeliverTemp;
 		}
 		else if (!_isHeating && needHeat) {
-			logger().log("ThermalStore::needHeat?\tGas Turned ON   Curr DHW temp:", _currDeliverTemp);
-			logger().log("ThermalStore::needHeat?\tGroundT, Top, Mid, Lower", 0,
-				_groundT,
-				getTopTemp(),
-				_tempSensorArr[_thermStoreData.MidDhwTS].get_temp(),
-				_tempSensorArr[_thermStoreData.LowerDhwTS].get_temp());
+			logger() << "\n\tGas Turned ON   Curr DHW temp: " << _currDeliverTemp;
+			logger() << "\n\tGroundT: " << _groundT
+				<< " Top: " << getTopTemp()
+				<< " Mid: " << _tempSensorArr[_thermStoreData.MidDhwTS].get_temp()
+				<< " Lower " << _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp();
 		}
+		logger() << L_endl;
 		_isHeating = needHeat;
 		return needHeat;
 	}
@@ -166,12 +167,15 @@ namespace HardwareInterfaces {
 		bool dhwTempOK = dhwDeliveryOK(callTemp);
 		if (!hasRequestedCondReduction && _currDeliverTemp >= callTemp && !dhwTempOK) { // reduce conductivity if claims to be hot enought, but isn't
 			hasRequestedCondReduction = true;
-			Serial.println("wants to reduce conductivity");
+			logger() << "\nwants to reduce conductivity";
 			//f->eventS().newEvent(EVT_THS_COND_CHANGE,S1_byte(getVal(Conductivity)) - 1);
-			logger().log("ThermalStore::dhwNeedsHeat\tDHW too cool-reduce cond?\tCond, call, next,DHW,dhwFlowTemp,DHWpreMixTS:", 0, 0
-				, int8_t(_thermStoreData.Conductivity), callTemp, nextRequest
-				, _currDeliverTemp, _tempSensorArr[_thermStoreData.DHWFlowTS].get_temp()
-				, _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() / 256);
+			logger() << "\nThermalStore::dhwNeedsHeat\tDHW too cool-reduce cond?\t " 
+				<< " Cond: " << _thermStoreData.Conductivity
+				<< " Call: " << callTemp
+				<< " Next: " << nextRequest
+				<< " DHW: " << _currDeliverTemp
+				<< " DHW-flowTemp: " << _tempSensorArr[_thermStoreData.DHWFlowTS].get_temp()
+				<< " DHW-preMixTemp: " << L_fixed << _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() / 256 << L_endl;
 			//setVal(Conductivity, uint8_t(getVal(Conductivity)) - 1);
 		}
 		if (dhwTempOK) hasRequestedCondReduction = false;
@@ -193,7 +197,7 @@ namespace HardwareInterfaces {
 		if (DHWpreMixTemp < 0 || dhwFlowTemp - DHWpreMixTemp > 2) tempError = true;
 		//int i = 5;
 		//while (DHWpreMixTemp - dhwFlowTemp < -5 && --i>0) {
-		//	logger().log("ThermalStore::dhwDeliveryOK\t TempError, DHWFlow, DHWpre:",tempError,dhwFlowTemp,DHWpreMixTemp);
+		//	logger() << "ThermalStore::dhwDeliveryOK\t TempError, DHWFlow, DHWpre:",tempError,dhwFlowTemp,DHWpreMixTemp);
 		//	dhwFlowTemp = f->tempSensorR(getVal(DHWFlowTS)).getSensTemp();
 		//	tempError = temp_sense_hasError;
 		//	DHWpreMixTemp = f->tempSensorR(getVal(DHWpreMixTS)).getSensTemp();

@@ -80,7 +80,7 @@ namespace client_data_structures {
 
 	const char * TimeTemp_Interface::streamData(bool isActiveElement) const {
 		TimeTemp tt{ getData(isActiveElement) };
-		//logger().log("TimeTemp : ", tt, "IsActive:", isActiveElement);
+		//logger() << "TimeTemp : ", tt, "IsActive:", isActiveElement);
 		auto time = tt.time();
 		auto temp = tt.temp();
 		strcpy(scratch, intToString(time.displayHrs(), 2, '0'));
@@ -101,7 +101,7 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_TimeTemp:
 			_timeTemp = uint16_t(record().rec().time_temp);
-			//logger().log("TimeTemp::getField :", record().rec().time_temp, " ID:", record().id());
+			//logger() << "TimeTemp::getField :", record().rec().time_temp, " ID:", record().id());
 			return &_timeTemp;
 		default: return 0;
 		}

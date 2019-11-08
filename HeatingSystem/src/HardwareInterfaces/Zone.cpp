@@ -65,11 +65,11 @@ namespace HardwareInterfaces {
 			bool needHeat;
 			if (I2C_Temp_Sensor::hasError()) {
 				needHeat = false;
-				//logger().log("Zone_Run::setZFlowTemp for DHW\tTS Error.");
+				//logger() << "Zone_Run::setZFlowTemp for DHW\tTS Error.");
 			}
 			else {
 				needHeat = _thermalStore->needHeat(currTempRequest() + _offsetT, nextTempRequest() + _offsetT);
-				//logger().log("Zone_Run::setZFlowTemp for DHW\t NeedHeat?",needHeat);
+				//logger() << "Zone_Run::setZFlowTemp for DHW\t NeedHeat?",needHeat);
 			}
 			_relay->setRelay(needHeat);
 			return needHeat;
@@ -78,7 +78,7 @@ namespace HardwareInterfaces {
 		auto fractionalZoneTemp = getFractionalCallSensTemp(); // get fractional temp.msb is temp is degrees
 		if (I2C_Temp_Sensor::hasError()) {
 			//if (i2C->getThisI2CFrequency(lcd()->i2cAddress()) == 0) {
-			  //logger().log("Zone_Run::setZFlowTemp\tCall TS Error for zone", epD().index());
+			  //logger() << "Zone_Run::setZFlowTemp\tCall TS Error for zone", epD().index());
 			//}
 			return false;
 		}
@@ -137,17 +137,23 @@ namespace HardwareInterfaces {
 			//long flowBoostDueToError = (-tempError * _tempRatio);
 			if (tempError > 7L) {
 				myFlowTemp = MIN_FLOW_TEMP;
-				// logger().log("Zone_Run::setZFlowTemp\tToo Cool: FlowTemp, MaxFlow,TempError, Zone:",(int)epDI().index(),myFlowTemp, myMaxFlowTemp,0,0,0,0,tempError * 16);
+				// logger() << "Zone_Run::setZFlowTemp\tToo Hot: FlowTemp, MaxFlow,TempError, Zone:",(int)epDI().index(),myFlowTemp, myMaxFlowTemp,0,0,0,0,tempError * 16);
 			}
 			else if (tempError < -8L) {
 				myFlowTemp = _maxFlowTemp;
-				logger().log("Zone_Run::setZFlowTemp\tToo Cool: ReqFlowTemp, MaxFlow,TempError, Zone:", _recID, myFlowTemp, _maxFlowTemp, 0, 0, 0, 0, tempError * 16);
+				logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tToo Cool. Zone: " << _recID
+					<< " ReqFlowTemp: " << myFlowTemp
+					<< " MaxFlow: " << _maxFlowTemp
+					<< " TempError: " << L_fixed << tempError * 16 << L_endl << L_flush;
 			}
 			else {
 				myFlowTemp = static_cast<long>((_maxFlowTemp + MIN_FLOW_TEMP) / 2. - tempError * (_maxFlowTemp - MIN_FLOW_TEMP) / 16.);
 				//U1_byte errorDivider = flowBoostDueToError > 16 ? 10 : 40; //40; 
 				//myFlowTemp = myTheoreticalFlow + (flowBoostDueToError + errorDivider/2) / errorDivider; // rounded to nearest degree
-				logger().log("Zone_Run::setZFlowTemp\tIn Range ReqFlowTemp, MaxFlow,TempError, Zone:", _recID, myFlowTemp, _maxFlowTemp, 0, 0, 0, 0, tempError * 16);
+				logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tIn Range. Zone: " << _recID
+					<< " ReqFlowTemp: " << myFlowTemp
+					<< " MaxFlow: " << _maxFlowTemp
+					<< " TempError: " << L_fixed << tempError * 16 << L_endl << L_flush;
 			}
 
 			// check limits

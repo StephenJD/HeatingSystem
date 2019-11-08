@@ -4,10 +4,6 @@
 #include "..\..\..\DateTime\src\Date_Time.h"
 #include "DateTimeWrapper.h"
 
-#ifdef ZPSIM
-	#include <ostream>
-#endif
-
 namespace client_data_structures {
 	using namespace LCD_UI;
 
@@ -18,8 +14,10 @@ namespace client_data_structures {
 	struct R_Spell {
 		// Spells can be filtered for a Dwelling via their Program
 		// When a new Spell is created, it is offered only those for a particular Dwelling 
+		constexpr R_Spell(Date_Time::DateTime date, RecordID programID) : date(date), programID(programID) {}
+		R_Spell() = default;
 		Date_Time::DateTime date;
-		RecordID programID;
+		RecordID programID = -1; // Initialisation inhibits default aggregate initialisation.
 		RecordID field(int fieldIndex) const { return programID; }
 		//bool operator < (R_Spell rhs) const { return date < rhs.date ; }
 		//bool operator < (Date_Time::DateTime rhs) const { return date < rhs; }
@@ -30,11 +28,9 @@ namespace client_data_structures {
 	inline bool operator < (R_Spell lhs, Date_Time::DateTime rhs) { return lhs.date < rhs ; }
 	inline bool operator < (Date_Time::DateTime lhs, R_Spell rhs) { return lhs < rhs.date ; }
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_Spell & spell) {
+	inline Logger & operator << (Logger & stream, const R_Spell & spell) {
 		return stream << "Spell Date: " << spell.date << " with ProgID: " << (int)spell.programID;
 	}
-#endif
 
 	//***************************************************
 	//              Spell DB Interface

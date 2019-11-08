@@ -1,4 +1,5 @@
 #include "A_Top_UI.h"
+#include <MemoryFree.h>
 
 #ifdef ZPSIM
 	#include <iostream>
@@ -139,26 +140,47 @@ namespace LCD_UI {
 	}
 
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
+		//logger() << "rec_up_down start for " << long(this) << " Mem: " << freeMemory() << L_endl;
 		auto haveMoved = false;
-		if (_upDownUI->get()->isCollection() && _upDownUI->behaviour().is_viewOneUpDn())
+		auto freeMem = freeMemory();
+
+		if (_upDownUI->get()->isCollection() && _upDownUI->behaviour().is_viewOneUpDn()) {
+			if (_leftRightBackUI->cursorMode(_leftRightBackUI) == HardwareInterfaces::LCD_Display::e_inEdit) {
+				move = -move; // reverse up/down when in edit.
+			}
 			haveMoved = _upDownUI->move_focus_by(move);
+			changeInFreeMemory(freeMem, "\trec_up_down move_focus_by");
+
+			//logger() << "rec_up_down move_focus_by for " << long(this) << " Mem: " << freeMemory() << L_endl;
+
+		}
 		if (!haveMoved) {
 			if (_upDownUI->get()->upDn_IsSet()) {
 				haveMoved = static_cast<Custom_Select*>(_upDownUI->get())->move_focus_by(move);
+				changeInFreeMemory(freeMem, "\trec_up_down not-moved move_focus_by");
+
+				//logger() << "rec_up_down !move_focus_by for " << long(this) << " Mem: " << freeMemory() << L_endl;
 				set_UpDownUI_from(selectedPage_h());
 				set_CursorUI_from(selectedPage_h());
 			} else if (_upDownUI->behaviour().is_edit_on_next()) {
 				rec_edit();
-				haveMoved = _upDownUI->move_focus_by(move);
+				changeInFreeMemory(freeMem, "\trec_up_down rec_edit");
+				haveMoved = _upDownUI->move_focus_by(-move); // reverse up/down when in edit.
+				changeInFreeMemory(freeMem, "\trec_up_down edit move_focus_by");
 			} 
 		}
 		
 		if (haveMoved) {
 			set_CursorUI_from(_upDownUI);
 			set_leftRightUI_from(selectedPage_h(),0);
-			notifyAllOfFocusChange(selectedPage_h());
+			changeInFreeMemory(freeMem, "\trec_up_down set_leftRightUI_from");
+			notifyAllOfFocusChange(_leftRightBackUI);
+			changeInFreeMemory(freeMem, "\trec_up_down notifyAllOfFocusChange");
+			//notifyAllOfFocusChange(selectedPage_h());
 			_cursorUI->backUI()->activeUI(); // required for setCursor to act on loaded active element
 			_cursorUI->setCursorPos();
+			changeInFreeMemory(freeMem, "\trec_up_down setCursorPos");
+			//logger() << "rec_up_down notifyAllOfFocusChange for " << long(this) << " Mem: " << freeMemory() << L_endl;
 		}
 	}
 

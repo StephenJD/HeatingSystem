@@ -8,9 +8,6 @@
 using namespace I2C_Talk_ErrorCodes;
 using namespace I2C_Recovery;
 
-//void log(const char * msg, long val);
-//void log(const char * msg, long val, const char * name, long val2 = 0xFFFFABCD);
-
 // encapsulation is improved by using global vars and functions in .cpp file
 // rather than declaring these as class statics in the header file,
 // since any changes to these would "dirty" the header file unnecessarily.
@@ -18,7 +15,6 @@ using namespace I2C_Recovery;
 // private global variables //
 static const uint16_t HALF_MAINS_PERIOD = 10000; // in microseconds. 10000 for 50Hz, 8333 for 60Hz
 
-//void log(const char * msg);
 uint32_t g_timeSince(uint32_t startTime);
 
 int8_t I2C_Talk::TWI_BUFFER_SIZE = 32;
@@ -56,16 +52,19 @@ I2C_Talk::I2C_Talk(int multiMaster_MyAddress, TwoWire & wire_port, int32_t i2cFr
 //	}
 
 error_codes I2C_Talk::read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) {
-	if (!_isMaster) {
-		//Serial.println("I2C_Talk::read slave_shouldnt_write");
-		return _slave_shouldnt_write;
+	//Serial.print("I2C_Talk::read from: 0x");
+	//Serial.println(deviceAddr, HEX); Serial.flush();
+	//Serial.print(" Reg: ");
+	//Serial.print(registerAddress);
+	//Serial.print(" Is Wire");
+	//Serial.println((long)&_wire_port == (long)&Wire ? "0" : "1");
+	auto returnStatus = beginTransmission(deviceAddr);
+	if (returnStatus == _OK) {
+		_wire_port.write(registerAddress);
+		returnStatus = endTransmission();
+		if (returnStatus == _OK) returnStatus = getData(deviceAddr, numberBytes, dataBuffer);
+		//Serial.println(getStatusMsg(returnStatus)); Serial.flush();
 	}
-
-	beginTransmission(deviceAddr);
-	_wire_port.write(registerAddress);
-	auto returnStatus = endTransmission();
-
-	if (returnStatus == _OK) returnStatus = getData(deviceAddr, numberBytes, dataBuffer);
 	return returnStatus;
 }
 
@@ -116,8 +115,6 @@ error_codes I2C_Talk::getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t
 }
 
 error_codes I2C_Talk::write(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, const uint8_t * dataBuffer) {
-	if (!_isMaster) return _slave_shouldnt_write;
-
 	auto returnStatus = beginTransmission(deviceAddr);
 	if (returnStatus == _OK) {
 		_wire_port.write(registerAddress);
@@ -183,11 +180,6 @@ error_codes I2C_Talk::writeEP(uint16_t deviceAddr, int pageAddress, uint16_t num
 	return returnStatus;
 }
 
-error_codes I2C_Talk::write(const uint8_t *dataBuffer, uint16_t numberBytes) {
-	return static_cast<error_codes>(_wire_port.write(dataBuffer, uint8_t(numberBytes))); 
-} // Called by slave in response to request from a Master. Return errCode.
-
-
 error_codes I2C_Talk::status(int deviceAddr) // Returns in slave mode.
 {
 	auto status = beginTransmission(deviceAddr);
@@ -240,6 +232,11 @@ const char * I2C_Talk::getStatusMsg(int errorCode) {
 	}
 }
 
+// Slave response
+error_codes I2C_Talk::write(const uint8_t *dataBuffer, uint16_t numberBytes) {// Called by slave in response to request from a Master. Return errCode.
+	return static_cast<error_codes>(_wire_port.write(dataBuffer, uint8_t(numberBytes)));
+} 
+
 uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 	uint8_t noReceived = 0;
 	while (_wire_port.available() && noReceived < howMany ) {
@@ -251,7 +248,7 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 
 // Private Functions
 error_codes I2C_Talk::beginTransmission(uint16_t deviceAddr) { // return false to inhibit access
-	auto status = addressOutOfRange(deviceAddr);
+	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) _wire_port.beginTransmission((uint8_t)deviceAddr); // Puts in Master Mode.
 	return status;
 }

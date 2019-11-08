@@ -62,11 +62,13 @@ using namespace I2C_Talk_ErrorCodes;
 		auto myfile = ofstream("EEPROM.dat", ios::binary);
 		if (myfile) {
 			myfile.write((char*)myEEProm, sizeof(myEEProm));
+			cout << "EEPROM.dat Saved\n";
 		}
 		else cout << "Unable to open EEPRPM file";
 		myfile = ofstream("I2C.dat", ios::binary);
 		if (myfile) {
 			myfile.write((char*)Wire1.i2CArr, sizeof(Wire1.i2CArr));
+			cout << "I2C.dat Saved\n";
 		}
 		else cout << "Unable to open I2C file";
 	}

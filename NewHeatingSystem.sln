@@ -19,8 +19,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCD_UI", "..\..\VS_Projects
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RelationalDatabase", "..\..\VS_Projects\NewHeatingSystem\RelationalDatabase\RelationalDatabase.vcxproj", "{E0568737-FF34-4467-A29C-44FBCCECCC00}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SJD_NewHeatingSystem", "..\SJD_NewHeatingSystem\SJD_NewHeatingSystem.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Collections", "..\..\VS_Projects\NewHeatingSystem\Test Collections\Test Collections.vcxproj", "{9816E000-1E25-42EC-8CB7-871144713A05}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics", "..\..\VS_Projects\NewHeatingSystem\Test UI Basics\Test UI Basics.vcxproj", "{8981DC8C-78CE-4EE2-A149-7AA870265467}"
@@ -28,6 +26,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics with DB", "..\..\VS_Projects\NewHeatingSystem\Test UI Basics with DB\Test UI Basics with DB.vcxproj", "{5767823B-227A-4F07-8A36-2C6AF30B862E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I2C_TestAndLog", "I2C_Talk\examples\I2C_TestAndLog\I2C_TestAndLog.vcxproj", "{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SJD_NewHeatingSystem", "..\SJD_NewHeatingSystem\SJD_NewHeatingSystem.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,16 +131,6 @@ Global
 		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|x64.Build.0 = Release|x64
 		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|x86.ActiveCfg = Release|Win32
 		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|x86.Build.0 = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|ARM.ActiveCfg = Debug|ARM
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|ARM.Build.0 = Debug|ARM
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x64.ActiveCfg = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.ActiveCfg = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.Build.0 = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|ARM.ActiveCfg = Release|ARM
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|ARM.Build.0 = Release|ARM
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x64.ActiveCfg = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.ActiveCfg = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.Build.0 = Release|Win32
 		{9816E000-1E25-42EC-8CB7-871144713A05}.Debug|ARM.ActiveCfg = Debug|Win32
 		{9816E000-1E25-42EC-8CB7-871144713A05}.Debug|x64.ActiveCfg = Debug|x64
 		{9816E000-1E25-42EC-8CB7-871144713A05}.Debug|x64.Build.0 = Debug|x64
@@ -179,6 +169,14 @@ Global
 		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x64.ActiveCfg = Release|Win32
 		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x86.ActiveCfg = Release|Win32
 		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x86.Build.0 = Release|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|ARM.ActiveCfg = Debug|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x64.ActiveCfg = Debug|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.ActiveCfg = Debug|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.Build.0 = Debug|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|ARM.ActiveCfg = Release|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x64.ActiveCfg = Release|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.ActiveCfg = Release|Win32
+		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

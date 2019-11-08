@@ -8,7 +8,7 @@ namespace Assembly {
 	using namespace client_data_structures;
 	using namespace LCD_UI;
 
-	MainConsolePageGenerator::MainConsolePageGenerator(Database & db, TemperatureController & tc) :
+	MainConsolePageGenerator::MainConsolePageGenerator(Database & db, TemperatureController & tc, HeatingSystem & hs) :
 		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)
@@ -22,7 +22,7 @@ namespace Assembly {
 		
 		, _progAllNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn().make_newLine() }
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDnRecycle() }
-		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle() }
+		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle()}
 		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&db._rec_dwSpells,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() }
 		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
@@ -50,13 +50,13 @@ namespace Assembly {
 		, _zone_subpage_c{ makeCollection(_dwellingZoneCmd, _zoneNameUI_c).set(viewAllUpDn())}
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _progAllNameUI_c).set(viewAllUpDn()) }
-		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _zone_subpage_c, _prog_subpage_c).set(viewOneUpDnRecycle()) }
+		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _zone_subpage_c).set(viewOneUpDnRecycle()) }
 		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _timeTempUI_sc) }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 
 		// Display - Collection of Page Handles
-		, _display_c{ makeDisplay(_page_currTime_c, _page_profile_c, _page_dwellingMembers_c, _page_zoneReqTemp_c) }
+		, _display_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _display_h{_display_c}
 	{
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));
@@ -71,6 +71,8 @@ namespace Assembly {
 		_editTTCmd.set_OnSelFn_TargetUI(_page_profile_c.item(7));
 		_newTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
 		_timeTempUI_c.set_OnSelFn_TargetUI(&_editTTCmd);
+		_contrastCmd.setDisplay(hs.mainDisplay);
+		_backlightCmd.setDisplay(hs.mainDisplay);
 		//_display_h.rec_select();
 		//UI_DisplayBuffer mainDisplayBuffer(mainDisplay);
 		// Create infinite loop

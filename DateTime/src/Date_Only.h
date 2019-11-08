@@ -6,6 +6,7 @@
 
 #include "Time_Only.h"
 #include "..\..\Bitfield\Bitfield.h"
+#include <Logging.h>
 
 namespace Date_Time {
 	using namespace BitFields;
@@ -41,7 +42,7 @@ namespace Date_Time {
 		/*constexpr*/ int month() const { return _month; }
 		/*constexpr*/ int year() const { return _yr; }
 		/*constexpr*/ int asInt() const { return _dateInt; }
-		/*constexpr*/ int weekDayNo() const; // 0-6
+		/*constexpr*/ int weekDayNo() const; // 0-6, Mon = 0
 		/*constexpr*/ uint8_t weekDayFlag() const;
 		/*constexpr*/ const char * getDayStr() const { return dayNames[weekDayNo()]; }
 		/*constexpr*/ const char * getMonthStr() const { return monthNames[month()]; }
@@ -81,14 +82,19 @@ namespace Date_Time {
 
 	};
 
-	inline /*constexpr*/ int DateOnly::weekDayNo() const {
+	inline Logger & operator << (Logger & stream, const DateOnly & dt) {
+		return stream << dt.day() << "/" << dt.getMonthStr() << "/" << dt.year();
+	}
+
+	inline /*constexpr*/ int DateOnly::weekDayNo() const { // Mon = 0;
 		int yy = year();
 		int yearStartDay = (yy + 5 + (yy - 1) / 4) % 7;
 		return (dayOfYear() + yearStartDay) % 7;
 	}
 
 	inline /*constexpr*/ uint8_t DateOnly::weekDayFlag() const {
-		return 1 << weekDayNo();
+		// 0MTWTFSS
+		return 64 >> weekDayNo();
 	}
 
 	inline /*constexpr*/ int DateOnly::dayOfYear() const {

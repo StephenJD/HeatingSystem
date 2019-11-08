@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include "..\..\Conversions\Conversions.h"
 #include "..\..\Sum_Operators\Sum_Operators.h"
+#include <Logging.h>
+
 //====================================================================
 // File:        TimeOnly.h
 // Description: Declaration of TimeOnly class and its literal opeartors
@@ -49,6 +51,10 @@ namespace Date_Time {
 		uint8_t _mins = 0;
 	};
 
+	inline Logger & operator << (Logger & stream, const TimeOnly & dt) {
+		return stream << dt.displayHrs() << ":" << dt.mins10() << "0" << (dt.isPM() ? "pm" : "am");
+	}	
+	
 	namespace Literals {
 		inline TimeOnly operator"" _mins(unsigned long long m) {
 			return TimeOnly{ 0,static_cast<int>(m) };

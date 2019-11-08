@@ -5,13 +5,14 @@
 
 extern byte LOCAL_INT_PIN;
 extern byte KEY_ANALOGUE;
+//extern unsigned long processStart_mS;
 
 namespace HardwareInterfaces {
 	LocalKeypad * localKeypad;
 	constexpr int16_t LocalKeypad::adc_LocalKey_val[]; // for analogue keypad
 
 	LocalKeypad::LocalKeypad() { //Display_Stream & displ) : Keypad(displ) 
-		logger().log("LocalKeypad Start...");
+		logger() << "\nLocalKeypad Start...";
 		localKeypad = this;
 		digitalWrite(LOCAL_INT_PIN, HIGH); // turn ON pull-up 
 		//attachInterrupt(digitalPinToInterrupt(LOCAL_INT_PIN), localKeyboardInterrupt, FALLING); 
@@ -81,5 +82,6 @@ void localKeyboardInterrupt() { // static or global interrupt handler, no argume
 			newKey = keypad.readKey(); // see if a second key is pressed
 			if (newKey >= 0) myKey = newKey;
 		}
+		//processStart_mS = millis();
 		putInKeyQue(keypad.keyQue, keypad.keyQuePos, myKey);
 	}

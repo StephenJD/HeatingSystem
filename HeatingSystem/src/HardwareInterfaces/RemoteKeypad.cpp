@@ -14,10 +14,10 @@ namespace HardwareInterfaces {
 	int RemoteKeypad::readKey() {
 		auto myKey = getKeyCode(_lcd->readI2C_keypad());
 		if (myKey == -2) {
-			logger().log("Remote Keypad: multiple keys detected");
+			logger() << "Remote Keypad: multiple keys detected" << L_endl;
 		}
 		if (putInKeyQue(keyQue, keyQuePos, myKey)) {
-			logger().log("Remote Keypad Read Key. Add : ", myKey);
+			logger() << "Remote Keypad Read Key. Add : " << myKey << L_endl;
 		}
 		return myKey;
 	}

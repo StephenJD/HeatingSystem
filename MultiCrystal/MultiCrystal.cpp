@@ -1,19 +1,22 @@
 #include "MultiCrystal.h"
 
-#include <stdio.h>
-#include <string.h>
+
 #include "Arduino.h"
 #include <I2C_Device.h>
 #include <Conversions.h>
-
-using namespace std;
+#include <Logging.h>
+#include <MemoryFree.h>
 using namespace GP_LIB;
 
-//#if defined (ZPSIM)
+
+#if defined (ZPSIM)
+using namespace std;
+#include <stdio.h>
+#include <string.h>
 //void digitalWrite (uint8_t, uint8_t){;}
 //void pinMode (uint8_t, uint8_t){;}
 //void delayMicroseconds(unsigned int us){};
-//#endif
+#endif
 
 // When the display powers up, it is configured as follows:
 //
@@ -84,12 +87,14 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7) // 11 parms - 8+3 pin
 : _key_mask_16(reinterpret_cast<const uint16_t &>(_key_mask[0]))
 {
 	init(0, rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7);
+	logger() << "MultiCrystal ini[11]\n";
 }
 
 MultiCrystal::MultiCrystal(uint8_t pinset[11])
 : _key_mask_16(reinterpret_cast<const uint16_t &>(_key_mask[0]))
 {
 	init(0, pinset[0], pinset[1], pinset[2], pinset[3], pinset[4], pinset[5], pinset[6], pinset[7], pinset[8], pinset[9], pinset[10]);
+	logger() << "MultiCrystal ini[pinset]\n";
 }
 
 
@@ -426,6 +431,7 @@ size_t MultiCrystal::print(const char buffer[] ) {
 	}
 	dirty = true;
 #endif
+	//logger() << "MultiCrystal::print " << buffer << L_endl;
 	auto noOfChars = 0; 
 	auto endChar = buffer + strlen(buffer);
 	for (auto nextChar = buffer; nextChar < endChar; ++nextChar) {
@@ -513,16 +519,29 @@ inline size_t MultiCrystal::write(uint8_t value) { // 0 = error, 1 = success
 // write either command or data, with automatic 4/8-bit selection
 uint8_t MultiCrystal::send(uint8_t value, uint8_t mode) { // 0 = success
 	uint8_t error = 0;
+	//auto freeMem = freeMemory();
+
 	if (_i2C_device == 0 ) {
 		digitalWrite(_rs_pin, mode);
+		//changeInFreeMemory(freeMem, "MultiCrystal::send rs");
+		//logger() << " MultiCrystal::send RS: " << mode << L_endl;
 		// if there is a RW pin indicated, set it low to Write
-		if (_rw_pin != -1) digitalWrite(_rw_pin, LOW);
+		if (_rw_pin != -1) {
+			digitalWrite(_rw_pin, LOW);
+			//changeInFreeMemory(freeMem, "MultiCrystal::send rw");
+			//logger() << " MultiCrystal::send RW to pin " << _rw_pin << L_endl;
+		}
+
 	} else {
 		setControl(_rs_pin, mode); // rs
 		setControl(_rw_pin, LOW); // rw
 	}
 	if (_displayfunction & LCD_8BITMODE) {
 		error = write8bits(value);
+		//changeInFreeMemory(freeMem, "MultiCrystal::send write8bits");
+		//static bool LED_ON;
+		//digitalWrite(19, LED_ON);
+		//LED_ON = !LED_ON;
 	} else {
 		error = write4bits(value>>4);
 		error = error | write4bits(value);
@@ -615,7 +634,7 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	data = 0;
 	uint8_t readFailed = _i2C_device->read(INTCAP, 2, _data); // Read INTCAP to get key-pressed and clear for next read
 	if (readFailed) {
-		//logging().log("MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C_device->getI2CFrequency());
+		//logging() << "MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C_device->getI2CFrequency());
 		return 0;
 	}
 

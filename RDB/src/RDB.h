@@ -67,16 +67,16 @@ namespace RelationalDatabase {
 		Table & registerTable(const Table & t) {
 			for (auto & tbl : tables) {
 				if (tbl._tableID == t._tableID) {
-					logger().log(" Registered Table found ID:", t._tableID, " pos", &tbl - tables);
+					logger() << L_tabs << L_time << " Registered Table found ID:" << t._tableID << " pos" << &tbl - tables << L_endl;
 					return tbl;
 				}
 				else if (tbl._tableID == 0) {
-					logger().log(" Register Table ID: ", t._tableID, " pos", &tbl - tables);
+					logger() << L_tabs << L_time << " Register Table ID: " << t._tableID << " pos" << &tbl - tables << L_endl;
 					tbl = t; 
 					return tbl; 
 				}
 			}
-			//logger().log(" Register of Table failed at addr ", t._tableID);
+			//logger() << " Register of Table failed at addr ", t._tableID);
 			return tables[maxNoOfTables];
 		}
 

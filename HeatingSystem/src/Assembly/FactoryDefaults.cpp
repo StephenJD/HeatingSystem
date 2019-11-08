@@ -31,7 +31,7 @@ namespace Assembly {
 
 	constexpr R_MixValveControl mixValveControl_f[] = {
 		{"DnS", T_DUfh, T_TkDs}
-	, {"UpS", T_UUfh, T_TkUs}
+		,{"UpS", T_UUfh, T_TkUs}
 	};
 
 	constexpr R_Display displays_f[] = {
@@ -98,44 +98,45 @@ namespace Assembly {
 	}
 
 	R_TimeTemp timeTemps_f[] = { // profileID,TT
-		{0, makeTT(7,40,15)}   // 11801
-		,{0, makeTT(10,30,18)} // 16156
-		,{1, makeTT(7,30,15)}
-		,{1, makeTT(22,40,18)}
-		,{2, makeTT(8,30,15)}
-		,{2, makeTT(22,50,18)}
-		,{3, makeTT(6,30,45)}
-		,{3, makeTT(10,00,30)}
-		,{3, makeTT(16,00,45)}
-		,{3, makeTT(23,00,30)}
-		,{4, makeTT(07,00,18)}
-		,{5, makeTT(07,00,18)}
-		,{6, makeTT(07,00,18)}
-		,{7, makeTT(07,00,45)}
+		{0, makeTT(7,40,15)}   // At Home US MT--F--
+		,{0, makeTT(23,00,18)} // At Home US MT--F--
+		,{1, makeTT(6,30,15)}  // At Work US MT-TF--
+		,{1, makeTT(22,30,18)} // At Work US MT-TF--
+		,{2, makeTT(8,30,15)}  // At Home US --WT-SS
+		,{2, makeTT(22,50,18)} // At Home US --WT-SS
+		,{3, makeTT(7,30,45)}  // At Home DHW MTW--S-
+		,{3, makeTT(10,00,30)} // At Home DHW MTW--S-
+		
+		,{3, makeTT(16,00,45)} // At Home DHW MTW--S-
+		,{3, makeTT(23,00,30)} // At Home DHW MTW--S-
+		,{4, makeTT(8,00,19)}  // At Home DS M-W-F-S
+		,{5, makeTT(7,00,18)}  // At Work US --W--SS
+		,{6, makeTT(7,50,18)}  // At Home DS -T-T-S-
+		,{7, makeTT(8,10,45)}  // At Home DHW ---TF-S
+		,{8, makeTT(07,00,10)} // Away US MTWTFSS
+		,{9, makeTT(07,00,10)} // Empty DHW
 
-		,{8, makeTT(07,00,10)}
-		,{9, makeTT(07,00,10)}
-		,{10, makeTT(07,00,10)}
-		,{11, makeTT(07,00,10)}
-		,{12, makeTT(07,00,45)}
-		,{13, makeTT(07,00,18)}
-		,{14, makeTT(07,00,18)}
-		,{15, makeTT(07,00,45)}
+		,{10, makeTT(07,00,10)} // Away DS
+		,{11, makeTT(07,00,10)} // Away DHW
+		,{12, makeTT(07,10,45)} // Occupied DHW MTWTF-S
+		,{13, makeTT(06,40,18)} // At Work DS MT-TF--
+		,{14, makeTT(06,50,18)} // At Work DS --W--SS
+		,{15, makeTT(06,30,45)} // At Work DHW MT-TF--
+		,{16, makeTT(06,20,45)} // At Work DHW --W--SS
+		,{17, makeTT(07,20,45)} // Occupied DHW -----S-
 
-		,{16, makeTT(07,00,45)}
-		,{17, makeTT(07,00,45)}
-		,{18, makeTT(07,00,18)}
-		,{19, makeTT(07,00,18)}
-		,{20, makeTT(07,00,10)}
+		,{18, makeTT(8,10,18)}  // Occupied Flat MTWTF-S
+		,{19, makeTT(8,50,18)}  // Occupied Flat -----S- 
+		,{20, makeTT(07,00,10)} // Empty Flat 
 	};
 
-	constexpr R_Spell spells_f[] = {
+	constexpr R_Spell spells_f[] = { // date, ProgramID : Ordered by date
 		{ DateTime({ 31,7,19, },{ 15,20 }),0 }
 		,{ DateTime({ 12,9,19, },{ 7,30 }),1 }
 		,{ DateTime({ 3,9,19, },{ 17,30 }),2 }
 		,{ DateTime({ 5,9,19, },{ 10,0 }),3 }
-		,{ DateTime({ 22,9,19, },{ 15,0 }),2 }
-		,{ DateTime({ 30,9,19, },{ 10,0 }),4 } 
+		,{ DateTime({ 22,9,19, },{ 15,0 }),4 }
+		,{ DateTime({ 30,9,19, },{ 10,0 }),0 } 
 	};
 
 	constexpr R_Profile profiles_f[] = {
@@ -175,34 +176,34 @@ namespace Assembly {
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {
 		//enum tableIndex {TB_Display, TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
 		db.reset(EEPROM_SIZE, password);
-		logger().log("setFactoryDefaults Started...");
-		logger().log("\nThermalStore Table ");
+		logger() << L_time << "setFactoryDefaults Started...";
+		logger() << "\nThermalStore Table ";
 		db.createTable(thermalStore_f);
-		logger().log("\nMixValveContr Table ");
+		logger() << "\nMixValveContr Table ";
 		db.createTable(mixValveControl_f);
-		logger().log("\nDisplay Table ");
+		logger() << "\nDisplay Table ";
 		db.createTable(displays_f);
-		logger().log("\nRelays Table ");
+		logger() << "\nRelays Table ";
 		db.createTable(relays_f);
-		logger().log("\nTempSensors Table ");
+		logger() << "\nTempSensors Table ";
 		db.createTable(tempSensors_f);
-		logger().log("\nDwellings Table ");
+		logger() << "\nDwellings Table ";
 		db.createTable(dwellings_f);
-		logger().log("\nZones Table ");
+		logger() << "\nZones Table ";
 		db.createTable(zones_f);
-		logger().log("\nDwellingZones Table ");
+		logger() << "\nDwellingZones Table ";
 		db.createTable(dwellingZones_f);
-		logger().log("\nPrograms Table ");
+		logger() << "\nPrograms Table ";
 		db.createTable(programs_f);
-		logger().log("\nProfiles Table ");
+		logger() << "\nProfiles Table ";
 		db.createTable(profiles_f);
-		logger().log("\nTimeTemps Table ");
+		logger() << "\nTimeTemps Table ";
 		db.createTable(timeTemps_f, i_09_orderedInsert);
-		logger().log("\nSpells Table ");
+		logger() << "\nSpells Table ";
 		db.createTable(spells_f, i_09_orderedInsert);
-		logger().log("\nAll Tables Created\n ");
+		logger() << "\nAll Tables Created";
 
-		logger().log("setFactoryDefaults Completed");
+		logger() << "\n\nsetFactoryDefaults Completed" << L_endl;
 	}
 	
 }

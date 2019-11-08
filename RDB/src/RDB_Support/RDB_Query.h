@@ -93,7 +93,7 @@ namespace RelationalDatabase {
 	public:
 		TableQuery() = default;
 		TableQuery(Table & table) : _table(&table) {
-			//logger().log("TableQuery strategy:", _table->insertionStrategy());
+			//logger() << "TableQuery strategy:", _table->insertionStrategy());
 
 #ifdef ZPSIM
 			std::cout << " TableQuery at: " << std::hex << (long long)this << " TableID : " << std::dec << (int)_table->tableID() << std::endl;

@@ -21,11 +21,10 @@ namespace client_data_structures {
 		bool operator == (R_MixValveControl rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-inline std::ostream & operator << (std::ostream & stream, const R_MixValveControl & profile) {
-	return stream << "R_MixValveControl";
+inline Logger & operator << (Logger & stream, const R_MixValveControl & mixValve) {
+	return stream << "R_MixValveControl " << mixValve.name;
 }
-#endif
+
 	//***************************************************
 	//              MixValveController LCD_UI
 	//***************************************************

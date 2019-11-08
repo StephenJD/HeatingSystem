@@ -4,17 +4,15 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\ValRange.h"
 
-#ifdef ZPSIM
-	#include <ostream>
-#endif
-
 namespace client_data_structures {
 	using namespace LCD_UI;
 	struct R_Profile {
+		R_Profile() = default;
+		constexpr R_Profile(RecordID programID, RecordID zoneID, uint8_t days) : programID(programID), zoneID(zoneID), days(days) {}
 		// Each Program has a weeks-worth of Profiles for each Zone belonging to the Program's Dwelling
-		RecordID programID;
-		RecordID zoneID;
-		uint8_t days;		// Days of the week this profile applies to 
+		RecordID programID = -1; // Initialisation inhibits default aggregate initialisation.
+		RecordID zoneID = -1;
+		uint8_t days = 0;		// Days of the week this profile applies to 
 		RecordID field(int fieldIndex) const {
 			if (fieldIndex == 0) return programID; else return zoneID;
 		}
@@ -22,11 +20,9 @@ namespace client_data_structures {
 		bool operator == (R_Profile rhs) const { return days == rhs.days; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_Profile & profile) {
-		return stream << "Profile for ProgID: " << std::dec << (int)profile.programID << " ZoneID: " << (int)profile.zoneID << " Days: " << (int)profile.days;
+	inline Logger & operator << (Logger & stream, const R_Profile & profile) {
+		return stream << "Profile for ProgID: " << (int)profile.programID << " ZoneID: " << (int)profile.zoneID << " Days: " << (int)profile.days;
 	}
-#endif
 
 	//***************************************************
 	//              ProfileDays UI Edit

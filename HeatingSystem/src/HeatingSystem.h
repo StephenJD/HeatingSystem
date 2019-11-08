@@ -24,6 +24,9 @@
 //////////////////////////////////////////////////////////
 //    Single Responsibility is to connect the parts     //
 //////////////////////////////////////////////////////////
+namespace HeatingSystemSupport {
+	void initialise_virtualROM();
+}
 
 	class HeatingSystem {
 	public:

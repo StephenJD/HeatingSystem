@@ -32,7 +32,7 @@ namespace Assembly {
 		, _rec_timeTemps{ _q_timeTemps, noVolData, &_rec_profile }
 
 	{
-		logger().log("Database queries constructed");
+		logger() << "Database queries constructed" << L_endl;
 	}
 
 }

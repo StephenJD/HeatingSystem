@@ -7,6 +7,8 @@
 #include "..\Client_DataStructures\Data_Relay.h"
 #include <Logging.h>
 #include <RDB.h>
+#include <../Clock/Clock.h>
+#include <EEPROM.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
@@ -22,32 +24,39 @@ namespace Assembly {
 		, _iniFunctor(*this)
 		, _testDevices(*this)
 	{
-		logger().log("  Initialiser PW check. req:", VERSION);
+#ifdef ZPSIM
+		clock_().setTime(Date_Time::DateOnly{ 24,10,19 }, Date_Time::TimeOnly{ 11,40 }, 0);
+		//clock_().setTime(Date_Time::DateOnly{ 15,9,19 }, Date_Time::TimeOnly{ 10,0 }, 5);
+		//clock_().setTime(Date_Time::DateOnly{ 3,10,19 }, Date_Time::TimeOnly{ 10,0 }, 5);
+#endif
+		hs._recover.setTimeoutFn(&_resetI2C);
+
+		logger() << "  Initialiser PW check. req: " << VERSION << L_endl;
 		if (!_hs.db.checkPW(VERSION)) {
-			logger().log("  Initialiser PW Failed");
+			logger() << "  Initialiser PW Failed";
 			setFactoryDefaults(_hs.db, VERSION);
 		}
 		auto dbFailed = false;
 		for (auto & table : _hs.db) {
 			if (!table.isOpen()) {
-				logger().log("  Table not open at", (long)table.tableID());
+				logger() << "  Table not open at " << table.tableID() << L_endl;
 				dbFailed = true;
 				break;
 			}
 		}
 		if (dbFailed) {
-			logger().log("  dbFailed");
+			logger() << "  dbFailed" << L_endl;
 			setFactoryDefaults(_hs.db, VERSION);
 		}
-		logger().log("  Initialiser Constructed");
+		logger() << "  Initialiser Constructed" << L_endl;
 	}
 
 	uint8_t Initialiser::i2C_Test() {
 		auto err = _testDevices.speedTestDevices();
 		/*if (!err) err = */_testDevices.testRelays();
 		/*if (!err)*/ err = postI2CResetInitialisation();
-		if (err != _OK) logger().log("  Initialiser::i2C_Test postI2CResetInitialisation failed");
-		//else logger().log("  Initialiser::i2C_Test OK");
+		if (err != _OK) logger() << "  Initialiser::i2C_Test postI2CResetInitialisation failed" << L_endl;
+		//else logger() << "  Initialiser::i2C_Test OK");
 		return err;
 	}
 
@@ -59,7 +68,7 @@ namespace Assembly {
 
 	uint8_t Initialiser::initialiseTempSensors() {
 		// Set room-sensors to high-res
-		logger().log("Set room-sensors to high-res");
+		logger() << "Set room-sensors to high-res" << L_endl;
 		return	_hs._tempController.tempSensorArr[T_DR].setHighRes()
 			| _hs._tempController.tempSensorArr[T_FR].setHighRes()
 			| _hs._tempController.tempSensorArr[T_UR].setHighRes();
@@ -70,7 +79,7 @@ namespace Assembly {
 		for (auto & rd : _hs.remDispl) {
 			failed |= rd.initialiseDevice();
 		}
-		logger().log("initialiseRemoteDisplays() done");
+		logger() << "initialiseRemoteDisplays() done" << L_endl;
 		return failed;
 	}
 

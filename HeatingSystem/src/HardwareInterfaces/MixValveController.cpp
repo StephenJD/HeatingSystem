@@ -5,6 +5,8 @@
 #include <I2C_Talk_ErrorCodes.h>
 #include <Logging.h>
 
+void ui_yield();
+
 namespace HardwareInterfaces {
 	using namespace Assembly;
 	using namespace I2C_Talk_ErrorCodes;
@@ -25,7 +27,7 @@ namespace HardwareInterfaces {
 
 	error_codes MixValveController::testDevice() {
 		auto status = writeToValve(Mix_Valve::request_temp, 55);
-		//if (status == 0) logger().log("MixValveController::testDevice() OK");
+		//if (status == 0) logger() << "MixValveController::testDevice() OK");
 		return status;
 	}
 
@@ -54,7 +56,7 @@ namespace HardwareInterfaces {
 		errCode |= writeToValve(Mix_Valve::temp_i2c_addr, _tempSensorArr[_flowTempSens].getAddress());
 		errCode |= writeToValve(Mix_Valve::max_ontime, VALVE_FULL_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::wait_time, VALVE_WAIT_TIME);
-		logger().log( "MixValveController::sendSetup()", errCode, i2C().getStatusMsg(errCode));
+		logger() <<  "\nMixValveController::sendSetup() " << errCode << i2C().getStatusMsg(errCode);
 		return errCode;
 	}
 
@@ -93,10 +95,11 @@ namespace HardwareInterfaces {
 				break;
 			}
 #endif
+			logger() << L_endl;
 			if (_controlZoneRelay != relayID) { // new control zone
 				writeToValve(Mix_Valve::control, Mix_Valve::e_stop_and_wait); // trigger stop and wait on valve
 				writeToValve(Mix_Valve::max_flow_temp, maxTemp);
-				logger().log("MixValveController::amControlZone\t New CZ - Write new MaxTemp: ", maxTemp);
+				logger() << " MixValveController::amControlZone\t New CZ - Write new MaxTemp: " << maxTemp << L_endl;
 			}
 			_controlZoneRelay = relayID;
 			if (callTemp <= MIN_FLOW_TEMP) {
@@ -112,13 +115,14 @@ namespace HardwareInterfaces {
 			uint8_t mixValveCallTemp = readFromValve(Mix_Valve::request_temp);
 			if (_mixCallTemp != callTemp || _mixCallTemp != mixValveCallTemp) {
 				_mixCallTemp = callTemp;
-				logger().log("MixValveController::amControlZone MixID: ", _index);
-				logger().log(relayName(relayID));
-				logger().log("MixValveController::request_temp was: ", mixValveCallTemp);
-				logger().log("MixValveController:: new_request_temp", _mixCallTemp);
-				logger().log("MixValveController::Actual flow_temp: ", readFromValve(Mix_Valve::flow_temp));
+				logger() << " MixValveController::amControlZone MixID: " << _index;
+				logger() << "\n\t" << relayName(relayID);
+				logger() << "\n\trequest_temp was: " << mixValveCallTemp;
+				logger() << "\n\tnew_request_temp " << _mixCallTemp;
+				logger() << "\n\tActual flow_temp: " << readFromValve(Mix_Valve::flow_temp) << L_endl << L_flush;
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
+				logger() << " MixValveController:: Done writing to valve\n" << L_flush;
 			}
 			return true;
 		}
@@ -147,15 +151,18 @@ namespace HardwareInterfaces {
 		auto status = recovery().newReadWrite(*this);
 		// Note: Contol register is write-only, so write_verify will fail.
 		if (status == _OK) {
-			do status = I_I2Cdevice::write(uint8_t(reg + _index * 16), 1, &value);
+			do {
+				status = I_I2Cdevice::write(uint8_t(reg + _index * 16), 1, &value);
+				ui_yield();
+			}
 			while (status && millis() < waitTime);
 
 			if (status) {
-				logger().log(" First try writeToValve failed to Reg:", reg, "Value:", value);
+				logger() << "\n First try writeToValve failed to Reg: " << reg << " Value: " << value;
 				status = write(uint8_t(reg + _index * 16), 1, &value);
 			}
 
-			if (status) logger().log(" MixValveController::writeToValve failed. Addr:", getAddress(), getStatusMsg(status));
+			if (status) logger() << "\n MixValveController::writeToValve failed. Addr: " << getAddress() << getStatusMsg(status);
 		}
 		return status;
 	}
@@ -170,7 +177,7 @@ namespace HardwareInterfaces {
 
 			status = read(reg + _index * 16, 1, &value);
 
-			if (status) logger().log(" MixValveController::getPos failed. Addr:", getAddress());
+			if (status) logger() << "\n MixValveController::getPos failed. Addr: " << getAddress();
 		}
 		return value;
 	}

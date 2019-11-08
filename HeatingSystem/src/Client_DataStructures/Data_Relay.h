@@ -1,6 +1,6 @@
 #pragma once
-#include "..\LCD_UI\I_Record_Interface.h"
 #include "..\HardwareInterfaces\Relay.h"
+#include "..\LCD_UI\I_Record_Interface.h"
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -16,18 +16,14 @@ namespace client_data_structures {
 
 	struct R_Relay {
 		char name[5];
-		uint8_t port; // includes port and active state
-		//Relay & obj(int objID) { return HardwareInterfaces::relays[objID]; }
+		uint8_t port; // Initialisation inhibits aggregate initialisation. Includes port and active state
 		bool operator < (R_Relay rhs) const { return false; }
 		bool operator == (R_Relay rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_Relay & relay) {
-		return stream << "Relay: " << relay.name << " Port: " << (int)relay.port;
+	inline Logger & operator << (Logger & stream, const R_Relay & relay) {
+		return stream << "Relay: " << relay.name << " Port: " << relay.port;
 	}
-#endif
-
 
 	//***************************************************
 	//              Relay LCD_UI

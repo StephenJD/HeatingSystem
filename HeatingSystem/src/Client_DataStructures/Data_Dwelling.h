@@ -3,10 +3,6 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\..\..\RDB\src\\RDB.h"
 
-#ifdef ZPSIM
-	#include <ostream>
-#endif
-
 namespace client_data_structures {
 	using namespace LCD_UI;
 	//***************************************************
@@ -27,11 +23,9 @@ namespace client_data_structures {
 		bool operator == (R_Dwelling rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_Dwelling & dwelling) {
+	inline Logger & operator << (Logger & stream, const R_Dwelling & dwelling) {
 		return stream << "Dwelling: " << dwelling.name;
 	}
-#endif
 
 	//***************************************************
 	//              Dwelling LCD_UI

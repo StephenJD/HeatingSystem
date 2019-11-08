@@ -14,7 +14,7 @@ namespace HardwareInterfaces {
 		0, 4, 3, 2,
 		this, addr,
 		0xFF, 0x1F) {
-		Serial.print("RemoteDisplay : "); Serial.print(I_I2Cdevice::getAddress(),HEX); Serial.println(" Constructed");
+		logger() << "RemoteDisplay : " << L_hex << I_I2Cdevice::getAddress() << " Constructed" << L_endl;
 	}
 	
 	error_codes RemoteDisplay::testDevice() {
@@ -26,7 +26,7 @@ namespace HardwareInterfaces {
 	error_codes RemoteDisplay::initialiseDevice() {
 		auto rem_error = _lcd.begin(16, 2) == 0 ? _OK : _unknownError;
 		if (rem_error != _OK) {
-			logger().log(" Remote.begin() for display [", getAddress(), "] failed with:", rem_error);
+			logger() << " Remote.begin() for display [" << getAddress() << "] failed with: " << rem_error << L_endl;
 		}
 		else displ().print("Start ");
 		return rem_error;

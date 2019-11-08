@@ -13,7 +13,7 @@ namespace RelationalDatabase {
 	{
 		savePW(password);
 		setDB_Header();
-		logger().log("RDB_B(create) Constructed");
+		logger() << "RDB_B(create) Constructed" << L_endl;
 	}
 
 	RDB_B::RDB_B(int dbStart, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
@@ -23,10 +23,10 @@ namespace RelationalDatabase {
 	{
 		if (checkPW(password)) {
 			loadDB_Header();
-			logger().log("RDB_B(load) Constructed Size :", _dbSize);
+			logger() << "RDB_B(load) Constructed Size : " << _dbSize << L_endl;
 		}
 		else {
-			logger().log("RDB_B(load) Password mismatch");
+			logger() << "RDB_B(load) Password mismatch" << L_endl;
 		}
 	}
 
@@ -44,7 +44,7 @@ namespace RelationalDatabase {
 	bool RDB_B::checkPW(size_t password) const {
 		size_t pw = 0;
 		_readByte(_dbStart, &pw, SIZE_OF_PASSWORD);
-		logger().log("PW was", pw, "Should be", password);
+		logger() << "PW was " << pw << " Should be " << password << L_endl;
 		return pw == password;
 		//return false;
 	}
@@ -84,7 +84,7 @@ namespace RelationalDatabase {
 			}
 			_dbSize += table_size;
 			updateDB_Header();
-			logger().log("RDB_B::createTable() New DB_Size:", _dbSize);
+			logger() << "RDB_B::createTable() New DB_Size: " << _dbSize << L_endl;
 		}
 		return { *this, tableID, th };
 	}
@@ -114,15 +114,15 @@ namespace RelationalDatabase {
 	}
 
 	int RDB_B::getTables(Table * tableArr, int maxNoOfTables) {
-		logger().log(" RDB_B::getTables ...");
+		logger() << " RDB_B::getTables ..." << L_endl;
 		Table table(*this, _dbStart + DB_HeaderSize);
 		int i;
 		for (i = 0; i < maxNoOfTables && table.isOpen(); ++i, ++tableArr) {
-			logger().log(" RDB_B::gotTable :", i);
+			logger() << " RDB_B::gotTable : " << i << L_endl;
 			*tableArr = table;
 			table.openNextTable();
 		}
-		logger().log(" RDB_B::getTables loaded", i, "tables.");
+		logger() << " RDB_B::getTables loaded " << i << " tables." << L_endl;
 		return i;
 	}
 

@@ -77,6 +77,15 @@
 		void _adjustForDST();
 	};
 
+	inline Logger & operator<<(Logger & logger, const Clock & clk) {
+		return logger << GP_LIB::intToString(clk.day(), 2)
+		<< "/" << GP_LIB::intToString(clk.month(), 2)
+		<< "/" << GP_LIB::intToString(clk.year(), 2)
+		<< " " << GP_LIB::intToString(clk.hrs(), 2)
+		<< ":" << GP_LIB::intToString(clk.mins10(), 1) << GP_LIB::intToString(clk.minUnits(), 1)
+		<< ":" << GP_LIB::intToString(clk.seconds(), 2);
+	}
+
 	class Clock_EEPROM : public Clock {
 	public:
 		Clock_EEPROM(unsigned int addr);
@@ -106,7 +115,8 @@
 		using I2Cdevice<i2c>::I2Cdevice;
 
 		Clock_I2C(int addr) : I2Cdevice<i2c>(addr) {
-			loadTime();
+			Serial.println("Clock_I2C Constructor");
+			I_Clock_I2C::loadTime();
 		}
 		
 		bool ok() const override {
@@ -118,8 +128,8 @@
 		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 
 	private:
-		auto readData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return i2c.read(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
-		auto writeData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return i2c.write(I2Cdevice<i2c>::getAddress(), start, numberBytes, dataBuffer); }
+		auto readData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer); }
+		auto writeData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::write(start, numberBytes, dataBuffer); }
 	};
 
 

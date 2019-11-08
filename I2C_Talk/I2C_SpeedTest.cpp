@@ -31,7 +31,7 @@ template<>
 uint32_t I2C_SpeedTest::fastest_T<false>() {
 	if (!_i2c_device->isEnabled()) {
 		_i2c_device->reset();
-		logger().log("\tRe-enabling disabled device");
+		logger() << "\tRe-enabling disabled device";
 	}	
 	auto startFreq = _i2c_device->runSpeed(); // default 100000
 	if (_is_inSpeedTest) return startFreq;
@@ -43,7 +43,7 @@ uint32_t I2C_SpeedTest::fastest_T<false>() {
 	_thisHighestFreq = _i2c_device->i2C().setI2CFrequency(startFreq);
 	_i2c_device->recovery().registerDevice(*_i2c_device);
 	auto status = _i2c_device->recovery().testDevice(2,1); // Unfreeze is only Recovery strategy applied during speed-test
-	//logger().log("fastest_T Device tested result", status, _i2c_device->getStatusMsg(status));
+	//logger() << "fastest_T Device tested result", status, _i2c_device->getStatusMsg(status));
 	if (status != _OK) status = _i2c_device->recovery().findAworkingSpeed();
 	if (status == _OK) {
 		//Serial.println(" ** findMaxSpeed **");
@@ -75,9 +75,9 @@ error_codes I2C_SpeedTest::findOptimumSpeed(int32_t & bestSpeed, int32_t limitSp
 		auto trySpeed = _i2c_device->i2C().setI2CFrequency(limitSpeed - adjustBy);
 		status = _OK;
 		do {
-			logger().log("  Try best speed: ", trySpeed, " adjustBy : ", adjustBy);
+			logger() << "\n  Try best speed: " << trySpeed << " adjustBy : " << adjustBy;
 			while (status == _OK && (adjustBy > 0 ? trySpeed < limitSpeed : trySpeed > limitSpeed)) { // adjust speed 'till it breaks	
-				logger().log("    Try at: ", _i2c_device->i2C().getI2CFrequency());
+				logger() << "\n    Try at: " << _i2c_device->i2C().getI2CFrequency();
 				status = _i2c_device->recovery().testDevice(2, 1);
 				if (status != _OK) {
 					limitSpeed = trySpeed - adjustBy / 100;
@@ -113,7 +113,7 @@ error_codes I2C_SpeedTest::adjustSpeedTillItWorksAgain(int32_t incrementRatio) {
 				if (increment > -2000) increment = -2000;
 			}
 			_i2c_device->i2C().setI2CFrequency(currFreq + increment);
-			logger().log(" Adjust I2C_Speed: ", currFreq, " increment :", increment);
+			logger() << "\n Adjust I2C_Speed: " << currFreq << " increment : " << increment;
 		}
 		currFreq = _i2c_device->i2C().getI2CFrequency();
 	} while (status != _OK && currFreq > I2C_Talk::MIN_I2C_FREQ && currFreq < I2C_Talk::MAX_I2C_FREQ);

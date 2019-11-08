@@ -7,6 +7,8 @@
 #include "..\HardwareInterfaces\A__Constants.h"
 #include <Clock.h>
 
+void ui_yield();
+
 namespace Assembly {
 	using namespace RelationalDatabase;
 	using namespace HardwareInterfaces;
@@ -23,14 +25,14 @@ namespace Assembly {
 		int index = 0;
 		auto tempSensors = db.tableQuery(TB_TempSensor);
 		for (Answer_R<R_TempSensor> tempSensor : tempSensors) {
-			//logger().log("Initialise TS[]", index, " Rec ID:" , tempSensor.id());
+			//logger() << "Initialise TS[]", index, " Rec ID:" , tempSensor.id());
 
 			tempSensorArr[index].initialise(tempSensor.id(), tempSensor.rec().address); // Reads temp
 			++index;
 			//if (index == 7)
 			//	auto a = true;
 		}
-		logger().log("loadtempSensors Completed");
+		logger() << "loadtempSensors Completed" << L_endl;
 
 		index = 0;
 		auto relays = db.tableQuery(TB_Relay);
@@ -39,7 +41,7 @@ namespace Assembly {
 			++index;
 		}
 
-		logger().log("loadRelays Completed");
+		logger() << "loadRelays Completed" << L_endl;
 
 		Answer_R<R_ThermalStore> thStRec = *db.tableQuery(TB_ThermalStore).begin();
 		thermalStore.initialise(thStRec.rec());
@@ -70,24 +72,37 @@ namespace Assembly {
 			);
 			++index;
 		}
-		logger().log("loadZones Completed");
+		logger() << "loadZones Completed" << L_endl;
 	}
 
 	void TemperatureController::checkAndAdjust() {
 		// once per second
 		static auto lastCheck = millis();
-		static size_t tempSensorIndex = NO_OF_TEMP_SENSORS;
-		if (tempSensorIndex >= size_t(NO_OF_TEMP_SENSORS)) {
-			if (Clock::secondsSinceLastCheck(lastCheck) == 0) return; // all done, wait for next check time.
-			tempSensorIndex = 0;
-			for (auto & zone : zoneArr) zone.setFlowTemp();
-			for (auto & mixValveControl : mixValveControllerArr) mixValveControl.check();
-			backBoiler.check();
-			thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(), zoneArr[Z_DHW].nextTempRequest());
-			relaysPort.setAndTestRegister();
+		if (Clock::secondsSinceLastCheck(lastCheck) == 0) { return; } //Wait for next check time.
+		for (auto ts : tempSensorArr) {
+			//ts.readTemperature();
+			ui_yield();
 		}
-		//logger().log(" ReadTemp for", tempSensorIndex);
-		tempSensorArr[tempSensorIndex].readTemperature();		
-		++tempSensorIndex;	
+		for (auto & zone : zoneArr) { zone.setFlowTemp(); ui_yield(); }
+		for (auto & mixValveControl : mixValveControllerArr) {mixValveControl.check(); ui_yield(); }
+		backBoiler.check();
+		ui_yield();
+		thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(), zoneArr[Z_DHW].nextTempRequest());
+		ui_yield();
+		relaysPort.setAndTestRegister();
+
+		//static size_t tempSensorIndex = NO_OF_TEMP_SENSORS;
+		//if (tempSensorIndex >= size_t(NO_OF_TEMP_SENSORS)) {
+		//	if (Clock::secondsSinceLastCheck(lastCheck) == 0) return; // all done, wait for next check time.
+		//	tempSensorIndex = 0;
+		//	for (auto & zone : zoneArr) zone.setFlowTemp();
+		//	for (auto & mixValveControl : mixValveControllerArr) mixValveControl.check();
+		//	backBoiler.check();
+		//	thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(), zoneArr[Z_DHW].nextTempRequest());
+		//	relaysPort.setAndTestRegister();
+		//}
+		////logger() << " ReadTemp for", tempSensorIndex);
+		//tempSensorArr[tempSensorIndex].readTemperature();		
+		//++tempSensorIndex;	
 	}
 }

@@ -23,12 +23,13 @@ namespace HardwareInterfaces {
 			digitalWrite(RESET_LED_PIN_N, HIGH);
 			pinMode(abs(RESET_OUT_PIN), OUTPUT);
 			digitalWrite(abs(RESET_OUT_PIN), (RESET_OUT_PIN < 0) ? HIGH : LOW);
+			_recover->setTimeoutFn(this);
 		}
 
 	error_codes ResetI2C::operator()(I2C_Talk & i2c, int addr) {
 		static bool isInReset = false;
 		if (isInReset) {
-			logger().log("Test: Recursive Reset... for", addr);
+			logger() << "\nTest: Recursive Reset... for " << addr;
 			return _OK;
 		}
 
@@ -37,7 +38,7 @@ namespace HardwareInterfaces {
 		auto origFn = _recover->getTimeoutFn();
 		_recover->setTimeoutFn(&hardReset);
 
-		logger().log("ResetI2C... for ", addr);
+		logger() << "\nResetI2C... for " << addr;
 		hardReset(i2c, addr);
 		if (!_recover->isRecovering()) {
 			I_I2Cdevice_Recovery & device = _testDevices->getDevice(addr);
@@ -62,9 +63,9 @@ namespace HardwareInterfaces {
 		//delayMicroseconds(2000); // required to allow supply to recover before re-testing
 		i2c.restart();
 		timeOfReset_mS = millis();
-		//if (i2c.i2C_is_frozen(addr)) logger().log("*** Reset I2C is stuck at I2c freq:", i2c.getI2CFrequency(), "for addr:",addr);
+		//if (i2c.i2C_is_frozen(addr)) logger() << "*** Reset I2C is stuck at I2c freq:", i2c.getI2CFrequency(), "for addr:",addr);
 		//else 
-			logger().log("Done Hard Reset for addr:", addr);
+			logger() << "\nDone Hard Reset for addr: " << addr;
 		digitalWrite(RESET_LED_PIN_N, HIGH);
 		initialisationRequired = true;
 		return _OK;

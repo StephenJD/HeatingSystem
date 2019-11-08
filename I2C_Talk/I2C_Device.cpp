@@ -18,7 +18,7 @@ error_codes I_I2Cdevice_Recovery::getStatus() {
 
 error_codes I_I2Cdevice_Recovery::read(uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) { // dataBuffer may not be written to if read fails.
 	auto status = recovery().newReadWrite(*this);
-	//logger().log(" I2Cdevice::read status:", status);
+	//logger() << " I2Cdevice::read status:", status);
 	if (status == _OK) {
 		do {
 			status = i2C().read(getAddress(), registerAddress, numberBytes, dataBuffer);

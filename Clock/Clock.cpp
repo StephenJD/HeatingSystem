@@ -159,37 +159,35 @@ using namespace I2C_Talk_ErrorCodes;
 
 	//Clock_I2C::Clock_I2C(I2C_Talk & i2C, int addr) : Clock_I2C(i2C, addr) {
 
-	error_codes I_Clock_I2C::loadTime() {
-		//Serial.println("Clock_I2C::loadTime()");
-		// called by log so must not recursivly call log
+	error_codes I_Clock_I2C::loadTime() {	
 		auto status = _OK;
 #if !defined (ZPSIM)
+		auto log = Serial_Logger(); // called by clock-log so must not recursivly call clock-enabled log
+		//log << "Clock_I2C::loadTime()\n";
 
 		uint8_t data[9];
 		data[6] = 0; // year
-
 		status = readData(0, 9, data);
+
 		if (status != _OK) {
-			if (Serial) { Serial.print("RTC Unreadable. "); }
+			log << "RTC Unreadable." << I2C_Talk::getStatusMsg(status) << L_endl;
 		}
 		else if (data[6] == 0) {
-			if (Serial) { Serial.println("RTC set from Compiler"); }
+			log << "RTC set from Compiler\n";
 			_setFromCompiler();
 		}
 		else {
-			//if (Serial) {
-			//	Serial.print("Set from RTC secs: ");
-			//	Serial.println(fromBCD(data[0]), DEC);
-			//}
 			_now.setMins10(data[1] >> 4);
 			_now.setHrs(fromBCD(data[2]));
 			_now.setDay(fromBCD(data[4]));
 			_now.setMonth(fromBCD(data[5]));
+			if (_now.month() == 0) _now.setMonth(1);
 			_now.setYear(fromBCD(data[6]));
 			_autoDST = data[8] >> 1;
 			_dstHasBeenSet = data[8] & 1;
 			setMinUnits(data[1] & 15);
 			setSeconds(fromBCD(data[0]));
+			log << "Clock Set from RTC, day: " << fromBCD(data[4]) << L_endl;
 		}
 #endif	
 		_lastCheck_mS = millis();

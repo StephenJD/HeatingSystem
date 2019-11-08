@@ -16,7 +16,7 @@ namespace HardwareInterfaces {
 		, _resetPin( resetPin )
 	{
 		pinMode(abs(_zeroCrossPin), INPUT);
-		logger().log("RelaysPort::setup()");
+		logger() << "\nRelaysPort::setup()" << L_endl;
 		digitalWrite(abs(_zeroCrossPin), HIGH); // turn on pullup resistors
 		pinMode(abs(_resetPin), OUTPUT);
 		digitalWrite(abs(_resetPin), (_resetPin < 0) ? HIGH : LOW);
@@ -28,14 +28,14 @@ namespace HardwareInterfaces {
 
 		status = write_verify(REG_8PORT_PullUp, 1, pullUp_out); // clear all pull-up resistors
 		if (status) {
-			logger().log("Initialise RelaysPort() write-verify failed at Freq:", i2C().getI2CFrequency());
+			logger() << "\nInitialise RelaysPort() write-verify failed at Freq: " << i2C().getI2CFrequency() << L_endl;
 		}
 		else {
 			status = write_verify(REG_8PORT_OLAT, 1, &relayRegister); // set latches
 			writeInSync();
 			status |= write_verify(REG_8PORT_IODIR, 1, pullUp_out); // set all as outputs
-			if (status) logger().log("Initialise RelaysPort() lat-write failed at Freq:", i2C().getI2CFrequency());
-			//else logger().log("Initialise RelaysPort() succeeded at Freq:", i2C().getI2CFrequency());
+			if (status) logger() << "\nInitialise RelaysPort() lat-write failed at Freq: " << i2C().getI2CFrequency() << L_endl;
+			//else logger() << "Initialise RelaysPort() succeeded at Freq:", i2C().getI2CFrequency());
 		}
 		return status;
 	}
@@ -47,7 +47,7 @@ namespace HardwareInterfaces {
 			writeInSync();
 			auto status = write_verify(REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
 		//}
-		//logger().log("RelaysPort::setAndTestRegister() addr:", _address,i2C().getStatusMsg(error));
+		//logger() << "RelaysPort::setAndTestRegister() addr:", _address,i2C().getStatusMsg(error));
 		return status;
 	}
 
@@ -62,11 +62,11 @@ namespace HardwareInterfaces {
 
 	bool Relay::setRelay(uint8_t state) { // returns true if state is changed
 		uint8_t myBitMask = 1 << port();
-		uint8_t myBit = (RelaysPort::relayRegister  & myBitMask) != 0;
-		uint8_t currState = !(myBit^activeState());
+		uint8_t myBitBinaryState = (RelaysPort::relayRegister  & myBitMask) != 0;
+		uint8_t currState = !(myBitBinaryState^activeState());
 
-		myBit = !(state^activeState()); // Required bit state 
-		if (!myBit) { // clear bit
+		myBitBinaryState = !(state^activeState()); // Required bit binary state 
+		if (!myBitBinaryState) { // clear bit
 			RelaysPort::relayRegister &= ~myBitMask;
 		}
 		else { // set this bit

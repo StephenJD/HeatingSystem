@@ -22,7 +22,8 @@ namespace LCD_UI {
 
 	HI_BD::CursorMode UI_Object::cursorMode(const Object_Hndl * activeElement) const {
 		if (activeElement) {
-			if (this == activeElement->get()) return HI_BD::e_selected;
+			if (this == activeElement->get()) 
+				return HI_BD::e_selected;
 		}
 		return HI_BD::e_unselected;
 	}
@@ -81,7 +82,8 @@ namespace LCD_UI {
 	CursorMode Collection_Hndl::cursorMode(const Object_Hndl * activeElement) const {
 		using HI_BD = HardwareInterfaces::LCD_Display;
 		if (activeElement) {
-			if (this == reinterpret_cast<const Collection_Hndl*>(activeElement->get())) return HI_BD::e_selected;
+			if (this == reinterpret_cast<const Collection_Hndl*>(activeElement->get())) 
+				return HI_BD::e_selected;
 		}
 		return HI_BD::e_unselected;
 	}
@@ -128,7 +130,7 @@ namespace LCD_UI {
 	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
 		auto collection = get()->collection();
 		if (collection) {
-			move_focus_to(focusIndex());
+			move_focus_to(focusIndex()); // sets the focus to the current focus and adjusts if out of range.
 			const int startFocus = focusIndex(); // might be endIndex()
 			////////////////////////////////////////////////////////////////////
 			//************* Lambdas evaluating algorithm *********************//
@@ -345,10 +347,10 @@ namespace LCD_UI {
 		
 		// lambdas
 		auto endOfBufferSoFar = [&buffer]() {return strlen(buffer.toCStr());};
-		auto thisElementIsOnAnewLine = [&buffer](auto bufferStart) {return buffer.toCStr()[bufferStart -1] == '~';};
-		auto removeNewLineSymbol = [](auto & bufferStart) {--bufferStart; };
+		auto thisElementIsOnAnewLine = [&buffer](size_t bufferStart) {return buffer.toCStr()[bufferStart -1] == '~';};
+		auto removeNewLineSymbol = [](size_t & bufferStart) {--bufferStart; };
 		auto elementHasfocus = [focus, this]() {return (focus >= 0 && focus < endIndex()) ? true : false; };
-		auto startThisField = [&buffer](auto bufferStart, auto newLine) {
+		auto startThisField = [&buffer](size_t bufferStart, bool newLine) {
 			buffer.truncate(bufferStart);
 			if (newLine) buffer.newLine();
 		};
@@ -360,7 +362,7 @@ namespace LCD_UI {
 		auto hasFocus = elementHasfocus();
 
 		do {
-			startThisField(bufferStart, newLine);
+			startThisField(bufferStart, mustStartNewLine);
 			collection()->streamElement(buffer, activeElement, this, streamIndex);
 		} while (hasFocus && (focus < _beginShow || focus >= _endShow));
 

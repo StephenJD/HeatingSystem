@@ -5,6 +5,7 @@
 //#include <Logging.h>
 #include <..\Logging\Logging.h>
 
+void ui_yield();
 extern int st_index;
 
 namespace I2C_Recovery {
@@ -21,7 +22,7 @@ namespace I2C_Recovery {
 				return_status = status;
 			}
 			--noOfTests;
-			//logger().log("testDevice Tests/Failures ", noOfTests, "/", allowableFailures);
+			//logger() << "testDevice Tests/Failures ", noOfTests, "/", allowableFailures);
 		} while (allowableFailures >= 0 && noOfTests > 0);
 		if (allowableFailures >= 0) return _OK; else return return_status;
 	}
@@ -32,26 +33,27 @@ namespace I2C_Recovery {
 		// Must test MAX_I2C_FREQ as this is skipped in later tests
 		constexpr uint32_t tryFreq[] = { 52000,8200,330000,3200,21000,2000,5100,13000,33000,83000,210000 };
 		i2C().setI2CFrequency(I2C_Talk::MAX_I2C_FREQ);
-		//logger().log("findAworkingSpeed Try Exists? At:", i2C().getI2CFrequency());
+		//logger() << "findAworkingSpeed Try Exists? At:", i2C().getI2CFrequency());
 		auto testResult = i2C().status(addr);
-		//logger().log("findAworkingSpeed Exists? At:", i2C().getI2CFrequency(), device().getStatusMsg(testResult));
+		//logger() << "findAworkingSpeed Exists? At:", i2C().getI2CFrequency(), device().getStatusMsg(testResult));
 		if (testResult == _OK) {
 			testResult = testDevice(2, 1);
-			logger().log("findAworkingSpeed Exists succeeded. Test device at ", i2C().getI2CFrequency(), device().getStatusMsg(testResult));
+			logger() << L_time << "findAworkingSpeed Exists succeeded. Test device at " << i2C().getI2CFrequency() << device().getStatusMsg(testResult);
 		}
 
 		if (testResult != _OK) {
 			for (auto freq : tryFreq) {
 				i2C().setI2CFrequency(freq);
-				logger().log("Trying addr:", addr,"at freq:",freq);// Serial.print(" Success: "); Serial.println(getStatusMsg(testResult));
+				logger() << "\nTrying addr: " << addr << " at freq: " << freq;// Serial.print(" Success: "); Serial.println(getStatusMsg(testResult);
 				testResult = i2C().status(addr);
 
 				if (testResult == _OK) {
 					device().set_runSpeed(freq);
 					testResult = testDevice(2, 1);
-					logger().log("findAworkingSpeed Exists succeeded. Test device at ", i2C().getI2CFrequency(), device().getStatusMsg(testResult));
+					logger() << "\nfindAworkingSpeed Exists succeeded. Test device at " << i2C().getI2CFrequency() << device().getStatusMsg(testResult);
 					if (testResult == _OK) break;
 				}
+				ui_yield();
 			}
 		}
 		return testResult ? _I2C_Device_Not_Found : _OK;
@@ -70,10 +72,10 @@ namespace I2C_Recovery {
 		if (!device.isEnabled()) {
 			if (millis() - device.getFailedTime() > DISABLE_PERIOD_ON_FAILURE) {
 				device.reset();
-				logger().log("10s rest: Re-enabling disabled device",device.getAddress());
+				logger() << "\n10s rest: Re-enabling disabled device " << device.getAddress();
 			}
 			else {
-				logger().log("Disabled device",device.getAddress());
+				logger() << "\nDisabled device" << device.getAddress();
 				return _disabledDevice;
 			}
 		}
@@ -87,7 +89,7 @@ namespace I2C_Recovery {
 		if (_strategy.strategy() == S_NoProblem) {
 			if (!I2C_SpeedTest::doingSpeedTest() && _lastGoodDevice == 0) {
 				_lastGoodDevice = &device();
-				logger().log("_lastGoodDevice reset to", _lastGoodDevice->getAddress());
+				logger() << "\n_lastGoodDevice reset to " << _lastGoodDevice->getAddress();
 			}
 		} else {
 			_strategy.succeeded();
@@ -103,11 +105,11 @@ namespace I2C_Recovery {
 		static uint32_t recoveryTime;
 		uint32_t strategyStartTime;
 		static int tryAgain;
-		//logger().log("tryReadWriteAgain: status", status);
+		//logger() << "\ntryReadWriteAgain: status" << status;
 		if (status == _OK) {
 			tryAgain = 0;
 			if (recoveryTime > 0) {
-				logger().log("Recovery Time uS:", recoveryTime);
+				logger() << "\nRecovery Time uS: " << recoveryTime;
 				strategy().stackTrace(++st_index, "tryReadWriteAgain - recovered");
 				recoveryTime = 0;
 			}
@@ -121,28 +123,28 @@ namespace I2C_Recovery {
 			return false;	
 		} else {
 			if (_lastGoodDevice == &device()) _lastGoodDevice = 0;
-			//logger().log("tryReadWriteAgain: ", device().getAddress(), device().getStatusMsg(status));
+			//logger() << "\ntryReadWriteAgain: " << device().getAddress() << device().getStatusMsg(status);
 			_strategy.next();
 			strategy().stackTrace(++st_index, "tryReadWriteAgain - next");
 			_isRecovering = true;
 			switch (_strategy.strategy()) {
 			case S_TryAgain:
 			case S_Restart:
-				logger().log("    S_Restart", device().getAddress(), device().getStatusMsg(status));
+				logger() << "\n    S_Restart " << device().getAddress() << device().getStatusMsg(status);
 				strategyStartTime = micros();
 				restart("read 0x");
 				recoveryTime = micros() - strategyStartTime;
 				strategy().stackTrace(++st_index, "S_Restart");
 				break;			
 			case S_WaitForDataLine:
-				logger().log("    S_WaitForDataLine", device().getAddress(), device().getStatusMsg(status));
+				logger() << "\n    S_WaitForDataLine" << device().getAddress() << device().getStatusMsg(status);
 				strategyStartTime = micros();
 				Wait_For_I2C_Data_Line_OK();
 				recoveryTime = micros() - strategyStartTime;
 				strategy().stackTrace(++st_index, "S_WaitForDataLine");
 				break;
 			//case S_WaitAgain10:
-			//	logger().log("    S_WaitForDataLine", device().getAddress(), device().getStatusMsg(status));
+			//	logger() << "    S_WaitForDataLine", device().getAddress(), device().getStatusMsg(status));
 			//	strategyStartTime = micros();
 			//	Wait_For_I2C_Data_Line_OK();
 			//	recoveryTime = micros() - strategyStartTime;
@@ -151,7 +153,7 @@ namespace I2C_Recovery {
 			//	if (tryAgain < 20) strategy().tryAgain(S_WaitForDataLine); else tryAgain = 0;
 			//	break;
 			case S_NotFrozen:
-				logger().log("    S_NotFrozen", device().getAddress(), device().getStatusMsg(status));
+				logger() << "\n    S_NotFrozen " << device().getAddress() << device().getStatusMsg(status);
 				strategyStartTime = micros();
 				if (i2C_is_frozen()) call_timeOutFn(lastGoodDevice()->getAddress());
 				recoveryTime = micros() - strategyStartTime;
@@ -160,32 +162,32 @@ namespace I2C_Recovery {
 				//if (tryAgain < 5) strategy().tryAgain(S_WaitAgain10);
 				break;
 			case S_SlowDown:
-				logger().log("    S_Slow-down", device().getAddress(), device().getStatusMsg(status));
+				logger() << "\n    S_Slow-down " << device().getAddress() << device().getStatusMsg(status);
 				strategyStartTime = micros();
 				{ auto slowedDown = slowdown();
 					recoveryTime = micros() - strategyStartTime;
-					if (!slowedDown) logger().log("    Slow-down did nothing...");
+					if (!slowedDown) logger() << "\n    Slow-down did nothing...";
 				}
 				strategy().stackTrace(++st_index, "S_SlowDown");
 				break;
 			case S_SpeedTest:
-				logger().log("    S_SpeedTest", device().getAddress(), device().getStatusMsg(status));
+				logger() << "\n    S_SpeedTest " << device().getAddress() << device().getStatusMsg(status);
 				strategyStartTime = micros();
 				{
 					auto speedTest = I2C_SpeedTest(device());
 					speedTest.fastest();
 					recoveryTime = micros() - strategyStartTime;
 					if (speedTest.error())
-						logger().log("   Device Failed");
+						logger() << "\n   Device Failed";
 					else {
 						strategy().tryAgain(S_TryAgain);
-						logger().log("   New Speed", device().runSpeed());
+						logger() << "\n   New Speed " << device().runSpeed();
 					}
 				}
 				strategy().stackTrace(++st_index, "S_SpeedTest");
 				break;
 			case S_PowerDown:
-				logger().log("    S_Power-Down", device().getAddress(), device().getStatusMsg(status));
+				logger() << "\n    S_Power-Down " << device().getAddress() << device().getStatusMsg(status);
 				strategyStartTime = micros();
 				call_timeOutFn(device().getAddress());
 				{
@@ -193,10 +195,10 @@ namespace I2C_Recovery {
 					speedTest.fastest();
 					recoveryTime = micros() - strategyStartTime;
 					if (speedTest.error())
-						logger().log("   Device Failed");
+						logger() << "\n   Device Failed";
 					else {
 						strategy().tryAgain(S_TryAgain);
-						logger().log("   New Speed", device().runSpeed());
+						logger() << "\n   New Speed " << device().runSpeed();
 					}
 				}
 				strategy().stackTrace(++st_index, "S_PowerDown");
@@ -204,7 +206,7 @@ namespace I2C_Recovery {
 				if (tryAgain <= 1) strategy().tryAgain(S_TryAgain);
 				break;
 			case S_Disable:
-				logger().log("    S_Disable Device", device().getAddress(), device().getStatusMsg(status));
+				logger() << "\n    S_Disable Device " << device().getAddress() << device().getStatusMsg(status);
 				disable();
 				strategy().stackTrace(++st_index, "S_Disable");
 				recoveryTime = 0;
@@ -231,9 +233,9 @@ namespace I2C_Recovery {
 			auto thisFreq = device().runSpeed();
 			canReduce = thisFreq > I2C_Talk::MIN_I2C_FREQ;
 			if (canReduce) {
-				logger().log("\tslowdown for", device().getAddress(), "speed was", thisFreq);
+				logger() << "\n\tslowdown for " << device().getAddress() << " speed was " << thisFreq;
 				device().set_runSpeed(max(thisFreq - max(thisFreq / 10, 1000), I2C_Talk::MIN_I2C_FREQ));
-				logger().log("\treduced speed to", device().runSpeed());
+				logger() << "\n\treduced speed to " << device().runSpeed();
 			}
 		}
 		return canReduce;
@@ -259,7 +261,7 @@ namespace I2C_Recovery {
 		i2C().setI2CFrequency(i2C_speed);
 		runTime = micros() - runTime;
 		if (status == _Timeout || runTime > TIMEOUT) { // 20mS timeout
-			logger().log("****  i2C_is_frozen timed-out  ****", lastGoodDevice()->getAddress());
+			logger() << "\n****  i2C_is_frozen timed-out  **** " << lastGoodDevice()->getAddress();
 			return true;
 		}
 		return false;
@@ -269,14 +271,14 @@ namespace I2C_Recovery {
 		static bool doingTimeOut;
 		if (_timeoutFunctor != 0) {
 			if (doingTimeOut) {
-				logger().log("\tcall_timeOutFn called recursively");
+				logger() << "\n\tcall_timeOutFn called recursively";
 				return;
 			}
 			doingTimeOut = true;
 			(*_timeoutFunctor)(i2C(), device().getAddress());
 		}
 		else {
-			logger().log("\t... no Time_OutFn set");
+			logger() << "\n\t***  no Time_OutFn set ***\n";
 			i2C().restart(); // restart i2c in case this is called after an i2c failure
 		}
 		doingTimeOut = false;

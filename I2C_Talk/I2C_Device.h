@@ -20,7 +20,10 @@ public:
 	virtual void disable() {};
 	virtual void reset() {};
 
-	virtual auto read(uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::error_codes { return i2C().read(getAddress(), registerAddress, numberBytes, dataBuffer); } // Return errCode. dataBuffer may not be written to if read fails.
+	virtual auto read(uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::error_codes { 
+		//Serial.println("I_I2Cdevice::read");
+		return i2C().read(getAddress(), registerAddress, numberBytes, dataBuffer); 
+	} // Return errCode. dataBuffer may not be written to if read fails.
 	virtual auto readEP(int pageAddress, uint16_t numberBytes, uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::error_codes { return i2C().readEP(getAddress(), pageAddress, numberBytes, dataBuffer); }  // Return errCode. dataBuffer may not be written to if read fails.
 	virtual auto write(uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::error_codes { return i2C().write(getAddress(), registerAddress, numberBytes, dataBuffer); }  // Return errCode.
 	virtual auto writeEP(int pageAddress, uint16_t numberBytes, const uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::error_codes { return i2C().writeEP(getAddress(), pageAddress, numberBytes, dataBuffer); } // Return errCode.

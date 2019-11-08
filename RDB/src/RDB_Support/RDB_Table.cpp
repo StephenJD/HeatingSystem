@@ -21,7 +21,7 @@ namespace RelationalDatabase {
 		, _insertionStrategy(tableHdr.insertionStrategy())
 		, _max_NoOfRecords_in_table(_recordsPerChunk)
 	{
-		//logger().log("Table::Table _insertionStrategy:", _insertionStrategy);
+		//logger() << "Table::Table _insertionStrategy:", _insertionStrategy);
 	}
 
 	Table::Table(RDB_B & db, TableID tableID) :
@@ -35,7 +35,7 @@ namespace RelationalDatabase {
 
 	Table::Table(const Table & rhs) :_timeOfLastChange(micros())
 	{
-		//logger().log("Table::Table copy  _insertionStrategy:", _insertionStrategy);
+		//logger() << "Table::Table copy  _insertionStrategy:", _insertionStrategy);
 	}
 
 	//Table & Table::operator =(const Table & rhs) {
@@ -47,7 +47,7 @@ namespace RelationalDatabase {
 	//	_rec_size = rhs._rec_size;
 	//	_insertionStrategy = rhs._insertionStrategy;
 	//	_max_NoOfRecords_in_table = rhs._max_NoOfRecords_in_table;
-	//	//logger().log("Table::Table assignment  _insertionStrategy:", _insertionStrategy);
+	//	//logger() << "Table::Table assignment  _insertionStrategy:", _insertionStrategy);
 	//	return *this;
 	//}
 
@@ -59,19 +59,19 @@ namespace RelationalDatabase {
 			rec_sel._chunkAddr = rec_sel.firstRecordInChunk() + chunkSize();
 			if (rec_sel._chunkAddr < _db->_dbSize) {
 				_db->_readByte(rec_sel._chunkAddr, &rec_sel._chunk_header, HeaderSize);
-				logger().log("\nTable::openNextTable() chunk at:", rec_sel._chunkAddr);
+				logger() << "Table::openNextTable() chunk at: " << rec_sel._chunkAddr << L_endl;
 			}
 			else {
-				logger().log("Table::openNextTable() no more Tables");
+				logger() << "Table::openNextTable() no more Tables" << L_endl;
 				markAsInvalid();
 				return;
 			}
 			if (!rec_sel._chunk_header.isFinalChunk() && (rec_sel._chunk_header.nextChunk() == rec_sel._chunkAddr || rec_sel._chunk_header.nextChunk() > _db->_dbSize)) {
-				//logger().log("Table::openNextTable() read from", rec_sel._chunkAddr, "Size is :", _db->_dbSize);
-				//logger().log(" A table-extention? :", !rec_sel.isStartOfATable(), "Chunk _isFinalChunk", rec_sel._chunk_header.isFinalChunk());
-				//logger().log(" if Final: chunk _recSize", rec_sel._chunk_header._recSize, " ELSE NextChunk :", rec_sel._chunk_header.nextChunk());
-				//logger().log(" IsfirstChunk :", rec_sel._chunk_header.isFirstChunk(), "  chunk noOfRecords", rec_sel._chunk_header.chunkSize());
-				logger().log(" Corrupt Table found. Database Reset.");
+				//logger() << "Table::openNextTable() read from", rec_sel._chunkAddr, "Size is :", _db->_dbSize);
+				//logger() << " A table-extention? :", !rec_sel.isStartOfATable(), "Chunk _isFinalChunk", rec_sel._chunk_header.isFinalChunk());
+				//logger() << " if Final: chunk _recSize", rec_sel._chunk_header._recSize, " ELSE NextChunk :", rec_sel._chunk_header.nextChunk());
+				//logger() << " IsfirstChunk :", rec_sel._chunk_header.isFirstChunk(), "  chunk noOfRecords", rec_sel._chunk_header.chunkSize());
+				logger() << " Corrupt Table found. Database Reset." << L_endl;
 				_db->reset(0,0);
 				markAsInvalid();
 				return;
@@ -93,16 +93,16 @@ namespace RelationalDatabase {
 
 		_recordsPerChunk = rec_sel._chunk_header.chunkSize();
 		_max_NoOfRecords_in_table = _recordsPerChunk;
-		logger().log(" getRecordSize. recPerCh:", _recordsPerChunk, "Rec Size:", rec_sel._chunk_header.rec_size());
-		logger().log("   Addr:", rec_sel._chunkAddr, "NextChunk at:", rec_sel._chunk_header.nextChunk());
+		logger() << " getRecordSize. recPerCh: " << _recordsPerChunk << " Rec Size: " << rec_sel._chunk_header.rec_size();
+		logger() << "\n   Addr: " << rec_sel._chunkAddr << " NextChunk at: " << rec_sel._chunk_header.nextChunk() << L_endl;
 
 		while (rec_sel.haveMovedToNextChunck()) {
 			_max_NoOfRecords_in_table += _recordsPerChunk;
-			logger().log("     _max_NoOfRecords_in_table:", _max_NoOfRecords_in_table);
+			logger() << "     _max_NoOfRecords_in_table: " << _max_NoOfRecords_in_table << L_endl;
 		}
 		_rec_size = rec_sel._chunk_header.rec_size();
 		_insertionStrategy = rec_sel._chunk_header.insertionStrategy();
-		//logger().log("Table::getRecordSize _insertionStrategy:", _insertionStrategy);
+		//logger() << "Table::getRecordSize _insertionStrategy:", _insertionStrategy);
 		return true;
 	}
 

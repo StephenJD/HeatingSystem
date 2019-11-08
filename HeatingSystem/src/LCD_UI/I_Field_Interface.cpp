@@ -70,7 +70,7 @@ namespace LCD_UI {
 			auto fieldInterface_h = parent();
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
-				//logger().log("edit value", streamVal);
+				//logger() << "edit value", streamVal);
 			}
 			else const_cast<I_Edit_Hndl&>(editItem()).currValue().val = streamVal;
 		}
@@ -112,7 +112,7 @@ namespace LCD_UI {
 		if (!activeElement) return HI_BD::e_unselected;
 		if (this == activeElement) {
 			if (_cursorMode == HI_BD::e_inEdit) return HI_BD::e_inEdit;
-			else return HI_BD::e_selected;;
+			else return HI_BD::e_selected;
 		} else return _cursorMode;
 	}
 

@@ -46,7 +46,19 @@ public:
 	auto write(int iAddr, uint8_t iVal)->I2C_Talk_ErrorCodes::error_codes;
 	auto update(int iAddr, uint8_t iVal)->I2C_Talk_ErrorCodes::error_codes;
 	auto getStatus()-> I2C_Talk_ErrorCodes::error_codes override { i2C().waitForEPready(getAddress()); return i2C().status(getAddress()); }
+	
+	//Functionality to 'get' and 'put' objects to and from EEPROM.
+	template< typename T > T & get(int iAddr, T & t) {
+		uint8_t * ptr = (uint8_t*)&t;
+		for (int endStop = iAddr + sizeof(T); iAddr < endStop; ++iAddr, ++ptr)  *ptr = read(iAddr);
+		return t;
+	}
 
+	template< typename T > const T & put(int iAddr, const T & t) {
+		const uint8_t * ptr = (const uint8_t*)&t;
+		for (int endStop = iAddr + sizeof(T); iAddr < endStop; ++iAddr, ++ptr)  update(iAddr, *ptr);
+		return t;
+	}
 private:
 };
 

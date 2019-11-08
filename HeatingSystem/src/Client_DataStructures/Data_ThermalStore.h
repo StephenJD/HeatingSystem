@@ -31,10 +31,7 @@ namespace client_data_structures {
 		bool operator == (R_ThermalStore rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_ThermalStore & thermalStore) {
-		return stream << "TthermalStore: ";
+	inline Logger & operator << (Logger & stream, const R_ThermalStore & thermalStore) {
+		return stream << "ThermalStore";
 	}
-#endif
-
 }

@@ -25,6 +25,8 @@ namespace HardwareInterfaces {
 #endif
 	private:
 		MultiCrystal _lcd;
+		bool _cursorOn = true;
+		bool _wasBlinking = false;
 	};
 }
 

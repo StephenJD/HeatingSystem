@@ -7,6 +7,8 @@
 #include "..\LCD_UI\UI_Cmd.h"
 #include "..\Client_DataStructures\Client_Cmd.h"
 
+class HeatingSystem;
+
 namespace HardwareInterfaces {
 	class LocalDisplay;
 }
@@ -19,7 +21,7 @@ namespace Assembly {
 	{
 	public:
 		enum { e_zones, e_calendars, e_programs, e_towelRails, e_NO_OF_CMDS };
-		MainConsolePageGenerator(Database & db, TemperatureController & tc);
+		MainConsolePageGenerator(Database & db, TemperatureController & tc, HeatingSystem & hs);
 		LCD_UI::A_Top_UI & pages() { return _display_h; }
 
 	private:

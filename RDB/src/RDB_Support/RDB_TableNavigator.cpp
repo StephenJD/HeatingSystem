@@ -22,7 +22,7 @@ namespace RelationalDatabase {
 			_chunk_header = t->table_header();
 			_chunkAddr = t->tableID();
 			loadHeader();
-			//logger().log("Loaded TableNavigator VR:", _chunk_header.validRecords());
+			//logger() << "Loaded TableNavigator VR:", _chunk_header.validRecords());
 		}
 		else _currRecord.setStatus(TB_INVALID_TABLE);
 	}
@@ -51,7 +51,7 @@ namespace RelationalDatabase {
 		//uint8_t vrIndex;
 		//ValidRecord_t usedRecords;
 		//getAvailabilityBytesForThisRecord(usedRecords, vrIndex);
-		//logger().log("    InsertRecordID:", _currRecord.id(), "VRec",usedRecords);
+		//logger() << "    InsertRecordID:", _currRecord.id(), "VRec",usedRecords);
 		
 		auto targetRecordID = _currRecord.id();
 		auto unusedRecordID = reserveUnusedRecordID();
@@ -216,7 +216,7 @@ namespace RelationalDatabase {
 
 	RecordID TableNavigator::reserveUnusedRecordID() {
 		bool found = reserveFirstUnusedRecordInThisChunk();
-		//logger().log("    found unused in this chunk:", found);
+		//logger() << "    found unused in this chunk:", found);
 		if (!found && _chunkAddr != _t->tableID()) {
 			moveToFirstRecord();
 			found = reserveFirstUnusedRecordInThisChunk();
@@ -355,12 +355,12 @@ namespace RelationalDatabase {
 
 	bool TableNavigator::haveMovedToNextChunck() {
 		if (chunkIsExtended()) {
-			//logger().log("chunkIsExtended : Addr:", _chunkAddr, "NextChunk at:", _chunk_header.nextChunk());
+			//logger() << "chunkIsExtended : Addr:", _chunkAddr, "NextChunk at:", _chunk_header.nextChunk());
 			_chunk_start_recordID += chunkCapacity();
 			//if (_chunkAddr == _chunk_header.nextChunk()) return false;
 			//else 
 				_chunkAddr = _chunk_header.nextChunk();
-			//logger().log("chunkIsExtended : capacity:", chunkCapacity(), " addr:", _chunkAddr);
+			//logger() << "chunkIsExtended : capacity:", chunkCapacity(), " addr:", _chunkAddr);
 			_t->loadHeader(_chunkAddr, _chunk_header);
 			_VR_Byte_No = 0;
 			checkStatus();
@@ -415,10 +415,10 @@ namespace RelationalDatabase {
 		uint8_t old_VR_Byte_No = _VR_Byte_No;
 		vrIndex = getValidRecordIndex();
 		TB_Size_t availabilityByteAddr = getAvailabilityByteAddress();
-		//logger().log("     getValidRecordIndex", vrIndex, "A-Byte_Addr", availabilityByteAddr);
+		//logger() << "     getValidRecordIndex", vrIndex, "A-Byte_Addr", availabilityByteAddr);
 		if (old_VR_Byte_No != _VR_Byte_No || _t->outOfDate(_timeValidRecordLastRead)) {
 			if (_VR_Byte_No == 0) {
-				//logger().log(" Load Header from EEPROM");
+				//logger() << " Load Header from EEPROM");
 				const_cast<TableNavigator *>(this)->loadHeader(); // invalidated by moving to another chunk or by table-update
 				usedRecords = _chunk_header.validRecords();
 			}
@@ -479,8 +479,7 @@ namespace RelationalDatabase {
 		, void(*swapRecords)(TableNavigator *original, void * recToInsert)) {
 		
 		moveToThisRecord(_currRecord.signed_id());
-		//logger().log();
-		//logger().log("Sort...  Curr RecordID :", _currRecord.signed_id(), "Status:", status());
+		//logger() << L_endl << "Sort...  Curr RecordID : " << _currRecord.signed_id() << " Status:", status());
 		if (status() == TB_RECORD_UNUSED || status() == TB_BEFORE_BEGIN) ++(*this);
 		bool sortOrder = isSmallestFirst(_t->insertionStrategy());
 		bool moveToNext = compareRecords(this, recToInsert, sortOrder);
@@ -511,12 +510,12 @@ namespace RelationalDatabase {
 
 		// Find Space
 		moveToThisRecord(insertionPos);
-		//logger().log("  InsertPos :", insertionPos, "Status:", status());
+		//logger() << "\n  InsertPos : " << insertionPos << " Status: " << status());
 		ValidRecord_t validRecords;
 		uint8_t vrIndex;
 		getAvailabilityBytesForThisRecord(validRecords, vrIndex);
 		auto insertPosTaken = recordIsUsed(validRecords, vrIndex);
-		//logger().log("  validRecords :", validRecords, " Pos taken:", insertPosTaken);
+		//logger() << "  validRecords :", validRecords, " Pos taken:", insertPosTaken);
 
 		//cout << "      validRecords " << std::bitset<8>(validRecords) << endl;
 
@@ -530,7 +529,7 @@ namespace RelationalDatabase {
 				moveToThisRecord(swapPos);
 				getAvailabilityBytesForThisRecord(validRecords, vrIndex);
 				insertPosTaken = recordIsUsed(validRecords, vrIndex);
-				//logger().log("    swapPos:", swapPos, "validRecords :", validRecords);
+				//logger() << "    swapPos:", swapPos, "validRecords :", validRecords);
 			}
 		}
 		return insertionPos;

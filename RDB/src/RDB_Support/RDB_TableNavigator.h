@@ -197,20 +197,20 @@ namespace RelationalDatabase {
 				currRec.Answer_Locator::update(recToInsert);
 				*reinterpret_cast<Record_T*>(recToInsert) = currRec.get();
 			};
-			//logger().log("Try Inserting ", recordToInsert);
+			//logger() << "Try Inserting ", recordToInsert);
 
 			auto insertPos = sortedInsert(&recordToInsert, compareRecords, swapRecords);
-			//logger().log("  Now Inserting at: " , insertPos); // ", recordToInsert ,"
+			//logger() << "  Now Inserting at: " , insertPos); // ", recordToInsert ,"
 
 			auto unusedRec = insertRecord(&recordToInsert);
-			//logger().log("    Inserted at ", unusedRec);
+			//logger() << "    Inserted at ", unusedRec);
 
 			if (unusedRec < insertPos) --insertPos;
 			moveToThisRecord(insertPos);
 			return insertPos;
 		}
 		else {
-			//logger().log("  Unsorted Insert Strategy", table().insertionStrategy());
+			//logger() << "  Unsorted Insert Strategy", table().insertionStrategy());
 			return insertRecord(newRecord);
 		}
 	}

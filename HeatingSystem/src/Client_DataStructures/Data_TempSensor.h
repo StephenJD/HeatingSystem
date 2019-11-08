@@ -15,17 +15,15 @@ namespace client_data_structures {
 
 	struct R_TempSensor {
 		char name[5];
-		uint8_t address;
+		uint8_t address; // Initialisation inhibits aggregate initialisation.
 		//I2C_Temp_Sensor & obj(int objID) { return HardwareInterfaces::tempSensors[objID]; }
 		bool operator < (R_TempSensor rhs) const { return false; }
 		bool operator == (R_TempSensor rhs) const { return true; }
 	};
 
-#ifdef ZPSIM
-	inline std::ostream & operator << (std::ostream & stream, const R_TempSensor & tempSensor) {
+	inline Logger & operator << (Logger & stream, const R_TempSensor & tempSensor) {
 		return stream << "TempSensor: " << tempSensor.name << " Addr: " << (int)tempSensor.address;
 	}
-#endif
 
 	//***************************************************
 	//              TempSensor LCD_UI

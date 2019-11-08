@@ -83,7 +83,7 @@ namespace RelationalDatabase {
 	}
 
 	void Answer_Locator::rec(void * rec) {
-		if (_tb->outOfDate(_lastRead)) {
+		if (_tb && _tb->outOfDate(_lastRead)) {
 			statusOnly();
 			if (_status == TB_OK) _tb->db()._readByte(_recordAddress, rec, _tb->recordSize());
 			_lastRead = micros();

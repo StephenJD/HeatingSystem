@@ -191,7 +191,7 @@ int8_t getKeyCode(uint16_t gpio);
 uint8_t resetI2C_(I2C_Talk & i2c, int addr) { // addr == 0 forces hard reset
 	static bool isInReset = false;
 	if (isInReset) {
-		logger().log("Test: Recursive Reset... for", addr);
+		logger() << "\nTest: Recursive Reset... for " << addr;
 		return 0;
 	}
 	isInReset = true;
@@ -199,15 +199,15 @@ uint8_t resetI2C_(I2C_Talk & i2c, int addr) { // addr == 0 forces hard reset
 	uint8_t hasFailed = 0;
 	auto origFn = i2c_recover.getTimeoutFn();
 	i2c_recover.setTimeoutFn(hardReset_Performed_);
-	logger().log("\tResetI2C for ", addr);
+	logger() << "\n\tResetI2C for " << addr;
 	hardReset_Performed_(i2c, addr);
 	if (!i2c_recover.isRecovering()) {
 		hasFailed = getDevice(addr).testDevice();
 
 		//if (hasFailed) {
-			//logger().log(" Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
+			// logger() << "\n Re-test Speed for", addr, " Started at: ", i2c.getI2CFrequency());
 			//hasFailed = speedTestDevice_(addr);
-			//logger().log(" Re-test Speed Done at:", i2c.getThisI2CFrequency(addr));
+			// logger() << "\n Re-test Speed Done at:", i2c.getThisI2CFrequency(addr));
 		//}
 
 		if (!hasFailed && initialisationRequired_) {
@@ -228,16 +228,16 @@ uint8_t hardReset_Performed_(I2C_Talk & i2c, int addr) {
 	digitalWrite(I2C_RESET, HIGH);
 	i2c.restart();
 	timeOfReset_mS_ = millis();
-	//if (i2c_recover.i2C_is_frozen()) logger().log("*** Reset I2C is stuck at I2c freq:", i2c.getI2CFrequency());
+	//if (i2c_recover.i2C_is_frozen())  logger() << "\n*** Reset I2C is stuck at I2c freq:", i2c.getI2CFrequency());
 	//else 
-	logger().log("\t\tDone Hard Reset... for", addr);
+	logger() << "\n\t\tDone Hard Reset... for " << addr;
 	digitalWrite(RESET_LEDN_PIN, HIGH);
 	initialisationRequired_ = true;
 	return true;
 }
 
 uint8_t resetRTC(I2C_Talk & i2c, int addr) {
-	//Serial.println("Power-Down RTC...");
+	logger() << "\nPower-Down RTC...";
 	pinMode(RTC_RESET, OUTPUT);
 	digitalWrite(RTC_RESET, HIGH);
 	delayMicroseconds(200000);
@@ -252,8 +252,8 @@ bool checkEEPROM(const char * msg) {
 	if (EEPROM.getStatus() != _OK) {
 		resetRTC(rtc, 0x50);
 		if (EEPROM.getStatus() != _OK) {
-			logger().log("EEPROM error after reset ", 0, msg);
-		} else logger().log("EEPROM recovered after reset: ", 0, msg);
+			logger() << "\nEEPROM error after reset " << msg;
+		} else logger() << "\nEEPROM recovered after reset: " << msg;
 		OK = false;
 	}
 	return OK;
@@ -266,17 +266,17 @@ uint8_t testEEPROM() {
 	if (status == _OK) {
 		status = EEPROM.readEP(1000, sizeof(verify), verify);
 		if (status == _OK) {
-			logger().log(verify);
+			logger().set(L_endl) << verify;
 			return status;
 		}
 	}
-	logger().log("testEEPROM failed with", status, EEPROM.getStatusMsg(status));
+	logger() << "\ntestEEPROM failed with " << status << EEPROM.getStatusMsg(status);
 	return status;
 }
 
 uint8_t initialiseRemoteDisplaysFailed_() {
 	uint8_t rem_error;
-	logger().log(); logger().log("InitialiseRemoteDisplays");
+	logger() << "\nInitialiseRemoteDisplays";
 	rem_error = 0;
 	for (auto & rmPtr : rem_lcd) {
 		rem_error |= rmPtr.initialiseDevice();
@@ -302,7 +302,7 @@ I_I2Cdevice_Recovery & getDevice(int addr) {
 
 void fullSpeedTest() {
 	mainLCD->clear();
-	logger().log(" Speedtest I2C."); Serial.flush();
+	logger() << "\n Speedtest I2C.";
 	mainLCD->setCursor(0, 2);
 	mainLCD->print("Speed: 0x");
 	bool firstFound = false;
@@ -313,7 +313,7 @@ void fullSpeedTest() {
 	for (int i = 0; i < sizeof(i2cAddr); ++i) {
 		uint8_t addr = i2cAddr[i];
 		auto & dev = getDevice(addr);
-		logger().log(); logger().log("Device addr:", dev.getAddress()); Serial.flush();
+		logger() << "\nDevice addr: " << dev.getAddress();
 		i2c_recover.basicTestsBeforeScan();
 		//if (testMode == resetBeforeTest) hardReset_Performed_(i2C, addr);
 		//i2c_recover.foundDeviceAddr = addr;
@@ -323,29 +323,27 @@ void fullSpeedTest() {
 		mainLCD->print(addr, HEX);
 		mainLCD->print(" :       ");
 		mainLCD->setCursor(13, 2);
-		logger().log();
 		if (i2c_test.error() == 0) {
 			mainLCD->print(dev.runSpeed());
-			logger().log("Device:", addr, " Speed:", dev.runSpeed());
+			logger() << "\nDevice: " << addr << " Speed: " << dev.runSpeed();
 			++(i2c_test.totalDevicesFound);
 		}
 		else {
 			mainLCD->print("Failed");
-			logger().log("Device:", addr, " Failed Speed-test");
+			logger() << "\nDevice: " << addr << " Failed Speed-test";
 			lastTimeGood[i] = millis();
 		}
 		showTill = millis() + 500L;
 	}
-	logger().log(" Test took mS:", millis() - startTestTime);
+	logger() << "\n Test took mS: " << millis() - startTestTime;
 	mainLCD->setCursor(0, 3);
 	mainLCD->print("Total:");
 	mainLCD->print(i2c_test.totalDevicesFound);
 	mainLCD->setCursor(9, 3);
 	mainLCD->print("Spd:");
 	mainLCD->print(i2c_test.maxSafeSpeed());
-	logger().log("Final Max speed: ", (int)i2c_test.maxSafeSpeed());
-	logger().log("No of Devices:", i2c_test.totalDevicesFound);
-	logger().log();
+	logger() << "\nFinal Max speed: " << i2c_test.maxSafeSpeed();
+	logger() << "\nNo of Devices: " << i2c_test.totalDevicesFound << L_endl;
 
 	delay(2000);
 	mainLCD->clear();
@@ -387,7 +385,7 @@ volatile signed char keyQue[10][2] = {
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
 	Serial.begin(9600);
-	Serial.println(" Serial Begun");
+	logger() << " Serial Begun";
 	pinMode(I2C_RESET, OUTPUT);
 	pinMode(PHOTO_ANALOGUE, INPUT);
 	pinMode(REMKEYINT, INPUT);
@@ -409,29 +407,29 @@ void setup() {
 	};
 
 	//rtc_scan.show_all();
-	logger().log("\n***** Start setup *****");
-	logger().log("RTC at:", (long)&rtc);
-	logger().log("I2C_Talk at:", (long)&i2C);
-	logger().log("RecoveryObj at:", (long)&i2c_recover);
-	logger().log("MixV I2C_Talk at:", (long)&mixValve.i2C());
-	logger().log("MixV RecoveryObj at:", (long)&mixValve.recovery());
-	logger().log("Rem Disp[0] at:", (long)&rem_lcd[0]);
-	logger().log("Rem Disp[1] at:", (long)&rem_lcd[1]);
-	logger().log("Rem Disp[2] at:", (long)&rem_lcd[2]);
-	logger().log("setTimeoutFn");
+	logger() << "\n***** Start setup *****";
+	 logger() << "\nRTC at: " << (long)&rtc;
+	 logger() << "\nI2C_Talk at: " << (long)&i2C;
+	 logger() << "\nRecoveryObj at: " << (long)&i2c_recover;
+	 logger() << "\nMixV I2C_Talk at: " << (long)&mixValve.i2C();
+	 logger() << "\nMixV RecoveryObj at: " << (long)&mixValve.recovery();
+	 logger() << "\nRem Disp[0] at: " << (long)&rem_lcd[0];
+	 logger() << "\nRem Disp[1] at: " << (long)&rem_lcd[1];
+	 logger() << "\nRem Disp[2] at: " << (long)&rem_lcd[2];
+	 logger() << "\nsetTimeoutFn";
 	i2c_recover.setTimeoutFn(resetI2C_);
 
 	char stackTrace[32];
 	EEPROM.readEP(0, 10, stackTrace);
-	logger().log("Score[0]", int(stackTrace[0]));
+	logger() << "\nScore[0] " << int(stackTrace[0]);
 
 	i2C.restart();
 
 	uint8_t status = rtc.status(0x50);
-	logger().log("EEPROM Status", status, rtc.getStatusMsg(status));
+	logger() << "\nEEPROM Status " << status << rtc.getStatusMsg(status);
 
 	status = rtc.status(0x68);
-	logger().log("Clock Status", status, rtc.getStatusMsg(status));
+	logger() << "\nClock Status " << status << rtc.getStatusMsg(status);
 
 	mainLCD = new MultiCrystal(46, 44, 42, 40, 38, 36, 34, 32, 30, 28, 26); // new board
 
@@ -449,20 +447,20 @@ void setup() {
 		delay(500);
 	}
 	else {
-		logger().log("RTC:OK");
+		 logger() << "\nRTC:OK";
 		mainLCD->print("RTC:OK");
 	}
 
 	//for (auto & ltg : lastTimeGood) ltg = 0;
 	i2c_recover.strategy().log_stackTrace();
-	logger().log("0x28 readTemperature()");
+	 logger() << "\n0x28 readTemperature()";
 	tempSens[0].readTemperature();
 
 	fullSpeedTest();
 	testMode = normal;
 
-	if (!initialiseRemoteDisplaysFailed_()) logger().log(" Remote Display begin() all OK");
-	else logger().log(" Remote Displ begin() failed");
+	if (!initialiseRemoteDisplaysFailed_())  logger() << "\n Remote Display begin() all OK";
+	else  logger() << "\n Remote Displ begin() failed";
 
 	mainLCD->setCursor(0, 0);
 	mainLCD->print("                    ");
@@ -474,7 +472,7 @@ void setup() {
 	mainLCD->print(" Spd:"); mainLCD->print(i2C.getI2CFrequency(), DEC);
 	mainLCD->setCursor(0, 2);
 	mainLCD->print("Optimal Speed ");
-	logger().log("attachInterrupt");
+	 logger() << "\nattachInterrupt";
 	attachInterrupt(KEYINT, readLocalKeyboard, FALLING);
 	pinMode(SIGNAL, OUTPUT);
 
@@ -485,7 +483,7 @@ void setup() {
 	case speedTestExistsOnly:  mainLCD->print("Exists"); break;
 	}
 	//i2c_test.show_fastest(0x28);
-	logger().log(" ** End of setup.\n");
+	 logger() << "\n ** End of setup.\n";
 }
 
 bool keyIsWaiting() {
@@ -502,7 +500,7 @@ void printSpeed() {
 }
 
 void loop() {
-	//logger().log("\n***** New loop... *****");
+	//logger() << "\n***** New loop... *****";
 	//i2c_recover.show_fastest(0x28);
 	//Serial.println("loop...");
 	checkEEPROM(" EP Failed new Loop");
@@ -520,7 +518,7 @@ void loop() {
 	i2c_recover.strategy().stackTrace(++st_index, "Loop-Start");
 	if (nextKey >= 0) { // only do something if key pressed
 		displayNeedsRefreshing = true;
-		logger().log(" KeyPressed:", nextKey);
+		 logger() << "\n KeyPressed:", nextKey);
 
 		mainLCD->setCursor(0, 0);
 		mainLCD->print("                    ");
@@ -549,12 +547,12 @@ void loop() {
 				if (testMode >= NO_OF_MODES) testMode = 0;
 				mainLCD->setCursor(13, 2);
 				switch (testMode) {
-				case normal: logger().log("*** normal ***"); break;
-				case resetBeforeTest:  logger().log("*** resetBeforeTest *** "); break;
-				case speedTestExistsOnly:  logger().log("*** speedTestExistsOnly *** "); break;
+				case normal:  logger() << "\n*** normal ***"; break;
+				case resetBeforeTest:   logger() << "\n*** resetBeforeTest *** "; break;
+				case speedTestExistsOnly:   logger() << "\n*** speedTestExistsOnly *** "; break;
 				}
 				delay(500);
-				Serial.println("*** User Requested Hard Reset ***");
+				logger() << "\n*** User Requested Hard Reset ***";
 				hardReset_Performed_(i2C, 0);
 				break;
 			default:
@@ -579,13 +577,13 @@ void loop() {
 			auto & device = getDevice(i2cAddr[i2cAddrIndex]);
 			device.set_runSpeed(100000000 / loopTime[loopTimeIndex]);
 			//i2C.setI2CFrequency(100000000 / loopTime[loopTimeIndex]);
-			logger().log(" Loop set speed for", i2cAddr[i2cAddrIndex], "is", (int)device.runSpeed());
+			 logger() << "\n Loop set speed for", i2cAddr[i2cAddrIndex], "is", (int)device.runSpeed());
 			mainLCD->print("Manual Speed ");
 		}
 		else {
 			mainLCD->print("Optimal Speed ");
 			auto & device = getDevice(i2cAddr[i2cAddrIndex]);
-			logger().log(" Loop set speed: Optimal for", i2cAddr[i2cAddrIndex], "is", device.runSpeed());
+			 logger() << "\n Loop set speed: Optimal for", i2cAddr[i2cAddrIndex], "is", device.runSpeed());
 		}
 		mainLCD->setCursor(14, 2);
 		switch (testMode) {
@@ -604,12 +602,12 @@ void loop() {
 		i2cAddrIndex = ++i2cAddrIndex;
 		if (i2cAddrIndex >= sizeof(i2cAddr)) {
 			i2cAddrIndex = 0;
-			logger().log("\n Next Cycle\n");
+			logger() << "\n Next Cycle\n";
 			++tryCount;
 		}
 		loopEndTime = millis() + LOOP_TIME;
 		displayNeedsRefreshing = true;
-		//logger().log("Moved to next device", i2cAddr[i2cAddrIndex]);
+		// logger() << "\nMoved to next device", i2cAddr[i2cAddrIndex]);
 	}
 
 	//checkEEPROM(" EP Failed before tryDevice");
@@ -642,17 +640,17 @@ void loop() {
 		if (lastTimeGood[i2cAddrIndex] == 0) {
 			lastTimeGood[i2cAddrIndex] = millis();
 		}
-		logger().log(" Failed for ", i2cAddr[i2cAddrIndex]);
-		logger().log();
+		 logger() << "\n Failed for ", i2cAddr[i2cAddrIndex]);
+		logger() << L_endl;
 		i2c_recover.strategy().stackTrace(++st_index, "Printed Failed");
 		//loopEndTime = millis() + LOOP_TIME;
 	}
 	else {
 		if (lastTimeGood[i2cAddrIndex] != 0) {
-			logger().log(" Recovered for ", i2cAddr[i2cAddrIndex], "after mS:", millis() - lastTimeGood[i2cAddrIndex]);
+			 logger() << "\n Recovered for ", i2cAddr[i2cAddrIndex], "after mS:", millis() - lastTimeGood[i2cAddrIndex]);
 			lastTimeGood[i2cAddrIndex] = 0;
-			//logger().log(" Success :", min((successCount[i2cAddrIndex] * 100L) / tryCount, 100), "%");
-			logger().log();
+			// logger() << "\n Success :", min((successCount[i2cAddrIndex] * 100L) / tryCount, 100), "%");
+			logger() << L_endl;
 			i2c_recover.strategy().stackTrace(++st_index, "Printed Recovered");
 		}
 		++successCount[i2cAddrIndex];
@@ -693,7 +691,7 @@ void loop() {
 	i2c_recover.strategy().stackTrace(++st_index, "Get Clock-hours");
 	if (clock_().hrs() != lastHours) {
 		lastHours = clock_().hrs();
-		logger().log(" Still looping...");
+		 logger() << "\n Still looping...");
 		//checkEEPROM(" EP Failed after getting time");
 	}
 	//checkEEPROM(" EP Failed at end of loop");
@@ -705,7 +703,7 @@ uint8_t tryDeviceAt(int addrIndex) {
 	const uint8_t NO_OF_ATTEMPTS = 5;
 	uint8_t hasFailed = 0, attempts = NO_OF_ATTEMPTS;
 	uint8_t addr = i2cAddr[addrIndex];
-	//logger().log("TryDevice ", addr);
+	// logger() << "\nTryDevice ", addr);
 	auto & device = getDevice(addr);
 	do { // try with hard reset
 		i2c_recover.strategy().stackTrace(++st_index, "Try-Device - getStatus");
@@ -717,7 +715,7 @@ uint8_t tryDeviceAt(int addrIndex) {
 		//	continue;
 		//}
 		//if (i2c_recover.i2C_is_frozen()) {
-		//	logger().log("Hung before try :", addr);
+		//	 logger() << "\nHung before try :", addr);
 		//	//resetI2C_(*i2C_h, addr);
 		//}
 		mainLCD->setCursor(10, 1);
@@ -756,14 +754,14 @@ uint8_t tryDeviceAt(int addrIndex) {
 
 	if (hasFailed) {
 		dataBuffa = 0;
-		logger().log(" Failed after", NO_OF_ATTEMPTS, "attempts for", (int)addr);
+		 logger() << "\n Failed after", NO_OF_ATTEMPTS, "attempts for", (int)addr);
 		//checkEEPROM(" EP Failed after 5 tryDevice failures");
 		i2c_recover.strategy().stackTrace(++st_index, "Try-Device - failed");
-		//logger().log(" tryDeviceAt() calling SpeedTest");
+		// logger() << "\n tryDeviceAt() calling SpeedTest");
 	}
 	else if (NO_OF_ATTEMPTS - attempts > 0) {
-		logger().log(" Succeeded after ", NO_OF_ATTEMPTS - attempts + 1, " attempts for", (int)addr);
-		logger().log();
+		 logger() << "\n Succeeded after ", NO_OF_ATTEMPTS - attempts + 1, " attempts for", (int)addr);
+		logger() << L_endl;
 		i2c_recover.strategy().stackTrace(++st_index, "Try-Device - suceeded");
 	}
 	if (hasFailed == _OK && dataBuffa == 0) dataBuffa = 1;
@@ -807,7 +805,7 @@ void readLocalKeyboard() { // interrupt handler
 		++keyQuePos;
 		keyQue[keyQuePos][0] = 0;
 		keyQue[keyQuePos][1] = myKey;
-		//logger().log(" readLocalKeyboard",myKey);
+		// logger() << "\n readLocalKeyboard",myKey);
 	}
 }
 
@@ -829,7 +827,7 @@ void readRemoteKeyboard() {
 	for (int i = 0; i < sizeof(rem_lcd) / sizeof(rem_lcd[0]); ++i) {
 		int8_t myKey = getKeyCode(rem_lcd[i].displ().readI2C_keypad());
 		if (myKey >= 0 && keyQuePos < 9) {
-			logger().log("RC-ReadKey: ", myKey);
+			 logger() << "\nRC-ReadKey: ", myKey);
 			++keyQuePos;
 			keyQue[keyQuePos][0] = i + 1;
 			keyQue[keyQuePos][1] = myKey;
@@ -861,7 +859,7 @@ int I2C_Temp_Sensor::_error;
 int8_t I2C_Temp_Sensor::readTemperature() {
 	uint8_t temp[2] = { 0 };
 	_error = read(DS75LX_Temp, 2, temp);
-	//logger().log(" readTemp()", getAddress(), getStatusMsg(_error) );
+	// logger() << "\n readTemp()", getAddress(), getStatusMsg(_error) );
 
 	lastGood = (temp[0] << 8) | temp[1];
 	return _error;
@@ -884,7 +882,7 @@ int16_t I2C_Temp_Sensor::get_fractional_temp() const {
 uint8_t I2C_Temp_Sensor::testDevice() {
 	uint8_t temp[2] = { 75,0 };
 	_error = write_verify(DS75LX_HYST_REG, 2, temp);
-	//logger().log("TS at", getAddress(), getStatusMsg(_error));
+	// logger() << "\nTS at", getAddress(), getStatusMsg(_error));
 	return _error;
 }
 
@@ -895,7 +893,7 @@ RelaysPort::RelaysPort(I2C_Recover & recovery, int addr, int8_t zeroCrossPin, in
 	, _resetPin(resetPin)
 {
 	pinMode(abs(_zeroCrossPin), INPUT);
-	//logger().log("RelaysPort::setup()");
+	// logger() << "\nRelaysPort::setup()");
 	digitalWrite(abs(_zeroCrossPin), HIGH); // turn on pullup resistors
 	pinMode(abs(_resetPin), OUTPUT);
 	digitalWrite(abs(_resetPin), (_resetPin < 0) ? HIGH : LOW);
@@ -905,14 +903,14 @@ uint8_t RelaysPort::initialiseDevice() {
 	uint8_t pullUp_out[] = { 0 };
 	uint8_t hasFailed = write_verify(REG_8PORT_PullUp, 1, pullUp_out); // clear all pull-up resistors
 	if (hasFailed) {
-		logger().log("Device 32. Initialise RelaysPort() write-verify failed at Freq:", i2C().getI2CFrequency());
+		 logger() << "\nDevice 32. Initialise RelaysPort() write-verify failed at Freq:", i2C().getI2CFrequency());
 	}
 	else {
 		hasFailed = write_verify(REG_8PORT_OLAT, 1, &relayRegister); // set latches
 		writeInSync();
 		hasFailed |= write_verify(REG_8PORT_IODIR, 1, pullUp_out); // set all as outputs
-		if (hasFailed) logger().log("Initialise RelaysPort() lat-write failed at Freq:", i2C().getI2CFrequency());
-		//else logger().log("Initialise RelaysPort() succeeded at Freq:", i2C().getI2CFrequency());
+		if (hasFailed)  logger() << "\nInitialise RelaysPort() lat-write failed at Freq:", i2C().getI2CFrequency());
+		//else  logger() << "\nInitialise RelaysPort() succeeded at Freq:", i2C().getI2CFrequency());
 	}
 	return hasFailed;
 }
@@ -956,9 +954,9 @@ uint8_t RemoteDisplay::sendMessage(const char * msg) {
 
 uint8_t RemoteDisplay::initialiseDevice() {
 	uint8_t rem_error = _lcd.begin(16, 2);
-	//logger().log(" Remote.begin() for display :", getAddress(), getStatusMsg(rem_error));
+	// logger() << "\n Remote.begin() for display :", getAddress(), getStatusMsg(rem_error));
 	if (rem_error) {
-		//logger().log(" Remote.begin() for display :", getAddress(), getStatusMsg(rem_error));
+		// logger() << "\n Remote.begin() for display :", getAddress(), getStatusMsg(rem_error));
 	}
 	else {
 		displ().print("Start ");
@@ -978,8 +976,8 @@ uint8_t MixValveController::testDevice() {
 	} while (status && millis() < waitTime);
 	tryAgainTime = millis() - tryAgainTime + 2;
 	
-	if (status) logger().log(" MixValveController::testDevice failed. Addr:", getAddress(), getStatusMsg(status));
-	else logger().log(" MixValveController::testDevice OK after mS", tryAgainTime);
+	if (status)  logger() << "\n MixValveController::testDevice failed. Addr:", getAddress(), getStatusMsg(status));
+	else  logger() << "\n MixValveController::testDevice OK after mS", tryAgainTime);
 	return status;
 }
 
@@ -995,7 +993,7 @@ uint8_t MixValveController::getPos(uint8_t & pos) {
 
 	if (status) status = read(valve_pos, 1, &pos); // read request temp
 	//tryAgainTime = millis() - tryAgainTime + 3;
-	//if (status) logger().log(" MixValveController::getPos failed. Addr:", getAddress());
-	//else logger().log(" MixValveController::getPos OK after mS", tryAgainTime);
+	//if (status)  logger() << "\n MixValveController::getPos failed. Addr:", getAddress());
+	//else  logger() << "\n MixValveController::getPos OK after mS", tryAgainTime);
 	return status;
 }
