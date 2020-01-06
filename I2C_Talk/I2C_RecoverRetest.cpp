@@ -2,8 +2,7 @@
 #include <I2C_Talk.h>
 #include <I2C_Device.h>
 #include <I2C_Talk_ErrorCodes.h>
-//#include <Logging.h>
-#include <..\Logging\Logging.h>
+#include <Logging.h>
 
 void ui_yield();
 extern int st_index;

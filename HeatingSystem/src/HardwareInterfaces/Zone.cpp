@@ -106,17 +106,17 @@ namespace HardwareInterfaces {
 			myFlowTemp = MIN_FLOW_TEMP;
 			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tToo Warm. Zone: " << _recordID
 				<< " Req Temp: " << currTempReq
-				<< " fractionalZoneTemp: " << fractionalZoneTemp / 256.
+				<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
 				<< " ReqFlowTemp: " << myFlowTemp
-				<< " TempError: " << L_fixed << tempError * 16 << (logger_RelayStatus? " On":" Off") << L_flush;
+				<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus? " On":" Off") << L_flush;
 		}
 		else if (tempError < -8L) {
 			myFlowTemp = _maxFlowTemp;
 			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tToo Cool. Zone: " << _recordID
 				<< " Req Temp: " << currTempReq
-				<< " fractionalZoneTemp: " << fractionalZoneTemp / 256.
+				<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
 				<< " ReqFlowTemp: " << myFlowTemp
-				<< " TempError: " << L_fixed << tempError * 16 << (logger_RelayStatus ? " On" : " Off") << L_flush;
+				<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus ? " On" : " Off") << L_flush;
 		}
 		else {
 			myFlowTemp = static_cast<long>((_maxFlowTemp + MIN_FLOW_TEMP) / 2. - tempError * (_maxFlowTemp - MIN_FLOW_TEMP) / 16.);
@@ -124,9 +124,9 @@ namespace HardwareInterfaces {
 			//myFlowTemp = myTheoreticalFlow + (flowBoostDueToError + errorDivider/2) / errorDivider; // rounded to nearest degree
 			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tIn Range. Zone: " << _recordID
 				<< " Req Temp: " << currTempReq
-				<< " fractionalZoneTemp: " << fractionalZoneTemp / 256.
+				<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
 				<< " ReqFlowTemp: " << myFlowTemp
-				<< " TempError: " << L_fixed << tempError * 16 << (logger_RelayStatus ? " On" : " Off") << L_flush;
+				<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus ? " On" : " Off") << L_flush;
 		}
 
 		// check limits

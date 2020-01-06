@@ -100,36 +100,49 @@ namespace Assembly {
 	}
 
 	R_TimeTemp timeTemps_f[] = { // profileID,TT
-		{0, makeTT(7,40,15)}   // At Home US MT--F--
-		,{0, makeTT(23,00,18)} // At Home US MT--F--
-		,{1, makeTT(6,30,15)}  // At Work US MT-TF--
-		,{1, makeTT(22,30,18)} // At Work US MT-TF--
-		,{2, makeTT(8,30,15)}  // At Home US --WT-SS
-		,{2, makeTT(22,50,18)} // At Home US --WT-SS
-		,{3, makeTT(7,30,45)}  // At Home DHW MTW--S-
-		,{3, makeTT(10,00,30)} // At Home DHW MTW--S-
+		{0, makeTT(7,30,15)}   // At Home US MTWTFSS
+		,{0, makeTT(21,00,18)} // At Home US MTWTFSS
+		,{1, makeTT(7,45,19)}  // At Home DS MTWTF--
+		,{1, makeTT(23,00,16)} // At Home DS MTWTF--
+		,{2, makeTT(8,00,19)}  // At Home DS -----SS
+		,{2, makeTT(22,50,16)} // At Home DS -----SS
+		,{3, makeTT(6,30,45)}  // At Home DHW MTWTF--
+		,{3, makeTT(9,00,30)}  // At Home DHW MTWTF--
 		
-		,{3, makeTT(16,00,45)} // At Home DHW MTW--S-
-		,{3, makeTT(23,00,30)} // At Home DHW MTW--S-
-		,{4, makeTT(8,00,19)}  // At Home DS M-W-F-S
-		,{5, makeTT(7,00,18)}  // At Work US --W--SS
-		,{6, makeTT(7,50,18)}  // At Home DS -T-T-S-
-		,{7, makeTT(8,10,45)}  // At Home DHW ---TF-S
-		,{8, makeTT(07,00,10)} // Away US MTWTFSS
-		,{9, makeTT(07,00,10)} // Empty DHW
+		,{3, makeTT(15,30,45)} // At Home DHW MTWTF--
+		,{3, makeTT(22,30,30)} // At Home DHW MTWTF--
+		,{4, makeTT(7,30,45)}  // At Home DHW -----SS
+		,{4, makeTT(9,30,30)}  // At Home DHW -----SS
+		,{4, makeTT(15,00,45)} // At Home DHW -----SS
+		,{4, makeTT(22,30,30)} // At Home DHW -----SS
+		,{5, makeTT(6,30,15)} // At Work US MTWTFSS
+		,{5, makeTT(21,00,18)} // At Work US MTWTFSS
 
-		,{10, makeTT(07,00,10)} // Away DS
-		,{11, makeTT(07,00,10)} // Away DHW
-		,{12, makeTT(07,10,45)} // Occupied DHW MTWTF-S
-		,{13, makeTT(06,40,18)} // At Work DS MT-TF--
-		,{14, makeTT(06,50,18)} // At Work DS --W--SS
-		,{15, makeTT(06,30,45)} // At Work DHW MT-TF--
-		,{16, makeTT(06,20,45)} // At Work DHW --W--SS
-		,{17, makeTT(07,20,45)} // Occupied DHW -----S-
+		,{6, makeTT(17,30,19)} // At Work DS MTWTF--
+		,{6, makeTT(23,00,16)} // At Work DS MTWTF--
+		,{7, makeTT(8,00,19)} // At Work DS -----SS
+		,{7, makeTT(23,00,16)} // At Work DS -----SS
+		,{8, makeTT(06,30,45)} // At Work DHW MTWTF--
+		,{8, makeTT(07,00,30)} // At Work DHW MTWTF--
+		,{8, makeTT(18,00,45)} // At Work DHW MTWTF--
+		,{8, makeTT(22,30,30)} // At Work DHW MTWTF--
 
-		,{18, makeTT(8,10,18)}  // Occupied Flat MTWTF-S
-		,{19, makeTT(8,50,18)}  // Occupied Flat -----S- 
-		,{20, makeTT(07,00,10)} // Empty Flat 
+		,{9, makeTT(7,40,45)}  // At Work DHW -----SS
+		,{9, makeTT(10,00,30)}  // At Work DHW -----SS 
+		,{9, makeTT(15,30,45)} // At Work DHW -----SS 
+		,{9, makeTT(23,00,30)} // At Work DHW -----SS 
+		,{10, makeTT(07,00,10)} // Away US MTWTFSS 
+		,{11, makeTT(07,00,10)} // Away DS MTWTFSS 
+		,{12, makeTT(07,00,10)} // Away DHW MTWTFSS 
+		,{13, makeTT(07,00,45)} // Occupied DHW MTWTFSS 
+		
+		,{13, makeTT(10,00,30)} // Occupied DHW MTWTFSS 
+		,{13, makeTT(16,00,45)} // Occupied DHW MTWTFSS 
+		,{13, makeTT(23,00,30)} // Occupied DHW MTWTFSS 
+		,{14, makeTT(07,00,20)} // Occupied Flat MTWTFSS 
+		,{14, makeTT(23,00,18)} // Occupied Flat MTWTFSS 
+		,{15, makeTT(07,00,10)} // Empty DHW 
+		,{16, makeTT(07,00,10)} // Empty Flat  
 	};
 
 	constexpr R_Spell spells_f[] = { // date, ProgramID : Ordered by date
@@ -143,29 +156,26 @@ namespace Assembly {
 
 	constexpr R_Profile profiles_f[] = {
 		//ProgID, ZnID, Days
-		{ 0,0,100 } // At Home US MT--F--
-		,{ 2,0,108 }// At Work US MT-TF--
-		,{ 0,0,27 } // At Home US --WT-SS
-		,{ 0,2,114 }// At Home DHW MTW--S-
-		,{ 0,1,85}  // At Home DS M-W-F-S
-		,{ 2,0,19 } // At Work US --W--SS
-		,{ 0,1,42 } // At Home DS -T-T-S-
-		,{ 0,2,13 } // At Home DHW ---TF-S
-
-		,{ 4,0,255 } // Away US MTWTFSS
-		,{ 3,2,255 } // Empty DHW 
-		,{ 4,1,255 } // Away DS
-		,{ 4,2,255 } // Away DHW 
-		,{ 1,2,125 } // Occupied DHW MTWTF-S
-		,{ 2,1,108 } // At Work DS MT-TF--
-		,{ 2,1,19 }  // At Work DS --W--SS
-		,{ 2,2,108 } // At Work DHW MT-TF--
-
-		,{ 2,2,19 }  // At Work DHW --W--SS
-		,{ 1,2,2 }   // Occupied DHW -----S-
-		,{ 1,3,125}  // Occupied Flat MTWTF-S
-		,{ 1,3,2 }   // Occupied Flat -----S- 
-		,{ 3,3,255}  // Empty Flat 
+		{ 0,0,255 } // [0] At Home US MTWTFSS
+		,{ 0,1,124 }// [1] At Home DS MTWTF--
+		,{ 0,1,3 }  // [2] At Home DS -----SS
+		,{ 0,2,124 }// [3] At Home DHW MTWTF--
+		,{ 0,2,3 }  // [4] At Home DHW -----SS
+		
+		,{ 2,0,255 }// [5] At Work US MTWTFSS
+		,{ 2,1,124 }// [6] At Work DS MTWTF--
+		,{ 2,1,3 }  // [7] At Work DS -----SS
+		,{ 2,2,124 }// [8] At Work DHW MTWTF--
+		,{ 2,2,3 }  // [9] At Work DHW -----SS		
+		
+		,{ 4,0,255 } // [10] Away US MTWTFSS
+		,{ 4,1,255 } // [11] Away DS MTWTFSS
+		,{ 4,2,255 } // [12] Away DHW MTWTFSS
+		
+		,{ 1,2,255 } // [13] Occupied DHW MTWTFSS
+		,{ 1,3,255}  // [14] Occupied Flat MTWTFSS
+		,{ 3,2,255 } // [15] Empty DHW 
+		,{ 3,3,255}  // [16] Empty Flat 
 	};	
 		
 	constexpr R_Zone zones_f[] = { 
