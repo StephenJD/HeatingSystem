@@ -1,6 +1,9 @@
 #include "Relay.h"
 #include "A__Constants.h"
 #include <Logging.h>
+#include "I2C_RecoverRetest.h"
+
+extern int st_index;
 
 namespace HardwareInterfaces {
 	using namespace I2C_Recovery;
@@ -42,12 +45,18 @@ namespace HardwareInterfaces {
 
 	error_codes RelaysPort::setAndTestRegister() {
 		uint8_t ANDmask = 0x7F;
-		//if (i2C().status(_address)) error = I2C_Talk::_I2C_Device_Not_Found;
-		//else {
-			writeInSync();
-			auto status = write_verify(REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
-		//}
-		//logger() << "RelaysPort::setAndTestRegister() addr:", _address,i2C().getStatusMsg(error));
+
+		writeInSync();
+		auto status = write_verify(REG_8PORT_OLAT & ANDmask, 1, &relayRegister);
+
+		if (status) {
+			auto strategy = static_cast<I2C_Recover_Retest &>(recovery()).strategy();
+			strategy.stackTrace(++st_index, "RelayFail");
+			if (!logger().isWorking()) {
+				strategy.stackTrace(++st_index, "Logger Failed");
+				while (true); // cause timeout to reset...
+			} else logger() << L_time << "RelaysPort::setAndTestRegister() Register: 0x" << L_hex << (REG_8PORT_OLAT & ANDmask) << " Data: 0x" << relayRegister << i2C().getStatusMsg(status) << L_endl;
+		}
 		return status;
 	}
 
@@ -64,7 +73,6 @@ namespace HardwareInterfaces {
 		uint8_t myBitMask = 1 << port();
 		uint8_t myBitBinaryState = (RelaysPort::relayRegister  & myBitMask) != 0;
 		uint8_t currState = !(myBitBinaryState^activeState());
-
 		myBitBinaryState = !(state^activeState()); // Required bit binary state 
 		if (!myBitBinaryState) { // clear bit
 			RelaysPort::relayRegister &= ~myBitMask;
@@ -72,6 +80,7 @@ namespace HardwareInterfaces {
 		else { // set this bit
 			RelaysPort::relayRegister |= myBitMask;
 		}
+		//logger() << L_time << "setRelay Port: " << port() << " to " << state << " bits: 0x" << L_hex << RelaysPort::relayRegister << L_endl;
 		return currState != state; // returns true if state is changed
 	}
 }

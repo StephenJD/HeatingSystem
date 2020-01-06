@@ -89,7 +89,6 @@ namespace client_data_structures {
 	private:
 		TimeTempWrapper _currValue; // copy value for editing
 		Permitted_Vals editVal;
-
 	};
 
 	/// <summary>

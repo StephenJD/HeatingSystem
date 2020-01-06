@@ -1,7 +1,8 @@
 #include "Data_Zone.h"
-#include "..\..\..\Conversions\Conversions.h"
+#include "Conversions.h"
+#include "..\LCD_UI\UI_FieldData.h"
+#include "..\HardwareInterfaces\Zone.h"
 
-//#include <iostream>
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;
@@ -36,9 +37,16 @@ namespace client_data_structures {
 		I_Edit_Hndl::setInRangeValue();
 		Field_Interface_h & f_int_h = static_cast<Field_Interface_h&>(*backUI());
 		f_int_h.backUI()->getItem(f_int_h.backUI()->focusIndex());
-		auto wrapper = f_int_h.f_interface().getWrapper();
-		auto req_wrapper = static_cast<const ReqIsTemp_Wrapper*>(wrapper);
-		if (currValue().val > req_wrapper->isTemp + 1) currValue().val = req_wrapper->isTemp + 1;
+		auto wrapper = const_cast<I_UI_Wrapper *>(f_int_h.f_interface().getWrapper());
+		auto req_wrapper = static_cast<ReqIsTemp_Wrapper*>(wrapper);
+		auto tempOffset = f_int_h.getData()->data()->getField(Dataset_Zone::e_offset)->val;
+		auto & zoneData  = static_cast<Dataset_Zone &>(*f_int_h.getData()->data());
+		HardwareInterfaces::Zone & z = zoneData.zone(zoneData.record().id());
+		if (tempOffset >= 0) {
+			if (currValue().val >= z.maxUserRequestTemp()) currValue().val = z.maxUserRequestTemp();			 
+		}
+		req_wrapper->val = currValue().val;
+		f_int_h.getData()->data()->setNewValue(Dataset_Zone::e_reqIsTemp, req_wrapper);
 	}
 	
 	//************ReqIsTemp_Interface***********************
@@ -93,7 +101,7 @@ namespace client_data_structures {
 			return &_factor;
 		case e_reqIsTemp:
 		{
-			//auto recID = record();
+			//auto recordID = record();
 			HardwareInterfaces::Zone & z = zone(record().id());
 			strcpy(_reqIsTemp.name, record().rec().name);
 			_reqIsTemp.isTemp = z.getCurrTemp();
@@ -101,6 +109,9 @@ namespace client_data_structures {
 			_reqIsTemp.val = z.currTempRequest();
 			return &_reqIsTemp;
 		}
+		case e_offset:
+			_tempOffset.val = record().rec().offsetT;
+			return &_tempOffset;
 		default: return 0;
 		}
 	}

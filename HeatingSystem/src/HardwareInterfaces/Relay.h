@@ -26,13 +26,13 @@ namespace HardwareInterfaces {
 	public:
 		// Queries
 		bool getRelayState() const;
-		RelationalDatabase::RecordID recID() const { return _recID; }
+		RelationalDatabase::RecordID recordID() const { return _recordID; }
 		// Modifiers
 		bool setRelay(uint8_t state); // returns true if state is changed
-		void initialise(int recID, int port) { _recID = recID; _port = port;}
+		void initialise(int recordID, int port) { _recordID = recordID; _port = port;}
 
 	private:
-		RelationalDatabase::RecordID _recID = 0;
+		RelationalDatabase::RecordID _recordID = 0;
 		uint8_t activeState() const { return _port & 1;}
 		uint8_t port() const { return _port >> 1;}
 		int8_t _port = 0; // port[0-15] and active state (lsb == active state)

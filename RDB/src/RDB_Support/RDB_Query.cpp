@@ -16,14 +16,14 @@ namespace RelationalDatabase {
 	}
 
 	RecordSelector Query::last() {
-		resultsQ().last();
+		if (&resultsQ() != this) resultsQ().last();
 		auto match = RecordSelector{ *this, incrementQ().last() };
 		if (match.status() == TB_OK) getMatch(match, -1, matchArg());
 		return { match };
 	}
 
 	void Query::next(RecordSelector & recSel, int moveBy) {
-		incrementQ().next(recSel, moveBy);
+		if (&incrementQ() != this) incrementQ().next(recSel, moveBy);
 		moveBy = moveBy ? moveBy : 1;
 		getMatch(recSel, moveBy, matchArg());
 	}
@@ -34,7 +34,8 @@ namespace RelationalDatabase {
 	}
 
 	void Query::moveTo(RecordSelector & rs, int index) {
-		incrementQ().moveTo(rs, index);
+		if (&incrementQ() != this) 
+			incrementQ().moveTo(rs, index);
 		incrementQ().next(rs, 0);
 		findMatch(rs);
 	}

@@ -6,8 +6,8 @@ namespace HardwareInterfaces {
 
 	int I2C_Temp_Sensor::_error;
 
-	void I2C_Temp_Sensor::initialise(int recID, int address) {
-		_recID = recID; 
+	void I2C_Temp_Sensor::initialise(int recordID, int address) {
+		_recordID = recordID; 
 		setAddress(address);
 	}
 
@@ -17,13 +17,15 @@ namespace HardwareInterfaces {
 		_error = read(DS75LX_Temp, 2, temp);
 
 #ifdef ZPSIM
-		lastGood += change;
-		temp[0] = lastGood / 256;
-		if (lastGood < 7680) change = 256;
-		if (lastGood > 17920) change = -256;
+		//if (getAddress() == 0x70)
+			//bool debug = true;
+		//_lastGood += change;
+		temp[0] = _lastGood / 256;
+		if (_lastGood < 2560) change = 256;
+		if (_lastGood > 17920) change = -256;
 		temp[1] = 0;
 #endif
-		lastGood = (temp[0] << 8) | temp[1];
+		_lastGood = (temp[0] << 8) + temp[1];
 		return _error;
 	}
 
@@ -42,7 +44,7 @@ namespace HardwareInterfaces {
 		extern S2_byte tempSensors[2];
 		return tempSensors[address];
 #else
-		return lastGood;
+		return _lastGood;
 #endif
 	}
 

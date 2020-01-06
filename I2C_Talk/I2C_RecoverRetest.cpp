@@ -38,19 +38,19 @@ namespace I2C_Recovery {
 		//logger() << "findAworkingSpeed Exists? At:", i2C().getI2CFrequency(), device().getStatusMsg(testResult));
 		if (testResult == _OK) {
 			testResult = testDevice(2, 1);
-			logger() << L_time << "findAworkingSpeed Exists succeeded. Test device at " << i2C().getI2CFrequency() << device().getStatusMsg(testResult);
+			logger() << "\tfindAworkingSpeed Test at " << i2C().getI2CFrequency() << device().getStatusMsg(testResult) << L_endl;
 		}
 
 		if (testResult != _OK) {
 			for (auto freq : tryFreq) {
 				i2C().setI2CFrequency(freq);
-				logger() << "\nTrying addr: " << addr << " at freq: " << freq;// Serial.print(" Success: "); Serial.println(getStatusMsg(testResult);
+				logger() << "\tTrying Exists for 0x" << L_hex << addr << " at freq: " << L_dec << freq << L_endl;// Serial.print(" Success: "); Serial.println(getStatusMsg(testResult);
 				testResult = i2C().status(addr);
 
 				if (testResult == _OK) {
 					device().set_runSpeed(freq);
 					testResult = testDevice(2, 1);
-					logger() << "\nfindAworkingSpeed Exists succeeded. Test device at " << i2C().getI2CFrequency() << device().getStatusMsg(testResult);
+					logger() << "\tfindAworkingSpeed Test at " << i2C().getI2CFrequency() << device().getStatusMsg(testResult) << L_endl;
 					if (testResult == _OK) break;
 				}
 				ui_yield();
@@ -72,10 +72,10 @@ namespace I2C_Recovery {
 		if (!device.isEnabled()) {
 			if (millis() - device.getFailedTime() > DISABLE_PERIOD_ON_FAILURE) {
 				device.reset();
-				logger() << "\n10s rest: Re-enabling disabled device " << device.getAddress();
+				logger() << "\t10s rest: Re-enabling disabled device 0x" << L_hex << device.getAddress() << L_endl;
 			}
 			else {
-				logger() << "\nDisabled device" << device.getAddress();
+				logger() << "\tDisabled device 0x" << L_hex << device.getAddress() << L_endl;
 				return _disabledDevice;
 			}
 		}
@@ -89,7 +89,7 @@ namespace I2C_Recovery {
 		if (_strategy.strategy() == S_NoProblem) {
 			if (!I2C_SpeedTest::doingSpeedTest() && _lastGoodDevice == 0) {
 				_lastGoodDevice = &device();
-				logger() << "\n_lastGoodDevice reset to " << _lastGoodDevice->getAddress();
+				logger() << "\t_lastGoodDevice reset to 0x" << L_hex << _lastGoodDevice->getAddress() << L_endl;
 			}
 		} else {
 			_strategy.succeeded();
@@ -104,14 +104,16 @@ namespace I2C_Recovery {
 	bool I2C_Recover_Retest::tryReadWriteAgain(error_codes status) {
 		static uint32_t recoveryTime;
 		uint32_t strategyStartTime;
-		static int tryAgain;
+		static Strategy maxStrategyUsed = S_NoProblem;
 		//logger() << "\ntryReadWriteAgain: status" << status;
 		if (status == _OK) {
-			tryAgain = 0;
 			if (recoveryTime > 0) {
-				logger() << "\nRecovery Time uS: " << recoveryTime;
-				strategy().stackTrace(++st_index, "tryReadWriteAgain - recovered");
+				logger() << "Recovery Time uS: " << recoveryTime << L_endl;
+				//strategy().stackTrace(++st_index, "tryReadWriteAgain - recovered");
 				recoveryTime = 0;
+				(*_timeoutFunctor).postResetInitialisation();
+				strategy().tryAgain(maxStrategyUsed);
+				maxStrategyUsed = S_NoProblem;
 			}
 			endReadWrite();
 			return false;
@@ -125,23 +127,25 @@ namespace I2C_Recovery {
 			if (_lastGoodDevice == &device()) _lastGoodDevice = 0;
 			//logger() << "\ntryReadWriteAgain: " << device().getAddress() << device().getStatusMsg(status);
 			_strategy.next();
-			strategy().stackTrace(++st_index, "tryReadWriteAgain - next");
+			//strategy().stackTrace(++st_index, "tryReadWriteAgain - next");
 			_isRecovering = true;
 			switch (_strategy.strategy()) {
 			case S_TryAgain:
 			case S_Restart:
-				logger() << "\n    S_Restart " << device().getAddress() << device().getStatusMsg(status);
+				if (maxStrategyUsed < S_Restart) maxStrategyUsed = S_Restart;
+				logger() << "\t\tS_Restart 0x" << L_hex << device().getAddress() << device().getStatusMsg(status) << L_endl;
 				strategyStartTime = micros();
 				restart("read 0x");
 				recoveryTime = micros() - strategyStartTime;
-				strategy().stackTrace(++st_index, "S_Restart");
+				//strategy().stackTrace(++st_index, "S_Restart");
 				break;			
 			case S_WaitForDataLine:
-				logger() << "\n    S_WaitForDataLine" << device().getAddress() << device().getStatusMsg(status);
+				if (maxStrategyUsed < S_WaitForDataLine) maxStrategyUsed = S_WaitForDataLine;
+				logger() << "\t\tS_WaitForDataLine 0x" << L_hex << device().getAddress() << device().getStatusMsg(status) << L_endl;
 				strategyStartTime = micros();
 				Wait_For_I2C_Data_Line_OK();
 				recoveryTime = micros() - strategyStartTime;
-				strategy().stackTrace(++st_index, "S_WaitForDataLine");
+				//strategy().stackTrace(++st_index, "S_WaitForDataLine");
 				break;
 			//case S_WaitAgain10:
 			//	logger() << "    S_WaitForDataLine", device().getAddress(), device().getStatusMsg(status));
@@ -153,65 +157,62 @@ namespace I2C_Recovery {
 			//	if (tryAgain < 20) strategy().tryAgain(S_WaitForDataLine); else tryAgain = 0;
 			//	break;
 			case S_NotFrozen:
-				logger() << "\n    S_NotFrozen " << device().getAddress() << device().getStatusMsg(status);
+				if (maxStrategyUsed < S_NotFrozen) maxStrategyUsed = S_NotFrozen;
+				logger() << "\t\tS_NotFrozen 0x" << L_hex << device().getAddress() << device().getStatusMsg(status) << L_endl;
 				strategyStartTime = micros();
 				if (i2C_is_frozen()) call_timeOutFn(lastGoodDevice()->getAddress());
 				recoveryTime = micros() - strategyStartTime;
-				strategy().stackTrace(++st_index, "S_NotFrozen");
+				//strategy().stackTrace(++st_index, "S_NotFrozen");
 				//++tryAgain;
 				//if (tryAgain < 5) strategy().tryAgain(S_WaitAgain10);
 				break;
 			case S_SlowDown:
-				logger() << "\n    S_Slow-down " << device().getAddress() << device().getStatusMsg(status);
-				strategyStartTime = micros();
-				{ auto slowedDown = slowdown();
+				if (maxStrategyUsed < S_SlowDown) {
+					maxStrategyUsed = S_SlowDown;
+					logger() << "\t\tS_Slow-down 0x" << L_hex << device().getAddress() << device().getStatusMsg(status) << L_endl;
+					strategyStartTime = micros();
+					auto slowedDown = slowdown();
 					recoveryTime = micros() - strategyStartTime;
 					if (!slowedDown) logger() << "\n    Slow-down did nothing...";
+					//strategy().stackTrace(++st_index, "S_SlowDown");
+					break;
 				}
-				strategy().stackTrace(++st_index, "S_SlowDown");
-				break;
 			case S_SpeedTest:
-				logger() << "\n    S_SpeedTest " << device().getAddress() << device().getStatusMsg(status);
-				strategyStartTime = micros();
-				{
+				if (maxStrategyUsed < S_SpeedTest) {
+					logger() << "\t\tS_SpeedTest 0x" << L_hex << device().getAddress() << device().getStatusMsg(status) << L_endl;
+					strategyStartTime = micros();
+					maxStrategyUsed = S_SpeedTest;
 					auto speedTest = I2C_SpeedTest(device());
 					speedTest.fastest();
 					recoveryTime = micros() - strategyStartTime;
 					if (speedTest.error())
-						logger() << "\n   Device Failed";
+						logger() << "\t\tDevice Failed";
 					else {
 						strategy().tryAgain(S_TryAgain);
-						logger() << "\n   New Speed " << device().runSpeed();
+						logger() << "\t\tNew Speed " << device().runSpeed();
 					}
+					//strategy().stackTrace(++st_index, "S_SpeedTest");
+					break;
 				}
-				strategy().stackTrace(++st_index, "S_SpeedTest");
-				break;
 			case S_PowerDown:
-				logger() << "\n    S_Power-Down " << device().getAddress() << device().getStatusMsg(status);
-				strategyStartTime = micros();
-				call_timeOutFn(device().getAddress());
-				{
-					auto speedTest = I2C_SpeedTest(device());
-					speedTest.fastest();
-					recoveryTime = micros() - strategyStartTime;
-					if (speedTest.error())
-						logger() << "\n   Device Failed";
-					else {
-						strategy().tryAgain(S_TryAgain);
-						logger() << "\n   New Speed " << device().runSpeed();
-					}
+				if (maxStrategyUsed < S_PowerDown) {
+					maxStrategyUsed = S_PowerDown;
+					logger() << "\t\tS_Power-Down 0x" << L_hex << device().getAddress() << device().getStatusMsg(status) << L_endl;
+					strategyStartTime = micros();
+					call_timeOutFn(device().getAddress());
+					strategy().tryAgain(S_TryAgain);
+					//strategy().stackTrace(++st_index, "S_PowerDown");
+					break;
 				}
-				strategy().stackTrace(++st_index, "S_PowerDown");
-				++tryAgain;
-				if (tryAgain <= 1) strategy().tryAgain(S_TryAgain);
-				break;
 			case S_Disable:
-				logger() << "\n    S_Disable Device " << device().getAddress() << device().getStatusMsg(status);
+				logger() << "\t\tS_Disable Device 0x" << L_hex << device().getAddress() << device().getStatusMsg(status) << L_endl;
 				disable();
-				strategy().stackTrace(++st_index, "S_Disable");
+				//strategy().stackTrace(++st_index, "S_Disable");
 				recoveryTime = 0;
 				_isRecovering = false;
+				strategy().tryAgain(S_Disable);
 				endReadWrite();
+				maxStrategyUsed = S_NoProblem;				
 				return false;
 			default:
 				_isRecovering = false;
@@ -233,9 +234,9 @@ namespace I2C_Recovery {
 			auto thisFreq = device().runSpeed();
 			canReduce = thisFreq > I2C_Talk::MIN_I2C_FREQ;
 			if (canReduce) {
-				logger() << "\n\tslowdown for " << device().getAddress() << " speed was " << thisFreq;
+				logger() << "\t\tslowdown for 0x" << L_hex << device().getAddress() << " speed was " << L_dec << thisFreq << L_endl;
 				device().set_runSpeed(max(thisFreq - max(thisFreq / 10, 1000), I2C_Talk::MIN_I2C_FREQ));
-				logger() << "\n\treduced speed to " << device().runSpeed();
+				logger() << "\t\treduced speed to " << device().runSpeed() << L_endl;
 			}
 		}
 		return canReduce;
@@ -261,7 +262,7 @@ namespace I2C_Recovery {
 		i2C().setI2CFrequency(i2C_speed);
 		runTime = micros() - runTime;
 		if (status == _Timeout || runTime > TIMEOUT) { // 20mS timeout
-			logger() << "\n****  i2C_is_frozen timed-out  **** " << lastGoodDevice()->getAddress();
+			logger() << "\n****  i2C_is_frozen timed-out  **** 0x" << L_hex << lastGoodDevice()->getAddress() << L_endl;
 			return true;
 		}
 		return false;
@@ -271,7 +272,7 @@ namespace I2C_Recovery {
 		static bool doingTimeOut;
 		if (_timeoutFunctor != 0) {
 			if (doingTimeOut) {
-				logger() << "\n\tcall_timeOutFn called recursively";
+				logger() << "\n\t**** call_timeOutFn called recursively ***";
 				return;
 			}
 			doingTimeOut = true;

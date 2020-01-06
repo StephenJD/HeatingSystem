@@ -16,7 +16,7 @@ error_codes I_I2Cdevice_Recovery::getStatus() {
 	}
 }
 
-error_codes I_I2Cdevice_Recovery::read(uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) { // dataBuffer may not be written to if read fails.
+error_codes I_I2Cdevice_Recovery::read(int registerAddress, int numberBytes, uint8_t *dataBuffer) { // dataBuffer may not be written to if read fails.
 	auto status = recovery().newReadWrite(*this);
 	//logger() << " I2Cdevice::read status:", status);
 	if (status == _OK) {
@@ -27,7 +27,7 @@ error_codes I_I2Cdevice_Recovery::read(uint8_t registerAddress, uint16_t numberB
 	return status;
 } 
 
-error_codes I_I2Cdevice_Recovery::write(uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer) {
+error_codes I_I2Cdevice_Recovery::write(int registerAddress, int numberBytes, const uint8_t *dataBuffer) {
 	auto status = recovery().newReadWrite(*this);
 	if (status == _OK) {
 		do {
@@ -37,7 +37,7 @@ error_codes I_I2Cdevice_Recovery::write(uint8_t registerAddress, uint16_t number
 	return status;
 }
 
-error_codes I_I2Cdevice_Recovery::write_verify(uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer) {
+error_codes I_I2Cdevice_Recovery::write_verify(int registerAddress, int numberBytes, const uint8_t *dataBuffer) {
 	auto status = recovery().newReadWrite(*this);
 	if (status == _OK) {
 		do {

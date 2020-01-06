@@ -1,14 +1,14 @@
-#include "MainConsolePageGenerator.h"
+#include "MainConsoleChapters.h"
 #include "..\HeatingSystem.h"
 #include "TemperatureController.h"
-#include "Database.h"
+#include "HeatingSystem_Queries.h"
 
 namespace Assembly {
 	using namespace RelationalDatabase;
 	using namespace client_data_structures;
 	using namespace LCD_UI;
 
-	MainConsolePageGenerator::MainConsolePageGenerator(Database & db, TemperatureController & tc, HeatingSystem & hs) :
+	MainConsoleChapters::MainConsoleChapters(HeatingSystem_Queries & db, TemperatureController & tc, HeatingSystem & hs) :
 		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)
@@ -26,7 +26,11 @@ namespace Assembly {
 		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&db._rec_dwSpells,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() }
 		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAll().make_newLine() }
+		//, _towelRailUI_c{ &db._rec_towelRails, Dataset_TempSensor::e_name_temp,0,0, viewAll().make_newLine() }
 		, _timeTempUI_sc{ UI_ShortCollection{ 80, _timeTempUI_c } }
+		, _tempSensorUI_sc{ UI_ShortCollection{ 80, _tempSensorUI_c } }
+		//, _towelRailUI_sc{ UI_ShortCollection{ 80, _towelRailUI_c } }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}
@@ -43,6 +47,7 @@ namespace Assembly {
 		, _deleteTTCmd{ "Delete", 0, viewOneUpDn().make_hidden().make_newLine() }
 		, _editTTCmd{ "Edit", 0, viewOneUpDn().make_hidden().make_viewAll() }
 		, _newTTCmd{ "New", 0, viewOneUpDn().make_hidden() }
+		, _towelRailsLbl{"Room Temp OnFor ToGo"}
 
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection(_currTimeUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
@@ -54,10 +59,14 @@ namespace Assembly {
 		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _timeTempUI_sc) }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
+		, _page_tempSensors_c{ makeCollection(_tempSensorUI_sc) }
+		//, _page_towelRails_c{ makeCollection(_towelRailsLbl, _towelRailUI_sc) }
 
 		// Display - Collection of Page Handles
-		, _display_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
-		, _display_h{_display_c}
+		, _user_chapter_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
+		, _user_chapter_h{_user_chapter_c}
+		, _info_chapter_c{ makeDisplay(_page_tempSensors_c/*, _page_towelRails_c*/) }
+		, _info_chapter_h{_info_chapter_c}
 	{
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));
 		_contrastCmd.set_UpDn_Target(_contrastCmd.function(Contrast_Brightness_Cmd::e_contrast));
@@ -73,11 +82,43 @@ namespace Assembly {
 		_timeTempUI_c.set_OnSelFn_TargetUI(&_editTTCmd);
 		_contrastCmd.setDisplay(hs.mainDisplay);
 		_backlightCmd.setDisplay(hs.mainDisplay);
-		//_display_h.rec_select();
+		//_user_chapter_h.rec_select();
 		//UI_DisplayBuffer mainDisplayBuffer(mainDisplay);
 		// Create infinite loop
 		//display1_h.stream(mainDisplayBuffer);
+#ifdef ZPSIM
+		ui_Objects[(long)&_user_chapter_c] = "_user_chapter_c";
+		ui_Objects[(long)&_user_chapter_h] = "_user_chapter_h";
+		ui_Objects[(long)&_page_currTime_c] = "_page_currTime_c";
+		ui_Objects[(long)&_page_zoneReqTemp_c] = "_page_zoneReqTemp_c";
+		ui_Objects[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
+		ui_Objects[(long)&_page_profile_c] = "_page_profile_c";
+		ui_Objects[(long)&_timeTempUI_sc] = "_timeTempUI_sc";
+		ui_Objects[(long)&_timeTempUI_c] = "_timeTempUI_c";
+		ui_Objects[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
+		ui_Objects[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
+		ui_Objects[(long)&_progNameUI_c] = "_progNameUI_c";
+		ui_Objects[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
+		ui_Objects[(long)&_tt_SubPage_c] = "_tt_SubPage_c";
+		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getInterface().f_interface().editItem().get();
+		ui_Objects[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";
+		auto & tt_Field_Interface = _timeTempUI_c.getInterface().f_interface();
+		ui_Objects[(long)&tt_Field_Interface] = "tt_Field_Interface";
+		auto & zone_Field_Interface = _zoneAbbrevUI_c.getInterface().f_interface();
+		ui_Objects[(long)&zone_Field_Interface] = "zone_Field_Interface";
+		auto & profileDays_Field_Interface = _profileDaysUI_c.getInterface().f_interface();
+		ui_Objects[(long)&profileDays_Field_Interface] = "profileDays_Field_Interface";
 
+#endif
+
+	}
+
+	LCD_UI::A_Top_UI & MainConsoleChapters::operator()(int chapterNo) { 
+		switch (chapterNo) {
+		case 0:	return _user_chapter_h;
+		case 1: return _info_chapter_h;
+		default: return _user_chapter_h;
+		}
 	}
 
 	//class DwellingCmdCollection : public LCD_UI::LazyCollection {

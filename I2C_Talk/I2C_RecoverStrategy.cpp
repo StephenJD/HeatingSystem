@@ -19,7 +19,7 @@ namespace I2C_Recovery {
 	void I2C_RecoverStrategy::initialise() {
 		if (score(0) != STRATEGY_VERSION) {
 			//checkEEPROM("I2C_RecoverStrategy::initialise()");
-			 logger() << "\n\tI2C_RecoverStrategy::initialise() from " << _eeprom_addr;
+			 logger() << "\tI2C_RecoverStrategy::initialise() from " << _eeprom_addr << L_endl;
 			for (int s = 1; s < S_NoOfStrategies; ++s) score(s, 0);
 			score(0, STRATEGY_VERSION);
 		}
@@ -45,47 +45,56 @@ namespace I2C_Recovery {
 	void I2C_RecoverStrategy::stackTrace(int index, const char * msg) {
 		index = index % STACKTRACE_MESSAGE_NO;
 		int startAddr = STACKTRACE_MESSAGE_LENGTH * (index+1);
- 		auto endMsg = uint16_t(strlen(msg));
-		if (endMsg > STACKTRACE_MESSAGE_LENGTH-2) endMsg = STACKTRACE_MESSAGE_LENGTH-2;
+ 		auto msgLen = uint16_t(strlen(msg));
+		if (msgLen > STACKTRACE_MESSAGE_LENGTH-2) msgLen = STACKTRACE_MESSAGE_LENGTH-2;
 		//bool ep_OK = checkEEPROM("I2C_RecoverStrategy::stackTrace()");
 		//Serial.print(startAddr, DEC); Serial.print(" Write ST["); Serial.print(index, DEC); Serial.print("] ");
 		//Serial.println(msg); Serial.flush();
 		EEPROM.write(startAddr, '@');
-		EEPROM.writeEP(startAddr + 1, endMsg, msg);
+		++startAddr;
+		auto endMsg = msg + msgLen;
+		for (; msg < endMsg; ++startAddr, ++msg) {
+			EEPROM.write(startAddr, *msg);
+		}
 		//if (!ep_OK) {
 		//	char failure[] = { " EPFail" };
-		//	if (endMsg > STACKTRACE_MESSAGE_LENGTH-2 - sizeof(failure)) endMsg = STACKTRACE_MESSAGE_LENGTH-2 - sizeof(failure);
-		//	EEPROM.writeEP(startAddr + endMsg, sizeof(failure), failure);
-		//	endMsg += sizeof(failure);
+		//	if (msgLen > STACKTRACE_MESSAGE_LENGTH-2 - sizeof(failure)) msgLen = STACKTRACE_MESSAGE_LENGTH-2 - sizeof(failure);
+		//	EEPROM.writeEP(startAddr + msgLen, sizeof(failure), failure);
+		//	msgLen += sizeof(failure);
 		//}
-		EEPROM.write(startAddr + endMsg + 1, '\0');
+		EEPROM.write(startAddr, '\0');
 		++index;
 		index = index % STACKTRACE_MESSAGE_NO;
 		EEPROM.write(STACKTRACE_MESSAGE_LENGTH * (index + 1) + 1, '\0'); // delete following message
 
 		//char readMsg[STACKTRACE_MESSAGE_LENGTH] = { '\0' };
-		//EEPROM.readEP(startAddr, endMsg + 2, readMsg);
+		//EEPROM.readEP(startAddr, msgLen + 2, readMsg);
 		//Serial.print(startAddr, DEC); Serial.print(" Read ST["); Serial.print(index,DEC);Serial.print("] ");
 		//Serial.println(readMsg); Serial.flush();
 	}
 
 	void I2C_RecoverStrategy::log_stackTrace() {
-		if (EEPROM.getStatus() != _OK) {
-			Serial.println("EEPROM Status failed");
-			//resetRTC(rtc, 0x50);
-		}
+		#ifdef ZPSIM
+				if (EEPROM.getStatus() != _OK) {
+					Serial.println("EEPROM Status failed\n");
+					//resetRTC(rtc, 0x50);
+				}
+		#endif
 		int startAddr = STACKTRACE_MESSAGE_LENGTH;
 		char msg[STACKTRACE_MESSAGE_LENGTH] = { 0 };
 		//char gotTrace = EEPROM.read(startAddr);
-		logger() << "\n***** Start Stack-Trace Log *****";
+		logger() << "***** Start Stack-Trace Log *****\n";
 		
 		for (int s = 1; s <= STACKTRACE_MESSAGE_NO; ++s) {
-			EEPROM.readEP(startAddr, STACKTRACE_MESSAGE_LENGTH, msg);
-			 logger() << "\nStack-Trace at " << startAddr << msg+1;
-			startAddr += STACKTRACE_MESSAGE_LENGTH;
+			
+			logger() << "\nStack-Trace at " << startAddr;
+			for (int i = 0; i < STACKTRACE_MESSAGE_LENGTH; ++startAddr, ++i) {
+				msg[i] = EEPROM.read(startAddr);
+			}
+			logger() << msg+1;
 			if (EEPROM.read(startAddr) != '@') break;
 		}
-		logger() << "\n***** End Stack-Trace Log *****";
+		logger() << "***** End Stack-Trace Log *****\n";
 	}
 
 	void I2C_RecoverStrategy::next() {
@@ -107,7 +116,7 @@ namespace I2C_Recovery {
 		//		}
 		//	}
 		//}
-		 logger() << "\nNext Strategy is " << nextStrategy << " Score: " << score(nextStrategy);
+		 logger() << "\tNext Strategy is " << nextStrategy << " Score: " << score(nextStrategy) << L_endl;
 		_strategy = static_cast<Strategy>(nextStrategy);
 	}
 
@@ -117,10 +126,10 @@ namespace I2C_Recovery {
 		}
 		score(_strategy, score(_strategy) + 1);
 		if (strategy() == S_Disable) {
-			 logger() << "\nFailed & Disabled with strategy " << strategy() << " Score: " << score(_strategy);
+			 logger() << "\tFailed & Disabled with strategy " << strategy() << " Score: " << score(_strategy) << L_endl;
 		}
 		else {
-			 logger() << "\nSucceeded with strategy " << strategy() << " Score: " << score(_strategy);
+			 logger() << "\tSucceeded with strategy " << strategy() << " Score: " << score(_strategy) << L_endl;
 		}
 		logger();
 		reset();

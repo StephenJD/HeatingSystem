@@ -70,7 +70,7 @@ namespace client_data_structures {
 		, _dwellZone(dwellZone)
 	{}
 
-	int Dataset_ProfileDays::resetCount() {
+	void Dataset_ProfileDays::setMatchArgs() {
 		// ProfileDays depends on dwellProgs RecordInterface and dwellingZone RecordInterface.
 		// Each is selected on the user-interface.
 		// The ProfileDays query is a FilterQ, filtering on ProgramID obtained from the parent dwellProgs RecordInterface.
@@ -87,11 +87,16 @@ namespace client_data_structures {
 			record() = *(_recSel.begin());
 			setRecordID(_recSel.id());
 		}
+	}
+
+	int Dataset_ProfileDays::resetCount() {
+		setMatchArgs();
 		return Record_Interface::resetCount();
 	}
 
 	I_UI_Wrapper * Dataset_ProfileDays::getField(int fieldID) {
 		if (recordID() == -1) return 0;
+		setMatchArgs();
 		switch (fieldID) {
 		case e_days:
 			_days = record().rec().days;

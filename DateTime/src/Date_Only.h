@@ -6,12 +6,14 @@
 
 #include "Time_Only.h"
 #include "..\..\Bitfield\Bitfield.h"
+#include "Conversions.h"
 #include <Logging.h>
 
 namespace Date_Time {
 	using namespace BitFields;
 	using namespace Rel_Ops;
 	using namespace Sum_Ops;
+	using namespace GP_LIB;
 
 	constexpr char monthNames[][4] = { "","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec" };
 	constexpr char dayNames[][4] = { "Mon","Tue","Wed","Thu","Fri","Sat","Sun" };
@@ -25,6 +27,9 @@ namespace Date_Time {
 			UBitField<uint16_t, 9, 7>{uint16_t(year), true}.asBase();
 	}
 
+	/// <summary>
+	/// Represents date for the years 2000-2127.
+	/// </summary>
 	class DateOnly {
 	public:
 		// Constructors
@@ -83,7 +88,7 @@ namespace Date_Time {
 	};
 
 	inline Logger & operator << (Logger & stream, const DateOnly & dt) {
-		return stream << dt.day() << "/" << dt.getMonthStr() << "/" << dt.year();
+		return stream << dt.getDayStr() << " " << intToString(dt.day(), 2) << "/" << dt.getMonthStr() << "/20" << intToString(dt.year(), 2);
 	}
 
 	inline /*constexpr*/ int DateOnly::weekDayNo() const { // Mon = 0;

@@ -107,7 +107,7 @@ public:
 	uint8_t testDevice() override;
 
 protected:
-	int16_t lastGood = 20 * 256;
+	int16_t _lastGood = 20 * 256;
 	static int _error;
 private:
 };
@@ -313,7 +313,7 @@ void fullSpeedTest() {
 	for (int i = 0; i < sizeof(i2cAddr); ++i) {
 		uint8_t addr = i2cAddr[i];
 		auto & dev = getDevice(addr);
-		logger() << "\nDevice addr: " << dev.getAddress();
+		logger() << "\nDevice addr: 0x" << L_hex << dev.getAddress() << L_endl;
 		i2c_recover.basicTestsBeforeScan();
 		//if (testMode == resetBeforeTest) hardReset_Performed_(i2C, addr);
 		//i2c_recover.foundDeviceAddr = addr;
@@ -325,17 +325,17 @@ void fullSpeedTest() {
 		mainLCD->setCursor(13, 2);
 		if (i2c_test.error() == 0) {
 			mainLCD->print(dev.runSpeed());
-			logger() << "\nDevice: " << addr << " Speed: " << dev.runSpeed();
+			logger() << "\t Speed: " << dev.runSpeed() << L_endl;
 			++(i2c_test.totalDevicesFound);
 		}
 		else {
 			mainLCD->print("Failed");
-			logger() << "\nDevice: " << addr << " Failed Speed-test";
+			logger() << "\tFailed Speed-test\n";
 			lastTimeGood[i] = millis();
 		}
 		showTill = millis() + 500L;
 	}
-	logger() << "\n Test took mS: " << millis() - startTestTime;
+	logger() << "\tTest took mS: " << millis() - startTestTime;
 	mainLCD->setCursor(0, 3);
 	mainLCD->print("Total:");
 	mainLCD->print(i2c_test.totalDevicesFound);
@@ -861,7 +861,7 @@ int8_t I2C_Temp_Sensor::readTemperature() {
 	_error = read(DS75LX_Temp, 2, temp);
 	// logger() << "\n readTemp()", getAddress(), getStatusMsg(_error) );
 
-	lastGood = (temp[0] << 8) | temp[1];
+	_lastGood = (temp[0] << 8) | temp[1];
 	return _error;
 }
 
@@ -876,7 +876,7 @@ int8_t I2C_Temp_Sensor::get_temp() const {
 }
 
 int16_t I2C_Temp_Sensor::get_fractional_temp() const {
-	return lastGood;
+	return _lastGood;
 }
 
 uint8_t I2C_Temp_Sensor::testDevice() {
@@ -976,8 +976,8 @@ uint8_t MixValveController::testDevice() {
 	} while (status && millis() < waitTime);
 	tryAgainTime = millis() - tryAgainTime + 2;
 	
-	if (status)  logger() << "\n MixValveController::testDevice failed. Addr:", getAddress(), getStatusMsg(status));
-	else  logger() << "\n MixValveController::testDevice OK after mS", tryAgainTime);
+	if (status)  logger() << "\n MixValveController::testDevice failed. Addr: 0x" << L_hex << getAddress() << getStatusMsg(status) << L_endl;
+	else  logger() << "\n MixValveController::testDevice OK after mS" <<  tryAgainTime << L_endl;
 	return status;
 }
 

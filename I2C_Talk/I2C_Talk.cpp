@@ -51,7 +51,7 @@ I2C_Talk::I2C_Talk(int multiMaster_MyAddress, TwoWire & wire_port, int32_t i2cFr
 //		//TWI_BUFFER_SIZE = getTWIbufferSize(); //locks up if called before entering setup()
 //	}
 
-error_codes I2C_Talk::read(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, uint8_t *dataBuffer) {
+error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes, uint8_t *dataBuffer) {
 	//Serial.print("I2C_Talk::read from: 0x");
 	//Serial.println(deviceAddr, HEX); Serial.flush();
 	//Serial.print(" Reg: ");
@@ -68,7 +68,7 @@ error_codes I2C_Talk::read(uint16_t deviceAddr, uint8_t registerAddress, uint16_
 	return returnStatus;
 }
 
-error_codes I2C_Talk::readEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, uint8_t *dataBuffer) {
+error_codes I2C_Talk::readEP(int deviceAddr, int pageAddress, int numberBytes, uint8_t *dataBuffer) {
 	//Serial.print("\treadEP Wire:"); Serial.print((long)&_wire_port); Serial.print(", addr:"); Serial.print(deviceAddr); Serial.print(", page:"); Serial.print(pageAddress);
 	//Serial.print(", NoOfBytes:"); Serial.println(numberBytes);
 	auto returnStatus = _OK;
@@ -92,7 +92,7 @@ error_codes I2C_Talk::readEP(uint16_t deviceAddr, int pageAddress, uint16_t numb
 	return returnStatus;
 }
 
-error_codes I2C_Talk::getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t *dataBuffer) {
+error_codes I2C_Talk::getData(int deviceAddr, int numberBytes, uint8_t *dataBuffer) {
 	// Register address must be loaded into write buffer before entry...
 	//retuns 0=_OK, 1=_Insufficient_data_returned, 2=_NACK_during_address_send, 3=_NACK_during_data_send, 4=_NACK_during_complete, 5=_NACK_receiving_data, 6=_Timeout, 7=_slave_shouldnt_write, 8=_I2C_not_created
 
@@ -114,7 +114,7 @@ error_codes I2C_Talk::getData(uint16_t deviceAddr, uint16_t numberBytes, uint8_t
 	return static_cast<error_codes>(returnStatus);
 }
 
-error_codes I2C_Talk::write(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, const uint8_t * dataBuffer) {
+error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes, const uint8_t * dataBuffer) {
 	auto returnStatus = beginTransmission(deviceAddr);
 	if (returnStatus == _OK) {
 		_wire_port.write(registerAddress);
@@ -134,7 +134,7 @@ error_codes I2C_Talk::write(uint16_t deviceAddr, uint8_t registerAddress, uint16
 	return returnStatus;
 }
 
-error_codes I2C_Talk::write_verify(uint16_t deviceAddr, uint8_t registerAddress, uint16_t numberBytes, const uint8_t *dataBuffer) {
+error_codes I2C_Talk::write_verify(int deviceAddr, int registerAddress, int numberBytes, const uint8_t *dataBuffer) {
 	uint8_t verifyBuffer[32];
 	auto status = write(deviceAddr, registerAddress, numberBytes, dataBuffer);
 	if (status == _OK) status = read(deviceAddr, registerAddress, numberBytes, verifyBuffer);
@@ -146,7 +146,7 @@ error_codes I2C_Talk::write_verify(uint16_t deviceAddr, uint8_t registerAddress,
 	return status;
 }
 
-error_codes I2C_Talk::writeEP(uint16_t deviceAddr, int pageAddress, uint16_t numberBytes, const uint8_t * dataBuffer) {
+error_codes I2C_Talk::writeEP(int deviceAddr, int pageAddress, int numberBytes, const uint8_t * dataBuffer) {
 	auto returnStatus = _OK; 
 	// Lambda
 	auto _writeEP_block = [returnStatus, deviceAddr, this](int pageAddress, uint16_t numberBytes, const uint8_t * dataBuffer) mutable {
@@ -190,7 +190,7 @@ error_codes I2C_Talk::status(int deviceAddr) // Returns in slave mode.
 	return status;
 }
 
-void I2C_Talk::waitForEPready(uint16_t deviceAddr) {
+void I2C_Talk::waitForEPready(int deviceAddr) {
 	constexpr uint32_t I2C_WRITEDELAY = 5000;
 	// If writing again within 5mS of last write, wait until EEPROM gives ACK again.
 	// this is a bit faster than the hardcoded 5 milliSeconds
@@ -233,7 +233,7 @@ const char * I2C_Talk::getStatusMsg(int errorCode) {
 }
 
 // Slave response
-error_codes I2C_Talk::write(const uint8_t *dataBuffer, uint16_t numberBytes) {// Called by slave in response to request from a Master. Return errCode.
+error_codes I2C_Talk::write(const uint8_t *dataBuffer, int numberBytes) {// Called by slave in response to request from a Master. Return errCode.
 	return static_cast<error_codes>(_wire_port.write(dataBuffer, uint8_t(numberBytes)));
 } 
 
@@ -247,7 +247,7 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 }
 
 // Private Functions
-error_codes I2C_Talk::beginTransmission(uint16_t deviceAddr) { // return false to inhibit access
+error_codes I2C_Talk::beginTransmission(int deviceAddr) { // return false to inhibit access
 	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) _wire_port.beginTransmission((uint8_t)deviceAddr); // Puts in Master Mode.
 	return status;

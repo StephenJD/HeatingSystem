@@ -17,6 +17,7 @@ namespace client_data_structures {
 	/// This Object derivative wraps CurrentTime values.
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static CurrentTime_Interface object via ui().
+	/// The streamed value is held in the base-class as .val
 	/// </summary>
 	class CurrentTimeWrapper : public I_UI_Wrapper {
 	public:
@@ -35,7 +36,11 @@ namespace client_data_structures {
 	class Edit_CurrentTime_h : public I_Edit_Hndl {
 	public:
 		using I_Edit_Hndl::currValue;
-		Edit_CurrentTime_h() : I_Edit_Hndl(&editVal) { /*editVal.setBackUI(this); */ }
+		Edit_CurrentTime_h() : I_Edit_Hndl(&editVal) {
+#ifdef ZPSIM
+			std::cout << "\tEdit_CurrentTime_h Addr: " << std::hex << long long(this) << std::endl;
+#endif
+		}
 		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
 		I_UI_Wrapper & currValue() override { return _currValue; }
@@ -91,7 +96,12 @@ namespace client_data_structures {
 	class Edit_CurrentDate_h : public I_Edit_Hndl {
 	public:
 		using I_Edit_Hndl::currValue;
-		Edit_CurrentDate_h() : I_Edit_Hndl(&editVal) { /*editVal.setBackUI(this); */ }
+		Edit_CurrentDate_h() : I_Edit_Hndl(&editVal) {
+#ifdef ZPSIM
+			std::cout << "\tEdit_CurrentDate_h Addr: " << std::hex << long long(this) << std::endl;
+#endif
+			/*editVal.setBackUI(this); */ 
+		}
 		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
 		I_UI_Wrapper & currValue() override { return _currValue; }

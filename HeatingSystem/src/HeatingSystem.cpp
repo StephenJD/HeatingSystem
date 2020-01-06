@@ -49,16 +49,15 @@ HeatingSystem::HeatingSystem()
 	, db(RDB_START_ADDR, writer, reader, VERSION)
 	, _initialiser(*this)
 	, _tempController(_recover, db, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
-	, _hs_db(db, _tempController)
-	, mainDisplay(&_hs_db._q_displays)
+	, _hs_queries(db, _tempController)
+	, mainDisplay(&_hs_queries._q_displays)
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, FL_REMOTE_ADDRESS, DS_REMOTE_ADDRESS }
-	, _mainPages{ _hs_db, _tempController, *this}
-	, _sequencer(_hs_db, _tempController)
-	, _mainConsole(localKeypad, mainDisplay, _mainPages.pages())
+	, _mainConsoleChapters{ _hs_queries, _tempController, *this}
+	, _sequencer(_hs_queries, _tempController)
+	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
 	{
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
-		//_initialiser.i2C_Test();
-		//serviceProfiles();
+		_initialiser.i2C_Test();
 	}
 
 void HeatingSystem::serviceConsoles() {
@@ -69,6 +68,13 @@ void HeatingSystem::serviceConsoles() {
 
 void HeatingSystem::serviceProfiles() { _sequencer.getNextEvent(); }
 
+void HeatingSystem::notifyDataIsEdited() {
+	logger() << L_time << "notifyDataIsEdited\n";
+	_tempController.checkZones();
+	_sequencer.recheckNextEvent();
+}
 
-
+void HeatingSystem::logStackTrace() {
+	_recover.strategy().log_stackTrace();
+}
 

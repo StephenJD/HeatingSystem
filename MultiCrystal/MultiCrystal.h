@@ -112,7 +112,7 @@ public:
 	uint8_t createChar(uint8_t, const uint8_t[]);
 	uint8_t setCursor(uint8_t col, uint8_t row);
 	virtual size_t write(uint8_t oneChar);
-	uint8_t getError() {return errorCode;}
+	uint8_t getError() {return _errorCode;}
 	
 	uint8_t i2cAddress() {return _address;}
 	uint8_t checkI2C_Failed();
@@ -163,7 +163,7 @@ private:
 	// I2C stuff
 	bool setControl(uint8_t port_pos, uint8_t value); // returns true if position is on port B
 	void setDataBit(uint8_t position, uint8_t value);
-	uint8_t errorCode;
+	uint8_t _errorCode;
 
 };
 

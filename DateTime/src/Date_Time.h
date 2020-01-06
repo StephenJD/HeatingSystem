@@ -24,6 +24,9 @@ namespace Date_Time {
 		int offset;
 	};
 
+	/// <summary>
+	/// Represents date and time in 10's of minutes (no units) for the years 2000-2127.
+	/// </summary>
 	class DateTime : public TimeOnly, public DateOnly
 	{
 	public:

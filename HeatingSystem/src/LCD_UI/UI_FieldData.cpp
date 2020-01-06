@@ -2,6 +2,11 @@
 #include "I_Record_Interface.h"
 #include "UI_Primitives.h"
 
+#ifdef ZPSIM
+#include <map>
+extern std::map<long, std::string> ui_Objects;
+#endif
+
 namespace LCD_UI {
 	using namespace RelationalDatabase;
 
@@ -28,7 +33,16 @@ namespace LCD_UI {
 
 	void UI_FieldData::focusHasChanged(bool hasFocus) {
 		// parent field might have been changed
+		//_data->move_by(0);
 		auto objectAtFocus = _data->query()[focusIndex()];
+/*#ifdef ZPSIM
+		logger() << "\tfocusHasChanged on " << ui_Objects[(long)_field_Interface_h.get()].c_str() <<  L_tabs 
+			<< "\n\t\tFocusIndex was: " << focusIndex()
+			<< "\n\t\tObjectIndex was: " << objectIndex()
+			<< "Obj ID was: " << objectAtFocus.id()
+			<< "Parent ID was: " << (_parentRecord ? _parentRecord->record().id() : 0)
+			<< L_endl;
+#endif	*/	
 		bool focusWasInRange = objectAtFocus.status() == TB_OK;
 	    setCount(_data->resetCount());
 		setObjectIndex(_data->recordID());
@@ -36,6 +50,11 @@ namespace LCD_UI {
 		bool focusStillInRange = objectAtFocus.status() == TB_OK;
 		if (hasFocus || (focusWasInRange && !focusStillInRange))
 			setFocusIndex(objectIndex());
+
+//#ifdef ZPSIM
+//		logger() <<  L_tabs << "\tNew FocusIndex: " << focusIndex()
+//		<< "New Obj ID: " << objectAtFocus.id() << L_endl;
+//#endif
 	}
 
 	int UI_FieldData::nextIndex(int id) const {
@@ -95,6 +114,7 @@ namespace LCD_UI {
 			}
 			setCount(_data->resetCount());
 		}
+		notifyDataIsEdited();
 		return 0;
 	}
 

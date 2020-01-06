@@ -1,34 +1,28 @@
 #include <I2C_Talk_ErrorCodes.h>
-#include <I2C_Talk.h>
-#include <I2C_SpeedTest.h>
-#include <I2C_Scan.h>
-#include <I2C_RecoverStrategy.h>
-#include <I2C_RecoverRetest.h>
-#include <I2C_Recover.h>
-#include <I2C_Device.h>
 #include <Clock.h>
 #include <Logging.h>
 #include <Date_Time.h>
-#include <I2C_Talk.h>
 #include <Conversions.h>
 #include <SD.h>
 #include <SPI.h>
-#include <Wire.h>
 #include <Arduino.h>
+#include <Wire.h>
 #include <EEPROM.h>
+#include <I2C_Talk.h>
 
 #define RTC_ADDRESS 0x68
 #define EEPROM_ADDR 0x50
 #define EEPROM_CLOCK_ADDR 0
 
 #define RTC_RESET 4
+
 using namespace Date_Time;
 
-I2C_Talk rtc{ Wire1, 100000 };
-I_I2C_Scan scanner{ rtc };
+//#if defined(__SAM3X8E__)
 
-#if defined(__SAM3X8E__)
-#include <EEPROM.h>
+
+
+I2C_Talk rtc(Wire1);
 
 EEPROMClass & eeprom() {
 	static EEPROMClass_T<rtc> _eeprom_obj{ 0x50 };
@@ -36,11 +30,11 @@ EEPROMClass & eeprom() {
 }
 
 EEPROMClass & EEPROM = eeprom();
-#endif
+//#endif
 
 Clock & clock_() {
-  static Clock_I2C<rtc> _clock(RTC_ADDRESS);
-  return _clock;
+	static Clock_EEPROM _clock(EEPROM_CLOCK_ADDR);
+	return _clock;
 }
 
 Logger & timelessLogger() {
@@ -63,31 +57,41 @@ Logger & sdlogger() {
   return _log;
 }
 
+Logger & eplogger() {
+	static EEPROM_Logger _log(6000, 6100);
+	return _log;
+}
+
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
   Serial.begin(9600); // NOTE! Serial.begin must be called before i2c_clock is constructed.
-  logger() << " Setup Start\n";
+  logger() << " Setup Start" << L_flush;
+#if defined(__SAM3X8E__)
   pinMode(RTC_RESET, OUTPUT);
   digitalWrite(RTC_RESET, LOW); // reset pin
   rtc.restart();
-  scanner.show_all();
-
+#endif
   logger() << "Notime Logger Message\n";
   logger() << L_time << "Timed Logger Message\n";
+  logger() << L_tabs << "Tabs. Text. Int 125:" << 125 << "Float 1.5:" << 1.5 << L_endl;
+  logger() << L_tabs << L_fixed << "Tabs Fixed 12.75:" << (12*256 + 128 + 64) << L_flush;
   sdlogger() << L_time << "SD Timed Logger Started\n";
+  sdlogger() << L_tabs << L_fixed << "SD tabbed: Fixed 12.75:" << (12*256 + 128 + 64) << L_endl;
+  sdlogger() << L_time << L_tabs << "sd tabbed" << 5 << L_concat << "untabbed" << 6 << L_endl;
+  sdlogger() << L_time << "sd not tabbed" << 5 << L_endl;
+  sdlogger() << L_time << "sd log" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+  sdlogger() << L_cout << "sd cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+  sdlogger() << "sd log after cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+  logger() << "SD finished" << L_flush;
+  eplogger() << "ep Text." << L_endl;
+  eplogger() << L_tabs << "ep Text. Int 125:" << 125 << "Float 1.5:" << 1.5 << L_fixed << "Fixed 12.75:" << (12*256 + 128 + 64) << L_endl;
   clock_().saveTime();
   clock_().loadTime();
+  timelessLogger() << "timelessLogger\n";
+  nullLogger() << "Nothing";
+  eplogger().readAll();
 }
 
 void loop()
 {
-  delay(5000);
-  sdlogger() << "SD Timed Logger...\n";
-  timelessLogger() << "timelessLogger\n";
-  nullLogger() << "Nothing";
-  sdlogger() << L_time << L_tabs << "tabbed" << 5 << L_concat << "untabbed" << 6 << L_endl;
-  sdlogger() << L_time << "not tabbed" << 5 << L_endl;
-  sdlogger() << L_time << "log" << 5 << L_tabs << "tabbed" << 6 << L_endl;
-  sdlogger() << L_cout << "cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
-  sdlogger() << "log after cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
 }

@@ -36,7 +36,12 @@ namespace LCD_UI {
 	//                 Edit Ints 
 	/////////////////////////////////////////////////////////////////////////////////////////
 
-	Edit_Int_h::Edit_Int_h() : I_Edit_Hndl(&editVal) {}
+	Edit_Int_h::Edit_Int_h() : I_Edit_Hndl(&editVal) {
+#ifdef ZPSIM
+		std::cout << "\tEdit_Int_h Addr: " << std::hex << long long(this) << std::endl;
+		std::cout << "\tEdit_Int_h Edit Addr: " << std::hex << long long(&editVal) << std::endl;
+#endif
+	}
 
 	int Edit_Int_h::gotFocus(const I_UI_Wrapper * data) { // returns edit focus
 		if (data) _currValue = static_cast<const IntWrapper &>(*data);
@@ -142,8 +147,8 @@ namespace LCD_UI {
 
 	Edit_Char_h::Edit_Char_h() : I_Edit_Hndl(&editChar) {
 #ifdef ZPSIM
-		std::cout << "** Edit_Char_h Addr:" << std::hex << long long(this) << std::endl;
-		std::cout << "** editChar Addr:" << std::hex << long long(&editChar) << std::endl;
+		std::cout << "\tEdit_Char_h Addr:" << std::hex << long long(this) << std::endl;
+		std::cout << "\teditChar Addr:" << std::hex << long long(&editChar) << std::endl;
 #endif
 	}
 

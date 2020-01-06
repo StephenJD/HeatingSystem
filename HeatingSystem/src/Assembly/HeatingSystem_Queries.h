@@ -7,6 +7,7 @@
 #include "..\Client_DataStructures\Data_Spell.h"
 #include "..\Client_DataStructures\Data_Profile.h"
 #include "..\Client_DataStructures\Data_TimeTemp.h"
+#include "..\Client_DataStructures\Data_TowelRail.h"
 #include "..\Client_DataStructures\Data_CurrentTime.h"
 #include "..\Client_DataStructures\Client_Cmd.h"
 #include <RDB.h>
@@ -14,10 +15,10 @@
 namespace Assembly {
 	class TemperatureController;
 
-	class Database
+	class HeatingSystem_Queries
 	{
 	public:
-		Database(RelationalDatabase::RDB<TB_NoOfTables> & rdb, TemperatureController & tc);
+		HeatingSystem_Queries(RelationalDatabase::RDB<TB_NoOfTables> & rdb, TemperatureController & tc);
 
 	//private:
 		RelationalDatabase::RDB<TB_NoOfTables> * _rdb;
@@ -26,6 +27,7 @@ namespace Assembly {
 		RelationalDatabase::TableQuery _q_dwellings;
 		RelationalDatabase::TableQuery _q_zones;
 		RelationalDatabase::QueryL_T<client_data_structures::R_DwellingZone, client_data_structures::R_Zone> _q_dwellingZones;
+		RelationalDatabase::QueryL_T<client_data_structures::R_DwellingZone, client_data_structures::R_Dwelling> _q_zoneDwellings;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_dwellingProgs;
 		RelationalDatabase::QueryLF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_dwellingSpells;
 		RelationalDatabase::QueryIJ_T<client_data_structures::R_Spell> _q_spellProg;
@@ -33,6 +35,8 @@ namespace Assembly {
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_zoneProfiles;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_profile;
 		RelationalDatabase::QueryF_T<client_data_structures::R_TimeTemp> _q_timeTemps;
+		RelationalDatabase::TableQuery _q_tempSensors;
+		//RelationalDatabase::TableQuery _q_towelRails;
 
 		// DB Record Interfaces
 		client_data_structures::Dataset_WithoutQuery _rec_currTime;
@@ -44,6 +48,8 @@ namespace Assembly {
 		client_data_structures::Dataset_Program _rec_spellProg;
 		client_data_structures::Dataset_ProfileDays _rec_profile;
 		client_data_structures::Dataset_TimeTemp _rec_timeTemps;
+		client_data_structures::Dataset_TempSensor _rec_tempSensors;
+		//client_data_structures::Dataset_TowelRail _rec_towelRails;
 	};
 
 }

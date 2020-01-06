@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef ZPSIM
+#include <map>
+extern std::map<long, std::string> ui_Objects;
+#endif
+
+
 namespace Assembly {
 	constexpr int STACK_TRACE_ADDR = 0;
 	constexpr int EEPROM_CLOCK_ADDR = 400;

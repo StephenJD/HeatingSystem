@@ -298,7 +298,7 @@ namespace LCD_UI {
 		Behaviour _behaviour;
 		int8_t _focusIndex = 0; // index of selected object in this Collection
 	private:
-		mutable int8_t _index = 0; // used by lazy-collections to show which object is being delievered. Placed here to avoid padding.
+		mutable int8_t _index = 0; // used by lazy-collections to show which object is being delivered. Placed here to avoid padding.
 	};
 
 	inline UI_Object * Collection_Hndl::getItem(int index)  // Must return polymorphicly

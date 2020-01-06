@@ -25,7 +25,7 @@ namespace HardwareInterfaces {
 		uint8_t readFromValve(Mix_Valve::Registers reg); // returns value
 		uint8_t sendSetup();
 		void setResetTimePtr(unsigned long * timeOfReset_mS) { _timeOfReset_mS = timeOfReset_mS; }
-		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t relayID);
+		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
 		bool check();
 
 //#if defined (ZPSIM)

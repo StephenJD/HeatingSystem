@@ -46,13 +46,13 @@ namespace LCD_UI {
 	/// <summary>
 	/// This class wraps data values, typically obtained from a database.
 	/// It is constructed with the value and a ValRange formatting object.
-	/// It facilitates streaming and editing by providing a refernce to an I_Field_Interface object via ui().
+	/// It facilitates streaming and editing by providing a reference to an I_Field_Interface object via ui().
 	/// </summary>
 	class I_UI_Wrapper {
 	public:
 		I_UI_Wrapper() = default;
-		I_UI_Wrapper(int32_t val, ValRange valRangeArg)
-			: val(val), valRange(valRangeArg) {
+		I_UI_Wrapper(int32_t initialVal, ValRange valRangeArg)
+			: val(initialVal), valRange(valRangeArg) {
 		}
 		virtual const I_Field_Interface & ui() const { return const_cast<I_UI_Wrapper*>(this)->ui(); }
 		virtual I_Field_Interface & ui() = 0;

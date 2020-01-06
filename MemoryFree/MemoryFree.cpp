@@ -6,6 +6,11 @@ extern "C" char* sbrk(int incr);
 extern char *__brkval;
 #endif  // __arm__
 
+#ifdef ZPSIM
+char * __malloc_heap_start  = 0;
+char * __brkval = 0;
+#endif
+
 int freeMemory() {
   char top;
 #ifdef __arm__

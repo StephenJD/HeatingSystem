@@ -13,6 +13,7 @@ namespace LCD_UI {
 	using namespace RelationalDatabase;
 	class ValRange;
 	class I_Record_Interface;
+	void notifyDataIsEdited(); // global function prototype for notifying anyone who needs to know
 
 	// **********************  Interface to Editable data ******************
 	// Objects are constructed with an fieldID to obtain the particular item required from the target data-UI-interface object of type <Dataset_Type>.

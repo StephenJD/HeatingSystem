@@ -193,7 +193,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 
 	// SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
 	// according to datasheet, we need at least 40ms after power rises above 2.7V
-	// before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50
+	// before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50mS
 	delayMicroseconds(50000);
 	// Now we pull both RS and R/W low to begin commands
 	uint8_t hasFailed=0;
@@ -202,44 +202,34 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		digitalWrite(_enable_pin, LOW);
 		if (_rw_pin != -1) digitalWrite(_rw_pin, LOW);
 	} else {
-		//Serial.print("Multi-Crystal Begin() Remote at 0x"); Serial.println(_address,HEX);
-		errorCode = 1;
+		// Lambdas
 		// We use interrupt on GPIO change to record which key has been pressed, ready for retrieval when the keyboard is scanned.
-		//if (!hasFailed) {
-			//errorCode = 2;
-			hasFailed = _i2C_device->write(IOCON,1,IOCON_SET);  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading INTCAP
-		//}
-		if (!hasFailed) {
-			errorCode = 3;
-			hasFailed = _i2C_device->write(IODIR,2,_key_mask);
-		}
-		if (!hasFailed) {
-			errorCode = 4;
-			hasFailed = _i2C_device->write(IPOL,2,_key_mask);
-		}
-		if (!hasFailed) {
-			errorCode = 5;
-			hasFailed = _i2C_device->write(DEFVAL,2,_key_mask); // Default IO state == 1. Interrupt if different.
-			hasFailed |= _i2C_device->write(INTCON,2,_key_mask); // INTCON_SET); // INTerrupt CONtrol. == CLEAR causes interrupt on GPIO changed.
-		}
-		if (!hasFailed) {
-			errorCode = 6;
-			hasFailed = _i2C_device->write(GPPU,2,PULL_UP);
-		}
-		if (!hasFailed) {
-			errorCode = 7;
-			hasFailed = _i2C_device->write(GPINTEN,2,_key_mask); // enables interrupt for GPIO port.
-			hasFailed |= _i2C_device->read( INTCAP, 2, _data); // clear interrupt
-		}
+		auto setSingleBank = [this]() {_errorCode = 2; return _i2C_device->write(IOCON, 1, IOCON_SET); };  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading INTCAP
+		auto setIO_Direction = [this]() {_errorCode = 3; return _i2C_device->write(IODIR, 2, _key_mask); };
+		auto setInt_Polarity = [this]() {_errorCode = 4; return _i2C_device->write(IPOL, 2, _key_mask); };
+		auto setDefaut_IOstate = [this]() {_errorCode = 5; return  _i2C_device->write(DEFVAL, 2, _key_mask); };
+		auto setInterupt_Control = [this]() {_errorCode = 5; return  _i2C_device->write(INTCON, 2, _key_mask); };
+		auto setPullUps = [this]() {_errorCode = 6; return  _i2C_device->write(GPPU, 2, PULL_UP); };
+		auto setInterruptEnable = [this]() {_errorCode = 7; return  _i2C_device->write(GPINTEN, 2, _key_mask); };
+		auto clearInterrupts = [this]() {_errorCode = 7; return  _i2C_device->read(INTCAP, 2, _data); };
+
+		//Serial.print("Multi-Crystal Begin() Remote at 0x"); Serial.println(_address,HEX);
+		_errorCode = 1;
+		hasFailed = setSingleBank() 
+			|| setIO_Direction() 
+			|| setInt_Polarity() 
+			|| setDefaut_IOstate()
+			|| setInterupt_Control()
+			|| setPullUps()
+			|| setInterruptEnable()
+			|| clearInterrupts();
+
 		if (hasFailed) {
-			//Serial.print("Multi-Crystal Failed Begin() at "); Serial.println(errorCode);
+			//Serial.print("Multi-Crystal Failed Begin() at "); Serial.println(_errorCode);
 			return hasFailed;
 		} 
 		_data[0] = 0; _data[1] = 0;
-		//setControl(_rs_pin, LOW);
-		//setControl(_rw_pin, LOW);
-		errorCode = 8;
-		//hasFailed = pulseEnable();
+		_errorCode = 8;
 	}
 
 	if (!(_displayfunction & LCD_8BITMODE)) {
@@ -248,7 +238,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		// figure 24, pg 46
 
 		// we start in 8bit mode, try to set 4 bit mode
-		errorCode = 9;
+		_errorCode = 9;
 		hasFailed = hasFailed | write4bits(0x03);
 		delayMicroseconds(4500); // wait min 4.1ms
 
@@ -265,7 +255,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 	} else {
 		// this is according to the hitachi HD44780 datasheet
 		// page 45 figure 23
-		errorCode = 10;
+		_errorCode = 10;
 		// Send function set command sequence
 		command(LCD_FUNCTIONSET | _displayfunction);
 		delayMicroseconds(4500); // wait more than 4.1ms
@@ -293,8 +283,8 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 	// set the entry mode
 	command(LCD_ENTRYMODESET | _displaymode);
 	
-	if (!hasFailed) errorCode = 0; 
-	return errorCode;
+	if (!hasFailed) _errorCode = 0; 
+	return _errorCode;
 }
 
 /********** Simulator commands, for the user! */
@@ -402,7 +392,7 @@ uint8_t MultiCrystal::clear() {
 	cursor_pos = 0;
 	command(LCD_CLEARDISPLAY);  // clear display, set cursor position to zero
     delayMicroseconds(2000);  // this command takes a long time!
-	return errorCode;
+	return _errorCode;
 }
 
 /********** high level commands, for the user! */
@@ -444,7 +434,7 @@ uint8_t MultiCrystal::home()
 {
 	command(LCD_RETURNHOME); // set cursor position to zero
 	delayMicroseconds(2000); // this command takes a long time!
-	return errorCode;
+	return _errorCode;
 }
 
 // Turn the display on/off (quickly)
@@ -497,20 +487,20 @@ uint8_t MultiCrystal::createChar(uint8_t location, const uint8_t charmap[]) {
 	for (int i=0; i<8; i++) {
 		write(charmap[i]);
 	}
-	return errorCode;
+	return _errorCode;
 }
 
 /*********** mid level commands, for sending data/cmds */
 
 inline uint8_t MultiCrystal::command(uint8_t value) { // 0 = success
-	errorCode = send(value, LOW);
-	return errorCode;
+	_errorCode = send(value, LOW);
+	return _errorCode;
 }
 
 inline size_t MultiCrystal::write(uint8_t value) { // 0 = error, 1 = success
 	//Serial.print("Write:");Serial.println(value,HEX);
-	errorCode = send(value, HIGH);
-	if (errorCode > 0) return 0;
+	_errorCode = send(value, HIGH);
+	if (_errorCode > 0) return 0;
 	else return 1;
 }
 

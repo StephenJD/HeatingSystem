@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
-#include "..\..\Conversions\Conversions.h"
-#include "..\..\Sum_Operators\Sum_Operators.h"
+#include "Conversions.h"
+#include "Sum_Operators.h"
 #include <Logging.h>
 
 //====================================================================
@@ -12,7 +12,11 @@
 namespace Date_Time {
 	using namespace Rel_Ops;
 	using namespace Sum_Ops;
+	using namespace GP_LIB;
 
+	/// <summary>
+	/// Represents time in 10's of minutes (no units), up to 42hrs 30mins.
+	/// </summary>
 	class TimeOnly {
 	public:
 		// Constructors & Assignment
@@ -52,7 +56,7 @@ namespace Date_Time {
 	};
 
 	inline Logger & operator << (Logger & stream, const TimeOnly & dt) {
-		return stream << dt.displayHrs() << ":" << dt.mins10() << "0" << (dt.isPM() ? "pm" : "am");
+		return stream << intToString(dt.displayHrs(), 2) << ":" << dt.mins10() << "0" << (dt.isPM() ? "pm" : "am");
 	}	
 	
 	namespace Literals {

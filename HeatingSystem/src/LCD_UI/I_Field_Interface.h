@@ -42,7 +42,11 @@ namespace LCD_UI {
 
 		void setWrapper(I_UI_Wrapper * wrapper);
 	protected:
-		I_Field_Interface() : I_SafeCollection(0,viewAll()) {}
+		I_Field_Interface() : I_SafeCollection(0,viewAll()) {
+#ifdef ZPSIM
+		std::cout << "\tI_Field_Interface Addr: " << std::hex << long long(this) << std::endl;
+#endif
+		}
 		I_UI_Wrapper * _wrapper;
 		Field_Interface_h * _parent;
 		static char scratch[81]; // Buffer for constructing strings of wrapped values

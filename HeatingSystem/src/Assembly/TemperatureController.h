@@ -14,9 +14,12 @@ namespace Assembly {
 	{
 	public:
 		TemperatureController(I2C_Recovery::I2C_Recover & recovery, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS);
-		
+		// Queries
+		int outsideTemp() const { return thermalStore.getOutsideTemp(); }
+
 		// Modifiers
 		void checkAndAdjust();
+		void checkZones();
 		
 		HardwareInterfaces::I2C_Temp_Sensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS];
 		HardwareInterfaces::BackBoiler backBoiler;

@@ -8,7 +8,7 @@ namespace HardwareInterfaces {
 
 	class I_IniFunctor {
 		public:
-			virtual uint8_t operator()() = 0;
+			virtual uint8_t operator()() = 0; // performs post-reset initialisation. Return 0 for OK 
 	};
 
 	class I_TestDevices {
@@ -20,7 +20,7 @@ namespace HardwareInterfaces {
 	public:
 		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
 
-		bool initialisationRequired = true;
+		bool initialisationRequired = false;
 		unsigned long timeOfReset_mS = 0;
 	private:
 	};	
@@ -31,6 +31,7 @@ namespace HardwareInterfaces {
 
 		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
 		unsigned long timeOfReset_mS() { return hardReset.timeOfReset_mS; }
+		void postResetInitialisation() override;
 		HardReset hardReset;
 	private:
 

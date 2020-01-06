@@ -1,5 +1,5 @@
 #include "Data_CurrentTime.h"
-#include "..\..\..\Conversions\Conversions.h"
+#include "Conversions.h"
 #include <Clock.h>
 
 namespace client_data_structures {
@@ -64,9 +64,8 @@ namespace client_data_structures {
 	}
 
 	const char * CurrentTime_Interface::streamData(bool isActiveElement) const {
-		clock_().refresh();
 		auto dt = DateTime(getData(isActiveElement));
-		if (editItem().backUI() == 0) dt = DateTime{ clock_() };
+		//if (editItem().backUI() == 0) dt = DateTime{ clock_() };
 
 		strcpy(scratch, intToString(dt.displayHrs(), 2));
 		strcat(scratch, ":");
@@ -74,7 +73,7 @@ namespace client_data_structures {
 		strcat(scratch, intToString(clock_().minUnits(), 1));
 		strcat(scratch, ":");
 		strcat(scratch, intToString(clock_().seconds(), 2));
-		strcat(scratch, (dt.hrs() < 12) ? " am" : " pm");
+		strcat(scratch, (dt.isPM() ? "pm" : "am"));
 		return scratch;
 	}
 
@@ -138,9 +137,9 @@ namespace client_data_structures {
 		strcpy(scratch, dt.getDayStr());
 		strcat(scratch, " ");
 		strcat(scratch, intToString(dt.day(), 2));
-		strcat(scratch, "-");
+		strcat(scratch, "/");
 		strcat(scratch, dt.getMonthStr());
-		strcat(scratch, "-20");
+		strcat(scratch, "/20");
 		strcat(scratch, intToString(dt.year(), 2));
 		return scratch;
 	}
@@ -161,6 +160,10 @@ namespace client_data_structures {
 	}
 
 	I_UI_Wrapper * Dataset_WithoutQuery::getField(int fieldID) {
+		_currTime.val = clock_().time().asInt();
+		_currDate.val = clock_().date().asInt();
+		_dst.val = clock_().autoDSThours();
+
 		switch (fieldID) {
 		case e_currTime: return &_currTime;
 		case e_currDate: return &_currDate;
@@ -172,12 +175,15 @@ namespace client_data_structures {
 	bool Dataset_WithoutQuery::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
 		switch (fieldID) {
 		case e_currTime:
+			// Note: minute units are written to clock_() as they are edited.
 			_currTime.val = newValue->val;
+			logger() << L_time << "Save new Time: " << TimeOnly(_currTime.val) << L_endl;
 			clock_().setTime(TimeOnly( _currTime.val ));
 			break;
 		case e_currDate:
 			_currDate.val = newValue->val;
-			clock_().setDate(DateOnly( _currTime.val ));
+			logger() << L_time << "Save new Date: " << DateOnly(_currDate.val) << L_endl;
+			clock_().setDate(DateOnly(_currDate.val ));
 			break;
 		case e_dst:
 			_dst.val = newValue->val;

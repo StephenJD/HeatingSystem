@@ -140,7 +140,6 @@ namespace RelationalDatabase {
 		return incrementTableQ().insert(record);
 	}
 
-
 	class CustomQuery : public Query {
 	public:
 		CustomQuery(Query & source) : _incrementQ(&source) {}

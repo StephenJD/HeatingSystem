@@ -78,31 +78,20 @@ namespace Assembly {
 	void TemperatureController::checkAndAdjust() {
 		// once per second
 		static auto lastCheck = millis();
-		if (Clock::secondsSinceLastCheck(lastCheck) == 0) { return; } //Wait for next check time.
-		for (auto ts : tempSensorArr) {
-			//ts.readTemperature();
+		if (Clock::secondsSinceLastCheck(lastCheck) == 0) { return; } // Wait for next second.
+		for (auto & ts : tempSensorArr) {
+			ts.readTemperature();
+			//logger() << "TS: 0x" << L_hex << ts.getAddress() << " " << L_dec << ts.get_temp() << " Error? " << ts.hasError() << L_endl;
 			ui_yield();
 		}
-		for (auto & zone : zoneArr) { zone.setFlowTemp(); ui_yield(); }
+		if (clock_().seconds() == 0) checkZones(); // each minute
 		for (auto & mixValveControl : mixValveControllerArr) {mixValveControl.check(); ui_yield(); }
 		backBoiler.check();
 		ui_yield();
-		thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(), zoneArr[Z_DHW].nextTempRequest());
-		ui_yield();
 		relaysPort.setAndTestRegister();
+	}
 
-		//static size_t tempSensorIndex = NO_OF_TEMP_SENSORS;
-		//if (tempSensorIndex >= size_t(NO_OF_TEMP_SENSORS)) {
-		//	if (Clock::secondsSinceLastCheck(lastCheck) == 0) return; // all done, wait for next check time.
-		//	tempSensorIndex = 0;
-		//	for (auto & zone : zoneArr) zone.setFlowTemp();
-		//	for (auto & mixValveControl : mixValveControllerArr) mixValveControl.check();
-		//	backBoiler.check();
-		//	thermalStore.needHeat(zoneArr[Z_DHW].currTempRequest(), zoneArr[Z_DHW].nextTempRequest());
-		//	relaysPort.setAndTestRegister();
-		//}
-		////logger() << " ReadTemp for", tempSensorIndex);
-		//tempSensorArr[tempSensorIndex].readTemperature();		
-		//++tempSensorIndex;	
+	void TemperatureController::checkZones() {
+		for (auto & zone : zoneArr) { zone.setFlowTemp(); ui_yield(); }
 	}
 }

@@ -10,11 +10,12 @@ namespace client_data_structures {
 
 namespace Assembly {
 	class TemperatureController;
-	class Database;
+	class HeatingSystem_Queries;
 
 	class Sequencer {
 	public:
-		Sequencer(Database & db, TemperatureController & tc);
+		Sequencer(HeatingSystem_Queries & db, TemperatureController & tc);
+		void recheckNextEvent();
 		void getNextEvent();
 	private:
 		auto getCurrentSpell(RelationalDatabase::RecordID dwellingID, client_data_structures::R_Spell & nextSpell)->client_data_structures::R_Spell;
@@ -24,9 +25,9 @@ namespace Assembly {
 		auto getTT_for_Time(Date_Time::TimeOnly time, RelationalDatabase::RecordID profileID, RelationalDatabase::RecordID prevDayProfileID)->client_data_structures::R_TimeTemp;
 		auto getFirstTT_for_profile(RelationalDatabase::RecordID & profileID)->client_data_structures::R_TimeTemp;
 
-		Database * _db = 0;
+		HeatingSystem_Queries * _db = 0;
 		TemperatureController * _tc = 0;
-		Date_Time::DateTime _ttEndDateTime;
+		Date_Time::DateTime _nextSystemEvent;
 	};
 
 }

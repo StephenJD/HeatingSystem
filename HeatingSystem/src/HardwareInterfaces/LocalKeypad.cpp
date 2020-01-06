@@ -12,7 +12,7 @@ namespace HardwareInterfaces {
 	constexpr int16_t LocalKeypad::adc_LocalKey_val[]; // for analogue keypad
 
 	LocalKeypad::LocalKeypad() { //Display_Stream & displ) : Keypad(displ) 
-		logger() << "\nLocalKeypad Start...";
+		logger() << "\nLocalKeypad Start...\n";
 		localKeypad = this;
 		digitalWrite(LOCAL_INT_PIN, HIGH); // turn ON pull-up 
 		//attachInterrupt(digitalPinToInterrupt(LOCAL_INT_PIN), localKeyboardInterrupt, FALLING); 

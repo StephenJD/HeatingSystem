@@ -23,6 +23,7 @@ namespace I2C_Recovery {
 		class I_I2CresetFunctor {
 		public:
 			virtual I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) = 0;
+			virtual void postResetInitialisation() {};
 		};
 
 		class I2Creset_Functor : public I_I2CresetFunctor {

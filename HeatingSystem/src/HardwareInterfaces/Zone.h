@@ -20,42 +20,43 @@ namespace HardwareInterfaces {
 		Zone(I2C_Temp_Sensor & ts, int reqTemp);
 #endif
 		// Queries
-		RelationalDatabase::RecordID record() const { return _recID; }
-		uint8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
+		RelationalDatabase::RecordID record() const { return _recordID; }
+		int8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
 		//int8_t getFlowSensTemp() const;
-		uint8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
-		uint8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
-		uint8_t offset() const { return _offsetT; }
-		uint8_t getCurrTemp() const;
-		bool isCallingHeat() const { return getCurrTemp() < modifiedCallTemp(_currProfileTempRequest); }
+		int8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
+		int8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
+		int8_t maxUserRequestTemp() const;
+		int8_t offset() const { return _offsetT; }
+		int8_t getCurrTemp() const;
+		bool isCallingHeat() const; // { return getCurrTemp() < modifiedCallTemp(_currProfileTempRequest); }
 		Date_Time::DateTime nextEventTime() { return _ttEndDateTime; }
-		bool operator== (const Zone & rhs) { return _recID == rhs._recID; }
+		bool operator== (const Zone & rhs) { return _recordID == rhs._recordID; }
 		bool isDHWzone() const;
 		int16_t getFractionalCallSensTemp() const;
 
 		// Modifier
 		void initialise(int zoneID, I2C_Temp_Sensor & callTS, Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp);
-		void offsetCurrTempRequest(uint8_t val);
+		void offsetCurrTempRequest(int8_t val);
 		bool setFlowTemp();
-		void setProfileTempRequest(uint8_t temp) { _currProfileTempRequest = temp; }
-		void setNextProfileTempRequest(uint8_t temp) { _nextProfileTempRequest = temp; }
+		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
+		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
 
 	private:
-		uint8_t modifiedCallTemp(uint8_t callTemp) const;
+		int8_t modifiedCallTemp(int8_t callTemp) const;
 
 		I2C_Temp_Sensor * _callTS = 0;
 		Relay * _relay = 0;
 		ThermalStore * _thermalStore = 0;
 		MixValveController * _mixValveController;
-		RelationalDatabase::RecordID _recID = 0;
+		RelationalDatabase::RecordID _recordID = 0;
 		int8_t _offsetT = 0;
 		int8_t _maxFlowTemp = 0;
 
 		int8_t _currProfileTempRequest = 0;
 		int8_t _nextProfileTempRequest = 0;
 		Date_Time::DateTime _ttEndDateTime;
-		uint8_t _callFlowTemp = 0;		// Programmed flow temp, modified by zoffset
+		int8_t _callFlowTemp = 0;		// Programmed flow temp, modified by zoffset
 		//uint8_t _tempRatio = 0;
 		//long _aveError = 0; // in 1/16 degrees
 		//long _aveFlow = 0;  // in degrees

@@ -61,6 +61,7 @@ namespace Assembly {
 	}
 
 	uint8_t Initialiser::postI2CResetInitialisation() {
+		_resetI2C.hardReset.initialisationRequired = false;
 		return initialiseTempSensors()
 			| _hs._tempController.relaysPort.initialiseDevice()
 			| initialiseRemoteDisplays();
@@ -68,7 +69,7 @@ namespace Assembly {
 
 	uint8_t Initialiser::initialiseTempSensors() {
 		// Set room-sensors to high-res
-		logger() << "Set room-sensors to high-res" << L_endl;
+		logger() << "\nSet room-sensors to high-res" << L_endl;
 		return	_hs._tempController.tempSensorArr[T_DR].setHighRes()
 			| _hs._tempController.tempSensorArr[T_FR].setHighRes()
 			| _hs._tempController.tempSensorArr[T_UR].setHighRes();
@@ -79,7 +80,7 @@ namespace Assembly {
 		for (auto & rd : _hs.remDispl) {
 			failed |= rd.initialiseDevice();
 		}
-		logger() << "initialiseRemoteDisplays() done" << L_endl;
+		logger() << L_time << "initialiseRemoteDisplays() done" << L_endl;
 		return failed;
 	}
 
@@ -97,7 +98,7 @@ namespace Assembly {
 		}
 	}
 
-	uint8_t IniFunctor:: operator()() {
+	uint8_t IniFunctor:: operator()() { // inlining creates circular dependancy
 		return _ini->postI2CResetInitialisation();
 	}
 }

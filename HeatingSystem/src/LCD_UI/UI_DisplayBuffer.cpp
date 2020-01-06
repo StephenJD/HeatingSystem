@@ -94,7 +94,7 @@ namespace LCD_UI {
 			}
 		}
 		else {
-			if (!(listStatus & e_this_not_showing) && spaceFor_char(originalEnd + 1)) {
+			if (!hasShortListChar && !(listStatus & e_this_not_showing) && spaceFor_char(originalEnd + 1)) {
 				terminate_with_EndList_char_at(originalEnd + 1);
 			} else buffer[originalEnd + 1] = 0;
 			return false;

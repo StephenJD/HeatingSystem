@@ -29,7 +29,7 @@ namespace HardwareInterfaces {
 	error_codes ResetI2C::operator()(I2C_Talk & i2c, int addr) {
 		static bool isInReset = false;
 		if (isInReset) {
-			logger() << "\nTest: Recursive Reset... for " << addr;
+			logger() << "\nTest: Recursive Reset... for 0x" << L_hex << addr << L_endl;
 			return _OK;
 		}
 
@@ -38,22 +38,26 @@ namespace HardwareInterfaces {
 		auto origFn = _recover->getTimeoutFn();
 		_recover->setTimeoutFn(&hardReset);
 
-		logger() << "\nResetI2C... for " << addr;
+		logger() << "\t\tResetI2C... for 0x" << L_hex << addr << L_endl;
 		hardReset(i2c, addr);
 		if (!_recover->isRecovering()) {
 			I_I2Cdevice_Recovery & device = _testDevices->getDevice(addr);
 			status = device.testDevice();
-
-			if (status == _OK && hardReset.initialisationRequired) {
-				auto iniFailed = (*_postI2CResetInitialisation)();
-				hardReset.initialisationRequired = (iniFailed == 0);
-			}
+			if (status == _OK) postResetInitialisation();
 		}
 
 		_recover->setTimeoutFn(origFn);
 		isInReset = false;
 		return status;
 	}
+
+	void ResetI2C::postResetInitialisation() { 
+		if (hardReset.initialisationRequired && _postI2CResetInitialisation) {
+			logger() << "\t\tResetI2C... _postI2CResetInitialisation\n";
+			if ((*_postI2CResetInitialisation)() != 0) return; // return 0 for OK. Resets hardReset.initialisationRequired to false.
+		}
+	};
+
 
 	error_codes HardReset::operator()(I2C_Talk & i2c, int addr) {
 		digitalWrite(RESET_LED_PIN_N, LOW);
@@ -65,7 +69,7 @@ namespace HardwareInterfaces {
 		timeOfReset_mS = millis();
 		//if (i2c.i2C_is_frozen(addr)) logger() << "*** Reset I2C is stuck at I2c freq:", i2c.getI2CFrequency(), "for addr:",addr);
 		//else 
-			logger() << "\nDone Hard Reset for addr: " << addr;
+			logger() << L_time << "Done Hard Reset for 0x" << L_hex << addr << L_endl;
 		digitalWrite(RESET_LED_PIN_N, HIGH);
 		initialisationRequired = true;
 		return _OK;

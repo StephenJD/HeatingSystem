@@ -1,9 +1,7 @@
 #pragma once
 #include <../DateTime/src/Date_Time.h>
-//#include <Date_Time.h>
 #include <I2C_Talk.h>
 #include <I2C_Device.h>
-//#include <Conversions.h>
 #include <..\Conversions\Conversions.h>
 #include <Arduino.h>
 #include <I2C_Talk_ErrorCodes.h>
@@ -12,12 +10,12 @@
 
 	/// <summary>
 	/// A Monostate class representing current time/date.
+	/// NOTE: to get minute units and seconds, specific functions must be called.
 	/// Date/Time obtained by explicit outward conversion to a Date_Time object.
 	/// Derivations provide EEPROM storage of current time every 10 minutes,
 	/// or obtaining time from an I2C RTC chip.
 	/// Automatic DST may be set from 0-2 hours.
 	/// </summary>
-
 	class Clock { 
 	public:
 		// Rated at 5v/100kHz - NO 3.3v operation, min 2.2v HI.
@@ -36,6 +34,10 @@
 		// Modifiers
 		// Reading the time triggers an update-check which might modify the time
 		explicit operator Date_Time::DateTime() { return _dateTime(); }
+		
+		/// <summary>
+		/// Returns time in 10's of minutes - no units.
+		/// </summary>
 		Date_Time::DateTime now() { return  _dateTime(); }
 		Date_Time::DateOnly date() { return _dateTime(); }
 		Date_Time::TimeOnly time() { return _dateTime(); }
@@ -104,9 +106,9 @@
 		auto loadTime()->I2C_Talk_ErrorCodes::error_codes override;
 
 	private:
-		void _update() override; // called every 10 minutes - reads from RTC
-		virtual auto readData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
-		virtual auto writeData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
+		void _update() override { loadTime(); }	// called every 10 minutes - reads from RTC
+		virtual auto readData(int start, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
+		virtual auto writeData(int start, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
 	};
 
 	template<I2C_Talk & i2c>
@@ -116,7 +118,6 @@
 
 		Clock_I2C(int addr) : I2Cdevice<i2c>(addr) {
 			Serial.println("Clock_I2C Constructor");
-			I_Clock_I2C::loadTime();
 		}
 		
 		bool ok() const override {
@@ -128,8 +129,8 @@
 		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 
 	private:
-		auto readData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer); }
-		auto writeData(uint16_t start, uint16_t numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::write(start, numberBytes, dataBuffer); }
+		auto readData(int start, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer); }
+		auto writeData(int start, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::write(start, numberBytes, dataBuffer); }
 	};
 
 

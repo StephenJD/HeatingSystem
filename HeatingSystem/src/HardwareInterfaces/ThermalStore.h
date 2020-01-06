@@ -18,8 +18,10 @@ namespace HardwareInterfaces {
 		//uint8_t getOutsideTemp() const;
 		//bool storeIsUpToTemp() const; // just returns status flag
 		bool dumpHeat() const;
-		uint8_t currDeliverTemp() const { return _currDeliverTemp; }
+		uint8_t currDeliverTemp() const { return _theoreticalDeliveryTemp; }
 		uint8_t calcCurrDeliverTemp(int callTemp) const;
+		uint8_t getGroundTemp() const;
+		uint8_t getOutsideTemp() const;
 
 		// Modifier
 		void initialise(client_data_structures::R_ThermalStore thermStoreData);
@@ -27,7 +29,6 @@ namespace HardwareInterfaces {
 		void setLowestCWtemp(bool isFlowing);
 		//void adjustHeatRate(byte change);
 		bool needHeat(int currRequest, int nextRequest);
-		uint8_t getGroundTemp() const;
 		void calcCapacities();
 
 	private:
@@ -38,7 +39,7 @@ namespace HardwareInterfaces {
 		bool dhwDeliveryOK(int currRequest) const;
 		bool dhwNeedsHeat(int callTemp, int nextRequest);
 
-		uint8_t _currDeliverTemp = 45;
+		uint8_t _theoreticalDeliveryTemp = 45;
 		bool _isHeating = false;
 
 		float _upperC, _midC, _bottomC; // calculated capacity factors

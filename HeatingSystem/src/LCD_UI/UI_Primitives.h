@@ -8,6 +8,8 @@
 	#include <string>
 	#include <iostream>
 	#include <iomanip>
+	#include <map>
+	extern std::map<long, std::string> ui_Objects;
 #endif
 
 namespace LCD_UI {
@@ -98,7 +100,12 @@ namespace LCD_UI {
 	/// </summary>
 	class Permitted_Vals : public I_SafeCollection {
 	public:
-		Permitted_Vals() :I_SafeCollection(0, viewOneUpDn()), _oneVal(this) { /*_oneVal.setParent(this);*/ }
+		Permitted_Vals() :I_SafeCollection(0, viewOneUpDn()), _oneVal(this) {
+#ifdef ZPSIM
+			std::cout << "\tPermitted_Vals Addr: " << std::hex << long long(this) << std::endl;
+#endif
+			/*_oneVal.setParent(this);*/ 
+		}
 		Collection_Hndl * select(Collection_Hndl * from) override;
 
 		Object_Hndl * item(int index) override {return &_oneVal;} // returns object reference at index.

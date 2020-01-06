@@ -5,6 +5,8 @@
 #ifdef ZPSIM
 	#include <ostream>
 	#include <iomanip>
+    #include <map>
+	extern std::map<long, std::string> ui_Objects;
 #endif
 
 namespace LCD_UI {
@@ -109,11 +111,17 @@ namespace LCD_UI {
 	void Collection_Hndl::focusHasChanged(bool hasFocus) {
 		get()->focusHasChanged(hasFocus);
 		if (hasFocus) {
+#ifdef ZPSIM
+			//logger() << "\tfocusHasChanged on " << ui_Objects[(long)get()].c_str() << L_tabs << L_hex << (long)get() << L_endl;
+#endif
 			move_focus_by(0);
 		}
 	}
 
 	Collection_Hndl * Collection_Hndl::move_focus_to(int index) {
+#ifdef ZPSIM
+			//logger() << "\tmove_focus_to on " << ui_Objects[(long)get()].c_str() << L_endl;
+#endif		
 		auto newObject = this;
 		auto collection = get()->collection();
 		if (!empty() && collection) {

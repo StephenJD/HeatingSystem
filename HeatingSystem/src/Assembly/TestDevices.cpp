@@ -38,7 +38,7 @@ namespace HardwareInterfaces {
 		if (speedTest.error() != _OK) {
 			hs().mainDisplay.print("Bad");
 			hs().mainDisplay.sendToDisplay();
-			 logger() << "TestDevices::speedTestDevices for " << device.getAddress() << " Failed" << L_endl;
+			 logger() << "\tspeedTestDevices for 0x" << L_hex << device.getAddress() << " Failed" << L_endl;
 #ifndef ZPSIM
 			delay(2000);
 #endif
@@ -46,7 +46,7 @@ namespace HardwareInterfaces {
 		else {
 			hs().mainDisplay.print(" OK");
 			hs().mainDisplay.sendToDisplay();
-			 logger() << "TestDevices::speedTestDevices for " << device.getAddress() << " OK at " << speedTest.thisHighestFreq() << L_endl;
+			 logger() << "\tspeedTestDevices for 0x" << L_hex << device.getAddress() << " OK at " << L_dec << speedTest.thisHighestFreq() << L_endl;
 		}
 		logger() << L_endl;
 		return speedTest.error();
@@ -60,13 +60,13 @@ namespace HardwareInterfaces {
 		int8_t returnVal = 0;
 		hs().mainDisplay.setCursor(0, 2);
 		hs().mainDisplay.print("Test ");
-		 logger() << "\n\nTestDevices::speedTestDevices has been called";
-		 logger() << "\nTestDevices::speedTestDevices\tTry Relay Port" << L_endl;
+		 logger() << L_endl << L_time << "TestDevices::speedTestDevices has been called\n";
+		 logger() << "\n\tTry Relay Port\n";
 		if (showSpeedTestFailed(hs()._tempController.relaysPort, "Relay")) {
 			returnVal = ERR_PORTS_FAILED;
 		}
 
-		 logger() << "TestDevices::speedTestDevices\tTry Remotes" << L_endl;
+		 logger() << "\tTry Remotes" << L_endl;
 		if (showSpeedTestFailed(hs().remDispl[D_Hall], "DS Rem")) {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
@@ -79,19 +79,19 @@ namespace HardwareInterfaces {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
-		 logger() << "TestDevices::speedTestDevices\tTry Mix Valve" << L_endl;
+		 logger() << "\tTry Mix Valve" << L_endl;
 		if (showSpeedTestFailed(hs()._tempController.mixValveControllerArr[0], "Mix V")) {
 			returnVal = ERR_MIX_ARD_FAILED;
 		}
 		
 		for (auto & ts : hs()._tempController.tempSensorArr) {
-			 logger() << "TestDevices::speedTestDevices\tTry TS " << ts.getAddress() << L_endl;
+			 logger() << "\tTry TS 0x" << L_hex << ts.getAddress() << L_endl;
 			showSpeedTestFailed(ts, "TS");
+			ts.readTemperature();
 		}
 
 		hs().mainDisplay.sendToDisplay();
 		hs()._recover.setTimeoutFn(&_ini._resetI2C);
-		logger() << L_endl;
 		return returnVal;
 	}
 
@@ -99,9 +99,9 @@ namespace HardwareInterfaces {
 		//******************** Cycle through ports *************************
 		uint8_t returnVal = 0;
 		uint8_t numberFailed = 0;
-		 logger() << "Relay_Run::testRelays";
+		logger() << "Relay_Run::testRelays\n";
 		if (hs()._tempController.relaysPort.testDevice()) {
-			 logger() << "\nRelay_Run::testRelays\tNo Relays\tERR_PORTS_FAILED";
+			 logger() << "\tNo Relays\tERR_PORTS_FAILED\n";
 			return NO_OF_RELAYS;
 		}
 		hs().mainDisplay.setCursor(0, 3);
@@ -116,7 +116,7 @@ namespace HardwareInterfaces {
 			hs().mainDisplay.setCursor(12, 3);
 			hs().mainDisplay.print(relayNo, DEC);
 			if (returnVal) {
-				 logger() << "\nRelay_Run::testRelays\tRelay Failed\tERR_PORTS_FAILED " << relayNo;
+				 logger() << "\tRelay Failed\tERR_PORTS_FAILED for Relay " << relayNo << L_endl;
 				hs().mainDisplay.print(" Fail");
 			}
 			else {
@@ -128,12 +128,12 @@ namespace HardwareInterfaces {
 		}
 		hs().mainDisplay.setCursor(12, 3);
 		if (numberFailed > 0) {
-			 logger() << "\nFailed : " << numberFailed << L_endl;
+			logger() << L_tabs << numberFailed << " Relays Failed" << L_endl;
 			hs().mainDisplay.print(numberFailed);
 			hs().mainDisplay.print("Failed");
 		}
 		else {
-			 logger() << "\nAll OK\n" << L_endl;
+			logger() << "All Relays OK\n" << L_endl;
 			hs().mainDisplay.print("All OK  ");
 			//I2C_OK = true;
 		}

@@ -97,6 +97,7 @@ namespace client_data_structures {
 		enum streamable { e_days };
 		Dataset_ProfileDays(Query & query, VolatileData * volData, I_Record_Interface * dwellProgs, I_Record_Interface * dwellZone);
 		int resetCount() override;
+		void setMatchArgs();
 		I_UI_Wrapper * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override;
 		static int firstIncludedDay(int days, int * pos = 0);

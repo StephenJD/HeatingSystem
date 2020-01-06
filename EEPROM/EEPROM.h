@@ -17,7 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #pragma once
-//#pragma message( "I2C EEPROM header loaded" )
+#pragma message( "I2C EEPROM header loaded" )
 
 #if defined(__SAM3X8E__) || defined ZPSIM
 

@@ -3,6 +3,18 @@
 #include "UI_LazyCollection.h"
 
 namespace LCD_UI {
+	class A_Top_UI;
+
+	class Chapter_Generator {
+	public:
+		virtual A_Top_UI & operator()(int chapterNo) = 0;
+		A_Top_UI & operator()() { return operator()(_chapterNo); }
+		void setChapterNo(int chapterNo) { _chapterNo = chapterNo; }
+		void backKey();
+	private:
+		uint8_t _chapterNo = 0;
+	};
+
 	// This UI uses _backUI to hold the UI that receives interactions from the user.
 	// _backUI is therefore the selected / edited UI.
 

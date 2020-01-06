@@ -60,6 +60,7 @@ namespace Assembly {
 		{ "DnSt",0x74 },
 		{ "OutS",0x2B }, // { "OutS",0x2B }, // 29
 		{ "Grnd",0x35 },
+
 		{ "Pdhw",0x37 },
 		{ "DHot",0x28 },
 		{ "US-F",0x2C },
@@ -68,6 +69,7 @@ namespace Assembly {
 		{ "TkDs",0x77 },
 		{ "TkUs",0x2E },
 		{ "TkTp",0x2D },
+
 		{ "GasF",0x4B },
 		{ "MFBF",0x2F }
 	};

@@ -4,10 +4,20 @@
 #ifdef ZPSIM
 	#include <iostream>
 	#include <iomanip>
+	#include <map>
+	extern std::map<long, std::string> ui_Objects;
 #endif
 
 namespace LCD_UI {
 	using namespace std;
+
+	void Chapter_Generator::backKey() {
+		auto & currentChapter = operator()();
+		if (currentChapter.backUI() == &currentChapter)
+			setChapterNo(0);
+		else
+			currentChapter.rec_prevUI();
+	}
 
 	A_Top_UI::A_Top_UI(const I_SafeCollection & safeCollection, int default_active_index )
 		: Collection_Hndl(safeCollection, default_active_index)
@@ -42,8 +52,10 @@ namespace LCD_UI {
 		_cursorUI = topUI;
 		while (_cursorUI->get()->isCollection()) {
 			auto parent = _cursorUI;
-			_cursorUI = _cursorUI->activeUI(); // the focus lies in a nested collection
-			if ( _cursorUI->backUI() == 0) _cursorUI->setBackUI(parent);
+			auto newActive = _cursorUI->activeUI(); // the focus lies in a nested collection
+			if (newActive == 0) break;
+			_cursorUI = newActive;
+			if (_cursorUI->backUI() == 0) _cursorUI->setBackUI(parent);
 		}
 	}
 
@@ -68,6 +80,7 @@ namespace LCD_UI {
 				enter_nested_ViewAll(_leftRightBackUI, direction);
 			}
 			this_UI_h = this_UI_h->activeUI();
+			if (this_UI_h == 0) return topUI;
 		} while (this_UI_h->get()->isCollection());
 		if (this_UI_h->behaviour().is_viewAll()) 
 			_leftRightBackUI = this_UI_h;
@@ -92,6 +105,12 @@ namespace LCD_UI {
 		set_leftRightUI_from(selectedPage_h(),0);
 		set_UpDownUI_from(selectedPage_h());
 		_cursorUI->setCursorPos();
+//#ifdef ZPSIM 
+//		logger() << "\tselectedPage: " << ui_Objects[(long long)(selectedPage_h()->get())].c_str() << L_endl;
+//		logger() << "\t_upDownUI: " << ui_Objects[(long long)(_upDownUI->get())].c_str() << L_endl;
+//		logger() << "\t_leftRightBackUI: " << ui_Objects[(long long)(_leftRightBackUI->get())].c_str() << L_endl;
+//		logger() << "\trec_activeUI(): " << ui_Objects[(long long)(rec_activeUI()->get())].c_str() << L_endl;
+//#endif
 	}
 
 	void A_Top_UI::rec_left_right(int move) { // left-right movement
@@ -137,6 +156,13 @@ namespace LCD_UI {
 		_leftRightBackUI->move_focus_by(0);
 		if (wasInEdit)
 			rec_edit();
+
+//#ifdef ZPSIM
+//		logger() << "\tselectedPage: " << ui_Objects[(long long)(selectedPage_h()->get())].c_str() << L_endl;
+//		logger() << "\t_upDownUI: " << ui_Objects[(long long)(_upDownUI->get())].c_str() << L_endl;
+//		logger() << "\t_leftRightBackUI: " << ui_Objects[(long long)(_leftRightBackUI->get())].c_str() << L_endl;
+//		logger() << "\trec_activeUI(): " << ui_Objects[(long long)(rec_activeUI()->get())].c_str() << L_endl;
+//#endif
 	}
 
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
@@ -189,6 +215,9 @@ namespace LCD_UI {
 		for (int i = top->get()->collection()->nextActionableIndex(0); !top->atEnd(i); i = top->get()->collection()->nextActionableIndex(++i)) { // need to check all elements on the page
 			auto element_h = static_cast<Collection_Hndl *>(top->get()->collection()->item(i));
 			if (element_h->get()->isCollection()) {
+//#ifdef ZPSIM
+//				logger() << "Notify: " << ui_Objects[(long long)(element_h->get())].c_str() << L_tabs << L_hex << (long long)(element_h->get()) << L_endl;
+//#endif
 				element_h->focusHasChanged(element_h == _upDownUI);
 				auto inner = element_h->activeUI();
 				if (inner && inner->get()->isCollection()) notifyAllOfFocusChange(inner);
@@ -223,9 +252,9 @@ namespace LCD_UI {
 
 	void A_Top_UI::rec_prevUI() {
 		decltype(backUI()) newFocus = 0;
-		if (_cursorUI->get()->back() && _cursorUI->on_back()) // else returning from cancelled edit
+		if (_cursorUI->get()->back() && _cursorUI->on_back()) {// else returning from cancelled edit
 			newFocus = selectedPage_h()->backUI();
-		
+		}
 		if (newFocus == this) { // deselect page
 			selectedPage_h()->setBackUI(0);
 			setBackUI(this);

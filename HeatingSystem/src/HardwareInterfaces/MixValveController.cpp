@@ -76,13 +76,29 @@ namespace HardwareInterfaces {
 		}
 	}
 
-	bool MixValveController::amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t relayID) { // highest callflow temp
-		if (callTemp > MIN_FLOW_TEMP && maxTemp < _limitTemp)
-			_limitTemp = maxTemp;
-		if (_controlZoneRelay == relayID || callTemp > _mixCallTemp) {
+	bool MixValveController::amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID) { // highest callflow temp
+		// Lambdas
+		auto checkMaxMixTempIsPermissible = [maxTemp,this]() { if (maxTemp < _limitTemp) _limitTemp = maxTemp;};
+
+		auto requestIsFromControllingZone = [zoneRelayID, this]()-> bool {return _controlZoneRelay == zoneRelayID; };
+
+		auto checkForNewControllingZone = [callTemp, zoneRelayID, maxTemp, this, requestIsFromControllingZone]() {
+			if (!requestIsFromControllingZone() && callTemp > _mixCallTemp) { // new control zone
+				writeToValve(Mix_Valve::control, Mix_Valve::e_stop_and_wait); // trigger stop and wait on valve
+				writeToValve(Mix_Valve::max_flow_temp, maxTemp);
+				logger() << L_time << "MixValveController::amControlZone\t New CZ - Write new MaxTemp: " << maxTemp << L_flush;
+				_controlZoneRelay = zoneRelayID; 
+			}
+		};
+				
+		// Algorithm
+		checkMaxMixTempIsPermissible();
+		checkForNewControllingZone();
+
+		if (requestIsFromControllingZone()) {
 #if defined (ZPSIM)
 			bool debug;
-			if (relayID == 3)
+			if (zoneRelayID == 3)
 				debug = true;
 			switch (_index) {
 			case 0: {// upstairs
@@ -95,13 +111,7 @@ namespace HardwareInterfaces {
 				break;
 			}
 #endif
-			logger() << L_endl;
-			if (_controlZoneRelay != relayID) { // new control zone
-				writeToValve(Mix_Valve::control, Mix_Valve::e_stop_and_wait); // trigger stop and wait on valve
-				writeToValve(Mix_Valve::max_flow_temp, maxTemp);
-				logger() << " MixValveController::amControlZone\t New CZ - Write new MaxTemp: " << maxTemp << L_endl;
-			}
-			_controlZoneRelay = relayID;
+			
 			if (callTemp <= MIN_FLOW_TEMP) {
 				callTemp = MIN_FLOW_TEMP;
 				_relayArr[_controlZoneRelay].setRelay(0); // turn call relay OFF
@@ -109,20 +119,25 @@ namespace HardwareInterfaces {
 			}
 			else {
 				_relayArr[_controlZoneRelay].setRelay(1); // turn call relay ON
-				if (callTemp > _limitTemp)
-					callTemp = _limitTemp;
+				if (callTemp > _limitTemp) callTemp = _limitTemp;
 			}
 			uint8_t mixValveCallTemp = readFromValve(Mix_Valve::request_temp);
+			auto loggingTemp = readFromValve(Mix_Valve::flow_temp);
 			if (_mixCallTemp != callTemp || _mixCallTemp != mixValveCallTemp) {
 				_mixCallTemp = callTemp;
-				logger() << " MixValveController::amControlZone MixID: " << _index;
-				logger() << "\n\t" << relayName(relayID);
+				logger() << L_time << "MixValveController::amControlZone MixID: " << _index;
+				logger() << "\n\t" << relayName(zoneRelayID);
+				logger() << "\n\tNew_request_temp: " << _mixCallTemp;
 				logger() << "\n\trequest_temp was: " << mixValveCallTemp;
-				logger() << "\n\tnew_request_temp " << _mixCallTemp;
-				logger() << "\n\tActual flow_temp: " << readFromValve(Mix_Valve::flow_temp) << L_endl << L_flush;
+				logger() << "\n\tActual flow_temp: " << loggingTemp << L_endl;
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
-				logger() << " MixValveController:: Done writing to valve\n" << L_flush;
+				logger() << " MixValveController:: Done writing to valve" << L_flush;
+			} else if (loggingTemp != _mixCallTemp) {
+				logger() << L_time << "MixValveController::amControlZone MixID: " << _index;
+				logger() << "\n\t" << relayName(zoneRelayID);
+				logger() << "\n\tRequest_temp is: " << _mixCallTemp;
+				logger() << "\n\tActual flow_temp: " << loggingTemp << L_flush;
 			}
 			return true;
 		}
@@ -158,11 +173,11 @@ namespace HardwareInterfaces {
 			while (status && millis() < waitTime);
 
 			if (status) {
-				logger() << "\n First try writeToValve failed to Reg: " << reg << " Value: " << value;
+				logger() << "\tMixValveController::writeToValve failed first try to Reg: " << reg << " Value: " << value << L_flush;
 				status = write(uint8_t(reg + _index * 16), 1, &value);
 			}
 
-			if (status) logger() << "\n MixValveController::writeToValve failed. Addr: " << getAddress() << getStatusMsg(status);
+			if (status) logger() << "\tMixValveController::writeToValve failed. 0x" << L_hex << getAddress() << getStatusMsg(status) << L_flush;
 		}
 		return status;
 	}
@@ -172,12 +187,18 @@ namespace HardwareInterfaces {
 		uint8_t value = 0;
 		auto status = recovery().newReadWrite(*this);
 		if (status == _OK) {
-			do status = I_I2Cdevice::read(reg + _index * 16, 1, &value);
+			do {
+				status = I_I2Cdevice::read(reg + _index * 16, 1, &value);
+				ui_yield();
+			}
 			while (status && millis() < waitTime);
 
-			status = read(reg + _index * 16, 1, &value);
+			if (status) {
+				logger() << "\tMixValveController::readFromValve failed first try from Reg: " << reg << L_flush;
+				status = read(reg + _index * 16, 1, &value);
+			}
 
-			if (status) logger() << "\n MixValveController::getPos failed. Addr: " << getAddress();
+			if (status) logger() << "\tMixValveController::readFromValve failed. 0x" << L_hex << getAddress() << getStatusMsg(status) << L_flush;
 		}
 		return value;
 	}

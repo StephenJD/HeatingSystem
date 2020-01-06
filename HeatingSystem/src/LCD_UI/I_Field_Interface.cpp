@@ -5,6 +5,11 @@
 #include "Conversions.h"
 #include <Logging.h>
 
+#ifdef ZPSIM
+#include <map>
+extern std::map<long, std::string> ui_Objects;
+#endif
+
 namespace LCD_UI {
 	using namespace GP_LIB;
 	using HI_BD = HardwareInterfaces::LCD_Display;
@@ -94,7 +99,12 @@ namespace LCD_UI {
 	const char * Field_Interface_h::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		auto cursor_mode = cursorMode(activeElement);
 		if (activeElement && !cursor_mode) activeElement = 0;
+
 		const char * dataStream = f_interface().streamData(activeElement);
+#ifdef ZPSIM
+		//logger() << "\tstreamElement " << dataStream << L_tabs
+			//<< "\n\t\tObjectIndex: " << f_interface().objectIndex() << L_endl;
+#endif		
 		const UI_Object * streamObject = backUI() ? backUI()->get() : get();
 		return streamObject->streamToBuffer(dataStream, buffer, activeElement, shortColl, streamIndex);
 	}
