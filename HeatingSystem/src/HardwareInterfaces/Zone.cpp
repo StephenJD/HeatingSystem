@@ -74,6 +74,15 @@ namespace HardwareInterfaces {
 	}
 
 	bool Zone::setFlowTemp() { // Called every minute. Sets flow temps. Returns true if needs heat.
+		// lambdas
+		auto logTemps = [this](const char * msg, long currTempReq, short fractionalZoneTemp, long myFlowTemp, long tempError, bool logger_RelayStatus) {
+			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\t" << msg << " Zone: " << _recordID
+			<< " Req Temp: " << currTempReq
+			<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
+			<< " ReqFlowTemp: " << myFlowTemp
+			<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus ? " On" : " Off") << L_flush;
+		};
+		
 		if (isDHWzone()) {
 			bool needHeat;
 			if (I2C_Temp_Sensor::hasError()) {
@@ -104,29 +113,17 @@ namespace HardwareInterfaces {
 		auto logger_RelayStatus = _relay->getRelayState();
 		if (tempError > 7L) {
 			myFlowTemp = MIN_FLOW_TEMP;
-			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tToo Warm. Zone: " << _recordID
-				<< " Req Temp: " << currTempReq
-				<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
-				<< " ReqFlowTemp: " << myFlowTemp
-				<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus? " On":" Off") << L_flush;
+			logTemps("Too Warm", currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 		else if (tempError < -8L) {
 			myFlowTemp = _maxFlowTemp;
-			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tToo Cool. Zone: " << _recordID
-				<< " Req Temp: " << currTempReq
-				<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
-				<< " ReqFlowTemp: " << myFlowTemp
-				<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus ? " On" : " Off") << L_flush;
+			logTemps("Too Cool", currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 		else {
 			myFlowTemp = static_cast<long>((_maxFlowTemp + MIN_FLOW_TEMP) / 2. - tempError * (_maxFlowTemp - MIN_FLOW_TEMP) / 16.);
 			//U1_byte errorDivider = flowBoostDueToError > 16 ? 10 : 40; //40; 
 			//myFlowTemp = myTheoreticalFlow + (flowBoostDueToError + errorDivider/2) / errorDivider; // rounded to nearest degree
-			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tIn Range. Zone: " << _recordID
-				<< " Req Temp: " << currTempReq
-				<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
-				<< " ReqFlowTemp: " << myFlowTemp
-				<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus ? " On" : " Off") << L_flush;
+			logTemps("In Range", currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 
 		// check limits
