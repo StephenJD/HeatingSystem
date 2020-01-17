@@ -78,9 +78,12 @@ namespace HardwareInterfaces {
 		auto logTemps = [this](const char * msg, long currTempReq, short fractionalZoneTemp, long myFlowTemp, long tempError, bool logger_RelayStatus) {
 			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\t" << msg << " Zone: " << _recordID
 			<< " Req Temp: " << currTempReq
-			<< " fractionalZoneTemp: " << double(fractionalZoneTemp / 256.)
+			<< " fractionalZoneTemp: " << fractionalZoneTemp / 256.
+			//<< fractionalZoneTemp
+			//<< "\n\t dbl-fractionalZoneTemp: " << double(fractionalZoneTemp)
+			//<< "\n\t dbl-fractionalZoneTemp/256: " 	
 			<< " ReqFlowTemp: " << myFlowTemp
-			<< " TempError: " << double(tempError / 16.) << (logger_RelayStatus ? " On" : " Off") << L_flush;
+			<< " TempError: " << tempError / 16. << (logger_RelayStatus ? " On" : " Off") << L_flush;
 		};
 		
 		if (isDHWzone()) {

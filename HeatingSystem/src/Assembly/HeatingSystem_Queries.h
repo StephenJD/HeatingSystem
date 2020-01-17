@@ -36,7 +36,7 @@ namespace Assembly {
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_profile;
 		RelationalDatabase::QueryF_T<client_data_structures::R_TimeTemp> _q_timeTemps;
 		RelationalDatabase::TableQuery _q_tempSensors;
-		//RelationalDatabase::TableQuery _q_towelRails;
+		RelationalDatabase::TableQuery _q_towelRails;
 
 		// DB Record Interfaces
 		client_data_structures::Dataset_WithoutQuery _rec_currTime;
@@ -49,7 +49,7 @@ namespace Assembly {
 		client_data_structures::Dataset_ProfileDays _rec_profile;
 		client_data_structures::Dataset_TimeTemp _rec_timeTemps;
 		client_data_structures::Dataset_TempSensor _rec_tempSensors;
-		//client_data_structures::Dataset_TowelRail _rec_towelRails;
+		client_data_structures::Dataset_TowelRail _rec_towelRails;
 	};
 
 }

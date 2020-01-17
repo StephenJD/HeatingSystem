@@ -22,6 +22,7 @@ namespace Assembly {
 		void checkZones();
 		
 		HardwareInterfaces::I2C_Temp_Sensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS];
+		HardwareInterfaces::I2C_Temp_Sensor towelRailArr[Assembly::NO_OF_TOWELRAILS];
 		HardwareInterfaces::BackBoiler backBoiler;
 		HardwareInterfaces::ThermalStore thermalStore;
 		HardwareInterfaces::RelaysPort relaysPort;

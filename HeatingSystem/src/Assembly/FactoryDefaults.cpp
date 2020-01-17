@@ -74,6 +74,12 @@ namespace Assembly {
 		{ "MFBF",0x2F }
 	};
 
+	constexpr R_TowelRail towelRails_f[] = {
+		  { "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 55, 160 }
+		, { "Family", T_HTrS, R_HsTR, M_UpStrs, 45, 60 }
+		, { "Flat", T_FTrS, R_FlTR, M_UpStrs, 40, 30 }
+	};
+
 	constexpr R_Dwelling dwellings_f[] = {
 		{ "House" }
 		,{ "HolAppt" }
@@ -199,6 +205,8 @@ namespace Assembly {
 		db.createTable(relays_f);
 		logger() << "\nTempSensors Table ";
 		db.createTable(tempSensors_f);
+		logger() << "\nTowelRails Table ";
+		db.createTable(towelRails_f);
 		logger() << "\nDwellings Table ";
 		db.createTable(dwellings_f);
 		logger() << "\nZones Table ";

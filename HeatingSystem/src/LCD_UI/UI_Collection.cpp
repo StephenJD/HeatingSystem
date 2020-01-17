@@ -6,11 +6,12 @@
 	#include <ostream>
 	#include <iomanip>
     #include <map>
-	extern std::map<long, std::string> ui_Objects;
+	#include <string>
+	using namespace std;	
+	extern map<long, string> ui_Objects;
 #endif
 
 namespace LCD_UI {
-	using namespace std;
 	using HI_BD = HardwareInterfaces::LCD_Display;
 	using ListStatus = UI_DisplayBuffer::ListStatus;
 
@@ -200,9 +201,9 @@ namespace LCD_UI {
 	}
 
 	const char * Collection_Hndl::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		//std::cout << "Streaming : " << std::hex << (long long)(this) << std::endl;
 		if (behaviour().is_viewable()) {
 			auto collectionPtr = get()->collection();
+			//cout << "Streaming : " << hex << (long)get() << " " << ui_Objects[(long)get()] << endl;
 			if (behaviour().is_viewAll()) {
 				collectionPtr->filter(viewable());
 				auto focus_index = focusIndex();
@@ -212,7 +213,6 @@ namespace LCD_UI {
 					auto ith_collectionPtr = ith_objectPtr->get()->collection();
 					if (ith_objectPtr->get()->behaviour().is_OnNewLine())
 						buffer.newLine();
-					//std::cout << "Streaming ViewAll at: " << (long long)(collHndl) << std::endl;
 					auto endVisibleIndex = collectionPtr->endVisibleItem();
 					if (endVisibleIndex) {
 						if (i < collectionPtr->firstVisibleItem()) continue;
@@ -220,9 +220,11 @@ namespace LCD_UI {
 					}
 
 					if (ith_collectionPtr && ith_collectionPtr->behaviour().is_viewAll()) { // get the handle pointing to the nested collection
+						//cout << "Streaming ViewAll at: " << (long)(ith_collectionPtr) << " " << ui_Objects[(long)ith_collectionPtr] << endl;
 						ith_collectionPtr->streamElement(buffer, activeElement, static_cast<const I_SafeCollection *>(ith_objectPtr->get()), i);
 					}
 					else {
+						//cout << "Streaming Object at: " << (long)(ith_objectPtr->get()) << " " << ui_Objects[(long)ith_objectPtr->get()] << endl;
 						ith_objectPtr->streamElement(buffer, activeElement, shortColl, streamIndex);
 					}
 					auto debug = buffer.toCStr();
@@ -233,6 +235,7 @@ namespace LCD_UI {
 				if (active) active->streamElement(buffer, activeElement, shortColl, streamIndex);
 			}
 			else {
+				//cout << "Streaming : " << hex << (long)get() << " " << ui_Objects[(long)get()] << endl;
 				get()->streamElement(buffer, activeElement, shortColl, streamIndex);
 			}
 		}
@@ -320,9 +323,15 @@ namespace LCD_UI {
 			if (element->collection() && element->behaviour().is_viewOne()) {
 				auto collHndl = static_cast<const Collection_Hndl *>(item(i));
 				auto active = collHndl->activeUI();
-				if (active) active->streamElement(buffer, activeElement, shortColl, streamIndex);
+				if (active) {
+					//cout << "I_SafeC_Streaming at: " << (long)(active->get()) << " " << ui_Objects[(long)active->get()] << endl;
+					active->streamElement(buffer, activeElement, shortColl, streamIndex);
+				}
 			}
-			else element->streamElement(buffer, activeElement, shortColl, i);
+			else {
+				//cout << "I_SafeC_Streaming at: " << (long)(element->get()) << " " << ui_Objects[(long)active->get()] << endl;
+				element->streamElement(buffer, activeElement, shortColl, i);
+			}
 		}
 		return buffer.toCStr();
 	}
@@ -370,6 +379,7 @@ namespace LCD_UI {
 		auto hasFocus = elementHasfocus();
 
 		do {
+			//cout << "Streaming : " << hex << (long)get() << " " << ui_Objects[(long)get()] << endl;
 			startThisField(bufferStart, mustStartNewLine);
 			collection()->streamElement(buffer, activeElement, this, streamIndex);
 		} while (hasFocus && (focus < _beginShow || focus >= _endShow));

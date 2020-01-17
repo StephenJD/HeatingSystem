@@ -17,12 +17,9 @@ namespace LCD_UI {
 
 	// **********************  Interface to Editable data ******************
 	// Objects are constructed with an fieldID to obtain the particular item required from the target data-UI-interface object of type <Dataset_Type>.
-	// The UI points to a collection of data belonging to the parent, e.g. all zones for the parent dwelling.
+	// The UI points to a collection of data belonging to the parent, e.g. all zones for this dwelling.
 	// To make the data editable, set the bahaviour to editable.
 	// streamElement(buffer) returns the data from the target object. 40 byte Objects.
-	// Multiple UI_FieldData objects may share the same I_Record_Interface dataset, but selecting a different field.
-	// If any field moves to a different record, all fields need to see the new record.
-	// Therefore the collection-focus needs to be derived from the record, rather than the record being set by the UI element.
 
 	class UI_FieldData : public LazyCollection {
 	public:

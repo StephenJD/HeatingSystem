@@ -64,7 +64,7 @@ namespace client_data_structures {
 	//***************************************************
 
 	struct R_TowelRail {
-		char name[7];
+		char name[8];
 		RecordID callTempSens;
 		RecordID callRelay;
 		RecordID mixValve;
@@ -93,7 +93,7 @@ namespace client_data_structures {
 		enum streamable { e_name, e_onTemp, e_minutesOn, e_secondsToGo };
 		Dataset_TowelRail(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		I_UI_Wrapper * getField(int _fieldID) override;
-		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override { return true; }
+		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;
 		HardwareInterfaces::TowelRail & towelRail(int index) { return static_cast<HardwareInterfaces::TowelRail*>(runTimeData())[index]; }
 	private:
 		StrWrapper _name;

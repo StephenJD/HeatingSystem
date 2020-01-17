@@ -7,6 +7,7 @@
 #include <MemoryFree.h>
 
 extern unsigned long processStart_mS;
+void ui_yield();
 
 namespace HardwareInterfaces {
 	using namespace LCD_UI;
@@ -30,7 +31,7 @@ namespace HardwareInterfaces {
 		//	processStart_mS = micros() - processStart_mS;
 		//	logger() << "\n** Time to detect Keypress: " << processStart_mS << L_endl;
 		//}
-		//do { // prevents watchdog timer reset!
+		do { // prevents watchdog timer reset!
 			//logger() << "Key val: " << keyPress << L_endl;
 			//keyProcessStart = micros();
 			//freeMem = freeMemory();
@@ -120,8 +121,9 @@ namespace HardwareInterfaces {
 				//}
 			}
 			keyPress = _keyPad.getKey();
+			ui_yield();
 			//changeInFreeMemory(freeMem, "processKeys again-getKey");
-		//} while (keyPress != -1);
+		} while (keyPress != -1);
 		return doRefresh;
 	}
 }

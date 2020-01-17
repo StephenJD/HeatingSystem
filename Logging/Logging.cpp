@@ -155,7 +155,7 @@ using namespace std;
 
 	size_t SD_Logger::write(uint8_t chr) {
 		if (!is_cout() && openSD()) {
-			_dataFile.print(chr);
+			_dataFile.print(char(chr));
 			_dataFile.close();
 		}
 		return 1;

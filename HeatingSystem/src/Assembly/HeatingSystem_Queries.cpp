@@ -21,6 +21,7 @@ namespace Assembly {
 		, _q_profile{ _q_zoneProfiles, 0 }
 		, _q_timeTemps{ rdb.tableQuery(TB_TimeTemp), 0 }
 		, _q_tempSensors{ rdb.tableQuery(TB_TempSensor) }
+		, _q_towelRails{ rdb.tableQuery(TB_TowelRail) }
 
 		// DB Record Interfaces
 		, _rec_currTime{ Dataset_WithoutQuery() }
@@ -33,6 +34,7 @@ namespace Assembly {
 		, _rec_profile{ _q_profile, noVolData, &_rec_dwProgs, &_rec_dwZones }
 		, _rec_timeTemps{ _q_timeTemps, noVolData, &_rec_profile }
 		, _rec_tempSensors{ _q_tempSensors, tc.tempSensorArr, 0 }
+		, _rec_towelRails{ _q_towelRails, tc.towelRailArr, 0 }
 
 	{
 		logger() << "Database queries constructed" << L_endl;

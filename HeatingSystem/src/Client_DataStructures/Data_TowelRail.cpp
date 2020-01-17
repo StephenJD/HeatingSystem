@@ -64,8 +64,34 @@ namespace client_data_structures {
 			return &_minutesOn;
 		case e_secondsToGo:
 			return &_secondsToGo;
+		//case e_status:
 
 		default: return 0;
 		}
+	}
+
+	bool Dataset_TowelRail::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+		switch (fieldID) {
+		case e_name: {
+			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(newValue));
+			_name = *strWrapper;
+			//auto debug = record();
+			//debug.rec();
+			strcpy(record().rec().name, _name.str());
+			setRecordID(record().update());
+			break; }
+		case e_onTemp:
+			_onTemp = *newValue;
+			record().rec().onTemp = decltype(record().rec().onTemp)(_onTemp.val);
+			setRecordID(record().update());
+			break;
+		case e_minutesOn: {
+			_minutesOn = *newValue;
+			record().rec().minutes_on = decltype(record().rec().minutes_on)(_minutesOn.val);
+			setRecordID(record().update());
+			break;
+		}
+		}
+		return false;
 	}
 }

@@ -41,12 +41,17 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _dwellSpellUI_c;
 		LCD_UI::UI_FieldData _spellProgUI_c;
 		LCD_UI::UI_FieldData _profileDaysUI_c;
+		
 		LCD_UI::UI_FieldData _timeTempUI_c;
-		LCD_UI::UI_FieldData _tempSensorUI_c;
-		//LCD_UI::UI_FieldData _towelRailUI_c;
 		LCD_UI::UI_ShortCollection _timeTempUI_sc;
+		
+		LCD_UI::UI_FieldData _tempSensorUI_c;
 		LCD_UI::UI_ShortCollection _tempSensorUI_sc;
-		//LCD_UI::UI_ShortCollection _towelRailUI_sc;
+		
+		LCD_UI::UI_FieldData _towelRailNameUI_c;
+		LCD_UI::UI_FieldData _towelRailTempUI_c;
+		LCD_UI::UI_FieldData _towelRailOnTimeUI_c;
+		LCD_UI::UI_FieldData _towelRailStatus_c;
 
 		// Basic UI Elements
 		LCD_UI::UI_Label _dst, _prog, _zone;
@@ -71,12 +76,15 @@ namespace Assembly {
 		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _page_dwellingMembers_c;
 		LCD_UI::Collection<8, LCD_UI::Collection_Hndl> _page_profile_c;
 		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_tempSensors_c;
-		//LCD_UI::Collection<5, LCD_UI::Collection_Hndl> _page_towelRails_c;
+		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _towelRails_info_c;
+		//LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _subpage_towelRails_c;
+		LCD_UI::UI_ShortCollection _towelRailUI_sc;
+		LCD_UI::Collection<5, LCD_UI::Collection_Hndl> _page_towelRails_c;
 
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;
-		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _info_chapter_c;
+		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _info_chapter_c;
 		LCD_UI::A_Top_UI _info_chapter_h;
 	};
 }

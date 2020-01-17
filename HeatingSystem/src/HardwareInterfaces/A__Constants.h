@@ -14,7 +14,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 19;
+	constexpr uint8_t VERSION = 20;
 	////////////////// EVENT CODES ////////////////////////
 	//extern bool temp_sense_hasError;
 	//const S1_err TEMP_SENS_ERR_TEMP		= -30;
