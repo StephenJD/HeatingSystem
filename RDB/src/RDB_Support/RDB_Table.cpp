@@ -93,12 +93,12 @@ namespace RelationalDatabase {
 
 		_recordsPerChunk = rec_sel._chunk_header.chunkSize();
 		_max_NoOfRecords_in_table = _recordsPerChunk;
-		logger() << " getRecordSize. recPerCh: " << _recordsPerChunk << " Rec Size: " << rec_sel._chunk_header.rec_size();
-		logger() << "\n   Addr: " << rec_sel._chunkAddr << " NextChunk at: " << rec_sel._chunk_header.nextChunk() << L_endl;
+		//logger() << " getRecordSize. recPerCh: " << _recordsPerChunk << " Rec Size: " << rec_sel._chunk_header.rec_size();
+		//logger() << "\n   Addr: " << rec_sel._chunkAddr << " NextChunk at: " << rec_sel._chunk_header.nextChunk() << L_endl;
 
 		while (rec_sel.haveMovedToNextChunck()) {
 			_max_NoOfRecords_in_table += _recordsPerChunk;
-			logger() << "     _max_NoOfRecords_in_table: " << _max_NoOfRecords_in_table << L_endl;
+			//logger() << "     _max_NoOfRecords_in_table: " << _max_NoOfRecords_in_table << L_endl;
 		}
 		_rec_size = rec_sel._chunk_header.rec_size();
 		_insertionStrategy = rec_sel._chunk_header.insertionStrategy();

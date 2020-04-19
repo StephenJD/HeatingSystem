@@ -28,10 +28,8 @@ namespace HeatingSystemSupport {
 	void initialise_virtualROM();
 }
 
-
 class HeatingSystem {
 public:
-
 	HeatingSystem();
 	void serviceConsoles();
 	void serviceProfiles();
@@ -41,6 +39,7 @@ public:
 	/// </summary>
 	void notifyDataIsEdited();
 	void logStackTrace();
+	auto & recoverObject() { return _recover; }
 private: // data-member ordering matters!
 	I2C_Talk i2C;
 	I2C_Recovery::I2C_Recover_Retest _recover;

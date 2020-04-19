@@ -15,7 +15,7 @@ namespace I2C_Recovery {
 		static constexpr decltype(millis()) REPEAT_FAILURE_PERIOD = 10000;
 		static constexpr decltype(millis()) DISABLE_PERIOD_ON_FAILURE = 10000; // 10 secs for display black-out
 		static constexpr decltype(micros()) TIMEOUT = 20000;
-		static constexpr uint8_t _I2C_DATA_PIN = 20; 	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
+		//static constexpr uint8_t _I2C_DATA_PIN = 20; 	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
 
 		// Definitions for custom reset functions
 		//using TestFnPtr = (*)(I2C_Talk &, int)->uint8_t;
@@ -34,7 +34,7 @@ namespace I2C_Recovery {
 			TestFnPtr _tfn = 0;
 		};
 
-		// Polymorphic Functions for I2C_Talk
+		// Polymorphic Modifier Functions for I2C_Talk
 		auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::error_codes override;
 		bool tryReadWriteAgain(I2C_Talk_ErrorCodes::error_codes status) override;
 
@@ -42,17 +42,18 @@ namespace I2C_Recovery {
 		I_I2CresetFunctor * getTimeoutFn() const { return _timeoutFunctor; }
 		bool isRecovering() { return _isRecovering; }
 		I_I2Cdevice_Recovery * lastGoodDevice() const override { return _lastGoodDevice; }
+		bool isUnrecoverable() const override {return _deviceWaitingOnFailureFor10Mins < 0;}
 		// Modifiers for I2C_Recover_Retest
 		auto testDevice(int noOfTests, int allowableFailures)-> I2C_Talk_ErrorCodes::error_codes override;
 		auto findAworkingSpeed() -> I2C_Talk_ErrorCodes::error_codes override;
 		void setTimeoutFn(I_I2CresetFunctor * timeoutFnPtr);
 		void setTimeoutFn(TestFnPtr timeoutFnPtr);
-		void basicTestsBeforeScan();
+		void basicTestsBeforeScan(I_I2Cdevice_Recovery & device);
 		I2C_RecoverStrategy & strategy() { return _strategy; }
-		bool Wait_For_I2C_Data_Line_OK();
+		//bool Wait_For_I2C_Data_Line_OK();
+		bool i2C_is_frozen();
 	private:
 		// Strategies
-		bool i2C_is_frozen();
 		void call_timeOutFn(int addr);
 		void endReadWrite();
 
@@ -63,6 +64,7 @@ namespace I2C_Recovery {
 		bool slowdown(); // called by timoutFunction. Reduces I2C speed by 10% if last called within one second. Returns true if speed was reduced
 		void disable() { device().disable(); }
 		
+		static int _deviceWaitingOnFailureFor10Mins;
 		unsigned long _lastRestartTime = micros();
 		I2Creset_Functor _i2CresetFunctor; // data member functor to wrap free reset function
 		I_I2CresetFunctor * _timeoutFunctor = 0;

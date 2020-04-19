@@ -73,7 +73,7 @@ namespace HardwareInterfaces {
 		// called every Minute.
 		setLowestCWtemp(false);
 		bool needHeat = dhwNeedsHeat(currRequest, nextRequest);
-		logger() << L_time << "ThermalStore:: currRequest: " << currRequest << " CurrDHW temp: " << _theoreticalDeliveryTemp << (_isHeating ? " is heating" : " not heating")  << L_endl;
+		logger() << L_time << "ThermalStore:: currRequest: " << currRequest << " CurrDHW temp: " << _theoreticalDeliveryTemp << (needHeat ? " Asking for heat." : " Not asking for heat.") <<  (_isHeating ? " Is heating" : " Not heating")  << L_endl;
 		if (!_isHeating && needHeat) logger() << L_time << "DHW Needs Heat. CurrRequest: " << currRequest << " Curr DHW temp: " << _theoreticalDeliveryTemp << L_endl;
 		// Check temp for each mix valve		
 		auto mixNeedsHeat = false;

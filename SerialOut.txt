@@ -1,0 +1,2042 @@
+Started
+Clock_I2C Constructor
+ Serial_Logger Begun
+ card fail took: 600004
+
+
+01/01/00 00:11:01	RTC Unreadable. Timeout
+01/01/00 00:11:01	****** Arduino Restarted ******
+
+01/01/00 00:11:01	*** Reset RTC... ***
+12/03/20 13:01:58	Clock Set from RTC, day: 12
+12/03/20 13:01:58	Test string for EEPROM OK
+New Board
+  Read EEPROM into RAM
+
+Build HeatingSystem
+PW was 20 Should be 20
+RDB_B(load) Constructed Size : 1139
+PW was 20 Should be 20
+ RDB_B::getTables ...
+ getRecordSize. recPerCh: 1 Rec Size: 19
+   Addr: 411 NextChunk at: 19
+ RDB_B::gotTable : 0
+Table::openNextTable() chunk at: 434
+ getRecordSize. recPerCh: 2 Rec Size: 7
+   Addr: 434 NextChunk at: 7
+ RDB_B::gotTable : 1
+Table::openNextTable() chunk at: 452
+ getRecordSize. recPerCh: 4 Rec Size: 12
+   Addr: 452 NextChunk at: 12
+ RDB_B::gotTable : 2
+Table::openNextTable() chunk at: 504
+ getRecordSize. recPerCh: 7 Rec Size: 6
+   Addr: 504 NextChunk at: 6
+ RDB_B::gotTable : 3
+Table::openNextTable() chunk at: 550
+ getRecordSize. recPerCh: 18 Rec Size: 6
+   Addr: 550 NextChunk at: 6
+ RDB_B::gotTable : 4
+Table::openNextTable() chunk at: 664
+ getRecordSize. recPerCh: 3 Rec Size: 13
+   Addr: 664 NextChunk at: 13
+ RDB_B::gotTable : 5
+Table::openNextTable() chunk at: 707
+ getRecordSize. recPerCh: 2 Rec Size: 8
+   Addr: 707 NextChunk at: 8
+ RDB_B::gotTable : 6
+Table::openNextTable() chunk at: 727
+ getRecordSize. recPerCh: 4 Rec Size: 21
+   Addr: 727 NextChunk at: 21
+ RDB_B::gotTable : 7
+Table::openNextTable() chunk at: 815
+ getRecordSize. recPerCh: 5 Rec Size: 2
+   Addr: 815 NextChunk at: 2
+ RDB_B::gotTable : 8
+Table::openNextTable() chunk at: 829
+ getRecordSize. recPerCh: 5 Rec Size: 9
+   Addr: 829 NextChunk at: 9
+ RDB_B::gotTable : 9
+Table::openNextTable() chunk at:  card fail took: 599805
+878
+ getRecordSize. recPerCh: 17 Rec Size: 3
+   Addr: 878 NextChunk at: 3
+ RDB_B::gotTable : 10
+Table::openNextTable() chunk at: 935
+ getRecordSize. recPerCh: 39 Rec Size: 4
+   Addr: 935 NextChunk at: 8196
+ RDB_B::gotTable : 11
+Table::openNextTable() chunk at: 1099
+ getRecordSize. recPerCh: 6 Rec Size: 6
+   Addr: 1099 NextChunk at: 8198
+ RDB_B::gotTable : 12
+Table::openNextTable() no more Tables
+ RDB_B::getTables loaded 13 tables.
+TestDevices Constructed
+  Initialiser PW check. req: 20
+PW was 20 Should be 20
+  Initialiser Constructed
+
+RelaysPort::setup()
+loadtempSensors Completed
+loadRelays Completed
+
+ThermalStore::calcCapacities	_upperC 0.31 _midC 0.58 _bottomC 0.39
+loadZones Completed
+Database queries constructed
+Pins New board
+MultiCrystal ini[pinset]
+
+LocalDisplay Constructed
+LocalKeypad Start...
+RemoteDisplay : 0x24 Constructed
+RemoteDisplay : 0x25 Constructed
+RemoteDisplay : 0x26 Constructed
+
+12/03/20 13:01:59	TestDevices::speedTestDevices has been called
+
+	Try Relay Port
+12/03/20 13:01:59	Done Hard Reset for 0x20
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	speedTestDevices for 0x20 OK at 100000
+
+	Try Remotes
+12/03/20 13:01:59	Done Hard Reset for 0x26
+12/03/20 13:01:59	Done Hard Reset for 0x26
+	Trying Exists for 0x26 at freq: 52000
+	Trying Exists for 0x26 at freq: 8200
+	Trying Exists for 0x26 at freq: 330000
+	Trying Exists for 0x card fail took: 599705
+26 at freq: 3200
+	Trying Exists for 0x26 at freq: 21000
+	Trying Exists for 0x26 at freq: 2000
+	Trying Exists for 0x26 at freq: 5100
+	Trying Exists for 0x26 at freq: 13000
+	Trying Exists for 0x26 at freq: 33000
+	Trying Exists for 0x26 at freq: 83000
+	Trying Exists for 0x26 at freq: 210000
+	speedTestDevices for 0x26 Failed
+
+ card fail took: 600196
+12/03/20 13:02:04	Done Hard Reset for 0x24
+12/03/20 13:02:04	Done Hard Reset for 0x24
+	Trying Exists for 0x24 at freq: 52000
+	Trying Exists for 0x24 at freq: 8200
+	Trying Exists for 0x24 at freq: 330000
+	Trying Exists for 0x24 at freq: 3200
+	Trying Exists for 0x24 at freq: 21000
+	Trying Exists for 0x24 at freq: 2000
+	Trying Exists for 0x24 at freq: 5100
+	Trying Exists for 0x24 at freq: 13000
+	Trying Exists for 0x card fail took: 599623
+24 at freq: 33000
+	Trying Exists for 0x24 at freq: 83000
+	Trying Exists for 0x24 at freq: 210000
+	speedTestDevices for 0x24 Failed
+
+ card fail took: 600196
+12/03/20 13:02:08	Done Hard Reset for 0x25
+12/03/20 13:02:08	Done Hard Reset for 0x25
+	Trying Exists for 0x25 at freq: 52000
+	Trying Exists for 0x25 at freq: 8200
+	Trying Exists for 0x25 at freq: 330000
+	Trying Exists for 0x25 at freq: 3200
+	Trying Exists for 0x25 at freq: 21000
+	Trying Exists for 0x25 at freq: 2000
+	Trying Exists for 0x25 at freq: 5100
+	Trying Exists for 0x25 at freq: 13000
+	Trying Exists for 0x card fail took: 599622
+25 at freq: 33000
+	Trying Exists for 0x25 at freq: 83000
+	Trying Exists for 0x25 at freq: 210000
+	speedTestDevices for 0x25 Failed
+
+ card fail took: 600196
+	Try Mix Valve
+	MixValveController::writeToValve failed first try to Reg: 7 Value: 55
+12/03/20 13:02:12	Done Hard Reset for 0x10
+	MixValveController::writeToValve failed. 0x10 Timeout
+	MixValveController::writeToValve failed first try to Reg:  card fail took: 599548
+7 Value: 55
+12/03/20 13:02:16	Done Hard Reset for 0x10
+	MixValveController::writeToValve failed. 0x10 Timeout
+	Trying Exists for 0x10 at freq: 52000
+	Trying Exists for 0x10 at freq: 8200
+	Trying Exists for 0x10 at freq: 330000
+	Trying Exists for 0x10 at freq: 3200
+	Trying Exists for 0x10 at freq: 21000
+	Trying Exists for 0x10 at freq: 2000
+	Trying Exists for 0x10 at freq: 5100
+	Trying Exists for 0x10 at freq: 13000
+	Trying Exists for 0x10 at freq: 33000
+	Trying Exists for 0x10 at freq: 83000
+	Trying Exists for 0x10 at freq: 210000
+	speedTestDevices for 0x10 Failed
+
+ card fail took: 600196
+	Try TS 0x70
+12/03/20 13:02:20	Done Hard Reset for 0x70
+12/03/20 13:02:20	Done Hard Reset for 0x70
+12/03/20 13:02:20	Done Hard Reset for 0x70
+12 card fail took: 599374
+/03/20 13:02:21	Done Hard Reset for 0x70
+	findAworkingSpeed Test at 100000 Timeout
+	Trying Exists for 0x70 at freq: 52000
+	findAworkingSpeed Test at 52000 No Error
+	speedTestDevices for 0x70 OK at 52000
+
+	_lastGoodDevice reset to 0x70
+	Try TS 0x72
+	findAworkingSpeed Test at 400000 No Error
+	speedTestDevices for 0x72 OK at 400000
+
+	Try TS 0x71
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x71 OK at 300000
+
+	Try TS 0x76
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x76 OK at 300000
+
+	Try TS 0x36
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x36 OK at 300000
+
+	Try TS 0x74
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x74 OK at 300000
+
+	Try TS 0x2B
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2B OK at 300000
+
+	Try TS 0x35
+	speedTestDevices for 0x35 OK at 400000
+
+	Try TS 0x37
+	speedTestDevices for 0x37 OK at 400000
+
+	Try TS 0x28
+	speedTestDevices for 0x28 OK at 400000
+
+	Try TS 0x2C
+	Trying Exists for 0x2C at freq: 52000
+	Trying Exists for 0x2C at freq: 8200
+	Trying Exists for 0x2C at freq: 330000
+	Trying Exists for 0x2C at freq: 3200
+	Trying Exists for 0x2C at freq: 21000
+	Trying Exists for 0x2C at freq: 2000
+	Trying Exists for 0x2C at freq: 5100
+	Trying Exists for 0x2C at freq: 13000
+	Trying Exists for 0x2C at freq: 33000
+	Trying Exists for 0x2C at freq: 83000
+	Trying Exists for 0x2C at freq: 210000
+	speedTestDevices for 0x2C Failed
+
+ card fail took: 600196
+	Next Strategy is 1 Score: 18
+		S_Restart 0x2C NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x2C NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x2C NACK data send
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x2C NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x2C NACK data send
+
+    Slow-down did nothing...	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x2C NACK data send
+	Trying Exists for 0x2C at freq: 52000
+	Trying Exists for 0x2C at freq: 8200
+	Trying Exists for 0x2C at freq: 330000
+	Trying Exists for 0x2C at freq: 3200
+	Trying Exists for 0x2C at freq: 21000
+	Trying Exists for 0x2C at freq: 2000
+	Trying Exists for 0x2C at freq: 5100
+	Trying Exists for 0x2C at freq: 13000
+	Trying Exists for 0x2C at freq: 33000
+	Trying Exists for 0x2C at freq: 83000
+	Trying Exists for 0x2C at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 11
+		S_Power-Down 0x2C NACK data send
+12/03/20 13:02:24	Done Hard Reset for 0x2C
+	Next Strategy is 2 Score: 46
+		S_Restart 0x2C NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x2C NACK data send
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x2C NACK data send
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x2C NACK data send
+	Failed & Disabled with strategy 8 Score: 230
+	Try TS 0x4F
+	speedTestDevices for 0x4F OK at 400000
+
+	Try TS 0x75
+	Trying Exists for 0x75 at freq: 52000
+	Trying Exists for 0x75 at freq: 8200
+	Trying Exists for 0x75 at freq: 330000
+	Trying Exists for 0x75 at freq: 3200
+	Trying Exists for 0x75 at freq: 21000
+	Trying Exists for 0x75 at freq: 2000
+	Trying Exists for 0x75 at freq: 5100
+	Trying Exists for 0x75 at freq: 13000
+	Trying Exists for 0x75 at freq: 33000
+	Trying Exists for 0x75 at freq: 83000
+	Trying Exists for 0x75 at freq: 210000
+	speedTestDevices for 0x75 Failed
+
+ card fail took: 600196
+	Next Strategy is 1 Score: 18
+		S_Restart 0x75 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x75 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x75 NACK data send
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x75 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x75 NACK data send
+
+    Slow-down did nothing...	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x75 NACK data send
+	Trying Exists for 0x75 at freq: 52000
+	Trying Exists for 0x75 at freq: 8200
+	Trying Exists for 0x75 at freq: 330000
+	Trying Exists for 0x75 at freq: 3200
+	Trying Exists for 0x75 at freq: 21000
+	Trying Exists for 0x75 at freq: 2000
+	Trying Exists for 0x75 at freq: 5100
+	Trying Exists for 0x75 at freq: 13000
+	Trying Exists for 0x75 at freq: 33000
+	Trying Exists for 0x75 at freq: 83000
+	Trying Exists for 0x75 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 11
+		S_Power-Down 0x75 NACK data send
+12/03/20 13:02:27	Done Hard Reset for 0x75
+	Next Strategy is 2 Score: 46
+		S_Restart 0x75 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x75 NACK data send
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x75 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x75 NACK data send
+	Failed & Disabled with strategy 8 Score: 231
+	Try TS 0x77
+	speedTestDevices for 0x77 OK at 400000
+
+	Try TS 0x2E
+	speedTestDevices for 0x2E OK at 400000
+
+	Try TS 0x2D
+	speedTestDevices for 0x2D OK at 400000
+
+	Try TS 0x4B
+	speedTestDevices for 0x4B OK at 400000
+
+	Try TS 0x2F
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2F OK at 300000
+
+Relay_Run::testRelays
+	Next Strategy is 1 Score: 18
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+
+    Slow-down did nothing...	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	Trying Exists for 0x20 at freq: 52000
+Recovery Time uS: 2
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+ Remote.begin() for display [0x24] failed with: Not known
+ Remote.begin() for display [0x25] failed with: Not known
+ Remote.begin() for display [0x26] failed with: Not known
+12/03/20 13:02:28	initialiseRemoteDisplays() done
+
+Initialise RelaysPort() lat-write failed at Freq: 52000
+
+Initialise RelaysPort() write-verify failed at Freq: 52000
+	findAworkingSpeed Test at 52000 Timeout
+	Trying Exists for 0x20 at freq: 8200
+	Trying Exists for 0x20 at freq: 330000
+	Trying Exists for 0x20 at freq: 3200
+	Trying Exists for 0x card fail took: 600199
+20 at freq: 21000
+	Trying Exists for 0x20 at freq: 2000
+	Trying Exists for 0x20 at freq: 5100
+	Trying Exists for 0x20 at freq: 13000
+	Trying Exists for 0x20 at freq: 33000
+	Trying Exists for 0x20 at freq: 83000
+	Trying Exists for 0x20 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 11
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:02:29	Done Hard Reset for 0x20
+Recovery Time uS: 1592028
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 1 Score: 19
+	Next Strategy is 1 Score: 19
+		S_Restart 0x25 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x25 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x25 NACK data send
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x25 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x25 NACK data send
+	Failed & Disabled with strategy 8 Score: 232
+ Remote.begin() for display [0x25] failed with: Not known
+12/03/20 13:02:30	initialiseRemoteDisplays() done
+	Next Strategy is 1 Score: 19
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x20 NACK data send card fail took: 599641
+
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+
+    Slow-down did nothing...	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	Trying Exists for 0x20 at freq: 52000
+Recovery Time uS: 3
+	findAworkingSpeed Test at 52000 No Error
+
+Initialise RelaysPort() write-verify failed at Freq: 400000
+
+Initialise RelaysPort() write-verify failed at Freq: 400000
+
+  Try best speed: 284000 adjustBy : 116000
+    Try at: 284000
+Initialise RelaysPort() write-verify failed at Freq: 284000
+
+Initialise RelaysPort() write-verify failed at Freq: 284000
+
+  Try best speed: 168000 adjustBy : 58000
+    Try at: 168000
+Initialise RelaysPort() write-verify failed at Freq: 168000
+
+Initialise RelaysPort() write-verify failed at Freq: 168000
+
+  Try best speed: 110000 adjustBy : 29000
+    Try at: 110000
+Initialise RelaysPort() write-verify failed at Freq: 110000
+
+Initialise RelaysPort() write-verify failed at Freq: 110000
+
+  Try best speed: 81000 adjustBy : 14500
+    Try at: 81000
+Initialise RelaysPort() write-verify failed at Freq: 81000
+
+Initialise RelaysPort() write-verify failed at Freq: 81000
+
+Initialise RelaysPort() lat-write failed at Freq: 66500
+
+Initialise RelaysPort() write-verify failed at Freq: 66500
+
+ Adjust I2C_Speed: 66500 increment : -6650
+Initialise RelaysPort() write-verify failed at Freq: 59850
+
+Initialise RelaysPort() write-verify failed at Freq: 59850
+
+ Adjust I2C_Speed: 59850 increment : -5985
+Initialise RelaysPort() write-verify failed at Freq: 53865
+
+Initialise RelaysPort() write-verify failed at Freq: 53865
+
+ Adjust I2C_Speed: 53865 increment : -5386
+Initialise RelaysPort() write-verify failed at Freq: 48479
+
+Initialise RelaysPort() write-verify failed at Freq: 48479
+
+ Adjust I2C_Speed: 48479 increment : -4847
+Initialise RelaysPort() write-verify failed at Freq: 43632
+
+Initialise RelaysPort() write-verify failed at Freq: 43632
+
+ Adjust I2C_Speed: 43632 increment : -4363
+Initialise RelaysPort() write-verify failed at Freq: 39269
+
+Initialise RelaysPort() write-verify failed at Freq: 39269
+
+ Adjust I2C_Speed: 39269 increment : -3926
+Initialise RelaysPort() write-verify failed at Freq: 35343
+
+Initialise RelaysPort() write-verify failed at Freq: 35343
+
+ Adjust I2C_Speed: 35343 increment : -3534
+Initialise RelaysPort() write-verify failed at Freq: 31809
+
+Initialise RelaysPort() write-verify failed at Freq:  card fail took: 600177
+31809
+
+ Adjust I2C_Speed: 31809 increment : -3180
+Initialise RelaysPort() write-verify failed at Freq: 28629
+
+Initialise RelaysPort() write-verify failed at Freq: 28629
+
+ Adjust I2C_Speed: 28629 increment : -2862
+Initialise RelaysPort() write-verify failed at Freq: 25767
+
+Initialise RelaysPort() write-verify failed at Freq: 25767
+
+ Adjust I2C_Speed: 25767 increment : -2576
+Initialise RelaysPort() write-verify failed at Freq: 23191
+
+Initialise RelaysPort() write-verify failed at Freq: 23191
+
+ Adjust I2C_Speed: 23191 increment : -2319
+Initialise RelaysPort() write-verify failed at Freq: 20872
+
+Initialise RelaysPort() write-verify failed at Freq: 20872
+
+ Adjust I2C_Speed: 20872 increment : -2087
+Initialise RelaysPort() write-verify failed at Freq: 18785
+
+Initialise RelaysPort() write-verify failed at Freq: 18785
+
+ Adjust I2C_Speed: 18785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 16785
+
+Initialise RelaysPort() write-verify failed at Freq: 16785
+
+ Adjust I2C_Speed: 16785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 14785
+
+Initialise RelaysPort() write-verify failed at Freq: 14785
+
+ Adjust I2C_Speed: 14785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 12785
+
+Initialise RelaysPort() write-verify failed at Freq: 12785
+
+ Adjust I2C_Speed: 12785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 10785
+
+Initialise RelaysPort() write-verify failed at Freq: 10785
+
+ Adjust I2C_Speed: 10785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq:  card fail took: 600068
+8785
+
+Initialise RelaysPort() write-verify failed at Freq: 8785
+
+ Adjust I2C_Speed: 8785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 6785
+
+Initialise RelaysPort() write-verify failed at Freq: 6785
+
+ Adjust I2C_Speed: 6785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 4785
+
+Initialise RelaysPort() write-verify failed at Freq: 4785
+
+ Adjust I2C_Speed: 4785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 2785
+
+Initialise RelaysPort() write-verify failed at Freq: 2785
+
+ Adjust I2C_Speed: 2785 increment : -2000		Device Failed	Next Strategy is 7 Score: 11
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:02:34	Done Hard Reset for 0x20
+Recovery Time uS: 3615206
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 1 Score: 20
+	Next Strategy is 1 Score: 20
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 Timeout
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 Timeout
+	Next Strategy is 4 Score: 48
+		S_NotFrozen 0x20 Timeout
+
+****  i2C_is_frozen timed-out  **** 0x70
+		ResetI2C... for 0x20
+12/03/20 13:02:35	Done Hard Reset for 0x20
+Recovery Time uS: 182418
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 4 Score: 49
+	Disabled device 0x card fail took: 599374
+25
+ Remote.begin() for display [0x25] failed with: Not known
+12/03/20 13:02:35	initialiseRemoteDisplays() done
+	Succeeded with strategy 7 Score: 12
+	Next Strategy is 1 Score: 20
+		S_Restart 0x20 Timeout
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 Timeout
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 Timeout
+	Next Strategy is 4 Score: 49
+		S_NotFrozen 0x20 Timeout
+
+****  i2C_is_frozen timed-out  **** 0x70
+		ResetI2C... for 0x20
+12/03/20 13:02:36	Done Hard Reset for 0x20
+Recovery Time uS: 182416
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 4 Score: 50
+	Disabled device 0x25
+ Remote.begin() for display [0x25] failed with: Not known
+12/03/20 13:02:36	initialiseRemoteDisplays() done
+	Succeeded with strategy 4 Score: 51
+	Disabled device 0x25
+ Remote.begin() for display [0x25] failed with: Not known
+12/03/20 13:02:36	initialiseRemoteDisplays() done
+	Next Strategy is  card fail took: 599514
+1 Score: 20
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+
+    Slow-down did nothing...	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	Trying Exists for 0x20 at freq: 52000
+Recovery Time uS: 3
+
+Initialise RelaysPort() lat-write failed at Freq: 52000
+
+Initialise RelaysPort() write-verify failed at Freq: 52000
+	findAworkingSpeed Test at 52000 Timeout
+	Trying Exists for 0x20 at freq: 8200
+	Trying Exists for 0x20 at freq: 330000
+	Trying Exists for 0x20 at freq: 3200
+	Trying Exists for 0x20 at freq: 21000
+	Trying Exists for 0x20 at freq: 2000
+	Trying Exists for 0x20 at freq: 5100
+	Trying Exists for 0x20 at freq: 13000
+	Trying Exists for 0x20 at freq: 33000
+	Trying Exists for 0x20 at freq: 83000
+	Trying Exists for 0x20 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 12
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:02:38	Done Hard Reset for 0x20
+Recovery Time uS: 716310
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 1 Score: 21
+	Disabled device 0x card fail took: 599843
+25
+ Remote.begin() for display [0x25] failed with: Not known
+12/03/20 13:02:39	initialiseRemoteDisplays() done
+	Succeeded with strategy 7 Score: 13
+	Next Strategy is 1 Score: 21
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+
+    Slow-down did nothing...	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	Trying Exists for 0x20 at freq: 52000
+Recovery Time uS: 3
+	findAworkingSpeed Test at 52000 No Error
+
+Initialise RelaysPort() write-verify failed at Freq: 400000
+
+Initialise RelaysPort() write-verify failed at Freq: 400000
+
+  Try best speed: 284000 adjustBy : 116000
+    Try at: 284000
+Initialise RelaysPort() write-verify failed at Freq: 284000
+
+Initialise RelaysPort() write-verify failed at Freq: 284000
+
+  Try best speed: 168000 adjustBy : 58000
+    Try at: 168000
+Initialise RelaysPort() write-verify failed at Freq: 168000
+
+Initialise RelaysPort() write-verify failed at Freq: 168000
+
+  Try best speed: 110000 adjustBy : 29000
+    Try at: 110000
+Initialise RelaysPort() write-verify failed at Freq: 110000
+
+Initialise RelaysPort() write-verify failed at Freq: 110000
+
+  Try best speed: 81000 adjustBy : 14500
+    Try at: 81000
+Initialise RelaysPort() write-verify failed at Freq: 81000
+
+Initialise RelaysPort() write-verify failed at Freq: 81000
+
+Initialise RelaysPort() write-verify failed at Freq: 66500
+
+Initialise RelaysPort() write-verify failed at Freq: 66500
+
+ Adjust I2C_Speed: 66500 increment : -6650
+Initialise RelaysPort() write-verify failed at Freq: 59850
+
+Initialise RelaysPort() write-verify failed at Freq: 59850
+
+ Adjust I2C_Speed: 59850 increment : -5985
+Initialise RelaysPort() write-verify failed at Freq: 53865
+
+Initialise RelaysPort() write-verify failed at Freq: 53865
+
+ Adjust I2C_Speed: 53865 increment : -5386
+Initialise RelaysPort() write-verify failed at Freq: 48479
+
+Initialise RelaysPort() write-verify failed at Freq: 48479
+
+ Adjust I2C_Speed: 48479 increment : -4847
+Initialise RelaysPort() write-verify failed at Freq: 43632
+
+Initialise RelaysPort() write-verify failed at Freq: 43632
+
+ Adjust I2C_Speed: 43632 increment : -4363
+Initialise RelaysPort() write-verify failed at Freq: 39269
+
+Initialise RelaysPort() write-verify failed at Freq:  card fail took: 599876
+39269
+
+ Adjust I2C_Speed: 39269 increment : -3926
+Initialise RelaysPort() write-verify failed at Freq: 35343
+
+Initialise RelaysPort() write-verify failed at Freq: 35343
+
+ Adjust I2C_Speed: 35343 increment : -3534
+Initialise RelaysPort() write-verify failed at Freq: 31809
+
+Initialise RelaysPort() write-verify failed at Freq: 31809
+
+ Adjust I2C_Speed: 31809 increment : -3180
+Initialise RelaysPort() write-verify failed at Freq: 28629
+
+Initialise RelaysPort() write-verify failed at Freq: 28629
+
+ Adjust I2C_Speed: 28629 increment : -2862
+Initialise RelaysPort() write-verify failed at Freq: 25767
+
+Initialise RelaysPort() write-verify failed at Freq: 25767
+
+ Adjust I2C_Speed: 25767 increment : -2576
+Initialise RelaysPort() write-verify failed at Freq: 23191
+
+Initialise RelaysPort() write-verify failed at Freq: 23191
+
+ Adjust I2C_Speed: 23191 increment : -2319
+Initialise RelaysPort() write-verify failed at Freq: 20872
+
+Initialise RelaysPort() write-verify failed at Freq: 20872
+
+ Adjust I2C_Speed: 20872 increment : -2087
+Initialise RelaysPort() write-verify failed at Freq: 18785
+
+Initialise RelaysPort() write-verify failed at Freq: 18785
+
+ Adjust I2C_Speed: 18785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 16785
+
+Initialise RelaysPort() write-verify failed at Freq: 16785
+
+ Adjust I2C_Speed: 16785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 14785
+
+Initialise RelaysPort() write-verify failed at Freq: 14785
+
+ Adjust I2C_Speed: 14785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq:  card fail took: 600068
+12785
+
+Initialise RelaysPort() write-verify failed at Freq: 12785
+
+ Adjust I2C_Speed: 12785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 10785
+
+Initialise RelaysPort() write-verify failed at Freq: 10785
+
+ Adjust I2C_Speed: 10785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 8785
+
+Initialise RelaysPort() write-verify failed at Freq: 8785
+
+ Adjust I2C_Speed: 8785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 6785
+
+Initialise RelaysPort() write-verify failed at Freq: 6785
+
+ Adjust I2C_Speed: 6785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 4785
+
+Initialise RelaysPort() write-verify failed at Freq: 4785
+
+ Adjust I2C_Speed: 4785 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 2785
+
+Initialise RelaysPort() write-verify failed at Freq: 2785
+
+ Adjust I2C_Speed: 2785 increment : -2000		Device Failed	Next Strategy is 7 Score: 13
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:02:43	Done Hard Reset for 0x20
+Recovery Time uS: 3561595
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 1 Score: 22
+	Next Strategy is 1 Score: 22
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x20 NACK data send
+	Failed & Disabled with strategy 8 Score: 233
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	10s rest: Re-enabling disabled device 0x25
+	Next Strategy is 1 Score: 22
+		S_Restart 0x25 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x25 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x25 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x25 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x25 NACK data send
+
+    Slow-down did nothing...	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x25 NACK data send
+	Trying Exists for 0x25 at freq: 52000
+Recovery Time uS: 3
+	findAworkingSpeed Test at 52000 No Error
+
+  Try best speed:  card fail took: 599340
+284000 adjustBy : 116000
+    Try at: 284000
+  Try best speed: 168000 adjustBy : 58000
+    Try at: 168000
+  Try best speed: 110000 adjustBy : 29000
+    Try at: 110000
+  Try best speed: 81000 adjustBy : 14500
+    Try at: 81000
+    Try at: 95500
+ Adjust I2C_Speed: 81000 increment : -8100
+ Adjust I2C_Speed: 72900 increment : -7290
+ Adjust I2C_Speed: 65610 increment : -6561
+ Adjust I2C_Speed: 59049 increment : -5904
+ Adjust I2C_Speed: 53145 increment : -5314
+ Adjust I2C_Speed: 47831 increment : -4783
+ Adjust I2C_Speed: 43048 increment : -4304
+ Adjust I2C_Speed: 38744 increment : -3874
+ Adjust I2C_Speed:  card fail took: 599925
+34870 increment : -3487		New Speed 31383Recovery Time uS: 2313207
+12/03/20 13:02:45	initialiseRemoteDisplays() done
+	Disabled device 0x20
+Started
+Clock_I2C Constructor
+ Serial_Logger Begun
+ card fail took: 600004
+
+
+01/01/00 00:11:01	RTC Unreadable. Timeout
+01/01/00 00:11:01	****** Arduino Restarted ******
+
+01/01/00 00:11:01	*** Reset RTC... ***
+12/03/20 13:02:55	Clock Set from RTC, day: 12
+12/03/20 13:02:55	Test string for EEPROM OK
+New Board
+  Read EEPROM into RAM
+
+Build HeatingSystem
+PW was 20 Should be 20
+RDB_B(load) Constructed Size : 1139
+PW was 20 Should be 20
+ RDB_B::getTables ...
+ getRecordSize. recPerCh: 1 Rec Size: 19
+   Addr: 411 NextChunk at: 19
+ RDB_B::gotTable : 0
+Table::openNextTable() chunk at: 434
+ getRecordSize. recPerCh: 2 Rec Size: 7
+   Addr: 434 NextChunk at: 7
+ RDB_B::gotTable : 1
+Table::openNextTable() chunk at: 452
+ getRecordSize. recPerCh: 4 Rec Size: 12
+   Addr: 452 NextChunk at: 12
+ RDB_B::gotTable : 2
+Table::openNextTable() chunk at: 504
+ getRecordSize. recPerCh: 7 Rec Size: 6
+   Addr: 504 NextChunk at: 6
+ RDB_B::gotTable : 3
+Table::openNextTable() chunk at: 550
+ getRecordSize. recPerCh: 18 Rec Size: 6
+   Addr: 550 NextChunk at: 6
+ RDB_B::gotTable : 4
+Table::openNextTable() chunk at: 664
+ getRecordSize. recPerCh: 3 Rec Size: 13
+   Addr: 664 NextChunk at: 13
+ RDB_B::gotTable : 5
+Table::openNextTable() chunk at: 707
+ getRecordSize. recPerCh: 2 Rec Size: 8
+   Addr: 707 NextChunk at: 8
+ RDB_B::gotTable : 6
+Table::openNextTable() chunk at: 727
+ getRecordSize. recPerCh: 4 Rec Size: 21
+   Addr: 727 NextChunk at: 21
+ RDB_B::gotTable : 7
+Table::openNextTable() chunk at: 815
+ getRecordSize. recPerCh: 5 Rec Size: 2
+   Addr: 815 NextChunk at: 2
+ RDB_B::gotTable : 8
+Table::openNextTable() chunk at: 829
+ getRecordSize. recPerCh: 5 Rec Size: 9
+   Addr: 829 NextChunk at: 9
+ RDB_B::gotTable : 9
+Table::openNextTable() chunk at:  card fail took: 599476
+878
+ getRecordSize. recPerCh: 17 Rec Size: 3
+   Addr: 878 NextChunk at: 3
+ RDB_B::gotTable : 10
+Table::openNextTable() chunk at: 935
+ getRecordSize. recPerCh: 39 Rec Size: 4
+   Addr: 935 NextChunk at: 8196
+ RDB_B::gotTable : 11
+Table::openNextTable() chunk at: 1099
+ getRecordSize. recPerCh: 6 Rec Size: 6
+   Addr: 1099 NextChunk at: 8198
+ RDB_B::gotTable : 12
+Table::openNextTable() no more Tables
+ RDB_B::getTables loaded 13 tables.
+TestDevices Constructed
+  Initialiser PW check. req: 20
+PW was 20 Should be 20
+  Initialiser Constructed
+
+RelaysPort::setup()
+loadtempSensors Completed
+loadRelays Completed
+
+ThermalStore::calcCapacities	_upperC 0.31 _midC 0.58 _bottomC 0.39
+loadZones Completed
+Database queries constructed
+Pins New board
+MultiCrystal ini[pinset]
+
+LocalDisplay Constructed
+LocalKeypad Start...
+RemoteDisplay : 0x24 Constructed
+RemoteDisplay : 0x25 Constructed
+RemoteDisplay : 0x26 Constructed
+
+12/03/20 13:02:56	TestDevices::speedTestDevices has been called
+
+	Try Relay Port
+12/03/20 13:02:56	Done Hard Reset for 0x20
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	speedTestDevices for 0x20 OK at 100000
+
+	Try Remotes
+	speedTestDevices for 0x26 OK at 100000
+
+	speedTestDevices for 0x24 OK at 100000
+
+12/03/20 13:02:56	Done Hard Reset for 0x25
+12/03/20 13:02:56	Done Hard Reset for 0x25
+	Trying Exists for 0x25 at freq: 52000
+	Trying Exists for 0x25 at freq: 8200
+	findAworkingSpeed Test at 8200 No Error
+	speedTestDevices for 0x25 OK at 8200
+
+	Try Mix Valve
+	speedTestDevices for 0x10 OK at 400000
+
+	Try TS 0x70
+	speedTestDevices for 0x70 OK at 100000
+
+	_lastGoodDevice reset to 0x70
+	Try TS 0x72
+	findAworkingSpeed Test at 400000 No Error
+	speedTestDevices for 0x72 OK at 400000
+
+	Try TS 0x71
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x71 OK at 300000
+
+	Try TS 0x76
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x card fail took: 599844
+76 OK at 300000
+
+	Try TS 0x36
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x36 OK at 300000
+
+	Try TS 0x74
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x74 OK at 300000
+
+	Try TS 0x2B
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2B OK at 300000
+
+	Try TS 0x35
+	speedTestDevices for 0x35 OK at 400000
+
+	Try TS 0x37
+	speedTestDevices for 0x37 OK at 400000
+
+	Try TS 0x28
+	speedTestDevices for 0x28 OK at 400000
+
+	Try TS 0x2C
+	speedTestDevices for 0x2C OK at 400000
+
+	Try TS 0x4F
+	speedTestDevices for 0x4F OK at 400000
+
+	Try TS 0x75
+	Trying Exists for 0x75 at freq: 52000
+	Trying Exists for 0x75 at freq: 8200
+	Trying Exists for 0x75 at freq: 330000
+	Trying Exists for 0x75 at freq: 3200
+	Trying Exists for 0x75 at freq: 21000
+	Trying Exists for 0x75 at freq: 2000
+	Trying Exists for 0x75 at freq: 5100
+	Trying Exists for 0x75 at freq: 13000
+	Trying Exists for 0x75 at freq: 33000
+	Trying Exists for 0x75 at freq: 83000
+	Trying Exists for 0x75 at freq: 210000
+	speedTestDevices for 0x75 Failed
+
+ card fail took: 600196
+	Next Strategy is 1 Score: 22
+		S_Restart 0x75 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x75 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x75 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x75 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x75 NACK data send
+		slowdown for 0x75 speed was 100000
+		reduced speed to 90000
+	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x75 NACK data send
+	Trying Exists for 0x75 at freq: 52000
+	Trying Exists for 0x75 at freq: 8200
+	Trying Exists for 0x75 at freq: 330000
+	Trying Exists for 0x75 at freq: 3200
+	Trying Exists for 0x75 at freq: 21000
+	Trying Exists for 0x75 at freq: 2000
+	Trying Exists for 0x75 at freq: 5100
+	Trying Exists for 0x75 at freq: 13000
+	Trying Exists for 0x75 at freq: 33000
+	Trying Exists for 0x75 at freq: 83000
+	Trying Exists for 0x75 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 13
+		S_Power-Down 0x75 NACK data send
+12/03/20 13:03:00	Done Hard Reset for 0x75
+	Next Strategy is 2 Score: 46
+		S_Restart 0x75 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x75 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x75 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x75 NACK data send
+	Failed & Disabled with strategy 8 Score: 234
+	Try TS 0x77
+	speedTestDevices for 0x77 OK at 400000
+
+	Try TS 0x2E
+	speedTestDevices for 0x2E OK at 400000
+
+	Try TS 0x2D
+	speedTestDevices for 0x2D OK at 400000
+
+	Try TS 0x4B
+	speedTestDevices for 0x4B OK at 400000
+
+	Try TS 0x2F
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2F OK at 300000
+
+Relay_Run::testRelays
+	Next Strategy is 1 Score: 22
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+		slowdown for 0x20 speed was 100000
+		reduced speed to 90000
+	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+	Trying Exists for 0x20 at freq: 52000
+Recovery Time uS: 5315
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+ Remote.begin() for display [0x24] failed with: Not known
+ Remote.begin() for display [0x26] failed with: Not known
+12/03/20 13:03:01	initialiseRemoteDisplays() done
+
+Initialise RelaysPort() lat-write failed at Freq: 52000
+
+Initialise RelaysPort() write-verify failed at Freq: 52000
+	findAworkingSpeed Test at 52000 Timeout
+	Trying Exists for 0x20 at freq: 8200
+	Trying Exists for 0x20 at freq: 330000
+	Trying Exists for 0x20 at freq: 3200
+	Trying Exists for 0x20 at freq: 21000
+	Trying Exists for 0x card fail took: 600117
+20 at freq: 2000
+	Trying Exists for 0x20 at freq: 5100
+	Trying Exists for 0x20 at freq: 13000
+	Trying Exists for 0x20 at freq: 33000
+	Trying Exists for 0x20 at freq: 83000
+	Trying Exists for 0x20 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 13
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:03:02	Done Hard Reset for 0x20
+Recovery Time uS: 1511988
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 1 Score: 23
+12/03/20 13:03:03	initialiseRemoteDisplays() done
+	Succeeded with strategy 7 Score: 14
+	Next Strategy is 1 Score: 23
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+		slowdown for 0x20 speed was 100000
+		reduced speed to 90000
+	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+	Trying Exists for 0x20 at freq: 52000
+	Trying Exists for 0x20 at freq: 8200
+Recovery Time uS: 5315
+	findAworkingSpeed Test at 8200 No Error
+
+Initialise RelaysPort() write-verify failed at Freq: 400000
+
+Initialise RelaysPort() write-verify failed at Freq: 400000
+
+  Try best speed: 269400 adjustBy : 130600
+    Try at: 269400
+Initialise RelaysPort() write-verify failed at Freq: 269400
+
+Initialise RelaysPort() write-verify failed at Freq: 269400
+
+  Try best speed: 138800 adjustBy : 65300
+    Try at: 138800
+Initialise RelaysPort() write-verify failed at Freq: 138800
+
+Initialise RelaysPort() write-verify failed at Freq: 138800
+
+  Try best speed: 73500 adjustBy : 32650
+    Try at: 73500
+Initialise RelaysPort() write-verify failed at Freq:  card fail took: 599751
+73500
+
+Initialise RelaysPort() write-verify failed at Freq: 73500
+
+  Try best speed: 40850 adjustBy : 16325
+    Try at: 40850
+Initialise RelaysPort() lat-write failed at Freq: 40850
+
+Initialise RelaysPort() write-verify failed at Freq: 40850
+
+  Try best speed: 24525 adjustBy : 8162
+    Try at: 24525
+Initialise RelaysPort() write-verify failed at Freq: 24525
+
+Initialise RelaysPort() write-verify failed at Freq: 24525
+
+  Try best speed: 16363 adjustBy : 4081
+    Try at: 16363
+Initialise RelaysPort() write-verify failed at Freq: 16363
+
+Initialise RelaysPort() write-verify failed at Freq: 16363
+
+  Try best speed: 12282 adjustBy : 2040
+    Try at: 12282
+Initialise RelaysPort() write-verify failed at Freq: 12282
+
+Initialise RelaysPort() write-verify failed at Freq: 12282
+
+Initialise RelaysPort() write-verify failed at Freq: 10242
+
+Initialise RelaysPort() write-verify failed at Freq: 10242
+
+ Adjust I2C_Speed: 10242 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 8242
+
+Initialise RelaysPort() write-verify failed at Freq: 8242
+
+ Adjust I2C_Speed: 8242 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 6242
+
+Initialise RelaysPort() write-verify failed at Freq: 6242
+
+ Adjust I2C_Speed: 6242 increment : -2000
+Initialise RelaysPort() write-verify failed at Freq: 4242
+
+Initialise RelaysPort() write-verify failed at Freq: 4242
+
+ Adjust I2C_Speed: 4242 increment : -2000		Device Failed	Next Strategy is 7 Score: 14
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12 card fail took: 599783
+/03/20 13:03:04	Done Hard Reset for 0x20
+Recovery Time uS: 1633430
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 1 Score: 24
+	Next Strategy is 1 Score: 24
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x20 NACK data send
+	Failed & Disabled with strategy 8 Score: 235
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+12/03/20 13:03:06	initialiseRemoteDisplays() done
+	Disabled device 0x20
+	Disabled device 0x20
+Started
+Clock_I2C Constructor
+ Serial_Logger Begun
+ card fail took: 600004
+
+
+01/01/00 00:11:01	RTC Unreadable. Timeout
+01/01/00 00:11:01	****** Arduino Restarted ******
+
+01/01/00 00:11:01	*** Reset RTC... ***
+12/03/20 13:03:24	Clock Set from RTC, day: 12
+12/03/20 13:03:24	Test string for EEPROM OK
+New Board
+  Read EEPROM into RAM
+
+Build HeatingSystem
+PW was 20 Should be 20
+RDB_B(load) Constructed Size : 1139
+PW was 20 Should be 20
+ RDB_B::getTables ...
+ getRecordSize. recPerCh: 1 Rec Size: 19
+   Addr: 411 NextChunk at: 19
+ RDB_B::gotTable : 0
+Table::openNextTable() chunk at: 434
+ getRecordSize. recPerCh: 2 Rec Size: 7
+   Addr: 434 NextChunk at: 7
+ RDB_B::gotTable : 1
+Table::openNextTable() chunk at: 452
+ getRecordSize. recPerCh: 4 Rec Size: 12
+   Addr: 452 NextChunk at: 12
+ RDB_B::gotTable : 2
+Table::openNextTable() chunk at: 504
+ getRecordSize. recPerCh: 7 Rec Size: 6
+   Addr: 504 NextChunk at: 6
+ RDB_B::gotTable : 3
+Table::openNextTable() chunk at: 550
+ getRecordSize. recPerCh: 18 Rec Size: 6
+   Addr: 550 NextChunk at: 6
+ RDB_B::gotTable : 4
+Table::openNextTable() chunk at: 664
+ getRecordSize. recPerCh: 3 Rec Size: 13
+   Addr: 664 NextChunk at: 13
+ RDB_B::gotTable : 5
+Table::openNextTable() chunk at: 707
+ getRecordSize. recPerCh: 2 Rec Size: 8
+   Addr: 707 NextChunk at: 8
+ RDB_B::gotTable : 6
+Table::openNextTable() chunk at: 727
+ getRecordSize. recPerCh: 4 Rec Size: 21
+   Addr: 727 NextChunk at: 21
+ RDB_B::gotTable : 7
+Table::openNextTable() chunk at: 815
+ getRecordSize. recPerCh: 5 Rec Size: 2
+   Addr: 815 NextChunk at: 2
+ RDB_B::gotTable : 8
+Table::openNextTable() chunk at: 829
+ getRecordSize. recPerCh: 5 Rec Size: 9
+   Addr: 829 NextChunk at: 9
+ RDB_B::gotTable : 9
+Table::openNextTable() chunk at:  card fail took: 600078
+878
+ getRecordSize. recPerCh: 17 Rec Size: 3
+   Addr: 878 NextChunk at: 3
+ RDB_B::gotTable : 10
+Table::openNextTable() chunk at: 935
+ getRecordSize. recPerCh: 39 Rec Size: 4
+   Addr: 935 NextChunk at: 8196
+ RDB_B::gotTable : 11
+Table::openNextTable() chunk at: 1099
+ getRecordSize. recPerCh: 6 Rec Size: 6
+   Addr: 1099 NextChunk at: 8198
+ RDB_B::gotTable : 12
+Table::openNextTable() no more Tables
+ RDB_B::getTables loaded 13 tables.
+TestDevices Constructed
+  Initialiser PW check. req: 20
+PW was 20 Should be 20
+  Initialiser Constructed
+
+RelaysPort::setup()
+loadtempSensors Completed
+loadRelays Completed
+
+ThermalStore::calcCapacities	_upperC 0.31 _midC 0.58 _bottomC 0.39
+loadZones Completed
+Database queries constructed
+Pins New board
+MultiCrystal ini[pinset]
+
+LocalDisplay Constructed
+LocalKeypad Start...
+RemoteDisplay : 0x24 Constructed
+RemoteDisplay : 0x25 Constructed
+RemoteDisplay : 0x26 Constructed
+
+12/03/20 13:03:25	TestDevices::speedTestDevices has been called
+
+	Try Relay Port
+12/03/20 13:03:25	Done Hard Reset for 0x20
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	speedTestDevices for 0x20 OK at 100000
+
+	Try Remotes
+	speedTestDevices for 0x26 OK at 100000
+
+	speedTestDevices for 0x24 OK at 100000
+
+12/03/20 13:03:25	Done Hard Reset for 0x25
+12/03/20 13:03:25	Done Hard Reset for 0x25
+	Trying Exists for 0x25 at freq: 52000
+	findAworkingSpeed Test at 52000 No Error
+	speedTestDevices for 0x25 OK at 52000
+
+	Try Mix Valve
+	speedTestDevices for 0x10 OK at 400000
+
+	Try TS 0x70
+	speedTestDevices for 0x70 OK at 100000
+
+	_lastGoodDevice reset to 0x70
+	Try TS 0x72
+	findAworkingSpeed Test at 400000 No Error
+	speedTestDevices for 0x72 OK at 400000
+
+	Try TS 0x71
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x71 OK at 300000
+
+	Try TS 0x76
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x76 OK at 300000
+
+	Try TS 0x36
+
+  Try best speed:  card fail took: 599540
+300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x36 OK at 300000
+
+	Try TS 0x74
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x74 OK at 300000
+
+	Try TS 0x2B
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2B OK at 300000
+
+	Try TS 0x35
+	speedTestDevices for 0x35 OK at 400000
+
+	Try TS 0x37
+	speedTestDevices for 0x37 OK at 400000
+
+	Try TS 0x28
+	speedTestDevices for 0x28 OK at 400000
+
+	Try TS 0x2C
+	speedTestDevices for 0x2C OK at 400000
+
+	Try TS 0x4F
+	speedTestDevices for 0x4F OK at 400000
+
+	Try TS 0x75
+	speedTestDevices for 0x75 OK at 400000
+
+	Try TS 0x77
+	speedTestDevices for 0x77 OK at 400000
+
+	Try TS 0x2E
+	speedTestDevices for 0x2E OK at 400000
+
+	Try TS 0x2D
+	speedTestDevices for 0x2D OK at 400000
+
+	Try TS 0x4B
+	speedTestDevices for 0x4B OK at 400000
+
+	Try TS 0x2F
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2F OK at 300000
+
+Relay_Run::testRelays
+	Next Strategy is 1 Score: 24
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+		slowdown for 0x20 speed was 100000
+		reduced speed to 90000
+	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+	Trying Exists for 0x20 at freq: 52000
+Recovery Time uS: 5314
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+ Remote.begin() for display [0x24] failed with: Not known
+ Remote.begin() for display [0x26] failed with: Not known
+12/03/20 13:03:27	initialiseRemoteDisplays() done
+
+Initialise RelaysPort() lat-write failed at Freq: 52000
+
+Initialise RelaysPort() write-verify failed at Freq: 52000
+	findAworkingSpeed Test at 52000 Timeout
+	Trying Exists for 0x20 at freq: 8200
+	Trying Exists for 0x20 at freq: 330000
+	Trying Exists for 0x20 at freq: 3200
+	Trying Exists for 0x card fail took: 599622
+20 at freq: 21000
+	Trying Exists for 0x20 at freq: 2000
+	Trying Exists for 0x20 at freq: 5100
+	Trying Exists for 0x20 at freq: 13000
+	Trying Exists for 0x20 at freq: 33000
+	Trying Exists for 0x20 at freq: 83000
+	Trying Exists for 0x20 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 14
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:03:28	Done Hard Reset for 0x20
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 Timeout
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 Timeout
+	Next Strategy is 4 Score: 51
+		S_NotFrozen 0x20 Timeout
+
+****  i2C_is_frozen timed-out  **** 0x70
+		ResetI2C... for 0x20
+12/03/20 13:03:29	Done Hard Reset for 0x20
+Recovery Time uS: 182416
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 4 Score: 52
+12 card fail took: 599841
+/03/20 13:03:29	initialiseRemoteDisplays() done
+	Succeeded with strategy 7 Score: 15
+	Next Strategy is 1 Score: 24
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 52
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+		slowdown for 0x20 speed was 100000
+		reduced speed to 90000
+	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+	Trying Exists for 0x20 at freq: 52000
+	Trying Exists for 0x20 at freq: 8200
+	Trying Exists for 0x20 at freq: 330000
+	Trying Exists for 0x20 at freq: 3200
+	Trying Exists for 0x20 at freq: 21000
+	Trying Exists for 0x20 at freq: 2000
+	Trying Exists for 0x20 at freq: 5100
+	Trying Exists for 0x20 at freq: 13000
+	Trying Exists for 0x20 at freq: 33000
+	Trying Exists for 0x20 at freq: 83000
+	Trying Exists for 0x20 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 15
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:03:30	Done Hard Reset for 0x20
+Recovery Time uS: 604539
+		ResetI2C... _postI2CResetInitialisation
+
+Set room-sensors to high-res
+	Succeeded with strategy 1 Score: 25
+12 card fail took: 599289
+/03/20 13:03:31	initialiseRemoteDisplays() done
+	Succeeded with strategy 7 Score: 16
+	Next Strategy is 1 Score: 25
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 52
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+		slowdown for 0x20 speed was 100000
+		reduced speed to 90000
+	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+	Trying Exists for 0x20 at freq: 52000
+	Trying Exists for 0x20 at freq: 8200
+	Trying Exists for 0x20 at freq: 330000
+	Trying Exists for 0x20 at freq: 3200
+	Trying Exists for 0x20 at freq: 21000
+	Trying Exists for 0x20 at freq: 2000
+	Trying Exists for 0x20 at freq: 5100
+	Trying Exists for 0x20 at freq: 13000
+	Trying Exists for 0x20 at freq: 33000
+	Trying Exists for 0x20 at freq: 83000
+	Trying Exists for 0x20 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 16
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:03:32	Done Hard Reset for 0x20
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 Timeout
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 Timeout
+	Next Strategy is 4 Score: 52
+		S_NotFrozen 0x20 Timeout
+
+****  i2C_is_frozen timed-out  **** 0x card fail took: 599514
+70
+		ResetI2C... for 0x20
+12/03/20 13:03:33	Done Hard Reset for 0x20
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x20 Timeout
+	Failed & Disabled with strategy 8 Score: 236
+	Disabled device 0x20
+Started
+Clock_I2C Constructor
+ Serial_Logger Begun
+ card fail took: 600004
+
+
+01/01/00 00:11:01	RTC Unreadable. Timeout
+01/01/00 00:11:01	****** Arduino Restarted ******
+
+01/01/00 00:11:01	*** Reset RTC... ***
+12/03/20 13:03:53	Clock Set from RTC, day: 12
+12/03/20 13:03:53	Test string for EEPROM OK
+New Board
+  Read EEPROM into RAM
+
+Build HeatingSystem
+PW was 20 Should be 20
+RDB_B(load) Constructed Size : 1139
+PW was 20 Should be 20
+ RDB_B::getTables ...
+ getRecordSize. recPerCh: 1 Rec Size: 19
+   Addr: 411 NextChunk at: 19
+ RDB_B::gotTable : 0
+Table::openNextTable() chunk at: 434
+ getRecordSize. recPerCh: 2 Rec Size: 7
+   Addr: 434 NextChunk at: 7
+ RDB_B::gotTable : 1
+Table::openNextTable() chunk at: 452
+ getRecordSize. recPerCh: 4 Rec Size: 12
+   Addr: 452 NextChunk at: 12
+ RDB_B::gotTable : 2
+Table::openNextTable() chunk at: 504
+ getRecordSize. recPerCh: 7 Rec Size: 6
+   Addr: 504 NextChunk at: 6
+ RDB_B::gotTable : 3
+Table::openNextTable() chunk at: 550
+ getRecordSize. recPerCh: 18 Rec Size: 6
+   Addr: 550 NextChunk at: 6
+ RDB_B::gotTable : 4
+Table::openNextTable() chunk at: 664
+ getRecordSize. recPerCh: 3 Rec Size: 13
+   Addr: 664 NextChunk at: 13
+ RDB_B::gotTable : 5
+Table::openNextTable() chunk at: 707
+ getRecordSize. recPerCh: 2 Rec Size: 8
+   Addr: 707 NextChunk at: 8
+ RDB_B::gotTable : 6
+Table::openNextTable() chunk at: 727
+ getRecordSize. recPerCh: 4 Rec Size: 21
+   Addr: 727 NextChunk at: 21
+ RDB_B::gotTable : 7
+Table::openNextTable() chunk at: 815
+ getRecordSize. recPerCh: 5 Rec Size: 2
+   Addr: 815 NextChunk at: 2
+ RDB_B::gotTable : 8
+Table::openNextTable() chunk at: 829
+ getRecordSize. recPerCh: 5 Rec Size: 9
+   Addr: 829 NextChunk at: 9
+ RDB_B::gotTable : 9
+Table::openNextTable() chunk at:  card fail took: 599476
+878
+ getRecordSize. recPerCh: 17 Rec Size: 3
+   Addr: 878 NextChunk at: 3
+ RDB_B::gotTable : 10
+Table::openNextTable() chunk at: 935
+ getRecordSize. recPerCh: 39 Rec Size: 4
+   Addr: 935 NextChunk at: 8196
+ RDB_B::gotTable : 11
+Table::openNextTable() chunk at: 1099
+ getRecordSize. recPerCh: 6 Rec Size: 6
+   Addr: 1099 NextChunk at: 8198
+ RDB_B::gotTable : 12
+Table::openNextTable() no more Tables
+ RDB_B::getTables loaded 13 tables.
+TestDevices Constructed
+  Initialiser PW check. req: 20
+PW was 20 Should be 20
+  Initialiser Constructed
+
+RelaysPort::setup()
+loadtempSensors Completed
+loadRelays Completed
+
+ThermalStore::calcCapacities	_upperC 0.31 _midC 0.58 _bottomC 0.39
+loadZones Completed
+Database queries constructed
+Pins New board
+MultiCrystal ini[pinset]
+
+LocalDisplay Constructed
+LocalKeypad Start...
+RemoteDisplay : 0x24 Constructed
+RemoteDisplay : 0x25 Constructed
+RemoteDisplay : 0x26 Constructed
+
+12/03/20 13:03:54	TestDevices::speedTestDevices has been called
+
+	Try Relay Port
+12/03/20 13:03:54	Done Hard Reset for 0x20
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+
+Initialise RelaysPort() write-verify failed at Freq: 100000
+	speedTestDevices for 0x20 OK at 100000
+
+	Try Remotes
+	speedTestDevices for 0x26 OK at 100000
+
+	speedTestDevices for 0x24 OK at 100000
+
+12/03/20 13:03:54	Done Hard Reset for 0x25
+12/03/20 13:03:54	Done Hard Reset for 0x25
+	Trying Exists for 0x25 at freq: 52000
+	findAworkingSpeed Test at 52000 No Error
+	speedTestDevices for 0x25 OK at 52000
+
+	Try Mix Valve
+	speedTestDevices for 0x10 OK at 400000
+
+	Try TS 0x70
+	speedTestDevices for 0x70 OK at 100000
+
+	_lastGoodDevice reset to 0x70
+	Try TS 0x72
+	findAworkingSpeed Test at 400000 No Error
+	speedTestDevices for 0x72 OK at 400000
+
+	Try TS 0x71
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x71 OK at 300000
+
+	Try TS 0x76
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x76 OK at 300000
+
+	Try TS 0x36
+
+  Try best speed:  card fail took: 600034
+300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x36 OK at 300000
+
+	Try TS 0x74
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x74 OK at 300000
+
+	Try TS 0x2B
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2B OK at 300000
+
+	Try TS 0x35
+	speedTestDevices for 0x35 OK at 400000
+
+	Try TS 0x37
+	speedTestDevices for 0x37 OK at 400000
+
+	Try TS 0x28
+	speedTestDevices for 0x28 OK at 400000
+
+	Try TS 0x2C
+	speedTestDevices for 0x2C OK at 400000
+
+	Try TS 0x4F
+	speedTestDevices for 0x4F OK at 400000
+
+	Try TS 0x75
+	speedTestDevices for 0x75 OK at 400000
+
+	Try TS 0x77
+	speedTestDevices for 0x77 OK at 400000
+
+	Try TS 0x2E
+	speedTestDevices for 0x2E OK at 400000
+
+	Try TS 0x2D
+	speedTestDevices for 0x2D OK at 400000
+
+	Try TS 0x4B
+	speedTestDevices for 0x4B OK at 400000
+
+	Try TS 0x2F
+
+  Try best speed: 300000 adjustBy : 100000
+    Try at: 300000
+  Try best speed: 300000 adjustBy : 50000
+    Try at: 300000
+    Try at: 350000	speedTestDevices for 0x2F OK at 300000
+
+Relay_Run::testRelays
+	Next Strategy is 1 Score: 25
+		S_Restart 0x20 NACK data send
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 NACK data send
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 NACK data send
+	Next Strategy is 4 Score: 52
+		S_NotFrozen 0x20 NACK data send
+	Next Strategy is 5 Score: 12
+		S_Slow-down 0x20 NACK data send
+		slowdown for 0x20 speed was 100000
+		reduced speed to 90000
+	Next Strategy is 6 Score: 0
+		S_SpeedTest 0x20 NACK data send
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+
+Initialise RelaysPort() write-verify failed at Freq: 90000
+	Trying Exists for 0x20 at freq: 52000
+	Trying Exists for 0x20 at freq: 8200
+	Trying Exists for 0x20 at freq: 330000
+	Trying Exists for 0x20 at freq: 3200
+	Trying Exists for 0x20 at freq: 21000
+	Trying Exists for 0x20 at freq: 2000
+	Trying Exists for 0x20 at freq: 5100
+	Trying Exists for 0x20 at freq: 13000
+	Trying Exists for 0x20 at freq: 33000
+	Trying Exists for 0x20 at freq: 83000
+	Trying Exists for 0x card fail took: 599349
+20 at freq: 210000
+		Device Failed	Next Strategy is 7 Score: 16
+		S_Power-Down 0x20 Timeout
+		ResetI2C... for 0x20
+12/03/20 13:03:57	Done Hard Reset for 0x20
+	Next Strategy is 2 Score: 46
+		S_Restart 0x20 Timeout
+	Next Strategy is 3 Score: 7
+		S_WaitForDataLine 0x20 Timeout
+	Next Strategy is 4 Score: 52
+		S_NotFrozen 0x20 Timeout
+	Next Strategy is 5 Score: 12
+		S_Disable Device 0x20 NACK data send
+	Failed & Disabled with strategy 8 Score: 237
+
+Initialise RelaysPort() write-verify failed at Freq: 210000
+	No Relays	ERR_PORTS_FAILED
+
+Set room-sensors to high-res
+	Disabled device 0x20
+
+Initialise RelaysPort() write-verify failed at Freq: 300000
+12/03/20 13:03:58	initialiseRemoteDisplays() done
+  Initialiser::i2C_Test postI2CResetInitialisation failed
+***** Start Stack-Trace Log *****
+
+Stack-Trace at 32RelayFail
+Stack-Trace at 64RelayFail
+Stack-Trace at 96Logger Failed
+Stack-Trace at 128
+Stack-Trace at 160RelayFail
+Stack-Trace at 192RelayFail
+Stack-Trace at 224RelayFail
+Stack-Trace at 256RelayFail
+Stack-Trace at 288RelayFail
+Stack-Trace at 320RelayFail***** End Stack-Trace Log *****
+12/03/20 13:03:58	Start setHS for ServiceConsoles...
+12/03/20 13:03:58	notifyDataIsEdited
+
+12/03/20 13:03:58	Zone_Run::setZFlowTemp	Too Warm Zone: 0 Req Temp: 10 fractionalZoneTemp: 18.50 ReqFlowTemp: 30 TempError: 8.50 Off
+
+12/03/20 13:03:58	Zone_Run::setZFlowTemp	Too Warm Zone: 1 Req Temp: 10 fractionalZoneTemp: 21.00 ReqFlowTemp: 30 TempError: 11.00 Off
+12/03/20 13:03:58	ThermalStore:: currRequest: 10 CurrDHW temp: 65 not heating
+
+12/03/20 13:03:58	Zone_Run::setZFlowTemp	Too Warm Zone: 3 Req Temp: 10 fractionalZoneTemp: 22.50 ReqFlowTemp: 30 TempError: 12.50 Off
+12 card fail took: 599650
+/03/20 13:03:59	MixValveController::amControlZone MixID: 1
+	Flat
+	New_request_temp: 30
+	request_temp was: 0
+	Actual flow_temp: 0
+ MixValveController:: Done writing to valve
+
+12/03/20 13:03:59	Sequencer::getNextEvent()
+Zone: UpStrs ID: 0
+Dwelling: House ID: 0	Program 0
+	This profileID: 0 Next Day ProfileID: 0
+	This TimeTemp for ProfileID: 0 time: 0730  Temp: 15
+	Next TimeTemp for ProfileID: 0 time: 2100  Temp: 18
+	This Prog next TimeTemp for ProfileID: 0 time: 2100  Temp: 18
+	Event at: 12/Mar/20 9:00pm
+	Current Request for UpStrs is 15	Next Request is 18
+	Next ZoneEvent is at 12/Mar/20 9:00pm
+Zone: DnStrs ID: 1
+Dwelling: House ID: 0	Program 0
+	This profileID: 1 Next Day ProfileID: 1
+	This TimeTemp for ProfileID: 1 time: 0740  Temp: 19
+	Next TimeTemp for ProfileID: 1 time: 2300  Temp: 16
+	This Prog next TimeTemp for ProfileID: 1 time: 2300  Temp: 16
+	Event at: 12/Mar/20 11:00pm
+	Current Request for DnStrs is 19	Next Request is 16
+	Next ZoneEvent is at 12/Mar/20 11:00pm
+Zone: DHW ID: 2
+Dwelling: HolAppt ID: 1	Program 3
+	This profileID: 15 Next Day ProfileID: 15
+	This TimeTemp for ProfileID: 15 time: 0700  Temp: 10
+	Next TimeTemp for ProfileID: 15 time: 0700  Temp: 10
+	This Prog next TimeTemp for ProfileID: 15 time: 0700  Temp: 10
+	Event at: 13/Mar/20 7:00am
+Dwelling: House ID: 0	Program 0
+	This profileID: 3 Next Day ProfileID: 3
+	This TimeTemp for ProfileID: 3 time: 0900  Temp: 30
+	Next TimeTemp for ProfileID: 3 time: 1530  Temp: 45
+	This Prog next TimeTemp for ProfileID: 3 time: 1530  Temp: 45
+	Event at: 12/Mar/20 3:30pm
+	Current Request for DHW is 30	Next Request is 45
+	Next ZoneEvent is at 12/Mar/20 3:30pm
+Zone: Flat ID: 3
+Dwelling: HolAppt ID: 1	Program 3
+	This profileID: 16 Next Day ProfileID: 16
+	This TimeTemp for ProfileID: 16 time: 0700  Temp: 10
+	Next TimeTemp for ProfileID: 16 time: 0700  Temp: 10
+	This Prog next TimeTemp for ProfileID: 16 time: 0700  Temp: 10
+	Event at: 13/Mar/20 7:00am
+	Current Request for Flat is 10	Next Request is 10
+	Next ZoneEvent is at 13/Mar/20 7:00am
+Next SystemEvent: 12/Mar/20 3:30pm
+12/03/20 13:03:59	Done setHS for ServiceConsoles...
+
+12/03/20 13:03:59	HeatingSystem done.
+	Free RAM: 80595
+
+ card fail took: 599454
+12/03/20 13:04:01	Zone_Run::setZFlowTemp	Too Warm Zone: 0 Req Temp: 15 fractionalZoneTemp: 18.37 ReqFlowTemp: 30 TempError: 3.37 Off
+
+12/03/20 13:04:01	Zone_Run::setZFlowTemp	Too Warm Zone: 1 Req Temp: 19 fractionalZoneTemp: 20.81 ReqFlowTemp: 30 TempError: 1.81 Off
+12/03/20 13:04:01	ThermalStore:: currRequest: 30 CurrDHW temp: 44 not heating
+
+12/03/20 13:04:01	Zone_Run::setZFlowTemp	Too Warm Zone: 3 Req Temp: 10 fractionalZoneTemp: 22.25 ReqFlowTemp: 30 TempError: 12.25 Off
+	Disabled device 0x20

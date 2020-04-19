@@ -1,9 +1,9 @@
 #include "BackBoiler.h"
 #include "Temp_Sensor.h"
-#include "Relay.h"
+#include "Relay_Bitwise.h"
 
 namespace HardwareInterfaces {
-	BackBoiler::BackBoiler(I2C_Temp_Sensor & flowTS, I2C_Temp_Sensor & thrmStrTS, Relay & relay)
+	BackBoiler::BackBoiler(I2C_Temp_Sensor & flowTS, I2C_Temp_Sensor & thrmStrTS, Bitwise_Relay & relay)
 		: _flowTS(&flowTS)
 		, _thrmStrTS(&thrmStrTS)
 		, _relay(&relay)
@@ -21,7 +21,7 @@ namespace HardwareInterfaces {
 				pumpOn = true;
 			}
 		}
-		_relay->setRelay(pumpOn);
+		_relay->set(pumpOn);
 		return pumpOn;
 	}
 }

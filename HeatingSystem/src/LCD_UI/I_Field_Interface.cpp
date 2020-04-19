@@ -43,16 +43,16 @@ namespace LCD_UI {
 
 	int I_Field_Interface::setInitialCount(Field_Interface_h * parent) {
 		_parent = parent;
-		int initialFocus;
+		int initialEditFocus;
 		if (parent->editBehaviour().is_Editable()) {
-			initialFocus = editItem().gotFocus(_wrapper); // gotFocus copies data to currValue
+			initialEditFocus = editItem().gotFocus(_wrapper); // gotFocus copies data to currValue
 		}
 		else {
 			UI_FieldData * fieldData = parent->getData();
-			initialFocus = editItem().editMemberSelection(_wrapper, fieldData->data()->recordID());
+			initialEditFocus = editItem().editMemberSelection(_wrapper, fieldData->data()->recordID());
 		}
 		setCount(editItem().currValue().valRange.editablePlaces);
-		return initialFocus; // return focus for initial edit
+		return initialEditFocus;
 	}
 
 	int I_Field_Interface::getFieldWidth() const {
@@ -128,8 +128,8 @@ namespace LCD_UI {
 
 	void Field_Interface_h::setCursorPos() { 
 		// only called when it gets the focus - i.e selected, not in edit
-		auto initialFocus = f_interface().setInitialCount(this); // Sets endIndex() for number of edit-positions and returns initial edit-focus 
-		set_focus(initialFocus);
+		auto initialEditFocus = f_interface().setInitialCount(this); // Sets endIndex() for number of edit-positions and returns initial edit-focus 
+		set_focus(initialEditFocus);
 	}
 
 	void Field_Interface_h::setEditFocus(int focus) {

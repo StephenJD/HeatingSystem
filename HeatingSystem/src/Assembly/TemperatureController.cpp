@@ -5,6 +5,7 @@
 #include "..\Client_DataStructures\Data_Relay.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\HardwareInterfaces\A__Constants.h"
+#include "..\HardwareInterfaces\I2C_Comms.h"
 #include <Clock.h>
 
 void ui_yield();
@@ -19,7 +20,7 @@ namespace Assembly {
 		tempSensorArr{ recovery }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
-		, relaysPort{ recovery, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN}
+		, relaysPort{0x7F, recovery, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN}
 		, mixValveControllerArr{ recovery }
 	{
 		int index = 0;
@@ -37,7 +38,7 @@ namespace Assembly {
 		index = 0;
 		auto relays = db.tableQuery(TB_Relay);
 		for (Answer_R<R_Relay> relay : relays) {
-			relayArr[index].initialise(relay.id(), relay.rec().port);
+			relayArr[index].initialise(relay.id(), relay.rec().port, LOW);
 			++index;
 		}
 
@@ -88,7 +89,11 @@ namespace Assembly {
 		for (auto & mixValveControl : mixValveControllerArr) {mixValveControl.check(); ui_yield(); }
 		backBoiler.check();
 		ui_yield();
-		relaysPort.setAndTestRegister();
+		relaysPort.updateRelays();
+		if (relaysPort.recovery().isUnrecoverable()) { 
+			logger() << "Initiating Arduino Reset" << L_flush;
+			HardReset::arduinoReset(); 
+		};
 	}
 
 	void TemperatureController::checkZones() {

@@ -83,18 +83,18 @@ namespace I2C_Recovery {
 		int startAddr = STACKTRACE_MESSAGE_LENGTH;
 		char msg[STACKTRACE_MESSAGE_LENGTH] = { 0 };
 		//char gotTrace = EEPROM.read(startAddr);
-		logger() << "***** Start Stack-Trace Log *****\n";
+		logger() << "***** Start Stack-Trace Log *****";
 		
 		for (int s = 1; s <= STACKTRACE_MESSAGE_NO; ++s) {
 			
-			logger() << "\nStack-Trace at " << startAddr;
+			logger() << "\nStack-Trace at " << startAddr << " ";
 			for (int i = 0; i < STACKTRACE_MESSAGE_LENGTH; ++startAddr, ++i) {
 				msg[i] = EEPROM.read(startAddr);
 			}
 			logger() << msg+1;
 			if (EEPROM.read(startAddr) != '@') break;
 		}
-		logger() << "***** End Stack-Trace Log *****\n";
+		logger() << "\n***** End Stack-Trace Log *****\n";
 	}
 
 	void I2C_RecoverStrategy::next() {
@@ -125,8 +125,8 @@ namespace I2C_Recovery {
 			for (int s = 1; s < S_NoOfStrategies; ++s) score(s, score(s) / 2);
 		}
 		score(_strategy, score(_strategy) + 1);
-		if (strategy() == S_Disable) {
-			 logger() << "\tFailed & Disabled with strategy " << strategy() << " Score: " << score(_strategy) << L_endl;
+		if (strategy() >= S_Disable) {
+			 logger() << "\t*** Failed & Disabled with strategy " << strategy() << " Score: " << score(_strategy) << " *** \n\n";
 		}
 		else {
 			 logger() << "\tSucceeded with strategy " << strategy() << " Score: " << score(_strategy) << L_endl;

@@ -90,13 +90,13 @@ using namespace std;
 	char logTimeStr[18];
 	char decTempStr[7];
 
-	Serial_Logger::Serial_Logger(int baudRate) : Logger() {
+	Serial_Logger::Serial_Logger(uint32_t baudRate) : Logger() {
 		Serial.flush();
 		Serial.begin(baudRate);
 		Serial.println(" Serial_Logger Begun");
 	}	
 	
-	Serial_Logger::Serial_Logger(int baudRate, Clock & clock) : Logger(clock) {
+	Serial_Logger::Serial_Logger(uint32_t baudRate, Clock & clock) : Logger(clock) {
 		Serial.flush();
 		Serial.begin(baudRate);
 		Serial.println(" Serial_Logger Begun");
@@ -129,19 +129,24 @@ using namespace std;
 	////////////////////////////////////
 	//            SD_Logger           //
 	////////////////////////////////////
-	constexpr int chipSelect = 53; // 4; // 53;
+
+	// On Mega, MISO is internally connected to digital pin 50, MOSI is 51, SCK is 52
+	// Due SPI header does not use digital pins.
+	// Chip select is usually connected to pin 53 and is active LOW.
+	constexpr int chipSelect = 53;
+
 	Serial_Logger SD_Logger::_serial;
 
-	SD_Logger::SD_Logger(const char * fileName, int baudRate) : Serial_Logger(baudRate), _fileName(fileName) {
+	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate) : Serial_Logger(baudRate), _fileName(fileName) {
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		SD.begin(chipSelect);
-		Serial_Logger::print("SD_Logger Begun\n");
+		Serial_Logger::print("\nSD_Logger Begun\n");
 	}	
 	
-	SD_Logger::SD_Logger(const char * fileName, int baudRate, Clock & clock) : Serial_Logger(baudRate, clock), _fileName(fileName) {
+	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock), _fileName(fileName) {
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		SD.begin(chipSelect);
-		Serial_Logger::print("SD_Logger Begun\n");
+		Serial_Logger::print("\nSD_Logger Begun\n");
 	}
 
 	bool SD_Logger::isWorking() { return SD.sd_exists(chipSelect); }

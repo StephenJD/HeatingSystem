@@ -58,6 +58,10 @@ namespace HardwareInterfaces {
 		}
 	};
 
+	void HardReset::arduinoReset() {
+		pinMode(A4, OUTPUT);
+		digitalWrite(A4, LOW);
+	}
 
 	error_codes HardReset::operator()(I2C_Talk & i2c, int addr) {
 		digitalWrite(RESET_LED_PIN_N, LOW);
@@ -69,7 +73,7 @@ namespace HardwareInterfaces {
 		timeOfReset_mS = millis();
 		//if (i2c.i2C_is_frozen(addr)) logger() << "*** Reset I2C is stuck at I2c freq:", i2c.getI2CFrequency(), "for addr:",addr);
 		//else 
-			logger() << L_time << "Done Hard Reset for 0x" << L_hex << addr << L_endl;
+		logger() << L_time << "Done Hard Reset for 0x" << L_hex << addr << L_endl;
 		digitalWrite(RESET_LED_PIN_N, HIGH);
 		initialisationRequired = true;
 		return _OK;

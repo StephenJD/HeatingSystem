@@ -11,7 +11,7 @@ namespace Assembly {
 }
 
 namespace HardwareInterfaces {
-	class Relay;
+	class Bitwise_Relay;
 	class I2C_Temp_Sensor;
 	class MixValveController;
 
@@ -25,11 +25,11 @@ namespace HardwareInterfaces {
 		bool isCallingHeat() const;
 
 		// Modifier
-		void initialise(int towelRailID, I2C_Temp_Sensor & callTS, Relay & callRelay, Assembly::TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp);
+		void initialise(int towelRailID, I2C_Temp_Sensor & callTS, Bitwise_Relay & callRelay, Assembly::TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp);
 	private:
 		RelationalDatabase::RecordID _recordID = 0;
 		I2C_Temp_Sensor * _callTS = 0;
-		Relay * _relay = 0;
+		Bitwise_Relay * _relay = 0;
 		MixValveController * _mixValveController;
 		int8_t _maxFlowTemp = 0;
 		Assembly::TemperatureController * _temperatureController;

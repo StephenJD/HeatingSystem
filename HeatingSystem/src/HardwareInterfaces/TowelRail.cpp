@@ -6,7 +6,7 @@ using namespace Assembly;
 
 namespace HardwareInterfaces {
 
-	void TowelRail::initialise(int towelRailID, I2C_Temp_Sensor & callTS, Relay & callRelay, TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp) {
+	void TowelRail::initialise(int towelRailID, I2C_Temp_Sensor & callTS, Bitwise_Relay & callRelay, TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
@@ -27,7 +27,7 @@ namespace HardwareInterfaces {
 		//}
 		//else { // I can not set the flow temp, so just set the call relay
 		//	// If turning relay off, check any zones sharing call relay (e.g.towel rad circuits) also want off.
-		//	if (needHeat || sharedZoneCallTemp(zoneRelay) > MIN_FLOW_TEMP) f->relayR(zoneRelay).setRelay(needHeat);
+		//	if (needHeat || sharedZoneCallTemp(zoneRelay) > MIN_FLOW_TEMP) f->relayR(zoneRelay).set(needHeat);
 		//}
 		return needHeat;
 	}

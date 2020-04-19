@@ -1,5 +1,7 @@
 #include <I2C_Device.h>
 #include <I2C_Recover.h>
+#include <I2C_Talk.h>
+
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;

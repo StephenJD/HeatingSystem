@@ -166,10 +166,11 @@ namespace LCD_UI {
 			}
 			else {
 				while (wantToMoveForward(nth)) {
-					setFocusIndex(tryMovingForwardByOne(focusIndex()));
-					setFocusIndex(firstValidIndexLookingForwards(focusIndex()));
-					if (!weHaveMoved(focusIndex()))  break;
-					else if (!atEnd(focusIndex())) --nth; // We have a valid element
+					auto newFocus = tryMovingForwardByOne(focusIndex());
+					newFocus = firstValidIndexLookingForwards(newFocus);
+					setFocusIndex(newFocus);
+					if (!weHaveMoved(newFocus))  break;
+					else if (!atEnd(newFocus)) --nth; // We have a valid element
 					else if (behaviour().is_recycle_on_next()) setFocusIndex(-1);
 					else { // at end, can't recycle
 						if (behaviour().is_viewOneUpDn()) setFocusIndex(weCouldNotMove);
@@ -177,14 +178,15 @@ namespace LCD_UI {
 					}
 				}
 				while (wantToMoveBackwards(nth)) {  // Assume move-back from a valid start-point or focusIndex() of -1 (no actionable elements)
-					setFocusIndex(tryMovingBackwardByOne(focusIndex()));
-					setFocusIndex(firstValidIndexLookingBackwards(focusIndex())); // if no prev, is now -1.
-					if (!weHaveMoved(focusIndex())) break;
-					else if (focusIndex() >= 0) ++nth; // We found one!
+					auto newFocus = tryMovingBackwardByOne(focusIndex());
+					newFocus = firstValidIndexLookingBackwards(newFocus);
+					setFocusIndex(newFocus); // if no prev, is now -1.
+					if (!weHaveMoved(newFocus)) break;
+					else if (newFocus >= 0) ++nth; // We found one!
 					else if (behaviour().is_recycle_on_next()) {
 						setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
 						move_focus_to(endIndex());
-						if (focusIndex() == 0) break;
+						if (newFocus == 0) break;
 					}
 					else {
 						if (behaviour().is_viewOneUpDn() || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
@@ -207,6 +209,10 @@ namespace LCD_UI {
 			if (behaviour().is_viewAll()) {
 				collectionPtr->filter(viewable());
 				auto focus_index = focusIndex();
+#ifdef ZPSIM
+				cout << "Streaming : " << hex << (long)get() << " " << ui_Objects[(long)get()] << endl;
+				cout << "NoOfHandles : " << collectionPtr->endIndex() << endl;
+#endif
 				for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
 					auto ith_objectPtr = collectionPtr->item(i);
 					//auto behav = ith_objectPtr->get()->behaviour().is_viewAll();

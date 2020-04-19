@@ -10,8 +10,6 @@ namespace GP_LIB {
 
 	// *************************************************************
 	// ***************  Utility ************************************
-	char numStrBuff[7]; // 5 digits + sign + null
-	char padStrBuff[7]; // 5 digits + sign + null
 
 	int nextIndex(int minVal, int currVal, int maxVal, int move, bool carryOver) { // return index, which has max value of noOfMembers -1
 																				   // when incrementing by 10 or 100, leave the lower digits unchanged when overflowing the max and min values.
@@ -40,11 +38,12 @@ namespace GP_LIB {
 			(value < 1000 ? 3 : 4)));			
 	}
 
-	const char * intToString(int value) { // only valid for values < 1029
+	CStr_10 intToString(int value) { // only valid for values < 1029
 		// TODO: implement using arduino Print / PString
 		if (abs(value) > 1028)
 			value = 1028;
-		char * p = numStrBuff;
+		auto cstr_10 = CStr_10{};
+		char * p = cstr_10;
 		if (value < 0) {
 			*p = '-';
 			++p;
@@ -55,7 +54,7 @@ namespace GP_LIB {
 		do {
 			*--p = "0123456789"[mod10(value)];
 		} while (value = div10(value));
-		return numStrBuff;
+		return cstr_10;
 	}
 
 	int power10(unsigned int power) {
@@ -66,60 +65,64 @@ namespace GP_LIB {
 		else return 1;
 	}
 
-	const char * intToString(int value, int minNoOfChars, char leadingChar, int format) {
+	CStr_10 intToString(int value, int minNoOfChars, char leadingChar, int format) {
 		bool leadPlus = (format & e_showSign) != 0;
 		if ((format & e_fixedWidth) == 0) minNoOfChars = 0;
 		//bool inEdit = (format & (e_inEdit | e_editAll)) == (e_inEdit | e_editAll);
 		int charIndex = 0;
 
-		intToString(abs(value));
-		int editablePlaces = strlen(numStrBuff);
+		auto numStr_10 = intToString(abs(value));
+		int editablePlaces = strlen(numStr_10);
+
+		auto padStr_10 = CStr_10{};
+
 		int noOfpadding = 0;
 		if (leadingChar == '0') {
 			if (value >= 0) {
 				if (leadPlus) {
-					padStrBuff[charIndex] = '+';
+					padStr_10[charIndex] = '+';
 					++charIndex;
 				}
 			}
 			else {
-				padStrBuff[charIndex] = '-';
+				padStr_10[charIndex] = '-';
 				++charIndex;
 			}
 		}
 		if (minNoOfChars > editablePlaces) noOfpadding = minNoOfChars - editablePlaces + charIndex;
 		for (; charIndex < noOfpadding; ++charIndex) {
-			padStrBuff[charIndex] = leadingChar;
+			padStr_10[charIndex] = leadingChar;
 		} 
 		if (leadingChar != '0') {
 			if (value >= 0) {
 				if (leadPlus) {
-					padStrBuff[charIndex] = '+';
+					padStr_10[charIndex] = '+';
 					++charIndex;
 				}
 			} else {
-				padStrBuff[charIndex] = '-';
+				padStr_10[charIndex] = '-';
 				++charIndex;
 			}
 		}		
-		padStrBuff[charIndex] = 0;
-		strcat(padStrBuff, numStrBuff);
-		return padStrBuff;
+		padStr_10[charIndex] = 0;
+		strcat(padStr_10, numStr_10);
+		return padStr_10;
 	}
 
-	const char * decToString(int number, int minNoOfChars, int noOfDecPlaces, int format) {
+	CStr_10 decToString(int number, int minNoOfChars, int noOfDecPlaces, int format) {
 		// TODO: implement using arduino Print / PString
-		intToString(number, minNoOfChars,' ',format);
-		int decPos = strlen(padStrBuff) - noOfDecPlaces - 1;
-		if (padStrBuff[decPos] < '0' || padStrBuff[decPos] > '9') {
+		auto padStr_10 = intToString(number, minNoOfChars,' ',format);
+
+		int decPos = strlen(padStr_10) - noOfDecPlaces - 1;
+		if (padStr_10[decPos] < '0' || padStr_10[decPos] > '9') {
 			// insert preceeding 0 if there is no digit to left of dec place.
-			if (decPos -1 >= 0) padStrBuff[decPos - 1] = padStrBuff[decPos];
-			padStrBuff[decPos] = '0';
+			if (decPos -1 >= 0) padStr_10[decPos - 1] = padStr_10[decPos];
+			padStr_10[decPos] = '0';
 		}
 		for (int i = 5; i > decPos; --i) {
-			padStrBuff[i+1] = padStrBuff[i];
+			padStr_10[i+1] = padStr_10[i];
 		}
-		padStrBuff[decPos + 1] = '.';
-		return padStrBuff;
+		padStr_10[decPos + 1] = '.';
+		return padStr_10;
 	}
 }

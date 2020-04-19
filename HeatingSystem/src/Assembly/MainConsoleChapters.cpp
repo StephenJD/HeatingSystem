@@ -15,6 +15,7 @@ namespace Assembly {
 		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editOnNextItem() }
 		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editOnNextItem() }
 		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editOnNextItem() }
+		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard,0,0, viewable()}
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
 		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editOnNextItem().make_viewAll() }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name,0,0, viewAllUpDn().make_newLine() }
@@ -32,7 +33,7 @@ namespace Assembly {
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAll().make_newLine() }
 		, _tempSensorUI_sc{ UI_ShortCollection{ 80, _tempSensorUI_c } }
 		
-		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name }
+		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name } // viewOneUpDnRecycle()
 		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp }
 		, _towelRailOnTimeUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_minutesOn }
 		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo }
@@ -55,7 +56,7 @@ namespace Assembly {
 		, _towelRailsLbl{"Room Temp OnFor ToGo"}
 
 		// Pages & sub-pages - Collections of UI handles
-		, _page_currTime_c{ makeCollection(_currTimeUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
+		, _page_currTime_c{ makeCollection(_currTimeUI_c, _SDCardUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
 		, _page_zoneReqTemp_c{ makeCollection(_zoneIsReq_UI_c) }
 		, _zone_subpage_c{ makeCollection(_dwellingZoneCmd, _zoneNameUI_c).set(viewAllUpDn())}
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
@@ -68,8 +69,12 @@ namespace Assembly {
 		
 		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c).set(viewAllUpDn()) }
 		//, _subpage_towelRails_c{ makeCollection(_towelRails_info_c).set(viewAllUpDn()) }
-		, _towelRailUI_sc{ UI_ShortCollection{ 80, _towelRails_info_c } }
-		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _towelRailUI_sc) }
+		
+		, _towelRailUI_sc{ makeCollection(_towelRails_info_c).set(viewAllUpDn()) } // displays one line at a time
+		//, _towelRailUI_sc{ UI_ShortCollection{ 80, _towelRails_info_c } }
+		
+		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _towelRails_info_c) } // displays one line at a time
+		//, _page_towelRails_c{ makeCollection(_towelRailsLbl, _towelRailUI_sc) } // try to make this show all lines
 
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
@@ -107,6 +112,7 @@ namespace Assembly {
 		ui_Objects[(long)&_timeTempUI_c] = "_timeTempUI_c";
 		ui_Objects[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 		ui_Objects[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
+		ui_Objects[(long)&_zoneIsReq_UI_c] = "_zoneIsReq_UI_c";
 		ui_Objects[(long)&_progNameUI_c] = "_progNameUI_c";
 		ui_Objects[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
 		ui_Objects[(long)&_tt_SubPage_c] = "_tt_SubPage_c";

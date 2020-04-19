@@ -5,6 +5,7 @@
 
 extern byte LOCAL_INT_PIN;
 extern byte KEY_ANALOGUE;
+extern byte KEYPAD_REF_PIN;
 //extern unsigned long processStart_mS;
 
 namespace HardwareInterfaces {
@@ -15,8 +16,7 @@ namespace HardwareInterfaces {
 		logger() << "\nLocalKeypad Start...\n";
 		localKeypad = this;
 		digitalWrite(LOCAL_INT_PIN, HIGH); // turn ON pull-up 
-		//attachInterrupt(digitalPinToInterrupt(LOCAL_INT_PIN), localKeyboardInterrupt, FALLING); 
-		 attachInterrupt(LOCAL_INT_PIN, localKeyboardInterrupt, CHANGE);
+		attachInterrupt(LOCAL_INT_PIN, localKeyboardInterrupt, CHANGE);
 	}
 
 #if defined (ZPSIM)
@@ -28,9 +28,13 @@ namespace HardwareInterfaces {
 #else
 	int LocalKeypad::readKey() {
 		// Cannot do Serial.print or logtoSD in here.
-		auto adc_key_in = analogReadDelay(KEY_ANALOGUE);  // read the value from the sensor
+		uint32_t adc_key_in = analogReadDelay(KEY_ANALOGUE);  // read the value from the sensor
 		while (adc_key_in != analogReadDelay(KEY_ANALOGUE)) adc_key_in = analogReadDelay(KEY_ANALOGUE);
 		// Convert ADC value to key number
+		uint32_t keyPadRefV = analogRead(KEYPAD_REF_PIN);
+		adc_key_in *= 1024;
+		adc_key_in /= keyPadRefV;
+
 		int key = 0;
 		for (; key < NUM_LOCAL_KEYS; ++key) {
 			if (adc_key_in > adc_LocalKey_val[key]) break;
@@ -69,19 +73,26 @@ namespace HardwareInterfaces {
 }
 
 void localKeyboardInterrupt() { // static or global interrupt handler, no arguments
-		
-		// lastTime check required to prevent multiple interrupts from each key press.
-		static unsigned long lastTime = millis();
-		if (millis() < lastTime) return;
-		lastTime = millis() + 2;
+		static unsigned long nextPermissibleInterruptTime = 0;
+		if (millis() > nextPermissibleInterruptTime) {
+			// When releasing the switch, it may bounce back on. 
+			// But it must first go OFF which this handler will capture. It then prohibits re-capture for 5mS.
+#ifndef ZPSIM
+			if (digitalRead(LOCAL_INT_PIN) == LOW) {
+#else
+			{
+#endif
+				auto & keypad = *HardwareInterfaces::localKeypad;
+				auto myKey = keypad.readKey();
+				auto newKey = myKey;
+				while (myKey == 1 && newKey == myKey) {
+					newKey = keypad.readKey(); // see if a second key is pressed
+					if (newKey >= 0) myKey = newKey;
+				}
+				//processStart_mS = millis();
+				putInKeyQue(keypad.keyQue, keypad.keyQuePos, myKey);
 
-		auto & keypad = *HardwareInterfaces::localKeypad;
-		auto myKey = keypad.readKey();
-		auto newKey = myKey;
-		while (myKey == 1 && newKey == myKey) {
-			newKey = keypad.readKey(); // see if a second key is pressed
-			if (newKey >= 0) myKey = newKey;
+			}
+			nextPermissibleInterruptTime = millis() + 5;
 		}
-		//processStart_mS = millis();
-		putInKeyQue(keypad.keyQue, keypad.keyQuePos, myKey);
 	}

@@ -105,12 +105,14 @@ namespace LCD_UI {
 		set_leftRightUI_from(selectedPage_h(),0);
 		set_UpDownUI_from(selectedPage_h());
 		_cursorUI->setCursorPos();
-//#ifdef ZPSIM 
-//		logger() << "\tselectedPage: " << ui_Objects[(long long)(selectedPage_h()->get())].c_str() << L_endl;
-//		logger() << "\t_upDownUI: " << ui_Objects[(long long)(_upDownUI->get())].c_str() << L_endl;
-//		logger() << "\t_leftRightBackUI: " << ui_Objects[(long long)(_leftRightBackUI->get())].c_str() << L_endl;
-//		logger() << "\trec_activeUI(): " << ui_Objects[(long long)(rec_activeUI()->get())].c_str() << L_endl;
-//#endif
+#ifdef ZPSIM 
+		auto selectedUI = selectedPage_h()->get();
+		logger() << "\tselectedPage: " << ui_Objects[(long long)(selectedPage_h()->get())].c_str() << L_endl;
+		logger() << "\t_upDownUI: " << ui_Objects[(long long)(_upDownUI->get())].c_str() << L_endl;
+		logger() << "\t_leftRightBackUI: " << ui_Objects[(long long)(_leftRightBackUI->get())].c_str() << L_endl;
+		logger() << "\trec_activeUI(): " << ui_Objects[(long long)(rec_activeUI()->get())].c_str() << L_endl;
+		//logger() << "\t_cursorUI(): " << ui_Objects[(long long)(_cursorUI)].c_str() << L_endl;
+#endif
 	}
 
 	void A_Top_UI::rec_left_right(int move) { // left-right movement

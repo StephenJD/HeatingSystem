@@ -1,5 +1,5 @@
 #include "MixValveController.h"
-#include "Relay.h"
+#include "Relay_Bitwise.h"
 #include "A__Constants.h"
 #include "..\Assembly\HeatingSystemEnums.h"
 #include <I2C_Talk_ErrorCodes.h>
@@ -16,7 +16,7 @@ namespace HardwareInterfaces {
 //
 //#endif
 
-	void MixValveController::initialise(int index, int addr, Relay * relayArr, I2C_Temp_Sensor * tempSensorArr, int flowTempSens, int storeTempSens) {
+	void MixValveController::initialise(int index, int addr, Bitwise_Relay * relayArr, I2C_Temp_Sensor * tempSensorArr, int flowTempSens, int storeTempSens) {
 		setAddress(addr);
 		_index = index;
 		_relayArr = relayArr;
@@ -114,11 +114,11 @@ namespace HardwareInterfaces {
 			
 			if (callTemp <= MIN_FLOW_TEMP) {
 				callTemp = MIN_FLOW_TEMP;
-				_relayArr[_controlZoneRelay].setRelay(0); // turn call relay OFF
+				_relayArr[_controlZoneRelay].set(0); // turn call relay OFF
 				_limitTemp = 100; // reset since it might have been the limiting zone
 			}
 			else {
-				_relayArr[_controlZoneRelay].setRelay(1); // turn call relay ON
+				_relayArr[_controlZoneRelay].set(1); // turn call relay ON
 				if (callTemp > _limitTemp) callTemp = _limitTemp;
 			}
 			uint8_t mixValveCallTemp = readFromValve(Mix_Valve::request_temp);
@@ -148,7 +148,7 @@ namespace HardwareInterfaces {
 	// Private Methods
 
 	bool MixValveController::controlZoneRelayIsOn() const {
-		return (_relayArr[_controlZoneRelay].getRelayState() != 0);
+		return (_relayArr[_controlZoneRelay].logicalState() != 0);
 	}
 
 	bool MixValveController::needHeat(bool isHeating) {

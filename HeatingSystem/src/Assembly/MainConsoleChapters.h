@@ -31,6 +31,7 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _currTimeUI_c;
 		LCD_UI::UI_FieldData _currDateUI_c;
 		LCD_UI::UI_FieldData _dstUI_c;
+		LCD_UI::UI_FieldData _SDCardUI_c;
 
 		LCD_UI::UI_FieldData _dwellNameUI_c;
 		LCD_UI::UI_FieldData _zoneIsReq_UI_c;
@@ -66,7 +67,7 @@ namespace Assembly {
 		LCD_UI::UI_Label _towelRailsLbl;
 		
 		// Pages & sub-pages - Collections of UI handles
-		LCD_UI::Collection<6, LCD_UI::Collection_Hndl> _page_currTime_c;
+		LCD_UI::Collection<7, LCD_UI::Collection_Hndl> _page_currTime_c;
 		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_zoneReqTemp_c;
 		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _zone_subpage_c;
 		LCD_UI::Collection<5, LCD_UI::Collection_Hndl> _calendar_subpage_c;

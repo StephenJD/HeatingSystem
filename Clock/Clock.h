@@ -31,17 +31,18 @@
 		int year() const { return _now.year(); }
 		virtual bool ok() const { return true; }
 	
-		// Modifiers
-		// Reading the time triggers an update-check which might modify the time
-		explicit operator Date_Time::DateTime() { return _dateTime(); }
+		// Conceptually, these are queries, although reading the time triggers an update-check which might modify the time
+		explicit operator Date_Time::DateTime() const { return _dateTime(); }
 		
 		/// <summary>
 		/// Returns time in 10's of minutes - no units.
 		/// </summary>
-		Date_Time::DateTime now() { return  _dateTime(); }
-		Date_Time::DateOnly date() { return _dateTime(); }
-		Date_Time::TimeOnly time() { return _dateTime(); }
-		uint32_t asInt() { return _dateTime().asInt(); }
+		Date_Time::DateTime now() const { return  _dateTime(); }
+		Date_Time::DateOnly date() const { return _dateTime(); }
+		Date_Time::TimeOnly time() const { return _dateTime(); }
+		uint32_t asInt() const { return _dateTime().asInt(); }
+
+		// Modifiers
 		void refresh() { _dateTime(); }
 
 		void setTime(Date_Time::DateOnly date, Date_Time::TimeOnly time, int min);
@@ -63,9 +64,9 @@
 
 	protected:
 		virtual void _update() {} // called by _dateTime() every 10 minutes
-		bool dstHasBeenSet() { return _dstHasBeenSet == 1; }
-		void dstHasBeenSet(bool set) { _dstHasBeenSet = set; }
-		void _setFromCompiler();
+		bool dstHasBeenSet() const { return _dstHasBeenSet == 1; }
+		void dstHasBeenSet(bool set) const { _dstHasBeenSet = set; }
+		Date_Time::DateTime _timeFromCompiler(int & minUnits, int & seconds);
 
 		static uint8_t _secs;
 		static uint8_t _mins1; // minute units
@@ -75,17 +76,17 @@
 		static uint32_t _lastCheck_mS;
 
 	private:
-		Date_Time::DateTime _dateTime();
+		Date_Time::DateTime _dateTime() const;
 		void _adjustForDST();
 	};
 
 	inline Logger & operator<<(Logger & logger, const Clock & clk) {
-		return logger << GP_LIB::intToString(clk.day(), 2)
-		<< "/" << GP_LIB::intToString(clk.month(), 2)
-		<< "/" << GP_LIB::intToString(clk.year(), 2)
-		<< " " << GP_LIB::intToString(clk.hrs(), 2)
-		<< ":" << GP_LIB::intToString(clk.mins10(), 1) << GP_LIB::intToString(clk.minUnits(), 1)
-		<< ":" << GP_LIB::intToString(clk.seconds(), 2);
+		return logger << GP_LIB::intToString(clk.day(),2)
+		<< "/" << GP_LIB::intToString(clk.month(),2)
+		<< "/" << GP_LIB::intToString(clk.year(),2)
+		<< " " << GP_LIB::intToString(clk.hrs(),2)
+		<< ":" << clk.mins10() << clk.minUnits()
+		<< ":" << GP_LIB::intToString(clk.seconds(),2);
 	}
 
 	class Clock_EEPROM : public Clock {
@@ -109,6 +110,7 @@
 		void _update() override { loadTime(); }	// called every 10 minutes - reads from RTC
 		virtual auto readData(int start, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
 		virtual auto writeData(int start, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
+		Date_Time::DateTime _timeFromRTC(int & minUnits, int & seconds);
 	};
 
 	template<I2C_Talk & i2c>
@@ -133,14 +135,13 @@
 		auto writeData(int start, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::write(start, numberBytes, dataBuffer); }
 	};
 
-
 ///////////////////////////////////////////////////////////////
 //                         Clock                             //
 ///////////////////////////////////////////////////////////////
 
 	Clock & clock_();  // to be defined by the client
 
-	inline void Clock::_setFromCompiler() { // inlined to ensure latest compile time used.
+	inline Date_Time::DateTime Clock::_timeFromCompiler(int & minUnits, int & seconds) { // inlined to ensure latest compile time used.
 		// sample input: date = "Dec 26 2009", time = "12:34:56"
 		auto year = GP_LIB::c2CharsToInt(&__DATE__[9]);
 		// Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec 
@@ -159,10 +160,10 @@
 		auto day = GP_LIB::c2CharsToInt(&__DATE__[4]);
 		auto hrs = GP_LIB::c2CharsToInt(__TIME__);
 		auto mins10 = GP_LIB::c2CharsToInt(&__TIME__[3]);
-		_now = Date_Time::DateTime{ { day,mnth,year },{ hrs,mins10 } };
-		setMinUnits(mins10 % 10);
-		setSeconds(GP_LIB::c2CharsToInt(&__TIME__[6]));
-		saveTime();
+		minUnits = mins10 % 10;
+		seconds = GP_LIB::c2CharsToInt(&__TIME__[6]);
+		logger() << "Compiler Time: " << Date_Time::DateTime{ {day, mnth, year }, { hrs,mins10 }} << L_endl;
+		return { { day,mnth,year },{ hrs,mins10 } };
 	}
 
 ///////////////////////////////////////////////////////////////

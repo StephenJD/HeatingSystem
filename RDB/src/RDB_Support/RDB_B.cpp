@@ -118,7 +118,7 @@ namespace RelationalDatabase {
 		Table table(*this, _dbStart + DB_HeaderSize);
 		int i;
 		for (i = 0; i < maxNoOfTables && table.isOpen(); ++i, ++tableArr) {
-			logger() << " RDB_B::gotTable : " << i << L_endl;
+			//logger() << " RDB_B::gotTable : " << i << L_endl;
 			*tableArr = table;
 			table.openNextTable();
 		}

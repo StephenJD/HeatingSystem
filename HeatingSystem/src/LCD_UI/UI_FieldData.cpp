@@ -63,6 +63,19 @@ namespace LCD_UI {
 		return _data->move_to(id);
 	}
 
+	int	UI_FieldData::focusIndex() const {
+		if (behaviour().is_viewAll()) 
+			return LazyCollection::focusIndex();
+		else 
+			return LazyCollection::focusIndex();
+			//return _data->recordID();
+	}
+
+	void UI_FieldData::setFocusIndex(int focus) {
+		_data->move_to(focus);		
+		LazyCollection::setFocusIndex(focus);
+	}
+
 	Collection_Hndl * UI_FieldData::item(int elementIndex) { // return 0 if record invalid
 		if (_parentRecord) { // where a parent points to a single child, this allows the child object to be chosen
 			if (_field_Interface_h.cursorMode(&_field_Interface_h) == HI_BD::e_inEdit) {
@@ -85,7 +98,7 @@ namespace LCD_UI {
 
 	const char * UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.	
-		auto focus_index = focusIndex();
+		auto focus_index = LazyCollection::focusIndex();
 		for (auto & element : *this) {
 			auto endVisibleIndex = shortColl->endVisibleItem();
 			auto objIndex = objectIndex();

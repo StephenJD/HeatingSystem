@@ -241,6 +241,7 @@ namespace LCD_UI {
 		virtual int objectIndex() const { return _index; }
 
 		// New Queries
+		virtual int	focusIndex() const { return _focusIndex; }
 		bool atEnd(int pos) const {
 			return pos >= _count;
 		}
@@ -249,7 +250,6 @@ namespace LCD_UI {
 		bool indexIsInRange(int index) const { return index >= 0 && !atEnd(index); }
 		const Object_Hndl * item(int index) const { return const_cast<I_SafeCollection*>(this)->item(index); }
 		const Object_Hndl & operator[](int index) const { return const_cast<I_SafeCollection*>(this)->operator[](index); }
-		int	focusIndex() const { return _focusIndex; }
 		int endIndex() const { return _count; }
 		Coll_Iterator begin() const { return const_cast<I_SafeCollection*>(this)->begin(); }
 		Coll_Iterator end() const { return const_cast<I_SafeCollection*>(this)->end(); }

@@ -153,6 +153,7 @@ namespace client_data_structures {
 		, _currTime{ clock_().time(), ValRange(e_fixedWidth | e_editAll,0,uint16_t(-1),0,e_time) }
 		, _currDate{ clock_().date(), ValRange(e_fixedWidth | e_editAll, 0, uint16_t(-1),0,e_date)}
 		, _dst{ clock_().autoDSThours(),ValRange(e_edOneShort,0,2)}
+		, _SDCard{"",5}
 	{}
 
 	I_UI_Wrapper * Dataset_WithoutQuery::getFieldAt(int fieldID, int elementIndex) {
@@ -163,11 +164,12 @@ namespace client_data_structures {
 		_currTime.val = clock_().time().asInt();
 		_currDate.val = clock_().date().asInt();
 		_dst.val = clock_().autoDSThours();
-
+		_SDCard = logger().isWorking() ? "SD OK" : "No SD";
 		switch (fieldID) {
 		case e_currTime: return &_currTime;
 		case e_currDate: return &_currDate;
 		case e_dst: return &_dst;
+		case e_sdcard: return &_SDCard;
 		default: return 0;
 		}
 	}

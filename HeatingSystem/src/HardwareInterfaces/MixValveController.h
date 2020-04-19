@@ -4,7 +4,7 @@
 #include <Mix_Valve.h>
 #include "Temp_Sensor.h"
 #include <RDB.h>
-#include "Relay.h"
+#include "Relay_Bitwise.h"
 #include "A__Constants.h"
 #if defined (ZPSIM)
 #include <ostream>
@@ -33,12 +33,12 @@ namespace HardwareInterfaces {
 //		void reportMixStatus() const;
 //		int8_t controlRelay() const { return _controlZoneRelay; }
 //		uint8_t mixCallT() const { return _mixCallTemp; }
-//		int8_t getState() const; // 1 = heat, 0 = off, -1 = cool
+//		int8_t logicalState() const; // 1 = heat, 0 = off, -1 = cool
 //
 //		volatile int8_t motorState = 0; // required by simulator
 //		static std::ofstream lf;
 //#endif
-		void initialise(int index, int addr, Relay * relayArr, I2C_Temp_Sensor * tempSensorArr, int flowTempSens, int storeTempSens);
+		void initialise(int index, int addr, Bitwise_Relay * relayArr, I2C_Temp_Sensor * tempSensorArr, int flowTempSens, int storeTempSens);
 	private:
 		bool controlZoneRelayIsOn() const;
 		I2C_Talk_ErrorCodes::error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
@@ -46,7 +46,7 @@ namespace HardwareInterfaces {
 		//void setLimitZone(int mixValveIndex);
 
 		I2C_Temp_Sensor * _tempSensorArr = 0;
-		Relay * _relayArr = 0;
+		Bitwise_Relay * _relayArr = 0;
 		unsigned long * _timeOfReset_mS = 0;
 		uint8_t _error = 0;
 		uint8_t _index = 0;

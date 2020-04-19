@@ -1,5 +1,11 @@
 #pragma once
-//#include <string>
+
+#ifdef ZPSIM
+#include <cstring>
+#else
+#include <string.h>
+#endif
+
 
 //#define DISPLAY_BUFFER_LENGTH 40
 //#define MAX_LINE_LENGTH 20
@@ -12,6 +18,22 @@ namespace GP_LIB {
 	
 	int nextIndex(int minVal, int currVal, int maxVal, int move, bool carryOver = true);
 
+	/// <summary>
+	/// Short Copyable c-string
+	/// </summary>
+	class CStr_10 {
+	public:
+		CStr_10(const char * str) { strncpy(_str, str, 10); }
+		CStr_10() { _str[0] = 0; }
+		CStr_10 & operator=(const char * str) { strncpy(_str, str, 10); return *this; }
+		char & operator[](int index) { return _str[index]; }
+		char operator[](int index) const { return _str[index]; }
+		operator const char *() const { return _str; }
+		operator char *() { return _str; }
+	private:
+		char _str[10];
+	};
+	
 	/// <summary>
 	/// Returns number of significant digits
 	/// </summary>
@@ -34,20 +56,20 @@ namespace GP_LIB {
 	/// <summary>
 	/// only for values &lt; 1029
 	/// </summary>
-	const char * intToString(int value);
+	CStr_10 intToString(int value);
 	
 	/// <summary>
 	/// only for values &lt; 1029
 	/// If minNoOfChars -ve, then add + prefix.
 	/// </summary>
-	const char * intToString(int value, int minNoOfChars, char leadingChar = '0', int format = e_editAll | e_fixedWidth);
+	CStr_10 intToString(int value, int minNoOfChars, char leadingChar = '0', int format = e_editAll | e_fixedWidth);
 	
 	/// <summary>
 	/// only for int values &lt; 1029
 	/// If minNoOfChars -ve, then add + prefix.
 	/// abs(minNoOfChars) must be at least 1 more than noOfDecPlaces
 	/// </summary>
-	const char * decToString(int number, int minNoOfChars, int noOfDecPlaces, int format = e_editAll | e_fixedWidth);
+	CStr_10 decToString(int number, int minNoOfChars, int noOfDecPlaces, int format = e_editAll | e_fixedWidth);
 	
 	/// <summary>
 	/// Returns 10^power up to 3 (1000)

@@ -145,7 +145,7 @@ namespace client_data_structures {
 	class Dataset_WithoutQuery : public Record_Interface<R_NoQuery>
 	{
 	public:
-		enum {e_currTime, e_currDate, e_dst};
+		enum {e_currTime, e_currDate, e_dst, e_sdcard};
 		Dataset_WithoutQuery();
 		I_UI_Wrapper * getFieldAt(int fieldID, int elementIndex) override;
 		I_UI_Wrapper * getField(int fieldID) override;
@@ -154,5 +154,6 @@ namespace client_data_structures {
 		CurrentTimeWrapper _currTime; // size is 32 bits.
 		CurrentDateWrapper _currDate; // size is 32 bits.
 		IntWrapper _dst;
+		StrWrapper _SDCard;
 	};
 }

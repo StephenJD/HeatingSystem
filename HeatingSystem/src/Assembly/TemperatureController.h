@@ -27,7 +27,7 @@ namespace Assembly {
 		HardwareInterfaces::ThermalStore thermalStore;
 		HardwareInterfaces::RelaysPort relaysPort;
 		HardwareInterfaces::MixValveController mixValveControllerArr[NO_OF_MIX_VALVES];
-		HardwareInterfaces::Relay relayArr[Assembly::NO_OF_RELAYS];
+		HardwareInterfaces::Bitwise_Relay relayArr[Assembly::NO_OF_RELAYS];
 		HardwareInterfaces::Zone zoneArr[NO_OF_ZONES];
 	};
 

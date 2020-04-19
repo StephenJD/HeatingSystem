@@ -32,7 +32,7 @@ using namespace I2C_Talk_ErrorCodes;
 	uint8_t Clock::_autoDST;
 	uint8_t Clock::_dstHasBeenSet;
 	Date_Time::DateTime Clock::_now;
-	uint32_t Clock::_lastCheck_mS = millis() - 60 * 1000 * 11;
+	uint32_t Clock::_lastCheck_mS = millis() - uint32_t(60ul * 1000ul * 11ul);
 
 	///////////////////////////////////////////////////
 	//         Public Static Helper Functions        //
@@ -54,7 +54,7 @@ using namespace I2C_Talk_ErrorCodes;
 	//             Clock Member Functions            //
 	///////////////////////////////////////////////////
 
-	DateTime Clock::_dateTime() { 
+	DateTime Clock::_dateTime() const { 
 		// called on every request for time/date.
 		// Only needs to check anything every 10 minutes
 		static uint8_t oldHr = _now.hrs() + 1; // force check first time through
@@ -63,11 +63,12 @@ using namespace I2C_Talk_ErrorCodes;
 		int newMins = _mins1 + newSecs / 60;
 		_mins1 = newMins % 10;
 		if (newMins >= 10) {
+			Clock & modifierRef = const_cast<Clock &>(*this);
 			_now.addOffset({ m10, newMins / 10 });
-			_update();
+			modifierRef._update();
 			if (_now.hrs() != oldHr) {
 				oldHr = _now.hrs();
-				_adjustForDST();
+				modifierRef._adjustForDST();
 			}
 		}
 		return _now;
@@ -126,7 +127,7 @@ using namespace I2C_Talk_ErrorCodes;
 	//                     Clock_EEPROM                          //
 	///////////////////////////////////////////////////////////////
 
-	Clock_EEPROM::Clock_EEPROM(unsigned int addr) :_addr(addr) {}
+	Clock_EEPROM::Clock_EEPROM(unsigned int addr) :_addr(addr) { /*loadTime();*/ } // loadtime crashes!
 
 	bool Clock_EEPROM::ok() const {
 		int _day = day();
@@ -147,10 +148,16 @@ using namespace I2C_Talk_ErrorCodes;
 		auto status = reader(nextAddr, &_now, 4);
 		status |= reader(nextAddr, &_autoDST, 1);
 		status |= reader(nextAddr, &_dstHasBeenSet, 1);
-		if (year() == 0) {
-			_setFromCompiler();
-			logger() << "Clock Set from Compiler\n";
-		} else logger() << "Clock Set from EEPROM\n";
+		int minUnits, seconds;
+		auto compilerTime = _timeFromCompiler(minUnits, seconds);
+		if (compilerTime > _now) {
+			_now = compilerTime;
+			setMinUnits(minUnits);
+			setSeconds(seconds);
+			saveTime();
+			logger() << L_time << "Clock Set from Compiler" << L_endl;
+		} else logger() << L_time << "Clock Set from EEPROM" << L_endl;
+
 
 		return status;
 	}
@@ -162,41 +169,64 @@ using namespace I2C_Talk_ErrorCodes;
 	///////////////////////////////////////////////////////////////
 	//                     Clock_I2C                             //
 	///////////////////////////////////////////////////////////////
-
-	error_codes I_Clock_I2C::loadTime() {	
-		auto status = _OK;
-		uint8_t data[9];
-		data[6] = 0; // year
-		status = readData(0, 9, data);
-
+	
+	DateTime I_Clock_I2C::_timeFromRTC(int & minUnits, int & seconds) {
+		uint8_t data[7] = { 0 };
+		auto status = readData(0, 7, data);
+		
+		DateTime date{};
 		if (status != _OK) {
 			logger() << L_time << "RTC Unreadable." << I2C_Talk::getStatusMsg(status) << L_endl;
 		}
-		else if (data[6] == 0) {
-			if (millis() < 10000) {
-				logger() << "RTC set from Compiler. Data read was:\n";
-				for (auto d : data) {
-					logger() << "\t" << d << L_endl;
-				}
-				_setFromCompiler();
-			}
-			else {
-				logger() << L_time << "RTC year was zero.\n";
-				status = _Insufficient_data_returned;
-			}
+		else {
+			date.setMins10(data[1] >> 4);
+			date.setHrs(fromBCD(data[2]));
+			date.setDay(fromBCD(data[4]));
+			date.setMonth(fromBCD(data[5]));
+			if (date.month() == 0) date.setMonth(1);
+			date.setYear(fromBCD(data[6]));
+			minUnits = data[1] & 15;
+			seconds = fromBCD(data[0]);
+		}
+		return date;
+	}
+
+	error_codes I_Clock_I2C::loadTime() {	
+		// lambda
+		auto shouldUseCompilerTime = [](DateTime rtcTime, DateTime compilerTime) -> bool {
+			if (rtcTime == DateTime{}) {
+				if (millis() < 10000) return true; // don't want to reset RTC if this is a temporary glitch
+			} else if (rtcTime < compilerTime) return true; // got valid rtc time
+			return false;
+		};
+
+		int rtcMinUnits, rtcSeconds;
+		auto rtcTime = _timeFromRTC(rtcMinUnits, rtcSeconds); // 0 if failed
+		int compilerMinUnits, compilerSeconds;
+		auto compilerTime = _timeFromCompiler(compilerMinUnits, compilerSeconds);
+		auto status = _OK;
+
+		if (shouldUseCompilerTime(rtcTime,compilerTime)) {
+			_now = compilerTime;
+			setMinUnits(compilerMinUnits);
+			setSeconds(compilerSeconds);
+			saveTime();
+			logger() << L_time << "Clock Set from Compiler" << L_endl;
 		}
 		else {
-			_now.setMins10(data[1] >> 4);
-			_now.setHrs(fromBCD(data[2]));
-			_now.setDay(fromBCD(data[4]));
-			_now.setMonth(fromBCD(data[5]));
-			if (_now.month() == 0) _now.setMonth(1);
-			_now.setYear(fromBCD(data[6]));
-			_autoDST = data[8] >> 1;
-			_dstHasBeenSet = data[8] & 1;
-			setMinUnits(data[1] & 15);
-			setSeconds(fromBCD(data[0]));
-			logger() << L_time << "Clock Set from RTC, day: " << fromBCD(data[4]) << L_endl;
+			uint8_t dst;
+			status = readData(8, 1, &dst);
+			if (rtcTime != DateTime{} || status != _OK) {
+				logger() << L_time << "RTC Unreadable." << I2C_Talk::getStatusMsg(status) << L_endl;
+			}
+			else {
+				_now = rtcTime;
+				setMinUnits(rtcMinUnits);
+				setSeconds(rtcSeconds);
+				_autoDST = dst >> 1;
+				_dstHasBeenSet = dst & 1;
+				logger() << L_time << "Clock Set from RTC" << L_endl;
+			}
 		}
 	
 		_lastCheck_mS = millis();

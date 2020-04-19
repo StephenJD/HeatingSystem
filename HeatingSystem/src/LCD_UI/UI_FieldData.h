@@ -31,6 +31,7 @@ namespace LCD_UI {
 			, OnSelectFnctr onSelect = 0);
 
 		// Queries
+		int	focusIndex() const override;
 		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex=0) const override;
 		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override;
@@ -41,6 +42,7 @@ namespace LCD_UI {
 		// Modifiers
 		Collection_Hndl * item(int elementIndex) override;
 		void focusHasChanged(bool hasFocus) override;
+		void setFocusIndex(int focus) override;
 		void insertNewData();
 		void deleteData();
 		void set_OnSelFn_TargetUI(Collection_Hndl * obj);

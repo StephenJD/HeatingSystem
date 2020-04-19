@@ -52,7 +52,7 @@ public:
 	const I2C_Talk & i2C() const { return const_cast<I_I2Cdevice*>(this)->i2C(); }
 	virtual I2C_Talk & i2C() = 0;
 protected:
-	explicit I_I2Cdevice(int addr) : _address(static_cast<uint8_t>(addr)) {}
+	constexpr explicit I_I2Cdevice(int addr) : _address(static_cast<uint8_t>(addr)) {}
 	I_I2Cdevice() = default; 
 private:
 	uint8_t _address = 0;
@@ -66,12 +66,12 @@ public:
 	I2C_Talk & i2C() override { return i2c; }
 };
 
-class I_I2Cdevice_Recovery : public I_I2Cdevice {
+class I_I2Cdevice_Recovery : public I_I2Cdevice { // cannot be constexpr because of use of non-const class static in constructors
 public:
 	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice(addr), _recover(&recover) { set_recover = _recover; } // initialiser for first array element 
 	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover) : _recover(&recover) {set_recover = _recover;}
 	I_I2Cdevice_Recovery(int addr) : I_I2Cdevice(addr), _recover(set_recover) {}; // initialiser for subsequent array elements 
-	I_I2Cdevice_Recovery() : _recover(set_recover) {}; // initialiser for subsequent array elements 
+	I_I2Cdevice_Recovery() : I_I2Cdevice(), _recover(set_recover) {}; // initialiser for subsequent array elements 
 	bool isEnabled() const override { return _i2c_speed != 0; }
 	auto getStatus()->I2C_Talk_ErrorCodes::error_codes override;
 	void disable() override { _lastFailedTime = millis(); _i2c_speed = 0; }

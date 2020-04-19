@@ -3,8 +3,11 @@
 #include <Arduino.h>
 
 class EEPROMClass;
-class I2C_Temp_Sensor;
-class iRelay;
+
+namespace HardwareInterfaces {
+	class TempSensor;
+	class Relay_D;
+}
 
 void sendMsg(const char* msg);
 void sendMsg(const char* msg, long a);
@@ -26,7 +29,7 @@ public:
 	enum State {e_Moving_Coolest = -2, e_NeedsCooling, e_Off, e_NeedsHeating};
 	enum ControlSetting {e_nothing, e_stop_and_wait, e_new_temp};
 
-	Mix_Valve(I2C_Temp_Sensor & temp_sensr, iRelay & heat_relay, iRelay & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp);
+	Mix_Valve(HardwareInterfaces::TempSensor & temp_sensr, HardwareInterfaces::Relay_D & heat_relay, HardwareInterfaces::Relay_D & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp);
 	int8_t getTemperature() const;
 	uint16_t getRegister(int reg) const;
 	
@@ -55,9 +58,9 @@ private:
 	uint8_t loadFromEEPROM(); // returns noOfBytes read
 
 	// Injected dependancies
-	I2C_Temp_Sensor * temp_sensr;
-	iRelay * heat_relay;
-	iRelay * cool_relay;
+	HardwareInterfaces::TempSensor * temp_sensr;
+	HardwareInterfaces::Relay_D * heat_relay;
+	HardwareInterfaces::Relay_D * cool_relay;
 	EEPROMClass * _ep;
 	uint8_t _eepromAddr;
 	// EEPROM saved data

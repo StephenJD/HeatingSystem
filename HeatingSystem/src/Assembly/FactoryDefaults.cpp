@@ -53,12 +53,12 @@ namespace Assembly {
 
 	constexpr R_TempSensor tempSensors_f[] = {
 		{ "Flat",0x70 },
-		{ "FlTR",0x72 },
+		{ "FlTR",0x48 },
 		{ "HsTR",0x71 },
 		{ "EnST",0x76 },
 		{ "UpSt",0x36 },
 		{ "DnSt",0x74 },
-		{ "OutS",0x2B }, // { "OutS",0x2B }, // 29
+		{ "OutS",0x2B },
 		{ "Grnd",0x35 },
 
 		{ "Pdhw",0x37 },

@@ -22,7 +22,7 @@ SD.h/.cpp modified to provide sd_exists();
 	class Logger : public Print {
 	public:
 		Logger() = default;
-		Logger(const char * fileName, int baudRate, Clock & clock) {}
+		Logger(const char * fileName, uint32_t baudRate, Clock & clock) {}
 
 		Flags addFlag(Flags flag) { _flags = _flags + flag; return _flags; }
 		Flags removeFlag(Flags flag) { _flags = static_cast<Flags>(_flags & ~flag); return _flags; }
@@ -30,8 +30,8 @@ SD.h/.cpp modified to provide sd_exists();
 		size_t write(uint8_t) override { return 1; }
 		size_t write(const uint8_t *buffer, size_t size) override { return size; }
 
-		virtual bool isWorking() { return true; };
-		virtual void readAll() {};
+		virtual bool isWorking() { return true; }
+		virtual void readAll() {}
 		Logger & operator <<(Flags);
 		
 		template<class T>
@@ -102,8 +102,8 @@ SD.h/.cpp modified to provide sd_exists();
 
 	class Serial_Logger : public Logger {
 	public:
-		Serial_Logger(int baudRate, Clock & clock);
-		Serial_Logger(int baudRate);
+		Serial_Logger(uint32_t baudRate, Clock & clock);
+		Serial_Logger(uint32_t baudRate);
 		Serial_Logger() = default;
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
@@ -116,8 +116,8 @@ SD.h/.cpp modified to provide sd_exists();
 
 	class SD_Logger : public Serial_Logger {
 	public:
-		SD_Logger(const char * fileName, int baudRate, Clock & clock);
-		SD_Logger(const char * fileName, int baudRate);
+		SD_Logger(const char * fileName, uint32_t baudRate, Clock & clock);
+		SD_Logger(const char * fileName, uint32_t baudRate);
 		bool isWorking() override;
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;

@@ -2,10 +2,12 @@
 
 #include <Mix_Valve.h>
 #include <TempSensor.h>
-#include "RelayM.h"
+#include "Relay.h"
 #include "TimeLib.h"
 #include <EEPROM.h>
 #include <I2C_Talk.h>
+
+using namespace HardwareInterfaces;
 
 void enableRelays(bool enable); // this function must be defined elsewhere
 extern bool receivingNewData;
@@ -17,7 +19,7 @@ const uint8_t I2C_MASTER_ADDR = 0x11;
 
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 
-Mix_Valve::Mix_Valve(I2C_Temp_Sensor & temp_sensr, iRelay & heat_relay, iRelay & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp)
+Mix_Valve::Mix_Valve(TempSensor & temp_sensr, Relay_D & heat_relay, Relay_D & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp)
 	: temp_sensr(&temp_sensr),
 	heat_relay(&heat_relay),
 	cool_relay(&cool_relay),
@@ -282,8 +284,8 @@ void checkPumpIsOn() {
 
 int8_t Mix_Valve::getMotorState() const {
 	if (_state == e_Moving_Coolest) return -2;
-	else if (cool_relay->get()) return -1;	
-	else if (heat_relay->get()) return 1;
+	else if (cool_relay->logicalState()) return -1;	
+	else if (heat_relay->logicalState()) return 1;
 	else return 0;
 }
 

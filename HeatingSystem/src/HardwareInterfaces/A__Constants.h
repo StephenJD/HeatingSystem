@@ -14,7 +14,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 20;
+	constexpr uint8_t VERSION = 22;
 	////////////////// EVENT CODES ////////////////////////
 	//extern bool temp_sense_hasError;
 	//const S1_err TEMP_SENS_ERR_TEMP		= -30;
@@ -57,7 +57,7 @@ namespace HardwareInterfaces {
 	const uint8_t MIX_VALVE_USED = 128 | 8 | 2 | 1;
 
 	// registers
-	const uint8_t REG_8PORT_IODIR = 0x00;
+	const uint8_t REG_8PORT_IODIR = 0x00; // default all 1's = input
 	const uint8_t REG_8PORT_PullUp = 0x06;
 	const uint8_t REG_8PORT_OPORT = 0x09;
 	const uint8_t REG_8PORT_OLAT = 0x0A;

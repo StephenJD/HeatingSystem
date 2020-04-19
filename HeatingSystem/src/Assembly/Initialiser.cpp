@@ -77,10 +77,11 @@ namespace Assembly {
 
 	uint8_t Initialiser::initialiseRemoteDisplays() {
 		uint8_t failed = 0;
+		logger() << L_time << "initialiseRemoteDisplays()" << L_endl;
 		for (auto & rd : _hs.remDispl) {
 			failed |= rd.initialiseDevice();
 		}
-		logger() << L_time << "initialiseRemoteDisplays() done" << L_endl;
+		logger() << "\tinitialiseRemoteDisplays() done" << L_endl;
 		return failed;
 	}
 

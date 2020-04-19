@@ -43,7 +43,7 @@ uint32_t I2C_SpeedTest::fastest_T<false>() {
 	_thisHighestFreq = _i2c_device->i2C().setI2CFrequency(startFreq);
 	_i2c_device->recovery().registerDevice(*_i2c_device);
 	auto status = _i2c_device->recovery().testDevice(2,1); // Unfreeze is only Recovery strategy applied during speed-test
-	//logger() << "fastest_T Device tested result", status, _i2c_device->getStatusMsg(status));
+	//logger() << "fastest_T Device tested result " << status << _i2c_device->getStatusMsg(status) << L_flush;
 	if (status != _OK) status = _i2c_device->recovery().findAworkingSpeed();
 	if (status == _OK) {
 		//Serial.println(" ** findMaxSpeed **");
@@ -75,9 +75,9 @@ error_codes I2C_SpeedTest::findOptimumSpeed(int32_t & bestSpeed, int32_t limitSp
 		auto trySpeed = _i2c_device->i2C().setI2CFrequency(limitSpeed - adjustBy);
 		status = _OK;
 		do {
-			logger() << "\n  Try best speed: " << trySpeed << " adjustBy : " << adjustBy;
+			//logger() << "\n  Try best speed: " << trySpeed << " adjustBy : " << adjustBy << L_endl;
 			while (status == _OK && (adjustBy > 0 ? trySpeed < limitSpeed : trySpeed > limitSpeed)) { // adjust speed 'till it breaks	
-				logger() << "\n    Try at: " << _i2c_device->i2C().getI2CFrequency();
+				//logger() << "    Try at: " << _i2c_device->i2C().getI2CFrequency() << L_endl;
 				status = _i2c_device->recovery().testDevice(2, 1);
 				if (status != _OK) {
 					limitSpeed = trySpeed - adjustBy / 100;
@@ -113,7 +113,7 @@ error_codes I2C_SpeedTest::adjustSpeedTillItWorksAgain(int32_t incrementRatio) {
 				if (increment > -2000) increment = -2000;
 			}
 			_i2c_device->i2C().setI2CFrequency(currFreq + increment);
-			logger() << "\n Adjust I2C_Speed: " << currFreq << " increment : " << increment;
+			//logger() << "\tAdjust I2C_Speed: " << currFreq << " increment : " << increment << L_endl;
 		}
 		currFreq = _i2c_device->i2C().getI2CFrequency();
 	} while (status != _OK && currFreq > I2C_Talk::MIN_I2C_FREQ && currFreq < I2C_Talk::MAX_I2C_FREQ);

@@ -9,8 +9,8 @@ namespace I2C_Recovery {
 
 	class I2C_Recover { // no-recovery base-class
 	public:
-		I2C_Recover() = default;
-		I2C_Recover(I2C_Talk & i2C) : _i2C(&i2C) {}
+		constexpr I2C_Recover() = default;
+		constexpr I2C_Recover(I2C_Talk & i2C) : _i2C(&i2C) {}
 		
 		// Queries
 		const I2C_Talk & i2C() const { return *_i2C; }
@@ -29,6 +29,7 @@ namespace I2C_Recovery {
 			return false;
 		}
 		virtual I_I2Cdevice_Recovery * lastGoodDevice() const { return _device; }
+		virtual bool isUnrecoverable() const { return false; }
 
 		// Polymorphic Functions for I2C_Talk
 		virtual auto findAworkingSpeed()->I2C_Talk_ErrorCodes::error_codes  { return testDevice(1, 0); }

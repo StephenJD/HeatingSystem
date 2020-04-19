@@ -2,7 +2,7 @@
 #include "..\Assembly\HeatingSystemEnums.h"
 #include "Temp_Sensor.h"
 #include "ThermalStore.h"
-#include "Relay.h"
+#include "Relay_Bitwise.h"
 #include "MixValveController.h"
 
 namespace HardwareInterfaces {
@@ -12,14 +12,15 @@ namespace HardwareInterfaces {
 	//              Zone Dynamic Class
 	//***************************************************
 #ifdef ZPSIM
-	Zone::Zone(I2C_Temp_Sensor & ts, int reqTemp)
+	Zone::Zone(I2C_Temp_Sensor & ts, int reqTemp, Bitwise_Relay & callRelay )
 		: _callTS(&ts)
 		, _currProfileTempRequest(reqTemp)
+		, _relay(&callRelay)
 		, _isHeating(reqTemp > _callTS->get_temp() ? true : false)
 		, _maxFlowTemp(65)
 	{}
 #endif
-	void Zone::initialise(int zoneID, I2C_Temp_Sensor & callTS, Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp) {
+	void Zone::initialise(int zoneID, I2C_Temp_Sensor & callTS, Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
@@ -37,7 +38,7 @@ namespace HardwareInterfaces {
 	}
 
 	bool Zone::isCallingHeat() const {
-		return _relay->getRelayState();
+		return _relay->logicalState();
 	}
 
 	int8_t Zone::getCurrTemp() const { return _callTS ? (getFractionalCallSensTemp() >> 8) : 0; }
@@ -96,7 +97,7 @@ namespace HardwareInterfaces {
 				needHeat = _thermalStore->needHeat(currTempRequest(), nextTempRequest());
 				//logger() << "Zone_Run::setZFlowTemp for DHW\t NeedHeat?",needHeat);
 			}
-			_relay->setRelay(needHeat);
+			_relay->set(needHeat);
 			return needHeat;
 		}
 
@@ -113,7 +114,7 @@ namespace HardwareInterfaces {
 		if (_thermalStore->dumpHeat()) {// turn zone on to dump heat
 			tempError = -10;
 		}
-		auto logger_RelayStatus = _relay->getRelayState();
+		auto logger_RelayStatus = _relay->logicalState();
 		if (tempError > 7L) {
 			myFlowTemp = MIN_FLOW_TEMP;
 			logTemps("Too Warm", currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
@@ -137,7 +138,7 @@ namespace HardwareInterfaces {
 		if (_mixValveController->amControlZone(uint8_t(myFlowTemp), _maxFlowTemp, _relay->recordID())) { // I am controlling zone, so set flow temp
 		}
 		else { // not control zone
-			_relay->setRelay(tempError < 0); // too cool
+			_relay->set(tempError < 0); // too cool
 		}
 
 		_callFlowTemp = (int8_t)myFlowTemp;

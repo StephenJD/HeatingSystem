@@ -5,7 +5,7 @@ namespace I2C_Recovery {
 	constexpr uint8_t STRATEGY_VERSION = 1;
 	constexpr uint8_t STACKTRACE_MESSAGE_NO = 10;
 	constexpr uint8_t STACKTRACE_MESSAGE_LENGTH = 32;
-	enum Strategy {S_NoProblem, S_TryAgain, S_Restart, S_WaitForDataLine/*, S_WaitAgain10*/, S_NotFrozen, S_SlowDown, S_SpeedTest, S_PowerDown, S_Disable, S_NoOfStrategies };
+	enum Strategy {S_NoProblem, S_TryAgain, S_Restart, S_WaitForDataLine/*, S_WaitAgain10*/, S_NotFrozen, S_SlowDown, S_SpeedTest, S_PowerDown, S_Disable, S_Unrecoverable, S_NoOfStrategies };
 	
 	class I2C_RecoverStrategy
 	{

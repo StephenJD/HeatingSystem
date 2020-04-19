@@ -19,7 +19,7 @@ namespace HardwareInterfaces {
 	class HardReset : public I2C_Recovery::I2C_Recover_Retest::I_I2CresetFunctor {
 	public:
 		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
-
+		static void arduinoReset();
 		bool initialisationRequired = false;
 		unsigned long timeOfReset_mS = 0;
 	private:
