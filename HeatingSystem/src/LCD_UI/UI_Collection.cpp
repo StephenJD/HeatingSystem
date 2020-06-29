@@ -222,12 +222,12 @@ namespace LCD_UI {
 				collectionPtr->filter(viewable());
 				auto focus_index = focusIndex();
 #ifdef ZPSIM
-				cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects[(long)get()] << endl;
-				cout << F("NoOfHandles : ") << collectionPtr->endIndex() << endl;
+				//cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects[(long)get()] << endl;
+				//cout << F("NoOfHandles : ") << collectionPtr->endIndex() << endl;
 #endif
 				for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
 					auto ith_objectPtr = collectionPtr->item(i);
-					cout << F("Streaming ") << ui_Objects[(long)ith_objectPtr->get()] << endl;
+					//cout << F("Streaming ") << ui_Objects[(long)ith_objectPtr->get()] << endl;
 
 					auto ith_collectionPtr = ith_objectPtr->get()->collection();
 					if (ith_objectPtr->get()->behaviour().is_OnNewLine())
@@ -239,11 +239,11 @@ namespace LCD_UI {
 					}
 
 					if (ith_collectionPtr && ith_collectionPtr->behaviour().is_viewAll()) { // get the handle pointing to the nested collection
-						cout << F("Streaming ViewAll ") << ui_Objects[(long)ith_collectionPtr] << endl;
+						//cout << F("Streaming ViewAll ") << ui_Objects[(long)ith_collectionPtr] << endl;
 						ith_collectionPtr->streamElement(buffer, activeElement, static_cast<const I_SafeCollection *>(ith_objectPtr->get()), i);
 					}
 					else {
-						cout << F("Streaming Object  ") << ui_Objects[(long)ith_objectPtr->get()] << endl;
+						//cout << F("Streaming Object  ") << ui_Objects[(long)ith_objectPtr->get()] << endl;
 						ith_objectPtr->streamElement(buffer, activeElement, shortColl, streamIndex);
 					}
 					auto debug = buffer.toCStr();
@@ -298,10 +298,11 @@ namespace LCD_UI {
 	Behaviour I_SafeCollection::_filter = viewable();
 
 	Collection_Hndl * I_SafeCollection::leftRight_Collection() {
-		if (behaviour().is_viewAll())
-			return 0;
-		else
+		if (item(validIndex(focusIndex()))->get()->isCollection()) {
 			return static_cast<Collection_Hndl*>(item(validIndex(focusIndex())));
+		}
+		else
+			return 0;
 	}
 
 	int I_SafeCollection::nextActionableIndex(int index) const { // index must be in valid range including endIndex()

@@ -63,10 +63,13 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * A_Top_UI::set_leftRightUI_from(Collection_Hndl * topUI, int direction) {
-		if (!topUI->behaviour().is_viewAll()) topUI = topUI->backUI();
+		if (!topUI->behaviour().is_viewAll()) {
+			topUI = topUI->backUI();
+		}
 		_leftRightBackUI = topUI;
 		auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
 		if (innerLeftRight) {
+			logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects[(long)(innerLeftRight->get())].c_str() << L_endl;
 			auto inner_UI_h = innerLeftRight;
 			//auto inner_UI_h = topUI->activeUI();
 			do {
@@ -82,6 +85,7 @@ namespace LCD_UI {
 				//}
 				//if (inner_UI_h == 0) return topUI;
 				if (innerLeftRight == 0) break;
+				logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects[(long)(innerLeftRight->get())].c_str() << L_endl;
 				_leftRightBackUI = innerLeftRight;
 				inner_UI_h = innerLeftRight;
 				inner_UI_h->enter_collection(direction);
