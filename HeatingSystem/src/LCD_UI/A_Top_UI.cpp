@@ -77,18 +77,10 @@ namespace LCD_UI {
 		if (!topUI->behaviour().is_viewAll()) topUI = topUI->backUI();
 		_leftRightBackUI = topUI;
 		auto this_UI_h = topUI->activeUI();
-		if (ui_Objects[(long)_leftRightBackUI->get()] == "_subpage_towelRails_c") {
-			//if (_leftRightBackUI->behaviour().is_viewAll() && _leftRightBackUI->endIndex() == 1)
-			return topUI;
-		}
 		do {
+			cout << "inner: " << ui_Objects[(long)this_UI_h->get()] << endl;
 			if (this_UI_h->behaviour().is_viewAll()) {
-				if (this_UI_h->endIndex() == 1) {
-					this_UI_h = this_UI_h->activeUI()->activeUI();
-				}
-				else {
-					_leftRightBackUI = this_UI_h;
-				}
+				_leftRightBackUI = this_UI_h;	
 				enter_nested_ViewAll(this_UI_h, direction);
 				this_UI_h = _leftRightBackUI->activeUI();
 			}
@@ -96,7 +88,7 @@ namespace LCD_UI {
 				this_UI_h = this_UI_h->activeUI();
 			}
 			if (this_UI_h == 0) return topUI;
-		} while (this_UI_h->get()->isCollection() && this_UI_h->endIndex() > 1);
+		} while (this_UI_h->get()->isCollection());
 		if (this_UI_h->behaviour().is_viewAll()) 
 			_leftRightBackUI = this_UI_h;
 		return topUI;
