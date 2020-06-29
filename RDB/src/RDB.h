@@ -17,15 +17,20 @@ namespace RelationalDatabase {
 		/// <summary>
 		/// For creating a new Database
 		/// </summary>	
-		RDB(int dbStart, int dbEnd, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStart, dbEnd, wbh, rbh, password) {};
+		RDB(int dbStartAddr, int dbMaxAddr, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStartAddr, dbMaxAddr, wbh, rbh, password) {};
 
 		/// <summary>
 		/// For opening an existing Database
 		/// </summary>	
-		RDB(int dbStart, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStart, wbh, rbh, password) {
+		RDB(int dbStartAddr, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStartAddr, wbh, rbh, password) {
 			if (checkPW(password)) {
 				getTables(tables, maxNoOfTables);
 			}
+		}
+
+		void reset(size_t password, uint16_t dbMaxAddr) override {
+			RDB_B::reset(password, dbMaxAddr);
+			for (auto & table : tables) table = Table{};
 		}
 
 		template <typename Record_T>
@@ -36,7 +41,7 @@ namespace RelationalDatabase {
 		template <typename Record_T>
 		const TableQuery createTable(const Record_T & rec, int initialNoOfRecords, InsertionStrategy strategy = i_retainOrder) {
 			TableQuery tq = registerTable(RDB_B::createTable(sizeof(Record_T), initialNoOfRecords, strategy));
-			tq.insert(&rec);
+			tq.insert(rec);
 			return tq;
 		}
 
@@ -67,16 +72,15 @@ namespace RelationalDatabase {
 		Table & registerTable(const Table & t) {
 			for (auto & tbl : tables) {
 				if (tbl._tableID == t._tableID) {
-					logger() << L_tabs << " Registered Table found ID:" << t._tableID << " pos" << &tbl - tables << L_endl;
+					logger() << L_tabs << F(" Registered Table found ID:") << t._tableID << F(" pos") << &tbl - tables << L_endl;
 					return tbl;
 				}
 				else if (tbl._tableID == 0) {
-					logger()  << L_tabs << " Register Table ID: " << t._tableID << " pos" << &tbl - tables << L_endl;
+					logger()  << L_tabs << F(" Register Table ID: ") << t._tableID << F(" pos") << &tbl - tables << L_endl;
 					tbl = t; 
 					return tbl; 
 				}
 			}
-			//logger() << " Register of Table failed at addr ", t._tableID);
 			return tables[maxNoOfTables];
 		}
 

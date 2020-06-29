@@ -20,7 +20,7 @@ namespace RelationalDatabase {
 	/// begin() may be decremented to return an ID of -1, with status TB_BEFORE_BEGIN.
 	/// end() has an ID of Table_Capacity and a status of TB_END_STOP.
 	/// last() points to the last valid record - also obtained by decrementing end().
-	/// It maintains it current position and provides next(moveBy) to support bi-directional Query traversal.
+	/// It provides next(moveBy) to support bi-directional Query traversal on the supplied Record Selector.
 	/// Queries may also be indexed, like an array, giving the Record at that ID if it exists, or status of "Record Unused".
 	/// A Query may be constructed from another Query and use Match Field arguments to create filters and other more complex Queries by implementing next().
 	/// Specialised TableQuery downcasts its Query* member to the TableNavigator passed into its constructor. 
@@ -43,11 +43,12 @@ namespace RelationalDatabase {
 		virtual void next(RecordSelector & recSel, int moveBy);
 
 		// Modify Query
+		//virtual void refresh();
 		virtual void setMatchArg(int matchArg) {}
 		virtual RecordSelector findMatch(RecordSelector & recSel);
 		
 		template <typename Record_T>
-		RecordSelector insert(const Record_T * record);
+		RecordSelector insert(const Record_T & record);
 
 		// Access
 		const Query & incrementQ() const { return const_cast<Query*>(this)->resultsQ(); }
@@ -84,25 +85,21 @@ namespace RelationalDatabase {
 	/// <summary>
 	/// A Query on a Table.
 	/// Returned from RBD::table(index);
-	/// It has a TableNavigator initialised by the constructor.
-	/// I maintains its own RecordSelector, recording the Record ID for this query.
 	/// Multiple TableQueries may range over the same Table.
-	/// TableNavigator maintains the address details for its active iterator.
 	/// </summary>
 	class TableQuery : public Query {
 	public:
 		TableQuery() = default;
 		TableQuery(Table & table) : _table(&table) {
-			//logger() << "TableQuery strategy:", _table->insertionStrategy());
 
 #ifdef ZPSIM
-			std::cout << " TableQuery at: " << std::hex << (long long)this << " TableID : " << std::dec << (int)_table->tableID() << std::endl;
+			logger() << F(" TableQuery at: ") << L_hex << (long)this << F(" TableID : ") << L_dec << (int)_table->tableID() << L_endl;
 #endif
 		}
 
 		TableQuery(const TableQuery & tableQ) : _table(tableQ._table) {
 #ifdef ZPSIM
-			std::cout << " Copy TableQuery at: " << std::hex << (long long)this << " TableID : " << std::dec << (int)_table->tableID() << std::endl;
+			logger() << F(" Copy TableQuery at: ") << L_hex << (long)this << F(" TableID : ") << L_dec << (int)_table->tableID() << L_endl;
 #endif
 		}
 
@@ -115,8 +112,10 @@ namespace RelationalDatabase {
 		TableQuery & incrementTableQ() override { return *this; }
 
 		template <typename Record_T>
-		RecordSelector insert(const Record_T * record) {
+		RecordSelector insert(const Record_T & record) {
+			static_assert(!std::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 			auto rs = RecordSelector{ *this, _table };
+			//rs.end();
 			rs.tableNavigator().insert(record);
 			return rs;
 		}
@@ -125,28 +124,33 @@ namespace RelationalDatabase {
 		RecordSelector insert(const Record_T * record, int noOfRecords) {
 			auto rs = RecordSelector{ *this, _table };
 			for (int i = 0; i < noOfRecords; ++i) {
-				rs.tableNavigator().insert(record);
+				rs.tableNavigator().insert(*record);
 				++record;
 			}
 			return rs;
 		}
 		RDB_B * getDB();
+		//void refresh() override;
 	private:
 		Table * _table = 0;
 	};
 
 	template <typename Record_T>
-	RecordSelector Query::insert(const Record_T * record) {
+	RecordSelector Query::insert(const Record_T & record) {
+		static_assert(!std::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 		return incrementTableQ().insert(record);
 	}
 
+	/// <summary>
+	/// A base Query for building complex queries.
+	/// </summary>	
 	class CustomQuery : public Query {
 	public:
 		CustomQuery(Query & source) : _incrementQ(&source) {}
 		CustomQuery(const TableQuery & tableQ) : _incrementQ(&_tableQ), _tableQ(tableQ) {
 #ifdef ZPSIM
-			std::cout << " Custom Query at : " << std::hex << (long long)this << "\n";
-			std::cout << "    Nested Table Query at : " << std::hex << (long long)&_tableQ << "\n";
+			logger() << F(" Custom Query at : ") << L_hex << (long)this << F("\n");
+			logger() << F("    Nested Table Query at : ") << L_hex << (long)&_tableQ << F("\n");
 #endif
 		}
 
@@ -174,7 +178,7 @@ namespace RelationalDatabase {
 	/// <summary>
 	/// Single-table filter query.
 	/// Returns records whose field-value matches the firstMatch argument.
-	/// Provide a TableNavigator,
+	/// Provide a Query,
 	/// and the field index for the filter field.
 	/// </summary>	
 	template <typename ReturnedRecordType>
@@ -183,7 +187,7 @@ namespace RelationalDatabase {
 		QueryF_T(Query & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {}
 		QueryF_T(const TableQuery & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {
 #ifdef ZPSIM
-			std::cout << " Filter Query at : " << std::hex << (long long)this << "\n";
+			logger() << F(" Filter Query at : ") << L_hex << (long)this << F("\n");
 #endif
 		}
 
@@ -191,12 +195,12 @@ namespace RelationalDatabase {
 			auto matchLocator = recSel.incrementRecord();
 			Answer_R<ReturnedRecordType> match = matchLocator;
 			match.status();
-			//std::cout << "  Filter field at ID: " << (int)match.id() << " with val " << (int)match.field(_match_f) << " to " << id << std::endl;
+			//logger() << F("  Filter field at ID: ") << (int)match.id() << F(" with val ") << (int)match.field(_match_f) << F(" to ") << id << L_endl;
 			while (recSel.status() == TB_OK && match.status() == TB_OK && match.field(_match_f) != id) {
 				incrementQ().next(recSel, direction);
 				match = recSel.incrementRecord();
 				//match.rec();
-				//std::cout << "      Try next Match at ID: " << (int)match.id() << " with val " << (int)match.field(_match_f) << std::endl;
+				//logger() << F("      Try next Match at ID: ") << (int)match.id() << F(" with val ") << (int)match.field(_match_f) << L_:endl;
 			}
 			return match;
 		}
@@ -234,8 +238,8 @@ namespace RelationalDatabase {
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
 #ifdef ZPSIM
-			std::cout << " Link Query and results at : " << std::hex <<(long long)this << "\n";
-			std::cout << "    nested Filter Query at : " << std::hex <<(long long)&_linkQ << "\n";
+			logger() << F(" Link Query and results at : ") << L_hex <<(long)this << F("\n");
+			logger() << F("    nested Filter Query at : ") << L_hex <<(long)&_linkQ << F("\n");
 #endif
 		}
 
@@ -246,8 +250,8 @@ namespace RelationalDatabase {
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
 #ifdef ZPSIM
-			std::cout << " Link Query and results at : " << std::hex << (long long)this << "\n";
-			std::cout << "    nested Filter Query at : " << std::hex << (long long)&_linkQ << "\n";
+			logger() << F(" Link Query and results at : ") << L_hex << (long)this << F("\n");
+			logger() << F("    nested Filter Query at : ") << L_hex << (long)&_linkQ << F("\n");
 #endif
 		}
 		void setMatchArg(int matchArg) override { _linkQ.setMatchArg(matchArg); }
@@ -260,7 +264,7 @@ namespace RelationalDatabase {
 			Answer_R<LinkRecordType> match = recSel.incrementRecord();
 			if (match.status() == TB_OK) {
 				auto matchField = match.field(_select_f);
-				//std::cout << "  Link field at ID: " << (int)match.id() << " to select ID: " << (int)matchField << std::endl;
+				//logger() << F("  Link field at ID: ") << (int)match.id() << F(" to select ID: ") << (int)matchField << L_endl;
 				return resultsQ()[match.field(_select_f)];
 			} else if (match.status() == TB_BEFORE_BEGIN)  {
 				return resultsQ()[-1];

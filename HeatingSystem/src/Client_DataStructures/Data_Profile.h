@@ -21,7 +21,7 @@ namespace client_data_structures {
 	};
 
 	inline Logger & operator << (Logger & stream, const R_Profile & profile) {
-		return stream << "Profile for ProgID: " << (int)profile.programID << " ZoneID: " << (int)profile.zoneID << " Days: " << (int)profile.days;
+		return stream << F("Profile for ProgID: ") << (int)profile.programID << F(" ZoneID: ") << (int)profile.zoneID << F(" Days: ") << (int)profile.days;
 	}
 
 	//***************************************************

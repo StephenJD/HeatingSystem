@@ -75,7 +75,6 @@ namespace LCD_UI {
 			auto fieldInterface_h = parent();
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
-				//logger() << "edit value", streamVal);
 			}
 			else const_cast<I_Edit_Hndl&>(editItem()).currValue().val = streamVal;
 		}
@@ -102,8 +101,8 @@ namespace LCD_UI {
 
 		const char * dataStream = f_interface().streamData(activeElement);
 #ifdef ZPSIM
-		//logger() << "\tstreamElement " << dataStream << L_tabs
-			//<< "\n\t\tObjectIndex: " << f_interface().objectIndex() << L_endl;
+		//logger() << F("\tstreamElement ") << dataStream << L_tabs
+			//<< F("\n\t\tObjectIndex: ") << f_interface().objectIndex() << L_endl;
 #endif		
 		const UI_Object * streamObject = backUI() ? backUI()->get() : get();
 		return streamObject->streamToBuffer(dataStream, buffer, activeElement, shortColl, streamIndex);
@@ -138,7 +137,7 @@ namespace LCD_UI {
 
 	Collection_Hndl * Field_Interface_h::on_select() {
 		backUI()->getItem(backUI()->focusIndex());
-		auto fieldData = backUI()->get()->collection();
+		auto fieldData = backUI()->get()->collection();		
 		static_cast<UI_FieldData*>(fieldData)->saveEdit(&f_interface().editItem().currValue());
 		backUI()->on_select();
 		return on_back();

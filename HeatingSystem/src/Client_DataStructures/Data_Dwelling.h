@@ -24,7 +24,7 @@ namespace client_data_structures {
 	};
 
 	inline Logger & operator << (Logger & stream, const R_Dwelling & dwelling) {
-		return stream << "Dwelling: " << dwelling.name;
+		return stream << F("Dwelling: ") << dwelling.name;
 	}
 
 	//***************************************************

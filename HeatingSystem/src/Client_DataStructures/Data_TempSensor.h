@@ -1,11 +1,35 @@
 #pragma once
-#include "..\HardwareInterfaces\Temp_Sensor.h"
+#include <TempSensor.h>
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
 
+namespace HardwareInterfaces {
+	//***************************************************
+	//              UI_TempSensor
+	//***************************************************
+
+	class UI_TempSensor : public TempSensor, public LCD_UI::VolatileData {
+	public:
+		using TempSensor::TempSensor;
+		UI_TempSensor() = default;
+#ifdef ZPSIM
+		UI_TempSensor(I2C_Recovery::I2C_Recover & recover, uint8_t addr, int16_t temp) : TempSensor(recover, addr) { _lastGood = temp << 8; }
+#endif
+		// Queries
+		bool operator== (const UI_TempSensor & rhs) const { return _recordID == rhs._recordID; }
+
+		// Modifiers
+		void initialise(int recordID, int address) { _recordID = recordID; TempSensor::initialise(address); }
+
+	private:
+		RelationalDatabase::RecordID _recordID = 0;
+	};
+
+	//extern UI_TempSensor * tempSensors; // Array of TempSensor provided by client
+}
+
 namespace client_data_structures {
 	using namespace LCD_UI;
-	using namespace HardwareInterfaces;
 
 //***************************************************
 //              TempSensor UI Edit
@@ -70,16 +94,14 @@ namespace client_data_structures {
 	struct R_TempSensor {
 		char name[5];
 		uint8_t address; // Initialisation inhibits aggregate initialisation.
-		//I2C_Temp_Sensor & obj(int objID) { return HardwareInterfaces::tempSensors[objID]; }
+		//UI_TempSensor & obj(int objID) { return HardwareInterfaces::tempSensors[objID]; }
 		bool operator < (R_TempSensor rhs) const { return false; }
 		bool operator == (R_TempSensor rhs) const { return true; }
 	};
 
 	inline Logger & operator << (Logger & stream, const R_TempSensor & tempSensor) {
-		return stream << "TempSensor: " << tempSensor.name << " Addr: " << (int)tempSensor.address;
+		return stream << F("TempSensor: ") << tempSensor.name << F(" Addr: ") << (int)tempSensor.address;
 	}
-
-
 
 //***************************************************
 //              Dataset_TempSensor
@@ -102,8 +124,9 @@ namespace client_data_structures {
 		int recordField(int) const override {
 			return record().rec().address;
 		}
-		HardwareInterfaces::I2C_Temp_Sensor & tempSensor(int index) { return static_cast<HardwareInterfaces::I2C_Temp_Sensor*>(runTimeData())[index]; }
+		HardwareInterfaces::UI_TempSensor & tempSensor(int index) { return static_cast<HardwareInterfaces::UI_TempSensor*>(runTimeData())[index]; }
 	private:
 		TempSensor_Wrapper _tempSensor;
 	};
+
 }

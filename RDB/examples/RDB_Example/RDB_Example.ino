@@ -1,12 +1,29 @@
 #include <RDB.h>
 #include <EEPROM.h>
 
+#if defined(__SAM3X8E__)
+#include <I2C_Talk.h>
+
+I2C_Talk rtc{ Wire1 }; // not initialised until this translation unit initialised.
+
+EEPROMClass & eeprom() {
+	static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1), 0x50) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
+	return _eeprom_obj;
+}
+#else
+
+EEPROMClass & eeprom() {
+	return EEPROM;
+}
+#endif
+
 using namespace RelationalDatabase;
+const int PASSSWORD = 5;
 
 int writer(int address, const void * data, int noOfBytes) {
   const unsigned char * byteData = static_cast<const unsigned char *>(data);
   for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
-    EEPROM.update(address, *byteData);
+	  eeprom().update(address, *byteData);
   }
   return address;
 }
@@ -14,7 +31,7 @@ int writer(int address, const void * data, int noOfBytes) {
 int reader(int address, void * result, int noOfBytes) {
   uint8_t * byteData = static_cast<uint8_t *>(result);
   for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
-    *byteData = EEPROM.read(address);
+    *byteData = eeprom().read(address);
   }
   return address;
 }
@@ -42,7 +59,7 @@ struct R_Keyholder {
 };
 
 enum {T_Offices, T_People, T_Keyholders, T_NoOfTables};
-RDB<T_NoOfTables> db(0, 1024, writer, reader);
+RDB<T_NoOfTables> db(0, 1024, writer, reader, PASSSWORD);
 
 void setup() {
   Serial.begin(9600);

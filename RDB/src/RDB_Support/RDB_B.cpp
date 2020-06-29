@@ -4,60 +4,60 @@
 #include <Logging.h>
 
 namespace RelationalDatabase {
-	RDB_B::RDB_B(int dbStart, int dbEnd, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
+	RDB_B::RDB_B(uint16_t dbStartAddr, uint16_t dbMaxAddr, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
 		: _writeByte(w),
 		_readByte(r),
-		_dbStart(dbStart),
-		_dbSize(dbStart + DB_HeaderSize),
-		_dbEnd(dbEnd)
+		_dbStartAddr(dbStartAddr),
+		_dbEndAddr(dbStartAddr + DB_HeaderSize),
+		_dbMaxAddr(dbMaxAddr)
 	{
 		savePW(password);
 		setDB_Header();
-		logger() << "RDB_B(create) Constructed" << L_endl;
+		logger() << F("RDB_B(create) Constructed") << L_endl;
 	}
 
-	RDB_B::RDB_B(int dbStart, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
+	RDB_B::RDB_B(uint16_t dbStartAddr, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
 		: _writeByte(w),
 		_readByte(r),
-		_dbStart(dbStart)
+		_dbStartAddr(dbStartAddr)
 	{
 		if (checkPW(password)) {
 			loadDB_Header();
-			logger() << "RDB_B(load) Constructed Size : " << _dbSize << L_endl;
+			logger() << F("RDB_B(load) Constructed Size : ") << _dbEndAddr << L_endl;
 		}
 		else {
-			logger() << "RDB_B(load) Password mismatch" << L_endl;
+			logger() << F("RDB_B(load) Password mismatch") << L_endl;
 		}
 	}
 
-	void RDB_B::reset(int dbEnd, size_t password) {
+	void RDB_B::reset(size_t password, uint16_t dbMaxAddr) {
 		savePW(password);
-		_dbEnd = dbEnd;
-		_dbSize = _dbStart + DB_HeaderSize;
+		_dbEndAddr = _dbStartAddr + DB_HeaderSize;
+		_dbMaxAddr = dbMaxAddr;
 		setDB_Header();
 	}
 
 	void RDB_B::savePW(size_t password) {
-		_writeByte(_dbStart, &password, SIZE_OF_PASSWORD);
+		_writeByte(_dbStartAddr, &password, SIZE_OF_PASSWORD);
 	}
 
 	bool RDB_B::checkPW(size_t password) const {
 		size_t pw = 0;
-		_readByte(_dbStart, &pw, SIZE_OF_PASSWORD);
-		logger() << "PW was " << pw << " Should be " << password << L_endl;
+		_readByte(_dbStartAddr, &pw, SIZE_OF_PASSWORD);
+		logger() << F("PW was ") << pw << F(" Should be ") << password << L_endl;
 		return pw == password;
 		//return false;
 	}
 
 	void RDB_B::setDB_Header() {
-		auto addr = _writeByte(_dbStart + SIZE_OF_PASSWORD, &_dbSize, sizeof(DB_Size_t)); // _dbSize is next address available for a new table-header
-		_writeByte(addr, &_dbEnd, sizeof(DB_Size_t));
+		auto addr = _writeByte(_dbStartAddr + SIZE_OF_PASSWORD, &_dbEndAddr, sizeof(DB_Size_t)); // _dbEndAddr is next address available for a new table-header
+		_writeByte(addr, &_dbMaxAddr, sizeof(DB_Size_t));
 	}
 
 	void RDB_B::loadDB_Header() {
-		DB_Size_t addr = _dbStart + SIZE_OF_PASSWORD;
-		addr = _readByte(addr, &_dbSize, sizeof(DB_Size_t));
-		addr = _readByte(addr, &_dbEnd, sizeof(DB_Size_t));
+		DB_Size_t addr = _dbStartAddr + SIZE_OF_PASSWORD;
+		addr = _readByte(addr, &_dbEndAddr, sizeof(DB_Size_t));
+		addr = _readByte(addr, &_dbMaxAddr, sizeof(DB_Size_t));
 	}
 
 	Table RDB_B::createTable(size_t recsize, int initialNoOfRecords, InsertionStrategy strategy) {
@@ -68,10 +68,11 @@ namespace RelationalDatabase {
 		ChunkHeader th;
 
 		// Check available space
-		if (_dbSize + table_size <= _dbEnd) {
-			tableID = _dbSize;
-			DB_Size_t addr = _dbSize;
+		if (_dbEndAddr + table_size <= _dbMaxAddr) {
+			tableID = _dbEndAddr;
+			DB_Size_t addr = _dbEndAddr;
 			th.rec_size(static_cast<Record_Size_t>(recsize));
+			th.finalChunk(true);
 			th.chunkSize(initialNoOfRecords);
 			th.insertionStrategy(strategy);
 			th.validRecords(unvacantRecords(initialNoOfRecords));	// set all bits to "Used"
@@ -82,9 +83,12 @@ namespace RelationalDatabase {
 				ValidRecord_t usedRecords = unvacantRecords(initialNoOfRecords);
 				addr = _writeByte(addr, &usedRecords, 1);
 			}
-			_dbSize += table_size;
+			_dbEndAddr += table_size;
 			updateDB_Header();
-			logger() << "RDB_B::createTable() New DB_Size: " << _dbSize << L_endl;
+			logger() << F("RDB_B::createTable() New DB_Size: ") << _dbEndAddr << L_endl;
+			//logger() << F("RDB_B::createTable() ExtraVR's: ") << extraValidRecordBytes << L_endl;
+			//logger() << F("RDB_B::createTable() IsFinalChunk: ") << th.isFinalChunk() << L_endl;
+			//logger() << F("RDB_B::createTable() NextChunk(not valid if final): ") << th.nextChunk() << L_endl;
 		}
 		return { *this, tableID, th };
 	}
@@ -114,15 +118,15 @@ namespace RelationalDatabase {
 	}
 
 	int RDB_B::getTables(Table * tableArr, int maxNoOfTables) {
-		logger() << " RDB_B::getTables ..." << L_endl;
-		Table table(*this, _dbStart + DB_HeaderSize);
+		//logger() << F(" RDB_B::getTables 1st Table addr: ") << int(_dbStartAddr + DB_HeaderSize) << L_endl;
+		Table table(*this, _dbStartAddr + DB_HeaderSize);
 		int i;
 		for (i = 0; i < maxNoOfTables && table.isOpen(); ++i, ++tableArr) {
-			//logger() << " RDB_B::gotTable : " << i << L_endl;
+			//logger() << F(" RDB_B::gotTable : ") << i << L_endl;
 			*tableArr = table;
 			table.openNextTable();
 		}
-		logger() << " RDB_B::getTables loaded " << i << " tables." << L_endl;
+		logger() << F(" RDB_B::getTables loaded ") << i << F(" tables.") << L_endl;
 		return i;
 	}
 

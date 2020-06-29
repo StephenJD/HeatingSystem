@@ -15,7 +15,6 @@ namespace LCD_UI {
 	//		, _hidden_pages_hndl(hiddenCollection)
 	//		, _collection(&safeCollection)
 	//	{
-	//		std::cout << "MenuCollection at: " << std::hex << (long long)(this) << std::endl;
 	//	}
 
 	//	// Polymorphic Queries

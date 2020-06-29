@@ -21,7 +21,6 @@ namespace RelationalDatabase {
 		, _insertionStrategy(tableHdr.insertionStrategy())
 		, _max_NoOfRecords_in_table(_recordsPerChunk)
 	{
-		//logger() << "Table::Table _insertionStrategy:", _insertionStrategy);
 	}
 
 	Table::Table(RDB_B & db, TableID tableID) :
@@ -33,76 +32,81 @@ namespace RelationalDatabase {
 		openTable();
 	}
 
-	Table::Table(const Table & rhs) :_timeOfLastChange(micros())
-	{
-		//logger() << "Table::Table copy  _insertionStrategy:", _insertionStrategy);
-	}
-
-	//Table & Table::operator =(const Table & rhs) {
-	//	_timeOfLastChange = micros();
-	//	_db = rhs._db;
-	//	_table_header = rhs._table_header;
-	//	_tableID = rhs._tableID;
-	//	_recordsPerChunk = rhs._recordsPerChunk;
-	//	_rec_size = rhs._rec_size;
-	//	_insertionStrategy = rhs._insertionStrategy;
-	//	_max_NoOfRecords_in_table = rhs._max_NoOfRecords_in_table;
-	//	//logger() << "Table::Table assignment  _insertionStrategy:", _insertionStrategy);
-	//	return *this;
+	//Table::Table(const Table & rhs) :_timeOfLastChange(micros())
+	//{
 	//}
 
+	//void Table::refresh() {
+	//	openTable();
+	//}
 
 	void  Table::openNextTable() {
 		TableNavigator rec_sel(this);
 
-		do { // Move to next chunk in the DB - might be the extention to an earlier table.
+		do { // Move to next chunk in the DB - might be the extention to an earlier table.			
 			rec_sel._chunkAddr = rec_sel.firstRecordInChunk() + chunkSize();
-			if (rec_sel._chunkAddr < _db->_dbSize) {
+			
+			auto tableOK = (rec_sel._chunkAddr > _db->_dbStartAddr) && (rec_sel._chunkAddr < _db->_dbEndAddr);
+			
+			if (tableOK) {
 				_db->_readByte(rec_sel._chunkAddr, &rec_sel._chunk_header, HeaderSize);
-				logger() << "Table::openNextTable() chunk at: " << rec_sel._chunkAddr << L_endl;
+				logger() << F("Table::openNextTable() chunk at: ") << rec_sel._chunkAddr << L_endl;
 			}
 			else {
-				logger() << "Table::openNextTable() no more Tables" << L_endl;
+				//logger() << F("Table::openNextTable() no more Tables") << L_endl;
 				markAsInvalid();
 				return;
 			}
-			if (!rec_sel._chunk_header.isFinalChunk() && (rec_sel._chunk_header.nextChunk() == rec_sel._chunkAddr || rec_sel._chunk_header.nextChunk() > _db->_dbSize)) {
-				//logger() << "Table::openNextTable() read from", rec_sel._chunkAddr, "Size is :", _db->_dbSize);
-				//logger() << " A table-extention? :", !rec_sel.isStartOfATable(), "Chunk _isFinalChunk", rec_sel._chunk_header.isFinalChunk());
-				//logger() << " if Final: chunk _recSize", rec_sel._chunk_header._recSize, " ELSE NextChunk :", rec_sel._chunk_header.nextChunk());
-				//logger() << " IsfirstChunk :", rec_sel._chunk_header.isFirstChunk(), "  chunk noOfRecords", rec_sel._chunk_header.chunkSize());
-				logger() << " Corrupt Table found. Database Reset." << L_endl;
+
+			tableOK = calcRecordSizeOK(rec_sel);
+
+			if (tableOK) {
+				auto areMoreChuncks = rec_sel.chunkIsExtended();
+				if (areMoreChuncks) {
+					auto nextChunkAddr = rec_sel._chunk_header.nextChunk();
+					//logger() << F(" NextChunk addr: ") << nextChunkAddr << L_endl;
+					if (nextChunkAddr == rec_sel._chunkAddr || nextChunkAddr > _db->_dbEndAddr) {
+						tableOK = false;
+					}
+				}
+			} else logger() << F("calcRecordSize failed: ") << _max_NoOfRecords_in_table << L_endl;
+
+			if (!tableOK) {
+				logger() << F(" Corrupt Table found. Database Reset.") << L_endl;
 				_db->reset(0,0);
 				markAsInvalid();
 				return;
 			}
-		} while (!rec_sel.isStartOfATable() && getRecordSize(rec_sel));
+		} while (!rec_sel.isStartOfATable());
 		_tableID = rec_sel._chunkAddr;
 		_table_header = rec_sel._chunk_header;
-		getRecordSize(rec_sel);
 	}
 
 	void Table::openTable() {
 		if (_tableID) {
 			loadHeader(_tableID, _table_header);
-			getRecordSize(this);
+			//logger() << "Open T. Calc RecSize" << L_endl;
+			calcRecordSizeOK(this);
 		}
 	}
 
-	bool Table::getRecordSize(TableNavigator rec_sel) {
-
+	bool Table::calcRecordSizeOK(TableNavigator rec_sel) {
 		_recordsPerChunk = rec_sel._chunk_header.chunkSize();
+		
+		//logger() << F(" calcRecordSizeOK. recPerCh: ") << _recordsPerChunk << F(" Rec Size: ") << rec_sel._chunk_header.rec_size();
+		//logger() << F("\n   Chunk Addr: ") << rec_sel._chunkAddr << L_endl;
+		//if (!rec_sel._chunk_header.isFinalChunk()) logger() << F(" NextChunk at: ") << rec_sel._chunk_header.nextChunk() << L_endl;
+		
 		_max_NoOfRecords_in_table = _recordsPerChunk;
-		//logger() << " getRecordSize. recPerCh: " << _recordsPerChunk << " Rec Size: " << rec_sel._chunk_header.rec_size();
-		//logger() << "\n   Addr: " << rec_sel._chunkAddr << " NextChunk at: " << rec_sel._chunk_header.nextChunk() << L_endl;
+		
+		if (_recordsPerChunk == 0) return false;
 
 		while (rec_sel.haveMovedToNextChunck()) {
 			_max_NoOfRecords_in_table += _recordsPerChunk;
-			//logger() << "     _max_NoOfRecords_in_table: " << _max_NoOfRecords_in_table << L_endl;
+			//logger() << F("     _max_NoOfRecords_in_table: ") << _max_NoOfRecords_in_table << L_endl;
 		}
 		_rec_size = rec_sel._chunk_header.rec_size();
 		_insertionStrategy = rec_sel._chunk_header.insertionStrategy();
-		//logger() << "Table::getRecordSize _insertionStrategy:", _insertionStrategy);
 		return true;
 	}
 
@@ -112,7 +116,9 @@ namespace RelationalDatabase {
 
 	TB_Status Table::readRecord(RecordID recordID, void * result) const {
 		TableNavigator rec_sel(const_cast<Table *>(this));
+//		logger() << F("readRecord : ") << recordID << L_endl;
 		rec_sel.moveToThisRecord(recordID);
+//		logger() << F("readRecord moved ") << L_endl;
 		if (rec_sel._currRecord.status() == TB_OK) {
 			if (rec_sel.isDeletedRecord()) {
 				rec_sel._currRecord.setStatus(TB_RECORD_UNUSED);
@@ -125,8 +131,7 @@ namespace RelationalDatabase {
 	}
 
 	void Table::tableIsChanged(bool reloadHeader) {
-		_timeOfLastChange = micros();
-		//if (debugStop) std::cout << "tableIsChanged: " << std::dec << _timeOfLastChange << std::endl;
+		_timeOfLastChange = micros() + 1;
 		if (reloadHeader) {
 			loadHeader(_tableID, _table_header);
 		}

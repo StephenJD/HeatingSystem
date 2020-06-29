@@ -29,7 +29,7 @@ namespace client_data_structures {
 	inline bool operator < (Date_Time::DateTime lhs, R_Spell rhs) { return lhs < rhs.date ; }
 
 	inline Logger & operator << (Logger & stream, const R_Spell & spell) {
-		return stream << "Spell Date: " << spell.date << " with ProgID: " << (int)spell.programID;
+		return stream << F("Spell Date: ") << spell.date << F(" with ProgID: ") << (int)spell.programID;
 	}
 
 	//***************************************************

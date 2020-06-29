@@ -17,8 +17,6 @@ namespace client_data_structures {
 
 	Dataset_Dwelling::Dataset_Dwelling(Query & query, VolatileData * volData, I_Record_Interface * parent)
 		: Record_Interface(query, volData, parent), _name("", 7) {
-		//record() = this->query().firstMatch();
-		//std::cout << "** Dwelling " << " Addr:" << std::hex << long long(this) << std::endl;
 	}
 
 	I_UI_Wrapper * Dataset_Dwelling::getField(int fieldID) {

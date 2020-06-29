@@ -23,10 +23,11 @@ namespace client_data_structures {
 
 	bool Edit_ProfileDays_h::move_focus_by(int moveBy) { // Change character at the cursor. Modify copy held by currValue
 		if (moveBy == 0) return false;
-		using valType = decltype(currValue().val);
-		auto mask = valType(64) >> focusIndex();
-		auto newVal = (currValue().val & mask);
-		currValue().val = (currValue().val | mask) ^ newVal;
+		auto mask = uint32_t(64) >> focusIndex();
+		currValue().val = (uint32_t(currValue().val) ^ mask);
+		auto daysOnly = currValue().val & 0x7F;
+		if (daysOnly == 0x7F) currValue().val = 0xFF;
+		else currValue().val = daysOnly;
 		setInRangeValue();
 		return true;
 	}
@@ -116,10 +117,10 @@ namespace client_data_structures {
 		// New profiles must be given a copy of it's parent TTs.
 		switch (fieldID) {
 		case e_days: {
-			auto oldDays = uint8_t(_days.val);
-			auto newDays = uint8_t(newValue->val);
-			auto removedDays = oldDays & ~newDays;
-			auto addedDays = newDays & ~oldDays;
+			uint8_t oldDays = _days.val & 0x7F;
+			uint8_t newDays = newValue->val;
+			uint8_t removedDays = oldDays & ~newDays;
+			uint8_t addedDays = newDays & ~oldDays;
 			record().rec().days = newDays;
 			setRecordID(record().update());
 			addDaysToNextProfile(removedDays);
@@ -215,7 +216,7 @@ namespace client_data_structures {
 		if (days) {
 			auto profile = record().rec();
 			profile.days = days;
-			auto newProfile = query().insert(&profile);
+			auto newProfile = query().insert(profile);
 			createProfileTT(newProfile.id());
 		}
 	}
@@ -229,8 +230,7 @@ namespace client_data_structures {
 		auto gotTT = tt_FilterQ.begin();
 		if (gotTT.status() != TB_OK) {
 			auto newTime = TimeTemp{ {7,0},18 };
-			R_TimeTemp newTT{ RecordID(profileID), newTime};
-			tt_tableQ.insert(&newTT);
+			tt_tableQ.insert(R_TimeTemp { RecordID(profileID), newTime });
 		}
 	}
 

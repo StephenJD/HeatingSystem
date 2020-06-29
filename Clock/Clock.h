@@ -5,6 +5,7 @@
 #include <..\Conversions\Conversions.h>
 #include <Arduino.h>
 #include <I2C_Talk_ErrorCodes.h>
+#include <FlashStrings.h>
 
 //#pragma message( "Clock.h loaded" )
 
@@ -12,13 +13,11 @@
 	/// A Monostate class representing current time/date.
 	/// NOTE: to get minute units and seconds, specific functions must be called.
 	/// Date/Time obtained by explicit outward conversion to a Date_Time object.
-	/// Derivations provide EEPROM storage of current time every 10 minutes,
-	/// or obtaining time from an I2C RTC chip.
+	/// Derivations update time from an I2C RTC chip every 10 minutes.
 	/// Automatic DST may be set from 0-2 hours.
 	/// </summary>
 	class Clock { 
 	public:
-		// Rated at 5v/100kHz - NO 3.3v operation, min 2.2v HI.
 		//Clock(const char* date, const char* time);
 		// Queries
 		int minUnits() const { return _mins1; }
@@ -43,7 +42,7 @@
 		uint32_t asInt() const { return _dateTime().asInt(); }
 
 		// Modifiers
-		void refresh() { _dateTime(); }
+		void refresh() const { _dateTime(); }
 
 		void setTime(Date_Time::DateOnly date, Date_Time::TimeOnly time, int min);
 		void setTime(Date_Time::TimeOnly time) { _now.time() = time; saveTime();}
@@ -54,9 +53,6 @@
 		void setAutoDSThours(int set) { _autoDST = set; saveTime(); }
 		virtual auto saveTime()->I2C_Talk_ErrorCodes::error_codes { return I2C_Talk_ErrorCodes::_OK; }
 		virtual auto loadTime()->I2C_Talk_ErrorCodes::error_codes { return I2C_Talk_ErrorCodes::_OK; }
-		// Public Helper Functions
-		static int secondsSinceLastCheck(uint32_t & lastCheck_mS);
-		static uint32_t millisSince(uint32_t lastCheck_mS) { return millis() - lastCheck_mS; } // Since unsigned ints are used, rollover just works.
 
 #ifdef ZPSIM
 		void testAdd1Min();
@@ -66,7 +62,7 @@
 		virtual void _update() {} // called by _dateTime() every 10 minutes
 		bool dstHasBeenSet() const { return _dstHasBeenSet == 1; }
 		void dstHasBeenSet(bool set) const { _dstHasBeenSet = set; }
-		Date_Time::DateTime _timeFromCompiler(int & minUnits, int & seconds);
+		auto _timeFromCompiler(int & minUnits, int & seconds) -> Date_Time::DateTime;
 
 		static uint8_t _secs;
 		static uint8_t _mins1; // minute units
@@ -81,22 +77,32 @@
 	};
 
 	inline Logger & operator<<(Logger & logger, const Clock & clk) {
+		clk.refresh();
 		return logger << GP_LIB::intToString(clk.day(),2)
-		<< "/" << GP_LIB::intToString(clk.month(),2)
-		<< "/" << GP_LIB::intToString(clk.year(),2)
-		<< " " << GP_LIB::intToString(clk.hrs(),2)
-		<< ":" << clk.mins10() << clk.minUnits()
-		<< ":" << GP_LIB::intToString(clk.seconds(),2);
+		<< F_SLASH << GP_LIB::intToString(clk.month(),2)
+		<< F_SLASH << GP_LIB::intToString(clk.year(),2)
+		<< F_SPACE << GP_LIB::intToString(clk.hrs(),2)
+		<< F_COLON << clk.mins10() << clk.minUnits()
+		<< F_COLON << GP_LIB::intToString(clk.seconds(),2);
 	}
 
+	/// <summary>
+	/// A Monostate class representing current time/date.
+	/// Last compile-time saved to EEPROM (4-bytes)
+	/// Saves 6-byte time to EEPROM every 10 minutes to aid recovery from re-start.
+	/// </summary>	
 	class Clock_EEPROM : public Clock {
 	public:
 		Clock_EEPROM(unsigned int addr);
+		static constexpr int SIZE = sizeof(_now) * 2 + 4;
 		auto saveTime()->I2C_Talk_ErrorCodes::error_codes override;
 		bool ok() const override;
 	private:
 		void _update() override;  // called every 10 minutes - saves to EEPROM
 		auto loadTime()->I2C_Talk_ErrorCodes::error_codes override;
+		auto writer(uint16_t & address, const void * data, int noOfBytes) -> I2C_Talk_ErrorCodes::error_codes;
+		auto reader(uint16_t & address, void * result, int noOfBytes) -> I2C_Talk_ErrorCodes::error_codes;
+		
 		uint16_t _addr;
 	};
 	
@@ -110,7 +116,7 @@
 		void _update() override { loadTime(); }	// called every 10 minutes - reads from RTC
 		virtual auto readData(int start, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
 		virtual auto writeData(int start, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
-		Date_Time::DateTime _timeFromRTC(int & minUnits, int & seconds);
+		auto _timeFromRTC(int & minUnits, int & seconds) -> Date_Time::DateTime;
 	};
 
 	template<I2C_Talk & i2c>
@@ -119,7 +125,10 @@
 		using I2Cdevice<i2c>::I2Cdevice;
 
 		Clock_I2C(int addr) : I2Cdevice<i2c>(addr) {
-			Serial.println("Clock_I2C Constructor");
+			// Rated at 5v/100kHz - NO 3.3v operation, min 2.2v HI.
+			i2c.setMax_i2cFreq(100000); // Max freq supported by DS1307
+			i2c.extendTimeouts(5000, 5, 1000); // process time to read clock. Potential freeze if Wire not constructed
+			//Serial.println(F("Clock_I2C Constructor"));
 		}
 		
 		bool ok() const override {
@@ -128,11 +137,14 @@
 			}
 			return false;
 		}
-		I2C_Talk_ErrorCodes::error_codes testDevice() override;
+		auto testDevice() -> I2C_Talk_ErrorCodes::error_codes override;
 
 	private:
-		auto readData(int start, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer); }
-		auto writeData(int start, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::write(start, numberBytes, dataBuffer); }
+		auto readData(int start, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override {
+			//if (I2Cdevice<i2c>::getStatus() != I2C_Talk_ErrorCodes::_OK) logger() << "RTC Unavailable" << L_endl;
+			return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer); 
+		}
+		auto writeData(int start, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::write_verify(start, numberBytes, dataBuffer); }
 	};
 
 ///////////////////////////////////////////////////////////////
@@ -162,7 +174,7 @@
 		auto mins10 = GP_LIB::c2CharsToInt(&__TIME__[3]);
 		minUnits = mins10 % 10;
 		seconds = GP_LIB::c2CharsToInt(&__TIME__[6]);
-		logger() << "Compiler Time: " << Date_Time::DateTime{ {day, mnth, year }, { hrs,mins10 }} << L_endl;
+		Serial.print(F("Compiler Time: ")); Serial.print(__DATE__); Serial.print(F(" ")); Serial.println(__TIME__);
 		return { { day,mnth,year },{ hrs,mins10 } };
 	}
 
@@ -174,7 +186,7 @@
 //Clock_I2C::Clock_I2C(I2C_Talk & i2C, int addr) : Clock_I2C(i2C, addr) {
 
 	template<I2C_Talk & i2C>
-	I2C_Talk_ErrorCodes::error_codes Clock_I2C<i2C>::testDevice() {
+	auto Clock_I2C<i2C>::testDevice() -> I2C_Talk_ErrorCodes::error_codes {
 		//Serial.print(" RTC testDevice at "); Serial.println(i2c.getI2CFrequency(),DEC);
 		uint8_t data[1] = { 0 };
 		auto errCode = I2Cdevice<i2C>::write_verify(9, 1, data);

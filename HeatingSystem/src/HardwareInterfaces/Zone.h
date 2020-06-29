@@ -9,15 +9,16 @@
 
 namespace HardwareInterfaces {
 	class ThermalStore;
-	class Bitwise_Relay;
-	class I2C_Temp_Sensor;
+	class UI_Bitwise_Relay;
+	class UI_TempSensor;
 	class MixValveController;
 
 	class Zone : public LCD_UI::VolatileData {
 	public:
 		Zone() = default;
+		void initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp);
 #ifdef ZPSIM
-		Zone(I2C_Temp_Sensor & ts, int reqTemp, Bitwise_Relay & callRelay);
+		Zone(UI_TempSensor & ts, int reqTemp, UI_Bitwise_Relay & callRelay);
 #endif
 		// Queries
 		RelationalDatabase::RecordID record() const { return _recordID; }
@@ -35,7 +36,6 @@ namespace HardwareInterfaces {
 		int16_t getFractionalCallSensTemp() const;
 
 		// Modifier
-		void initialise(int zoneID, I2C_Temp_Sensor & callTS, Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp);
 		void offsetCurrTempRequest(int8_t val);
 		bool setFlowTemp();
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
@@ -45,8 +45,8 @@ namespace HardwareInterfaces {
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
 
-		I2C_Temp_Sensor * _callTS = 0;
-		Bitwise_Relay * _relay = 0;
+		UI_TempSensor * _callTS = 0;
+		UI_Bitwise_Relay * _relay = 0;
 		ThermalStore * _thermalStore = 0;
 		MixValveController * _mixValveController;
 		RelationalDatabase::RecordID _recordID = 0;

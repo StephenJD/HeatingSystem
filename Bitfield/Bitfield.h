@@ -40,6 +40,9 @@ namespace BitFields {
 			void>::type>::type>::type>::type>::type type;
 	};
 
+	/// <summary>
+	/// Creates char-sized or larger bitfield collections that are portable
+	/// </summary>
 	template <typename IntType, int start, int bits = 1>
 	class UBitField {
 		static_assert(start >= 0, "start must be >= 0");

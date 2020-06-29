@@ -13,6 +13,7 @@ public:
 	virtual auto getStatus()-> I2C_Talk_ErrorCodes::error_codes { return /*i2C().addressOutOfRange(getAddress())*/i2C().status(getAddress()); }
 	virtual auto initialiseDevice()-> I2C_Talk_ErrorCodes::error_codes {return I2C_Talk_ErrorCodes::_OK; }
 	virtual auto testDevice()-> I2C_Talk_ErrorCodes::error_codes {
+		// NOTE: derived implementations should call base-class write/read functions to avoid recovery strategies being applied during tests.
 		//Serial.print(" I_I2Cdevice.testDevice at: 0x"); Serial.println(getAddress(), HEX);
 		return i2C().status(getAddress()); 
 	}
@@ -48,7 +49,7 @@ public:
 		_address = addr; 
 	}
 
-	static const char * getStatusMsg(uint8_t status) { return I2C_Talk::getStatusMsg(status); }
+	//static const __FlashStringHelper * getStatusMsg(uint8_t status) { return I2C_Talk::getStatusMsg(status); }
 	const I2C_Talk & i2C() const { return const_cast<I_I2Cdevice*>(this)->i2C(); }
 	virtual I2C_Talk & i2C() = 0;
 protected:
@@ -68,7 +69,9 @@ public:
 
 class I_I2Cdevice_Recovery : public I_I2Cdevice { // cannot be constexpr because of use of non-const class static in constructors
 public:
-	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice(addr), _recover(&recover) { set_recover = _recover; } // initialiser for first array element 
+	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice(addr), _recover(&recover) { set_recover = _recover; 
+	//logger() << F("I_I2Cdevice_Recovery done for 0x") << L_hex << addr << L_endl;
+	} // initialiser for first array element 
 	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover) : _recover(&recover) {set_recover = _recover;}
 	I_I2Cdevice_Recovery(int addr) : I_I2Cdevice(addr), _recover(set_recover) {}; // initialiser for subsequent array elements 
 	I_I2Cdevice_Recovery() : I_I2Cdevice(), _recover(set_recover) {}; // initialiser for subsequent array elements 
@@ -88,7 +91,7 @@ public:
 	I2C_Talk & i2C() override;
 
 	void setRecovery(I2C_Recovery::I2C_Recover & recovery) { _recover = &recovery; }
-	int32_t set_runSpeed(int32_t i2cFreq) override { return _i2c_speed = i2cFreq; }
+	int32_t set_runSpeed(int32_t i2cFreq) override;
 	int32_t getFailedTime() const override { return _lastFailedTime; }
 
 	I2C_Recovery::I2C_Recover & recovery() const { return *_recover; }

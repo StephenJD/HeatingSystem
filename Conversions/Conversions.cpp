@@ -7,7 +7,6 @@ namespace GP_LIB {
 	char SPACE_CHAR = '~';
 	const char NEW_LINE_CHR = '~';
 
-
 	// *************************************************************
 	// ***************  Utility ************************************
 
@@ -38,12 +37,12 @@ namespace GP_LIB {
 			(value < 1000 ? 3 : 4)));			
 	}
 
-	CStr_10 intToString(int value) { // only valid for values < 1029
+	CStr_20 intToString(int value) { // only valid for values < 1029
 		// TODO: implement using arduino Print / PString
 		if (abs(value) > 1028)
 			value = 1028;
-		auto cstr_10 = CStr_10{};
-		char * p = cstr_10;
+		auto cstr_20 = CStr_20{};
+		char * p = cstr_20.str();
 		if (value < 0) {
 			*p = '-';
 			++p;
@@ -54,7 +53,7 @@ namespace GP_LIB {
 		do {
 			*--p = "0123456789"[mod10(value)];
 		} while (value = div10(value));
-		return cstr_10;
+		return cstr_20;
 	}
 
 	int power10(unsigned int power) {
@@ -65,16 +64,16 @@ namespace GP_LIB {
 		else return 1;
 	}
 
-	CStr_10 intToString(int value, int minNoOfChars, char leadingChar, int format) {
+	CStr_20 intToString(int value, int minNoOfChars, char leadingChar, int format) {
 		bool leadPlus = (format & e_showSign) != 0;
 		if ((format & e_fixedWidth) == 0) minNoOfChars = 0;
 		//bool inEdit = (format & (e_inEdit | e_editAll)) == (e_inEdit | e_editAll);
 		int charIndex = 0;
 
-		auto numStr_10 = intToString(abs(value));
-		int editablePlaces = strlen(numStr_10);
+		auto numStr_20 = intToString(abs(value));
+		int editablePlaces = strlen(numStr_20);
 
-		auto padStr_10 = CStr_10{};
+		auto padStr_10 = CStr_20{};
 
 		int noOfpadding = 0;
 		if (leadingChar == '0') {
@@ -105,11 +104,11 @@ namespace GP_LIB {
 			}
 		}		
 		padStr_10[charIndex] = 0;
-		strcat(padStr_10, numStr_10);
+		strcat(padStr_10.str(), numStr_20);
 		return padStr_10;
 	}
 
-	CStr_10 decToString(int number, int minNoOfChars, int noOfDecPlaces, int format) {
+	CStr_20 decToString(int number, int minNoOfChars, int noOfDecPlaces, int format) {
 		// TODO: implement using arduino Print / PString
 		auto padStr_10 = intToString(number, minNoOfChars,' ',format);
 

@@ -1,16 +1,17 @@
 #pragma once
 #include "Arduino.h"
 #include <I2C_Talk.h>
+#include <I2C_Recover.h>
 #include <Mix_Valve.h>
-#include "Temp_Sensor.h"
 #include <RDB.h>
-#include "Relay_Bitwise.h"
 #include "A__Constants.h"
 #if defined (ZPSIM)
 #include <ostream>
 #endif
 
 namespace HardwareInterfaces {
+	class UI_Bitwise_Relay;
+	class UI_TempSensor;
 
 	class MixValveController : public I_I2Cdevice_Recovery {
 	public:
@@ -38,15 +39,15 @@ namespace HardwareInterfaces {
 //		volatile int8_t motorState = 0; // required by simulator
 //		static std::ofstream lf;
 //#endif
-		void initialise(int index, int addr, Bitwise_Relay * relayArr, I2C_Temp_Sensor * tempSensorArr, int flowTempSens, int storeTempSens);
+		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, UI_TempSensor * tempSensorArr, int flowTempSens, int storeTempSens);
 	private:
 		bool controlZoneRelayIsOn() const;
 		I2C_Talk_ErrorCodes::error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
 		uint8_t getStoreTemp() const;
 		//void setLimitZone(int mixValveIndex);
 
-		I2C_Temp_Sensor * _tempSensorArr = 0;
-		Bitwise_Relay * _relayArr = 0;
+		UI_TempSensor * _tempSensorArr = 0;
+		UI_Bitwise_Relay * _relayArr = 0;
 		unsigned long * _timeOfReset_mS = 0;
 		uint8_t _error = 0;
 		uint8_t _index = 0;

@@ -68,7 +68,6 @@ namespace client_data_structures {
 		: Record_Interface(query, runtimeData, parent)
 		, _tempSensor(ValRange(e_fixedWidth, 0, 90))
 	{
-		//std::cout << "** Zone " << " Addr:" << std::hex << long long(this) << std::endl;
 	}
 
 	I_UI_Wrapper * Dataset_TempSensor::getField(int fieldID) {
@@ -76,7 +75,7 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_name_temp:
 		{
-			HardwareInterfaces::I2C_Temp_Sensor & ts = tempSensor(record().id());
+			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());
 			strcpy(_tempSensor.name, record().rec().name);
 			_tempSensor.temperature = ts.get_temp();
 			if (ts.hasError()) _tempSensor.temperature = -127;

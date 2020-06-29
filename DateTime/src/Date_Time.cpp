@@ -57,5 +57,28 @@ namespace Date_Time {
 		return *this;
 	}
 
+	bool DateTime::inRange() const {
+		if (mins10() > 5) return false;
+		if (hrs() > 23) return false;
+		if (day() > 31) return false;
+		if (month() > 12) return false;
+		if (year() > 127) return false;
+		return true;
+	};
 
+	DateTime::operator CStr_20 () const {
+		CStr_20 timedateStr;
+		strcpy(timedateStr, intToString(day(), 2));
+		strcat(timedateStr, "/");
+		strcat(timedateStr, getMonthStr());
+		strcat(timedateStr, "/");
+		strcat(timedateStr, intToString(year(), 2));
+		strcat(timedateStr, " ");
+		strcat(timedateStr, intToString(displayHrs(), 2));
+		strcat(timedateStr, ":");
+		strcat(timedateStr, intToString(mins10()));
+		strcat(timedateStr, "0");
+		strcat(timedateStr, (isPM() ? "pm" : "am"));
+		return timedateStr;
+	}
 }

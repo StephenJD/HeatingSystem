@@ -15,7 +15,6 @@ namespace client_data_structures {
 	Dataset_Spell::Dataset_Spell(Query & query, VolatileData * volData, I_Record_Interface * parent)
 		: Record_Interface(query, volData, parent),
 		_startDate(DateTime{ 0 }, ValRange(e_editAll, 0, JUDGEMEMT_DAY.asInt(),0, e_NO_OF_DT_EDIT_POS)) {
-		//std::cout << "** Spell " << " Addr:" << std::hex << long long(this) << std::endl;
 	}
 
 	I_UI_Wrapper * Dataset_Spell::getField(int fieldID) {
@@ -34,11 +33,8 @@ namespace client_data_structures {
 		case e_date: {
 				_startDate.val = newValue->val;
 				auto newDate = DateTime(_startDate.val);;
-				//cout << "Insert date: Was: ID:" << dec << (int)recordID() << ": " << record().rec().date.day() << record().rec().date.getMonthStr() << " Now: " << newDate.day() << newDate.getMonthStr() << endl;
 				record().rec().date = DateTime(_startDate.val);
-				//cout << "\nDelete original date: ID:" << dec << (int)record().id();
 				auto newRecordID = record().update();
-				//cout << "          New RecID: " << (int)newRecordID << ": Date is:  " << record().rec().date.day() << record().rec().date.getMonthStr() << record().rec().date.year() << endl;
 				if (newRecordID != recordID()) {
 					query().moveTo(_recSel, newRecordID);
 					setRecordID(newRecordID);
@@ -60,7 +56,6 @@ namespace client_data_structures {
 	}
 
 	void Dataset_Spell::insertNewData() {
-		auto newSpell = record().rec();
-		query().insert(&newSpell);
+		query().insert(record().rec());
 	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "Arduino.h"
 namespace RelationalDatabase {
-	typedef unsigned short DB_Size_t;
+	typedef uint16_t DB_Size_t;
 	typedef DB_Size_t TableID; // Chunk Header address in EEPROM.
 	typedef TableID TB_Size_t;
 	typedef	TableID Record_Size_t;
@@ -20,6 +20,6 @@ namespace RelationalDatabase {
 		TB_INVALID_TABLE
 	};
 
-	enum InsertionStrategy { i_retainOrder, i_reverseOrder, i_09_orderedInsert, i_09_reverseInsert, i_09_randomInsert, i_90_randomInsert, i_90_orderedInsert, i_90_reverseInsert };
+	enum InsertionStrategy : uint8_t { i_retainOrder, i_reverseOrder, i_09_orderedInsert, i_09_reverseInsert, i_09_randomInsert, i_90_randomInsert, i_90_orderedInsert, i_90_reverseInsert };
 }
 

@@ -24,7 +24,6 @@ namespace client_data_structures {
 
 	Dataset_Program::Dataset_Program(Query & query, VolatileData * volData, I_Record_Interface * parent)
 		: Record_Interface(query, volData,parent), _name("", 8) {
-		//std::cout << "** Program " << " Addr:" << std::hex << long long(this) << std::endl;
 	}
 
 	//int Dataset_Program::resetCount() {

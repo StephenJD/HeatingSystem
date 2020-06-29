@@ -2,9 +2,6 @@
 #include "..\..\..\MultiCrystal\MultiCrystal.h"
 #include "LCD_Display.h"
 
-extern byte BRIGHNESS_PWM;
-extern byte CONTRAST_PWM;
-
 namespace HardwareInterfaces {
 
 

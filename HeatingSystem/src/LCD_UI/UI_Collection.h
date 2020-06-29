@@ -415,9 +415,9 @@ namespace LCD_UI {
 
 		Collection(ArrayWrapper<noOfObjects, ObjectType> arrayWrp, Behaviour behaviour) :I_SafeCollection(noOfObjects, behaviour), _array(arrayWrp) {
 #ifdef ZPSIM
-			std::cout << "Collection at : " << std::hex << (long long)(this) << std::endl;
+			logger() << F("Collection at : ") << L_hex << (long)(this) << L_endl;
 			for (int i = 0; i < noOfObjects; ++i)
-				std::cout << "   Has Element at : " << (long long)&_array[i] << " Pointing to : " << (long long)_array[i].get() << std::endl;
+				logger() << F("   Has Element at : ") << (long)&_array[i] << F(" Pointing to : ") << (long)_array[i].get() << L_endl;
 			std::cout << std::endl;
 #endif
 		}

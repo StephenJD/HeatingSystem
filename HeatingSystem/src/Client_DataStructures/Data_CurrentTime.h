@@ -38,7 +38,7 @@ namespace client_data_structures {
 		using I_Edit_Hndl::currValue;
 		Edit_CurrentTime_h() : I_Edit_Hndl(&editVal) {
 #ifdef ZPSIM
-			std::cout << "\tEdit_CurrentTime_h Addr: " << std::hex << long long(this) << std::endl;
+			logger() << F("\tEdit_CurrentTime_h Addr: ") << L_hex << long(this) << L_endl;
 #endif
 		}
 		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
@@ -98,7 +98,7 @@ namespace client_data_structures {
 		using I_Edit_Hndl::currValue;
 		Edit_CurrentDate_h() : I_Edit_Hndl(&editVal) {
 #ifdef ZPSIM
-			std::cout << "\tEdit_CurrentDate_h Addr: " << std::hex << long long(this) << std::endl;
+			logger() << F("\tEdit_CurrentDate_h Addr: ") << L_hex << long(this) << L_endl;
 #endif
 			/*editVal.setBackUI(this); */ 
 		}

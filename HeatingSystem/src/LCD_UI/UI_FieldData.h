@@ -26,7 +26,7 @@ namespace LCD_UI {
 
 	class UI_FieldData : public LazyCollection {
 	public:
-		UI_FieldData(I_Record_Interface * dataset, int fieldID, I_Record_Interface * parent = 0, int selectFldID = 0
+		UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent = 0, int selectFldID = 0
 			, Behaviour selectBehaviour = viewOneUpDnRecycle(), Behaviour editBehaviour = editNonRecycle()
 			, OnSelectFnctr onSelect = 0);
 
@@ -53,7 +53,7 @@ namespace LCD_UI {
 		int fieldID() { return _field_Interface_h.fieldID(); }
 		void moveToSavedRecord();
 		I_Record_Interface * _data;
-		I_Record_Interface * _parentRecord;
+		UI_FieldData * _parentFieldData;
 		Field_Interface_h _field_Interface_h;
 		signed char _selectFieldID;
 	};

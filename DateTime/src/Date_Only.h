@@ -8,6 +8,7 @@
 #include "..\..\Bitfield\Bitfield.h"
 #include "Conversions.h"
 #include <Logging.h>
+#include <FlashStrings.h>
 
 namespace Date_Time {
 	using namespace BitFields;
@@ -80,15 +81,15 @@ namespace Date_Time {
 	private:
 		union {
 			uint16_t _dateInt;
-			UBitField<uint16_t, 0, 5> _day;
-			UBitField<uint16_t, 5, 4> _month;
+			UBitField<uint16_t, 0, 5> _day; // 1-31
+			UBitField<uint16_t, 5, 4> _month; // 1-12
 			UBitField<uint16_t, 9, 7> _yr; // 2000-2127
 		};
 
 	};
 
 	inline Logger & operator << (Logger & stream, const DateOnly & dt) {
-		return stream << dt.getDayStr() << " " << intToString(dt.day(), 2) << "/" << dt.getMonthStr() << "/20" << intToString(dt.year(), 2);
+		return stream << dt.getDayStr() << F_SPACE << intToString(dt.day(), 2) << F_SLASH << dt.getMonthStr() << F("/20") << intToString(dt.year(), 2);
 	}
 
 	inline /*constexpr*/ int DateOnly::weekDayNo() const { // Mon = 0;

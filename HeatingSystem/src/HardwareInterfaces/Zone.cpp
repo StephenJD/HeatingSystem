@@ -1,8 +1,8 @@
 #include "Zone.h"
 #include "..\Assembly\HeatingSystemEnums.h"
-#include "Temp_Sensor.h"
+#include "..\Client_DataStructures\Data_TempSensor.h"
+#include "..\Client_DataStructures\Data_Relay.h"
 #include "ThermalStore.h"
-#include "Relay_Bitwise.h"
 #include "MixValveController.h"
 
 namespace HardwareInterfaces {
@@ -12,7 +12,7 @@ namespace HardwareInterfaces {
 	//              Zone Dynamic Class
 	//***************************************************
 #ifdef ZPSIM
-	Zone::Zone(I2C_Temp_Sensor & ts, int reqTemp, Bitwise_Relay & callRelay )
+	Zone::Zone(UI_TempSensor & ts, int reqTemp, UI_Bitwise_Relay & callRelay )
 		: _callTS(&ts)
 		, _currProfileTempRequest(reqTemp)
 		, _relay(&callRelay)
@@ -20,7 +20,7 @@ namespace HardwareInterfaces {
 		, _maxFlowTemp(65)
 	{}
 #endif
-	void Zone::initialise(int zoneID, I2C_Temp_Sensor & callTS, Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp) {
+	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
@@ -47,13 +47,15 @@ namespace HardwareInterfaces {
 		if (isDHWzone()) {
 			return _thermalStore->currDeliverTemp() << 8;
 		}
-		else return _callTS->get_fractional_temp();
+		else {
+			return _callTS->get_fractional_temp();
+		}
 	}
 
 	int8_t Zone::modifiedCallTemp(int8_t callTemp) const {
 		callTemp += _offsetT;
 		if (callTemp == 246) {
-			logger() << L_time << "Zone::modifiedCallTemp. callTemp: " << callTemp << " Offset: " << _offsetT << L_endl;
+			logger() << L_time << F("Zone::modifiedCallTemp. callTemp: ") << callTemp << F(" Offset: ") << _offsetT << L_endl;
 		}		
 		if (callTemp < MIN_ON_TEMP) callTemp = MIN_ON_TEMP;
 		//int8_t modifiedTemp;
@@ -76,34 +78,34 @@ namespace HardwareInterfaces {
 
 	bool Zone::setFlowTemp() { // Called every minute. Sets flow temps. Returns true if needs heat.
 		// lambdas
-		auto logTemps = [this](const char * msg, long currTempReq, short fractionalZoneTemp, long myFlowTemp, long tempError, bool logger_RelayStatus) {
-			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\t" << msg << " Zone: " << _recordID
-			<< " Req Temp: " << currTempReq
-			<< " fractionalZoneTemp: " << fractionalZoneTemp / 256.
+		auto logTemps = [this](const __FlashStringHelper * msg, long currTempReq, short fractionalZoneTemp, long myFlowTemp, long tempError, bool logger_RelayStatus) {
+			logger() << L_endl << L_time << F("Zone_Run::setZFlowTemp\t") << msg << F(" Zone: ") << _recordID
+			<< F(" Req Temp: ") << currTempReq
+			<< F(" fractionalZoneTemp: ") << fractionalZoneTemp / 256.
 			//<< fractionalZoneTemp
-			//<< "\n\t dbl-fractionalZoneTemp: " << double(fractionalZoneTemp)
-			//<< "\n\t dbl-fractionalZoneTemp/256: " 	
-			<< " ReqFlowTemp: " << myFlowTemp
-			<< " TempError: " << tempError / 16. << (logger_RelayStatus ? " On" : " Off") << L_flush;
+			//<< F("\n\t dbl-fractionalZoneTemp: ") << double(fractionalZoneTemp)
+			//<< F("\n\t dbl-fractionalZoneTemp/256: ") 	
+			<< F(" ReqFlowTemp: ") << myFlowTemp
+			<< F(" TempError: ") << tempError / 16. << (logger_RelayStatus ? F(" On") : F(" Off")) << L_endl;
 		};
 		
 		if (isDHWzone()) {
 			bool needHeat;
-			if (I2C_Temp_Sensor::hasError()) {
+			if (UI_TempSensor::hasError()) {
 				needHeat = false;
-				//logger() << "Zone_Run::setZFlowTemp for DHW\tTS Error.");
+				//logger() << F("Zone_Run::setZFlowTemp for DHW\tTS Error.\n");
 			}
 			else {
 				needHeat = _thermalStore->needHeat(currTempRequest(), nextTempRequest());
-				//logger() << "Zone_Run::setZFlowTemp for DHW\t NeedHeat?",needHeat);
+				//logger() << F("Zone_Run::setZFlowTemp for DHW\t NeedHeat?") << needHeat << L_endl;
 			}
 			_relay->set(needHeat);
 			return needHeat;
 		}
 
 		auto fractionalZoneTemp = getFractionalCallSensTemp(); // get fractional temp.msb is temp is degrees
-		if (I2C_Temp_Sensor::hasError()) {
-			logger() << L_endl << L_time << "Zone_Run::setZFlowTemp\tCall TS Error for zone" << _recordID << L_endl;
+		if (UI_TempSensor::hasError()) {
+			logger() << L_endl << L_time << F("Zone_Run::setZFlowTemp\tCall TS Error for zone") << _recordID << L_endl;
 			return false;
 		}
 
@@ -117,17 +119,17 @@ namespace HardwareInterfaces {
 		auto logger_RelayStatus = _relay->logicalState();
 		if (tempError > 7L) {
 			myFlowTemp = MIN_FLOW_TEMP;
-			logTemps("Too Warm", currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
+			logTemps(F("Too Warm"), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 		else if (tempError < -8L) {
 			myFlowTemp = _maxFlowTemp;
-			logTemps("Too Cool", currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
+			logTemps(F("Too Cool"), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 		else {
 			myFlowTemp = static_cast<long>((_maxFlowTemp + MIN_FLOW_TEMP) / 2. - tempError * (_maxFlowTemp - MIN_FLOW_TEMP) / 16.);
 			//U1_byte errorDivider = flowBoostDueToError > 16 ? 10 : 40; //40; 
 			//myFlowTemp = myTheoreticalFlow + (flowBoostDueToError + errorDivider/2) / errorDivider; // rounded to nearest degree
-			logTemps("In Range", currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
+			logTemps(F("In Range"), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 
 		// check limits

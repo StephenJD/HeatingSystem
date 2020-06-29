@@ -11,8 +11,8 @@ namespace Assembly {
 }
 
 namespace HardwareInterfaces {
-	class Bitwise_Relay;
-	class I2C_Temp_Sensor;
+	class UI_Bitwise_Relay;
+	class UI_TempSensor;
 	class MixValveController;
 
 	class TowelRail : public LCD_UI::VolatileData
@@ -25,11 +25,11 @@ namespace HardwareInterfaces {
 		bool isCallingHeat() const;
 
 		// Modifier
-		void initialise(int towelRailID, I2C_Temp_Sensor & callTS, Bitwise_Relay & callRelay, Assembly::TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp);
+		void initialise(int towelRailID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, Assembly::TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp);
 	private:
 		RelationalDatabase::RecordID _recordID = 0;
-		I2C_Temp_Sensor * _callTS = 0;
-		Bitwise_Relay * _relay = 0;
+		UI_TempSensor * _callTS = 0;
+		UI_Bitwise_Relay * _relay = 0;
 		MixValveController * _mixValveController;
 		int8_t _maxFlowTemp = 0;
 		Assembly::TemperatureController * _temperatureController;

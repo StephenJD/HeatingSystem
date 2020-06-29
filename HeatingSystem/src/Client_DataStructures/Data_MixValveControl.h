@@ -22,7 +22,7 @@ namespace client_data_structures {
 	};
 
 inline Logger & operator << (Logger & stream, const R_MixValveControl & mixValve) {
-	return stream << "R_MixValveControl " << mixValve.name;
+	return stream << F("R_MixValveControl ") << mixValve.name;
 }
 
 	//***************************************************

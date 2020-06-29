@@ -6,7 +6,7 @@
 #include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\HardwareInterfaces\A__Constants.h"
 #include "..\HardwareInterfaces\I2C_Comms.h"
-#include <Clock.h>
+#include <Timer_mS_uS.h>
 
 void ui_yield();
 
@@ -20,33 +20,33 @@ namespace Assembly {
 		tempSensorArr{ recovery }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
-		, relaysPort{0x7F, recovery, IO8_PORT_OptCoupl, ZERO_CROSS_PIN, RESET_OUT_PIN}
 		, mixValveControllerArr{ recovery }
 	{
 		int index = 0;
+		logger() << F("loadtempSensors...") << L_endl;
 		auto tempSensors = db.tableQuery(TB_TempSensor);
-		for (Answer_R<R_TempSensor> tempSensor : tempSensors) {
-			//logger() << "Initialise TS[]", index, " Rec ID:" , tempSensor.id());
 
+		for (Answer_R<R_TempSensor> tempSensor : tempSensors) {
 			tempSensorArr[index].initialise(tempSensor.id(), tempSensor.rec().address); // Reads temp
 			++index;
 			//if (index == 7)
 			//	auto a = true;
 		}
-		logger() << "loadtempSensors Completed" << L_endl;
+		logger() << F("loadtempSensors Completed") << L_endl;
 
 		index = 0;
 		auto relays = db.tableQuery(TB_Relay);
 		for (Answer_R<R_Relay> relay : relays) {
-			relayArr[index].initialise(relay.id(), relay.rec().port, LOW);
+			relayArr[index].initialise(relay.id(), relay.rec().relay_B);
 			++index;
 		}
 
-		logger() << "loadRelays Completed" << L_endl;
+		logger() << F("loadRelays Completed") << L_endl;
 
 		Answer_R<R_ThermalStore> thStRec = *db.tableQuery(TB_ThermalStore).begin();
 		thermalStore.initialise(thStRec.rec());
 
+		logger() << F("load thermalStore Completed") << L_endl;
 		index = 0;
 		auto mixValveControls = db.tableQuery(TB_MixValveContr);
 		for (Answer_R<R_MixValveControl> mixValveControl : mixValveControls) {
@@ -61,6 +61,7 @@ namespace Assembly {
 			++index;
 		}
 		
+		logger() << F("load mixValveControllerArr Completed") << L_endl;
 		index = 0;
 		auto zones = db.tableQuery(TB_Zone);
 		for (Answer_R<R_Zone> zone : zones) {
@@ -73,30 +74,41 @@ namespace Assembly {
 			);
 			++index;
 		}
-		logger() << "loadZones Completed" << L_endl;
+		logger() << F("loadZones Completed") << L_endl;
 	}
 
 	void TemperatureController::checkAndAdjust() {
 		// once per second
 		static auto lastCheck = millis();
-		if (Clock::secondsSinceLastCheck(lastCheck) == 0) { return; } // Wait for next second.
+		if (secondsSinceLastCheck(lastCheck) == 0) { return; } // Wait for next second.
 		for (auto & ts : tempSensorArr) {
 			ts.readTemperature();
-			//logger() << "TS: 0x" << L_hex << ts.getAddress() << " " << L_dec << ts.get_temp() << " Error? " << ts.hasError() << L_endl;
+			//logger() << F("TS: 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
 		}
-		if (clock_().seconds() == 0) checkZones(); // each minute
-		for (auto & mixValveControl : mixValveControllerArr) {mixValveControl.check(); ui_yield(); }
+		if (clock_().seconds() == 0) { // each minute
+			checkZones();
+			//logger() << L_time << F("checkAndAdjust Zones checked.") << L_endl;
+		}
+		for (auto & mixValveControl : mixValveControllerArr) {
+			mixValveControl.check(); 
+			ui_yield(); 
+		}
 		backBoiler.check();
+		//logger() << L_time << F("BackBoiler::check done") << L_endl;
 		ui_yield();
-		relaysPort.updateRelays();
-		if (relaysPort.recovery().isUnrecoverable()) { 
-			logger() << "Initiating Arduino Reset" << L_flush;
-			HardReset::arduinoReset(); 
-		};
+		relayController().updateRelays();
+		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
+		//if (relaysPort.recovery().isUnrecoverable()) { 
+		//	logger() << F("Initiating Arduino Reset") << L_endl;
+		//	HardReset::arduinoReset(); 
+		//};
 	}
 
 	void TemperatureController::checkZones() {
-		for (auto & zone : zoneArr) { zone.setFlowTemp(); ui_yield(); }
+		for (auto & zone : zoneArr) { 
+			zone.setFlowTemp(); 
+			ui_yield();
+		}
 	}
 }

@@ -14,8 +14,7 @@ namespace RelationalDatabase {
 	class Table {
 	public:
 		Table(RDB_B & db, TableID tableID, ChunkHeader & tableHdr);
-		Table(const Table & rhs);
-		//Table & operator =(const Table & rhs);
+		Table(const Table & rhs) = delete;
 		
 		// Queries
 		TB_Status readRecord(RecordID recordID, void * result) const;
@@ -28,11 +27,11 @@ namespace RelationalDatabase {
 		void openTable();
 		void openNextTable();
 		bool outOfDate(unsigned long lastRead) {
-			//if (debugStop) std::cout << "outOfDate offered: " << std::dec << lastRead << " timeOfLastChange was: " << _timeOfLastChange <<  " Returned: " << (_timeOfLastChange >= lastRead) << std::endl;
-			return (_timeOfLastChange >= lastRead);
+			//if (debugStop) logger() << F("outOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << _timeOfLastChange << F(" Returned: ") << (_timeOfLastChange >= lastRead) << L_endl;
+			return int(_timeOfLastChange - lastRead) > 0;
 		}
 		NoOf_Recs_t maxRecordsInTable() const { return _max_NoOfRecords_in_table; }
-
+		//void refresh();
 	protected:
 
 	private:
@@ -57,17 +56,17 @@ namespace RelationalDatabase {
 		NoOf_Recs_t maxRecordsInChunk() const { return _recordsPerChunk; }
 		bool dbInvalid() const { return _db == 0; }
 		// Modifiers
-		bool getRecordSize(TableNavigator rec_sel);
+		bool calcRecordSizeOK(TableNavigator rec_sel);
 		void loadHeader(TableID _chunkAddr, ChunkHeader & _chunk_header) const;
 		void markAsInvalid() { _rec_size = 0; }
 		void tableIsChanged(bool reloadHeader);
 
 		// Data
-		mutable unsigned long _timeOfLastChange = 0;
+		mutable uint32_t _timeOfLastChange = 0;
 		RDB_B * _db = 0;
 		ChunkHeader _table_header;		// Header of First Chunk
-		TableID _tableID = 0;				// Address of first chunk
 		NoOf_Recs_t _recordsPerChunk = 0;		  // Copy of maxRecords from last Chunk
+		TableID _tableID = 0;				// Address of first chunk
 		Record_Size_t _rec_size = 0;			  // Copy of rec_size from last Chunk
 		InsertionStrategy _insertionStrategy = i_retainOrder; // Copy from last Chunk
 		NoOf_Recs_t _max_NoOfRecords_in_table = 0;

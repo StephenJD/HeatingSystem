@@ -87,14 +87,14 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7) // 11 parms - 8+3 pin
 : _key_mask_16(reinterpret_cast<const uint16_t &>(_key_mask[0]))
 {
 	init(0, rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7);
-	logger() << "MultiCrystal ini[11]\n";
+	logger() << F("MultiCrystal ini[11]\n");
 }
 
 MultiCrystal::MultiCrystal(uint8_t pinset[11])
 : _key_mask_16(reinterpret_cast<const uint16_t &>(_key_mask[0]))
 {
 	init(0, pinset[0], pinset[1], pinset[2], pinset[3], pinset[4], pinset[5], pinset[6], pinset[7], pinset[8], pinset[9], pinset[10]);
-	logger() << "MultiCrystal ini[pinset]\n";
+	logger() << F("MultiCrystal ini[pinset]\n");
 }
 
 
@@ -116,7 +116,7 @@ MultiCrystal::MultiCrystal(uint8_t rs, uint8_t rw, uint8_t enable,
 		init(0, rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7);
 	}
 
-// Initialise Parallel Display
+// Initialise Display
 void MultiCrystal::init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
@@ -421,7 +421,7 @@ size_t MultiCrystal::print(const char buffer[] ) {
 	}
 	dirty = true;
 #endif
-	//logger() << "MultiCrystal::print " << buffer << L_endl;
+	//logger() << F("MultiCrystal::print ") << buffer << L_endl;
 	auto noOfChars = 0; 
 	auto endChar = buffer + strlen(buffer);
 	for (auto nextChar = buffer; nextChar < endChar; ++nextChar) {
@@ -509,17 +509,14 @@ inline size_t MultiCrystal::write(uint8_t value) { // 0 = error, 1 = success
 // write either command or data, with automatic 4/8-bit selection
 uint8_t MultiCrystal::send(uint8_t value, uint8_t mode) { // 0 = success
 	uint8_t error = 0;
-	//auto freeMem = freeMemory();
 
 	if (_i2C_device == 0 ) {
 		digitalWrite(_rs_pin, mode);
-		//changeInFreeMemory(freeMem, "MultiCrystal::send rs");
-		//logger() << " MultiCrystal::send RS: " << mode << L_endl;
+		//logger() << F(" MultiCrystal::send RS: ") << mode << L_endl;
 		// if there is a RW pin indicated, set it low to Write
 		if (_rw_pin != -1) {
 			digitalWrite(_rw_pin, LOW);
-			//changeInFreeMemory(freeMem, "MultiCrystal::send rw");
-			//logger() << " MultiCrystal::send RW to pin " << _rw_pin << L_endl;
+			//logger() << F(" MultiCrystal::send RW to pin ") << _rw_pin << L_endl;
 		}
 
 	} else {
@@ -528,7 +525,6 @@ uint8_t MultiCrystal::send(uint8_t value, uint8_t mode) { // 0 = success
 	}
 	if (_displayfunction & LCD_8BITMODE) {
 		error = write8bits(value);
-		//changeInFreeMemory(freeMem, "MultiCrystal::send write8bits");
 		//static bool LED_ON;
 		//digitalWrite(19, LED_ON);
 		//LED_ON = !LED_ON;
@@ -624,7 +620,7 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	data = 0;
 	uint8_t readFailed = _i2C_device->read(INTCAP, 2, _data); // Read INTCAP to get key-pressed and clear for next read
 	if (readFailed) {
-		//logging() << "MultiCrystal::readI2C_keypad() Read failure for:",_address, "speed",_i2C_device->getI2CFrequency());
+		//logging() << F("MultiCrystal::readI2C_keypad() Read failure for: ") << _address << F(" speed ") << _i2C_device->getI2CFrequency() << L_endl;
 		return 0;
 	}
 
@@ -645,22 +641,22 @@ uint16_t MultiCrystal::readI2C_keypad() {
 }
 
 void MultiCrystal::debug() {
-	uint8_t dataBuffa[2] = {0};
-	uint8_t failedAt = 0;
-	uint8_t hasFailed = _i2C_device->write(GPIOA,2,_data);
-	if (hasFailed) failedAt = 1;
-	hasFailed = hasFailed | _i2C_device->read(GPIOA,2,dataBuffa);
-	if (hasFailed && !failedAt) failedAt = 2;
-	hasFailed = hasFailed | ((dataBuffa[0] & ~0xE3) != (_data[0] & ~_key_mask[0]));
-	if (hasFailed && !failedAt) failedAt = 3;
-	hasFailed = hasFailed | (dataBuffa[1] != _data[1]);
-	if (hasFailed && !failedAt) failedAt = 4;
-	
-	if (hasFailed) {
-		Serial.print("Failed at ");Serial.print(failedAt,DEC);Serial.print(" _data[0]:");Serial.print(_data[0],HEX); Serial.print(" was:");Serial.print(dataBuffa[0],HEX);
-		Serial.print(" _data[1]:");Serial.print(_data[1],HEX);Serial.print(" was:");Serial.println(dataBuffa[1],HEX);
-	} else {
-		Serial.print("OK"); Serial.print(" _data[0]:");Serial.print(_data[0],HEX);Serial.print(" _data[1]:");Serial.println(_data[1],HEX);
-	}
+	//uint8_t dataBuffa[2] = {0};
+	//uint8_t failedAt = 0;
+	//uint8_t hasFailed = _i2C_device->write(GPIOA,2,_data);
+	//if (hasFailed) failedAt = 1;
+	//hasFailed = hasFailed | _i2C_device->read(GPIOA,2,dataBuffa);
+	//if (hasFailed && !failedAt) failedAt = 2;
+	//hasFailed = hasFailed | ((dataBuffa[0] & ~0xE3) != (_data[0] & ~_key_mask[0]));
+	//if (hasFailed && !failedAt) failedAt = 3;
+	//hasFailed = hasFailed | (dataBuffa[1] != _data[1]);
+	//if (hasFailed && !failedAt) failedAt = 4;
+	//
+	//if (hasFailed) {
+	//	Serial.print(F("Failed at "));Serial.print(failedAt,DEC);Serial.print(" _data[0]:");Serial.print(_data[0],HEX); Serial.print(" was:");Serial.print(dataBuffa[0],HEX);
+	//	Serial.print(" _data[1]:");Serial.print(_data[1],HEX);Serial.print(" was:");Serial.println(dataBuffa[1],HEX);
+	//} else {
+	//	Serial.print("OK"); Serial.print(" _data[0]:");Serial.print(_data[0],HEX);Serial.print(" _data[1]:");Serial.println(_data[1],HEX);
+	//}
 	//delay(1000);
 }

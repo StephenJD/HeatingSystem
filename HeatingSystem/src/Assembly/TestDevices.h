@@ -17,8 +17,10 @@ namespace HardwareInterfaces {
 		HeatingSystem & hs();
 		uint8_t testRelays();
 	private:
-		Assembly::Initialiser & _ini;
 		int8_t showSpeedTestFailed(I_I2Cdevice_Recovery & testFn, const char * device);
+		
+		Assembly::Initialiser & _ini;
+		uint8_t _max_transferMargin_uS = 3;
 	};
 
 }

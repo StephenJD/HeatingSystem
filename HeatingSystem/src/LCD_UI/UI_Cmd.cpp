@@ -12,8 +12,7 @@ namespace LCD_UI {
 	UI_Cmd::UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour)
 		: Collection_Hndl(this), Custom_Select(onSelect, behaviour), text(label_text) {
 #ifdef ZPSIM
-		cout << "UI_Cmd " << label_text << " Addr:" << hex << long long(this) << endl;
-		//cout << " behaviour: " << dec << _behaviour << endl;
+		logger() << F("UI_Cmd ") << label_text << F(" Addr:") << L_hex << long(this) << L_endl;
 #endif
 	}
 
@@ -40,7 +39,7 @@ namespace LCD_UI {
 	UI_Label::UI_Label(const char * label_text, Behaviour behaviour)
 		: text(label_text), _behaviour(behaviour) {
 #ifdef ZPSIM
-		cout << "UI_Label " << label_text << " Addr:" << hex << long long(this) << endl;
+		logger() << F("UI_Label ") << label_text << F(" Addr:") << L_hex << long(this) << L_endl;
 #endif
 	}
 

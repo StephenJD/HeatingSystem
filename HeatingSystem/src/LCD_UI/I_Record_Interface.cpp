@@ -64,7 +64,7 @@ namespace LCD_UI {
 	int I_Record_Interface::move_to(int pos) {
 		// pos is the required incrementQ().id
 		// Move to the next matching record past the current, depending on the direction of traversal 
-		//std::cout << " move_to : " << std::dec <<  pos << " Record().id is :"  << (int)record().id() <<  " IncrementQ id: " << query().incrementQ().signed_id() << std::endl;
+		//logger() << F(" move_to : ") << L_dec <<  pos << F(" Record().id is :")  << (int)record().id() << F(" IncrementQ id: ") << query().incrementQ().signed_id() << L_endl;
 
 		query().setMatchArg(parentIndex());
 		if (pos < 0) {

@@ -42,12 +42,13 @@ namespace Date_Time {
 		/*constexpr*/ uint32_t asInt() const { return (uint32_t(DateOnly::asInt()) << 8) | TimeOnly::asInt(); };
 		/*constexpr*/ DateOnly date() const { return *this; }
 		/*constexpr*/ TimeOnly time() const { return *this;}
-	 /*constexpr*/ bool operator==(const DateTime & rhs) const { return asInt() == rhs.asInt(); }
-	 /*constexpr*/ bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
-	 /*constexpr*/ bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
-
+		/*constexpr*/ bool operator==(const DateTime & rhs) const { return asInt() == rhs.asInt(); }
+		/*constexpr*/ bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
+		/*constexpr*/ bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
+		bool inRange() const;
 		//DateTime operator~ () const {return ~this->asInt();}
 		// obtain other boolean operators via Rel_Ops
+		operator CStr_20 () const;
 
 		// Modifiers
 		DateOnly & date() { return *this; }
@@ -60,13 +61,14 @@ namespace Date_Time {
 	//inline /*constexpr*/ bool operator==(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() == rhs.asInt(); }
 	//inline /*constexpr*/ bool operator<(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() < rhs.asInt(); }
 	//inline /*constexpr*/ bool operator>(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() > rhs.asInt(); }
+
 	inline Logger & operator << (Logger & stream, const DateTime & dt) {
-		return stream << dt.day() << "/" << dt.getMonthStr() << "/" << dt.year() << " " << dt.displayHrs() << ":" << dt.mins10() << "0" << (dt.isPM() ? "pm" : "am");
+		return stream << dt.day() << F_SLASH << dt.getMonthStr() << F_SLASH << dt.year() << F_SPACE << dt.displayHrs() << F_COLON << dt.mins10() << F_ZERO << (dt.isPM() ? "pm" : "am");
 	}
 
 #ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const DateTime & dt) {
-		return stream << std::dec << dt.day() << "/" << dt.getMonthStr() << "/" << dt.year() << " " << dt.displayHrs() << ":" << dt.mins10() << "0" << (dt.isPM() ? "pm" : "am");
+		return stream << std::dec << dt.day() << F_SLASH << dt.getMonthStr() << F_SLASH << dt.year() << F_SPACE << dt.displayHrs() << F_COLON << dt.mins10() << F("0") << (dt.isPM() ? "pm" : "am");
 	}
 #endif
 

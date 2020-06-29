@@ -80,7 +80,7 @@ namespace client_data_structures {
 	};
 
 	inline Logger & operator << (Logger & stream, const R_Zone & zone) {
-		return stream << "Zone: " << zone.name;
+		return stream << F("Zone: ") << zone.name;
 	}
 
 	struct R_DwellingZone {
@@ -94,7 +94,7 @@ namespace client_data_structures {
 	};
 
 	inline Logger & operator << (Logger & stream, const R_DwellingZone & dwellingZone) {
-		return stream << "DwellingZone DwID: " << (int)dwellingZone.dwellingID << " ZnID: " << (int)dwellingZone.zoneID;
+		return stream << F("DwellingZone DwID: ") << (int)dwellingZone.dwellingID << F(" ZnID: ") << (int)dwellingZone.zoneID;
 	}
 
 	//***************************************************

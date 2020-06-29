@@ -37,7 +37,7 @@ namespace Assembly {
 		, _rec_towelRails{ _q_towelRails, tc.towelRailArr, 0 }
 
 	{
-		logger() << "Database queries constructed" << L_endl;
+		logger() << F("Database queries constructed") << L_endl;
 	}
 
 }

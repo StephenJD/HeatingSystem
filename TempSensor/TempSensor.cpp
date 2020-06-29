@@ -1,4 +1,5 @@
 #include "TempSensor.h"
+#include <I2C_Recover.h>
 
 using namespace I2C_Talk_ErrorCodes;
 
@@ -7,6 +8,15 @@ namespace HardwareInterfaces {
 	const uint8_t DS75LX_Config = 0x01;
 	const uint8_t DS75LX_HYST_REG = 0x02;
 	error_codes TempSensor::_error;
+
+	TempSensor::TempSensor(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice_Recovery(recover, addr) {
+		recover.i2C().setMax_i2cFreq(400000);
+	} // initialiser for first array element 
+	
+	TempSensor::TempSensor(I2C_Recovery::I2C_Recover & recover) : I_I2Cdevice_Recovery(recover) {
+		recover.i2C().setMax_i2cFreq(400000);
+	}
+
 
 	void TempSensor::initialise(int address) {
 		setAddress(address);
@@ -31,7 +41,7 @@ namespace HardwareInterfaces {
 	}
 
 	error_codes TempSensor::readTemperature() {
-		uint8_t temp[2];
+		uint8_t temp[2]; // 1stByte = units, 2nd byte = fraction
 		_error = read(DS75LX_Temp, 2, temp);
 
 #ifdef ZPSIM
@@ -43,12 +53,14 @@ namespace HardwareInterfaces {
 		if (_lastGood > 17920) change = -256;
 		temp[1] = 0;
 #endif
-		_lastGood = (temp[0] << 8) + temp[1];
+		if (_error == _OK) {
+			_lastGood = (temp[0] << 8) + temp[1];
+		}
 		return _error;
 	}
 
-	error_codes TempSensor::testDevice() {
+	error_codes TempSensor::testDevice() { // non-recovery test
 		uint8_t temp[2] = {75,0};
-		return write_verify(DS75LX_HYST_REG, 2, temp);
+		return I_I2Cdevice::write_verify(DS75LX_HYST_REG, 2, temp);
 	}
 }

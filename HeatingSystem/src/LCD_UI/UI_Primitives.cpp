@@ -27,8 +27,6 @@ namespace LCD_UI {
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	Collection_Hndl * Permitted_Vals::select(Collection_Hndl * from) {
-		//cout << "Permitted_Vals::select from: " << hex << (long long)from << endl;
-		//cout << "Permitted_Vals::select from->backUI: " << hex << (long long)from->backUI() << endl;
 		return from->on_select()->on_select();
 	}
 
@@ -38,8 +36,8 @@ namespace LCD_UI {
 
 	Edit_Int_h::Edit_Int_h() : I_Edit_Hndl(&editVal) {
 #ifdef ZPSIM
-		std::cout << "\tEdit_Int_h Addr: " << std::hex << long long(this) << std::endl;
-		std::cout << "\tEdit_Int_h Edit Addr: " << std::hex << long long(&editVal) << std::endl;
+		logger() << F("\tEdit_Int_h Addr: ") << L_hex << long(this) << L_endl;
+		logger() << F("\tEdit_Int_h Edit Addr: ") << L_hex << long(&editVal) << L_endl;
 #endif
 	}
 
@@ -134,11 +132,13 @@ namespace LCD_UI {
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	const char * Int_Interface::streamData(bool isActiveElement) const {
-		return intToString(getData(isActiveElement), _wrapper->valRange.editablePlaces,'0',_wrapper->valRange.format);
+		strcpy(scratch,intToString(getData(isActiveElement), _wrapper->valRange.editablePlaces,'0',_wrapper->valRange.format));
+		return scratch;
 	}
 
 	const char * Decimal_Interface::streamData(bool isActiveElement) const {
-		return decToString(getData(isActiveElement),_wrapper->valRange.editablePlaces, _wrapper->valRange.noOfDecPlaces,_wrapper->valRange.format);
+		strcpy(scratch,decToString(getData(isActiveElement),_wrapper->valRange.editablePlaces, _wrapper->valRange.noOfDecPlaces,_wrapper->valRange.format));
+		return scratch;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -147,8 +147,8 @@ namespace LCD_UI {
 
 	Edit_Char_h::Edit_Char_h() : I_Edit_Hndl(&editChar) {
 #ifdef ZPSIM
-		std::cout << "\tEdit_Char_h Addr:" << std::hex << long long(this) << std::endl;
-		std::cout << "\teditChar Addr:" << std::hex << long long(&editChar) << std::endl;
+		logger() << F("\tEdit_Char_h Addr:") << L_hex << long(this) << L_endl;
+		logger() << F("\teditChar Addr:") << L_hex << long(&editChar) << L_endl;
 #endif
 	}
 

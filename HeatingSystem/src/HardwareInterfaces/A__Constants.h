@@ -1,7 +1,9 @@
 #if !defined (CONSTANTS__INCLUDED_)
 #define CONSTANTS__INCLUDED_
 
-//#include "debgSwitch.h"
+#include <Clock.h>
+#include <I2C_RecoverStrategy.h>
+
 #include <Arduino.h>
 
 namespace HardwareInterfaces {
@@ -14,7 +16,42 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 22;
+	constexpr uint8_t VERSION = 31;
+
+	/////////////////// Pin assignments & misc. ///////////////////
+	constexpr uint8_t RESET_OUT_PIN = 14;  // active low.
+	constexpr uint8_t RESET_LEDP_PIN = 16;
+	constexpr uint8_t RESET_LEDN_PIN = 19;
+
+	constexpr uint8_t KEYPAD_INT_PIN = 18;
+	constexpr uint8_t KEYPAD_ANALOGUE_PIN = A1;
+	constexpr uint8_t KEYPAD_REF_PIN = A3;
+
+	constexpr uint8_t ZERO_CROSS_PIN = 15; // active falling edge.
+	constexpr uint16_t ZERO_CROSS_DELAY = 690;
+
+	/////////////////// Mixing Valves ///////////////////////////////
+	constexpr uint8_t VALVE_WAIT_TIME = 40;
+	constexpr uint16_t VALVE_FULL_TRANSIT_TIME = 140;
+	////////////////// EEPROM USAGE /////////////////////
+	// clock : 6 bytes
+	// strategy : 11 bytes
+	// RDB : 1000 bytes
+	// EEPROM_Log : top of EEPROM
+#if defined(__SAM3X8E__)
+	constexpr uint16_t EEPROM_SIZE = 32000;
+	constexpr uint16_t EEPROM_LOG_SIZE = 2000;
+#else
+	constexpr uint16_t EEPROM_SIZE = 4096;
+	constexpr uint16_t EEPROM_LOG_SIZE = 2000;
+#endif
+	constexpr uint16_t EEPROM_CLOCK_ADDR = 0;
+	constexpr uint16_t STRATEGY_EPPROM_ADDR = EEPROM_CLOCK_ADDR + Clock_EEPROM::SIZE;
+	constexpr uint16_t RDB_START_ADDR = STRATEGY_EPPROM_ADDR + I2C_Recovery::S_NoOfStrategies + 1;
+	constexpr uint16_t RDB_MAX_SIZE = 2000;
+	constexpr uint16_t EEPROM_LOG_END = EEPROM_SIZE;
+	constexpr uint16_t EEPROM_LOG_START = EEPROM_LOG_END - EEPROM_LOG_SIZE;
+
 	////////////////// EVENT CODES ////////////////////////
 	//extern bool temp_sense_hasError;
 	//const S1_err TEMP_SENS_ERR_TEMP		= -30;
@@ -44,8 +81,6 @@ namespace HardwareInterfaces {
 
 	const uint8_t I2C_MASTER_ADDR = 0x11;
 	const uint8_t MIX_VALVE_I2C_ADDR = 0x10;
-	const uint8_t RTC_ADDRESS = 0x68;
-	const uint8_t EEPROM_ADDRESS = 0x50;
 	const uint8_t US_REMOTE_ADDRESS = 0x24;
 	const uint8_t FL_REMOTE_ADDRESS = 0x25;
 	const uint8_t DS_REMOTE_ADDRESS = 0x26;
@@ -57,10 +92,6 @@ namespace HardwareInterfaces {
 	const uint8_t MIX_VALVE_USED = 128 | 8 | 2 | 1;
 
 	// registers
-	const uint8_t REG_8PORT_IODIR = 0x00; // default all 1's = input
-	const uint8_t REG_8PORT_PullUp = 0x06;
-	const uint8_t REG_8PORT_OPORT = 0x09;
-	const uint8_t REG_8PORT_OLAT = 0x0A;
 	const uint8_t REG_16PORT_INTCAPA = 0x10;
 	const uint8_t REG_16PORT_GPIOA = 0x12;
 
@@ -69,24 +100,10 @@ namespace HardwareInterfaces {
 	const uint8_t DS75LX_HYST_REG = 0x02;
 	const uint8_t DS75LX_LIMIT_REG = 0x03;
 
-	// Pin assignments & misc.
-	const uint8_t I2C_DATA_PIN = 20;
-	const int8_t ZERO_CROSS_PIN = -15; // -ve = active falling edge.
-	const int8_t RESET_OUT_PIN = -14;  // -ve = active low.
-	const int8_t RESET_LED_PIN_P = 16;
-	const int8_t RESET_LED_PIN_N = 19;
-	const uint8_t NO_OF_RETRIES = 3; //0xFF;
-	const uint16_t ZERO_CROSS_DELAY = 690;
-	/////////////////// Mixing Valves ///////////////////////////////
-	const int16_t VALVE_FULL_TRANSIT_TIME = 140;
-	const uint8_t VALVE_WAIT_TIME = 40;
-
 	//////////////////// Display ////////////////////////////////
-	const uint8_t NUM_LOCAL_KEYS = 7;
-	const uint8_t SECONDS_ON_VERSION_PAGE = 5;
+	//const uint8_t SECONDS_ON_VERSION_PAGE = 5;
 	const char NEW_LINE_CHR = '~'; // character used to indicate this field to start on a new line
 	const char CONTINUATION = '_'; // character used to indicate where a field can split over lines
-	const uint8_t DISPLAY_WAKE_TIME = 30;
 	const uint8_t MAX_LINE_LENGTH = 20;
 	const uint8_t MAX_NO_OF_ROWS = 4;
 	const uint8_t ADDITIONAL_BUFFER_SPACE = 3; // 1st char is cursor position, allow for space following string, last is a null.

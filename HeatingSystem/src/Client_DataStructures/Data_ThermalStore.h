@@ -32,6 +32,6 @@ namespace client_data_structures {
 	};
 
 	inline Logger & operator << (Logger & stream, const R_ThermalStore & thermalStore) {
-		return stream << "ThermalStore";
+		return stream << F("ThermalStore");
 	}
 }

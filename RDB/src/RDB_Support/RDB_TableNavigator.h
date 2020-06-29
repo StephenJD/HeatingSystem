@@ -19,12 +19,12 @@ namespace RelationalDatabase {
 	class Answer_Locator;
 #ifdef ZPSIM
 	inline std::ostream & operator << (std::ostream & stream, const TB_Status & status) {
-		return stream << " Status: " << std::dec << 
-			(status == TB_OK ? "OK" : 
-			(status == TB_RECORD_UNUSED ? "unused" : 
-			(status == TB_END_STOP ? "end_stop" : 
-		    (status == TB_BEFORE_BEGIN ? "before_begin" :
-			(status == TB_INVALID_TABLE ? "invalid_table" : "TB_something else")))));
+		return stream << F(" Status: ") << std::dec << 
+			(status == TB_OK ? F("OK") : 
+			(status == TB_RECORD_UNUSED ? F("unused") : 
+			(status == TB_END_STOP ? F("end_stop") : 
+		    (status == TB_BEFORE_BEGIN ? F("before_begin") :
+			(status == TB_INVALID_TABLE ? F("invalid_table") : F("TB_something else"))))));
 	}
 #endif
 
@@ -108,8 +108,8 @@ namespace RelationalDatabase {
 		
 		// Modifiers
 		template<typename Record_T>
-		RecordID insert(const Record_T * newRecord);
-
+		RecordID insert(const Record_T & newRecord);
+		
 		RecordID insertRecord(const void * record);
 		//Table & table() { return *_t; }
 		bool moveToFirstRecord();
@@ -125,7 +125,7 @@ namespace RelationalDatabase {
 		void setCurrent(AnswerID current) { _currRecord = current; }
 		void next(RecordSelector & recSel, int moveBy);
 
-	protected:
+	//protected:
 		// Modifiers
 		RecordID sortedInsert(void * recToInsert
 			, bool(*compareRecords)(TableNavigator * left, const void * right, bool lhs_IsGreater)
@@ -182,36 +182,34 @@ namespace RelationalDatabase {
 	};
 
 	template <typename Record_T>
-	RecordID TableNavigator::insert(const Record_T * newRecord) {
-
+	RecordID TableNavigator::insert(const Record_T & newRecord) {
+		static_assert(!std::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 		if (isSorted(table().insertionStrategy())) {
-			Record_T recordToInsert = *newRecord;
+			Record_T recordToInsert = newRecord;
 			auto compareRecords = [](TableNavigator * left, const void * right, bool lhsIsGreater)->bool {
 				auto lhs = Answer_R<Record_T>{ *left }.rec();
 				auto rhs = *reinterpret_cast<const Record_T*>(right);
 				return lhsIsGreater ? rhs < lhs : lhs < rhs;
 			};
 			auto swapRecords = [](TableNavigator *original, void * recToInsert) {
+				auto debug = *reinterpret_cast<Record_T*>(recToInsert);
 				Answer_R<Record_T> currRec = *original;
-				currRec.rec();
+				auto temp = currRec.rec();
 				currRec.Answer_Locator::update(recToInsert);
-				*reinterpret_cast<Record_T*>(recToInsert) = currRec.get();
+				//*reinterpret_cast<Record_T*>(recToInsert) = currRec.get();
+				*reinterpret_cast<Record_T*>(recToInsert) = temp;
 			};
-			//logger() << "Try Inserting ", recordToInsert);
 
 			auto insertPos = sortedInsert(&recordToInsert, compareRecords, swapRecords);
-			//logger() << "  Now Inserting at: " , insertPos); // ", recordToInsert ,"
 
 			auto unusedRec = insertRecord(&recordToInsert);
-			//logger() << "    Inserted at ", unusedRec);
 
 			if (unusedRec < insertPos) --insertPos;
 			moveToThisRecord(insertPos);
 			return insertPos;
 		}
 		else {
-			//logger() << "  Unsorted Insert Strategy", table().insertionStrategy());
-			return insertRecord(newRecord);
+			return insertRecord(&newRecord);
 		}
 	}
 
@@ -220,7 +218,7 @@ namespace RelationalDatabase {
 		if (isSorted(_tb->insertionStrategy())) {
 			deleteRecord();
 			auto tableNav = TableNavigator(_tb);
-			auto insertPos = tableNav.insert(&get());
+			auto insertPos = tableNav.insert(get());
 			*this = tableNav;
 		}
 		else {

@@ -5,6 +5,10 @@
 #include <Arduino.h>
 #include <I2C_Device.h>
 
+#ifdef DEBUG_SPEED_TEST
+#include <Logging.h>
+#endif
+
 /// <summary>
 /// <para>Supports Scanning and Speed-Testing</para>
 /// Usage:
@@ -17,36 +21,42 @@
 ///	or to LCD ...
 ///	<para>speedTest.prepareNextTest(); // reset to start scanning at 0</para>
 ///	<para>while (scanner.next()){ // return after each device found. Don't output to serial port.</para>
-///	<para>	lcd->print(scanner.foundDeviceAddr,HEX); lcd->print(" ");</para>
+///	<para>	lcd->print(scanner.foundDeviceAddr,HEX);</para>
 ///	<para>}</para>
 ///	</summary>
 class I2C_SpeedTest {
 public:
 	I2C_SpeedTest() = default;
 	I2C_SpeedTest(I_I2Cdevice_Recovery & i2c_device) : _i2c_device(&i2c_device) {
-		//logger() << "  I2C_SpeedTest setDevice:", i2c_device.getAddress());
+#ifdef DEBUG_SPEED_TEST		
+		logger() << F("  I2C_SpeedTest 0x") << L_hex << i2c_device.getAddress() << L_endl;
+#endif
 	}
 	static bool doingSpeedTest() { return _is_inSpeedTest; }
+	auto error() const -> I2C_Talk_ErrorCodes::error_codes{ return _error; }
+	int32_t thisHighestFreq() const { return _thisHighestFreq; }
+	uint8_t stopMargin() const { return _stopMargin; }
+
 	uint32_t fastest();
 	uint32_t fastest(I_I2Cdevice_Recovery & i2c_device);
 	uint32_t show_fastest();
 	uint32_t show_fastest(I_I2Cdevice_Recovery & i2c_device);
-	auto error() const -> I2C_Talk_ErrorCodes::error_codes{ return _error; }
 	void prepareNextTest();
-	const char * getStatusMsg() const { return I2C_Talk::getStatusMsg(error()); }
-	int32_t thisHighestFreq() const { return _thisHighestFreq; }
+	//const __FlashStringHelper * getStatusMsg() const { return I2C_Talk::getStatusMsg(error()); }
 	static constexpr int NO_OF_TESTS_MUST_PASS = 5;
 private:
 	template<bool serial_out>
 	uint32_t fastest_T();
-	
-	static bool _is_inSpeedTest;
-	I2C_Talk_ErrorCodes::error_codes _error = I2C_Talk_ErrorCodes::_OK;
+
 	auto adjustSpeedTillItWorksAgain(int32_t increment)-> I2C_Talk_ErrorCodes::error_codes;
 	auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::error_codes;
 	auto findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed)->I2C_Talk_ErrorCodes::error_codes;
+	
+	static bool _is_inSpeedTest;
 	I_I2Cdevice_Recovery * _i2c_device = 0;
 	int32_t _thisHighestFreq = 0;
+	I2C_Talk_ErrorCodes::error_codes _error = I2C_Talk_ErrorCodes::_OK;
+	uint8_t _stopMargin = 0;
 };
 
 // specialization implemented in .cpp

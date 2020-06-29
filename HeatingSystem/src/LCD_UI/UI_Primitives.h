@@ -80,8 +80,8 @@ namespace LCD_UI {
 	public:
 		OneVal(I_SafeCollection * parent) : Collection_Hndl((const UI_Object*)this), _parent(parent) {
 #ifdef ZPSIM
-			std::cout << "oneVal at: " << std::hex << (long long)this << std::endl;
-			std::cout << "\tas UI_Object at: " << std::hex << (long long)(UI_Object*)this << std::endl;
+			logger() << F("oneVal at: ") << L_hex << (long)this << L_endl;
+			logger() << F("\tas UI_Object at: ") << L_hex << (long)(UI_Object*)this << L_endl;
 #endif
 		};
 		void setParent(I_SafeCollection * parent) { _parent = parent; }
@@ -102,7 +102,7 @@ namespace LCD_UI {
 	public:
 		Permitted_Vals() :I_SafeCollection(0, viewOneUpDn()), _oneVal(this) {
 #ifdef ZPSIM
-			std::cout << "\tPermitted_Vals Addr: " << std::hex << long long(this) << std::endl;
+			logger() << F("\tPermitted_Vals Addr: ") << L_hex << long(this) << L_endl;
 #endif
 			/*_oneVal.setParent(this);*/ 
 		}

@@ -9,8 +9,7 @@ namespace I2C_Recovery {
 
 	class I2C_Recover { // no-recovery base-class
 	public:
-		constexpr I2C_Recover() = default;
-		constexpr I2C_Recover(I2C_Talk & i2C) : _i2C(&i2C) {}
+		I2C_Recover(I2C_Talk & i2C) : _i2C(&i2C) {}
 		
 		// Queries
 		const I2C_Talk & i2C() const { return *_i2C; }
@@ -25,18 +24,20 @@ namespace I2C_Recovery {
 		// Polymorphic Functions for TryAgain
 		virtual auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::error_codes { return I2C_Talk_ErrorCodes::_OK; }
 		virtual bool tryReadWriteAgain(I2C_Talk_ErrorCodes::error_codes status) {
-			Serial.println(" Default non-recovery");
+			//Serial.println(" Default non-recovery");
 			return false;
 		}
 		virtual I_I2Cdevice_Recovery * lastGoodDevice() const { return _device; }
 		virtual bool isUnrecoverable() const { return false; }
 
 		// Polymorphic Functions for I2C_Talk
-		virtual auto findAworkingSpeed()->I2C_Talk_ErrorCodes::error_codes  { return testDevice(1, 0); }
+		/*virtual*/ auto findAworkingSpeed()->I2C_Talk_ErrorCodes::error_codes;
 		virtual auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::error_codes;
+		//friend class I_I2C_Scan;
+		constexpr I2C_Recover() = default;
 	protected:
 		// Non-Polymorphic functions for I2C_Recover
-		TwoWire & wirePort() const;
+		TwoWire & wirePort();
 		void wireBegin();
 	private:
 		I_I2Cdevice_Recovery * _device = 0;

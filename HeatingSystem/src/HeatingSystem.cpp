@@ -8,6 +8,7 @@
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
+using namespace HardwareInterfaces;
 
 //extern Remote_display * hall_display;
 //extern Remote_display * flat_display;
@@ -15,26 +16,47 @@ using namespace RelationalDatabase;
 
 namespace HeatingSystemSupport {
 	// Due has 96kB RAM
-	uint8_t virtualProm[Assembly::EEPROM_SIZE];
+	uint8_t virtualProm[RDB_START_ADDR + RDB_MAX_SIZE];
 
 	void initialise_virtualROM() {
-		logger() << "  Read EEPROM into RAM\n";
-		EEPROM.readEP(0, Assembly::EEPROM_SIZE, virtualProm);
+#if defined(__SAM3X8E__)		
+		logger() << F("  virtualROM...\n");
+		eeprom().readEP(RDB_START_ADDR, RDB_MAX_SIZE, virtualProm + RDB_START_ADDR);
+		logger() << F("  virtualROM Complete. Size: ") << sizeof(virtualProm) << L_endl;
+#endif
 	}
 
 	int writer(int address, const void * data, int noOfBytes) {
+		//if (address == 495) {
+		//	auto debug = false;
+		//}
+		if (address < RDB_START_ADDR || address + noOfBytes > RDB_START_ADDR + RDB_MAX_SIZE) {
+			logger() << F("Illegal RDB write address: ") << int(address) << L_endl;
+			return address;
+		}
+		//logger() << F("RDB write address: ") << int(address) << L_endl;
 		const unsigned char * byteData = static_cast<const unsigned char *>(data);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
+#if defined(__SAM3X8E__)			
 			virtualProm[address] = *byteData;
-			EEPROM.update(address, *byteData);
+#endif
+			eeprom().update(address, *byteData);
 		}
 		return address;
 	}
 
 	int reader(int address, void * result, int noOfBytes) {
+		if (address < RDB_START_ADDR || address + noOfBytes > RDB_START_ADDR + RDB_MAX_SIZE) {
+			logger() << F("Illegal RDB read address: ") << int(address) << L_endl;
+			return address;
+		}		
 		uint8_t * byteData = static_cast<uint8_t *>(result);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
+#if defined(__SAM3X8E__)
 			*byteData = virtualProm[address];
+#else
+			* byteData = eeprom().read(address);
+#endif
 		}
 		return address;
 	}
@@ -45,36 +67,39 @@ using namespace	Assembly;
 
 HeatingSystem::HeatingSystem()
 	: 
-	_recover(i2C, STACK_TRACE_ADDR)
+	_recover(i2C, STRATEGY_EPPROM_ADDR)
 	, db(RDB_START_ADDR, writer, reader, VERSION)
 	, _initialiser(*this)
 	, _tempController(_recover, db, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
 	, _hs_queries(db, _tempController)
 	, mainDisplay(&_hs_queries._q_displays)
+	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, FL_REMOTE_ADDRESS, DS_REMOTE_ADDRESS }
 	, _mainConsoleChapters{ _hs_queries, _tempController, *this}
 	, _sequencer(_hs_queries, _tempController)
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
 	{
+		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
+		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
+		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 		_initialiser.i2C_Test();
 	}
 
+void HeatingSystem::serviceTemperatureController() { _tempController.checkAndAdjust(); }
+
 void HeatingSystem::serviceConsoles() {
-	//auto freeMem = freeMemory();
 	_mainConsole.processKeys(); 
-	//changeInFreeMemory(freeMem, "processKeys");
 }
 
 void HeatingSystem::serviceProfiles() { _sequencer.getNextEvent(); }
 
 void HeatingSystem::notifyDataIsEdited() {
-	logger() << L_time << "notifyDataIsEdited\n";
+	logger() << L_time << F("notifyDataIsEdited\n");
 	_tempController.checkZones();
+	logger() << L_time << F("recheckNextEvent...\n");
 	_sequencer.recheckNextEvent();
 }
 
-void HeatingSystem::logStackTrace() {
-	_recover.strategy().log_stackTrace();
-}
+RelationalDatabase::RDB<Assembly::TB_NoOfTables> & HeatingSystem::getDB() { return db; }
 

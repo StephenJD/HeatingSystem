@@ -34,7 +34,6 @@ namespace Assembly {
 		_db->_q_dwellingSpells.setMatchArg(dwellingID);
 		Answer_R<R_Spell> prevSpell{};
 		for (Answer_R<R_Spell> spell : _db->_q_dwellingSpells) {
-			//cout << "Find Spell " << spell.rec() << endl;
 			if (spell.rec() > clock_().now()) {
 				nextSpell = spell.rec();
 				break;
@@ -56,11 +55,9 @@ namespace Assembly {
 		for (Answer_R<R_Profile> profile : _db->_q_profile) {
 			if (profile.rec().days & dayFlag) {
 				currProfileID = profile.id();
-				//logger() << "           Profile ID: ", currProfileID, " Days: ", profile.rec().days);
 			}
 			if (profile.rec().days & nextDayFlag) {
 				nextDayProfileID = profile.id();
-				//logger() << "           Next Profile ID: ", nextDayProfileID, " Days: ", profile.rec().days);
 			}
 		}
 		return currProfileID;
@@ -75,11 +72,9 @@ namespace Assembly {
 		for (Answer_R<R_Profile> profile : _db->_q_profile) {
 			if (profile.rec().days & startDayFlag) {
 				currProfileID = profile.id();
-				//logger() << "           Profile ID: ", profile.id(), " Days: ", profile.rec().days);
 			}
 			if (profile.rec().days & prevDayFlag) {
 				prevDayProfileID = profile.id();
-				//logger() << "           Prev Profile ID: ", profile.id(), " Days: ", profile.rec().days);
 			}
 		}
 		return currProfileID;
@@ -140,9 +135,9 @@ namespace Assembly {
 
 		auto currentTT_forThisProfile = [this](Answer_R<R_Zone> & zone, RecordID dwellingID, R_Spell & nextSpell, RecordID & currentProgID, RecordID & currentProfileID, RecordID & nextDayProfileID, R_TimeTemp & next_tt) {
 			currentProgID = getCurrentSpell(dwellingID, nextSpell).programID;
-			logger() << "\tProgram " << currentProgID << L_endl;
+			logger() << F("\tProgram ") << currentProgID << L_endl;
 			currentProfileID = getCurrentProfileID(zone.id(), currentProgID, nextDayProfileID);
-			logger() << "\tThis profileID: " << currentProfileID << " Next Day ProfileID: " << nextDayProfileID;
+			logger() << F("\tThis profileID: ") << currentProfileID << F(" Next Day ProfileID: ") << nextDayProfileID;
 			// ************ Actually, if now() < first TT of the day, then CurrentProfileID should be for the previous day.
 			return getCurrentTT(currentProfileID, next_tt); // next_tt will be the current TT if there isn't a later TT in this profile
 		};
@@ -150,11 +145,11 @@ namespace Assembly {
 		// Algorithm
 		if (clock_().now() >= _nextSystemEvent) {
 			_nextSystemEvent = JUDGEMEMT_DAY;
-			logger() << L_endl << L_time << "Sequencer::getNextEvent()\n";
+			logger() << L_endl << L_time << F("Sequencer::getNextEvent()\n");
 
 			for (Answer_R<R_Zone> zone : _db->_q_zones) {
 				auto nextZoneEvent = _tc->zoneArr[zone.id()].nextEventTime(); // zero on start-up
-				logger() << zone.rec() << " ID: " << zone.id() << L_endl;
+				logger() << zone.rec() << F(" ID: ") << zone.id() << L_endl;
 				if (clock_().now() >= nextZoneEvent) {
 					nextZoneEvent = JUDGEMEMT_DAY;
 					auto nextSpell = R_Spell{};
@@ -165,9 +160,9 @@ namespace Assembly {
 					auto currentTempRequest = TimeTemp{}.temp();
 					_db->_q_zoneDwellings.setMatchArg(zone.id());
 					for (Answer_R<R_Dwelling> dwelling : _db->_q_zoneDwellings) {
-						logger() << dwelling.rec() << " ID: " << dwelling.id();
+						logger() << dwelling.rec() << F(" ID: ") << dwelling.id();
 						auto currTT = currentTT_forThisProfile(zone, dwelling.id(), nextSpell, currentProgID, currentProfileID, nextDayProfileID, next_tt);
-						logger() << "\n\tThis " << currTT << "\n\t" << "Next " << next_tt;
+						logger() << F("\n\tThis ") << currTT << F("\n\tNext ") << next_tt;
 						// Highest current temperature request wins.
 						if (currTT.time_temp.temp() > currentTempRequest) currentTempRequest = currTT.time_temp.temp();
 						// GetNext TT
@@ -175,7 +170,7 @@ namespace Assembly {
 							next_tt = getFirstTT_for_profile(nextDayProfileID);
 						}
 						auto nextEvent = nextOccurrenceOfThisTime(next_tt.time(), clock_().now());
-						logger() << "\n\tThis Prog next " << next_tt << "\n\tEvent at: " << nextEvent << L_endl;
+						logger() << F("\n\tThis Prog next ") << next_tt << F("\n\tEvent at: ") << nextEvent << L_endl;
 						if (nextSpell.programID != currentProgID && nextSpell.date < nextEvent) {
 							nextEvent = nextSpell.date;
 							auto prevDayProfileID = RecordID{};
@@ -191,14 +186,14 @@ namespace Assembly {
 						ui_yield();
 					}
 					_tc->zoneArr[zone.id()].setProfileTempRequest(currentTempRequest);
-					logger() << "\tCurrent Request for " << zone.rec().name << " is " << _tc->zoneArr[zone.id()].currTempRequest() << "\tNext Request is " << _tc->zoneArr[zone.id()].nextTempRequest() << L_endl;
-					logger() << "\tNext ZoneEvent is at " << _tc->zoneArr[zone.id()].nextEventTime() << L_endl;
+					logger() << F("\tCurrent Request for ") << zone.rec().name << F(" is ") << _tc->zoneArr[zone.id()].currTempRequest() << F("\tNext Request is ") << _tc->zoneArr[zone.id()].nextTempRequest() << L_endl;
+					logger() << F("\tNext ZoneEvent is at ") << _tc->zoneArr[zone.id()].nextEventTime() << L_endl;
 				} else {
-					logger() << "\tNot time for first TT of today...\n";
+					logger() << F("\tNot time for first TT of today...\n");
 				}
 				if (nextZoneEvent < _nextSystemEvent) _nextSystemEvent = nextZoneEvent;
 			}
-			logger() << "Next SystemEvent: " << _nextSystemEvent << L_endl;
+			logger() << F("Next SystemEvent: ") << _nextSystemEvent << L_endl;
 		}
 	}
 

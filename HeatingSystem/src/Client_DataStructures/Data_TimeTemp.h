@@ -15,7 +15,7 @@ namespace client_data_structures {
 		constexpr TimeTemp(int32_t tt) : _time_temp(uint16_t(tt)) {}
 		constexpr TimeTemp(Date_Time::TimeOnly time, int8_t temp) : _time_temp((uint16_t(time.asInt()) << 8) + temp + 10) {}
 		TimeTemp() = default;
-		Date_Time::TimeOnly time() const { return Date_Time::TimeOnly{ _time_temp >> 8 }; }
+		Date_Time::TimeOnly time() const { return Date_Time::TimeOnly{ uint8_t(_time_temp >> 8) }; }
 		int8_t temp() const { return (_time_temp & 0xff) - 10; }
 		void setTime(Date_Time::TimeOnly time) { _time_temp = (_time_temp & 0xff) + (uint16_t(time.asInt()) << 8); }
 		void setTemp(int temp) { _time_temp = (_time_temp & 0xff00) + temp + 10; }
@@ -34,8 +34,8 @@ namespace client_data_structures {
 		// Each Profile has one or more TimeTemps defining the temperature for times throughout a day
 		constexpr R_TimeTemp(RecordID id, TimeTemp tt) : profileID(id), time_temp(tt) {}
 		R_TimeTemp() = default;
-		RecordID profileID = 0;
-		TimeTemp time_temp;
+		TimeTemp time_temp; // 16-bits
+		RecordID profileID = 0; // 8-bits
 		RecordID field(int fieldIndex) const { return profileID; }
 		Date_Time::TimeOnly time() const { return time_temp.time(); }
 		int8_t temp() const { return time_temp.temp(); }
@@ -48,8 +48,8 @@ namespace client_data_structures {
 
 	inline Logger & operator << (Logger & stream, const R_TimeTemp & timeTemp) {
 		using namespace Date_Time;
-		return stream << "TimeTemp for ProfileID: " << (int)timeTemp.profileID << " time: " 
-			<< intToString(timeTemp.time_temp.time().hrs(), 2, '0') << (int)timeTemp.time_temp.time().mins10() << "0  Temp: " << (int)timeTemp.time_temp.temp();
+		return stream << F("TimeTemp for ProfileID: ") << (int)timeTemp.profileID << F(" time: ") 
+			<< intToString(timeTemp.time_temp.time().hrs(), 2, '0') << (int)timeTemp.time_temp.time().mins10() << F("0  Temp: ") << (int)timeTemp.time_temp.temp();
 	}
 
 	//***************************************************

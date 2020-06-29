@@ -76,6 +76,7 @@ public:
 	uint8_t control_pos_is_port_B, uint8_t data_pos_is_port_B); // bits must be set for any data on port-B
 
 	uint8_t begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS); // returns >0 if failed
+	
 	using Print::print;
 	size_t print(const char[]);
 	size_t print(char);
@@ -124,7 +125,7 @@ private:
 	const uint16_t & _key_mask_16; // = reinterpret_cast<uint16_t &>(_key_mask[0]);
 
 
-	// Initialize Parallel
+	// Initialize
 	void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
 	uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 	uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);

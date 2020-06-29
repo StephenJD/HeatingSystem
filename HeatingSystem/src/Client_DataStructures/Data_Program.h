@@ -28,7 +28,7 @@ namespace client_data_structures {
 	};
 
 	inline Logger & operator << (Logger & stream, const R_Program & program) {
-		return stream << "Program: " << program.name << " for DwellingID: " << (int)program.dwellingID;
+		return stream << F("Program: ") << program.name << F(" for DwellingID: ") << (int)program.dwellingID;
 	}
 
 	//***************************************************

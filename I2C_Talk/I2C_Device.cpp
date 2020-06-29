@@ -1,7 +1,7 @@
 #include <I2C_Device.h>
 #include <I2C_Recover.h>
 #include <I2C_Talk.h>
-
+#include <Logging.h>
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
@@ -18,9 +18,11 @@ error_codes I_I2Cdevice_Recovery::getStatus() {
 	}
 }
 
+int32_t I_I2Cdevice_Recovery::set_runSpeed(int32_t i2cFreq) { return _i2c_speed = recovery().i2C().setI2CFrequency(i2cFreq); }
+
 error_codes I_I2Cdevice_Recovery::read(int registerAddress, int numberBytes, uint8_t *dataBuffer) { // dataBuffer may not be written to if read fails.
 	auto status = recovery().newReadWrite(*this);
-	//logger() << " I2Cdevice::read status:", status);
+	//logger() << F(" I_I2Cdevice_Recovery::read newReadWrite:") << I2C_Talk::getStatusMsg(status) << L_endl;
 	if (status == _OK) {
 		do {
 			status = i2C().read(getAddress(), registerAddress, numberBytes, dataBuffer);
@@ -40,10 +42,12 @@ error_codes I_I2Cdevice_Recovery::write(int registerAddress, int numberBytes, co
 }
 
 error_codes I_I2Cdevice_Recovery::write_verify(int registerAddress, int numberBytes, const uint8_t *dataBuffer) {
+	//logger() << F("I_I2Cdevice_Recovery::write_verify Try newReadWrite") << L_endl;
 	auto status = recovery().newReadWrite(*this);
 	if (status == _OK) {
 		do {
 			status = i2C().write_verify(getAddress(), registerAddress, numberBytes, dataBuffer);
+			//logger() << F("I_I2Cdevice_Recovery::write_verify done") << I2C_Talk::getStatusMsg(status) << L_endl;
 		} while (recovery().tryReadWriteAgain(status));
 	}
 	return status;

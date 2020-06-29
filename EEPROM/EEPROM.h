@@ -27,6 +27,9 @@
 #define LOAD_EEPROM
 #endif
 
+#if defined (ZPSIM)
+#include <A__Constants.h>
+#endif
 
 class I2C_Talk;
 
@@ -34,7 +37,7 @@ class EEPROMClass : public I_I2Cdevice {
 #if defined (ZPSIM)
 public:
 	//EEPROMClass();
-	static uint8_t myEEProm[4096]; // EEPROM object may not get created until after it is used! So ensure array exists by making it static
+	static uint8_t myEEProm[HardwareInterfaces::EEPROM_SIZE]; // EEPROM object may not get created until after it is used! So ensure array exists by making it static
 	~EEPROMClass();
 	void saveEEPROM();
 #endif
@@ -65,13 +68,16 @@ private:
 template<I2C_Talk & i2c>
 class EEPROMClass_T : public EEPROMClass {
 public:
-	using EEPROMClass::EEPROMClass;
+	EEPROMClass_T(int addr) : EEPROMClass(addr) { 
+		i2c.setMax_i2cFreq(100000);
+		i2c.extendTimeouts(5000, 5, 1000);
+	}
 private:
 	using EEPROMClass::i2C;
 	 I2C_Talk & i2C() override { return i2c; }
 };
 
-extern EEPROMClass & EEPROM;
+EEPROMClass & eeprom();
 
 #else
 //#pragma message( "__SAM3X8E__ not defined" )

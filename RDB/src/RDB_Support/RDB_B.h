@@ -43,14 +43,14 @@ namespace RelationalDatabase {
 		typedef int WriteByte_Handler(int address, const void * data, int noOfBytes);
 		typedef int ReadByte_Handler(int address, void * result, int noOfBytes);
 
-		RDB_B(int dbStart, int dbEnd, WriteByte_Handler *, ReadByte_Handler *, size_t password);
-		RDB_B(int dbStart, WriteByte_Handler *, ReadByte_Handler *, size_t password);
+		RDB_B(uint16_t dbStartAddr, uint16_t dbMaxAddr, WriteByte_Handler *, ReadByte_Handler *, size_t password);
+		RDB_B(uint16_t dbStartAddr, WriteByte_Handler *, ReadByte_Handler *, size_t password);
 
 		// Queries
 		bool checkPW(size_t password) const;
 
 		// Modifiers
-		void reset(int dbEnd, size_t password);
+		virtual void reset(size_t password, uint16_t dbMaxAddr);
 		int getTables(Table * table, int maxNoOfTables);
 		int moveRecords(int fromAddress, int toAddress, int noOfBytes);
 
@@ -65,18 +65,18 @@ namespace RelationalDatabase {
 		static ValidRecord_t unvacantRecords(int noOfRecords);
 		// Modifiers
 		void setDB_Header();
-		void updateDB_Header() { _writeByte(_dbStart+ SIZE_OF_PASSWORD, &_dbSize, sizeof(DB_Size_t)); }
+		void updateDB_Header() { _writeByte(_dbStartAddr+ SIZE_OF_PASSWORD, &_dbEndAddr, sizeof(DB_Size_t)); }
 		void loadDB_Header();
 		void savePW(size_t password);
 
 		// Data
 		WriteByte_Handler *_writeByte;
 		ReadByte_Handler *_readByte;
-		DB_Size_t _dbStart;
+		DB_Size_t _dbStartAddr; // EEPROM address of start of database
 		// The next items are the DB Header, saved in the DB
 		// the password
-		DB_Size_t _dbSize;
-		DB_Size_t _dbEnd;
+		DB_Size_t _dbEndAddr; // Current DB end addr
+		DB_Size_t _dbMaxAddr; // EEPROM address of end of avaialble space
 		// End of Header
 		enum { DB_HeaderSize = SIZE_OF_PASSWORD + sizeof(DB_Size_t) + sizeof(DB_Size_t), ValidRecord_t_Capacity = sizeof(ValidRecord_t) * 8 };
 	};

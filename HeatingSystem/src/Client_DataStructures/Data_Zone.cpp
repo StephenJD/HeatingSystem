@@ -67,6 +67,7 @@ namespace client_data_structures {
 		strcat(scratch, " is:");
 		strcat(scratch, intToString(reqIsTemp->isTemp));
 		strcat(scratch, reqIsTemp->isHeating ? "!" : " ");
+		//logger() << "Call temp: " << reqIsTemp->name << " " << reqIsTemp->isTemp << L_endl;
 		return scratch;
 	}
 
@@ -82,7 +83,6 @@ namespace client_data_structures {
 		_factor(0, ValRange(e_fixedWidth | e_editAll | e_showSign, -100, 100, 1))
 		,_reqIsTemp(ValRange(e_fixedWidth | e_editAll,10,90))
 	{
-		//std::cout << "** Zone " << " Addr:" << std::hex << long long(this) << std::endl;
 	}
 
 	I_UI_Wrapper * Dataset_Zone::getField(int fieldID) {

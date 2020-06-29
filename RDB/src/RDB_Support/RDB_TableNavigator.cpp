@@ -22,7 +22,6 @@ namespace RelationalDatabase {
 			_chunk_header = t->table_header();
 			_chunkAddr = t->tableID();
 			loadHeader();
-			//logger() << "Loaded TableNavigator VR:", _chunk_header.validRecords());
 		}
 		else _currRecord.setStatus(TB_INVALID_TABLE);
 	}
@@ -48,17 +47,15 @@ namespace RelationalDatabase {
 	// *************** Insert, Update & Delete ***************
 
 	RecordID TableNavigator::insertRecord(const void * newRecord) {
-		//uint8_t vrIndex;
-		//ValidRecord_t usedRecords;
-		//getAvailabilityBytesForThisRecord(usedRecords, vrIndex);
-		//logger() << "    InsertRecordID:", _currRecord.id(), "VRec",usedRecords);
-		
 		auto targetRecordID = _currRecord.id();
 		auto unusedRecordID = reserveUnusedRecordID();
+		//logger() << "Insert: " << *reinterpret_cast<const uint32_t*>(newRecord) << L_endl;
 		if (isSorted(_t->insertionStrategy()) && unusedRecordID < targetRecordID) {
 			shuffleRecordsBack(unusedRecordID, targetRecordID);
 			targetRecordID = unusedRecordID;
 			unusedRecordID = reserveUnusedRecordID();
+			//logger() << F(" unusedRecordID: ") << (int)unusedRecordID << L_endl;
+
 		} else targetRecordID = unusedRecordID;
 		_currRecord.setID(unusedRecordID);
 		if (_currRecord.id() >= _t->_max_NoOfRecords_in_table) {
@@ -95,11 +92,13 @@ namespace RelationalDatabase {
 			}
 			shuffleValidRecordsByte(currVRbyte_addr, start==end || status() == TB_RECORD_UNUSED);
 		}
+
 	}
 
-	NoOf_Recs_t TableNavigator::thisVRcapacity() const {
-		auto vrStartIndex = _VR_Byte_No * RDB_B::ValidRecord_t_Capacity;
-		auto maxVRIndex = chunkCapacity() + _chunk_start_recordID - vrStartIndex;
+	NoOf_Recs_t TableNavigator::thisVRcapacity() const { // 1-8
+		// for small chunks, VRcapacity and chunkCapacity will be less than 8!
+		auto vrStartIndex = _VR_Byte_No * RDB_B::ValidRecord_t_Capacity; // 0,8,16
+		auto maxVRIndex = chunkCapacity() /*+ _chunk_start_recordID */- vrStartIndex; // within a chunk, startRecID might be 
 		if (maxVRIndex < RDB_B::ValidRecord_t_Capacity) return maxVRIndex;
 		else return RDB_B::ValidRecord_t_Capacity;
 	}
@@ -116,7 +115,6 @@ namespace RelationalDatabase {
 		}
 		db()._writeByte(availabilityByteAddr, &usedRecords, sizeof(ValidRecord_t));
 		_t->tableIsChanged(_chunk_header.isFirstChunk());
-		//cout << " shuffled VR Byte at: " << dec << (int)availabilityByteAddr << " is: " << bitset<8>(usedRecords) << endl;
 	}
 
 	// *************** Iterator Functions ***************
@@ -140,16 +138,22 @@ namespace RelationalDatabase {
 	// ********  First Used Record ***************
 	void TableNavigator::moveToNextUsedRecord(int direction) {
 		auto currID = _currRecord.signed_id();
+//logger() << 9 << L_endl;
 		moveToThisRecord(_currRecord.signed_id());
+//logger() << 10 << L_endl;
+
 		if (_currRecord.status() == TB_BEFORE_BEGIN) {
 			if (direction > 0) {
 				_currRecord.setID(0);
+//logger() << 11 << L_endl;
 				moveToUsedRecordInThisChunk(direction);
 			}
 		}
 		else {
 			if (_currRecord.status() == TB_END_STOP && direction < 0 && _currRecord.id() > 0) moveToThisRecord(_currRecord.id()-1);
+//logger() << 12 << L_endl;			
 			bool found = moveToUsedRecordInThisChunk(direction);
+//logger() << 13 << L_endl;			
 			while (!found && _currRecord.status() != TB_END_STOP && _currRecord.signed_id() > 0) {
 				moveToThisRecord(_currRecord.id());
 				found = moveToUsedRecordInThisChunk(direction);
@@ -216,7 +220,6 @@ namespace RelationalDatabase {
 
 	RecordID TableNavigator::reserveUnusedRecordID() {
 		bool found = reserveFirstUnusedRecordInThisChunk();
-		//logger() << "    found unused in this chunk:", found);
 		if (!found && _chunkAddr != _t->tableID()) {
 			moveToFirstRecord();
 			found = reserveFirstUnusedRecordInThisChunk();
@@ -355,12 +358,8 @@ namespace RelationalDatabase {
 
 	bool TableNavigator::haveMovedToNextChunck() {
 		if (chunkIsExtended()) {
-			//logger() << "chunkIsExtended : Addr:", _chunkAddr, "NextChunk at:", _chunk_header.nextChunk());
 			_chunk_start_recordID += chunkCapacity();
-			//if (_chunkAddr == _chunk_header.nextChunk()) return false;
-			//else 
-				_chunkAddr = _chunk_header.nextChunk();
-			//logger() << "chunkIsExtended : capacity:", chunkCapacity(), " addr:", _chunkAddr);
+			_chunkAddr = _chunk_header.nextChunk();
 			_t->loadHeader(_chunkAddr, _chunk_header);
 			_VR_Byte_No = 0;
 			checkStatus();
@@ -415,10 +414,8 @@ namespace RelationalDatabase {
 		uint8_t old_VR_Byte_No = _VR_Byte_No;
 		vrIndex = getValidRecordIndex();
 		TB_Size_t availabilityByteAddr = getAvailabilityByteAddress();
-		//logger() << "     getValidRecordIndex", vrIndex, "A-Byte_Addr", availabilityByteAddr);
 		if (old_VR_Byte_No != _VR_Byte_No || _t->outOfDate(_timeValidRecordLastRead)) {
 			if (_VR_Byte_No == 0) {
-				//logger() << " Load Header from EEPROM");
 				const_cast<TableNavigator *>(this)->loadHeader(); // invalidated by moving to another chunk or by table-update
 				usedRecords = _chunk_header.validRecords();
 			}
@@ -459,6 +456,8 @@ namespace RelationalDatabase {
 	}
 
 	void TableNavigator::loadHeader() {
+//logger() << 16 << "a" << _chunkAddr << L_endl;
+
 		if (!table().dbInvalid()) db()._readByte(_chunkAddr, &_chunk_header, Table::HeaderSize);
 		_timeValidRecordLastRead = micros();
 	}
@@ -477,17 +476,29 @@ namespace RelationalDatabase {
 	RecordID TableNavigator::sortedInsert(void * recToInsert
 		, bool(*compareRecords)(TableNavigator * left, const void * right, bool lhs_IsGreater)
 		, void(*swapRecords)(TableNavigator *original, void * recToInsert)) {
+//		logger() << "sortedInsert start" << L_endl;
 		
+		//auto debugRecord = *reinterpret_cast<const uint32_t*>(recToInsert);
+		//logger() << "\nsortedInsert: " << debugRecord << L_endl;
+		//if (debugRecord == 587844698) {
+		//	bool a = true;
+		//}
+
 		moveToThisRecord(_currRecord.signed_id());
-		//logger() << L_endl << "Sort...  Curr RecordID : " << _currRecord.signed_id() << " Status:", status());
+		//logger() << "sortedInsert moveTo start Record " << _currRecord.signed_id() << L_endl;
 		if (status() == TB_RECORD_UNUSED || status() == TB_BEFORE_BEGIN) ++(*this);
 		bool sortOrder = isSmallestFirst(_t->insertionStrategy());
 		bool moveToNext = compareRecords(this, recToInsert, sortOrder);
+		//logger() << "sortedInsert moveToNext: " << moveToNext << L_endl;
 		bool needToMove = true;
 		if (status() == TB_END_STOP) { 
+			//logger() << "At end!" << L_endl;
 			--(*this);
-			if (status() == TB_OK) moveToNext = compareRecords(this, recToInsert, sortOrder);
+			if (status() == TB_OK) {
+				moveToNext = compareRecords(this, recToInsert, sortOrder);
+			}
 			else { // Empty Table
+				//logger() << "Empty Table" << L_endl;
 				needToMove = false;
 				moveToNext = false;
 			}
@@ -495,12 +506,14 @@ namespace RelationalDatabase {
 		int moveDirection = moveToNext ? -1 : 1;
 		// Move to insertion point
 		int insertionPos = _currRecord.signed_id();
+		//logger() << "insertionPos " << insertionPos << L_endl;
 		while (needToMove) {
 			insertionPos = _currRecord.signed_id();
 			(*this) += moveDirection; // to next valid record
 			auto thisStatus = status();
 			if (thisStatus == TB_BEFORE_BEGIN || status() == TB_END_STOP) break;
 			needToMove = (compareRecords(this, recToInsert, sortOrder) == moveToNext);
+		//logger() << "sortedInsert needToMove? " << needToMove << L_endl;
 		}
 		if (moveDirection == -1) {
 			insertionPos = _currRecord.signed_id();
@@ -510,14 +523,11 @@ namespace RelationalDatabase {
 
 		// Find Space
 		moveToThisRecord(insertionPos);
-		//logger() << "\n  InsertPos : " << insertionPos << " Status: " << status());
+		//logger() << "sortedInsert moveTo insertionPos " << insertionPos << L_endl;
 		ValidRecord_t validRecords;
 		uint8_t vrIndex;
 		getAvailabilityBytesForThisRecord(validRecords, vrIndex);
 		auto insertPosTaken = recordIsUsed(validRecords, vrIndex);
-		//logger() << "  validRecords :", validRecords, " Pos taken:", insertPosTaken);
-
-		//cout << "      validRecords " << std::bitset<8>(validRecords) << endl;
 
 		// Shuffle Records
 		if (insertPosTaken) {
@@ -525,13 +535,15 @@ namespace RelationalDatabase {
 			if (status() == TB_BEFORE_BEGIN) setStatus(TB_OK); // only if -1
 			while (insertPosTaken && status() == TB_OK) {
 				swapRecords(this, recToInsert);
+				//logger() << "Swapped: " << *reinterpret_cast<const uint32_t*>(recToInsert) << L_endl;
 				++swapPos;
 				moveToThisRecord(swapPos);
 				getAvailabilityBytesForThisRecord(validRecords, vrIndex);
 				insertPosTaken = recordIsUsed(validRecords, vrIndex);
-				//logger() << "    swapPos:", swapPos, "validRecords :", validRecords);
 			}
 		}
+		//logger() << "sortedInsert moveTo final insertionPos " << insertionPos << L_endl;
+		//logger() << "Rec To Insert: " << *reinterpret_cast<const uint32_t*>(recToInsert) << L_endl;
 		return insertionPos;
 	}
 

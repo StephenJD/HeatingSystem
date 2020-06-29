@@ -44,7 +44,7 @@ namespace LCD_UI {
 	protected:
 		I_Field_Interface() : I_SafeCollection(0,viewAll()) {
 #ifdef ZPSIM
-		std::cout << "\tI_Field_Interface Addr: " << std::hex << long long(this) << std::endl;
+		logger() << F("\tI_Field_Interface Addr: ") << L_hex << long(this) << L_endl;
 #endif
 		}
 		I_UI_Wrapper * _wrapper;

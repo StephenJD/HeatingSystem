@@ -75,7 +75,7 @@ namespace client_data_structures {
 	};
 
 	inline Logger & operator << (Logger & stream, const R_TowelRail & towelRail) {
-		return stream << "TowelRail: " << towelRail.name << " On for " << towelRail.minutes_on << " minutes";
+		return stream << F("TowelRail: ") << towelRail.name << F(" On for ") << towelRail.minutes_on << F(" minutes");
 	}
 
 	//***************************************************
@@ -90,7 +90,7 @@ namespace client_data_structures {
 	/// </summary>
 	class Dataset_TowelRail : public Record_Interface<R_TowelRail> {
 	public:
-		enum streamable { e_name, e_onTemp, e_minutesOn, e_secondsToGo };
+		enum streamable { e_name, e_onTemp, e_minutesOn, e_secondsToGo, e_TowelRailID };
 		Dataset_TowelRail(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		I_UI_Wrapper * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;

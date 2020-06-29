@@ -35,11 +35,36 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I2C_eeprom_test", "I2C_EEPR
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test RDB", "..\..\VS_Projects\NewHeatingSystem\Test RDB\Test RDB.vcxproj", "{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CardInfo", "..\..\..\Arduino_Install\libraries\SD\examples\CardInfo\CardInfo.vcxproj", "{14A8982B-B1DC-448A-9F8F-D151A40D4151}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Logger", "Logging\examples\Logger\Logger.vcxproj", "{93BF43DB-F3B7-4D45-BC81-994BEDA086F5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Logger_Test_x86", "..\..\VS_Projects\Test Libraries\Logger_Test_x86.vcxproj", "{75D3FFA6-5B93-4419-8D7B-ECD35BD463A0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_SJD_MixerValve_Control", "..\..\Sketches\A_SJD_MixerValve_Control\A_SJD_MixerValve_Control.vcxproj", "{382F173C-7C35-4969-AA6F-03E687A74608}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "read_i2c_tempSensors", "TempSensor\examples\read_i2c_tempSensors\read_i2c_tempSensors.vcxproj", "{309FC63E-4927-46C4-AF2A-DEE543E0C89B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{18E659B6-93B2-4C05-80D3-FDC63A13D399}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\Arduino_Install\libraries\SD\src\File.cpp = ..\..\..\Arduino_Install\libraries\SD\src\File.cpp
+		..\..\..\Arduino_Install\libraries\SD\src\SD.cpp = ..\..\..\Arduino_Install\libraries\SD\src\SD.cpp
+		..\..\..\Arduino_Install\libraries\SD\src\SD.h = ..\..\..\Arduino_Install\libraries\SD\src\SD.h
+		..\..\..\Arduino_Install\libraries\SD\src\utility\Sd2Card.cpp = ..\..\..\Arduino_Install\libraries\SD\src\utility\Sd2Card.cpp
+		..\..\..\Arduino_Install\libraries\SD\src\utility\Sd2Card.h = ..\..\..\Arduino_Install\libraries\SD\src\utility\Sd2Card.h
+		..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h = ..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h
+		TempSensor\TempSensor.cpp = TempSensor\TempSensor.cpp
+		TempSensor\TempSensor.h = TempSensor\TempSensor.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "localKeypad", "Keypad\examples\localKeypad\localKeypad.vcxproj", "{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SD_Test", "Logging\examples\SD_Test\SD_Test.vcxproj", "{6CC92402-3575-4076-A7AB-B152703D8A02}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RelationalDatabase", "..\..\VS_Projects\NewHeatingSystem\RelationalDatabase\RelationalDatabase.vcxproj", "{E0568737-FF34-4467-A29C-44FBCCECCC00}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "General_Purpose_Library", "..\..\VS_Projects\NewHeatingSystem\General_Purpose_Library\General_Purpose_Library.vcxproj", "{7775C75D-B1E9-4813-90A1-0B5E60A300EC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EE_Logger", "Logging\examples\EE_Logger\EE_Logger.vcxproj", "{E97E0323-F3C4-4182-A66C-25146C825330}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -188,14 +213,6 @@ Global
 		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x64.Build.0 = Release|x64
 		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x86.ActiveCfg = Release|Win32
 		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x86.Build.0 = Release|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Debug|ARM.ActiveCfg = Debug|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Debug|x64.ActiveCfg = Debug|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Debug|x86.ActiveCfg = Debug|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Debug|x86.Build.0 = Debug|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Release|ARM.ActiveCfg = Release|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Release|x64.ActiveCfg = Release|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Release|x86.ActiveCfg = Release|Win32
-		{14A8982B-B1DC-448A-9F8F-D151A40D4151}.Release|x86.Build.0 = Release|Win32
 		{93BF43DB-F3B7-4D45-BC81-994BEDA086F5}.Debug|ARM.ActiveCfg = Debug|Win32
 		{93BF43DB-F3B7-4D45-BC81-994BEDA086F5}.Debug|x64.ActiveCfg = Debug|Win32
 		{93BF43DB-F3B7-4D45-BC81-994BEDA086F5}.Debug|x86.ActiveCfg = Debug|Win32
@@ -214,6 +231,70 @@ Global
 		{75D3FFA6-5B93-4419-8D7B-ECD35BD463A0}.Release|x64.Build.0 = Release|x64
 		{75D3FFA6-5B93-4419-8D7B-ECD35BD463A0}.Release|x86.ActiveCfg = Release|Win32
 		{75D3FFA6-5B93-4419-8D7B-ECD35BD463A0}.Release|x86.Build.0 = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|ARM.ActiveCfg = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x64.ActiveCfg = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.ActiveCfg = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.Build.0 = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|ARM.ActiveCfg = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x64.ActiveCfg = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.ActiveCfg = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.Build.0 = Release|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|ARM.ActiveCfg = Debug|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|x64.ActiveCfg = Debug|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|x86.ActiveCfg = Debug|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|x86.Build.0 = Debug|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|ARM.ActiveCfg = Release|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|x64.ActiveCfg = Release|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|x86.ActiveCfg = Release|Win32
+		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|x86.Build.0 = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|ARM.ActiveCfg = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x64.ActiveCfg = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x86.ActiveCfg = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x86.Build.0 = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|ARM.ActiveCfg = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x64.ActiveCfg = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.ActiveCfg = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.Build.0 = Release|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Debug|ARM.ActiveCfg = Debug|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Debug|x64.ActiveCfg = Debug|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Debug|x86.ActiveCfg = Debug|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Debug|x86.Build.0 = Debug|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Release|ARM.ActiveCfg = Release|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Release|x64.ActiveCfg = Release|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Release|x86.ActiveCfg = Release|Win32
+		{6CC92402-3575-4076-A7AB-B152703D8A02}.Release|x86.Build.0 = Release|Win32
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Debug|ARM.ActiveCfg = Debug|ARM
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Debug|ARM.Build.0 = Debug|ARM
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Debug|x64.ActiveCfg = Debug|x64
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Debug|x64.Build.0 = Debug|x64
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Debug|x86.ActiveCfg = Debug|Win32
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Debug|x86.Build.0 = Debug|Win32
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|ARM.ActiveCfg = Release|ARM
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|ARM.Build.0 = Release|ARM
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|x64.ActiveCfg = Release|x64
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|x64.Build.0 = Release|x64
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|x86.ActiveCfg = Release|Win32
+		{E0568737-FF34-4467-A29C-44FBCCECCC00}.Release|x86.Build.0 = Release|Win32
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Debug|ARM.ActiveCfg = Debug|ARM
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Debug|ARM.Build.0 = Debug|ARM
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Debug|x64.ActiveCfg = Debug|x64
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Debug|x64.Build.0 = Debug|x64
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Debug|x86.ActiveCfg = Debug|Win32
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Debug|x86.Build.0 = Debug|Win32
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Release|ARM.ActiveCfg = Release|ARM
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Release|ARM.Build.0 = Release|ARM
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Release|x64.ActiveCfg = Release|x64
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Release|x64.Build.0 = Release|x64
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Release|x86.ActiveCfg = Release|Win32
+		{7775C75D-B1E9-4813-90A1-0B5E60A300EC}.Release|x86.Build.0 = Release|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Debug|ARM.ActiveCfg = Debug|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Debug|x64.ActiveCfg = Debug|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Debug|x86.ActiveCfg = Debug|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Debug|x86.Build.0 = Debug|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Release|ARM.ActiveCfg = Release|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Release|x64.ActiveCfg = Release|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Release|x86.ActiveCfg = Release|Win32
+		{E97E0323-F3C4-4182-A66C-25146C825330}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

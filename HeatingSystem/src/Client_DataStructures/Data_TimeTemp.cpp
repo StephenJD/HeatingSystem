@@ -80,7 +80,7 @@ namespace client_data_structures {
 
 	const char * TimeTemp_Interface::streamData(bool isActiveElement) const {
 		TimeTemp tt{ getData(isActiveElement) };
-		//logger() << "TimeTemp : ", tt, "IsActive:", isActiveElement);
+		//logger() << F("TimeTemp : ") << tt << F(" IsActive: ") << isActiveElement << L_endl;
 		auto time = tt.time();
 		auto temp = tt.temp();
 		strcpy(scratch, intToString(time.displayHrs(), 2, '0'));
@@ -101,7 +101,6 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_TimeTemp:
 			_timeTemp = uint16_t(record().rec().time_temp);
-			//logger() << "TimeTemp::getField :", record().rec().time_temp, " ID:", record().id());
 			return &_timeTemp;
 		default: return 0;
 		}
@@ -111,22 +110,12 @@ namespace client_data_structures {
 		// Every Profile needs at least one TT
 		switch (fieldID) {
 		case e_TimeTemp: {
-			//std::cout << "   ... Before Update\n";
-			//for (Answer_R<R_TimeTemp> tt : query().incrementTableQ()) {
-			//	std::cout << (int)tt.id() << " : " << tt.rec() << (tt.status() == TB_RECORD_UNUSED ? " Deleted" : "") << std::endl;
-			//}
 			record().rec().time_temp = (uint16_t)newValue->val;
-			auto newRecordID = record().update();
-/*			std::cout << "   ... After Update\n";
-			for (Answer_R<R_TimeTemp> tt : query().incrementTableQ()) {
-				std::cout << (int)tt.id() << " : " << tt.rec() << (tt.status() == TB_RECORD_UNUSED ? " Deleted" : "") << std::endl;
-			}*/			
-			
+			auto newRecordID = record().update();			
 			if (newRecordID != recordID()) {
 				setRecordID(newRecordID);
 				return true;
 			}
-
 			break;
 		}
 		default:;
@@ -135,8 +124,7 @@ namespace client_data_structures {
 	}
 
 	void Dataset_TimeTemp::insertNewData() {
-		auto newTT = record().rec();
-		record() = query().insert(&newTT);
+		record() = query().insert(record().rec());
 		setRecordID(record().id());
 	}
 

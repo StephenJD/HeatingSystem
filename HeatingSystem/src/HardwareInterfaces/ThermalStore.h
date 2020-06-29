@@ -3,16 +3,16 @@
 #include <RDB.h>
 #include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
 #include "..\Client_DataStructures\Data_ThermalStore.h" // relative path required by Arduino
-#include "..\HardwareInterfaces\Temp_Sensor.h" // relative path required by Arduino
 #include "..\Assembly\HeatingSystemEnums.h" // relative path required by Arduino
 
 namespace HardwareInterfaces {
 	class BackBoiler;
 	class MixValveController;
+	class UI_TempSensor;
 
 	class ThermalStore : public LCD_UI::VolatileData {
 	public:
-		ThermalStore(I2C_Temp_Sensor * tempSensorArr, MixValveController (& mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES], BackBoiler & backBoiler);
+		ThermalStore(UI_TempSensor * tempSensorArr, MixValveController (& mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES], BackBoiler & backBoiler);
 		//int16_t getFractionalOutsideTemp() const;
 		uint8_t getTopTemp() const;
 		//uint8_t getOutsideTemp() const;
@@ -32,7 +32,7 @@ namespace HardwareInterfaces {
 		void calcCapacities();
 
 	private:
-		I2C_Temp_Sensor * _tempSensorArr;
+		UI_TempSensor * _tempSensorArr;
 		MixValveController(& _mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES];
 		BackBoiler & _backBoiler;
 		client_data_structures::R_ThermalStore _thermStoreData;

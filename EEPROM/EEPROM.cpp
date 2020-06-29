@@ -35,7 +35,7 @@ using namespace I2C_Talk_ErrorCodes;
 	#include <fstream>
 	using namespace std;
 
-	uint8_t EEPROMClass::myEEProm[4096];
+	uint8_t EEPROMClass::myEEProm[HardwareInterfaces::EEPROM_SIZE];
 	auto i2c = I2C_Talk();
 
 	//EEPROMClass_T<i2c> fileEEPROM(0x50);

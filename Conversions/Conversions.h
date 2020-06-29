@@ -1,4 +1,5 @@
 #pragma once
+//#include "Logging.h"
 
 #ifdef ZPSIM
 #include <cstring>
@@ -21,18 +22,29 @@ namespace GP_LIB {
 	/// <summary>
 	/// Short Copyable c-string
 	/// </summary>
-	class CStr_10 {
+	class CStr_20 {
 	public:
-		CStr_10(const char * str) { strncpy(_str, str, 10); }
-		CStr_10() { _str[0] = 0; }
-		CStr_10 & operator=(const char * str) { strncpy(_str, str, 10); return *this; }
+		enum {STR_CAPACITY = 20};
+		typedef char char_arr20_t[STR_CAPACITY];
+		CStr_20(const char * str) { strncpy(_str, str, STR_CAPACITY); }
+		CStr_20() { _str[0] = 0; }
+		CStr_20 & operator=(const char * str) { strncpy(_str, str, STR_CAPACITY); return *this; }
 		char & operator[](int index) { return _str[index]; }
 		char operator[](int index) const { return _str[index]; }
-		operator const char *() const { return _str; }
-		operator char *() { return _str; }
+		char * str() { return _str; }
+		//const char * str() const { return _str; }
+		operator const char_arr20_t & () const {
+			return _str; // lifetime of temporary extended
+		}		
+		operator char * () {
+			return _str;
+		}		
 	private:
-		char _str[10];
+		char _str[STR_CAPACITY];
 	};
+	//inline Logger & operator<<(Logger & logger, CStr_20 str) {
+	//	return logger << str.str();
+	//}
 	
 	/// <summary>
 	/// Returns number of significant digits
@@ -56,20 +68,20 @@ namespace GP_LIB {
 	/// <summary>
 	/// only for values &lt; 1029
 	/// </summary>
-	CStr_10 intToString(int value);
+	CStr_20 intToString(int value);
 	
 	/// <summary>
 	/// only for values &lt; 1029
 	/// If minNoOfChars -ve, then add + prefix.
 	/// </summary>
-	CStr_10 intToString(int value, int minNoOfChars, char leadingChar = '0', int format = e_editAll | e_fixedWidth);
+	CStr_20 intToString(int value, int minNoOfChars, char leadingChar = '0', int format = e_editAll | e_fixedWidth);
 	
 	/// <summary>
 	/// only for int values &lt; 1029
 	/// If minNoOfChars -ve, then add + prefix.
 	/// abs(minNoOfChars) must be at least 1 more than noOfDecPlaces
 	/// </summary>
-	CStr_10 decToString(int number, int minNoOfChars, int noOfDecPlaces, int format = e_editAll | e_fixedWidth);
+	CStr_20 decToString(int number, int minNoOfChars, int noOfDecPlaces, int format = e_editAll | e_fixedWidth);
 	
 	/// <summary>
 	/// Returns 10^power up to 3 (1000)

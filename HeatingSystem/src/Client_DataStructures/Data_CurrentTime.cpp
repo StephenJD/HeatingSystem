@@ -42,14 +42,14 @@ namespace client_data_structures {
 	}
 
 	int Edit_CurrentTime_h::cursorFromFocus(int focusIndex) {
-		// 08:10:00 am
+		// 08:10:00am
 		int cursorPos = 0;
 		switch (focusIndex) {
 		case e_hours:	cursorPos = 1; break;
 		case e_10Mins: cursorPos = 3; break;
 		case e_mins: cursorPos = 4; break;
 		case e_am_pm: cursorPos = 9; break;
-		case e_time: cursorPos = 10; break;
+		case e_time: cursorPos = 9; break;
 		default: cursorPos = 0;
 		};
 
@@ -179,12 +179,12 @@ namespace client_data_structures {
 		case e_currTime:
 			// Note: minute units are written to clock_() as they are edited.
 			_currTime.val = newValue->val;
-			logger() << L_time << "Save new Time: " << TimeOnly(_currTime.val) << L_endl;
+			logger() << L_time << F("Save new Time: ") << TimeOnly(_currTime.val) << L_endl;
 			clock_().setTime(TimeOnly( _currTime.val ));
 			break;
 		case e_currDate:
 			_currDate.val = newValue->val;
-			logger() << L_time << "Save new Date: " << DateOnly(_currDate.val) << L_endl;
+			logger() << L_time << F("Save new Date: ") << DateOnly(_currDate.val) << L_endl;
 			clock_().setDate(DateOnly(_currDate.val ));
 			break;
 		case e_dst:

@@ -8,7 +8,7 @@ namespace RelationalDatabase {
 
 	/// <summary>
 	/// Gives the record-size(in bytes) and Chunk-size (no of records)
-	/// Tables can be extended by chaining chunks together. New chunks have the same size as the first.
+	/// Tables can be extended by chaining chunks together. New chunks have the same capacity as the first.
 	/// For non-final chunks, next_chunk holds the address of the next chunk. 
 	/// Has flags indicating the ordering of records and the insertion strategy to be used.
 	/// The default is an unordered table.
@@ -78,18 +78,19 @@ namespace RelationalDatabase {
 		//    _validRecords : 1 or more bytes
 		//  } 
 
-		enum {TableID_Size = sizeof(TableID) * 8, NoOfRecs_Size = sizeof(NoOf_Recs_t) * 8};
-		union { // If top-bit is set, this is final chunk and this data is interpreted as Record-Size and Ordering flags
+		static constexpr int TableID_Size = sizeof(TableID) * 8;
+		static constexpr int NoOfRecs_Size = sizeof(NoOf_Recs_t) * 8;
+		union { // If top-bit is set, this is final chunk and this data is interpreted as Record-Size(LS-12) and Ordering flags, otherwise the lower 15-bits are next-chunck address.
 			TableID _next_chunk; // Address in EEPROM
-			UBitField<TableID, 0, TableID_Size - 1> _nextChunk; // 15-bits address
-			UBitField<TableID, TableID_Size - 1, 1> _isFinalChunk; // top-bit 
+			UBitField<TableID, 0, TableID_Size - 1> _nextChunk; // 0, 15 == 15-bits address
+			UBitField<TableID, TableID_Size - 1, 1> _isFinalChunk; // 15, 1 == top-bit 
 			UBitField<TableID, 0, TableID_Size - 4> _recSize; // or 12-bits = bytes per record
 			UBitField<TableID, TableID_Size - 4, 3> _insertionStrategy; // 3-bits strategy _insertionOrderNeedsModifying;
 			//UBitField<TableID, TableID_Size - 3, 1> _insertionsAreMostlyOrdered;
 			//UBitField<TableID, TableID_Size - 2, 1> _orderedByLargestFirst;
 		};
 		union {
-			NoOf_Recs_t _chunk_Size;	// If top-bit is clear, this is the first chunk. The rest is the chunkSize in noOfRecords (0-127). Required in every chunk for getRecordSize().
+			NoOf_Recs_t _chunk_Size;	// If top-bit is clear, this is the first chunk. The rest is the chunkSize in noOfRecords (0-127). Required in every chunk for calcRecordSizeOK().
 			UBitField<NoOf_Recs_t, 0, NoOfRecs_Size - 1> _chunkSize; // noOfRecords per chunck
 			UBitField<NoOf_Recs_t, NoOfRecs_Size - 1, 1> _isExtendingChunk;
 		};

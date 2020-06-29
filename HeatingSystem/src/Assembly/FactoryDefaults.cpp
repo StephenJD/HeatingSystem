@@ -42,37 +42,60 @@ namespace Assembly {
 	};
 
 	constexpr R_Relay relays_f[] = {
-		{ "Flat",6 << 1 }
-		,{ "FlTR",1 << 1 }
-		,{ "HsTR",0 << 1 }
-		,{ "UpSt",5 << 1 }
-		,{ "MFSt",2 << 1 }
-		,{ "Gas",3 << 1 }
-		,{ "DnSt",4 << 1 }
+		{ "Flat",6 << 2 }
+		,{ "FlTR",1 << 2 }
+		,{ "HsTR",0 << 2 }
+		,{ "UpSt",5 << 2 }
+		,{ "MFSt",2 << 2 }
+		,{ "Gas",3 << 2 }
+		,{ "DnSt",4 << 2 }
 	};
 
 	constexpr R_TempSensor tempSensors_f[] = {
-		{ "Flat",0x70 },
-		{ "FlTR",0x48 },
-		{ "HsTR",0x71 },
-		{ "EnST",0x76 },
 		{ "UpSt",0x36 },
 		{ "DnSt",0x74 },
+		{ "Flat",0x70 },
+		{ "HsTR",0x71 },
+		{ "EnST",0x76 },
+		{ "FlTR",0x48 },
+		{ "GasF",0x4B },
 		{ "OutS",0x2B },
-		{ "Grnd",0x35 },
 
 		{ "Pdhw",0x37 },
 		{ "DHot",0x28 },
 		{ "US-F",0x2C },
 		{ "DS-F",0x4F },
-		{ "TkMf",0x75 },
-		{ "TkDs",0x77 },
-		{ "TkUs",0x2E },
 		{ "TkTp",0x2D },
+		{ "TkUs",0x2E },
+		{ "TkDs",0x77 },
+		{ "Grnd",0x35 },
 
-		{ "GasF",0x4B },
+		{ "TMfl",0x75 },
 		{ "MFBF",0x2F }
-	};
+	};	
+	
+	//constexpr R_TempSensor tempSensors_f[] = {
+	//	{ "Flat",0x29 },
+	//	{ "FlTR",0x29 },
+	//	{ "HsTR",0x29 },
+	//	{ "EnST",0x29 },
+	//	{ "UpSt",0x29 },
+	//	{ "DnSt",0x29 },
+	//	{ "OutS",0x29 },
+	//	{ "Grnd",0x29 },
+
+	//	{ "Pdhw",0x29 },
+	//	{ "DHot",0x29 },
+	//	{ "US-F",0x29 },
+	//	{ "DS-F",0x29 },
+	//	{ "TkMf",0x29 },
+	//	{ "TkDs",0x29 },
+	//	{ "TkUs",0x29 },
+	//	{ "TkTp",0x29 },
+
+	//	{ "GasF",0x29 },
+	//	{ "MFBF",0x29 }
+	//};
 
 	constexpr R_TowelRail towelRails_f[] = {
 		  { "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 55, 160 }
@@ -86,11 +109,11 @@ namespace Assembly {
 	};
 
 	constexpr R_Program programs_f[] = {
-		{ "At Home",0 }
-		,{ "Occup'd",1 }
-		,{ "At Work",0 }
-		,{ "Empty",1 }
-		,{ "Away",0 }
+		{ "At Home",0 }		// 0
+		,{ "Occup'd",1 }	// 1
+		,{ "At Work",0 }	// 2
+		,{ "Empty",1 }		// 3
+		,{ "Away",0 }		// 4
 	};
 
 	constexpr R_DwellingZone dwellingZones_f[] = {
@@ -153,9 +176,9 @@ namespace Assembly {
 
 	constexpr R_Spell spells_f[] = { // date, ProgramID : Ordered by date
 		{ DateTime({ 31,7,19, },{ 15,20 }),0 }
-		,{ DateTime({ 12,9,19, },{ 7,30 }),1 }
 		,{ DateTime({ 3,9,19, },{ 17,30 }),2 }
-		,{ DateTime({ 5,9,19, },{ 10,0 }),3 }
+		,{ DateTime({ 5,9,19, },{ 10,0 }),1 }
+		,{ DateTime({ 12,9,19, },{ 7,30 }),3 }
 		,{ DateTime({ 22,9,19, },{ 15,0 }),4 }
 		,{ DateTime({ 30,9,19, },{ 10,0 }),0 } 
 	};
@@ -192,38 +215,50 @@ namespace Assembly {
 	};
 
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {
-		//enum tableIndex {TB_Display, TB_Relay, TB_TempSensor, TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
-		db.reset(EEPROM_SIZE, password);
-		logger() << L_time << "setFactoryDefaults Started...";
-		logger() << "\nThermalStore Table ";
-		db.createTable(thermalStore_f);
-		logger() << "\nMixValveContr Table ";
-		db.createTable(mixValveControl_f);
-		logger() << "\nDisplay Table ";
-		db.createTable(displays_f);
-		logger() << "\nRelays Table ";
-		db.createTable(relays_f);
-		logger() << "\nTempSensors Table ";
-		db.createTable(tempSensors_f);
-		logger() << "\nTowelRails Table ";
-		db.createTable(towelRails_f);
-		logger() << "\nDwellings Table ";
-		db.createTable(dwellings_f);
-		logger() << "\nZones Table ";
-		db.createTable(zones_f);
-		logger() << "\nDwellingZones Table ";
-		db.createTable(dwellingZones_f);
-		logger() << "\nPrograms Table ";
-		db.createTable(programs_f);
-		logger() << "\nProfiles Table ";
-		db.createTable(profiles_f);
-		logger() << "\nTimeTemps Table ";
-		db.createTable(timeTemps_f, i_09_orderedInsert);
-		logger() << "\nSpells Table ";
-		db.createTable(spells_f, i_09_orderedInsert);
-		logger() << "\nAll Tables Created";
+		
+		//logger() << F("\n\nsetFactoryDefaults Try DB Readable") << L_endl;
+		//HeatingSystemSupport::initialise_virtualROM();
+		//auto noOpen = db.getTables(db.begin(), TB_NoOfTables);
 
-		logger() << "\n\nsetFactoryDefaults Completed" << L_endl;
+		//if (noOpen == TB_NoOfTables) return;
+		
+		//enum tableIndex { TB_ThermalStore, TB_MixValveContr, TB_Display, TB_Relay, TB_TempSensor, TB_TowelRail, TB_Dwelling, TB_Zone, TB_DwellingZone, TB_Program, TB_Profile, TB_TimeTemp, TB_Spell, TB_NoOfTables };
+		db.reset(password, RDB_MAX_SIZE);
+		logger() << L_time << F("setFactoryDefaults Started...\n");
+		logger() << F("ThermalStore Table\n");
+		db.createTable(thermalStore_f);
+		logger() << F("\nMixValveContr Table ");
+		db.createTable(mixValveControl_f);
+		logger() << F("\nDisplay Table ");
+		db.createTable(displays_f);
+		logger() << F("\nRelays Table ");
+		db.createTable(relays_f);
+		logger() << F("\nTempSensors Table ");
+		db.createTable(tempSensors_f);
+		logger() << F("\nTowelRails Table ");
+		db.createTable(towelRails_f);
+		logger() << F("\nDwellings Table ");
+		db.createTable(dwellings_f);
+		logger() << F("\nZones Table ");
+		db.createTable(zones_f);
+		logger() << F("\nDwellingZones Table ");
+		db.createTable(dwellingZones_f);
+		logger() << F("\nPrograms Table ");
+		db.createTable(programs_f);
+		logger() << F("\nProfiles Table ");
+		db.createTable(profiles_f);
+		logger() << F("\nTimeTemps Table ") << F("Rec size: ") << sizeof(R_TimeTemp) << F(" TimeTemp size: ") << sizeof(TimeTemp);
+		db.createTable(timeTemps_f, i_09_orderedInsert);
+		logger() << F("\nSpells Table ");
+		db.createTable(spells_f, i_09_orderedInsert);
+		logger() << F("\nAll Tables Created");
+
+		logger() << F("\n\nsetFactoryDefaults Completed") << L_endl;
+
+		//logger() << F("\n\nCheck DB Readable") << L_endl;
+		//HeatingSystemSupport::initialise_virtualROM();
+		//db.getTables(db.begin(), TB_NoOfTables);
+
 	}
 	
 }

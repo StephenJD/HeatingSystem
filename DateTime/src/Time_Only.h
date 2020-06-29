@@ -3,6 +3,7 @@
 #include "Conversions.h"
 #include "Sum_Operators.h"
 #include <Logging.h>
+#include <FlashStrings.h>
 
 //====================================================================
 // File:        TimeOnly.h
@@ -15,7 +16,7 @@ namespace Date_Time {
 	using namespace GP_LIB;
 
 	/// <summary>
-	/// Represents time in 10's of minutes (no units), up to 42hrs 30mins.
+	/// char-sized. Represents time in 10's of minutes (no units), up to 42hrs 30mins.
 	/// </summary>
 	class TimeOnly {
 	public:
@@ -56,7 +57,7 @@ namespace Date_Time {
 	};
 
 	inline Logger & operator << (Logger & stream, const TimeOnly & dt) {
-		return stream << intToString(dt.displayHrs(), 2) << ":" << dt.mins10() << "0" << (dt.isPM() ? "pm" : "am");
+		return stream << intToString(dt.displayHrs(), 2) << F_COLON << dt.mins10() << F_ZERO << (dt.isPM() ? F("pm") : F("am"));
 	}	
 	
 	namespace Literals {

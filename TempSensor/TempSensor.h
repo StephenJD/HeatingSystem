@@ -9,6 +9,8 @@ namespace HardwareInterfaces {
 	class TempSensor : public I_I2Cdevice_Recovery {
 	public:
 		using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
+		TempSensor(I2C_Recovery::I2C_Recover & recover, int addr);
+		TempSensor(I2C_Recovery::I2C_Recover & recover);
 		TempSensor() = default;
 #ifdef ZPSIM
 		TempSensor(I2C_Recovery::I2C_Recover & recover, uint8_t addr, int16_t temp) : I_I2Cdevice_Recovery(recover, addr) { _lastGood = temp << 8; }
@@ -17,7 +19,7 @@ namespace HardwareInterfaces {
 		int8_t get_temp() const;
 		int16_t get_fractional_temp() const;
 		static bool hasError() { return _error != I2C_Talk_ErrorCodes::_OK; }
-		static auto lastError() { return _error; }
+		static I2C_Talk_ErrorCodes::error_codes lastError() { return _error; }
 
 		// Modifiers
 		I2C_Talk_ErrorCodes::error_codes readTemperature();

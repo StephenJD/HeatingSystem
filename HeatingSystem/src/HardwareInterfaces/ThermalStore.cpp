@@ -3,10 +3,12 @@
 #include "BackBoiler.h"
 #include "MixValveController.h"
 #include "A__Constants.h"
+#include "..\Client_DataStructures\Data_TempSensor.h" // relative path required by Arduino
+#include <FlashStrings.h>
 
 namespace HardwareInterfaces {
 
-	ThermalStore::ThermalStore(I2C_Temp_Sensor * tempSensorArr, MixValveController(&mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES], BackBoiler & backBoiler)
+	ThermalStore::ThermalStore(UI_TempSensor * tempSensorArr, MixValveController(&mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES], BackBoiler & backBoiler)
 		: _tempSensorArr(tempSensorArr)
 		, _mixValveControllerArr(mixValveControllerArr)
 		, _backBoiler(backBoiler)
@@ -23,7 +25,7 @@ namespace HardwareInterfaces {
 
 	uint8_t ThermalStore::getTopTemp() const {
 		uint8_t temp = _tempSensorArr[_thermStoreData.OvrHeatTS].get_temp();
-		if (I2C_Temp_Sensor::hasError()) temp = _tempSensorArr[_thermStoreData.DHWpreMixTS].get_temp();
+		if (UI_TempSensor::hasError()) temp = _tempSensorArr[_thermStoreData.DHWpreMixTS].get_temp();
 		return temp;
 	}
 
@@ -73,26 +75,26 @@ namespace HardwareInterfaces {
 		// called every Minute.
 		setLowestCWtemp(false);
 		bool needHeat = dhwNeedsHeat(currRequest, nextRequest);
-		logger() << L_time << "ThermalStore:: currRequest: " << currRequest << " CurrDHW temp: " << _theoreticalDeliveryTemp << (needHeat ? " Asking for heat." : " Not asking for heat.") <<  (_isHeating ? " Is heating" : " Not heating")  << L_endl;
-		if (!_isHeating && needHeat) logger() << L_time << "DHW Needs Heat. CurrRequest: " << currRequest << " Curr DHW temp: " << _theoreticalDeliveryTemp << L_endl;
+		logger() << L_time << F("ThermalStore:: currRequest: ") << currRequest << F(" CurrDHW temp: ") << _theoreticalDeliveryTemp << (needHeat ? F(" Asking for heat.") : F(" Not asking for heat.")) <<  (_isHeating ? F(" Is heating") : F(" Not heating"))  << L_endl;
+		if (!_isHeating && needHeat) logger() << L_time << F("DHW Needs Heat. CurrRequest: ") << currRequest << F(" Curr DHW temp: ") << _theoreticalDeliveryTemp << L_endl;
 		// Check temp for each mix valve		
 		auto mixNeedsHeat = false;
 		for (auto & mixV : _mixValveControllerArr) {
 			mixNeedsHeat = mixNeedsHeat || mixV.needHeat(_isHeating);
 		}
-		if (/*!_isHeating && */mixNeedsHeat) logger() << L_time << "MixValve Needs Heat\n";
+		if (/*!_isHeating && */mixNeedsHeat) logger() << L_time << F("MixValve Needs Heat\n");
 		needHeat |= mixNeedsHeat;
 		if (_isHeating && !needHeat) {
 			//f->eventS().newEvent(EVT_GAS_TEMP, f->tempSensorR(getVal(GasTS)).getSensTemp());
-			logger() << "\tGas Turned OFF   Gas Flow Temp: " << _tempSensorArr[_thermStoreData.GasTS].get_temp();
-			logger() << "\n\tCurr DHW temp: " << _theoreticalDeliveryTemp << L_endl;
+			logger() << F("\tGas Turned OFF   Gas Flow Temp: ") << _tempSensorArr[_thermStoreData.GasTS].get_temp();
+			logger() << F("\n\tCurr DHW temp: ") << _theoreticalDeliveryTemp << L_endl;
 		}
 		else if (!_isHeating && needHeat) {
-			logger() << "\tGas Turned ON\n";
-			logger() << L_tabs << "GroundT:" << _groundT
-				<< "Top:" << getTopTemp()
-				<< "Mid:" << _tempSensorArr[_thermStoreData.MidDhwTS].get_temp()
-				<< "Lower" << _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp() << L_endl;
+			logger() << F("\tGas Turned ON\n");
+			logger() << L_tabs << F("GroundT:") << _groundT
+				<< F("Top:") << getTopTemp()
+				<< F("Mid:") << _tempSensorArr[_thermStoreData.MidDhwTS].get_temp()
+				<< F("Lower") << _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp() << L_endl;
 		}
 		_isHeating = needHeat;
 		return needHeat;
@@ -106,28 +108,28 @@ namespace HardwareInterfaces {
 		uint8_t flowRate = _thermStoreData.DHWflowRate;
 
 		float cond = _thermStoreData.Conductivity; //25; //
-		float F[4]; // First calc length of Heat Exchanger at level of sensor
-		F[3] = ((float)_thermStoreData.TopSensHeight - _thermStoreData.LowerSensHeight); // Length of heat exchanger
-		F[0] = ((float)_thermStoreData.MidSensHeight - _thermStoreData.LowerSensHeight) / 2.0F; // cm's
-		F[1] = F[3] / 2.0F;
-		F[2] = (_thermStoreData.TopSensHeight - _thermStoreData.MidSensHeight) / 2.0F;
+		float f_array[4]; // First calc length of Heat Exchanger at level of sensor
+		f_array[3] = ((float)_thermStoreData.TopSensHeight - _thermStoreData.LowerSensHeight); // Length of heat exchanger
+		f_array[0] = ((float)_thermStoreData.MidSensHeight - _thermStoreData.LowerSensHeight) / 2.0F; // cm's
+		f_array[1] = f_array[3] / 2.0F;
+		f_array[2] = (_thermStoreData.TopSensHeight - _thermStoreData.MidSensHeight) / 2.0F;
 
-		_bottomV = F[0] * pow((float)_thermStoreData.CylDia, 2) * 0.00071F; // vol in litres, allowing 10% for coil volume
-		_midV = F[1] * pow((float)_thermStoreData.CylDia, 2) * 0.00071F; // vol in litres
+		_bottomV = f_array[0] * pow((float)_thermStoreData.CylDia, 2) * 0.00071F; // vol in litres, allowing 10% for coil volume
+		_midV = f_array[1] * pow((float)_thermStoreData.CylDia, 2) * 0.00071F; // vol in litres
 		_upperV = (_thermStoreData.CylHeight - (_thermStoreData.TopSensHeight + _thermStoreData.MidSensHeight) / 2) * pow((float)_thermStoreData.CylDia, 2) * 0.00071F; // vol in litres
 		// Now calc Fraction of heatexchanger at each level
-		F[0] = F[0] / F[3];
-		F[1] = F[1] / F[3];
-		F[2] = F[2] / F[3];
+		f_array[0] = f_array[0] / f_array[3];
+		f_array[1] = f_array[1] / f_array[3];
+		f_array[2] = f_array[2] / f_array[3];
 		float k[3];
-		k[0] = (0.046F - 0.0031F*cond)*F[0] + (.026F * cond - .032F)*F[0] / pow(float(flowRate / 60.0), float(1.0 - .001*cond + (.003*cond - .025)*F[0]));
-		k[1] = (0.046F - 0.0031F*cond)*F[1] + (.026F * cond - .032F)*F[1] / pow(float(flowRate / 60.0), float(1.0 - .001*cond + (.003*cond - .025)*F[1]));
-		k[2] = (0.046F - 0.0031F*cond)*F[2] + (.026F * cond - .032F)*F[2] / pow(float(flowRate / 60.0), float(1.0 - .001*cond + (.003*cond - .025)*F[2]));
+		k[0] = (0.046F - 0.0031F*cond)*f_array[0] + (.026F * cond - .032F)*f_array[0] / pow(float(flowRate / 60.0), float(1.0 - .001*cond + (.003*cond - .025)*f_array[0]));
+		k[1] = (0.046F - 0.0031F*cond)*f_array[1] + (.026F * cond - .032F)*f_array[1] / pow(float(flowRate / 60.0), float(1.0 - .001*cond + (.003*cond - .025)*f_array[1]));
+		k[2] = (0.046F - 0.0031F*cond)*f_array[2] + (.026F * cond - .032F)*f_array[2] / pow(float(flowRate / 60.0), float(1.0 - .001*cond + (.003*cond - .025)*f_array[2]));
 
 		_bottomC = 1.0F - exp(-k[0]);
 		_midC = 1.0F - exp(-k[1]);
 		_upperC = 1.0F - exp(-k[2]);
-		logger() << "\nThermalStore::calcCapacities\t_upperC " << _upperC << " _midC " << _midC << " _bottomC " << _bottomC << L_endl;
+		logger() << F("\nThermalStore::calcCapacities\t_upperC ") << _upperC << F(" _midC ") << _midC << F(" _bottomC ") << _bottomC << L_endl;
 	}
 
 	uint8_t ThermalStore::calcCurrDeliverTemp(int callTemp) const {
@@ -137,14 +139,14 @@ namespace HardwareInterfaces {
 		float topT = getTopTemp();
 		float midT = _tempSensorArr[_thermStoreData.MidDhwTS].get_temp();
 		float botT = _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp();
-		//logger() << "\nThermalStore::calcCurrDeliverTemp\t_topT " << topT << " mid " << midT << " Bot " << botT << L_endl;
+		//logger() << F("\nThermalStore::calcCurrDeliverTemp\t_topT ") << topT << F(" mid ") << midT << F(" Bot ") << botT << L_endl;
 
 		// using Capacities, ground and store temps, calc HW temp at each level
 		float HWtemp[3];
 		HWtemp[0] = _groundT + (botT - _groundT) * _bottomC;
 		HWtemp[1] = HWtemp[0] + (midT - HWtemp[0]) * _midC;
 		HWtemp[2] = HWtemp[1] + (topT - HWtemp[1]) * _upperC;
-		//logger() << "\t_HWtemp[0] " << HWtemp[0] << " HWtemp[1] " << HWtemp[1] << " HWtemp[2] " << HWtemp[2] << L_endl;
+		//logger() << F("\t_HWtemp[0] ") << HWtemp[0] << F(" HWtemp[1] ") << HWtemp[1] << F(" HWtemp[2] ") << HWtemp[2] << L_endl;
 		// Using HWtemps, calculate share of energy for each section of store
 		float share[3];
 		share[0] = (HWtemp[0] - _groundT) / (HWtemp[2] - _groundT);
@@ -156,7 +158,7 @@ namespace HardwareInterfaces {
 		storeTemps[0] = botT - factor * share[0] / _bottomV;
 		storeTemps[1] = midT - factor * share[1] / _midV;
 		storeTemps[2] = topT - factor * share[2] / _upperV;
-		//logger() << "\t_storeTemps[0] " << storeTemps[0] << " storeTemps[1] " << storeTemps[1] << " storeTemps[2] " << storeTemps[2] << L_endl;
+		//logger() << F("\t_storeTemps[0] ") << storeTemps[0] << F(" storeTemps[1] ") << storeTemps[1] << F(" storeTemps[2] ") << storeTemps[2] << L_endl;
 
 		// Calc final HW temps
 		HWtemp[0] = _groundT + (storeTemps[0] - _groundT) * _bottomC;
@@ -167,20 +169,20 @@ namespace HardwareInterfaces {
 
 	bool ThermalStore::dhwNeedsHeat(int callTemp, int nextRequest) {
 		_theoreticalDeliveryTemp = calcCurrDeliverTemp(nextRequest > callTemp ? nextRequest : callTemp);
-		//logger() << "\nThermalStore::dhwNeedsHeat\t_theoreticalDeliveryTemp " << _theoreticalDeliveryTemp << L_endl;
+		//logger() << F("\nThermalStore::dhwNeedsHeat\t_theoreticalDeliveryTemp ") << _theoreticalDeliveryTemp << L_endl;
 		// Note that because callTemp determins the rate of heat-extraction, currDeliverTemp, which is temperature AFTER filling a bath, will change if callTemp changes.
 		static bool hasRequestedCondReduction = false;
 		bool dhwTempOK = dhwDeliveryOK(callTemp);
 		if (!hasRequestedCondReduction && _theoreticalDeliveryTemp >= callTemp && !dhwTempOK) { // reduce conductivity if claims to be hot enought, but isn't
 			hasRequestedCondReduction = true;
 			//f->eventS().newEvent(EVT_THS_COND_CHANGE,S1_byte(getVal(Conductivity)) - 1);
-			logger() << "\nThermalStore::dhwNeedsHeat\tPre-Mix temp too low - reduce cond?\t " 
-				<< " Cond: " << _thermStoreData.Conductivity
-				<< " CallTemp: " << callTemp
-				<< " NextCallTemp: " << nextRequest
-				<< " Calculated DHW: " << _theoreticalDeliveryTemp
-				<< " DHW-flowTemp: " << _tempSensorArr[_thermStoreData.DHWFlowTS].get_temp()
-				<< " DHW-preMixTemp: " << L_fixed << _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() / 256 << L_endl;
+			logger() << F("\nThermalStore::dhwNeedsHeat\tPre-Mix temp too low - reduce cond?\t ") 
+				<< F(" Cond: ") << _thermStoreData.Conductivity
+				<< F(" CallTemp: ") << callTemp
+				<< F(" NextCallTemp: ") << nextRequest
+				<< F(" Calculated DHW: ") << _theoreticalDeliveryTemp
+				<< F(" DHW-flowTemp: ") << _tempSensorArr[_thermStoreData.DHWFlowTS].get_temp()
+				<< F(" DHW-preMixTemp: ") << L_fixed << _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() / 256 << L_endl;
 			//setVal(Conductivity, uint8_t(getVal(Conductivity)) - 1);
 		}
 		if (dhwTempOK) hasRequestedCondReduction = false;

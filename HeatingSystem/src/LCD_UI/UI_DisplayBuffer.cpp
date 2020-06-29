@@ -16,10 +16,9 @@ namespace LCD_UI {
 		if (endPos == 0) endPos = _lcd->size(); else endPos;
 		auto buffer = _lcd->buff();
 		int originalEnd = strlen(buffer) -1; // index of current null
-		bool onNewLine = (buffer[originalEnd] == '~');
 		bool hasShortListChar = (buffer[originalEnd] == '>');
-		if (onNewLine) 
-			--originalEnd;
+		bool onNewLine = (buffer[originalEnd] == '~');
+		while (buffer[originalEnd] == '~') --originalEnd;
 		int appendPos = originalEnd + 1;
 		int addLen = strlen(stream);
 		////////////////////////////////////////////////////////////////////

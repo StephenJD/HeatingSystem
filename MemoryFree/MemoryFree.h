@@ -6,5 +6,6 @@
 #define MEMORY_FREE_H
 
 int freeMemory();
-int changeInFreeMemory(int & prevFree, const char * msg);
+//int changeInFreeMemory(int & prevFree, const char * msg);
+
 #endif

@@ -15,8 +15,11 @@ SD.h/.cpp modified to provide sd_exists();
 #define OCT 8
 #define BIN 2
 */
+	class EEPROMClass;
+	EEPROMClass & eeprom();
 	class Clock;
-	enum Flags {L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64};
+
+	enum Flags {L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
 	inline Flags operator +(Flags l_flag, Flags r_flag) {return static_cast<Flags>(l_flag | r_flag);}
 
 	class Logger : public Print {
@@ -32,6 +35,8 @@ SD.h/.cpp modified to provide sd_exists();
 
 		virtual bool isWorking() { return true; }
 		virtual void readAll() {}
+		virtual void flush() {}
+		virtual void begin(uint32_t baudRate = 0) {}
 		Logger & operator <<(Flags);
 		
 		template<class T>
@@ -46,7 +51,6 @@ SD.h/.cpp modified to provide sd_exists();
 		virtual void setBaseTimeTab(bool timeTab) {}
 		virtual Logger & prePrint() {return *this;}
 		virtual Logger & logTime() { return *this; }
-		virtual void flush() {}
 		bool is_cout() { return _flags & L_cout; }
 		bool is_fixed() { return _flags & L_fixed; }
 		int base() {return _flags & L_hex ? HEX : DEC;}
@@ -83,21 +87,53 @@ SD.h/.cpp modified to provide sd_exists();
 		return stream;
 	}
 
-	class EEPROM_Logger : public Logger {
+	/// <summary>
+	/// Per msg: 100uS Due/ 700uS Mega
+	/// Save 1KB to SD: 250mS Due / 150mS Mega
+	/// </summary>
+	class RAM_Logger : public Logger {
 	public:
-		EEPROM_Logger(unsigned int startAddr, unsigned int endAddr) : _startAddr(startAddr), _endAddr(endAddr), _currentAddress(startAddr) {}
-		void resetStart() { _currentAddress = _startAddr; }
-		unsigned int currentAddress() { return _currentAddress; }
+		RAM_Logger(const char * fileName, uint16_t ramFile_size, bool keepSaving, Clock & clock);
+		RAM_Logger(const char * fileName, uint16_t ramFile_size, bool keepSaving);
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
 		void readAll() override;
 	private:
 		Logger & logTime() override;
+		bool is_tabs() override { return _ram_mustTabTime ? (_ram_mustTabTime = false, true) : _flags & L_tabs; }
+		bool _ram_mustTabTime = false;
+		uint8_t * _ramFile = 0;
+		const char * _fileName;
+		uint16_t _ramFile_size;
+		uint16_t _filePos = 0;
+		bool _keepSaving;
+	};
+
+	/// <summary>
+	/// Per msg: 115mS Due/ 170mS Mega
+	/// Save 1KB to SD: 660mS Due / 230mS Mega
+	/// </summary>
+	class EEPROM_Logger : public Logger {
+	public:
+		EEPROM_Logger(const char * fileName, uint16_t startAddr, uint16_t endAddr, bool keepSaving, Clock & clock);
+		EEPROM_Logger(const char * fileName, uint16_t startAddr, uint16_t endAddr, bool keepSaving);
+		size_t write(uint8_t) override;
+		size_t write(const uint8_t *buffer, size_t size) override;
+		void readAll() override;
+		void begin(uint32_t = 0) override;
+	private:
+		Logger & logTime() override;
 		bool is_tabs() override { return _ee_mustTabTime ? (_ee_mustTabTime = false, true) : _flags & L_tabs; }
+		void saveOnFirstCall();
+		void findStart();
 		bool _ee_mustTabTime = false;
-		unsigned int _startAddr;
-		unsigned int _endAddr;
-		unsigned int _currentAddress = 0;
+		const char * _fileName;
+		uint16_t _startAddr;
+		uint16_t _endAddr;
+		uint16_t _currentAddress = 0;
+		bool _hasWrittenToSD = false;
+		bool _hasRecycled = false;
+		bool _keepSaving;
 	};
 
 	class Serial_Logger : public Logger {
@@ -107,13 +143,18 @@ SD.h/.cpp modified to provide sd_exists();
 		Serial_Logger() = default;
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
+		void flush() override { Serial.flush(); }
+		void begin(uint32_t baudRate) override;
 	protected:
 		Logger & logTime() override;
-		void flush() override { Serial.flush(); }
 		bool is_tabs() override { return _mustTabTime ? (_mustTabTime = false, true) : _flags & L_tabs; }
 		bool _mustTabTime = false;
 	};
 
+	/// <summary>
+	/// Per un-timed msg: 1.4mS
+	/// Per timed msg: 3mS
+	/// </summary>	
 	class SD_Logger : public Serial_Logger {
 	public:
 		SD_Logger(const char * fileName, uint32_t baudRate, Clock & clock);
@@ -121,8 +162,10 @@ SD.h/.cpp modified to provide sd_exists();
 		bool isWorking() override;
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
-	private:
 		File openSD();
+		void flush() override {
+			Serial_Logger::flush(); _dataFile.close(); _dataFile = File{}; }
+	private:
 		Logger & logTime() override;
 		bool is_tabs() override { return _SD_mustTabTime ? (_SD_mustTabTime = false, true) : _flags & L_tabs; }
 		void setBaseTimeTab(bool timeTab) override { _mustTabTime = timeTab; }

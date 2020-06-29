@@ -6,7 +6,7 @@ using namespace Assembly;
 
 namespace HardwareInterfaces {
 
-	void TowelRail::initialise(int towelRailID, I2C_Temp_Sensor & callTS, Bitwise_Relay & callRelay, TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp) {
+	void TowelRail::initialise(int towelRailID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, TemperatureController & temperatureController, MixValveController & mixValveController, int8_t maxFlowTemp) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
@@ -72,19 +72,19 @@ namespace HardwareInterfaces {
 				if (_timer == 0) {
 					_timer = TWL_RAD_RISE_TIME;
 					_prevTemp = hotWaterFlowTemp;
-					logger() << L_time << "TempDiff. Timer 0; Reset prevTemp, set timer to rise-time. Temp is: " << hotWaterFlowTemp << L_endl;
+					logger() << L_time << F("TempDiff. Timer 0; Reset prevTemp, set timer to rise-time. Temp is: ") << hotWaterFlowTemp << L_endl;
 				}
 				else { // _timer running
 					if (hotWaterFlowTemp > _prevTemp + TWL_RAD_RISE_TEMP) {
-						//logger() << "TowelR_Run::rapidTempRise\tTowelRad RapidRise was:" << _prevTemp << epD().getName());
+						//logger() << F("TowelR_Run::rapidTempRise\tTowelRad RapidRise was:") << _prevTemp << epD().getName());
 						//_timer = getVal(tr_RunTime) * 60; // turn-on time in secs
 						//_prevTemp = hotWaterFlowTemp;
 						//f->thermStoreR().setLowestCWtemp(true); // Reset _groundT for therm-store heat calculation because water is being drawn.
-						//logger() << "TowelR_Run::rapidTempRise\tTowelRad RapidRise is: " << hotWaterFlowTemp << " GroundT: ", f->thermStoreR().getGroundTemp());
+						//logger() << F("TowelR_Run::rapidTempRise\tTowelRad RapidRise is: ") << hotWaterFlowTemp << F(" GroundT: ") << f->thermStoreR().getGroundTemp() << L_endl;
 						return true;
 					}
 					else if (hotWaterFlowTemp < _prevTemp) {
-						Serial.println("Cool; Reset prevTemp");
+						//logger() << F("Cool; Reset prevTemp") << L_endl;
 						_prevTemp = hotWaterFlowTemp;
 					}
 				}

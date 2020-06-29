@@ -1,16 +1,28 @@
 #pragma once
 // This is the Arduino Mini Controller
+// ******** NOTE select Arduino Mini Pro 328P 8MHz **********
+// See A_SJD_MixerValve_Control.ini
+// Arduino Mini Pro must be upgraded with  boot-loader to enable watchdog timer.
+// File->Preferences->Additional Boards Manager URLs: https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json
+// Tools->Board->Boards Manager->Install MiniCore
+// 1. In Arduino: Load File-> Examples->ArduinoISP->ArduinoISP
+// 2. Upload this to any board, including another Mini Pro.
+// 3. THEN connect SPI pins to the Mini Pro: MOSI(11)->11, MISO(12)->12, SCK(13)->13, 10->Reset on MiniPro, Vcc and 0c pins.
+// 4. Tools->Board->MiniCore Atmega 328
+// 5. External 8Mhz clock, BOD disabled, LTO enabled, Variant 328P, UART0.
+// 6. Tools->Programmer->Arduino as ISP
+// 7. Burn Bootloader
+// 8. Then upload your desired sketch to ordinary MiniPro board. Tools->Board->Arduino Pro Mini
+
 #include <Arduino.h>
 
 class EEPROMClass;
 
 namespace HardwareInterfaces {
 	class TempSensor;
-	class Relay_D;
+	class Pin_Wag;
 }
 
-void sendMsg(const char* msg);
-void sendMsg(const char* msg, long a);
 enum Role { e_Slave, e_Master };
 extern enum Role role;
 
@@ -29,7 +41,7 @@ public:
 	enum State {e_Moving_Coolest = -2, e_NeedsCooling, e_Off, e_NeedsHeating};
 	enum ControlSetting {e_nothing, e_stop_and_wait, e_new_temp};
 
-	Mix_Valve(HardwareInterfaces::TempSensor & temp_sensr, HardwareInterfaces::Relay_D & heat_relay, HardwareInterfaces::Relay_D & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp);
+	Mix_Valve(HardwareInterfaces::TempSensor & temp_sensr, HardwareInterfaces::Pin_Wag & heat_relay, HardwareInterfaces::Pin_Wag & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp);
 	int8_t getTemperature() const;
 	uint16_t getRegister(int reg) const;
 	
@@ -51,7 +63,7 @@ private:
 	void adjustValve(int8_t tempDiff);
 	void activateMotor(int8_t direction);
 	void reverseOneDegree(int new_call_flowDiff, int actualFlowTemp);
-	void waitForValveToStop(int secsSinceLast);
+	void allowValveToMove(int secsSinceLast);
 	void waitForTempToSettle(int secsSinceLast);
 	void correct_flow_temp(int new_call_flowDiff, int actualFlowTemp);
 	void checkPumpIsOn();
@@ -59,8 +71,8 @@ private:
 
 	// Injected dependancies
 	HardwareInterfaces::TempSensor * temp_sensr;
-	HardwareInterfaces::Relay_D * heat_relay;
-	HardwareInterfaces::Relay_D * cool_relay;
+	HardwareInterfaces::Pin_Wag * heat_relay;
+	HardwareInterfaces::Pin_Wag * cool_relay;
 	EEPROMClass * _ep;
 	uint8_t _eepromAddr;
 	// EEPROM saved data

@@ -5,6 +5,8 @@
 namespace RelationalDatabase {
 	Null_Query nullQuery{};
 
+	//void Query::refresh() { incrementTableQ().refresh(); }
+
 	RecordSelector Query::begin() {
 		auto rs = RecordSelector{ *this, incrementQ().begin() };
 		getMatch(rs, 1, matchArg());
@@ -60,10 +62,22 @@ namespace RelationalDatabase {
 	//                      TableQuery                     //
 	/////////////////////////////////////////////////////////
 
+	//void TableQuery::refresh() {
+	//	if (_table != 0) {
+	//		_table->refresh();
+	//	}
+	//}
+
+
 	RecordSelector TableQuery::begin() {
 		RecordSelector beginRS{ *this, _table };
-		if (beginRS.tableNavigator().moveToFirstRecord()) 
+//logger() << 6 << L_endl;
+
+		if (beginRS.tableNavigator().moveToFirstRecord()) {
+		//	logger() << 7 << L_endl;
 			beginRS.tableNavigator().moveToNextUsedRecord(1);
+		//	logger() << 8 << L_endl;
+		}
 		return beginRS;
 	}
 

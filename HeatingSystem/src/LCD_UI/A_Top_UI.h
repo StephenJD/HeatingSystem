@@ -11,6 +11,8 @@ namespace LCD_UI {
 		A_Top_UI & operator()() { return operator()(_chapterNo); }
 		void setChapterNo(int chapterNo) { _chapterNo = chapterNo; }
 		void backKey();
+		uint8_t chapter() { return _chapterNo; }
+		uint8_t page();
 	private:
 		uint8_t _chapterNo = 0;
 	};

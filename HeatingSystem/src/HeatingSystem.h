@@ -1,25 +1,19 @@
 #pragma once
-#include "Assembly\HeatingSystemEnums.h"
-#include "Assembly\TestDevices.h"
-#include "Assembly\Initialiser.h"
-#include "Assembly\MainConsoleChapters.h"
-#include "Assembly\TemperatureController.h"
-#include "Assembly\HeatingSystem_Queries.h"
-
-//#include "Client_DataStructures\Data_TempSensor.h"
-//#include "Client_DataStructures\Data_MixValveControl.h"
-
-#include "HardwareInterfaces\RemoteDisplay.h"
-#include "HardwareInterfaces\I2C_Comms.h"
-#include "HardwareInterfaces\LocalDisplay.h"
-#include "HardwareInterfaces\LocalKeypad.h"
-#include "HardwareInterfaces\Console.h"
-#include "HardwareInterfaces\LocalDisplay.h"
-#include "Assembly/Sequencer.h"
 #include <I2C_Talk.h>
 #include <I2C_RecoverRetest.h>
 #include <RDB.h>
 
+#include "HardwareInterfaces\LocalDisplay.h"
+#include <LocalKeypad.h>
+#include <RemoteDisplay.h>
+#include "HardwareInterfaces\Console.h"
+
+#include "Assembly\Initialiser.h"
+#include "Assembly\TemperatureController.h"
+#include "Assembly\HeatingSystem_Queries.h"
+#include "Assembly\HeatingSystemEnums.h"
+#include "Assembly\MainConsoleChapters.h"
+#include "Assembly/Sequencer.h"
 
 //////////////////////////////////////////////////////////
 //    Single Responsibility is to connect the parts     //
@@ -33,15 +27,17 @@ public:
 	HeatingSystem();
 	void serviceConsoles();
 	void serviceProfiles();
-	void serviceTemperatureController() { _tempController.checkAndAdjust(); }
+	void serviceTemperatureController();
 	/// <summary>
 	/// Checks Zone Temps, then sets each zone.nextEvent to now.
 	/// </summary>
 	void notifyDataIsEdited();
-	void logStackTrace();
-	auto & recoverObject() { return _recover; }
+	auto recoverObject() -> I2C_Recovery::I2C_Recover_Retest & { return _recover; }
+	// For testing:...
+	Assembly::MainConsoleChapters & mainConsoleChapters() { return _mainConsoleChapters; }
+	RelationalDatabase::RDB<Assembly::TB_NoOfTables> & getDB();
 private: // data-member ordering matters!
-	I2C_Talk i2C;
+	I2C_Talk_ZX i2C;
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
 	Assembly::Initialiser _initialiser; // Checks db
@@ -53,10 +49,9 @@ public:
 	HardwareInterfaces::LocalKeypad localKeypad;
 private: 
 	friend Assembly::Initialiser;
-	friend HardwareInterfaces::TestDevices;
+	friend class HardwareInterfaces::TestDevices;
 	// Run-time data arrays
 	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
-	//Assembly::TemperatureController _tempController;
 	Assembly::MainConsoleChapters _mainConsoleChapters;
 	Assembly::Sequencer _sequencer;
 	HardwareInterfaces::Console _mainConsole;
