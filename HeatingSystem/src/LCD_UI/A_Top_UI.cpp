@@ -76,6 +76,7 @@ namespace LCD_UI {
 	Collection_Hndl * A_Top_UI::set_leftRightUI_from(Collection_Hndl * topUI, int direction) {
 		if (!topUI->behaviour().is_viewAll()) topUI = topUI->backUI();
 		_leftRightBackUI = topUI;
+		cout << "_leftRightBackUI: " << ui_Objects[(long)_leftRightBackUI->get()] << endl;
 		auto this_UI_h = topUI->activeUI();
 		do {
 			cout << "inner: " << ui_Objects[(long)this_UI_h->get()] << endl;
