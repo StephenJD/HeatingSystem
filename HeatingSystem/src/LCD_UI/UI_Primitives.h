@@ -173,6 +173,9 @@ namespace LCD_UI {
 	/// </summary>
 	class Int_Interface : public I_Field_Interface { // Shared stateless UI interface
 	public:
+#ifdef ZPSIM
+		Int_Interface() { ui_Objects[(long)this] = "Int_Interface"; }
+#endif
 		using I_Field_Interface::editItem;
 		void haveMovedTo(int currFocus) override;
 
@@ -201,6 +204,9 @@ namespace LCD_UI {
 	/// </summary>
 	class String_Interface : public I_Field_Interface {
 	public:
+#ifdef ZPSIM
+		String_Interface() {ui_Objects[(long)this] = "String_Interface";}
+#endif
 		using I_Field_Interface::editItem;
 		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
