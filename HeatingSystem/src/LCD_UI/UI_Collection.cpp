@@ -139,19 +139,6 @@ namespace LCD_UI {
 	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
 		auto collection = get()->collection();
 		if (collection) {
-			if (behaviour().is_viewAll() && endIndex() == 1) {
-				if (collection->item(0)->get()->isCollection()) {
-					auto element = collection->item(0)->get()->collection();
-					auto field = element->item(element->focusIndex());
-					if (field->get()->isCollection()) {
-						auto innerField = field->get()->collection();
-						cout << ui_Objects[(long)field->get()] << " Focus was: " << innerField->focusIndex();
-						innerField->move_focus_to(innerField->focusIndex() + nth);
-						cout << " now: " << innerField->focusIndex() << endl;
-						return true;
-					}
-				}
-			} 
 			move_focus_to(focusIndex()); // sets the focus to the current focus and adjusts if out of range.
 			const int startFocus = focusIndex(); // might be endIndex()
 			////////////////////////////////////////////////////////////////////
@@ -298,8 +285,10 @@ namespace LCD_UI {
 	Behaviour I_SafeCollection::_filter = viewable();
 
 	Collection_Hndl * I_SafeCollection::leftRight_Collection() {
-		if (item(validIndex(focusIndex()))->get()->isCollection()) {
-			return static_cast<Collection_Hndl*>(item(validIndex(focusIndex())));
+		auto activeObject = item(validIndex(focusIndex()));
+		logger() << F("\leftRight_Collection: ") << ui_Objects[(long)(this)].c_str() << " Focus: " << focusIndex() << " active: " << ui_Objects[(long)(activeObject->get())].c_str() << L_endl;
+		if (activeObject->get()->isCollection()) {
+			return static_cast<Collection_Hndl*>(activeObject);
 		}
 		else
 			return 0;

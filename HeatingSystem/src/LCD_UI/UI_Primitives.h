@@ -59,6 +59,8 @@ namespace LCD_UI {
 		{
 			strcpy(_str, strVal);
 			valRange._cursorPos = static_cast<unsigned char>(strlen(strVal))-1;
+
+			ui_Objects[(long)this] = "StrWrapper";
 		}
 
 		StrWrapper & operator= (const char* strVal) {
