@@ -33,7 +33,7 @@ namespace Assembly {
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAll().make_newLine() }
 		, _tempSensorUI_sc{ UI_ShortCollection{ 80, _tempSensorUI_c } }
 		
-		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name } // viewOneUpDnRecycle()
+		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name,0,0, viewOneUpDnRecycle().make_newLine() }
 		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
 		, _towelRailOnTimeUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_minutesOn, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
 		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
@@ -68,7 +68,7 @@ namespace Assembly {
 		, _page_tempSensors_c{ makeCollection(_tempSensorUI_sc) }
 		
 		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c).set(viewAllUpDn()) } // show all elements for one TR
-		, _subpage_towelRails_c{ makeCollection(_towelRails_info_c).set(viewAllUpDn().make_newLine()) } // show all TR's
+		, _subpage_towelRails_c{ _towelRails_info_c} // show all TR's
 		
 		, _towelRailUI_sc{ UI_ShortCollection{ 80, _subpage_towelRails_c } } 
 		
