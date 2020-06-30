@@ -70,17 +70,17 @@ namespace LCD_UI {
 		logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
 		if (innerLeftRight) {
-			logger() << " Inner: " << ui_Objects[(long)(innerLeftRight->get())].c_str() << L_endl;
 			auto inner_UI_h = innerLeftRight;
 			do {
-				innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
-				if (innerLeftRight == 0) {
-					break;
+				logger() << " Inner: " << ui_Objects[(long)(inner_UI_h->get())].c_str() << L_endl;
+				if (inner_UI_h->get()->behaviour().is_viewAll()) {
+					logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects[(long)(innerLeftRight->get())].c_str() << L_endl;
+					_leftRightBackUI = inner_UI_h;
+					inner_UI_h->enter_collection(direction);
 				}
-				logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects[(long)(innerLeftRight->get())].c_str() << L_endl;
-				_leftRightBackUI = innerLeftRight;
+				innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
+				if (innerLeftRight == 0) break;
 				inner_UI_h = innerLeftRight;
-				inner_UI_h->enter_collection(direction);
 			} while (inner_UI_h->get()->isCollection());
 			if (inner_UI_h->behaviour().is_viewAll()) {
 				_leftRightBackUI = inner_UI_h;
