@@ -77,18 +77,18 @@ namespace LCD_UI {
 		if (!topUI->behaviour().is_viewAll()) topUI = topUI->backUI();
 		_leftRightBackUI = topUI;
 		cout << "_leftRightBackUI: " << ui_Objects[(long)_leftRightBackUI->get()] << endl;
-		auto this_UI_h = topUI->activeUI();
+		auto inner_UI_h = topUI->activeUI();
 		do {
-			cout << "inner: " << ui_Objects[(long)this_UI_h->get()] << endl;
-			if (this_UI_h->behaviour().is_viewAll()) {
-				_leftRightBackUI = this_UI_h;	
-				enter_nested_ViewAll(this_UI_h, direction);
+			cout << "inner: " << ui_Objects[(long)inner_UI_h->get()] << endl;
+			if (inner_UI_h->behaviour().is_viewAll()) {
+				_leftRightBackUI = inner_UI_h;	
+				enter_nested_ViewAll(inner_UI_h, direction);
 			}
-			this_UI_h = this_UI_h->activeUI();
-			if (this_UI_h == 0) return topUI;
-		} while (this_UI_h->get()->isCollection());
-		if (this_UI_h->behaviour().is_viewAll()) 
-			_leftRightBackUI = this_UI_h;
+			inner_UI_h = inner_UI_h->activeUI();
+			if (inner_UI_h == 0) return topUI;
+		} while (inner_UI_h->get()->isCollection());
+		if (inner_UI_h->behaviour().is_viewAll()) 
+			_leftRightBackUI = inner_UI_h;
 		return topUI;
 	}
 
