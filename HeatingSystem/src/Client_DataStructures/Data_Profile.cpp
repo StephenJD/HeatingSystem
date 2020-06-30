@@ -69,7 +69,11 @@ namespace client_data_structures {
 		: Record_Interface(query, runtimeData, dwellProgs)
 		, _days(0, ValRange(e_editAll, 0, 127, 0, 7))
 		, _dwellZone(dwellZone)
-	{}
+	{
+#ifdef ZPSIM
+		ui_Objects[(long)this] = "Dataset_ProfileDays";
+#endif
+	}
 
 	void Dataset_ProfileDays::setMatchArgs() {
 		// ProfileDays depends on dwellProgs RecordInterface and dwellingZone RecordInterface.

@@ -83,11 +83,8 @@ namespace LCD_UI {
 			if (this_UI_h->behaviour().is_viewAll()) {
 				_leftRightBackUI = this_UI_h;	
 				enter_nested_ViewAll(this_UI_h, direction);
-				this_UI_h = _leftRightBackUI->activeUI();
 			}
-			else {
-				this_UI_h = this_UI_h->activeUI();
-			}
+			this_UI_h = this_UI_h->activeUI();
 			if (this_UI_h == 0) return topUI;
 		} while (this_UI_h->get()->isCollection());
 		if (this_UI_h->behaviour().is_viewAll()) 
