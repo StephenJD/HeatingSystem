@@ -287,11 +287,11 @@ namespace LCD_UI {
 	Collection_Hndl * I_SafeCollection::leftRight_Collection() {
 		auto activeObject = item(validIndex(focusIndex()));
 		logger() << F("\leftRight_Collection: ") << ui_Objects[(long)(this)].c_str() << " Focus: " << focusIndex() << " active: " << ui_Objects[(long)(activeObject->get())].c_str() << L_endl;
-		if (activeObject->get()->isCollection()) {
+		//if (activeObject->get()->isCollection()) {
 			return static_cast<Collection_Hndl*>(activeObject);
-		}
-		else
-			return 0;
+		//}
+		//else
+			//return 0;
 	}
 
 	int I_SafeCollection::nextActionableIndex(int index) const { // index must be in valid range including endIndex()

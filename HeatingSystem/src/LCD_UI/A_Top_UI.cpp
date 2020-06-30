@@ -84,7 +84,6 @@ namespace LCD_UI {
 			} while (inner_UI_h->get()->isCollection());
 			if (inner_UI_h->behaviour().is_viewAll()) {
 				_leftRightBackUI = inner_UI_h;
-				inner_UI_h->enter_collection(direction);
 			}
 		}
 		return topUI;
