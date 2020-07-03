@@ -50,7 +50,7 @@ namespace RelationalDatabase {
 			
 			if (tableOK) {
 				_db->_readByte(rec_sel._chunkAddr, &rec_sel._chunk_header, HeaderSize);
-				logger() << F("Table::openNextTable() chunk at: ") << rec_sel._chunkAddr << L_endl;
+				//logger() << F("Table::openNextTable() chunk at: ") << rec_sel._chunkAddr << L_endl;
 			}
 			else {
 				//logger() << F("Table::openNextTable() no more Tables") << L_endl;

@@ -1,8 +1,5 @@
 #pragma once
 #include <Bitfield.h>
-//#include <iostream>
-//using namespace std;
-//#include <Logging.h>
 
 namespace HardwareInterfaces {
 

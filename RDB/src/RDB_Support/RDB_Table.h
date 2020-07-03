@@ -14,8 +14,6 @@ namespace RelationalDatabase {
 	class Table {
 	public:
 		Table(RDB_B & db, TableID tableID, ChunkHeader & tableHdr);
-		Table(const Table & rhs) = delete;
-		
 		// Queries
 		TB_Status readRecord(RecordID recordID, void * result) const;
 		bool isOpen() const { return _rec_size != 0; }
@@ -42,7 +40,8 @@ namespace RelationalDatabase {
 
 		enum { HeaderSize = sizeof(ChunkHeader), ValidRecordStart = offsetof(ChunkHeader, _validRecords), NoUnusedRecords = -1 };
 		Table() = default;
-
+		Table(const Table & rhs) = default; // prevent client table copying, as update-time on one will not be seen on the other
+		Table & operator=(const Table & rhs) = default;
 
 		/// <summary>	
 		/// For loading an existing table

@@ -100,7 +100,11 @@ namespace client_data_structures {
 	class TimeTemp_Interface : public I_Field_Interface {
 	public:
 #ifdef ZPSIM
+<<<<<<< HEAD
 		TimeTemp_Interface() { ui_Objects[(long)this] = "TimeTemp_Interface"; }
+=======
+		TimeTemp_Interface() { ui_Objects()[(long)this] = "TimeTemp_Interface"; }
+>>>>>>> Sub_Page_Collection
 #endif
 		using I_Field_Interface::editItem;
 		const char * streamData(bool isActiveElement) const override;

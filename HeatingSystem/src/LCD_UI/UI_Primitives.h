@@ -5,11 +5,8 @@
 #include "UI_LazyCollection.h"
 
 #ifdef ZPSIM
-	#include <string>
 	#include <iostream>
 	#include <iomanip>
-	#include <map>
-	extern std::map<long, std::string> ui_Objects;
 #endif
 
 namespace LCD_UI {
@@ -59,6 +56,9 @@ namespace LCD_UI {
 		{
 			strcpy(_str, strVal);
 			valRange._cursorPos = static_cast<unsigned char>(strlen(strVal))-1;
+#ifdef ZPSIM
+			ui_Objects()[(long)this] = "StrWrapper";
+#endif
 		}
 
 		StrWrapper & operator= (const char* strVal) {
@@ -174,7 +174,11 @@ namespace LCD_UI {
 	class Int_Interface : public I_Field_Interface { // Shared stateless UI interface
 	public:
 #ifdef ZPSIM
+<<<<<<< HEAD
 		Int_Interface() { ui_Objects[(long)this] = "Int_Interface"; }
+=======
+		Int_Interface() { ui_Objects()[(long)this] = "Int_Interface"; }
+>>>>>>> Sub_Page_Collection
 #endif
 		using I_Field_Interface::editItem;
 		void haveMovedTo(int currFocus) override;
@@ -205,7 +209,11 @@ namespace LCD_UI {
 	class String_Interface : public I_Field_Interface {
 	public:
 #ifdef ZPSIM
+<<<<<<< HEAD
 		String_Interface() {ui_Objects[(long)this] = "String_Interface";}
+=======
+		String_Interface() { ui_Objects()[(long)this] = "String_Interface"; }
+>>>>>>> Sub_Page_Collection
 #endif
 		using I_Field_Interface::editItem;
 		const char * streamData(bool isActiveElement) const override;

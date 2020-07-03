@@ -77,7 +77,7 @@ namespace RelationalDatabase {
 				}
 				else if (tbl._tableID == 0) {
 					logger()  << L_tabs << F(" Register Table ID: ") << t._tableID << F(" pos") << &tbl - tables << L_endl;
-					tbl = t; 
+					tbl = t;
 					return tbl; 
 				}
 			}

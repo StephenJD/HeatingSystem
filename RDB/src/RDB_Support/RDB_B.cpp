@@ -100,7 +100,7 @@ namespace RelationalDatabase {
 	}
 
 	bool RDB_B::extendTable(TableNavigator & rec_sel) {
-		auto extension = createTable(rec_sel.recordSize(), rec_sel.chunkCapacity(), i_retainOrder);
+		Table extension{ createTable(rec_sel.recordSize(), rec_sel.chunkCapacity(), i_retainOrder) };
 		TableNavigator newChunk = &extension;
 		if (newChunk._chunkAddr != 0) {
 			// We only extend if we are trying to insert a record, so set first record-bit as used.

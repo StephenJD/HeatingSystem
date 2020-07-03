@@ -78,8 +78,7 @@ namespace Assembly {
 		LCD_UI::Collection<8, LCD_UI::Collection_Hndl> _page_profile_c;
 		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_tempSensors_c;
 		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _towelRails_info_c;
-		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _subpage_towelRails_c;
-		LCD_UI::UI_ShortCollection _towelRailUI_sc;
+		LCD_UI::UI_IterateSubCollection _subpage_towelRails_c;
 		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _page_towelRails_c;
 
 		// Display - Collection of Page Handles

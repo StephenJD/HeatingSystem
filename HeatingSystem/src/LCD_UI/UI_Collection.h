@@ -1,10 +1,13 @@
 #pragma once
 #include "Behaviour.h"
 #include "UI_DisplayBuffer.h"
+
 #ifdef ZPSIM 
 	#include <iostream> 
+	#include <map>
+	#include <string>
+	std::map<long, std::string> & ui_Objects();
 #endif
-//using namespace std;
 
 namespace LCD_UI {
 	class UI_DisplayBuffer;
@@ -183,6 +186,7 @@ namespace LCD_UI {
 		I_SafeCollection * operator->() { return get()->collection(); }
 		void focusHasChanged(bool hasFocus);
 		void setFocusIndex(int index);
+		void enter_collection(int direction);
 
 		template<typename RT>
 		explicit operator RT & () { return reinterpret_cast<RT &>(*this); } // prevent further offset being applied
@@ -231,6 +235,7 @@ namespace LCD_UI {
 		// Polymorphic Queries
 		bool isCollection() const override { return true; }
 		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
+		virtual Collection_Hndl * leftRight_Collection();
 
 		// Polymorphic short-list query functions
 		virtual int firstVisibleItem() const { return 0; }
@@ -384,6 +389,29 @@ namespace LCD_UI {
 		mutable int _beginShow = 0; // streamIndex of first visible element
 		mutable int _endShow; // streamIndex after the last visible element
 		int _beginIndex = 0; // streamIndex of first element in collection
+	};
+
+	/////////////////////////////////////////////////////////////////////////
+	//         UI_IterateSubCollection decorator for any I_SafeCollection derivative 
+	/////////////////////////////////////////////////////////////////////////
+
+	/// <summary>
+	/// A Collection-Wrapper providing iteration of its sub-collection.
+	/// UI_IterateSubCollection = {parent,child,child,child}
+	/// View_All -> {parent1,child1,child1,child1}, {parent2,child2,child2,child2}, {parent3,child3,child3,child3}
+	/// The sub-collection may contain any number of fields.
+	/// The active (parent) field of the sub-collection determins the underlying records to be used.
+	/// Thus iterating this wrapper results in the sub-collection showing its fields for each member of the active field.
+	/// </summary>
+	class UI_IterateSubCollection : public I_SafeCollection {
+	public:
+		UI_IterateSubCollection(I_SafeCollection & safeCollection);
+		// Polymorphic Queries
+		Collection_Hndl * leftRight_Collection() override;
+		// Polymorphic Modifiers
+		Object_Hndl * item(int newIndex) override;
+	private:
+		Collection_Hndl _nestedCollection;
 	};
 
 	//////////////////////////////////////////////////////////////////////

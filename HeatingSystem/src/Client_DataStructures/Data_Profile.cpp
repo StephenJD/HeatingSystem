@@ -71,7 +71,11 @@ namespace client_data_structures {
 		, _dwellZone(dwellZone)
 	{
 #ifdef ZPSIM
+<<<<<<< HEAD
 		ui_Objects[(long)this] = "Dataset_ProfileDays";
+=======
+		ui_Objects()[(long)this] = "Dataset_ProfileDays";
+>>>>>>> Sub_Page_Collection
 #endif
 	}
 
@@ -122,7 +126,7 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_days: {
 			uint8_t oldDays = _days.val & 0x7F;
-			uint8_t newDays = newValue->val;
+			uint8_t newDays = uint8_t(newValue->val);
 			uint8_t removedDays = oldDays & ~newDays;
 			uint8_t addedDays = newDays & ~oldDays;
 			record().rec().days = newDays;
