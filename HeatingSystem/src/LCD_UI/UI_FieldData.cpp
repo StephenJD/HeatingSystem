@@ -5,7 +5,7 @@
 #ifdef ZPSIM
 #include <iostream>
 #include <map>
-extern std::map<long, std::string> ui_Objects;
+std::map<long, std::string> & ui_Objects();
 using namespace std;
 #endif
 
@@ -24,8 +24,8 @@ namespace LCD_UI {
 		setFocusIndex(_data->recordID());
 		setObjectIndex(focusIndex());
 #ifdef ZPSIM
-		logger() << F("LazyCollection UI_FieldData Addr: ") << L_hex << long(this) << L_endl;
-		logger() << F("   Field_Interface_h Addr: ") << L_hex << long(&_field_Interface_h) << L_endl << L_endl;
+		//logger() << F("LazyCollection UI_FieldData Addr: ") << L_hex << long(this) << L_endl;
+		//logger() << F("   Field_Interface_h Addr: ") << L_hex << long(&_field_Interface_h) << L_endl << L_endl;
 #endif
 	} 
 
@@ -37,7 +37,7 @@ namespace LCD_UI {
 		// parent field might have been changed
 		auto objectAtFocus = _data->query()[focusIndex()];
 #ifdef ZPSIM
-		//logger() << F("\tfocusHasChanged on ") << ui_Objects[(long)_field_Interface_h.get()].c_str() <<  L_tabs 
+		//logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)_field_Interface_h.get()].c_str() <<  L_tabs 
 		//	<< F("\n\t\tFocusIndex was: ") << focusIndex()
 		//	<< F("\n\t\tObjectIndex was: ") << objectIndex()
 		//	//<< F("Obj ID was: ") << objectAtFocus.id()
@@ -101,7 +101,7 @@ namespace LCD_UI {
 
 	const char * UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.	
-		//cout << "UI_FieldData::streamElement " << ui_Objects[(long)this] << endl;
+		//cout << "UI_FieldData::streamElement " << ui_Objects()[(long)this] << endl;
 		auto focus_index = LazyCollection::focusIndex();
 		for (auto & element : *this) {
 			auto endVisibleIndex = shortColl->endVisibleItem();

@@ -5,8 +5,9 @@
 #include "RDB_Table.h"
 #include "RDB_Answer_Locator.h"
 #include "RDB_Capacities.h"
-#include "..\..\..\Sum_Operators\Sum_Operators.h"
-#include "..\..\..\Logging/Logging.h"
+#include <Sum_Operators.h>
+#include <Logging.h>
+#include <Type_Traits.h>
 
 #ifdef ZPSIM
 	#include <ostream>
@@ -183,7 +184,7 @@ namespace RelationalDatabase {
 
 	template <typename Record_T>
 	RecordID TableNavigator::insert(const Record_T & newRecord) {
-		static_assert(!std::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
+		static_assert(!typetraits::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 		if (isSorted(table().insertionStrategy())) {
 			Record_T recordToInsert = newRecord;
 			auto compareRecords = [](TableNavigator * left, const void * right, bool lhsIsGreater)->bool {

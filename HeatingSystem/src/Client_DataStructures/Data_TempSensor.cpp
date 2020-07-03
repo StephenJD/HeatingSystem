@@ -77,8 +77,8 @@ namespace client_data_structures {
 		{
 			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());
 			strcpy(_tempSensor.name, record().rec().name);
-			_tempSensor.temperature = ts.get_temp();
-			if (ts.hasError()) _tempSensor.temperature = -127;
+			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _tempSensor.temperature = -127;
+			else _tempSensor.temperature = ts.get_temp();
 			return &_tempSensor;
 		}
 		default: return 0;

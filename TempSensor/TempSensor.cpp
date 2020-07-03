@@ -45,7 +45,7 @@ namespace HardwareInterfaces {
 		_error = read(DS75LX_Temp, 2, temp);
 
 #ifdef ZPSIM
-		//if (getAddress() == 0x70)
+		//  if (getAddress() == 0x70) _error = _NACK_during_data_send;
 			//bool debug = true;
 		//_lastGood += change;
 		temp[0] = _lastGood / 256;

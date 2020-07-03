@@ -93,13 +93,13 @@ namespace RelationalDatabase {
 		TableQuery(Table & table) : _table(&table) {
 
 #ifdef ZPSIM
-			logger() << F(" TableQuery at: ") << L_hex << (long)this << F(" TableID : ") << L_dec << (int)_table->tableID() << L_endl;
+			//logger() << F(" TableQuery at: ") << L_hex << (long)this << F(" TableID : ") << L_dec << (int)_table->tableID() << L_endl;
 #endif
 		}
 
 		TableQuery(const TableQuery & tableQ) : _table(tableQ._table) {
 #ifdef ZPSIM
-			logger() << F(" Copy TableQuery at: ") << L_hex << (long)this << F(" TableID : ") << L_dec << (int)_table->tableID() << L_endl;
+			//logger() << F(" Copy TableQuery at: ") << L_hex << (long)this << F(" TableID : ") << L_dec << (int)_table->tableID() << L_endl;
 #endif
 		}
 
@@ -113,7 +113,7 @@ namespace RelationalDatabase {
 
 		template <typename Record_T>
 		RecordSelector insert(const Record_T & record) {
-			static_assert(!std::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
+			static_assert(!typetraits::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 			auto rs = RecordSelector{ *this, _table };
 			//rs.end();
 			rs.tableNavigator().insert(record);
@@ -137,7 +137,7 @@ namespace RelationalDatabase {
 
 	template <typename Record_T>
 	RecordSelector Query::insert(const Record_T & record) {
-		static_assert(!std::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
+		static_assert(!typetraits::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 		return incrementTableQ().insert(record);
 	}
 
@@ -149,8 +149,8 @@ namespace RelationalDatabase {
 		CustomQuery(Query & source) : _incrementQ(&source) {}
 		CustomQuery(const TableQuery & tableQ) : _incrementQ(&_tableQ), _tableQ(tableQ) {
 #ifdef ZPSIM
-			logger() << F(" Custom Query at : ") << L_hex << (long)this << F("\n");
-			logger() << F("    Nested Table Query at : ") << L_hex << (long)&_tableQ << F("\n");
+			//logger() << F(" Custom Query at : ") << L_hex << (long)this << F("\n");
+			//logger() << F("    Nested Table Query at : ") << L_hex << (long)&_tableQ << F("\n");
 #endif
 		}
 
@@ -187,7 +187,7 @@ namespace RelationalDatabase {
 		QueryF_T(Query & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {}
 		QueryF_T(const TableQuery & result_Query, int matchField) : CustomQuery(result_Query), _match_f(matchField) {
 #ifdef ZPSIM
-			logger() << F(" Filter Query at : ") << L_hex << (long)this << F("\n");
+			//logger() << F(" Filter Query at : ") << L_hex << (long)this << F("\n");
 #endif
 		}
 
@@ -238,8 +238,8 @@ namespace RelationalDatabase {
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
 #ifdef ZPSIM
-			logger() << F(" Link Query and results at : ") << L_hex <<(long)this << F("\n");
-			logger() << F("    nested Filter Query at : ") << L_hex <<(long)&_linkQ << F("\n");
+			//logger() << F(" Link Query and results at : ") << L_hex <<(long)this << F("\n");
+			//logger() << F("    nested Filter Query at : ") << L_hex <<(long)&_linkQ << F("\n");
 #endif
 		}
 
@@ -250,8 +250,8 @@ namespace RelationalDatabase {
 			int select_f
 		) : CustomQuery(result_Query), _linkQ(link_Query, filter_f ), _select_f{ select_f } {
 #ifdef ZPSIM
-			logger() << F(" Link Query and results at : ") << L_hex << (long)this << F("\n");
-			logger() << F("    nested Filter Query at : ") << L_hex << (long)&_linkQ << F("\n");
+			//logger() << F(" Link Query and results at : ") << L_hex << (long)this << F("\n");
+			//logger() << F("    nested Filter Query at : ") << L_hex << (long)&_linkQ << F("\n");
 #endif
 		}
 		void setMatchArg(int matchArg) override { _linkQ.setMatchArg(matchArg); }

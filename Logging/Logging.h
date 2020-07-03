@@ -2,7 +2,7 @@
 #include <SD.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "..\type_traits\type_traits.h"
+#include <Type_Traits.h>
 //#include <Streaming.h>
 //#pragma message( "Logging.h loaded" )
 /*
@@ -69,19 +69,19 @@ SD.h/.cpp modified to provide sd_exists();
 			stream.setBaseTimeTab(false);
 		}
 		if (stream.is_tabs()) stream.print("\t");
-		return streamToPrint(stream, value,  typename _Is_integer<T>::_Integral());
+		return streamToPrint(stream, value,  typename typetraits::_Is_integer<T>::_Integral());
 		//stream.print(value);
 		//return stream;
 	}
 
 	template<class T>
-	Logger & streamToPrint(Logger & stream, T value, __true_type)
+	Logger & streamToPrint(Logger & stream, T value, typetraits::__true_type)
 	{
 		return stream.streamToPrintInt(value);
 	}
 
 	template<class T>
-	Logger & streamToPrint(Logger & stream, T value, __false_type)
+	Logger & streamToPrint(Logger & stream, T value, typetraits::__false_type)
 	{
 		stream.print(value);
 		return stream;

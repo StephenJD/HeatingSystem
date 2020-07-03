@@ -4,10 +4,6 @@
 #ifdef ZPSIM
 	#include <iostream>
 	#include <iomanip>
-	#include <map>
-	#include <string>
-	extern std::map<long, std::string> ui_Objects;
-	using namespace std;
 #endif
 
 namespace LCD_UI {
@@ -67,21 +63,25 @@ namespace LCD_UI {
 			topUI = topUI->backUI();
 		}
 		_leftRightBackUI = topUI;
-		logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
 		if (innerLeftRight) {
 			auto inner_UI_h = innerLeftRight;
+			auto innerIsCollection = false;
 			do {
-				logger() << " Inner: " << ui_Objects[(long)(inner_UI_h->get())].c_str() << L_endl;
+				//logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
 				if (inner_UI_h->get()->behaviour().is_viewAll()) {
-					logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects[(long)(innerLeftRight->get())].c_str() << L_endl;
+					//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
 					_leftRightBackUI = inner_UI_h;
 					inner_UI_h->enter_collection(direction);
 				}
-				innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
-				if (innerLeftRight == 0) break;
-				inner_UI_h = innerLeftRight;
-			} while (inner_UI_h->get()->isCollection());
+				innerIsCollection = inner_UI_h->get()->isCollection();
+				if (innerIsCollection) {
+					innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
+					if (innerLeftRight == 0) break;
+					inner_UI_h = innerLeftRight;
+				}
+			} while (innerIsCollection);
 			if (inner_UI_h->behaviour().is_viewAll()) {
 				_leftRightBackUI = inner_UI_h;
 			}
@@ -108,12 +108,12 @@ namespace LCD_UI {
 		set_UpDownUI_from(selectedPage_h());
 		_cursorUI->setCursorPos();
 #ifdef ZPSIM 
-		auto selectedUI = selectedPage_h()->get();
-		logger() << F("\tselectedPage: ") << ui_Objects[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		logger() << F("\t_upDownUI: ") << ui_Objects[(long)(_upDownUI->get())].c_str() << L_endl;
-		logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << L_endl;
-		logger() << F("\trec_activeUI(): ") << ui_Objects[(long)(rec_activeUI()->get())].c_str() << L_endl;
-		//logger() << F("\t_cursorUI(): ") << ui_Objects[(long)(_cursorUI)].c_str() << L_endl;
+		//auto selectedUI = selectedPage_h()->get();
+		//logger() << F("\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
+		//logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		//logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
+		//logger() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI)].c_str() << L_endl;
 #endif
 	}
 
@@ -162,10 +162,10 @@ namespace LCD_UI {
 			rec_edit();
 
 #ifdef ZPSIM
-		logger() << F("\tselectedPage: ") << ui_Objects[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		logger() << F("\t_upDownUI: ") << ui_Objects[(long)(_upDownUI->get())].c_str() << L_endl;
-		logger() << F("\t_leftRightBackUI: ") << ui_Objects[(long)(_leftRightBackUI->get())].c_str() << L_endl;
-		logger() << F("\trec_activeUI(): ") << ui_Objects[(long)(rec_activeUI()->get())].c_str() << L_endl;
+		//logger() << F("\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
+		//logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		//logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
 #endif
 	}
 
@@ -206,7 +206,7 @@ namespace LCD_UI {
 			auto element_h = static_cast<Collection_Hndl *>(top->get()->collection()->item(i));
 			if (element_h->get()->isCollection()) {
 //#ifdef ZPSIM
-//				logger() << F("Notify: ") << ui_Objects[(long)(element_h->get())].c_str() << L_tabs << L_hex << (long)(element_h->get()) << L_endl;
+//				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_tabs << L_hex << (long)(element_h->get()) << L_endl;
 //#endif
 				element_h->focusHasChanged(element_h == _upDownUI);
 				auto inner = element_h->activeUI();

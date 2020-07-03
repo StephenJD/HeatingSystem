@@ -7,7 +7,7 @@
 
 #ifdef ZPSIM
 #include <map>
-extern std::map<long, std::string> ui_Objects;
+std::map<long, std::string> & ui_Objects();
 #endif
 
 namespace LCD_UI {

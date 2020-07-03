@@ -1,11 +1,5 @@
 #pragma once
 
-#ifdef ZPSIM
-#include <map>
-extern std::map<long, std::string> ui_Objects;
-#endif
-
-
 namespace Assembly {
 	enum tableIndex {TB_ThermalStore, TB_MixValveContr, TB_Display, TB_Relay, TB_TempSensor, TB_TowelRail, TB_Dwelling, TB_Zone, TB_DwellingZone, TB_Program, TB_Profile, TB_TimeTemp, TB_Spell, TB_NoOfTables };
 	enum relayNames { R_Flat, R_FlTR, R_HsTR, R_UpSt, R_MFS, R_Gas, R_DnSt, NO_OF_RELAYS };

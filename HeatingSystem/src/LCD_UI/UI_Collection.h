@@ -1,10 +1,13 @@
 #pragma once
 #include "Behaviour.h"
 #include "UI_DisplayBuffer.h"
+
 #ifdef ZPSIM 
 	#include <iostream> 
+	#include <map>
+	#include <string>
+	std::map<long, std::string> & ui_Objects();
 #endif
-//using namespace std;
 
 namespace LCD_UI {
 	class UI_DisplayBuffer;
@@ -394,30 +397,20 @@ namespace LCD_UI {
 
 	/// <summary>
 	/// A Collection-Wrapper providing iteration of its sub-collection.
+	/// UI_IterateSubCollection = {parent,child,child,child}
+	/// View_All -> {parent1,child1,child1,child1}, {parent2,child2,child2,child2}, {parent3,child3,child3,child3}
 	/// The sub-collection may contain any number of fields.
-	/// The active field of the sub-collection determins the underlying records to be used and provides the focus and count for this wrapper.
-	/// Thus iterating this wrapper results in the sub-collection showing its fields for each member of the active field
+	/// The active (parent) field of the sub-collection determins the underlying records to be used.
+	/// Thus iterating this wrapper results in the sub-collection showing its fields for each member of the active field.
 	/// </summary>
 	class UI_IterateSubCollection : public I_SafeCollection {
 	public:
 		UI_IterateSubCollection(I_SafeCollection & safeCollection);
-
 		// Polymorphic Queries
 		Collection_Hndl * leftRight_Collection() override;
-		//Behaviour & behaviour() override { return viewOneUpDnRecycle(); }
-
-		//HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override { return collection()->cursorMode(activeElement); }
-		//int cursorOffset(const char * data) const override { return collection()->cursorOffset(data); }
-		//int objectIndex() const override { return collection()->objectIndex(); }
-
 		// Polymorphic Modifiers
 		Object_Hndl * item(int newIndex) override;
-		//void focusHasChanged(bool hasFocus) override;
-		//void setObjectIndex(int index) const override { I_SafeCollection::setObjectIndex(index); collection()->setObjectIndex(index); }
-		//void setFocusIndex(int focus) override { I_SafeCollection::setFocusIndex(focus); collection()->I_SafeCollection::setFocusIndex(focus); }
-
 	private:
-		//int endIndex() const { return collection()->endIndex(); }
 		Collection_Hndl _nestedCollection;
 	};
 

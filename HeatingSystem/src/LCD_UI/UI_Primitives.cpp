@@ -38,7 +38,7 @@ namespace LCD_UI {
 #ifdef ZPSIM
 		logger() << F("\tEdit_Int_h Addr: ") << L_hex << long(this) << L_endl;
 		logger() << F("\tEdit_Int_h Edit Addr: ") << L_hex << long(&editVal) << L_endl;
-		ui_Objects[(long)get()] = "Edit_Int";
+		ui_Objects()[(long)get()] = "Edit_Int";
 #endif
 	}
 
@@ -150,7 +150,7 @@ namespace LCD_UI {
 #ifdef ZPSIM
 		logger() << F("\tEdit_Char_h Addr:") << L_hex << long(this) << L_endl;
 		logger() << F("\teditChar Addr:") << L_hex << long(&editChar) << L_endl;
-		ui_Objects[(long)get()] = "Edit_Char";
+		ui_Objects()[(long)get()] = "Edit_Char";
 #endif
 	}
 
