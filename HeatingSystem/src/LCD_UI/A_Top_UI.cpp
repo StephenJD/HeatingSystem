@@ -59,23 +59,6 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * A_Top_UI::set_leftRightUI_from(Collection_Hndl * topUI, int direction) {
-<<<<<<< HEAD
-		if (!topUI->behaviour().is_viewAll()) topUI = topUI->backUI();
-		_leftRightBackUI = topUI;
-		cout << "_leftRightBackUI: " << ui_Objects[(long)_leftRightBackUI->get()] << endl;
-		auto inner_UI_h = topUI->activeUI();
-		do {
-			cout << "inner: " << ui_Objects[(long)inner_UI_h->get()] << endl;
-			if (inner_UI_h->behaviour().is_viewAll()) {
-				_leftRightBackUI = inner_UI_h;	
-				enter_nested_ViewAll(inner_UI_h, direction);
-			}
-			inner_UI_h = inner_UI_h->activeUI();
-			if (inner_UI_h == 0) return topUI;
-		} while (inner_UI_h->get()->isCollection());
-		if (inner_UI_h->behaviour().is_viewAll()) 
-			_leftRightBackUI = inner_UI_h;
-=======
 		if (!topUI->behaviour().is_viewAll()) {
 			topUI = topUI->backUI();
 		}
@@ -103,7 +86,6 @@ namespace LCD_UI {
 				_leftRightBackUI = inner_UI_h;
 			}
 		}
->>>>>>> Sub_Page_Collection
 		return topUI;
 	}
 

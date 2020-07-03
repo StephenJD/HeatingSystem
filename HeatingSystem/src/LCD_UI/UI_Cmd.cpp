@@ -5,7 +5,6 @@
 	#include <iostream>
 	#include <map>
 	#include <string>
-	extern std::map<long, std::string> ui_Objects;
 #endif
 
 namespace LCD_UI {
@@ -16,11 +15,7 @@ namespace LCD_UI {
 		: Collection_Hndl(this), Custom_Select(onSelect, behaviour), text(label_text) {
 #ifdef ZPSIM
 		logger() << F("UI_Cmd ") << label_text << F(" Addr:") << L_hex << long(this) << L_endl;
-<<<<<<< HEAD
-		ui_Objects[(long)get()] = "UI_Cmd";
-=======
 		ui_Objects()[(long)get()] = "UI_Cmd";
->>>>>>> Sub_Page_Collection
 #endif
 	}
 

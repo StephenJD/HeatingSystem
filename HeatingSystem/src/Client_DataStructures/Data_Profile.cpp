@@ -71,11 +71,7 @@ namespace client_data_structures {
 		, _dwellZone(dwellZone)
 	{
 #ifdef ZPSIM
-<<<<<<< HEAD
-		ui_Objects[(long)this] = "Dataset_ProfileDays";
-=======
 		ui_Objects()[(long)this] = "Dataset_ProfileDays";
->>>>>>> Sub_Page_Collection
 #endif
 	}
 
