@@ -130,8 +130,7 @@ namespace LCD_UI {
 		auto collection = get()->collection();
 		if (!empty() && collection) {
 			newObject = collection->move_focus_to(index);
-			bool wasSelected = (_backUI == activeUI());
-			newObject = activeUI();
+			bool wasSelected = (_backUI == newObject);
 			if (wasSelected) {
 				_backUI = newObject;
 			}
@@ -142,7 +141,9 @@ namespace LCD_UI {
 	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
 		auto collection = get()->collection();
 		if (collection) {
-			move_focus_to(focusIndex()); // sets the focus to the current focus and adjusts if out of range.
+			//if (collection->objectIndex() != focusIndex()) {
+				move_focus_to(focusIndex());
+			//}// sets the focus to the current focus and adjusts if out of range.
 			const int startFocus = focusIndex(); // might be endIndex()
 			////////////////////////////////////////////////////////////////////
 			//************* Lambdas evaluating algorithm *********************//
@@ -170,8 +171,10 @@ namespace LCD_UI {
 			else {
 				while (wantToMoveForward(nth)) {
 					auto newFocus = tryMovingForwardByOne(focusIndex());
-					newFocus = firstValidIndexLookingForwards(newFocus);
-					setFocusIndex(newFocus);
+					if (newFocus != focusIndex()) {
+						newFocus = firstValidIndexLookingForwards(newFocus);
+						setFocusIndex(newFocus);
+					}
 					if (!weHaveMoved(newFocus))  break;
 					else if (!atEnd(newFocus)) --nth; // We have a valid element
 					else if (behaviour().is_recycle_on_next()) setFocusIndex(-1);
@@ -210,17 +213,16 @@ namespace LCD_UI {
 			auto collectionPtr = get()->collection();
 			if (behaviour().is_viewAll()) {
 				collectionPtr->filter(viewable());
-				auto focus_index = focusIndex();
 #ifdef ZPSIM
 				//cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects()[(long)get()] << endl;
 				//cout << F("NoOfHandles : ") << collectionPtr->endIndex() << endl;
 #endif
 				for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
-					auto ith_objectPtr = collectionPtr->item(i);
+					auto ith_objectPtr = collectionPtr->item(i)->get();
 					//cout << F("Streaming ") << ui_Objects()[(long)ith_objectPtr->get()] << endl;
 
-					auto ith_collectionPtr = ith_objectPtr->get()->collection();
-					if (ith_objectPtr->get()->behaviour().is_OnNewLine())
+					auto ith_collectionPtr = ith_objectPtr->collection();
+					if (ith_objectPtr->behaviour().is_OnNewLine())
 						buffer.newLine();
 					auto endVisibleIndex = collectionPtr->endVisibleItem();
 					if (endVisibleIndex) {
@@ -230,13 +232,16 @@ namespace LCD_UI {
 
 					if (ith_collectionPtr && ith_collectionPtr->behaviour().is_viewAll()) { // get the handle pointing to the nested collection
 						auto thisActiveObj = activeElement;
-						if (focusIndex() != i) thisActiveObj = 0;
+						//logger() << "ClHdl::ObjectIndex: " << get()->collection()->objectIndex() << " Focus: " << focusIndex() << L_endl;
+						//if (focusIndex() != i) {
+						//	thisActiveObj = 0;
+						//}
 						//cout << F("Streaming ViewAll ") << ui_Objects()[(long)ith_collectionPtr] << " Active: " << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
-						ith_collectionPtr->streamElement(buffer, thisActiveObj, static_cast<const I_SafeCollection *>(ith_objectPtr->get()), i);
+						ith_collectionPtr->streamElement(buffer, thisActiveObj, static_cast<const I_SafeCollection *>(ith_objectPtr), i);
 					}
 					else {
 						//cout << F("Streaming Object  ") << ui_Objects()[(long)ith_objectPtr->get()] << endl;
-						ith_objectPtr->streamElement(buffer, activeElement, shortColl, streamIndex);
+						collectionPtr->item(i)->streamElement(buffer, activeElement, shortColl, streamIndex);
 					}
 					auto debug = buffer.toCStr();
 				}			
@@ -330,26 +335,32 @@ namespace LCD_UI {
 	const char * I_SafeCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.
 		filter(viewable());
+		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << endl;
 		for (int i = nextActionableIndex(0); !atEnd(i); i = nextActionableIndex(++i)) { // need to check all elements on the page
 			auto element = item(i)->get();
-			if (item(i)->get()->behaviour().is_OnNewLine()) buffer.newLine();
+			cout << "\t[" << i << "]: " << ui_Objects()[(long)element] << endl;
+			if (element->behaviour().is_OnNewLine()) buffer.newLine();
 			auto endVisibleIndex = shortColl->endVisibleItem();
 			if (endVisibleIndex) {
 				if (i < shortColl->firstVisibleItem()) continue;
 				if (i > shortColl->endVisibleItem()) break;
 			}
 			if (element->collection() && element->behaviour().is_viewOne()) {
-				auto collHndl = static_cast<const Collection_Hndl *>(item(i));
-				auto active = collHndl->activeUI();
+				//auto collHndl = static_cast<const Collection_Hndl *>(item(i));
+				//auto active = collHndl->activeUI();
+				auto objectIndex = element->collection()->objectIndex();
+				auto active = element->collection()->item(objectIndex);
 				if (active) {
-					//cout << F("I_SafeC_Stream one ") << ui_Objects()[(long)active->get()] << " Active: " << (activeElement ? ui_Objects()[(long)activeElement->get()] : "") << endl;
+					cout << F("\t\tView Object: ") << ui_Objects()[(long)active->get()] << endl;
 					active->streamElement(buffer, activeElement, shortColl, streamIndex);
 				}
 			}
 			else {
 				auto thisActiveObj = activeElement;
-				if (focusIndex() != i) thisActiveObj = 0;
-				//cout << F("I_SafeC_Stream all ") << ui_Objects()[(long)element] << " Active: " << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") <<endl;
+				if (focusIndex() != i) {
+					thisActiveObj = 0;
+				}
+				cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") <<endl;
 				element->streamElement(buffer, thisActiveObj, shortColl, i);
 			}
 		}
@@ -391,16 +402,29 @@ namespace LCD_UI {
 		setCount(wrappedCount); // look like a collection of its nested collection
 	}
 
-	Object_Hndl * UI_IterateSubCollection::item(int newIndex) {
+	Object_Hndl * UI_IterateSubCollection::item(int newIndex) { // called for each displayed item on each row, newIndex is 0,0,0,1,1,1,2,2,2
 		// Move active element of nested collection to newIndex
-		auto wrappedActiveField = _nestedCollection->item(_nestedCollection->focusIndex());
-		wrappedActiveField->get()->collection()->setFocusIndex(newIndex); // shows all members
-		//wrappedActiveField->get()->collection()->item(newIndex); // shows all first member
+		auto wrappedActiveField = _nestedCollection->item(_nestedCollection->focusIndex()); // TowelRailNameUI_c : gets active member of that line (I.e. name or OnFor) ready for edit.
+		//wrappedActiveField->get()->collection()->setFocusIndex(newIndex); // Does move_to on UI_FieldData... sets active member for active field. shows all members, 
+		wrappedActiveField->get()->collection()->setObjectIndex(newIndex); // shows all members
+		//cout << F("wrappedActiveField item: ") << ui_Objects()[(long)wrappedActiveField->get()->collection()] << " indexArg: " << newIndex;
+		//cout << " SubCollection obj: " << objectIndex() << " SubCollection Focus: " << focusIndex() << " WrappedFocus: " << wrappedActiveField->get()->collection()->focusIndex() << endl;
 		return &_nestedCollection;
 	}
 
+	void UI_IterateSubCollection::setFocusIndex(int focus) {
+		I_SafeCollection::setFocusIndex(focus);
+		auto wrappedActiveField = _nestedCollection->item(_nestedCollection->focusIndex());		
+		wrappedActiveField->get()->collection()->setFocusIndex(focus);
+	}
+
 	Collection_Hndl * UI_IterateSubCollection::leftRight_Collection() {
-		return 0;
+		auto activeItem = _nestedCollection->item(_nestedCollection->focusIndex());
+		auto activeHdl = static_cast<Collection_Hndl *>(activeItem);
+		//cout << F("wrappedActiveField item: ") << ui_Objects()[(long)activeHdl->activeUI()->get()] << endl;
+		if (activeItem->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
+			return static_cast<Collection_Hndl *>(activeItem);
+		} else return 0;
 	}
 
 	///////////////////////////////////////////
@@ -438,10 +462,10 @@ namespace LCD_UI {
 		auto hasFocus = elementHasfocus();
 
 		do {
-			//logger() << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects()[(long)get()] << L_endl;
+			//cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects()[(long)get()] << endl;
 			startThisField(bufferStart, mustStartNewLine);
 			collection()->streamElement(buffer, activeElement, this, streamIndex);
-		} while (hasFocus && (focus < _beginShow || focus >= _endShow));
+		} while (hasFocus && _beginShow != _endShow && (focus < _beginShow || focus >= _endShow));
 
 		return 0;
 	}

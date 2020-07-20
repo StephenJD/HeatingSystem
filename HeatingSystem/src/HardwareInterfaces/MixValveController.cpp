@@ -103,12 +103,12 @@ namespace HardwareInterfaces {
 			if (zoneRelayID == 3)
 				debug = true;
 			switch (_index) {
-			case 0: {// upstairs
+			case M_UpStrs: {// upstairs
 				debug = true;
 				if (readFromValve(Mix_Valve::flow_temp) >= _mixCallTemp)
 					bool debug = true;
 				break; }
-			case 1: // downstairs
+			case M_DownStrs: // downstairs
 				debug = true;
 				break;
 			}
@@ -116,11 +116,11 @@ namespace HardwareInterfaces {
 			
 			if (callTemp <= MIN_FLOW_TEMP) {
 				callTemp = MIN_FLOW_TEMP;
-				_relayArr[_controlZoneRelay].set(0); // turn call relay OFF
+				_relayArr[_controlZoneRelay].clear(); // turn call relay OFF
 				_limitTemp = 100; // reset since it might have been the limiting zone
 			}
 			else {
-				_relayArr[_controlZoneRelay].set(1); // turn call relay ON
+				_relayArr[_controlZoneRelay].set(); // turn call relay ON
 				if (callTemp > _limitTemp) callTemp = _limitTemp;
 			}
 			uint8_t mixValveCallTemp = readFromValve(Mix_Valve::request_temp);
@@ -134,7 +134,8 @@ namespace HardwareInterfaces {
 				logger() << F("\n\tActual flow_temp: ") << loggingTemp << L_endl;
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
-				logger() << F(" MixValveController:: Done writing to valve") << L_endl;
+				loggingTemp = readFromValve(Mix_Valve::request_temp);
+				logger() << F(" MixValveController:: Confirmed request Is:") << loggingTemp << L_endl;
 			} else if (loggingTemp != _mixCallTemp) {
 				logger() << L_time << F("MixValveController::amControlZone MixID: ") << _index;
 				logger() << F("\n\t") << relayName(zoneRelayID);
@@ -165,19 +166,24 @@ namespace HardwareInterfaces {
 
 	error_codes  MixValveController::writeToValve(Mix_Valve::Registers reg, uint8_t value) {
 		auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
-		auto status = recovery().newReadWrite(*this); // see if is disabled;
+		auto status = recovery().newReadWrite(*this); // see if is disabled.
 		if (status == _OK) {
 			do {
+				i2C().setI2CFrequency(runSpeed());
 				status = I_I2Cdevice::write_verify(uint8_t(reg + _index * 16), 1, &value); // non-recovery
 				ui_yield();
 			} while (status && !timeOut);
 
 			if (status) {
-				logger() << F("\tMixValveController::writeToValve failed first try to Reg: ") << reg << F(" Value: ") << value << L_endl;
 				status = write_verify(uint8_t(reg + _index * 16), 1, &value); // attempt recovery-write
+				if (status) {
+					logger() << F("\tMixValveController::writeToValve failed. 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+				} else {
+					uint8_t readValue;
+					status = read(reg + _index * 16, 1, &readValue);
+					logger() << F("\tMixValveController::writeToValve OK after recovery. Write: ") << value << F(" Read: ") << readValue << L_endl;
+				}
 			}
-
-			if (status) logger() << F("\tMixValveController::writeToValve failed. 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
 		}
 		return status;
 	}
@@ -188,17 +194,20 @@ namespace HardwareInterfaces {
 		auto status = recovery().newReadWrite(*this); // see if is disabled
 		if (status == _OK) {
 			do {
+				i2C().setI2CFrequency(runSpeed());			
 				status = I_I2Cdevice::read(reg + _index * 16, 1, &value); // non-recovery
 				ui_yield();
 			}
 			while (status && !timeOut);
 
 			if (status) {
-				logger() << F("\tMixValveController::readFromValve failed first try from Reg: ") << reg << L_endl;
 				status = read(reg + _index * 16, 1, &value); // attempt recovery
+				if (status) {
+					logger() << F("\tMixValveController::readValve failed. 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+				} else {
+					logger() << F("\tMixValveController::readValve OK after recovery.") << L_endl;
+				}
 			}
-
-			if (status) logger() << F("\tMixValveController::readFromValve failed. 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
 		}
 		return value;
 	}

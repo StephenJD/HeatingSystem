@@ -55,8 +55,8 @@ namespace Assembly {
 	}
 
 	uint8_t Initialiser::i2C_Test() {
-//		auto err = _testDevices.speedTestDevices();
 		uint8_t err = _OK;
+		err = _testDevices.speedTestDevices();
 		_testDevices.testRelays();
 		err = postI2CResetInitialisation();
 		if (err != _OK) logger() << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;

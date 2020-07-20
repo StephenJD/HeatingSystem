@@ -173,7 +173,7 @@ namespace LCD_UI {
 		auto haveMoved = false;
 
 		if (_upDownUI->get()->isCollection() && _upDownUI->behaviour().is_viewOneUpDn()) {
-			if (_leftRightBackUI->cursorMode(_leftRightBackUI) == HardwareInterfaces::LCD_Display::e_inEdit) {
+			if (_upDownUI->backUI()->cursorMode(_upDownUI->backUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 				move = -move; // reverse up/down when in edit.
 			}
 			haveMoved = _upDownUI->move_focus_by(move);

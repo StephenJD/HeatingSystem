@@ -4,6 +4,7 @@
 #include "..\Client_DataStructures\Data_Zone.h"
 #include "..\Client_DataStructures\Data_Relay.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
+#include "..\Client_DataStructures\Data_TowelRail.h"
 #include "..\HardwareInterfaces\A__Constants.h"
 #include "..\HardwareInterfaces\I2C_Comms.h"
 #include <Timer_mS_uS.h>
@@ -75,6 +76,21 @@ namespace Assembly {
 			++index;
 		}
 		logger() << F("loadZones Completed") << L_endl;
+
+		index = 0;
+		auto towelrails = db.tableQuery(TB_TowelRail);
+		for (Answer_R<R_TowelRail> towelRail : towelrails) {
+			towelRailArr[index].initialise(towelRail.id()
+				, tempSensorArr[towelRail.rec().callTempSens]
+				, relayArr[towelRail.rec().callRelay]
+				, towelRail.rec().onTemp
+				, *this
+				, mixValveControllerArr[towelRail.rec().mixValve]
+			);
+			++index;
+		}
+		logger() << F("loadTowelRails Completed") << L_endl;
+
 	}
 
 	void TemperatureController::checkAndAdjust() {
@@ -97,6 +113,12 @@ namespace Assembly {
 		backBoiler.check();
 		//logger() << L_time << F("BackBoiler::check done") << L_endl;
 		ui_yield();
+
+		for (auto & towelRail : towelRailArr) {
+			towelRail.check();
+			ui_yield(); 
+		}
+
 		relayController().updateRelays();
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
 		//if (relaysPort.recovery().isUnrecoverable()) { 

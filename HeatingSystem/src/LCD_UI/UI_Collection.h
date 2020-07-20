@@ -284,13 +284,14 @@ namespace LCD_UI {
 		const I_SafeCollection * collection() const override { return this; }
 		virtual Object_Hndl * item(int index) = 0; // returns object pointer at index [-1 to end()], if it exists.
 		virtual void setObjectIndex(int index) const { _index = index; }
+		virtual void setFocusIndex(int focus) { _focusIndex = focus; }
+		Behaviour & behaviour() override { return _behaviour; }
+		
 		Coll_Iterator begin();
 		Coll_Iterator end() { return { this, _count }; }
 		void setCount(int count) { _count = count; }
-		virtual void setFocusIndex(int focus) { _focusIndex = focus; }
 		I_SafeCollection & filter(Behaviour behaviour) { _filter = behaviour; return *this; }
 		using UI_Object::behaviour;
-		Behaviour & behaviour() override { return _behaviour; }
 		Collection_Hndl * move_focus_to(int index);
 
 		template <typename RT>
@@ -410,6 +411,8 @@ namespace LCD_UI {
 		Collection_Hndl * leftRight_Collection() override;
 		// Polymorphic Modifiers
 		Object_Hndl * item(int newIndex) override;
+		void setFocusIndex(int focus) override;
+
 	private:
 		Collection_Hndl _nestedCollection;
 	};

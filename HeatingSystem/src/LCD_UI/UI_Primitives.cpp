@@ -157,8 +157,10 @@ namespace LCD_UI {
 	int Edit_Char_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(data));
 		if(strWrapper) _currValue = *strWrapper;
-		_currValue.valRange.noOfDecPlaces = static_cast<unsigned char>(strlen(_currValue.str()));
-		_currValue.valRange._cursorPos = _currValue.valRange.noOfDecPlaces -1; // initial cursorPos when selected (not in edit)
+		auto strEnd = static_cast<uint8_t>(strlen(_currValue.str())) - 1;
+		while (_currValue.str()[strEnd] == ' ') --strEnd;
+		_currValue.valRange.noOfDecPlaces = strEnd + 1; // Current Str length
+		_currValue.valRange._cursorPos = strEnd; // initial cursorPos when selected (not in edit)
 		return 0;
 	}
 
@@ -166,14 +168,16 @@ namespace LCD_UI {
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(data));
 		if (strWrapper) _currValue = *strWrapper;
 		_currValue.val = recordID;
-		_currValue.valRange.noOfDecPlaces = static_cast<unsigned char>(strlen(_currValue.str()));
-		_currValue.valRange._cursorPos = _currValue.valRange.noOfDecPlaces - 1; // initial cursorPos when selected (not in edit)
+		auto strEnd = static_cast<uint8_t>(strlen(_currValue.str())) - 1;
+		while (_currValue.str()[strEnd] == ' ') --strEnd;
+		_currValue.valRange.noOfDecPlaces = strEnd + 1; // Current Str length
+		_currValue.valRange._cursorPos = strEnd; // initial cursorPos when selected (not in edit)
 		return 0;
 	}
 
 	int Edit_Char_h::getEditCursorPos() { // copy data to edit
 		strcpy(stream_edited_copy, _currValue.str());
-		unsigned char currWidth = static_cast<unsigned char>(strlen(stream_edited_copy));
+		uint8_t currWidth = _currValue.valRange.noOfDecPlaces;
 		for (int i = currWidth; i < _currValue.valRange.editablePlaces; ++i) {
 			stream_edited_copy[i] = '|';
 			_currValue.str()[i] = 0;
@@ -286,6 +290,30 @@ namespace LCD_UI {
 	//////////////////////////////////////////////////////////////////////////////////////////
 	//                 String Interface
 	/////////////////////////////////////////////////////////////////////////////////////////
+	StrWrapper::StrWrapper(const char* strVal, ValRange valRangeArg)
+		: I_UI_Wrapper(0, valRangeArg) {
+		strcpy(_str, strVal);
+		auto lenStr = static_cast<uint8_t>(strlen(strVal));
+		valRange._cursorPos = lenStr - 1;
+		for (int i = lenStr; i < valRangeArg.editablePlaces; ++i) {
+			_str[i] = ' ';
+		}
+		_str[valRangeArg.editablePlaces] = 0;
+#ifdef ZPSIM
+		ui_Objects()[(long)this] = "StrWrapper";
+#endif
+	}
+
+	StrWrapper & StrWrapper::operator= (const char* strVal) {
+		strcpy(_str, strVal);
+		auto lenStr = static_cast<uint8_t>(strlen(strVal));
+		valRange._cursorPos = lenStr - 1;
+		for (int i = lenStr; i < valRange.editablePlaces; ++i) {
+			_str[i] = ' ';
+		}
+		_str[valRange.editablePlaces] = 0;
+		return *this;
+	}
 
 	const char * String_Interface::streamData(bool isActiveElement) const {
 		if (_wrapper == 0) return 0;
@@ -297,8 +325,8 @@ namespace LCD_UI {
 				if (fieldInterface_h->editBehaviour().is_Editable()) {
 					return _editItem.stream_edited_copy;
 				}
-			}
-		}
+			} else _editItem._currValue.valRange._cursorPos = _wrapper->valRange._cursorPos;
+		} 
 		return strWrapper->str();
 	}
 

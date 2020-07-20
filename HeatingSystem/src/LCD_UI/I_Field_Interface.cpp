@@ -7,7 +7,8 @@
 
 #ifdef ZPSIM
 #include <map>
-std::map<long, std::string> & ui_Objects();
+using namespace std;
+map<long, string> & ui_Objects();
 #endif
 
 namespace LCD_UI {
@@ -34,7 +35,11 @@ namespace LCD_UI {
 
 	Collection_Hndl * I_Field_Interface::edit(Collection_Hndl * from) {
 		editItem().setBackUI(from);
-		parent()->set_focus(editItem().getEditCursorPos());
+#ifdef ZPSIM
+		cout << F("edit->back ") << ui_Objects()[(long)parent()->backUI()->get()] << endl; // Collection with field to be edited
+		cout << F("edit->back->focus ") << parent()->backUI()->focusIndex() << endl;
+#endif	
+		parent()->set_focus(editItem().getEditCursorPos()); // copy data to edit
 		addBehaviour(Behaviour::b_ViewAll);
 		parent()->setCursorMode(HI_BD::e_inEdit);
 		return 0;
@@ -136,6 +141,9 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * Field_Interface_h::on_select() {
+#ifdef ZPSIM
+		cout << F("on_select ") << ui_Objects()[(long)backUI()->get()] << endl;
+#endif	
 		backUI()->getItem(backUI()->focusIndex());
 		auto fieldData = backUI()->get()->collection();		
 		static_cast<UI_FieldData*>(fieldData)->saveEdit(&f_interface().editItem().currValue());

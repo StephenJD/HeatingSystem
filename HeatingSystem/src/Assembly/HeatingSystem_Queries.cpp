@@ -22,6 +22,7 @@ namespace Assembly {
 		, _q_timeTemps{ rdb.tableQuery(TB_TimeTemp), 0 }
 		, _q_tempSensors{ rdb.tableQuery(TB_TempSensor) }
 		, _q_towelRails{ rdb.tableQuery(TB_TowelRail) }
+		, _q_relays{ rdb.tableQuery(TB_Relay) }
 
 		// DB Record Interfaces
 		, _rec_currTime{ Dataset_WithoutQuery() }
@@ -35,7 +36,7 @@ namespace Assembly {
 		, _rec_timeTemps{ _q_timeTemps, noVolData, &_rec_profile }
 		, _rec_tempSensors{ _q_tempSensors, tc.tempSensorArr, 0 }
 		, _rec_towelRails{ _q_towelRails, tc.towelRailArr, 0 }
-
+		, _rec_relay{ _q_relays }
 	{
 		logger() << F("Database queries constructed") << L_endl;
 	}

@@ -37,6 +37,8 @@ namespace Assembly {
 		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
 		, _towelRailOnTimeUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_minutesOn, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
 		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
+		, _relayUI_c{ &db._rec_relay, Dataset_Relay::e_name,0,0, viewAll() }
+		, _relayUI_sc{ UI_ShortCollection{ 80, _relayUI_c } }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}
@@ -70,11 +72,12 @@ namespace Assembly {
 		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c).set(viewAllUpDn()) } // show all elements for one TR
 		, _subpage_towelRails_c{ _towelRails_info_c} // show all TR's
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _subpage_towelRails_c) } // shows all fields for each TR
+		, _page_relays_c{ makeCollection(_relayUI_sc) }
 
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{_user_chapter_c}
-		, _info_chapter_c{ makeDisplay(_page_towelRails_c, _page_tempSensors_c ) }
+		, _info_chapter_c{ makeDisplay(_page_towelRails_c, _page_tempSensors_c, _page_relays_c) }
 		, _info_chapter_h{_info_chapter_c}
 	{
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));
@@ -117,6 +120,7 @@ namespace Assembly {
 		ui_Objects()[(long)&_towelRailsLbl] = "_towelRailsLbl";
 		ui_Objects()[(long)&_towelRailNameUI_c] = "_towelRailNameUI_c";
 		ui_Objects()[(long)&_towelRailTempUI_c] = "_towelRailTempUI_c";
+		ui_Objects()[(long)&_towelRailOnTimeUI_c] = "_towelRailOnTimeUI_c";
 		ui_Objects()[(long)&_towelRailStatus_c] = "_towelRailStatus_c";
 		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getInterface().f_interface().editItem().get();
 		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";

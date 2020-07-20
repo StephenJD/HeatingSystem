@@ -53,6 +53,8 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _towelRailTempUI_c;
 		LCD_UI::UI_FieldData _towelRailOnTimeUI_c;
 		LCD_UI::UI_FieldData _towelRailStatus_c;
+		LCD_UI::UI_FieldData _relayUI_c;
+		LCD_UI::UI_ShortCollection _relayUI_sc;
 
 		// Basic UI Elements
 		LCD_UI::UI_Label _dst, _prog, _zone;
@@ -80,11 +82,12 @@ namespace Assembly {
 		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _towelRails_info_c;
 		LCD_UI::UI_IterateSubCollection _subpage_towelRails_c;
 		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _page_towelRails_c;
+		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_relays_c;
 
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;
-		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _info_chapter_c;
+		LCD_UI::Collection<3, LCD_UI::Collection_Hndl> _info_chapter_c;
 		LCD_UI::A_Top_UI _info_chapter_h;
 	};
 }

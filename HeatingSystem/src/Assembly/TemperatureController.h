@@ -5,6 +5,7 @@
 #include "..\Client_DataStructures\Data_Relay.h"
 #include "..\HardwareInterfaces\MixValveController.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
+#include "..\Client_DataStructures\Data_TowelRail.h"
 #include "..\Assembly\HeatingSystemEnums.h"
 #include <RDB.h>
 
@@ -22,7 +23,7 @@ namespace Assembly {
 		void checkZones();
 		
 		HardwareInterfaces::UI_TempSensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS];
-		HardwareInterfaces::UI_TempSensor towelRailArr[Assembly::NO_OF_TOWELRAILS];
+		HardwareInterfaces::TowelRail towelRailArr[Assembly::NO_OF_TOWELRAILS];
 		HardwareInterfaces::BackBoiler backBoiler;
 		HardwareInterfaces::ThermalStore thermalStore;
 		HardwareInterfaces::MixValveController mixValveControllerArr[NO_OF_MIX_VALVES];

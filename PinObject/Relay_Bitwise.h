@@ -41,6 +41,7 @@ namespace HardwareInterfaces {
 
 		void initialise(int port, bool activeState);
 		void initialise(uint8_t relayRec);
+		bool set() { return set(true); }
 		bool set(bool state); // returns true if state is changed			
 	};
 

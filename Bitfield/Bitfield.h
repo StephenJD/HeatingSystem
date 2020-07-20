@@ -5,7 +5,7 @@
 #pragma once
 #include <Arduino.h>
 #include "..\Sum_Operators\Sum_Operators.h"
-//#include <type_traits.h>
+//#include <Type_Traits.h>
 //#include <numeric_limits.h>
 //#ifdef max
 //#undef max

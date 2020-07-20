@@ -16,7 +16,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 32;
+	constexpr uint8_t VERSION = 34;
 
 	/////////////////// Pin assignments & misc. ///////////////////
 	constexpr uint8_t RESET_OUT_PIN = 14;  // active low.
@@ -145,7 +145,7 @@ namespace HardwareInterfaces {
 
 ////////////////////// Towel Rails ///////////////////
 	const uint8_t TOWEL_RAIL_FLOW_TEMP = 50;
-	const uint8_t TWL_RAD_RISE_TIME = 10; // seconds
+	const uint8_t TWL_RAD_RISE_TIME = 20; // seconds
 	const uint8_t TWL_RAD_RISE_TEMP = 5; // degrees
 
 	////////////////////// Argument Constants ///////////////////

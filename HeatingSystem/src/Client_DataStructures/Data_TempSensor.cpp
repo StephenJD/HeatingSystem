@@ -84,6 +84,4 @@ namespace client_data_structures {
 		default: return 0;
 		}
 	}
-
-
 }

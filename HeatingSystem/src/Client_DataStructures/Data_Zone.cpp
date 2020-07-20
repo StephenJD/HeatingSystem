@@ -78,7 +78,7 @@ namespace client_data_structures {
 	Dataset_Zone::Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent)
 		: Record_Interface(query, runtimeData, parent),
 		_name("", 6),
-		_abbrev("", 4),
+		_abbrev("", 3),
 		_requestTemp(90, ValRange(e_editAll, 10, 100)),
 		_factor(0, ValRange(e_fixedWidth | e_editAll | e_showSign, -100, 100, 1))
 		,_reqIsTemp(ValRange(e_fixedWidth | e_editAll,10,90))

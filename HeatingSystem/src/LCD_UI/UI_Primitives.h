@@ -51,21 +51,9 @@ namespace LCD_UI {
 	class StrWrapper : public I_UI_Wrapper {
 	public:
 		StrWrapper() = default;
-		StrWrapper(const char* strVal, ValRange valRangeArg)
-			: I_UI_Wrapper(0, valRangeArg)
-		{
-			strcpy(_str, strVal);
-			valRange._cursorPos = static_cast<unsigned char>(strlen(strVal))-1;
-#ifdef ZPSIM
-			ui_Objects()[(long)this] = "StrWrapper";
-#endif
-		}
+		StrWrapper(const char* strVal, ValRange valRangeArg);
+		StrWrapper & operator= (const char* strVal);
 
-		StrWrapper & operator= (const char* strVal) {
-			strcpy(_str, strVal);
-			valRange._cursorPos = static_cast<unsigned char>(strlen(strVal))-1;
-			return *this;
-		}
 		I_Field_Interface & ui() override;
 		char * str() { return _str; }
 		const char * str() const { return _str; }

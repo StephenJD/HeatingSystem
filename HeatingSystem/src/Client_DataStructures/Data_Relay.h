@@ -1,5 +1,7 @@
 #pragma once
 #include "..\LCD_UI\I_Record_Interface.h"
+#include "..\LCD_UI\UI_Primitives.h"
+#include "..\LCD_UI\ValRange.h"
 #include <Relay_Bitwise.h>
 
 namespace HardwareInterfaces {
@@ -23,10 +25,6 @@ namespace HardwareInterfaces {
 
 namespace client_data_structures {
 	using namespace LCD_UI;
-	//***************************************************
-	//              Relay UI Edit
-	//***************************************************
-
 
 	//***************************************************
 	//              Relay RDB Tables
@@ -47,10 +45,20 @@ namespace client_data_structures {
 	//              Relay LCD_UI
 	//***************************************************
 
-	class UFlag : public I_Record_Interface
-	{
+	/// <summary>
+	/// DB Interface to all Relay Data
+	/// Provides streamable fields which may be populated by a database or the runtime-data.
+	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
+	/// A single object may be used to stream and edit any of the fields via getFieldAt
+	/// </summary>
+	class Dataset_Relay : public Record_Interface<R_Relay> {
 	public:
-
+		enum streamable { e_name, e_state };
+		Dataset_Relay(Query & query);
+		I_UI_Wrapper * getField(int _fieldID) override;
+		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override { return false; }
+		//HardwareInterfaces::UI_Bitwise_Relay & relay(int index) { return static_cast<HardwareInterfaces::UI_Bitwise_Relay*>(runTimeData())[index]; }
+	private:
+		StrWrapper _name;
 	};
-
 }
