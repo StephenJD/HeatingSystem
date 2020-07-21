@@ -214,7 +214,7 @@ namespace LCD_UI {
 			if (behaviour().is_viewAll()) {
 				collectionPtr->filter(viewable());
 #ifdef ZPSIM
-				//cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects()[(long)get()] << endl;
+				cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()] << endl;
 				//cout << F("NoOfHandles : ") << collectionPtr->endIndex() << endl;
 #endif
 				for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
@@ -335,10 +335,14 @@ namespace LCD_UI {
 	const char * I_SafeCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.
 		filter(viewable());
+#ifdef ZPSIM
 		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << endl;
+#endif
 		for (int i = nextActionableIndex(0); !atEnd(i); i = nextActionableIndex(++i)) { // need to check all elements on the page
 			auto element = item(i)->get();
+#ifdef ZPSIM
 			cout << "\t[" << i << "]: " << ui_Objects()[(long)element] << endl;
+#endif
 			if (element->behaviour().is_OnNewLine()) buffer.newLine();
 			auto endVisibleIndex = shortColl->endVisibleItem();
 			if (endVisibleIndex) {
@@ -346,21 +350,21 @@ namespace LCD_UI {
 				if (i > shortColl->endVisibleItem()) break;
 			}
 			if (element->collection() && element->behaviour().is_viewOne()) {
-				//auto collHndl = static_cast<const Collection_Hndl *>(item(i));
-				//auto active = collHndl->activeUI();
 				auto objectIndex = element->collection()->objectIndex();
-				auto active = element->collection()->item(objectIndex);
-				if (active) {
-					cout << F("\t\tView Object: ") << ui_Objects()[(long)active->get()] << endl;
-					active->streamElement(buffer, activeElement, shortColl, streamIndex);
-				}
+				auto object = element->collection()->item(objectIndex);
+#ifdef ZPSIM
+				cout << F("\t\tView Object: ") << ui_Objects()[(long)object->get()] << " ObjInd: " << objectIndex << endl << endl;
+#endif
+				object->streamElement(buffer, activeElement, shortColl, streamIndex);
 			}
 			else {
 				auto thisActiveObj = activeElement;
 				if (focusIndex() != i) {
 					thisActiveObj = 0;
 				}
+#ifdef ZPSIM
 				cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") <<endl;
+#endif
 				element->streamElement(buffer, thisActiveObj, shortColl, i);
 			}
 		}
@@ -372,6 +376,11 @@ namespace LCD_UI {
 		if (obj && obj->behaviour().is_selectable()) {
 			setFocusIndex(index);
 		}
+		return obj;
+	}
+
+	Collection_Hndl * I_SafeCollection::move_to_object(int index) {
+		auto obj = static_cast<Collection_Hndl *>(item(index));
 		return obj;
 	}
 
@@ -397,33 +406,32 @@ namespace LCD_UI {
 #ifdef ZPSIM
 		logger() << F("UI_IterateSubCollection at: ") << (long)this << F(" with collHdl at ") << (long)&_nestedCollection << F(" to: ") << (long)collection() << L_endl;
 #endif
+		safeCollection.setFocusIndex(safeCollection.nextActionableIndex(safeCollection.focusIndex()));
 		auto wrappedActiveField = safeCollection.item(safeCollection.focusIndex());
 		auto wrappedCount = wrappedActiveField->get()->collection()->endIndex();
 		setCount(wrappedCount); // look like a collection of its nested collection
 	}
 
-	Object_Hndl * UI_IterateSubCollection::item(int newIndex) { // called for each displayed item on each row, newIndex is 0,0,0,1,1,1,2,2,2
-		// Move active element of nested collection to newIndex
-		auto wrappedActiveField = _nestedCollection->item(_nestedCollection->focusIndex()); // TowelRailNameUI_c : gets active member of that line (I.e. name or OnFor) ready for edit.
-		//wrappedActiveField->get()->collection()->setFocusIndex(newIndex); // Does move_to on UI_FieldData... sets active member for active field. shows all members, 
-		wrappedActiveField->get()->collection()->setObjectIndex(newIndex); // shows all members
-		//cout << F("wrappedActiveField item: ") << ui_Objects()[(long)wrappedActiveField->get()->collection()] << " indexArg: " << newIndex;
-		//cout << " SubCollection obj: " << objectIndex() << " SubCollection Focus: " << focusIndex() << " WrappedFocus: " << wrappedActiveField->get()->collection()->focusIndex() << endl;
+	Object_Hndl * UI_IterateSubCollection::item(int newIndex) { // return member without moving focus
+		auto active = _nestedCollection.activeUI();
+		active->get()->collection()->move_to_object(newIndex);
+#ifdef ZPSIM
+		cout << F(" active item: ") << ui_Objects()[(long)active->get()->collection()];
+		cout << " NewIndex : " << newIndex << " SubCollection obj: " << objectIndex() << " SubCollection Focus: " << focusIndex() << endl;
+#endif
 		return &_nestedCollection;
 	}
 
 	void UI_IterateSubCollection::setFocusIndex(int focus) {
 		I_SafeCollection::setFocusIndex(focus);
-		auto wrappedActiveField = _nestedCollection->item(_nestedCollection->focusIndex());		
-		wrappedActiveField->get()->collection()->setFocusIndex(focus);
+		auto active = _nestedCollection.activeUI();
+		active->get()->collection()->setFocusIndex(focus);
 	}
 
 	Collection_Hndl * UI_IterateSubCollection::leftRight_Collection() {
-		auto activeItem = _nestedCollection->item(_nestedCollection->focusIndex());
-		auto activeHdl = static_cast<Collection_Hndl *>(activeItem);
-		//cout << F("wrappedActiveField item: ") << ui_Objects()[(long)activeHdl->activeUI()->get()] << endl;
-		if (activeItem->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
-			return static_cast<Collection_Hndl *>(activeItem);
+		auto activeHdl = _nestedCollection.activeUI();
+		if (activeHdl->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
+			return activeHdl;
 		} else return 0;
 	}
 

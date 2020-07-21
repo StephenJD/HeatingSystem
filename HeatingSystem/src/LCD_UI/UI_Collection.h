@@ -293,6 +293,7 @@ namespace LCD_UI {
 		I_SafeCollection & filter(Behaviour behaviour) { _filter = behaviour; return *this; }
 		using UI_Object::behaviour;
 		Collection_Hndl * move_focus_to(int index);
+		Collection_Hndl * move_to_object(int index); // Move to object without changing focus.
 
 		template <typename RT>
 		explicit operator RT & () { return static_cast<RT &>(*static_cast<UI_Object*>(this)); }

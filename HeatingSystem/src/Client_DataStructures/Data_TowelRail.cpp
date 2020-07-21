@@ -21,7 +21,6 @@ namespace client_data_structures {
 	{}
 
 	I_UI_Wrapper * Dataset_TowelRail::getField(int fieldID) {
-		//static IntWrapper recordID_wrappper;
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_name:
@@ -36,13 +35,8 @@ namespace client_data_structures {
 		case e_secondsToGo:
 		{
 			_secondsToGo.val = towelRail(recordID()).timeToGo();
-			//auto & towel_Rail = static_cast<TowelRail &>(*runTimeData());
-			//_secondsToGo.val = towel_Rail.timeToGo();
 			return &_secondsToGo;
 		}
-		//case e_TowelRailID:
-		//	recordID_wrappper.val = record().id();
-		//	return &recordID_wrappper;
 		default: return 0;
 		}
 	}

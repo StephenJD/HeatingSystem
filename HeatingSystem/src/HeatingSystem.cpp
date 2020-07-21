@@ -86,7 +86,11 @@ HeatingSystem::HeatingSystem()
 		_initialiser.i2C_Test();
 	}
 
-void HeatingSystem::serviceTemperatureController() { _tempController.checkAndAdjust(); }
+void HeatingSystem::serviceTemperatureController() {
+	if (_mainConsoleChapters.chapter() == 0) {
+		_tempController.checkAndAdjust();
+	}
+}
 
 void HeatingSystem::serviceConsoles() {
 	_mainConsole.processKeys(); 
@@ -95,10 +99,12 @@ void HeatingSystem::serviceConsoles() {
 void HeatingSystem::serviceProfiles() { _sequencer.getNextEvent(); }
 
 void HeatingSystem::notifyDataIsEdited() {
-	logger() << L_time << F("notifyDataIsEdited\n");
-	_tempController.checkZones();
-	logger() << L_time << F("recheckNextEvent...\n");
-	_sequencer.recheckNextEvent();
+	if (_mainConsoleChapters.chapter() == 0) {
+		logger() << L_time << F("notifyDataIsEdited\n");
+		_tempController.checkZones();
+		logger() << L_time << F("recheckNextEvent...\n");
+		_sequencer.recheckNextEvent();
+	}
 }
 
 RelationalDatabase::RDB<Assembly::TB_NoOfTables> & HeatingSystem::getDB() { return db; }

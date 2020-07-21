@@ -36,7 +36,7 @@ namespace Assembly {
 		, _rec_timeTemps{ _q_timeTemps, noVolData, &_rec_profile }
 		, _rec_tempSensors{ _q_tempSensors, tc.tempSensorArr, 0 }
 		, _rec_towelRails{ _q_towelRails, tc.towelRailArr, 0 }
-		, _rec_relay{ _q_relays }
+		, _rec_relay{ _q_relays, tc.relayArr }
 	{
 		logger() << F("Database queries constructed") << L_endl;
 	}

@@ -33,12 +33,13 @@ namespace Assembly {
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAll().make_newLine() }
 		, _tempSensorUI_sc{ UI_ShortCollection{ 80, _tempSensorUI_c } }
 		
-		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name,0,0, viewOneUpDnRecycle().make_newLine() }
-		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
-		, _towelRailOnTimeUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_minutesOn, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
-		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo, &_towelRailNameUI_c,  Dataset_TowelRail::e_TowelRailID }
-		, _relayUI_c{ &db._rec_relay, Dataset_Relay::e_name,0,0, viewAll() }
-		, _relayUI_sc{ UI_ShortCollection{ 80, _relayUI_c } }
+		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name }
+		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, &_towelRailNameUI_c }
+		, _towelRailOnTimeUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_minutesOn, &_towelRailNameUI_c }
+		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo, &_towelRailNameUI_c }
+		
+		, _relayStateUI_c{ &db._rec_relay, Dataset_Relay::e_state}
+		, _relayNameUI_c{ &db._rec_relay, Dataset_Relay::e_name, &_relayStateUI_c, 1, viewable() }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}
@@ -69,10 +70,13 @@ namespace Assembly {
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 		, _page_tempSensors_c{ makeCollection(_tempSensorUI_sc) }
 		
-		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c).set(viewAllUpDn()) } // show all elements for one TR
+		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c) } // show all elements for one TR
 		, _subpage_towelRails_c{ _towelRails_info_c} // show all TR's
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _subpage_towelRails_c) } // shows all fields for each TR
-		, _page_relays_c{ makeCollection(_relayUI_sc) }
+		
+		, _relays_info_c{makeCollection(_relayNameUI_c, _relayStateUI_c)}
+		, _subpage_relays_c{_relays_info_c}
+		, _page_relays_c{makeCollection(_subpage_relays_c)}
 
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
@@ -114,6 +118,7 @@ namespace Assembly {
 		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
 		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
 		ui_Objects()[(long)&_tt_SubPage_c] = "_tt_SubPage_c";
+		
 		ui_Objects()[(long)&_towelRails_info_c] = "_towelRails_info_c";
 		ui_Objects()[(long)&_subpage_towelRails_c] = "_subpage_towelRails_c";
 		ui_Objects()[(long)&_page_towelRails_c] = "_page_towelRails_c";
@@ -122,6 +127,13 @@ namespace Assembly {
 		ui_Objects()[(long)&_towelRailTempUI_c] = "_towelRailTempUI_c";
 		ui_Objects()[(long)&_towelRailOnTimeUI_c] = "_towelRailOnTimeUI_c";
 		ui_Objects()[(long)&_towelRailStatus_c] = "_towelRailStatus_c";
+		
+		ui_Objects()[(long)&_relayNameUI_c] = "_relayNameUI_c";
+		ui_Objects()[(long)&_relayStateUI_c] = "_relayStateUI_c";
+		ui_Objects()[(long)&_relays_info_c] = "_relays_info_c";
+		ui_Objects()[(long)&_subpage_relays_c] = "_subpage_relays_c";
+		ui_Objects()[(long)&_page_relays_c] = "_page_relays_c";
+
 		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getInterface().f_interface().editItem().get();
 		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";
 		auto & tt_Field_Interface = _timeTempUI_c.getInterface().f_interface();

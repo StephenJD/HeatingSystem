@@ -325,7 +325,7 @@ namespace LCD_UI {
 				if (fieldInterface_h->editBehaviour().is_Editable()) {
 					return _editItem.stream_edited_copy;
 				}
-			} else _editItem._currValue.valRange._cursorPos = _wrapper->valRange._cursorPos;
+			}
 		} 
 		return strWrapper->str();
 	}

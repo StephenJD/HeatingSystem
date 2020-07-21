@@ -9,7 +9,7 @@ namespace HardwareInterfaces {
 	//              UI_Bitwise_Relay
 	//***************************************************
 
-	class UI_Bitwise_Relay : public Relay_B {
+	class UI_Bitwise_Relay : public  LCD_UI::VolatileData, public Relay_B {
 	public:
 		UI_Bitwise_Relay() : Relay_B(0, 0) {}
 		// Queries
@@ -54,11 +54,12 @@ namespace client_data_structures {
 	class Dataset_Relay : public Record_Interface<R_Relay> {
 	public:
 		enum streamable { e_name, e_state };
-		Dataset_Relay(Query & query);
+		Dataset_Relay(Query & query, VolatileData * runtimeData);
 		I_UI_Wrapper * getField(int _fieldID) override;
-		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override { return false; }
-		//HardwareInterfaces::UI_Bitwise_Relay & relay(int index) { return static_cast<HardwareInterfaces::UI_Bitwise_Relay*>(runTimeData())[index]; }
+		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;
+		HardwareInterfaces::UI_Bitwise_Relay & relay(int index) { return static_cast<HardwareInterfaces::UI_Bitwise_Relay*>(runTimeData())[index]; }
 	private:
 		StrWrapper _name;
+		IntWrapper _status;
 	};
 }
