@@ -213,10 +213,22 @@ namespace LCD_UI {
 			auto collectionPtr = get()->collection();
 			if (behaviour().is_viewAll()) {
 				collectionPtr->filter(viewable());
+
+				auto actionObject = activeUI()->get(); // UI_Object *
+				if (actionObject->isCollection()) {
+					Collection_Hndl actionHdl = actionObject;
+					actionHdl->collection()->setObjectIndex(0);
+					auto activeActionObject = actionHdl.activeUI()->get();
+					if (activeActionObject && activeActionObject->isCollection()) {
+						activeActionObject->collection()->setObjectIndex(0);
 #ifdef ZPSIM
-				cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()] << endl;
-				//cout << F("NoOfHandles : ") << collectionPtr->endIndex() << endl;
-#endif
+						cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()];
+						cout << F("\n\t firstActObject is ") << ui_Objects()[(long)actionObject->collection()];
+						cout << " activeActionObject is " << ui_Objects()[(long)activeActionObject] << endl;
+#endif		
+					}
+				}
+				
 				for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
 					auto ith_objectPtr = collectionPtr->item(i)->get();
 					//cout << F("Streaming ") << ui_Objects()[(long)ith_objectPtr->get()] << endl;
@@ -350,10 +362,13 @@ namespace LCD_UI {
 				if (i > shortColl->endVisibleItem()) break;
 			}
 			if (element->collection() && element->behaviour().is_viewOne()) {
+				//auto objectIndex = element->collection()->nextActionableIndex(0);
 				auto objectIndex = element->collection()->objectIndex();
-				auto object = element->collection()->item(objectIndex);
+				auto object = element->collection()->item(objectIndex); // object index ignored if it has a parent.
+				objectIndex = element->collection()->objectIndex();
 #ifdef ZPSIM
-				cout << F("\t\tView Object: ") << ui_Objects()[(long)object->get()] << " ObjInd: " << objectIndex << endl << endl;
+				logger() << "\t\tObjInd: " << objectIndex << L_endl;
+				cout << F("\t\tView Object: ") << ui_Objects()[(long)object->get()] << endl << endl;				
 #endif
 				object->streamElement(buffer, activeElement, shortColl, streamIndex);
 			}

@@ -32,4 +32,10 @@ namespace HardwareInterfaces {
 		return rem_error;
 	}
 
+	void RemoteDisplay::sendToDisplay() {
+		//logger() << F(" *** sendToRemDisplay() *** ") << buff() << L_endl;
+		displ().clear();
+		displ().print(buff());
+	}
+
 }

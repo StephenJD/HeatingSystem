@@ -1,5 +1,6 @@
 #include "TempSensor.h"
 #include <I2C_Recover.h>
+#include "Logging.h"
 
 using namespace I2C_Talk_ErrorCodes;
 
@@ -53,14 +54,29 @@ namespace HardwareInterfaces {
 		if (_lastGood > 17920) change = -256;
 		temp[1] = 0;
 #endif
+		return checkTemp((temp[0] << 8) + temp[1]);
+	}
+
+	auto TempSensor::checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::error_codes {
 		if (_error == _OK) {
-			_lastGood = (temp[0] << 8) + temp[1];
+			if (_lastGood != 0 && abs(_lastGood - newTemp) > 1280) {
+				_error = _I2C_ReadDataWrong;
+				logger() << F("TempError. Was ") << _lastGood << F(" Now: ") << newTemp << L_endl;
+			} 
 		}
+		_lastGood = newTemp;
 		return _error;
 	}
 
 	error_codes TempSensor::testDevice() { // non-recovery test
 		uint8_t temp[2] = {75,0};
-		return I_I2Cdevice::write_verify(DS75LX_HYST_REG, 2, temp);
+		_error = I_I2Cdevice::write_verify(DS75LX_HYST_REG, 2, temp);
+		if (_error == _OK) {
+			_error = I_I2Cdevice::read(DS75LX_Temp, 2, temp);
+			if (_error == _OK) {
+				_error = checkTemp((temp[0] << 8) + temp[1]);
+			}
+		}
+		return _error;
 	}
 }

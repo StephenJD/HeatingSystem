@@ -18,8 +18,7 @@ namespace client_data_structures {
 
 	I_UI_Wrapper * Dataset_Relay::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
-		relayController().updateRelays();
-		logger() << "Relay recordID(): " << int(recordID()) << " " << record().rec() << L_endl;
+		//logger() << "Relay recordID(): " << int(recordID()) << " " << record().rec() << L_endl;
 		switch (fieldID) {
 		case e_name:
 			_name = record().rec().name;
@@ -27,6 +26,8 @@ namespace client_data_structures {
 		case e_state:
 		{
 			HardwareInterfaces::UI_Bitwise_Relay & rl = relay(record().id());
+			relayController().readPorts();
+			rl.getStateFromContoller();
 			_status.val = rl.logicalState();
 			return &_status;
 		}

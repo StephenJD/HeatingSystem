@@ -41,7 +41,7 @@ namespace HardwareInterfaces {
 		return _relay->logicalState();
 	}
 
-	int8_t Zone::getCurrTemp() const { return _callTS ? (getFractionalCallSensTemp() >> 8) : 0; }
+	int8_t Zone::getCurrTemp() const { return _callTS ? ((getFractionalCallSensTemp() + 128) >> 8) : 0; }
 
 	int16_t Zone::getFractionalCallSensTemp() const {
 		if (isDHWzone()) {

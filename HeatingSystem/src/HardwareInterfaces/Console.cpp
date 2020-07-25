@@ -84,9 +84,9 @@ namespace HardwareInterfaces {
 				//	keyProcessStart = micros();
 				//}
 				displayIsAwake = _keyPad.wakeDisplay(false);
-				if (!displayIsAwake) { // move off start-page
-					if (_chapterGenerator.chapter() == 0 && _chapterGenerator.page() == 0) _chapterGenerator().rec_up_down(1);
-				}
+				//if (!displayIsAwake) { // move off start-page
+					//if (_chapterGenerator.chapter() == 0 && _chapterGenerator.page() == 0) _chapterGenerator().rec_up_down(1);
+				//}
 #ifndef ZPSIM
 				_lcd_UI._lcd->blinkCursor(displayIsAwake);
 				//changeInFreeMemory(freeMem, "processKeys blinkCursor");

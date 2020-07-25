@@ -125,19 +125,19 @@ namespace HardwareInterfaces {
 			}
 			uint8_t mixValveCallTemp = readFromValve(Mix_Valve::request_temp);
 			auto loggingTemp = readFromValve(Mix_Valve::flow_temp);
-			if (_mixCallTemp != callTemp || _mixCallTemp != mixValveCallTemp) {
+			if (_mixCallTemp != callTemp || _mixCallTemp != mixValveCallTemp ) {
 				_mixCallTemp = callTemp;
 				logger() << L_time << F("MixValveController::amControlZone MixID: ") << _index;
 				logger() << F("\n\t") << relayName(zoneRelayID);
 				logger() << F("\n\tNew_request_temp: ") << _mixCallTemp;
-				logger() << F("\n\trequest_temp was: ") << mixValveCallTemp;
+				logger() << F("\n\tRequest_temp was: ") << mixValveCallTemp;
 				logger() << F("\n\tActual flow_temp: ") << loggingTemp << L_endl;
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
 				loggingTemp = readFromValve(Mix_Valve::request_temp);
-				logger() << F(" MixValveController:: Confirmed request Is:") << loggingTemp << L_endl;
+				if (loggingTemp != _mixCallTemp) { logger() << F(" MixValveController:: Confirmed request Failed: ") << loggingTemp << L_endl; }
 			} else if (loggingTemp != _mixCallTemp) {
-				logger() << L_time << F("MixValveController::amControlZone MixID: ") << _index;
+				logger() << L_time << F("MixValveController::amControlZone Temp Error. MixID: ") << _index;
 				logger() << F("\n\t") << relayName(zoneRelayID);
 				logger() << F("\n\tRequest_temp is: ") << _mixCallTemp;
 				logger() << F("\n\tActual flow_temp: ") << loggingTemp << L_endl;
@@ -180,8 +180,13 @@ namespace HardwareInterfaces {
 					logger() << F("\tMixValveController::writeToValve failed. 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
 				} else {
 					uint8_t readValue;
-					status = read(reg + _index * 16, 1, &readValue);
-					logger() << F("\tMixValveController::writeToValve OK after recovery. Write: ") << value << F(" Read: ") << readValue << L_endl;
+					read(reg + _index * 16, 1, &readValue);
+					status = (readValue == value? _OK : _I2C_ReadDataWrong);
+					if (status) {
+						logger() << F("\tMixValveController Failed: Verify OK but then: Wrote ") << value << F(" Read: ") << readValue << L_endl;
+					} //else {
+						//logger() << F("\tMixValveController::writeToValve OK after recovery. Write: ") << value << F(" Read: ") << readValue << L_endl;
+					//}
 				}
 			}
 		}

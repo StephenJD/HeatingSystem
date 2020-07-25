@@ -116,7 +116,7 @@ namespace client_data_structures {
 	class Dataset_TempSensor : public Record_Interface<R_TempSensor>
 	{
 	public:
-		enum streamable { e_name_temp };
+		enum streamable { e_name_temp, e_temp };
 		Dataset_TempSensor(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		I_UI_Wrapper * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override {return true;}

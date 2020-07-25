@@ -11,6 +11,8 @@ namespace HardwareInterfaces {
 		RemoteKeypad(MultiCrystal & lcd) : _lcd(&lcd) {}
 		int getKey() override;
 		int readKey() override;
+		bool wakeDisplay(bool) override { return true; }
+
 	private:
 		int getKeyCode(int gpio);
 		MultiCrystal * _lcd;

@@ -39,7 +39,7 @@ namespace Assembly {
 		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo, &_towelRailNameUI_c }
 		
 		, _relayStateUI_c{ &db._rec_relay, Dataset_Relay::e_state}
-		, _relayNameUI_c{ &db._rec_relay, Dataset_Relay::e_name, &_relayStateUI_c, 1, viewable() }
+		, _relayNameUI_c{ &db._rec_relay, Dataset_Relay::e_name, &_relayStateUI_c, 0, viewable() }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}

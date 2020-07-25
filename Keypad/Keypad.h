@@ -10,8 +10,8 @@ namespace HardwareInterfaces {
 		virtual int getKey() = 0;
 		virtual	int readKey() = 0;
 		virtual bool isTimeToRefresh();
+		virtual bool wakeDisplay(bool wake);
 		bool keyIsWaiting() {return keyQuePos != -1;	}
-		bool wakeDisplay(bool wake);
 		void clearKeys() { keyQue[0] = -1;  keyQuePos = -1; }
 
 #if defined (ZPSIM)

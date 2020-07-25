@@ -14,7 +14,7 @@ namespace HardwareInterfaces {
 		, _backBoiler(backBoiler)
 	{}
 
-	void ThermalStore::initialise(client_data_structures::R_ThermalStore thermStoreData) { 
+	void ThermalStore::initialise(client_data_structures::R_ThermalStore thermStoreData) {
 		_thermStoreData = thermStoreData;
 		calcCapacities();
 	}
@@ -109,7 +109,7 @@ namespace HardwareInterfaces {
 
 		float cond = _thermStoreData.Conductivity; //25; //
 		float f_array[4]; // First calc length of Water Column measured by sensor
-		f_array[0] = _thermStoreData.MidSensHeight - _thermStoreData.LowerSensHeight; // Bottom Column cm's
+		f_array[0] = float(_thermStoreData.MidSensHeight - _thermStoreData.LowerSensHeight); // Bottom Column cm's
 		f_array[1] = (_thermStoreData.TopSensHeight - _thermStoreData.LowerSensHeight) / 2.0F; // Mid Column
 		f_array[2] = _thermStoreData.CylHeight - (_thermStoreData.TopSensHeight + _thermStoreData.MidSensHeight) / 2.F; // Top Column
 		f_array[3] = f_array[0] + f_array[1] + f_array[2]; // Total Length of useful water column
@@ -144,21 +144,21 @@ namespace HardwareInterfaces {
 		float topT = getTopTemp();
 		float midT = _tempSensorArr[_thermStoreData.MidDhwTS].get_temp();
 		float botT = _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp();
-		logger() << F("\nThermalStore::calcCapacities\t_upperC ") << _upperC << F(" _midC ") << _midC << F(" _bottomC ") << _bottomC << L_endl;
-		logger() << F("\nThermalStore::calcCurrDeliverTemp\t_topT ") << topT << F(" mid ") << midT << F(" Bot ") << botT << F(" Grnd ") << _groundT << F(" Cond ") << _thermStoreData.Conductivity << L_endl;
+		//logger() << F("\nThermalStore::calcCurrDeliverTemp\t_topT ") << topT << F(" mid ") << midT << F(" Bot ") << botT << F(" Grnd ") << _groundT << F(" Cond ") << _thermStoreData.Conductivity << L_endl;
+		//logger() << F("\nThermalStore Capacities\t_upperC ") << _upperC << F(" _midC ") << _midC << F(" _bottomC ") << _bottomC << L_endl;
 
 		// using Capacities, ground and store temps, calc HW temp at each level
 		float HWtemp[3];
 		HWtemp[0] = groundT + (botT - groundT) * _bottomC;
 		HWtemp[1] = HWtemp[0] + (midT - HWtemp[0]) * _midC;
 		HWtemp[2] = HWtemp[1] + (topT - HWtemp[1]) * _upperC;
-		logger() << F("\t_HWtemp[0] ") << HWtemp[0] << F(" HWtemp[1] ") << HWtemp[1] << F(" HWtemp[2] ") << HWtemp[2] << L_endl;
+		//logger() << F("\t_HWtemp[0] ") << HWtemp[0] << F(" HWtemp[1] ") << HWtemp[1] << F(" HWtemp[2] ") << HWtemp[2] << L_endl;
 		// Using HWtemps, calculate share of energy for each section of store
 		float share[3];
 		share[0] = (HWtemp[0] - groundT) / (HWtemp[2] - groundT);
 		share[1] = (HWtemp[1] - HWtemp[0]) / (HWtemp[2] - groundT);
 		share[2] = (HWtemp[2] - HWtemp[1]) / (HWtemp[2] - groundT);
-		logger() << F("\t_share[0] ") << share[0] << F(" share[1] ") << share[1] << F(" share[2] ") << share[2] << L_endl;
+		//logger() << F("\t_share[0] ") << share[0] << F(" share[1] ") << share[1] << F(" share[2] ") << share[2] << L_endl;
 		
 		// Calc final store temps using ratio of DHW vol to storeVol
 		float storeTemps[3];
@@ -166,13 +166,13 @@ namespace HardwareInterfaces {
 		storeTemps[0] = botT - factor * share[0] / _bottomV;
 		storeTemps[1] = midT - factor * share[1] / _midV;
 		storeTemps[2] = topT - factor * share[2] / _upperV;
-		logger() << F("\t_storeTemps[0] ") << storeTemps[0] << F(" storeTemps[1] ") << storeTemps[1] << F(" storeTemps[2] ") << storeTemps[2] << L_endl;
+		//logger() << F("\t_storeTemps[0] ") << storeTemps[0] << F(" storeTemps[1] ") << storeTemps[1] << F(" storeTemps[2] ") << storeTemps[2] << L_endl;
 
 		// Calc final HW temps
 		HWtemp[0] = groundT + (storeTemps[0] - groundT) * _bottomC;
 		HWtemp[1] = HWtemp[0] + (storeTemps[1] - HWtemp[0]) * _midC;
 		HWtemp[2] = HWtemp[1] + (storeTemps[2] - HWtemp[1]) * _upperC + 0.5f;
-		logger() << F("\t_Final HWtemp[0] ") << HWtemp[0] << F(" HWtemp[1] ") << HWtemp[1] << F(" HWtemp[2] ") << HWtemp[2] << L_endl;
+		//logger() << F("\t_Final HWtemp[0] ") << HWtemp[0] << F(" HWtemp[1] ") << HWtemp[1] << F(" HWtemp[2] ") << HWtemp[2] << L_endl;
 		return (uint8_t)HWtemp[2];
 	}
 

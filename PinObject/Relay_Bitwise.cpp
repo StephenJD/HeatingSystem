@@ -36,10 +36,19 @@ namespace HardwareInterfaces {
 			return true;
 		}
 		else return false;
-	}	
+	}
+
+	void Relay_B::checkControllerStateCorrect() {
+		relayController().registerRelayChange(*this);
+	}
+
+	void Relay_B::getStateFromContoller() {
+		set(relayController().portState(*this));
+	}
+
 	
 	/////////////////////////////////////
-	//       RelaysPort Functions      //
+	//       Bitwise_RelayController Functions      //
 	/////////////////////////////////////
 	
 	void Bitwise_RelayController::registerRelayChange(Flag relay) {
@@ -52,6 +61,16 @@ namespace HardwareInterfaces {
 		}
 		//logger() << L_time << F("set RelayPort: ") << port() << F(" to ") << state << F(" bits: 0x") << L_hex << RelaysPort::relayRegister << L_endl;
 	}
+
+	bool Bitwise_RelayController::portState(Flag relay) {
+		RelayPortWidth_T relayFlagMask = 1 << relay.port();
+		bool physicalState = _relayRegister & relayFlagMask;
+		return !(relay.activeState() ^ physicalState);
+	}
+
+	/////////////////////////////////////
+	//       RelaysPort Functions      //
+	/////////////////////////////////////
 
 	RelaysPort::RelaysPort(RelayPortWidth_T connected_relays, I2C_Recover & recovery, int addr)
 		: Bitwise_RelayController(connected_relays)
@@ -100,4 +119,9 @@ namespace HardwareInterfaces {
 		}
 		return status;
 	}
+
+	auto RelaysPort::readPorts()->I2C_Talk_ErrorCodes::error_codes {
+			return read(REG_8PORT_OLAT, 1, &_relayRegister);
+	}
+
 }

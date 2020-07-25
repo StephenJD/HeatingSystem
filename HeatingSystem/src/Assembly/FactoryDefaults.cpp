@@ -98,9 +98,9 @@ namespace Assembly {
 	//};
 
 	constexpr R_TowelRail towelRails_f[] = {
-		  { "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 55, 160 }
-		, { "Family", T_HTrS, R_HsTR, M_UpStrs, 45, 60 }
-		, { "Flat", T_FTrS, R_FlTR, M_UpStrs, 40, 30 }
+		  { "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 50, 60 }
+		, { "Family", T_HTrS, R_HsTR, M_UpStrs, 50, 60 }
+		, { "Flat", T_FTrS, R_FlTR, M_UpStrs, 50, 60 }
 	};
 
 	constexpr R_Dwelling dwellings_f[] = {

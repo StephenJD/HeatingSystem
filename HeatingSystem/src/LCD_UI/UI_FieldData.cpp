@@ -101,7 +101,9 @@ namespace LCD_UI {
 
 	const char * UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.	
-		//cout << "UI_FieldData::streamElement " << ui_Objects()[(long)this] << endl;
+#ifdef ZPSIM
+		cout << "UI_FieldData::stream all Elements of " << ui_Objects()[(long)this] << endl;
+#endif
 		auto focus_index = LazyCollection::focusIndex();
 		for (auto & element : *this) {
 			auto endVisibleIndex = shortColl->endVisibleItem();

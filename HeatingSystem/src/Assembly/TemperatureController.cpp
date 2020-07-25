@@ -119,12 +119,16 @@ namespace Assembly {
 			ui_yield(); 
 		}
 
+		for ( auto & relay : relayArr) {
+			relay.checkControllerStateCorrect();
+		}
+
 		relayController().updateRelays();
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
-		//if (relaysPort.recovery().isUnrecoverable()) { 
-		//	logger() << F("Initiating Arduino Reset") << L_endl;
-		//	HardReset::arduinoReset(); 
-		//};
+		if (mixValveControllerArr[0].recovery().isUnrecoverable()) {
+			logger() << F("Initiating Arduino Reset") << L_endl;
+			HardReset::arduinoReset(); 
+		};
 	}
 
 	void TemperatureController::checkZones() {

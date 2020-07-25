@@ -19,6 +19,8 @@ namespace HardwareInterfaces {
 	public:
 		void registerRelayChange(Flag relay);
 		virtual auto updateRelays() -> I2C_Talk_ErrorCodes::error_codes  = 0;
+		virtual auto readPorts() -> I2C_Talk_ErrorCodes::error_codes  = 0;
+		bool portState(Flag relay);
 	protected:
 		Bitwise_RelayController(RelayPortWidth_T connected_relays) : _connected_relays(connected_relays) {}
 		RelayPortWidth_T _connected_relays;
@@ -43,6 +45,8 @@ namespace HardwareInterfaces {
 		void initialise(uint8_t relayRec);
 		bool set() { return set(true); }
 		bool set(bool state); // returns true if state is changed			
+		void checkControllerStateCorrect();
+		void getStateFromContoller();
 	};
 
 	// cannot be constexpr because I_I2Cdevice_Recovery cannot be literal
@@ -52,6 +56,7 @@ namespace HardwareInterfaces {
 
 		// Virtual Functions
 		auto updateRelays()->I2C_Talk_ErrorCodes::error_codes override;
+		auto readPorts()->I2C_Talk_ErrorCodes::error_codes override;
 		auto initialiseDevice()->I2C_Talk_ErrorCodes::error_codes override;
 		auto testDevice()->I2C_Talk_ErrorCodes::error_codes override;
 	private:

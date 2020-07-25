@@ -73,6 +73,13 @@ namespace client_data_structures {
 	I_UI_Wrapper * Dataset_TempSensor::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
+		case e_temp:
+		{
+			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());
+			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _tempSensor.temperature = -127;
+			else _tempSensor.temperature = ts.get_temp();
+			return &_tempSensor;
+		}		
 		case e_name_temp:
 		{
 			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());

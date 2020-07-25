@@ -3,7 +3,7 @@
 
 namespace HardwareInterfaces {
 #if defined (ZPSIM)
-	int8_t I_Keypad::simKey;
+	int8_t I_Keypad::simKey = -1;
 #endif
 
 	bool I_Keypad::isTimeToRefresh() {

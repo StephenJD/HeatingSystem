@@ -30,12 +30,12 @@ namespace HardwareInterfaces {
 		bool logicalState() const { return _logical_state; }
 		
 		/// <summary>
-		/// returns true if binary 1 represents logical "Set".
+		/// returns true if physical 1 represents logical "Set".
 		/// </summary>
 		bool activeState() const { return _activeState; }
 		
 		/// <summary>
-		/// returns binary value for the current logical state.
+		/// returns physical value for the current logical state.
 		/// </summary>
 		bool controlState() const { return !(logicalState() ^ activeState()); }
 		

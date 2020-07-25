@@ -74,10 +74,13 @@ HeatingSystem::HeatingSystem()
 	, _hs_queries(db, _tempController)
 	, mainDisplay(&_hs_queries._q_displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
+	, remoteKeypad{ {remDispl[0].displ()},{remDispl[0].displ()},{remDispl[0].displ()} }
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, FL_REMOTE_ADDRESS, DS_REMOTE_ADDRESS }
 	, _mainConsoleChapters{ _hs_queries, _tempController, *this}
+	, _remoteConsoleChapters{_hs_queries}
 	, _sequencer(_hs_queries, _tempController)
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
+	, _remoteConsole{ {remoteKeypad[0], remDispl[0], _remoteConsoleChapters},{remoteKeypad[1], remDispl[1], _remoteConsoleChapters},{remoteKeypad[2], remDispl[2], _remoteConsoleChapters} }
 	{
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
@@ -94,6 +97,9 @@ void HeatingSystem::serviceTemperatureController() {
 
 void HeatingSystem::serviceConsoles() {
 	_mainConsole.processKeys(); 
+	for (auto & remote : _remoteConsole) {
+		//remote.processKeys();
+	}
 }
 
 void HeatingSystem::serviceProfiles() { _sequencer.getNextEvent(); }
