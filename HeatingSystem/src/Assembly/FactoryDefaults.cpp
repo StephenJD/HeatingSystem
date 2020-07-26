@@ -36,8 +36,8 @@ namespace Assembly {
 
 	constexpr R_Display displays_f[] = {
 		{"Main", 0, 16, 20, 16, 250, 70, 30}
-		,{"DS", 0x26, 0, 0, 0, 0, 0, 0}
 		,{"US", 0x24, 0, 0, 0, 0, 0, 0}
+		,{"DS", 0x26, 0, 0, 0, 0, 0, 0}
 		,{"Flat", 0x25, 0, 0, 0, 0, 0, 0}
 	};
 

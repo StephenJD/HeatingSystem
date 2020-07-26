@@ -48,9 +48,9 @@ namespace LCD_UI {
 		/// When not in edit: a page element handle.
 		/// </summary>
 		Collection_Hndl * rec_activeUI();
+		void selectPage();
 	private:	
 		// Modifiers
-		void selectPage();
 		void set_CursorUI_from(Collection_Hndl * topUI);
 		Collection_Hndl * set_leftRightUI_from(Collection_Hndl * topUI, int direction);
 		void set_UpDownUI_from(Collection_Hndl * topUI);

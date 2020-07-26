@@ -39,7 +39,6 @@ namespace HardwareInterfaces {
 	int RemoteKeypad::getKey() {
 		auto gotKey = readKey();
 		if (gotKey >= 0) {
-			wakeDisplay(true);
 			gotKey = getFromKeyQue(keyQue, keyQuePos);
 		}
 		return gotKey;

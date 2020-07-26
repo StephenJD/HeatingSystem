@@ -46,7 +46,7 @@ namespace client_data_structures {
 			if (currValue().val >= z.maxUserRequestTemp()) currValue().val = z.maxUserRequestTemp();			 
 		}
 		req_wrapper->val = currValue().val;
-		f_int_h.getData()->data()->setNewValue(Dataset_Zone::e_reqIsTemp, req_wrapper);
+		f_int_h.getData()->data()->setNewValue(Dataset_Zone::e_reqTemp, req_wrapper);
 	}
 	
 	//************ReqIsTemp_Interface***********************
@@ -95,13 +95,25 @@ namespace client_data_structures {
 			_abbrev = record().rec().abbrev;
 			return &_abbrev;
 		case e_reqTemp:
+		{
+			//setNewValue(Dataset_Zone::e_reqTemp, &_requestTemp);
+			HardwareInterfaces::Zone & z = zone(record().id());
+			_requestTemp.val = z.currTempRequest();
 			return &_requestTemp;
+		}
+		case e_isTemp:
+		{
+			HardwareInterfaces::Zone & z = zone(record().id());
+			_isTemp.val = z.getCurrTemp();
+			return &_isTemp;
+		}
 		case e_factor:
 			_factor.val = record().rec().autoTimeC;
 			return &_factor;
 		case e_reqIsTemp:
 		{
 			//auto recordID = record();
+			//setNewValue(Dataset_Zone::e_reqTemp, &_reqIsTemp);
 			HardwareInterfaces::Zone & z = zone(record().id());
 			strcpy(_reqIsTemp.name, record().rec().name);
 			_reqIsTemp.isTemp = z.getCurrTemp();
@@ -133,9 +145,14 @@ namespace client_data_structures {
 			strcpy(record().rec().abbrev, _abbrev.str());
 			setRecordID(record().update());
 			break; }
-		case e_reqTemp: 
-			_requestTemp = *newValue;
-			break; 
+		case e_reqTemp:
+		{
+			HardwareInterfaces::Zone & z = zone(record().id());
+			z.offsetCurrTempRequest(uint8_t(newValue->val));
+			record().rec().offsetT = z.offset();
+			setRecordID(record().update());
+			break;
+		}
 		case e_factor: 
 			_factor = *newValue;
 			record().rec().autoTimeC = decltype(record().rec().autoTimeC)(_factor.val);

@@ -169,7 +169,6 @@ namespace LCD_UI {
 		const Collection_Hndl * backUI() const { return _backUI; }
 		virtual CursorMode cursorMode(const Object_Hndl * activeElement) const;
 		virtual int cursorOffset(const char * data) const;
-
 		// Polymorphic Modifiers
 		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
 
@@ -247,6 +246,10 @@ namespace LCD_UI {
 
 		// New Queries
 		virtual int	focusIndex() const { return _focusIndex; }
+		Collection_Hndl * activeUI() {
+			return static_cast<Collection_Hndl*>(item(validIndex(focusIndex())));
+		}
+
 		bool atEnd(int pos) const {
 			return pos >= _count;
 		}

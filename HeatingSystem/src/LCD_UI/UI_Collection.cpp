@@ -220,7 +220,7 @@ namespace LCD_UI {
 					actionHdl->collection()->setObjectIndex(0);
 					auto activeActionObject = actionHdl.activeUI()->get();
 					if (activeActionObject && activeActionObject->isCollection()) {
-						activeActionObject->collection()->setObjectIndex(0);
+						activeActionObject->collection()->setObjectIndex(activeActionObject->collection()->focusIndex());
 #ifdef ZPSIM
 						cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()];
 						cout << F("\n\t firstActObject is ") << ui_Objects()[(long)actionObject->collection()];

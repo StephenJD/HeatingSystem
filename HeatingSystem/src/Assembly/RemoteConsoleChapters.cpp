@@ -8,19 +8,26 @@ namespace Assembly {
 	using namespace LCD_UI;
 
 	RemoteConsoleChapters::RemoteConsoleChapters(HeatingSystem_Queries & db) :
-		_rem_tempSensorUI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp }
+		_rem_tempReqUI_c{ &db._rec_zones, Dataset_Zone::e_reqTemp,0,0, editOnNextItem() }
+		, _rem_tempIsUI_c{ &db._rec_zones, Dataset_Zone::e_isTemp, &_rem_tempReqUI_c, 0, viewable() }
 		, _rem_prompt{ "^v adjusts temp" }
-		, _remotePage_c{makeCollection(_rem_prompt, _rem_tempSensorUI_c)}
-		, _remote_chapter_c{makeCollection(_remotePage_c)}
+		, _rem_req_lbl{ "Req" }
+		, _rem_is_lbl{ "Is", viewable() }
+		, remotePage_c{makeCollection(_rem_prompt, _rem_req_lbl, _rem_tempReqUI_c, _rem_is_lbl, _rem_tempIsUI_c)}
+		, _remote_chapter_c{makeCollection(remotePage_c)}
 		, _remote_chapter_h{ _remote_chapter_c }
 
 	{
 #ifdef ZPSIM
-		ui_Objects()[(long)&_rem_tempSensorUI_c] = "_rem_tempSensorUI_c";
+		ui_Objects()[(long)&_rem_tempReqUI_c] = "_rem_tempReqUI_c";
+		ui_Objects()[(long)&_rem_tempIsUI_c] = "_rem_tempIsUI_c";
 		ui_Objects()[(long)&_rem_prompt] = "_rem_prompt";
-		ui_Objects()[(long)&_remotePage_c] = "_remotePage_c";
+		ui_Objects()[(long)&_rem_req_lbl] = "_rem_req_lbl";
+		ui_Objects()[(long)&_rem_is_lbl] = "_rem_is_lbl";
+		ui_Objects()[(long)&remotePage_c] = "_remotePage_c";
 		ui_Objects()[(long)&_remote_chapter_c] = "_remote_chapter_c";
 #endif
+		_remote_chapter_h.selectPage();
 	}
 
 	LCD_UI::A_Top_UI & RemoteConsoleChapters::operator()(int) {

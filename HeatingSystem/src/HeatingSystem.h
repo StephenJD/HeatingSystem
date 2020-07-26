@@ -50,11 +50,11 @@ public:
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;
 	HardwareInterfaces::RemoteKeypad remoteKeypad[Assembly::NO_OF_REMOTE_DISPLAYS];
+	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;
 	// Run-time data arrays
-	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 	Assembly::MainConsoleChapters _mainConsoleChapters;
 	Assembly::RemoteConsoleChapters _remoteConsoleChapters;
 	Assembly::Sequencer _sequencer;

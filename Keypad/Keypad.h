@@ -15,7 +15,7 @@ namespace HardwareInterfaces {
 		void clearKeys() { keyQue[0] = -1;  keyQuePos = -1; }
 
 #if defined (ZPSIM)
-		static	int8_t simKey;
+		int8_t simKey = -1;
 #endif
 		volatile int8_t keyQue[10] = { -1 };
 		volatile int8_t keyQuePos = -1; // points to last entry in KeyQue

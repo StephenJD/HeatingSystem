@@ -6,6 +6,10 @@
 #include <EEPROM.h>
 #include <MemoryFree.h>
 
+#ifdef ZPSIM
+#include <iostream>
+#endif
+
 using namespace client_data_structures;
 using namespace RelationalDatabase;
 using namespace HardwareInterfaces;
@@ -96,9 +100,14 @@ void HeatingSystem::serviceTemperatureController() {
 }
 
 void HeatingSystem::serviceConsoles() {
-	_mainConsole.processKeys(); 
+	_mainConsole.processKeys();
+	auto i = 0;
 	for (auto & remote : _remoteConsole) {
-		//remote.processKeys();
+		_remoteConsoleChapters.remotePage_c.activeUI()->setFocusIndex(i);
+		std::cout << "Remote: " << ui_Objects()[(long)_remoteConsoleChapters.remotePage_c.activeUI()->get()] << std::endl;
+		remote.processKeys();
+		++i;
+		if (i == 2) ++i;
 	}
 }
 

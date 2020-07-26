@@ -8,7 +8,7 @@ namespace I2C_Recovery { class I2C_Recover; }
 
 namespace HardwareInterfaces {
 
-	class RemoteDisplay : public LCD_Display_Buffer<20, 2>, public I_I2Cdevice_Recovery {
+	class RemoteDisplay : public LCD_Display_Buffer<16, 2>, public I_I2Cdevice_Recovery {
 	public:
 		RemoteDisplay(I2C_Recovery::I2C_Recover & recovery, int addr);
 		RemoteDisplay(int addr) : RemoteDisplay(*I_I2Cdevice_Recovery::set_recover, addr) {}

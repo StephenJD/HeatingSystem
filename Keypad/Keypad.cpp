@@ -2,9 +2,9 @@
 #include <Timer_mS_uS.h>
 
 namespace HardwareInterfaces {
-#if defined (ZPSIM)
-	int8_t I_Keypad::simKey = -1;
-#endif
+//#if defined (ZPSIM)
+//	int8_t I_Keypad::simKey = -1;
+//#endif
 
 	bool I_Keypad::isTimeToRefresh() {
 		int elapsedTime = secondsSinceLastCheck(_lastTick);

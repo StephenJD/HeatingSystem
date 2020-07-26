@@ -109,7 +109,7 @@ namespace client_data_structures {
 	/// </summary>
 	class Dataset_Zone : public Record_Interface<R_Zone> {
 	public:
-		enum streamable { e_name, e_abbrev, e_reqTemp, e_factor, e_reqIsTemp, e_offset };
+		enum streamable { e_name, e_abbrev, e_reqTemp, e_isTemp, e_factor, e_reqIsTemp, e_offset	};
 		Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		I_UI_Wrapper * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;
@@ -119,6 +119,7 @@ namespace client_data_structures {
 		StrWrapper _abbrev;
 		IntWrapper _requestTemp;
 		IntWrapper _tempOffset;
+		IntWrapper _isTemp;
 		DecWrapper _factor;
 		ReqIsTemp_Wrapper _reqIsTemp;
 	};
