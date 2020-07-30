@@ -230,7 +230,7 @@ namespace LCD_UI {
 	/// </summary>
 	class I_SafeCollection : public UI_Object {
 	public:
-		I_SafeCollection(int count, Behaviour behaviour) :_count(count), _behaviour(behaviour) {}
+		I_SafeCollection(int count, Behaviour behaviour);
 		// Polymorphic Queries
 		bool isCollection() const override { return true; }
 		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
@@ -321,7 +321,7 @@ namespace LCD_UI {
 	}
 
 	inline bool Collection_Hndl::atEnd(int pos) const { return empty() ? 0 : get()->collection()->atEnd(pos); }
-	inline int Collection_Hndl::focusIndex() const { return /*get()->collection() ? */get()->collection()->focusIndex()/* : 0*/; }
+	inline int Collection_Hndl::focusIndex() const { return get()->collection() ? get()->collection()->focusIndex() : 0; }
 	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->setFocusIndex(index); }
 	inline int Collection_Hndl::endIndex() const { return get()->collection()->endIndex(); }
 
@@ -393,7 +393,7 @@ namespace LCD_UI {
 		const int _endPos; // 0-based character endIndex on the display for the end of this list; i.e. no of visible chars including end markers: < ... >.
 		mutable int _beginShow = 0; // streamIndex of first visible element
 		mutable int _endShow; // streamIndex after the last visible element
-		int _beginIndex = 0; // streamIndex of first element in collection
+		int _beginIndex = 0; // required streamIndex of first element in collection
 	};
 
 	/////////////////////////////////////////////////////////////////////////
@@ -402,15 +402,16 @@ namespace LCD_UI {
 
 	/// <summary>
 	/// A Collection-Wrapper providing iteration of its sub-collection.
-	/// UI_IterateSubCollection = {parent,child,child,child}
-	/// View_All -> {parent1,child1,child1,child1}, {parent2,child2,child2,child2}, {parent3,child3,child3,child3}
+	/// UI_IterateSubCollection = {child, parent, child, child...}
+	/// View_All -> Show the nested collection for each member of the active ui. Focus matches nested focus.
+	/// View_One -> Show the nested collection once, but on multiple displays each showing a different member. Focus indicates member in edit. 
 	/// The sub-collection may contain any number of fields.
 	/// The active (parent) field of the sub-collection determins the underlying records to be used.
 	/// Thus iterating this wrapper results in the sub-collection showing its fields for each member of the active field.
 	/// </summary>
 	class UI_IterateSubCollection : public I_SafeCollection {
 	public:
-		UI_IterateSubCollection(I_SafeCollection & safeCollection);
+		UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = viewAll());
 		// Polymorphic Queries
 		Collection_Hndl * leftRight_Collection() override;
 		// Polymorphic Modifiers
@@ -455,6 +456,8 @@ namespace LCD_UI {
 				logger() << F("   Has Element at : ") << (long)&_array[i] << F(" Pointing to : ") << (long)_array[i].get() << L_endl;
 			std::cout << std::endl;
 #endif
+			_filter = selectable();
+			setFocusIndex(nextActionableIndex(0));
 		}
 		ObjectType * item(int index) override {
 			setObjectIndex(index);

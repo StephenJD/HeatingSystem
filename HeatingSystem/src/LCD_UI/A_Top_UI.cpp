@@ -106,15 +106,23 @@ namespace LCD_UI {
 		set_CursorUI_from(selectedPage_h());
 		set_leftRightUI_from(selectedPage_h(),0);
 		set_UpDownUI_from(selectedPage_h());
-		_cursorUI->setCursorPos();
 #ifdef ZPSIM 
-		//auto selectedUI = selectedPage_h()->get();
-		//logger() << F("\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		//logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
-		//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		logger() << F("\n\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
+		logger() << F("\n\tselectedPage focus: ") << selectedPage_h()->focusIndex() << L_endl;
+		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		logger() << F("\t_upDownUI focus: ") << _upDownUI->focusIndex() << L_endl;
+		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " LRColl addr: " << (long)selectedPage_h()->get()->collection()->leftRight_Collection() << L_endl;
+		
 		//logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
-		//logger() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI)].c_str() << L_endl;
+		logger() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
+		if (_cursorUI->get()) logger() << F("\t_cursorUI() focus: ") << _cursorUI->focusIndex() << L_endl;
 #endif
+		//if (_leftRightBackUI->cursorMode(_leftRightBackUI) == HardwareInterfaces::LCD_Display::e_selected) {
+		if (selectedPage_h()->get()->collection()->leftRight_Collection() == 0 && _leftRightBackUI->cursorMode(_leftRightBackUI) != HardwareInterfaces::LCD_Display::e_inEdit) {
+			selectedPage_h()->setFocusIndex(_upDownUI->focusIndex());
+			logger() << F("\n\tselectedPage focus now: ") << selectedPage_h()->focusIndex() << L_endl;
+		}
+		_cursorUI->setCursorPos();
 	}
 
 	void A_Top_UI::rec_left_right(int move) { // left-right movement
@@ -181,12 +189,12 @@ namespace LCD_UI {
 		if (!haveMoved) {
 			if (_upDownUI->get()->upDn_IsSet()) {
 				haveMoved = static_cast<Custom_Select*>(_upDownUI->get())->move_focus_by(move);
-
 				set_UpDownUI_from(selectedPage_h());
 				set_CursorUI_from(selectedPage_h());
 			} else if (_upDownUI->behaviour().is_edit_on_next()) {
 				rec_edit();
 				haveMoved = _upDownUI->move_focus_by(-move); // reverse up/down when in edit.
+				//_upDownUI->on_select();
 			} 
 		}
 		

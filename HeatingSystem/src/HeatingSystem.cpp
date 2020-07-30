@@ -8,6 +8,7 @@
 
 #ifdef ZPSIM
 #include <iostream>
+using namespace std;
 #endif
 
 using namespace client_data_structures;
@@ -102,9 +103,12 @@ void HeatingSystem::serviceTemperatureController() {
 void HeatingSystem::serviceConsoles() {
 	_mainConsole.processKeys();
 	auto i = 0;
+	
 	for (auto & remote : _remoteConsole) {
-		_remoteConsoleChapters.remotePage_c.activeUI()->setFocusIndex(i);
-		std::cout << "Remote: " << ui_Objects()[(long)_remoteConsoleChapters.remotePage_c.activeUI()->get()] << std::endl;
+		auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
+		cout << "\nRemote activeField: " << ui_Objects()[(long)activeField->get()] << endl;
+		activeField->setFocusIndex(i);
+		logger() << "Remote PageGroup focus: " << _remoteConsoleChapters._remote_page_group_c.focusIndex() << L_endl;
 		remote.processKeys();
 		++i;
 		if (i == 2) ++i;

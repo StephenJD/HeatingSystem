@@ -71,7 +71,7 @@ namespace Assembly {
 		, _page_tempSensors_c{ makeCollection(_tempSensorUI_sc) }
 		
 		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c) } // show all elements for one TR
-		, _subpage_towelRails_c{ _towelRails_info_c} // show all TR's
+		, _subpage_towelRails_c{ _towelRails_info_c} // iteration sub. show all TR's
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _subpage_towelRails_c) } // shows all fields for each TR
 		
 		, _relays_info_c{makeCollection(_relayNameUI_c, _relayStateUI_c)}

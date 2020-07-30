@@ -132,7 +132,7 @@ namespace LCD_UI {
 
 	void Field_Interface_h::setCursorPos() { 
 		// only called when it gets the focus - i.e selected, not in edit
-		auto initialEditFocus = f_interface().setInitialCount(this); // Sets endIndex() for number of edit-positions and returns initial edit-focus 
+		auto initialEditFocus = f_interface().setInitialCount(this); // Copies data to wrapper.currentValue, Sets endIndex() for number of edit-positions and returns initial edit-focus 
 		set_focus(initialEditFocus);
 	}
 

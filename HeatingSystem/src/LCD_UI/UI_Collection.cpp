@@ -78,11 +78,11 @@ namespace LCD_UI {
 
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
-		if (auto collection = get()->collection()) {
-			collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
-			set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
-			move_focus_by(0); // recycle if allowed. 
-		}
+		//if (auto collection = get()->collection()) {
+		//	collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
+		//	set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+		//	move_focus_by(0); // recycle if allowed. 
+		//}
 	}
 
 	CursorMode Collection_Hndl::cursorMode(const Object_Hndl * activeElement) const {
@@ -213,17 +213,16 @@ namespace LCD_UI {
 			auto collectionPtr = get()->collection();
 			if (behaviour().is_viewAll()) {
 				collectionPtr->filter(viewable());
-
-				auto actionObject = activeUI()->get(); // UI_Object *
-				if (actionObject->isCollection()) {
-					Collection_Hndl actionHdl = actionObject;
+				cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()] << (activeElement? " HasActive":" Inactive") << endl;
+				if (activeUI() && activeUI()->get()->isCollection()) {
+					Collection_Hndl actionHdl = activeUI()->get();
 					actionHdl->collection()->setObjectIndex(0);
 					auto activeActionObject = actionHdl.activeUI()->get();
 					if (activeActionObject && activeActionObject->isCollection()) {
 						activeActionObject->collection()->setObjectIndex(activeActionObject->collection()->focusIndex());
 #ifdef ZPSIM
-						cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()];
-						cout << F("\n\t firstActObject is ") << ui_Objects()[(long)actionObject->collection()];
+						//cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()];
+						cout << F("\n\t firstActObject is ") << ui_Objects()[(long)activeUI()->get()];
 						cout << " activeActionObject is " << ui_Objects()[(long)activeActionObject] << endl;
 #endif		
 					}
@@ -231,7 +230,7 @@ namespace LCD_UI {
 				
 				for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
 					auto ith_objectPtr = collectionPtr->item(i)->get();
-					//cout << F("Streaming ") << ui_Objects()[(long)ith_objectPtr->get()] << endl;
+					cout << F("Streaming ") << ui_Objects()[(long)ith_objectPtr] << endl;
 
 					auto ith_collectionPtr = ith_objectPtr->collection();
 					if (ith_objectPtr->behaviour().is_OnNewLine())
@@ -260,10 +259,19 @@ namespace LCD_UI {
 			}
 			else if (collectionPtr) {
 				auto active = activeUI();
-				if (active) active->streamElement(buffer, activeElement, shortColl, streamIndex);
+				cout << F("\nStreaming active member of: ") << ui_Objects()[(long)get()] << " Focus is: " << focusIndex() << " Active: " << ui_Objects()[(long)active->get()] <<endl;
+				cout << F("\tStreaming SubPage. Active element is: ") << ui_Objects()[(long)active->activeUI()->get()]  << " Act Focus: " << active->activeUI()->focusIndex() << endl;
+				if (ui_Objects()[(long)active->activeUI()->get()] != "Edit_Int" && active->activeUI()->focusIndex() != focusIndex()) {
+					//activeElement = 0;
+					cout << F("\tSet Active to 0: ") << endl;
+				}
+				if (active) {
+					cout << F("\tActive member is: ") << ui_Objects()[(long)active->get()] << " Active Focus is: " << active->focusIndex() << " Act ObjectInd: " << active->get()->collection()->objectIndex() << endl;
+					active->streamElement(buffer, activeElement, shortColl, streamIndex);
+				}
 			}
 			else {
-				//cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects()[(long)get()] << endl;
+				cout << F("Streaming only member : ") << ui_Objects()[(long)get()] << endl;
 				get()->streamElement(buffer, activeElement, shortColl, streamIndex);
 			}
 		}
@@ -305,6 +313,8 @@ namespace LCD_UI {
 	// **********   I_SafeCollection **********
 	///////////////////////////////////////////
 	Behaviour I_SafeCollection::_filter = viewable();
+
+	I_SafeCollection::I_SafeCollection(int count, Behaviour behaviour) :_count(count), _behaviour(behaviour) {}
 
 	Collection_Hndl * I_SafeCollection::leftRight_Collection() {
 		auto activeObject = item(validIndex(focusIndex()));
@@ -348,7 +358,7 @@ namespace LCD_UI {
 		// only called for viewall.
 		filter(viewable());
 #ifdef ZPSIM
-		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << endl;
+		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;
 #endif
 		for (int i = nextActionableIndex(0); !atEnd(i); i = nextActionableIndex(++i)) { // need to check all elements on the page
 			auto element = item(i)->get();
@@ -414,8 +424,8 @@ namespace LCD_UI {
 	// **********   UI_IterateSubCollection **********
 	///////////////////////////////////////////
 
-	UI_IterateSubCollection::UI_IterateSubCollection(I_SafeCollection & safeCollection)
-		: I_SafeCollection(1, viewAll()) 
+	UI_IterateSubCollection::UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour)
+		: I_SafeCollection(1, behaviour)
 		, _nestedCollection(&safeCollection)
 	{
 #ifdef ZPSIM
@@ -428,10 +438,11 @@ namespace LCD_UI {
 	}
 
 	Object_Hndl * UI_IterateSubCollection::item(int newIndex) { // return member without moving focus
+		cout << F("\tUI_IterateSubCollection: ") << ui_Objects()[(long)this] << " Nested : " << ui_Objects()[(long)_nestedCollection.get()] << endl;
 		auto active = _nestedCollection.activeUI();
 		active->get()->collection()->move_to_object(newIndex);
 #ifdef ZPSIM
-		cout << F(" active item: ") << ui_Objects()[(long)active->get()->collection()];
+		cout << F("\t\tactive item: ") << ui_Objects()[(long)active->get()->collection()];
 		cout << " NewIndex : " << newIndex << " SubCollection obj: " << objectIndex() << " SubCollection Focus: " << focusIndex() << endl;
 #endif
 		return &_nestedCollection;
