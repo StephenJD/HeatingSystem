@@ -2,7 +2,7 @@
 #include "UI_Collection.h"
 
 namespace LCD_UI {
-	class UI_ShortCollection;
+	class UI_IteratedCollection;
 
 	/////////////////////////////////////////////////////////////////////////
 	//         Menu decorator for catching move_by() on a collection handle 

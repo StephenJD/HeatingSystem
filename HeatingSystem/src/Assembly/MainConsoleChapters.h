@@ -44,10 +44,8 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _profileDaysUI_c;
 		
 		LCD_UI::UI_FieldData _timeTempUI_c;
-		LCD_UI::UI_ShortCollection _timeTempUI_sc;
 		
 		LCD_UI::UI_FieldData _tempSensorUI_c;
-		LCD_UI::UI_ShortCollection _tempSensorUI_sc;
 		
 		LCD_UI::UI_FieldData _towelRailNameUI_c;
 		LCD_UI::UI_FieldData _towelRailTempUI_c;
@@ -69,29 +67,31 @@ namespace Assembly {
 		LCD_UI::UI_Label _towelRailsLbl;
 		
 		// Pages & sub-pages - Collections of UI handles
-		LCD_UI::Collection<7, LCD_UI::Collection_Hndl> _page_currTime_c;
-		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_zoneReqTemp_c;
-		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _zone_subpage_c;
-		LCD_UI::Collection<5, LCD_UI::Collection_Hndl> _calendar_subpage_c;
-		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _prog_subpage_c;
-		LCD_UI::Collection<3, LCD_UI::Collection_Hndl> _page_dwellingMembers_subpage_c;
-		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _tt_SubPage_c;
-		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _page_dwellingMembers_c;
-		LCD_UI::Collection<8, LCD_UI::Collection_Hndl> _page_profile_c;
-		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_tempSensors_c;
+		LCD_UI::UI_IteratedCollection<1> _iterated_timeTempUI;
+		LCD_UI::UI_IteratedCollection<1> _iterated_tempSensorUI;
+		LCD_UI::Collection<7> _page_currTime_c;
+		LCD_UI::UI_IteratedCollection<1> _iterated_zoneReqTemp_c;
+		LCD_UI::UI_IteratedCollection<1> _iterated_zone_name_c;
+		LCD_UI::Collection<5> _calendar_subpage_c;
+		LCD_UI::Collection<2> _prog_subpage_c;
+		LCD_UI::Collection<3> _page_dwellingMembers_subpage_c;
+
+		LCD_UI::Collection<2> _page_dwellingMembers_c;
+		LCD_UI::Collection<8> _page_profile_c;
+		LCD_UI::Collection<1> _page_tempSensors_c;
 		
-		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _towelRails_info_c;
+		LCD_UI::Collection<4> _towelRails_info_c;
 		LCD_UI::UI_IterateSubCollection _subpage_towelRails_c;
-		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _page_towelRails_c;
+		LCD_UI::Collection<2> _page_towelRails_c;
 		
-		LCD_UI::Collection<2, LCD_UI::Collection_Hndl> _relays_info_c;
+		LCD_UI::Collection<2> _relays_info_c;
 		LCD_UI::UI_IterateSubCollection _subpage_relays_c;
-		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _page_relays_c;
+		LCD_UI::Collection<1> _page_relays_c;
 
 		// Display - Collection of Page Handles
-		LCD_UI::Collection<4, LCD_UI::Collection_Hndl> _user_chapter_c;
+		LCD_UI::Collection<4> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;
-		LCD_UI::Collection<3, LCD_UI::Collection_Hndl> _info_chapter_c;
+		LCD_UI::Collection<3> _info_chapter_c;
 		LCD_UI::A_Top_UI _info_chapter_h;
 	};
 }

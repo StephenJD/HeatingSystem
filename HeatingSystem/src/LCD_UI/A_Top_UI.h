@@ -67,7 +67,7 @@ namespace LCD_UI {
 	/// It takes a list of Collectible objects by reference
 	/// </summary>
 	template<typename... Args>
-	auto makeDisplay(Args & ... args) -> Collection<sizeof...(args), Collection_Hndl> {
+	auto makeDisplay(Args & ... args) -> Collection<sizeof...(args)> {
 		return Collection<sizeof...(args), Collection_Hndl>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, viewOneUpDnRecycle());
 	}
 }

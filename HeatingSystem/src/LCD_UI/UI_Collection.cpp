@@ -69,7 +69,7 @@ namespace LCD_UI {
 
 	Collection_Hndl::Collection_Hndl(const UI_Object * object) : Object_Hndl(object) {}
 
-	Collection_Hndl::Collection_Hndl(const UI_ShortCollection & shortList_Hndl, int default_focus)
+	Collection_Hndl::Collection_Hndl(const UI_IteratedCollection & shortList_Hndl, int default_focus)
 		: Object_Hndl(shortList_Hndl) {
 		get()->collection()->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
 		set_focus(get()->collection()->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
@@ -462,10 +462,10 @@ namespace LCD_UI {
 	}
 
 	///////////////////////////////////////////
-	// **********   UI_ShortCollection **********
+	// **********   UI_IteratedCollection **********
 	///////////////////////////////////////////
 
-	UI_ShortCollection::UI_ShortCollection(int endPos, I_SafeCollection & safeCollection)
+	UI_IteratedCollection::UI_IteratedCollection(int endPos, I_SafeCollection & safeCollection)
 		: I_SafeCollection(safeCollection.endIndex(), viewable())
 		, _nestedCollection(&safeCollection)
 		, _endPos(endPos)
@@ -476,7 +476,7 @@ namespace LCD_UI {
 #endif
 	}
 
-	const char * UI_ShortCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	const char * UI_IteratedCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		auto focus = collection()->focusIndex();		
 		
 		// lambdas
@@ -505,7 +505,7 @@ namespace LCD_UI {
 	}
 
 
-	void UI_ShortCollection::focusHasChanged(bool hasFocus) {
+	void UI_IteratedCollection::focusHasChanged(bool hasFocus) {
 		collection()->focusHasChanged(hasFocus);
 		collection()->begin();
 		_beginIndex = collection()->objectIndex();
@@ -518,7 +518,7 @@ namespace LCD_UI {
 		}
 	}
 
-	int UI_ShortCollection::firstVisibleItem() const {
+	int UI_IteratedCollection::firstVisibleItem() const {
 		auto focus = collection()->focusIndex();
 		if (focus == endIndex()) focus = _beginShow;
 		if (focus >= 0 && _beginShow > focus)
@@ -530,7 +530,7 @@ namespace LCD_UI {
 		return _beginShow;
 	}
 
-	ListStatus UI_ShortCollection::listStatus(int streamIndex) const {
+	ListStatus UI_IteratedCollection::listStatus(int streamIndex) const {
 		auto thisListStatus = ListStatus::e_showingAll;
 		if (streamIndex == _beginShow && _beginShow > _beginIndex) thisListStatus = ListStatus::e_notShowingStart;
 		if (_endShow < endIndex()) {
@@ -540,7 +540,7 @@ namespace LCD_UI {
 		return thisListStatus;
 	}
 
-	void UI_ShortCollection::endVisibleItem(bool thisWasShown, int streamIndex) const {
+	void UI_IteratedCollection::endVisibleItem(bool thisWasShown, int streamIndex) const {
 		// _endShow is streamIndex after the last visible 
 		if (thisWasShown && streamIndex >= _endShow) _endShow = streamIndex + 1;
 		if (!thisWasShown && streamIndex < _endShow) _endShow = streamIndex;

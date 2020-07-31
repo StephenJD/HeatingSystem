@@ -17,21 +17,18 @@ namespace Assembly {
 		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editOnNextItem() }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard,0,0, viewable()}
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editOnNextItem().make_viewAll() }
-		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name,0,0, viewAllUpDn().make_newLine() }
+		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editOnNextItem() }
+		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneUpDnRecycle() }
 		
-		, _progAllNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn().make_newLine() }
+		, _progAllNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name }
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDnRecycle() }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle()}
 		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() }
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
-		, _timeTempUI_sc{ UI_ShortCollection{ 80, _timeTempUI_c } }
-		
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewOneUpDnRecycle().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAll().make_newLine() }
-		, _tempSensorUI_sc{ UI_ShortCollection{ 80, _tempSensorUI_c } }
 		
 		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name }
 		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, &_towelRailNameUI_c }
@@ -59,16 +56,17 @@ namespace Assembly {
 		, _towelRailsLbl{"Room Temp OnFor ToGo"}
 
 		// Pages & sub-pages - Collections of UI handles
+		, _iterated_timeTempUI{80, makeCollection(_timeTempUI_c)}
+		, _iterated_tempSensorUI{ 80, makeCollection(_tempSensorUI_c)}
 		, _page_currTime_c{ makeCollection(_currTimeUI_c, _SDCardUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
-		, _page_zoneReqTemp_c{ makeCollection(_zoneIsReq_UI_c) }
-		, _zone_subpage_c{ makeCollection(_dwellingZoneCmd, _zoneNameUI_c).set(viewAllUpDn())}
+		, _iterated_zoneReqTemp_c{80, makeCollection(_zoneIsReq_UI_c) }
+		, _iterated_zone_name_c{ 80, makeCollection(_zoneNameUI_c)}
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _progAllNameUI_c).set(viewAllUpDn()) }
-		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _zone_subpage_c).set(viewOneUpDnRecycle()) }
-		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _timeTempUI_sc) }
+		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _iterated_zone_name_c).set(viewOneUpDnRecycle()) }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
-		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
-		, _page_tempSensors_c{ makeCollection(_tempSensorUI_sc) }
+		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _deleteTTCmd, _editTTCmd, _newTTCmd, _iterated_timeTempUI) }
+		, _page_tempSensors_c{ makeCollection(_iterated_tempSensorUI) }
 		
 		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c) } // show all elements for one TR
 		, _subpage_towelRails_c{ _towelRails_info_c} // iteration sub. show all TR's
@@ -79,7 +77,7 @@ namespace Assembly {
 		, _page_relays_c{makeCollection(_subpage_relays_c)}
 
 		// Display - Collection of Page Handles
-		, _user_chapter_c{ makeDisplay(_page_currTime_c, _page_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
+		, _user_chapter_c{ makeDisplay(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{_user_chapter_c}
 		, _info_chapter_c{ makeDisplay(_page_towelRails_c, _page_tempSensors_c, _page_relays_c) }
 		, _info_chapter_h{_info_chapter_c}
@@ -107,10 +105,10 @@ namespace Assembly {
 		ui_Objects()[(long)&_info_chapter_c] = "_info_chapter_c";
 		ui_Objects()[(long)&_user_chapter_h] = "_user_chapter_h";
 		ui_Objects()[(long)&_page_currTime_c] = "_page_currTime_c";
-		ui_Objects()[(long)&_page_zoneReqTemp_c] = "_page_zoneReqTemp_c";
+		ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
 		ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
 		ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
-		ui_Objects()[(long)&_timeTempUI_sc] = "_timeTempUI_sc";
+		ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
 		ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
 		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 		ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
