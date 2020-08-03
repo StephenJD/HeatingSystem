@@ -21,7 +21,6 @@ namespace Assembly {
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneUpDnRecycle() }
 		
-		, _progAllNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name }
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDnRecycle() }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle()}
 		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
@@ -49,37 +48,41 @@ namespace Assembly {
 		, _dwellingProgCmd{ "Programs",0 }
 		, _profileDaysCmd{ "Ds:",0}
 		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, viewOneUpDnRecycle().make_newLine() }
-		, _insert{ "Insert-Event", hidden().make_sameLine() }
 		, _deleteTTCmd{ "Delete", 0, viewOneUpDn().make_hidden().make_newLine() }
 		, _editTTCmd{ "Edit", 0, viewOneUpDn().make_hidden().make_viewAll() }
 		, _newTTCmd{ "New", 0, viewOneUpDn().make_hidden() }
 		, _towelRailsLbl{"Room Temp OnFor ToGo"}
 
 		// Pages & sub-pages - Collections of UI handles
-		, _iterated_timeTempUI{80, makeCollection(_timeTempUI_c)}
-		, _iterated_tempSensorUI{ 80, makeCollection(_tempSensorUI_c)}
 		, _page_currTime_c{ makeCollection(_currTimeUI_c, _SDCardUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
+
 		, _iterated_zoneReqTemp_c{80, makeCollection(_zoneIsReq_UI_c) }
+
+		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) }
+		, _iterated_prog_name_c{80, makeCollection(_progNameUI_c)}
+		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c) }
+
 		, _iterated_zone_name_c{ 80, makeCollection(_zoneNameUI_c)}
-		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c).set(viewAllUpDn())  }
-		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _progAllNameUI_c).set(viewAllUpDn()) }
-		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _iterated_zone_name_c).set(viewOneUpDnRecycle()) }
+		, _zone_subpage_c{makeCollection(_dwellingZoneCmd, _iterated_zone_name_c)}
+
+		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _zone_subpage_c) }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
+		
+		, _iterated_timeTempUI{80, makeCollection(_timeTempUI_c)}
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _deleteTTCmd, _editTTCmd, _newTTCmd, _iterated_timeTempUI) }
-		, _page_tempSensors_c{ makeCollection(_iterated_tempSensorUI) }
 		
-		, _towelRails_info_c{ makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c) } // show all elements for one TR
-		, _subpage_towelRails_c{ _towelRails_info_c} // iteration sub. show all TR's
-		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _subpage_towelRails_c) } // shows all fields for each TR
+		// Info Pages
+		, _iterated_tempSensorUI{ 80, makeCollection(_tempSensorUI_c)}
 		
-		, _relays_info_c{makeCollection(_relayNameUI_c, _relayStateUI_c)}
-		, _subpage_relays_c{_relays_info_c}
-		, _page_relays_c{makeCollection(_subpage_relays_c)}
+		, _iterated_towelRails_info_c{80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c) }
+		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _iterated_towelRails_info_c) }
+		
+		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}
 
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeDisplay(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{_user_chapter_c}
-		, _info_chapter_c{ makeDisplay(_page_towelRails_c, _page_tempSensors_c, _page_relays_c) }
+		, _info_chapter_c{ makeDisplay(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c) }
 		, _info_chapter_h{_info_chapter_c}
 	{
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));
@@ -101,37 +104,6 @@ namespace Assembly {
 		// Create infinite loop
 		//display1_h.stream(mainDisplayBuffer);
 #ifdef ZPSIM
-		ui_Objects()[(long)&_user_chapter_c] = "_user_chapter_c";
-		ui_Objects()[(long)&_info_chapter_c] = "_info_chapter_c";
-		ui_Objects()[(long)&_user_chapter_h] = "_user_chapter_h";
-		ui_Objects()[(long)&_page_currTime_c] = "_page_currTime_c";
-		ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
-		ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
-		ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
-		ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
-		ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
-		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
-		ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
-		ui_Objects()[(long)&_zoneIsReq_UI_c] = "_zoneIsReq_UI_c";
-		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
-		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
-		ui_Objects()[(long)&_tt_SubPage_c] = "_tt_SubPage_c";
-		
-		ui_Objects()[(long)&_towelRails_info_c] = "_towelRails_info_c";
-		ui_Objects()[(long)&_subpage_towelRails_c] = "_subpage_towelRails_c";
-		ui_Objects()[(long)&_page_towelRails_c] = "_page_towelRails_c";
-		ui_Objects()[(long)&_towelRailsLbl] = "_towelRailsLbl";
-		ui_Objects()[(long)&_towelRailNameUI_c] = "_towelRailNameUI_c";
-		ui_Objects()[(long)&_towelRailTempUI_c] = "_towelRailTempUI_c";
-		ui_Objects()[(long)&_towelRailOnTimeUI_c] = "_towelRailOnTimeUI_c";
-		ui_Objects()[(long)&_towelRailStatus_c] = "_towelRailStatus_c";
-		
-		ui_Objects()[(long)&_relayNameUI_c] = "_relayNameUI_c";
-		ui_Objects()[(long)&_relayStateUI_c] = "_relayStateUI_c";
-		ui_Objects()[(long)&_relays_info_c] = "_relays_info_c";
-		ui_Objects()[(long)&_subpage_relays_c] = "_subpage_relays_c";
-		ui_Objects()[(long)&_page_relays_c] = "_page_relays_c";
-
 		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getInterface().f_interface().editItem().get();
 		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";
 		auto & tt_Field_Interface = _timeTempUI_c.getInterface().f_interface();
@@ -140,7 +112,34 @@ namespace Assembly {
 		ui_Objects()[(long)&zone_Field_Interface] = "string_Interface";
 		auto & profileDays_Field_Interface = _profileDaysUI_c.getInterface().f_interface();
 		ui_Objects()[(long)&profileDays_Field_Interface] = "profileDays_Field_Interface";
+		
+		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
+		ui_Objects()[(long)&_zoneIsReq_UI_c] = "_zoneIsReq_UI_c";
+		ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
+		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
+		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 
+		ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
+		ui_Objects()[(long)&_towelRailsLbl] = "_towelRailsLbl";
+		ui_Objects()[(long)&_towelRailNameUI_c] = "_towelRailNameUI_c";
+		ui_Objects()[(long)&_towelRailTempUI_c] = "_towelRailTempUI_c";
+		ui_Objects()[(long)&_towelRailOnTimeUI_c] = "_towelRailOnTimeUI_c";
+		ui_Objects()[(long)&_towelRailStatus_c] = "_towelRailStatus_c";
+		ui_Objects()[(long)&_relayStateUI_c] = "_relayStateUI_c";
+		ui_Objects()[(long)&_relayNameUI_c] = "_relayNameUI_c";
+
+		ui_Objects()[(long)&_page_currTime_c] = "_page_currTime_c";
+		ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
+		ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
+		ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
+		ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
+
+		ui_Objects()[(long)&_iterated_towelRails_info_c] = "_iterated_towelRails_info_c";
+		ui_Objects()[(long)&_page_towelRails_c] = "_page_towelRails_c";
+
+		ui_Objects()[(long)&_user_chapter_c] = "_user_chapter_c";
+		ui_Objects()[(long)&_user_chapter_h] = "_user_chapter_h";
+		ui_Objects()[(long)&_info_chapter_c] = "_info_chapter_c";
 #endif
 
 	}

@@ -14,7 +14,6 @@ namespace LCD_UI {
 	class Object_Hndl;
 	class Collection_Hndl;
 	class I_SafeCollection;
-	class UI_IteratedCollection;
 	/// <summary>
 	/// Base-class for Arbitrary sized streamable element types, pointed to by Object_Handles.
 	/// Public interface provides for streaming, run-time switchable bahaviour and selection.
@@ -38,8 +37,8 @@ namespace LCD_UI {
 		virtual Collection_Hndl *	edit(Collection_Hndl * from) { return select(from); }
 		virtual bool				back() { return true; }
 		virtual Behaviour &			behaviour() = 0;
-		void						addBehaviour(Behaviour::BehaviourFlags b) { behaviour().addBehaviour(b); }
-		void						removeBehaviour(Behaviour::BehaviourFlags b) { behaviour().removeBehaviour(b); }
+		UI_Object &					addBehaviour(Behaviour::BehaviourFlags b) { behaviour().addBehaviour(b); return *this; }
+		UI_Object &					removeBehaviour(Behaviour::BehaviourFlags b) { behaviour().removeBehaviour(b); return *this; }
 		virtual void				focusHasChanged(bool hasFocus) {}
 
 		virtual ~UI_Object() = default;
@@ -138,6 +137,7 @@ namespace LCD_UI {
 	//                   Collection Handle Base Class                   //
 	//////////////////////////////////////////////////////////////////////
 	class I_SafeCollection;
+	template<int noOfObjects> class UI_IteratedCollection;
 	class UI_Cmd;
 	/// <summary>
 	/// An Object_Hndl pointing to an I_SafeCollection - possibly a nested collection of Collection_Hndl
@@ -153,8 +153,14 @@ namespace LCD_UI {
 		explicit Collection_Hndl(const UI_Cmd & object); // required to avoid ambiguous construction due to dual-base-types.
 		explicit Collection_Hndl(const I_SafeCollection & safeCollection);
 		explicit Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus);
-		explicit Collection_Hndl(const UI_IteratedCollection & shortList_Hndl, int default_focus = 0);
-
+		template<int noOfObjects>
+		explicit Collection_Hndl::Collection_Hndl(const UI_IteratedCollection<noOfObjects> & shortList_Hndl, int default_focus)
+			: Object_Hndl(shortList_Hndl) {
+				get()->collection()->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
+				set_focus(get()->collection()->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+				move_focus_by(0); // recycle if allowed. 
+			}
+		
 		// Polymorphic Queries
 		bool atEnd(int pos) const;
 		virtual const Behaviour behaviour() const { return get()->behaviour(); }
@@ -356,18 +362,18 @@ namespace LCD_UI {
 	/// The active (parent) field of the sub-collection determins the underlying records to be used.
 	/// Thus iterating this wrapper results in the sub-collection showing its fields for each member of the active field.
 	/// </summary>
-	class UI_IterateSubCollection : public I_SafeCollection {
-	public:
-		UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = viewAll());
-		// Polymorphic Queries
-		Collection_Hndl * leftRight_Collection() override;
-		// Polymorphic Modifiers
-		Object_Hndl * item(int newIndex) override;
-		void setFocusIndex(int focus) override;
+	//class UI_IterateSubCollection : public I_SafeCollection {
+	//public:
+	//	UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = viewAll());
+	//	// Polymorphic Queries
+	//	Collection_Hndl * leftRight_Collection() override;
+	//	// Polymorphic Modifiers
+	//	Object_Hndl * item(int newIndex) override;
+	//	void setFocusIndex(int focus) override;
 
-	private:
-		Collection_Hndl _nestedCollection;
-	};
+	//private:
+	//	Collection_Hndl _nestedCollection;
+	//};
 
 	//////////////////////////////////////////////////////////////////////
 	//                   Static Collection Base Class                   //
@@ -405,7 +411,11 @@ namespace LCD_UI {
 #endif
 			_filter = selectable();
 			setFocusIndex(nextActionableIndex(0));
-		}
+		}		
+		
+		Collection(const Collection<noOfObjects> & collection, Behaviour behaviour) 
+			: I_SafeCollection(noOfObjects, behaviour)
+			, _array(collection._array) {}
 
 		Collection_Hndl * item(int index) override {
 			setObjectIndex(index);
@@ -421,6 +431,30 @@ namespace LCD_UI {
 ////////////////////////////////////////////////////////////////////////
 //         Iterated collection with endPos 
 /////////////////////////////////////////////////////////////////////////
+	class UI_IteratedCollection_Hoist {
+	public:
+		UI_IteratedCollection_Hoist(int endPos)
+			: _endPos(endPos) {}
+
+		int h_firstVisibleItem() const;
+		void h_focusHasChanged(bool hasFocus);
+		const char * h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const;
+		UI_DisplayBuffer::ListStatus h_listStatus(int streamIndex) const;
+		void h_endVisibleItem(bool thisWasShown, int streamIndex) const;
+		Collection_Hndl * h_item(int newIndex);
+		virtual const I_SafeCollection * iterated_collection() const = 0;
+		virtual I_SafeCollection * iterated_collection() = 0;
+		Collection_Hndl * h_leftRight_Collection();
+
+	protected:
+		const int16_t _endPos; // 0-based character endIndex on the display for the end of this list; i.e. no of visible chars including end markers: < ... >.
+		mutable int16_t _beginShow = 0; // streamIndex of first visible element
+		mutable int16_t _endShow = 0; // streamIndex after the last visible element
+		int16_t _beginIndex = 0; // required streamIndex of first element in collection
+		int16_t _itFocus = 0;
+		int16_t _itIndex = 0;
+	};
+
 
 /// <summary>
 /// A View-all Collection which iterates its active member and provides limited-width.
@@ -430,49 +464,48 @@ namespace LCD_UI {
 /// When shared across different displays, it is used as a viewOne-iteration.
 /// </summary>
 	template<int noOfObjects>
-	class UI_IteratedCollection : public Collection<noOfObjects> {
+	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
 		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = viewAll())
 			: Collection<noOfObjects>(collection, behaviour)
-			, _endPos(endPos)
-			, _endShow(endIndex())
+			, UI_IteratedCollection_Hoist(endPos)
 		{}
 
 		// Polymorphic Queries
-		using UI_Object::behaviour;
-		Behaviour & behaviour() override { return collection()->behaviour(); }
-		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override { return collection()->cursorMode(activeElement); }
-		int cursorOffset(const char * data) const override { return collection()->cursorOffset(data); }
-		int objectIndex() const override { return collection()->objectIndex(); }
+		const I_SafeCollection * iterated_collection() const override { return this; }
+		I_SafeCollection * iterated_collection() override { return this; }
+		//using UI_Object::behaviour;
+		//Behaviour & behaviour() override { return collection()->behaviour(); }
+		//HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override { return collection()->cursorMode(activeElement); }
+		//int cursorOffset(const char * data) const override { return collection()->cursorOffset(data); }
+		//int objectIndex() const override { return collection()->objectIndex(); }
 
-		bool isCollection() const override { return collection()->isCollection(); }
-		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override;
+		//bool isCollection() const override { return collection()->isCollection(); }
+		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
 
-		int firstVisibleItem() const override;
+		int firstVisibleItem() const override { return h_firstVisibleItem(); }
 		int fieldEndPos() const override { return _endPos; }
-		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override;
-		void endVisibleItem(bool thisWasShown, int streamIndex) const override;
+		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override {return h_listStatus(streamIndex);}
+		void endVisibleItem(bool thisWasShown, int streamIndex) const override { h_endVisibleItem(thisWasShown, streamIndex); }
 		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
 
 		// Polymorphic Modifiers
-		I_SafeCollection * collection() override { return _nestedCollection->collection(); }
-		const I_SafeCollection * collection() const override { return _nestedCollection->collection(); }
+		//I_SafeCollection * collection() override { return _nestedCollection->collection(); }
+		//const I_SafeCollection * collection() const override { return _nestedCollection->collection(); }
 
-		Object_Hndl * item(int newIndex) override { return collection()->item(newIndex); }
-		void focusHasChanged(bool hasFocus) override;
-		void setObjectIndex(int index) const override { I_SafeCollection::setObjectIndex(index); collection()->setObjectIndex(index); }
-		void setFocusIndex(int focus) override { I_SafeCollection::setFocusIndex(focus); collection()->I_SafeCollection::setFocusIndex(focus); }
+		//Collection_Hndl * item(int newIndex) override {// return member without moving focus
+			
+			//return h_item(newIndex);
+		//}
+
+		Collection_Hndl * leftRight_Collection() { return h_leftRight_Collection(); }
+
+		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
+		//void setObjectIndex(int index) const override { I_SafeCollection::setObjectIndex(index); collection()->setObjectIndex(index); }
+		//void setFocusIndex(int focus) override { I_SafeCollection::setFocusIndex(focus); collection()->I_SafeCollection::setFocusIndex(focus); }
 
 	private:
-		int endIndex() const { return collection()->endIndex(); }
-		Collection_Hndl _nestedCollection;
-		const int16_t _endPos; // 0-based character endIndex on the display for the end of this list; i.e. no of visible chars including end markers: < ... >.
-		mutable int16_t _beginShow = 0; // streamIndex of first visible element
-		mutable int16_t _endShow; // streamIndex after the last visible element
-		int16_t _beginIndex = 0; // required streamIndex of first element in collection
-		int16_t _itFocus = 0;
-		int16_t _itIndex = 0;
 	};
 
 	/// <summary>
@@ -482,7 +515,7 @@ namespace LCD_UI {
 	/// </summary>
 	template<typename... Args>
 	auto makeCollection(Args & ... args) -> Collection<sizeof...(args)> {
-		return Collection<sizeof...(args), Collection_Hndl>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, viewAllRecycle());
+		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, viewAllRecycle());
 	}
 
 }

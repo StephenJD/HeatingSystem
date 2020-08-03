@@ -37,7 +37,6 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _zoneIsReq_UI_c;
 		LCD_UI::UI_FieldData _zoneNameUI_c;
 		LCD_UI::UI_FieldData _zoneAbbrevUI_c;
-		LCD_UI::UI_FieldData _progAllNameUI_c;
 		LCD_UI::UI_FieldData _progNameUI_c;
 		LCD_UI::UI_FieldData _dwellSpellUI_c;
 		LCD_UI::UI_FieldData _spellProgUI_c;
@@ -60,33 +59,33 @@ namespace Assembly {
 		LCD_UI::UI_Cmd _dwellingZoneCmd, _dwellingCalendarCmd, _dwellingProgCmd;
 		LCD_UI::UI_Cmd _profileDaysCmd;
 		client_data_structures::InsertSpell_Cmd _fromCmd;
-		LCD_UI::UI_Label _insert;
 		client_data_structures::InsertTimeTemp_Cmd _deleteTTCmd;
 		client_data_structures::InsertTimeTemp_Cmd _editTTCmd;
 		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
 		LCD_UI::UI_Label _towelRailsLbl;
 		
 		// Pages & sub-pages - Collections of UI handles
-		LCD_UI::UI_IteratedCollection<1> _iterated_timeTempUI;
-		LCD_UI::UI_IteratedCollection<1> _iterated_tempSensorUI;
 		LCD_UI::Collection<7> _page_currTime_c;
 		LCD_UI::UI_IteratedCollection<1> _iterated_zoneReqTemp_c;
-		LCD_UI::UI_IteratedCollection<1> _iterated_zone_name_c;
 		LCD_UI::Collection<5> _calendar_subpage_c;
+		LCD_UI::UI_IteratedCollection<1> _iterated_prog_name_c;
 		LCD_UI::Collection<2> _prog_subpage_c;
-		LCD_UI::Collection<3> _page_dwellingMembers_subpage_c;
 
+		LCD_UI::UI_IteratedCollection<1> _iterated_zone_name_c;
+		LCD_UI::Collection<2> _zone_subpage_c;
+
+		LCD_UI::Collection<3> _page_dwellingMembers_subpage_c;
 		LCD_UI::Collection<2> _page_dwellingMembers_c;
+
+		LCD_UI::UI_IteratedCollection<1> _iterated_timeTempUI;
 		LCD_UI::Collection<8> _page_profile_c;
-		LCD_UI::Collection<1> _page_tempSensors_c;
-		
-		LCD_UI::Collection<4> _towelRails_info_c;
-		LCD_UI::UI_IterateSubCollection _subpage_towelRails_c;
+		// Info pages
+		LCD_UI::UI_IteratedCollection<1> _iterated_tempSensorUI;
+	
+		LCD_UI::UI_IteratedCollection<4> _iterated_towelRails_info_c;
 		LCD_UI::Collection<2> _page_towelRails_c;
 		
-		LCD_UI::Collection<2> _relays_info_c;
-		LCD_UI::UI_IterateSubCollection _subpage_relays_c;
-		LCD_UI::Collection<1> _page_relays_c;
+		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;
 
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4> _user_chapter_c;

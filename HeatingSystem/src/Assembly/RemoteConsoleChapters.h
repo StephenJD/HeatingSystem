@@ -19,10 +19,10 @@ namespace Assembly {
 		LCD_UI::UI_Label _rem_is_lbl;
 		// Display - Collection of Page Handles
 	public:
-		LCD_UI::Collection<5, LCD_UI::Collection_Hndl> remotePage_c;
-		LCD_UI::UI_IterateSubCollection _remote_page_group_c;
+		LCD_UI::UI_IteratedCollection<5> remotePage_c;
+
 	private:
-		LCD_UI::Collection<1, LCD_UI::Collection_Hndl> _remote_chapter_c;
+		LCD_UI::Collection<1> _remote_chapter_c;
 		LCD_UI::A_Top_UI _remote_chapter_h;
 	};
 }

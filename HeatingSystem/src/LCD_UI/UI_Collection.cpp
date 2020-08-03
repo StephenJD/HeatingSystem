@@ -1,6 +1,7 @@
 #include "UI_Collection.h"
 #include "UI_LazyCollection.h"
 #include "UI_Cmd.h"
+#include "Logging.h"
 
 #ifdef ZPSIM
 	#include <ostream>
@@ -69,20 +70,13 @@ namespace LCD_UI {
 
 	Collection_Hndl::Collection_Hndl(const UI_Object * object) : Object_Hndl(object) {}
 
-	Collection_Hndl::Collection_Hndl(const UI_IteratedCollection & shortList_Hndl, int default_focus)
-		: Object_Hndl(shortList_Hndl) {
-		get()->collection()->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
-		set_focus(get()->collection()->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
-		move_focus_by(0); // recycle if allowed. 
-	}
-
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
-		//if (auto collection = get()->collection()) {
-		//	collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
-		//	set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
-		//	move_focus_by(0); // recycle if allowed. 
-		//}
+		if (auto collection = get()->collection()) {
+			collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
+			set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+			move_focus_by(0); // recycle if allowed. 
+		}
 	}
 
 	CursorMode Collection_Hndl::cursorMode(const Object_Hndl * activeElement) const {
@@ -424,66 +418,63 @@ namespace LCD_UI {
 	// **********   UI_IterateSubCollection **********
 	///////////////////////////////////////////
 
-	UI_IterateSubCollection::UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour)
-		: I_SafeCollection(1, behaviour)
-		, _nestedCollection(&safeCollection)
-	{
-#ifdef ZPSIM
-		logger() << F("UI_IterateSubCollection at: ") << (long)this << F(" with collHdl at ") << (long)&_nestedCollection << F(" to: ") << (long)collection() << L_endl;
-#endif
-		safeCollection.setFocusIndex(safeCollection.nextActionableIndex(safeCollection.focusIndex()));
-		auto wrappedActiveField = safeCollection.item(safeCollection.focusIndex());
-		auto wrappedCount = wrappedActiveField->get()->collection()->endIndex();
-		setCount(wrappedCount); // look like a collection of its nested collection
-	}
+//	UI_IterateSubCollection::UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour)
+//		: I_SafeCollection(1, behaviour)
+//		, _nestedCollection(&safeCollection)
+//	{
+//#ifdef ZPSIM
+//		logger() << F("UI_IterateSubCollection at: ") << (long)this << F(" with collHdl at ") << (long)&_nestedCollection << F(" to: ") << (long)collection() << L_endl;
+//#endif
+//		safeCollection.setFocusIndex(safeCollection.nextActionableIndex(safeCollection.focusIndex()));
+//		auto wrappedActiveField = safeCollection.item(safeCollection.focusIndex());
+//		auto wrappedCount = wrappedActiveField->get()->collection()->endIndex();
+//		setCount(wrappedCount); // look like a collection of its nested collection
+//	}
 
-	Object_Hndl * UI_IterateSubCollection::item(int newIndex) { // return member without moving focus
-		cout << F("\tUI_IterateSubCollection: ") << ui_Objects()[(long)this] << " Nested : " << ui_Objects()[(long)_nestedCollection.get()] << endl;
-		auto active = _nestedCollection.activeUI();
-		active->get()->collection()->move_to_object(newIndex);
-#ifdef ZPSIM
-		cout << F("\t\tactive item: ") << ui_Objects()[(long)active->get()->collection()];
-		cout << " NewIndex : " << newIndex << " SubCollection obj: " << objectIndex() << " SubCollection Focus: " << focusIndex() << endl;
-#endif
-		return &_nestedCollection;
-	}
+	//void UI_IterateSubCollection::setFocusIndex(int focus) {
+	//	I_SafeCollection::setFocusIndex(focus);
+	//	auto active = _nestedCollection.activeUI();
+	//	active->get()->collection()->setFocusIndex(focus);
+	//}
 
-	void UI_IterateSubCollection::setFocusIndex(int focus) {
-		I_SafeCollection::setFocusIndex(focus);
-		auto active = _nestedCollection.activeUI();
-		active->get()->collection()->setFocusIndex(focus);
-	}
-
-	Collection_Hndl * UI_IterateSubCollection::leftRight_Collection() {
-		auto activeHdl = _nestedCollection.activeUI();
-		if (activeHdl->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
-			return activeHdl;
-		} else return 0;
-	}
+	//Collection_Hndl * UI_IterateSubCollection::leftRight_Collection() {
+	//	auto activeHdl = _nestedCollection.activeUI();
+	//	if (activeHdl->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
+	//		return activeHdl;
+	//	} else return 0;
+	//}
 
 	///////////////////////////////////////////
 	// **********   UI_IteratedCollection **********
 	///////////////////////////////////////////
 
-	UI_IteratedCollection::UI_IteratedCollection(int endPos, I_SafeCollection & safeCollection)
-		: I_SafeCollection(safeCollection.endIndex(), viewable())
-		, _nestedCollection(&safeCollection)
-		, _endPos(endPos)
-		, _endShow(endIndex())
-	{
-#ifdef ZPSIM
-		logger() << F("Sort_Coll at: ") << (long)this << F(" with collHdl at ") << (long)&_nestedCollection << F(" to: ") << (long)collection() << L_endl;
-#endif
+//	UI_IteratedCollection::UI_IteratedCollection(int endPos, I_SafeCollection & safeCollection)
+//		: I_SafeCollection(safeCollection.endIndex(), viewable())
+//		, _nestedCollection(&safeCollection)
+//		, _endPos(endPos)
+//		, _endShow(endIndex())
+//	{
+//#ifdef ZPSIM
+//		logger() << F("Sort_Coll at: ") << (long)this << F(" with collHdl at ") << (long)&_nestedCollection << F(" to: ") << (long)collection() << L_endl;
+//#endif
+//	}
+
+
+	Collection_Hndl * UI_IteratedCollection_Hoist::h_leftRight_Collection() {
+		auto activeHdl = iterated_collection()->activeUI();
+		if (activeHdl->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
+			return activeHdl;
+		} else return 0;
 	}
 
-	const char * UI_IteratedCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		auto focus = collection()->focusIndex();		
+	const char * UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+		auto focus = iterated_collection()->focusIndex();
 		
 		// lambdas
 		auto endOfBufferSoFar = [&buffer]() {return strlen(buffer.toCStr());};
 		auto thisElementIsOnAnewLine = [&buffer](size_t bufferStart) {return buffer.toCStr()[bufferStart -1] == '~';};
 		auto removeNewLineSymbol = [](size_t & bufferStart) {--bufferStart; };
-		auto elementHasfocus = [focus, this]() {return (focus >= 0 && focus < endIndex()) ? true : false; };
+		auto elementHasfocus = [focus, this]() {return (focus >= 0 && focus < iterated_collection()->endIndex()) ? true : false; };
 		auto startThisField = [&buffer](size_t bufferStart, bool newLine) {
 			buffer.truncate(bufferStart);
 			if (newLine) buffer.newLine();
@@ -498,49 +489,63 @@ namespace LCD_UI {
 		do {
 			//cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects()[(long)get()] << endl;
 			startThisField(bufferStart, mustStartNewLine);
-			collection()->streamElement(buffer, activeElement, this, streamIndex);
+			iterated_collection()->streamElement(buffer, activeElement, iterated_collection(), streamIndex);
 		} while (hasFocus && _beginShow != _endShow && (focus < _beginShow || focus >= _endShow));
 
 		return 0;
 	}
 
-
-	void UI_IteratedCollection::focusHasChanged(bool hasFocus) {
-		collection()->focusHasChanged(hasFocus);
-		collection()->begin();
-		_beginIndex = collection()->objectIndex();
-		setCount(collection()->endIndex());
-		collection()->setCount(endIndex());
-		_endShow = endIndex();
-		_beginShow = _beginIndex;
-		if (_beginShow >= _endShow) {
-			_beginShow = collection()->prevActionableIndex(_endShow);
-		}
+	Collection_Hndl * UI_IteratedCollection_Hoist::h_item(int newIndex) {// return member without moving focus
+		cout << F("\tUI_IteratedCollection: ") << ui_Objects()[(long)iterated_collection()] << endl;
+		auto active = iterated_collection()->activeUI();
+		active->get()->collection()->move_to_object(newIndex);
+#ifdef ZPSIM
+		cout << F("\t\tactive item: ") << ui_Objects()[(long)active->get()->collection()];
+		cout << " NewIndex : " << newIndex << " SubCollection obj: " << iterated_collection()->objectIndex() << " SubCollection Focus: " << iterated_collection()->focusIndex() << endl;
+#endif
+		return active;
 	}
 
-	int UI_IteratedCollection::firstVisibleItem() const {
-		auto focus = collection()->focusIndex();
-		if (focus == endIndex()) focus = _beginShow;
+	void UI_IteratedCollection_Hoist::h_focusHasChanged(bool hasFocus) {
+		//if (iterated_collection()) {
+			auto & coll = *iterated_collection();
+			//coll.focusHasChanged(hasFocus);
+			coll.begin();
+			_beginIndex = coll.objectIndex();
+			coll.setCount(coll.endIndex());
+			coll.setCount(coll.endIndex());
+			_endShow = coll.endIndex();
+			_beginShow = _beginIndex;
+			if (_beginShow >= _endShow) {
+				_beginShow = coll.prevActionableIndex(_endShow);
+			}
+		//}
+	}
+
+	int UI_IteratedCollection_Hoist::h_firstVisibleItem() const {
+		auto & coll = *iterated_collection();
+		auto focus = coll.focusIndex();
+		if (focus == coll.endIndex()) focus = _beginShow;
 		if (focus >= 0 && _beginShow > focus)
 			_beginShow = focus; // move back through the list
 		if (_endShow <= focus) { // move forward through the list
-			_beginShow = collection()->nextIndex(_beginShow);
-			_endShow = endIndex();
+			_beginShow = coll.nextIndex(_beginShow);
+			_endShow = coll.endIndex();
 		}
 		return _beginShow;
 	}
 
-	ListStatus UI_IteratedCollection::listStatus(int streamIndex) const {
+	ListStatus UI_IteratedCollection_Hoist::h_listStatus(int streamIndex) const {
 		auto thisListStatus = ListStatus::e_showingAll;
 		if (streamIndex == _beginShow && _beginShow > _beginIndex) thisListStatus = ListStatus::e_notShowingStart;
-		if (_endShow < endIndex()) {
+		if (_endShow < iterated_collection()->endIndex()) {
 			thisListStatus = ListStatus(thisListStatus | ListStatus::e_not_showingEnd);
 			if (streamIndex > _endShow) thisListStatus = ListStatus(thisListStatus | ListStatus::e_this_not_showing);
 		}
 		return thisListStatus;
 	}
 
-	void UI_IteratedCollection::endVisibleItem(bool thisWasShown, int streamIndex) const {
+	void UI_IteratedCollection_Hoist::h_endVisibleItem(bool thisWasShown, int streamIndex) const {
 		// _endShow is streamIndex after the last visible 
 		if (thisWasShown && streamIndex >= _endShow) _endShow = streamIndex + 1;
 		if (!thisWasShown && streamIndex < _endShow) _endShow = streamIndex;

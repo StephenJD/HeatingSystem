@@ -108,7 +108,7 @@ void HeatingSystem::serviceConsoles() {
 		auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
 		cout << "\nRemote activeField: " << ui_Objects()[(long)activeField->get()] << endl;
 		activeField->setFocusIndex(i);
-		logger() << "Remote PageGroup focus: " << _remoteConsoleChapters._remote_page_group_c.focusIndex() << L_endl;
+		//logger() << "Remote PageGroup focus: " << _remoteConsoleChapters._remote_page_group_c.focusIndex() << L_endl;
 		remote.processKeys();
 		++i;
 		if (i == 2) ++i;
