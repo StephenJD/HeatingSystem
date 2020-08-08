@@ -93,7 +93,7 @@ namespace LCD_UI {
 		}
 		
 		auto wrapper = _data->getFieldAt(fieldID(), elementIndex);
-		setObjectIndex(_data->recordID());
+		LazyCollection::setObjectIndex(_data->recordID());
 		if (atEnd(objectIndex()) || objectIndex() == -1) return 0;
 		_field_Interface_h.f_interface().setWrapper(wrapper);
 		return &_field_Interface_h;
@@ -102,21 +102,22 @@ namespace LCD_UI {
 	const char * UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.	
 #ifdef ZPSIM
-		cout << "UI_FieldData::stream all Elements of " << ui_Objects()[(long)this] << endl;
+		//cout << "UI_FieldData::stream all Elements of " << ui_Objects()[(long)this] << endl;
+		//cout << "UI_FieldData::one Element of " << ui_Objects()[(long)this] << endl;
 #endif
 		auto focus_index = LazyCollection::focusIndex();
-		for (auto & element : *this) {
-			auto endVisibleIndex = shortColl->endVisibleItem();
+		//for (auto & element : *this) {
+		//	auto endVisibleIndex = shortColl->endVisibleItem();
 			auto objIndex = objectIndex();
-			if (endVisibleIndex) {
-				if (objIndex < shortColl->firstVisibleItem()) continue;
-				if (objIndex > shortColl->endVisibleItem()) break;
-			}
+		//	if (endVisibleIndex) {
+		//		if (objIndex < shortColl->firstVisibleItem()) continue;
+		//		if (objIndex > shortColl->endVisibleItem()) break;
+		//	}
 
 			auto activeEl = activeElement;
-			if (objIndex != focus_index) activeEl = 0;
+			//if (objIndex != focus_index) activeEl = 0;
 			_field_Interface_h.streamElement(buffer, activeEl, shortColl, objIndex);
-		}
+		//}
 		return buffer.toCStr();
 	}
 

@@ -43,6 +43,7 @@ namespace LCD_UI {
 		Collection_Hndl * item(int elementIndex) override;
 		void focusHasChanged(bool hasFocus) override;
 		void setFocusIndex(int focus) override;
+		void setObjectIndex(int index) const override {;} // done by item()
 		void insertNewData();
 		void deleteData();
 		void set_OnSelFn_TargetUI(Collection_Hndl * obj);

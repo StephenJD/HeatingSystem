@@ -50,7 +50,7 @@ namespace LCD_UI {
 	/// </summary>
 	class LazyCollection : public I_SafeCollection { // array-semantics wrapper for lazy-initialisation
 	public:
-		LazyCollection(int count, Behaviour behaviour) : I_SafeCollection(count, behaviour) {}
+		LazyCollection(int count, Behaviour behaviour = viewOneUpDnRecycle()) : I_SafeCollection(count, behaviour) {}
 
 		// Modifiers
 		Collection_Hndl * item(int newIndex) override = 0;

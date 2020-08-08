@@ -241,7 +241,7 @@ namespace LCD_UI {
 						//if (focusIndex() != i) {
 						//	thisActiveObj = 0;
 						//}
-						//cout << F("Streaming ViewAll ") << ui_Objects()[(long)ith_collectionPtr] << " Active: " << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
+						cout << F("Streaming ViewAll ") << ui_Objects()[(long)ith_collectionPtr] << " Active: " << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
 						ith_collectionPtr->streamElement(buffer, thisActiveObj, static_cast<const I_SafeCollection *>(ith_objectPtr), i);
 					}
 					else {
@@ -260,7 +260,7 @@ namespace LCD_UI {
 					cout << F("\tSet Active to 0: ") << endl;
 				}
 				if (active) {
-					cout << F("\tActive member is: ") << ui_Objects()[(long)active->get()] << " Active Focus is: " << active->focusIndex() << " Act ObjectInd: " << active->get()->collection()->objectIndex() << endl;
+					cout << F("\tActive member is: ") << ui_Objects()[(long)active->get()] << " Active Focus is: " << active->focusIndex() << " Act ObjectInd: " << (active->get()->collection() ? active->get()->collection()->objectIndex() : 0) << endl;
 					active->streamElement(buffer, activeElement, shortColl, streamIndex);
 				}
 			}
@@ -318,11 +318,21 @@ namespace LCD_UI {
 
 	int I_SafeCollection::nextActionableIndex(int index) const { // index must be in valid range including endIndex()
 		// returns endIndex() if none found
-		setObjectIndex(index);
-		while (!atEnd(objectIndex()) && !isActionableObjectAt(objectIndex()) && !atEnd(objectIndex())) {
-			setObjectIndex(nextIndex(objectIndex()));
+		//setObjectIndex(index);
+		//while (!atEnd(objectIndex()) && !isActionableObjectAt(objectIndex()) && !atEnd(objectIndex())) {
+		//	setObjectIndex(nextIndex(objectIndex()));
+		//}
+		while (!atEnd(index) && !isActionableObjectAt(index) /*&& !atEnd(index)*/) { //Database query moves record to next valid ID		
+			index = nextIndex(index);
+			//index = nextIndex(objectIndex());
+			//setObjectIndex(nextIndex(index));
+			//index = objectIndex();
 		}
-		if (atEnd(objectIndex())) setObjectIndex(_count);
+		if (atEnd(index)) {
+			I_SafeCollection::setObjectIndex(_count);
+		} else {
+			setObjectIndex(index); // does nothing for database queries.
+		}
 		return objectIndex();
 	}
 
@@ -468,8 +478,11 @@ namespace LCD_UI {
 	}
 
 	const char * UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		auto focus = iterated_collection()->focusIndex();
-		
+		// Set the activeUI to object-index 0 and Stream all the elements
+		// Then move the activeUI to the next object-index and re-stream all the elements
+		// Keep going till all members of the activeUI have been streamed
+
+		auto focus = iterated_collection()->I_SafeCollection::focusIndex();
 		// lambdas
 		auto endOfBufferSoFar = [&buffer]() {return strlen(buffer.toCStr());};
 		auto thisElementIsOnAnewLine = [&buffer](size_t bufferStart) {return buffer.toCStr()[bufferStart -1] == '~';};
@@ -481,16 +494,30 @@ namespace LCD_UI {
 		};
 
 		// algorithm
-		auto bufferStart = endOfBufferSoFar();
-		auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
-		if (mustStartNewLine) removeNewLineSymbol(bufferStart);
-		auto hasFocus = elementHasfocus();
+		auto & iteratedActiveUI_h = *const_cast<I_SafeCollection*>(iterated_collection())->activeUI();
+		auto numberOfIterations = 1;
+		if (iteratedActiveUI_h->isCollection()) {
+			numberOfIterations = iteratedActiveUI_h->endIndex();
+		}
+		
+		for (_itIndex = iteratedActiveUI_h->nextActionableIndex(0); 
+			_itIndex < iteratedActiveUI_h->endIndex(); 
+			_itIndex = iteratedActiveUI_h->nextActionableIndex(++_itIndex)) {
+			for (auto & object : *iterated_collection()) {
+				cout << F("Iteration-Streaming [") << _itIndex << "] " << ui_Objects()[(long)&object] << endl;
+				if (activeElement && _itIndex != activeElement->get()->collection()->focusIndex())
+					activeElement = 0;
+				auto bufferStart = endOfBufferSoFar();
+				auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
+				if (mustStartNewLine) removeNewLineSymbol(bufferStart);
+				auto hasFocus = elementHasfocus();
 
-		do {
-			//cout << F("Streaming : ") << L_hex << (long)get() << F_COLON << ui_Objects()[(long)get()] << endl;
-			startThisField(bufferStart, mustStartNewLine);
-			iterated_collection()->streamElement(buffer, activeElement, iterated_collection(), streamIndex);
-		} while (hasFocus && _beginShow != _endShow && (focus < _beginShow || focus >= _endShow));
+				do {
+					startThisField(bufferStart, mustStartNewLine);
+					object.streamElement(buffer, activeElement, iterated_collection(), streamIndex);
+				} while (hasFocus && _beginShow != _endShow && (focus < _beginShow || focus >= _endShow));
+			}
+		}
 
 		return 0;
 	}
@@ -566,9 +593,12 @@ namespace LCD_UI {
 	}
 
 	I_SafeCollection & Coll_Iterator::operator*() { // index must be in-range
+	//UI_Object & Coll_Iterator::operator*() { // index must be in-range
 		//auto & collectibleHndl = _collection->at(_index); // returns the element as a collectibleHndl
 		//auto & collection_Proxy = static_cast<const Collection_Hndl&>(collectibleHndl); // Interpret it as a Proxy
 		//auto & safeCollection = collection_Proxy.get()->collection(); // return its pointer as a safeCollection reference
-		return *static_cast<Collection_Hndl&>(*_collection->item(_index)).get()->collection();
+		auto object = static_cast<Collection_Hndl&>(*_collection->item(_index)).get();
+		auto collection = object->collection();
+		if (collection) return *collection; else return static_cast<I_SafeCollection &>(*object);
 	}
 }

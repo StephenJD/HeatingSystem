@@ -529,16 +529,18 @@ TEST_CASE("View-All with Names", "[Display]") {
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
 
 	// UI Elements
 	UI_Label L1("L1");
 	UI_Cmd C3("C3", 0);
 
-	// UI Element Arays / Collections
+	// UI Element Arrays / Collections
 	cout << "\npage1 Collection\n";
-	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, progNameUI_c, C3);
+	auto iterated_zoneNames = UI_IteratedCollection{ 32,makeCollection(zoneNameUI_c) };
+	auto iterated_progNames = UI_IteratedCollection{ 56,makeCollection(progNameUI_c) };
+	auto page1_c = makeCollection(L1, dwellNameUI_c, iterated_zoneNames, iterated_progNames, C3);
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeDisplay(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -546,6 +548,8 @@ TEST_CASE("View-All with Names", "[Display]") {
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
 	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[(long)&iterated_zoneNames] = "iterated_zoneNames";
+	ui_Objects()[(long)&iterated_progNames] = "iterated_progNames";
 	ui_Objects()[(long)&C3] = "C3";
 	ui_Objects()[(long)&L1] = "L1";
 	ui_Objects()[(long)&display1_c] = "display1_c";
@@ -557,6 +561,7 @@ TEST_CASE("View-All with Names", "[Display]") {
 	cout << test_stream(display1_h.stream(tb)) << endl;
 	display1_h.stream(tb);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
+	//                                           012345678901234567890123456789012345678901234567890123456789
 	display1_h.rec_left_right(1); // moves page focus to zones
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s DnStrs DHW    At Home At Work Away    C3");
 	display1_h.rec_left_right(-1);
@@ -798,9 +803,9 @@ TEST_CASE("Short List Items", "[Display]") {
 	auto label_c = makeCollection(C1, C2, C3, C4);
 
 	cout << "\n **** Next create Short-collection wrappers ****\n";
-	auto zoneName_sc = UI_IteratedCollection{19, zoneNameUI_c};
-	auto progName_sc = UI_IteratedCollection{30, progNameUI_c};
-	auto label_sc = UI_IteratedCollection{3, label_c };
+	auto zoneName_sc = UI_IteratedCollection{19, makeCollection(zoneNameUI_c)};
+	auto progName_sc = UI_IteratedCollection{30, makeCollection(progNameUI_c)};
+	auto label_sc = UI_IteratedCollection{3, makeCollection(label_c) };
 
 	// UI Element Arays / Collections	cout << "\npage1 Collection\n";
 	cout << "\npage1 Collection\n";
@@ -1447,7 +1452,6 @@ TEST_CASE("Edit Date Data", "[Display]") {
 
 	cout << "Size of UI_FieldData is " << dec << sizeof(dwellSpellUI_c) << endl;
 	cout << "Size of Field_Interface_h is " << dec << sizeof(Field_Interface_h) << endl;
-	cout << "Size of ShortCollection is " << dec << sizeof(UI_IteratedCollection) << endl;
 	cout << "Size of LazyCollection is " << dec << sizeof(LazyCollection) << endl;
 	cout << "Size of I_SafeCollection is " << dec << sizeof(I_SafeCollection) << endl;
 	cout << "Size of Collection_Hndl is " << dec << sizeof(Collection_Hndl) << endl;
@@ -2299,7 +2303,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() };
 	cout << "\ttimeTemp\n";
 	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
-	auto _iterated_timeTempUI = UI_IteratedCollection{ 80, _timeTempUI_c };
+	auto _iterated_timeTempUI = UI_IteratedCollection{ 80, makeCollection(_timeTempUI_c) };
 
 	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, viewOneUpDn().make_hidden().make_newLine()};
 	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, viewAll().make_hidden()};

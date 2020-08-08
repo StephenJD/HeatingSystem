@@ -411,6 +411,7 @@ namespace LCD_UI {
 #endif
 			_filter = selectable();
 			setFocusIndex(nextActionableIndex(0));
+			filter(viewable());
 		}		
 		
 		Collection(const Collection<noOfObjects> & collection, Behaviour behaviour) 
@@ -452,7 +453,7 @@ namespace LCD_UI {
 		mutable int16_t _endShow = 0; // streamIndex after the last visible element
 		int16_t _beginIndex = 0; // required streamIndex of first element in collection
 		int16_t _itFocus = 0;
-		int16_t _itIndex = 0;
+		mutable int16_t _itIndex = 0;
 	};
 
 
