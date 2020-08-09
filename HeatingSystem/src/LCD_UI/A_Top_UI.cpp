@@ -52,6 +52,7 @@ namespace LCD_UI {
 		while (_cursorUI->get()->isCollection()) {
 			auto parent = _cursorUI;
 			auto newActive = _cursorUI->activeUI(); // the focus lies in a nested collection
+			logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << " Active: " << (newActive? ui_Objects()[(long)(newActive->get())].c_str():"") << L_endl;
 			if (newActive == 0) break;
 			_cursorUI = newActive;
 			if (_cursorUI->backUI() == 0) _cursorUI->setBackUI(parent);
@@ -63,15 +64,15 @@ namespace LCD_UI {
 			topUI = topUI->backUI();
 		}
 		_leftRightBackUI = topUI;
-		//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
 		if (innerLeftRight) {
 			auto inner_UI_h = innerLeftRight;
 			auto innerIsCollection = false;
 			do {
-				//logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
+				logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
 				if (inner_UI_h->get()->behaviour().is_viewAll()) {
-					//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
+					logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
 					_leftRightBackUI = inner_UI_h;
 					inner_UI_h->enter_collection(direction);
 				}
@@ -165,7 +166,8 @@ namespace LCD_UI {
 
 		set_UpDownUI_from(_leftRightBackUI);
 		_cursorUI->setCursorPos();
-		_leftRightBackUI->move_focus_by(0);
+		//_leftRightBackUI->move_focus_by(0);
+		_upDownUI->move_focus_by(0);
 		if (wasInEdit)
 			rec_edit();
 
@@ -174,6 +176,7 @@ namespace LCD_UI {
 		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
+		logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
 #endif
 	}
 

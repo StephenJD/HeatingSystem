@@ -92,9 +92,15 @@ namespace LCD_UI {
 		return data ? strlen(data) - 1 : 0;
 	}
 
-	Collection_Hndl * Collection_Hndl::activeUI() {
+	Collection_Hndl * Collection_Hndl::activeUI() { //  returns validated focus element - index is made in-range
 		if (auto collection = get()->collection()) {
-			return static_cast<Collection_Hndl*>(collection->item(collection->validIndex(focusIndex())));;
+			auto validFocus = collection->validIndex(focusIndex());
+			auto newObject = collection->item(validFocus);
+			if (newObject == 0) {
+				newObject = collection->item(0);
+				collection->setFocusIndex(collection->objectIndex());
+			}
+			return static_cast<Collection_Hndl*>(newObject);
 		}
 		else return this;
 	} // must return polymorphicly
@@ -472,9 +478,9 @@ namespace LCD_UI {
 
 	Collection_Hndl * UI_IteratedCollection_Hoist::h_leftRight_Collection() {
 		auto activeHdl = iterated_collection()->activeUI();
-		if (activeHdl->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
+		//if (activeHdl->get()->collection()->cursorMode(activeHdl->activeUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 			return activeHdl;
-		} else return 0;
+		//} else return 0;
 	}
 
 	const char * UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
@@ -504,7 +510,7 @@ namespace LCD_UI {
 			_itIndex < iteratedActiveUI_h->endIndex(); 
 			_itIndex = iteratedActiveUI_h->nextActionableIndex(++_itIndex)) {
 			for (auto & object : *iterated_collection()) {
-				cout << F("Iteration-Streaming [") << _itIndex << "] " << ui_Objects()[(long)&object] << endl;
+				cout << F("Iteration-Streaming [") << _itIndex << "] " << ui_Objects()[(long)&object] << " Active: " << (activeElement? ui_Objects()[(long)activeElement->get()] : "") <<  endl;
 				if (activeElement && _itIndex != activeElement->get()->collection()->focusIndex())
 					activeElement = 0;
 				auto bufferStart = endOfBufferSoFar();

@@ -91,7 +91,7 @@ namespace LCD_UI {
 	// *********************************************
 
 	Field_Interface_h::Field_Interface_h(I_Field_Interface & fieldInterfaceObj, Behaviour editBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
-		: Collection_Hndl(fieldInterfaceObj), _editBehaviour(editBehaviour), _fieldID(fieldID), _data(parent), _onSelect(onSelect)
+		: Collection_Hndl(fieldInterfaceObj), _editBehaviour(editBehaviour), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
 	{
 		fieldInterfaceObj.behaviour() = viewOneSelectable();
 	}

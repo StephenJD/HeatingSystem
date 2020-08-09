@@ -78,7 +78,7 @@ namespace LCD_UI {
 		CursorMode cursor_Mode() const { return _cursorMode; }
 		int fieldID() { return _fieldID; }
 		Behaviour editBehaviour() const { return _editBehaviour; }
-		UI_FieldData * getData() { return _data; }
+		UI_FieldData * getData() { return _parentColln; }
 		OnSelectFnctr & onSelect() { return _onSelect; }
 		// New modifiers
 		void setCursorMode(CursorMode mode) { _cursorMode = mode; }
@@ -91,7 +91,7 @@ namespace LCD_UI {
 		CursorMode _cursorMode = HardwareInterfaces::LCD_Display::e_unselected;
 		Behaviour _editBehaviour;
 		const uint8_t _fieldID; // placed here to reduce padding
-		UI_FieldData * _data;
+		UI_FieldData * _parentColln; // LazyCollection
 		OnSelectFnctr _onSelect;
 	};
 }
