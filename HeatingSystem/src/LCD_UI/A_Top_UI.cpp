@@ -170,10 +170,11 @@ namespace LCD_UI {
 			rec_edit();
 
 #ifdef ZPSIM
-		//logger() << F("\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		//logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
-		//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
-		//logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
+		logger() << F("\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
+		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
+		logger() << F("\tcursorUI(): ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
 #endif
 	}
 
