@@ -154,8 +154,7 @@ using namespace HeatingSystemSupport;
 LocalLCD_Pinset localLCDpins() {
 	if (analogRead(0) < 10) {
 		return{ 26, 46, 44, 42, 40, 38, 36, 34, 32, 30, 28 }; // old board
-	}
-	else {
+	} else {
 		return{ 46, 44, 42, 40, 38, 36, 34, 32, 30, 28, 26 }; // new board
 	}
 }
@@ -280,7 +279,7 @@ SCENARIO("Create a Database", "[Database]") {
 	tq_dwelling.insert(R_Dwelling{ "House" });
 	tq_dwelling.insert(R_Dwelling{ "HolAppt" });
 
-	R_TimeTemp timeTemps[] = { 
+	R_TimeTemp timeTemps[] = {
 	{ 0,120L },
 	{ 1,121L },
 	{ 2,122L },
@@ -306,7 +305,7 @@ SCENARIO("Create a Database", "[Database]") {
 
 	tq_timeTemp.insert(timeTemps, sizeof(timeTemps) / sizeof(R_TimeTemp));
 
-	R_Zone allZones[] = { 
+	R_Zone allZones[] = {
 		{ "UpStrs","US",T_UR,R_UpSt,M_UpStrs,55,0,25,12,1,60 }
 		,{ "DnStrs","DS",T_DR,R_DnSt,M_DownStrs,45,0,25,12,1,60 }
 		,{ "DHW","DHW",T_GasF,R_Gas,M_UpStrs,80,0,60,12,1,3 }
@@ -316,9 +315,9 @@ SCENARIO("Create a Database", "[Database]") {
 	R_DwellingZone allDwellingZones[] = { { 0,0 },{ 0,1 },{ 0,2 },{ 1,3 },{ 1,2 } };
 	tq_dwellingZone.insert(allDwellingZones, sizeof(allDwellingZones) / sizeof(R_DwellingZone));
 
-	R_Program allPrograms[] = { 
+	R_Program allPrograms[] = {
 		{ "At Home",0 }
-		,{ "At Work",0 } 
+		,{ "At Work",0 }
 		,{ "Away",0 }
 		,{ "Occup'd",1 }
 		,{ "Empty",1 }
@@ -333,7 +332,7 @@ SCENARIO("Create a Database", "[Database]") {
 		{ DateTime({ 22,9,17, },{ 15,0 }),2 },
 		{ DateTime({ 30,9,17, },{ 10,0 }),4 } };
 	tq_spell.insert(allSpells, sizeof(allSpells) / sizeof(R_Spell)); // Cause small table to grow.
-	
+
 	R_Profile allProfiles[] = {
 		{ 0,0,100 }, // At Home
 		{ 0,1,101 },
@@ -374,9 +373,9 @@ TEST_CASE("View-One with Names", "[Display]") {
 	using namespace client_data_structures;
 	using namespace Assembly;
 
-	LCD_Display_Buffer<20,4> lcd;
+	LCD_Display_Buffer<20, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
-	
+
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 	if (!db.checkPW(VERSION)) { cout << "Password missmatch\n"; return; }
 	cout << "\tand some Queries are created" << endl;
@@ -392,7 +391,7 @@ TEST_CASE("View-One with Names", "[Display]") {
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDn()); // non-recyclable
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewOneUpDn()); // non-recyclable
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -432,7 +431,7 @@ TEST_CASE("View-One with Names", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs   At Home             C3");
 	display1_h.rec_prevUI(); // de-select page
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs   At Home             C3");
-	
+
 	display1_h.rec_select(); // The display is selected at start-up. This selects the page.
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs   At Home             C3");
 	display1_h.rec_left_right(1);
@@ -448,7 +447,7 @@ TEST_CASE("View-One with Names", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s   At Home             C3");
 	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs   At Hom_e             C3");
-	display1_h.rec_left_right(-1); 
+	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s   At Home             C3");
 	display1_h.rec_left_right(-1); // check page focus recycles
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs   At Home             C3");
@@ -456,9 +455,9 @@ TEST_CASE("View-One with Names", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs   At Home             C_3");
 	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs   At Hom_e             C3");
-	display1_h.rec_left_right(-1); 
+	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s   At Home             C3");
-	display1_h.rec_left_right(-1); 
+	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs   At Home             C3");
 	display1_h.rec_up_down(1);
 	cout << test_stream(display1_h.stream(tb)) << endl;
@@ -529,8 +528,8 @@ TEST_CASE("View-All with Names", "[Display]") {
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, 0, 0, viewAllUpDn());
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewAllUpDn());
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -570,13 +569,13 @@ TEST_CASE("View-All with Names", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 HolAppt Fla_t   DHW    Occup'd Empty   C3");
 	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 HolApp_t Flat   DHW    Occup'd Empty   C3");
-	
+
 	display1_h.rec_up_down(1); // check dwelling recycles past last
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 	display1_h.rec_up_down(-1); // check dwelling recycles before first
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 HolApp_t Flat   DHW    Occup'd Empty   C3");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");	
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 	display1_h.rec_left_right(1); // moves page focus to 2
 	cout << test_stream(display1_h.stream(tb)) << endl;
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s DnStrs DHW    At Home At Work Away    C3");
@@ -653,8 +652,8 @@ TEST_CASE("View-All with Edit Names", "[Display]") {
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, 0, 0, viewAllUpDn());
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewAllUpDn());
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -790,17 +789,17 @@ TEST_CASE("Short List Items", "[Display]") {
 
 	// UI Elements
 	UI_Label L1("L1");
-	UI_Cmd C1("C1", 0), C2("C2",0), C3("C3", 0),C4("C4", 0);
+	UI_Cmd C1("C1", 0), C2("C2", 0), C3("C3", 0), C4("C4", 0);
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, 0, 0, viewAllUpDn());
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewAllUpDn());
 	auto label_c = makeCollection(C1, C2, C3, C4);
 
 	cout << "\n **** Next create Short-collection wrappers ****\n";
-	auto zoneName_sc = UI_IteratedCollection{19, zoneNameUI_c};
-	auto progName_sc = UI_IteratedCollection{30, progNameUI_c};
-	auto label_sc = UI_IteratedCollection{3, label_c };
+	auto zoneName_sc = UI_ShortCollection{ 19, zoneNameUI_c };
+	auto progName_sc = UI_ShortCollection{ 30, progNameUI_c };
+	auto label_sc = UI_ShortCollection{ 3, label_c };
 
 	// UI Element Arays / Collections	cout << "\npage1 Collection\n";
 	cout << "\npage1 Collection\n";
@@ -808,7 +807,7 @@ TEST_CASE("Short List Items", "[Display]") {
 	cout << "\npage2 Collection\n";
 	auto page2_c = makeCollection(label_sc, dwellNameUI_c, zoneName_sc, progName_sc);
 	cout << "\npage3 Collection\n";
-	auto page3_c = UI_IteratedCollection(7, makeCollection(C1,C2,C3,C4));
+	auto page3_c = UI_ShortCollection(7, makeCollection(C1, C2, C3, C4));
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeDisplay(page1_c, page2_c, page3_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -871,7 +870,7 @@ TEST_CASE("Short List Items", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs> <Away   ");
 	display1_h.rec_up_down(1); // next dwelling
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 HolApp_t Flat  > Occup'd>");
-	cout << endl<< test_stream(display1_h.stream(tb)) << endl;
+	cout << endl << test_stream(display1_h.stream(tb)) << endl;
 	display1_h.rec_left_right(1); // moves focus
 	display1_h.stream(tb);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 HolAppt Fla_t  > Occup'd>");
@@ -893,7 +892,7 @@ TEST_CASE("Edit String Values", "[Display]") {
 	using namespace client_data_structures;
 	using namespace Assembly;
 
-	LCD_Display_Buffer<80,1> lcd;
+	LCD_Display_Buffer<80, 1> lcd;
 	UI_DisplayBuffer tb(lcd);
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
@@ -910,8 +909,8 @@ TEST_CASE("Edit String Values", "[Display]") {
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewOneUpDnRecycle(), editRecycle());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDn());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, 0, 0, viewOneUpDnRecycle(), editRecycle());
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewOneUpDn());
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -981,7 +980,7 @@ TEST_CASE("Edit String Values", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UqS #A| At Home C3");
 	display1_h.rec_select(); // should save zoneNameUI edits and come out of edit
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UqS _A  At Home C3");
-	display1_h.rec_select(); 
+	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   #UqS A| At Home C3");
 	display1_h.rec_left_right(-1); // moves focus within zoneNameUI to nect char
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UqS A#| At Home C3");
@@ -990,11 +989,11 @@ TEST_CASE("Edit String Values", "[Display]") {
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   U#pS A| At Home C3");
 	display1_h.rec_left_right(2); // moves focus within zoneNameUI to nect char
-	display1_h.rec_up_down(1); 
+	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#||| At Home C3");
-	display1_h.rec_up_down(-1); 
+	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS# A| At Home C3");
-	display1_h.rec_up_down(-1); 
+	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#AA| At Home C3");
 	display1_h.rec_up_down(-1); // B
 	display1_h.rec_up_down(-1); // C
@@ -1004,21 +1003,21 @@ TEST_CASE("Edit String Values", "[Display]") {
 	display1_h.rec_up_down(-1); // G
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#GA| At Home C3");
 	display1_h.rec_up_down(-1); // select prev permissible char at this position
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#LA| At Home C3");
 	display1_h.rec_up_down(-1); // select prev permissible char at this position
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#QA| At Home C3");
 	display1_h.rec_up_down(-1); // select prev permissible char at this position
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(1); 
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(-1);
+	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#tA| At Home C3");
 	display1_h.rec_left_right(1); // moves focus within zoneNameUI to next char
 	display1_h.rec_up_down(-1); // B 
@@ -1090,7 +1089,7 @@ TEST_CASE("Multi-Page back-track Selections", "[Display]") {
 
 	cout << "\npage1 Collection\n";
 	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, progNameUI_c, C3);
-	auto page2_c = makeCollection( L2, C4 );
+	auto page2_c = makeCollection(L2, C4);
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeDisplay(page1_c, page2_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -1130,7 +1129,7 @@ TEST_CASE("Edit Integer Data", "[Display]") {
 	using namespace client_data_structures;
 	using namespace Assembly;
 
-	LCD_Display_Buffer<80,1> lcd;
+	LCD_Display_Buffer<80, 1> lcd;
 	UI_DisplayBuffer tb(lcd);
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
@@ -1149,8 +1148,8 @@ TEST_CASE("Edit Integer Data", "[Display]") {
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
-	auto zoneReqTempUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_reqTemp,0,0, viewOneUpDnRecycle(), editNonRecycle());
-	
+	auto zoneReqTempUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_reqTemp, 0, 0, viewOneUpDnRecycle(), editNonRecycle());
+
 	// UI Elements
 	UI_Label L1("L1");
 	UI_Cmd C3("C3", 0);
@@ -1223,10 +1222,11 @@ TEST_CASE("Edit Formatted Integer Data", "[Display]") {
 
 	class Test_Ints : public Record_Interface<R_TestInts> {
 	public:
-		enum streamable { e_edit1short, e_edit1shortPlus, e_edit1Fixed3, e_edit1Fixed3Plus,
+		enum streamable {
+			e_edit1short, e_edit1shortPlus, e_edit1Fixed3, e_edit1Fixed3Plus,
 			e_editAllShort, e_editAllShortPlus, e_editAllFixed3, e_editAllFixed3Plus
 		};
-				
+
 		I_UI_Wrapper * getField(int fieldID) override {
 			switch (fieldID) {
 			case e_edit1short:
@@ -1335,7 +1335,7 @@ TEST_CASE("Edit Decimal Data", "[Display]") {
 	using namespace client_data_structures;
 	using namespace Assembly;
 
-	LCD_Display_Buffer<80,1> lcd;
+	LCD_Display_Buffer<80, 1> lcd;
 	UI_DisplayBuffer tb(lcd);
 
 	//enum tableIndex { TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
@@ -1410,7 +1410,7 @@ TEST_CASE("Edit Date Data", "[Display]") {
 
 	clock_().setTime({ 31,8,17 }, { 15,20 }, 0);
 
-	LCD_Display_Buffer<80,1> lcd;
+	LCD_Display_Buffer<80, 1> lcd;
 	UI_DisplayBuffer tb(lcd);
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
@@ -1447,7 +1447,7 @@ TEST_CASE("Edit Date Data", "[Display]") {
 
 	cout << "Size of UI_FieldData is " << dec << sizeof(dwellSpellUI_c) << endl;
 	cout << "Size of Field_Interface_h is " << dec << sizeof(Field_Interface_h) << endl;
-	cout << "Size of ShortCollection is " << dec << sizeof(UI_IteratedCollection) << endl;
+	cout << "Size of ShortCollection is " << dec << sizeof(UI_ShortCollection) << endl;
 	cout << "Size of LazyCollection is " << dec << sizeof(LazyCollection) << endl;
 	cout << "Size of I_SafeCollection is " << dec << sizeof(I_SafeCollection) << endl;
 	cout << "Size of Collection_Hndl is " << dec << sizeof(Collection_Hndl) << endl;
@@ -1595,12 +1595,12 @@ TEST_CASE("Edit CurrentDateTime", "[Display]") {
 	auto rec_currTime = Dataset_WithoutQuery();
 
 	cout << " **** Next create DB UIs ****\n";
-	auto currTimeUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editOnNextItem());
-	auto currDateUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editOnNextItem());
-	auto dstUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editOnNextItem());
+	auto currTimeUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currTime, 0, 0, editOnNextItem());
+	auto currDateUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currDate, 0, 0, editOnNextItem());
+	auto dstUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_dst, 0, 0, editOnNextItem());
 	// UI Elements
 	UI_Label L1("DST Hours:");
-	
+
 
 	// UI Collections
 	cout << "\npage1 Collection\n";
@@ -1641,7 +1641,7 @@ TEST_CASE("Display / Edit Run Data", "[Display]") {
 	using namespace Assembly;
 	using namespace HardwareInterfaces;
 
-	LCD_Display_Buffer<20,4> lcd;
+	LCD_Display_Buffer<20, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
 
 	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
@@ -1655,13 +1655,13 @@ TEST_CASE("Display / Edit Run Data", "[Display]") {
 
 	cout << " **** Next create DB Record Interfaces ****\n";
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
-	
+
 	cout << " **** Next create DB UIs ****\n";
-	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editOnNextItem().make_viewAll());
+	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp, 0, 0, editOnNextItem().make_viewAll());
 	// UI Collections
 	cout << "\npage1 Collection\n";
 	auto page1_c = makeCollection(zoneReqTempUI_c);
-	
+
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeDisplay(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -1681,7 +1681,7 @@ TEST_CASE("Display / Edit Run Data", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2_1 is:21 ");
 	display1_h.rec_left_right(1); // moves focus
 	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	
+
 	//display1_h.rec_select();
 	cout << "***** Up/Down to Edit *****\n";
 	display1_h.rec_up_down(-1); // increment 1 degree puts into edit
@@ -1737,7 +1737,7 @@ TEST_CASE("Cmd-Menu", "[Display]") {
 	// UI Element Arays / Collections
 	cout << "\npage2 hidden Elements Collection\n";
 	auto page2_hidden_c = makeCollection(zoneNameUI_c, dwellSpellUI_c, progNameUI_c);
-	
+
 	// UI Elements
 	LCD_UI::UI_Cmd _dwellingZoneCmd = { "Zones",0 }, _dwellingCalendarCmd = { "Calendar",0 }, _dwellingProgCmd = { "Programs",0 };
 	cout << "\ndwellingCmd Collection\n";
@@ -1811,13 +1811,13 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn().make_newLine());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn().make_newLine());
-	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, 0, 0, viewAllUpDn().make_newLine());
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewAllUpDn().make_newLine());
+	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, 0, 0, editOnNextItem(), editRecycle());
 	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, &dwellSpellUI_c, Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable());
 
 	// UI Elements
-	UI_Cmd _dwellingZoneCmd = {"Zones",0}, _dwellingCalendarCmd = { "Calendar",0}, _dwellingProgCmd = { "Programs",0 };
+	UI_Cmd _dwellingZoneCmd = { "Zones",0 }, _dwellingCalendarCmd = { "Calendar",0 }, _dwellingProgCmd = { "Programs",0 };
 	InsertSpell_Cmd _fromCmd = { "From", 0, viewOneUpDnRecycle().make_newLine() };
 	UI_Label _insert = { "Insert-Prog", hidden().make_sameLine() };
 
@@ -1836,7 +1836,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	cout << "\npage1 sub-page Collection\n";
 	auto page1_subpage_c = makeCollection(zone_subpage_c, calendar_subpage_c, prog_subpage_c);
 	page1_subpage_c.set(viewOneUpDnRecycle());
-	
+
 	_fromCmd.set_OnSelFn_TargetUI(page1_subpage_c.item(1));
 	cout << "page1_subpage_c at: " << (long long)&page1_subpage_c << endl;
 
@@ -1870,7 +1870,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	
+
 	display1_h.rec_up_down(-1); // next Menu
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Program_s    At Home At Work     Away   ");
 	display1_h.rec_up_down(-1); // next Menu
@@ -1897,9 +1897,9 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStrs DH_W   ");
 	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStr_s DHW   ");
-	display1_h.rec_left_right(-1); 
+	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStr_s DnStrs DHW   ");
-	display1_h.rec_left_right(-1); 
+	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
 	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Zones       UpStrs DnStrs DHW   ");
@@ -1934,7 +1934,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm #Tomor'wAt Home");
 	display1_h.rec_prevUI();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-	
+
 	cout << "\n **** Cancelled insert spell ****\n\n";
 
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
@@ -1976,17 +1976,17 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	display1_h.rec_up_down(-1);
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#4Aug  At Home");
-	
+
 	cout << "\n Insert new spell before first...\n";
-	
+
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 	}
-	
+
 	cout << "\n Insert new spell after first...\n";
 
 	display1_h.rec_select();
-	
+
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 	}
@@ -2008,7 +2008,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 22#Oct  Away   ");
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 2_2Oct  Away   ");
-	
+
 	cout << "\n Edit last spell...\n";
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
@@ -2071,7 +2071,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm 02Aug  At Home");
 	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Calendar    From 10:20pm 02Aug  At Home");
-	
+
 	cout << "\n House Spells before prog-change...\n";
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
@@ -2091,7 +2091,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Insert-Prog From #Now            Occup'd");
 	display1_h.rec_prevUI();
 	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
-	
+
 	cout << "\n Flat Spells before prog-change...\n";
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
@@ -2118,8 +2118,8 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	cout << "\n All spells After Change program...\n";
 	for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}	
-	
+	}
+
 	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Empt_y  ");
 	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From No_w            Empty  ");
@@ -2136,7 +2136,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	display1_h.rec_select();
 	display1_h.rec_up_down(-1);
 	display1_h.rec_up_down(1);
-	
+
 	cout << "\n After Change next program...\n";
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
@@ -2144,7 +2144,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	cout << "\n All spells After Change next program...\n";
 	for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}	
+	}
 
 	display1_h.stream(tb);
 	cout << test_stream(display1_h.stream(tb)) << endl;
@@ -2274,7 +2274,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	setFactoryDefaults(_db, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto _q_dwellings =  _db.tableQuery(TB_Dwelling);
+	auto _q_dwellings = _db.tableQuery(TB_Dwelling);
 	auto _q_dwellingProgs = QueryF_T<client_data_structures::R_Program>{ _db.tableQuery(TB_Program), 1 };
 	auto _q_dwellingZones = QueryL_T<client_data_structures::R_DwellingZone, client_data_structures::R_Zone>{ _db.tableQuery(TB_DwellingZone), _db.tableQuery(TB_Zone), 0, 1 };
 	auto _q_zoneProfiles = QueryF_T<client_data_structures::R_Profile>{ _db.tableQuery(TB_Profile), 1 };
@@ -2284,7 +2284,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	cout << " **** Next create DB Record Interface ****\n";
 	auto _rec_dwelling = Dataset_Dwelling(_q_dwellings, noVolData, 0);
 	auto _rec_dwProgs = Dataset_Program{ _q_dwellingProgs, noVolData, &_rec_dwelling };
-	auto _rec_dwZones= Dataset_Zone{ _q_dwellingZones, 0, &_rec_dwelling };
+	auto _rec_dwZones = Dataset_Zone{ _q_dwellingZones, 0, &_rec_dwelling };
 	auto _rec_profile = Dataset_ProfileDays{ _q_profile, noVolData, &_rec_dwProgs, &_rec_dwZones };
 	auto _rec_timeTemps = Dataset_TimeTemp(_q_timeTemps, noVolData, 0);
 
@@ -2298,16 +2298,16 @@ TEST_CASE("TimeTemps", "[Display]") {
 	cout << "\tprofile\n";
 	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() };
 	cout << "\ttimeTemp\n";
-	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
-	auto _iterated_timeTempUI = UI_IteratedCollection{ 80, _timeTempUI_c };
+	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, 0, 0, viewAll().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
+	auto _timeTempUI_sc = UI_ShortCollection{ 80, _timeTempUI_c };
 
-	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, viewOneUpDn().make_hidden().make_newLine()};
-	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, viewAll().make_hidden()};
-	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, viewOneUpDn().make_hidden()};
+	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, viewOneUpDn().make_hidden().make_newLine() };
+	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, viewAll().make_hidden() };
+	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, viewOneUpDn().make_hidden() };
 
 	// Pages & sub-pages - Collections of UI handles
 	cout << "\ntt_page Elements Collection\n";
-	auto _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _iterated_timeTempUI) };
+	auto _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _timeTempUI_sc) };
 	auto _page_profile_c{ makeCollection(_dwellNameUI_c, _progNameUI_c, _zoneAbbrevUI_c, _profileDaysUI_c, _tt_SubPage_c) };
 
 	cout << "\nDisplay     Collection\n";
@@ -2324,7 +2324,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	ui_Objects()[(long)&_progNameUI_c] = "progNameUI_c";
 	ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 	ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
-	ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
+	ui_Objects()[(long)&_timeTempUI_sc] = "_timeTempUI_sc";
 	ui_Objects()[(long)&_deleteTTCmd] = "_deleteTTCmd";
 	ui_Objects()[(long)&_editTTCmd] = "_editTTCmd";
 	ui_Objects()[(long)&_newTTCmd] = "_newTTCmd";
@@ -2427,12 +2427,12 @@ TEST_CASE("TimeTemps", "[Display]") {
 	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0730a16 0900p18    1000p18 1100p1_8>    ");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p18 1000p18    1100p18 1200p1_8"); 
+	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p18 1000p18    1100p18 1200p1_8");
 	display1_h.rec_select();
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p18"); 
+	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p18");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#100p18"); 
+	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#100p18");
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1000p18 1100p18    1200p18 0100p1_8");
 	display1_h.rec_select();
@@ -2455,7 +2455,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 TEST_CASE("MainConsoleChapters", "[Display]") {
 	cout << "\n*********************************\n**** MainConsoleChapters ****\n********************************\n\n";
 
-	
+
 	using namespace client_data_structures;
 	using namespace Assembly;
 	using namespace LCD_UI;
@@ -2475,7 +2475,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	logger() << "Table Capacity: " << q_Profiles.last().tableNavigator().table().maxRecordsInTable() << L_endl;
 	logger() << "Chunk Capacity: " << q_Profiles.last().tableNavigator().chunkCapacity() << L_endl;
 	logger() << "chunkIsExtended(): " << q_Profiles.last().tableNavigator().chunkIsExtended() << L_endl;
-	
+
 
 	auto & display1_h = hs.mainConsoleChapters()(0);
 	cout << test_stream(display1_h.stream(tb)) << endl;
@@ -2517,7 +2517,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 0900p18");
 	display1_h.rec_up_down(-1);
- 	display1_h.rec_left_right(1);
+	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Ds_: MTWTF--0630a45 0900a30     0330p45 1030p30");
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Ds_: -----SS0730a45 0930a30     0300p45 1030p30");
@@ -2570,7 +2570,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---#SS0800a19 1050p16");
 	display1_h.rec_up_down(1);
-	
+
 	display1_h.rec_select(); // remove Saturday, create a new profile.
 
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T----_S0800a19 1050p16");
@@ -2595,14 +2595,14 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T#-----0800a19 1050p16");
 	display1_h.rec_left_right(-1); 	// Steal Saturday from later profile - deletes that profile
-	display1_h.rec_left_right(-1); 
+	display1_h.rec_left_right(-1);
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---#S-0800a19 1050p16");
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---S_-0800a19 1050p16");
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-_S0740a19 1100p16");
-	display1_h.rec_up_down(1); 
+	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---S_-0800a19 1050p16");
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-_S0740a19 1100p16");
@@ -2620,7 +2620,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M--TF-S0740a1_9 1100p16");
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M--TF-SDelete Edi_t New     0740a19");
-  }
+}
 #endif
 
 #ifdef INFO_CONSOLE_PAGES
@@ -2680,7 +2680,7 @@ TEST_CASE("HeatingSystem Test Relays & TS", "[HeatingSystem]") {
 		auto relay = relayRec.obj(relayID);
 		relay.set(onOff);
 		CHECK(relay.logicalState() == onOff);
-		cout << thisRelay->rec().name << " Port: " << int(thisRelay->rec().port>>1) << (relay.logicalState() == false ? " Off" : " On") << endl;
+		cout << thisRelay->rec().name << " Port: " << int(thisRelay->rec().port >> 1) << (relay.logicalState() == false ? " Off" : " On") << endl;
 		onOff = !onOff;
 		thisRelay = q_relays.next(1);
 	}
@@ -2693,7 +2693,7 @@ TEST_CASE("HeatingSystem Test Relays & TS", "[HeatingSystem]") {
 		auto relay = thisRelay->rec().obj(relayID);
 		onOff = !onOff;
 		CHECK(relay.logicalState() == onOff);
-		cout << thisRelay->rec().name << " Port: " << int(thisRelay->rec().port>>1) << (relay.logicalState() == false ? " Off" : " On") << endl;
+		cout << thisRelay->rec().name << " Port: " << int(thisRelay->rec().port >> 1) << (relay.logicalState() == false ? " Off" : " On") << endl;
 		thisRelay = q_relays.next(1);
 	}
 
@@ -2708,8 +2708,6 @@ TEST_CASE("HeatingSystem Test Relays & TS", "[HeatingSystem]") {
 		thisTempSensor = q_tempSensors.next(1);
 	}
 
-	hs. serviceConsoles();
+	hs.serviceConsoles();
 }
 #endif
-
-
