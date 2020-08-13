@@ -12,22 +12,22 @@ namespace Assembly {
 		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)
-		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editOnNextItem() }
-		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editOnNextItem() }
-		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editOnNextItem() }
+		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editActiveMember_onUpDn() }
+		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editActiveMember_onUpDn() }
+		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editActiveMember_onUpDn() }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard,0,0, viewable()}
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editOnNextItem() }
+		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editActiveMember_onUpDn() }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name }
-		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneUpDnRecycle() }
+		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneRecycle() }
 		
-		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneUpDnRecycle() }
-		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editOnNextItem(), editRecycle()}
-		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, viewOneUpDnRecycle().make_newLine(), editRecycle().make_unEditable() }
-		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneUpDnRecycle(), editRecycle() }
+		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneRecycle() }
+		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editActiveMember_onUpDn(), editRecycle()}
+		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, viewOneRecycle().make_newLine(), editRecycle().make_unEditable() }
+		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneRecycle(), editRecycle() }
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewOneUpDnRecycle().make_newLine().make_editOnNext(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
-		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAll().make_newLine() }
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewOneRecycle().make_newLine().make_editOnUpDn(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAllRecycle().make_newLine() }
 		
 		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name }
 		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, &_towelRailNameUI_c }
@@ -41,16 +41,16 @@ namespace Assembly {
 		, _dst{"DST Hours:"}
 		, _prog{"Prg:", viewable().make_sameLine() }
 		, _zone{"Zne:"}
-		, _backlightCmd{"Backlight",0, viewOneUpDn().make_newLine() }
-		, _contrastCmd{"Contrast",0, viewOneUpDn() }
+		, _backlightCmd{"Backlight",0, viewOneRecycle().make_newLine() }
+		, _contrastCmd{"Contrast",0, viewOneRecycle() }
 		, _dwellingZoneCmd{"Zones",0 }
 		, _dwellingCalendarCmd{ "Calendar",0 }
 		, _dwellingProgCmd{ "Programs",0 }
 		, _profileDaysCmd{ "Ds:",0}
-		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, viewOneUpDnRecycle().make_newLine() }
-		, _deleteTTCmd{ "Delete", 0, viewOneUpDn().make_hidden().make_newLine() }
-		, _editTTCmd{ "Edit", 0, viewOneUpDn().make_hidden().make_viewAll() }
-		, _newTTCmd{ "New", 0, viewOneUpDn().make_hidden() }
+		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, viewOneRecycle().make_newLine() }
+		, _deleteTTCmd{ "Delete", 0, viewOneRecycle().make_hidden().make_newLine() }
+		, _editTTCmd{ "Edit", 0, viewOneRecycle().make_hidden().make_viewAll() }
+		, _newTTCmd{ "New", 0, viewOneRecycle().make_hidden() }
 		, _towelRailsLbl{"Room Temp OnFor ToGo"}
 
 		// Pages & sub-pages - Collections of UI handles

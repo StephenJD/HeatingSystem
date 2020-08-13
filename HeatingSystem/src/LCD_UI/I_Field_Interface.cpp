@@ -40,7 +40,7 @@ namespace LCD_UI {
 		cout << F("edit->back->focus ") << parent()->backUI()->focusIndex() << endl;
 #endif	
 		parent()->set_focus(editItem().getEditCursorPos()); // copy data to edit
-		addBehaviour(Behaviour::b_ViewAll);
+		removeBehaviour(Behaviour::b_ViewOne);
 		parent()->setCursorMode(HI_BD::e_inEdit);
 		return 0;
 	}
@@ -49,13 +49,13 @@ namespace LCD_UI {
 	int I_Field_Interface::setInitialCount(Field_Interface_h * parent) {
 		_parent = parent;
 		int initialEditFocus;
-		if (parent->editBehaviour().is_Editable()) {
+		//if (parent->editBehaviour().is_Editable()) {
 			initialEditFocus = editItem().gotFocus(_wrapper); // gotFocus copies data to currValue
-		}
-		else {
-			UI_FieldData * fieldData = parent->getData();
-			initialEditFocus = editItem().editMemberSelection(_wrapper, fieldData->data()->recordID());
-		}
+		//}
+		//else {
+		//	UI_FieldData * fieldData = parent->getData();
+		//	initialEditFocus = editItem().editMemberSelection(_wrapper, fieldData->data()->recordID());
+		//}
 		setCount(editItem().currValue().valRange.editablePlaces);
 		return initialEditFocus;
 	}
@@ -93,7 +93,7 @@ namespace LCD_UI {
 	Field_Interface_h::Field_Interface_h(I_Field_Interface & fieldInterfaceObj, Behaviour editBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
 		: Collection_Hndl(fieldInterfaceObj), _editBehaviour(editBehaviour), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
 	{
-		fieldInterfaceObj.behaviour() = viewOneSelectable();
+		fieldInterfaceObj.behaviour() = viewOneRecycle();
 	}
 
 	void Field_Interface_h::set_OnSelFn_TargetUI(Collection_Hndl * obj) {
@@ -155,7 +155,7 @@ namespace LCD_UI {
 		Collection_Hndl * retVal = this;
 		if (_cursorMode == HI_BD::e_inEdit) {
 			setCursorMode(HI_BD::e_unselected);
-			get()->removeBehaviour(Behaviour::b_ViewAll);
+			get()->addBehaviour(Behaviour::b_ViewOne);
 			f_interface().editItem().setBackUI(0);
 			f_interface().setCount(0);
 			retVal = 0;

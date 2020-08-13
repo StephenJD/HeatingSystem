@@ -68,7 +68,7 @@ namespace LCD_UI {
 	/// </summary>
 	template<typename... Args>
 	auto makeDisplay(Args & ... args) -> Collection<sizeof...(args)> {
-		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, viewOneUpDnRecycle());
+		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, viewOneRecycle());
 	}
 }
 

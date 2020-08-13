@@ -60,7 +60,7 @@ private:
 
 class Cmd : public Collection_Hndl, public Custom_Select {
 public:
-	Cmd(int label, OnSelectFnctr onSelect, Behaviour behaviour = viewOneUpDn()) : Collection_Hndl(this), Custom_Select(onSelect, behaviour), _label(label) {}
+	Cmd(int label, OnSelectFnctr onSelect, Behaviour behaviour = selectable()) : Collection_Hndl(this), Custom_Select(onSelect, behaviour), _label(label) {}
 	// Queries
 	int show() const { return _label; }
 	operator int() const { return _label; }
@@ -114,7 +114,7 @@ TEST_CASE("Collection_Clock_MoveFocus_non_const") {
 TEST_CASE("Collection_MoveFocus_non_const") {
 	Cmd C0(0,0, hidden()), C1(1,0), C2(2,0, hidden()), C3(3,0), C4(4, 0,hidden());
 	auto page_c = makeCollection(C0, C1, C2, C3, C4);
-	page_c.removeBehaviour(Behaviour::b_RecycleInList); // non-clock behaviour
+	page_c.addBehaviour(Behaviour::b_NonRecycle); // non-clock behaviour
 	auto page_h = Collection_Hndl{ page_c, 2};
 	// 1st valid element after default 
 	CHECK(page_h.focusIndex() == 3);

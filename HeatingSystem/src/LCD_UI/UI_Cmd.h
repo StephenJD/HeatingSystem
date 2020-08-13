@@ -7,7 +7,7 @@ namespace LCD_UI {
 	{
 	public:
 		using Custom_Select::behaviour;
-		UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour = selectable() /*viewOneUpDn()*/);
+		UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour = selectable() /*viewOneRecycle()*/);
 		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
 
 		void insertCommandForEdit(Object_Hndl & ui_fieldData_collection);

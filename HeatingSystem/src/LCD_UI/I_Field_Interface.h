@@ -42,7 +42,7 @@ namespace LCD_UI {
 
 		void setWrapper(I_UI_Wrapper * wrapper);
 	protected:
-		I_Field_Interface() : I_SafeCollection(0,viewAll()) {
+		I_Field_Interface() : I_SafeCollection(0,viewAllRecycle()) {
 #ifdef ZPSIM
 		logger() << F("\tI_Field_Interface Addr: ") << L_hex << long(this) << L_endl;
 #endif

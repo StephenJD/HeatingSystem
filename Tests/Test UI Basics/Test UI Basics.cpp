@@ -335,7 +335,7 @@ TEST_CASE("Page-element which is a view-all collection", "[Display]") {
 
 	cout << " CmdGroup Coll of Object_Hndl\n";
 	auto cmdGroup_c = makeCollection(L2, C1, C2, C3);
-	cmdGroup_c.removeBehaviour(Behaviour::b_RecycleInList);
+	cmdGroup_c.removeBehaviour(Behaviour::b_Recycle);
 	cout << " page1_c Coll of Collection_Hndl\n";
 	auto page1_c = makeCollection(L1, cmdGroup_c, L3, C4);
 	cout << " display1_c Coll of Collection_Hndl\n";
@@ -383,7 +383,7 @@ TEST_CASE("Page-element which is a view-one collection", "[Display]") {
 
 	cout << " CmdGroup Coll of Object_Hndl\n";
 	auto cmdGroup_c = makeCollection(C1, C2, C3);
-	cmdGroup_c.behaviour()= viewOneUpDnRecycle();
+	cmdGroup_c.behaviour()= viewOneRecycle();
 
 	cout << " page1_c Coll of Collection_Hndl\n";
 	auto page1_c = makeCollection(L1, cmdGroup_c, L3, C4);

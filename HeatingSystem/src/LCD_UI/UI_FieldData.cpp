@@ -105,7 +105,7 @@ namespace LCD_UI {
 		//cout << "UI_FieldData::stream all Elements of " << ui_Objects()[(long)this] << endl;
 		//cout << "UI_FieldData::one Element of " << ui_Objects()[(long)this] << endl;
 #endif
-		auto focus_index = LazyCollection::focusIndex();
+		//auto focus_index = LazyCollection::focusIndex();
 		//for (auto & element : *this) {
 		//	auto endVisibleIndex = shortColl->endVisibleItem();
 			auto objIndex = objectIndex();

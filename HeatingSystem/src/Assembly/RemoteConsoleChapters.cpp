@@ -8,7 +8,7 @@ namespace Assembly {
 	using namespace LCD_UI;
 
 	RemoteConsoleChapters::RemoteConsoleChapters(HeatingSystem_Queries & db) :
-		_rem_tempReqUI_c{ &db._rec_zones, Dataset_Zone::e_reqTemp,0,0, editOnNextItem() }
+		_rem_tempReqUI_c{ &db._rec_zones, Dataset_Zone::e_reqTemp,0,0, editActiveMember_onUpDn() }
 		, _rem_tempIsUI_c{ &db._rec_zones, Dataset_Zone::e_isTemp, &_rem_tempReqUI_c, 0, viewable() }
 		, _rem_prompt{ "^v adjusts temp" }
 		, _rem_req_lbl{ "Req" }

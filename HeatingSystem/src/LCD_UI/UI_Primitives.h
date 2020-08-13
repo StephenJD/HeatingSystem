@@ -88,7 +88,7 @@ namespace LCD_UI {
 	/// </summary>
 	class Permitted_Vals : public I_SafeCollection {
 	public:
-		Permitted_Vals() :I_SafeCollection(0, viewOneUpDn()), _oneVal(this) {
+		Permitted_Vals() :I_SafeCollection(0, viewOneRecycle()), _oneVal(this) {
 #ifdef ZPSIM
 			logger() << F("\tPermitted_Vals Addr: ") << L_hex << long(this) << L_endl;
 #endif

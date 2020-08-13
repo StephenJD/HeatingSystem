@@ -71,7 +71,7 @@ namespace LCD_UI {
 			auto innerIsCollection = false;
 			do {
 				logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
-				if (inner_UI_h->get()->behaviour().is_viewAll()) {
+				if (inner_UI_h->behaviour().is_viewAll()) {
 					logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
 					_leftRightBackUI = inner_UI_h;
 					inner_UI_h->enter_collection(direction);
@@ -95,7 +95,8 @@ namespace LCD_UI {
 		/*if (this_UI_h->behaviour().is_UpDnAble())*/ _upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto active = this_UI_h->activeUI();
-			if (active->behaviour().is_UpDnAble()) {
+			//if (active->behaviour().is_UpDnAble()) {
+			if (active->behaviour().is_selectable()) {
 				_upDownUI = active;
 			}
 			this_UI_h = active;
@@ -141,7 +142,7 @@ namespace LCD_UI {
 		if (!hasMoved) {
 			wasInEdit = { _leftRightBackUI->cursorMode(_leftRightBackUI) == HI_BD::e_inEdit };
 			if (wasInEdit) {
-				if (_leftRightBackUI->backUI()->behaviour().is_edit_on_next()) {
+				if (_leftRightBackUI->backUI()->behaviour().is_edit_on_UD()) {
 					rec_edit();
 					hasMoved = _leftRightBackUI->move_focus_by(move);
 				}
@@ -183,7 +184,7 @@ namespace LCD_UI {
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
 		auto haveMoved = false;
 
-		if (_upDownUI->get()->isCollection() && _upDownUI->behaviour().is_viewOneUpDn()) {
+		if (_upDownUI->get()->isCollection() && _upDownUI->behaviour().is_viewOneUpDn_Next()) {
 			if (_upDownUI->backUI()->cursorMode(_upDownUI->backUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 				move = -move; // reverse up/down when in edit.
 			}
@@ -194,7 +195,7 @@ namespace LCD_UI {
 				haveMoved = static_cast<Custom_Select*>(_upDownUI->get())->move_focus_by(move);
 				set_UpDownUI_from(selectedPage_h());
 				set_CursorUI_from(selectedPage_h());
-			} else if (_upDownUI->behaviour().is_edit_on_next()) {
+			} else if (_upDownUI->behaviour().is_edit_on_UD()) {
 				rec_edit();
 				haveMoved = _upDownUI->move_focus_by(-move); // reverse up/down when in edit.
 				//_upDownUI->on_select();

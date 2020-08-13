@@ -275,7 +275,7 @@ namespace LCD_UI {
 		else {
 			Field_Interface_h * fldInt_h = static_cast<Field_Interface_h *>(backUI());
 			auto status = fldInt_h->getData()->data()->move_by(move);
-			if (status != TB_OK && fldInt_h->behaviour().is_recycle_on_next()) {
+			if (status != TB_OK && fldInt_h->behaviour().is_recycle()) {
 				if (status == TB_BEFORE_BEGIN) 
 					fldInt_h->getData()->data()->last();
 				else fldInt_h->getData()->data()->move_to(0);

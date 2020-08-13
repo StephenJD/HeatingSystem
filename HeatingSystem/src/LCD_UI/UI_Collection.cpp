@@ -124,7 +124,7 @@ namespace LCD_UI {
 
 	Collection_Hndl * Collection_Hndl::move_focus_to(int index) {
 #ifdef ZPSIM
-			//logger() << F("\tmove_focus_to on ") << ui_Objects()[(long)get()].c_str() << L_endl;
+			logger() << F("\tmove_focus_to on ") << ui_Objects()[(long)get()].c_str() << L_endl;
 #endif		
 		auto newObject = this;
 		auto collection = get()->collection();
@@ -141,6 +141,8 @@ namespace LCD_UI {
 	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
 		auto collection = get()->collection();
 		if (collection) {
+			logger() << F("\tmove_focus_by on ") << ui_Objects()[(long)collection].c_str() << L_endl;
+
 			//if (collection->objectIndex() != focusIndex()) {
 				move_focus_to(focusIndex());
 			//}// sets the focus to the current focus and adjusts if out of range.
@@ -153,7 +155,7 @@ namespace LCD_UI {
 			auto wantToMoveBackwards = [](int nth) {return nth < 0; };
 			auto firstValidIndexLookingForwards = [this](int index) {return get()->collection()->nextActionableIndex(index); };
 			auto firstValidIndexLookingBackwards = [this](int index) {return get()->collection()->prevActionableIndex(index); };
-			auto needToRecycle = [this](int index) {return atEnd(index) && behaviour().is_recycle_on_next(); };
+			auto needToRecycle = [this](int index) {return atEnd(index) && behaviour().is_recycle(); };
 			auto tryMovingForwardByOne = [this](int index) {++index; return index; };
 			auto tryMovingBackwardByOne = [this](int index) {if (index > -1) { --index; } return index; };
 			auto weHaveMoved = [startFocus](int index) {return startFocus != index; };
@@ -177,9 +179,9 @@ namespace LCD_UI {
 					}
 					if (!weHaveMoved(newFocus))  break;
 					else if (!atEnd(newFocus)) --nth; // We have a valid element
-					else if (behaviour().is_recycle_on_next()) setFocusIndex(-1);
+					else if (behaviour().is_recycle()) setFocusIndex(-1);
 					else { // at end, can't recycle
-						if (behaviour().is_viewOneUpDn()) setFocusIndex(weCouldNotMove);
+						if (behaviour().is_viewOneUpDn_Next()) setFocusIndex(weCouldNotMove);
 						break;
 					}
 				}
@@ -189,13 +191,13 @@ namespace LCD_UI {
 					setFocusIndex(newFocus); // if no prev, is now -1.
 					if (!weHaveMoved(newFocus)) break;
 					else if (newFocus >= 0) ++nth; // We found one!
-					else if (behaviour().is_recycle_on_next()) {
+					else if (behaviour().is_recycle()) {
 						setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
 						move_focus_to(endIndex());
 						if (newFocus == 0) break;
 					}
 					else {
-						if (behaviour().is_viewOneUpDn() || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
+						if (behaviour().is_viewOneUpDn_Next() || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
 						break;
 					}
 				}
@@ -335,7 +337,7 @@ namespace LCD_UI {
 			//index = objectIndex();
 		}
 		if (atEnd(index)) {
-			I_SafeCollection::setObjectIndex(_count);
+			I_SafeCollection::setObjectIndex(endIndex());
 		} else {
 			setObjectIndex(index); // does nothing for database queries.
 		}
@@ -423,10 +425,12 @@ namespace LCD_UI {
 		if (direction < 0) {
 			set_focus(endIndex());
 			move_focus_by(-1);
-		}
-		else if (direction > 0 && atEnd(focusIndex())) { // if we previously left from the right and have cycled round to re-enter from the left, start at 0.
-			set_focus(0);
-			move_focus_by(0);
+		} else if (direction > 0) {
+			auto focus = focusIndex();
+			if (atEnd(focus) || focus == -1) { // if we previously left from the right and have cycled round to re-enter from the left, start at 0.
+				set_focus(0);
+				move_focus_by(0);
+			}
 		}
 	}
 
@@ -511,7 +515,7 @@ namespace LCD_UI {
 			_itIndex = iteratedActiveUI_h->nextActionableIndex(++_itIndex)) {
 			for (auto & object : *iterated_collection()) {
 				cout << F("Iteration-Streaming [") << _itIndex << "] " << ui_Objects()[(long)&object] << " Active: " << (activeElement? ui_Objects()[(long)activeElement->get()] : "") <<  endl;
-				if (activeElement && _itIndex != activeElement->get()->collection()->focusIndex())
+				if (activeElement && _itIndex != object.focusIndex())
 					activeElement = 0;
 				auto bufferStart = endOfBufferSoFar();
 				auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
@@ -582,6 +586,55 @@ namespace LCD_UI {
 		// _endShow is streamIndex after the last visible 
 		if (thisWasShown && streamIndex >= _endShow) _endShow = streamIndex + 1;
 		if (!thisWasShown && streamIndex < _endShow) _endShow = streamIndex;
+	}
+
+	int UI_IteratedCollection_Hoist::h_endIndex() const {
+		return 2;
+		//auto & coll = *iterated_collection();
+		//auto activeIndex = coll.I_SafeCollection::focusIndex();
+		//const Collection_Hndl * active = static_cast<const Collection_Hndl*>(coll.I_SafeCollection::item(activeIndex));
+		//return active->endIndex();
+	}
+
+	Collection_Hndl * UI_IteratedCollection_Hoist::h_move_focus_to(int index) {
+		_itFocus = index;
+		return iterated_collection()->activeUI();
+		//auto obj = static_cast<Collection_Hndl *>(iterated_collection()->item(index));
+		//if (obj && obj->behaviour().is_selectable()) {
+		//	iterated_collection()->setFocusIndex(index);
+		//}
+		//return obj;
+	}
+
+	int UI_IteratedCollection_Hoist::h_nextActionableIndex(int index) const { // index must be in valid range including endIndex()
+		return ++index;
+		//while (index) && !isActionableObjectAt(index) ) { //Database query moves record to next valid ID		
+			//index = nextIndex(index);
+		//}
+		//if (atEnd(index)) {
+		//	I_SafeCollection::setObjectIndex(endIndex());
+		//} else {
+		//	setObjectIndex(index); // does nothing for database queries.
+		//}
+		//return objectIndex();
+	}
+
+	int UI_IteratedCollection_Hoist::h_prevActionableIndex(int index) const { // index must in valid range including endIndex()
+		// Returns -1 of not found
+		// Lambdas
+		//auto tryAnotherMatch = [index, this](int index, bool match) {return !(objectIndex() <= index && match) && objectIndex() >= 0; };
+		//auto leastOf = [](int index, int objectIndex) { return index < objectIndex ? index : objectIndex; };
+		//// Algorithm
+		//setObjectIndex(index);
+		//auto match = isActionableObjectAt(index);
+		//index = leastOf(index, objectIndex());
+		//while (index >= 0 && tryAnotherMatch(index, match)) {
+		//	--index;
+		//	match = isActionableObjectAt(index);
+		//	index = leastOf(index, objectIndex());
+		//}
+		//return index;
+		return --index;
 	}
 
 	///////////////////////////////////////////

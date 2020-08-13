@@ -256,15 +256,19 @@ namespace LCD_UI {
 			return static_cast<Collection_Hndl*>(item(validIndex(focusIndex())));
 		}
 
+		const Collection_Hndl * activeUI() const {
+			return static_cast<const Collection_Hndl*>(item(validIndex(focusIndex())));
+		}
+
 		bool atEnd(int pos) const {
-			return pos >= _count;
+			return pos >= endIndex();
 		}
 		virtual int nextIndex(int index) const { return ++index; }
-		int validIndex(int index) const { return index < 0 ? 0 : (atEnd(index) ? _count - 1 : index); }
+		int validIndex(int index) const { return index < 0 ? 0 : (atEnd(index) ? endIndex() - 1 : index); }
 		bool indexIsInRange(int index) const { return index >= 0 && !atEnd(index); }
 		const Object_Hndl * item(int index) const { return const_cast<I_SafeCollection*>(this)->item(index); }
 		const Object_Hndl & operator[](int index) const { return const_cast<I_SafeCollection*>(this)->operator[](index); }
-		int endIndex() const { return _count; }
+		virtual int endIndex() const { return _count; }
 		Coll_Iterator begin() const { return const_cast<I_SafeCollection*>(this)->begin(); }
 		Coll_Iterator end() const { return const_cast<I_SafeCollection*>(this)->end(); }
 
@@ -278,12 +282,12 @@ namespace LCD_UI {
 		/// <summary>
 		/// Returns first valid index starting from index and going forwards.
 		/// </summary>
-		int nextActionableIndex(int index) const; // returns _count if none found
+		virtual int nextActionableIndex(int index) const; // returns _count if none found
 
 		/// <summary>
 		/// Returns first valid index starting from index and going backwards.
 		/// </summary>
-		int prevActionableIndex(int index) const; // returns -1 if none found
+		virtual int prevActionableIndex(int index) const; // returns -1 if none found
 
 		template <typename RT>
 		explicit operator const RT & () const { return static_cast<const RT &>(*static_cast<const UI_Object*>(this)); }
@@ -297,11 +301,11 @@ namespace LCD_UI {
 		Behaviour & behaviour() override { return _behaviour; }
 		
 		Coll_Iterator begin();
-		Coll_Iterator end() { return { this, _count }; }
+		Coll_Iterator end() { return { this, endIndex() }; }
 		void setCount(int count) { _count = count; }
 		I_SafeCollection & filter(Behaviour behaviour) { _filter = behaviour; return *this; }
 		using UI_Object::behaviour;
-		Collection_Hndl * move_focus_to(int index);
+		virtual Collection_Hndl * move_focus_to(int index);
 		Collection_Hndl * move_to_object(int index); // Move to object without changing focus.
 
 		template <typename RT>
@@ -364,7 +368,7 @@ namespace LCD_UI {
 	/// </summary>
 	//class UI_IterateSubCollection : public I_SafeCollection {
 	//public:
-	//	UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = viewAll());
+	//	UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = viewAllRecycle());
 	//	// Polymorphic Queries
 	//	Collection_Hndl * leftRight_Collection() override;
 	//	// Polymorphic Modifiers
@@ -435,7 +439,8 @@ namespace LCD_UI {
 	class UI_IteratedCollection_Hoist {
 	public:
 		UI_IteratedCollection_Hoist(int endPos)
-			: _endPos(endPos) {}
+			: _endPos(endPos)
+		{}
 
 		int h_firstVisibleItem() const;
 		void h_focusHasChanged(bool hasFocus);
@@ -446,6 +451,10 @@ namespace LCD_UI {
 		virtual const I_SafeCollection * iterated_collection() const = 0;
 		virtual I_SafeCollection * iterated_collection() = 0;
 		Collection_Hndl * h_leftRight_Collection();
+		int h_endIndex() const;
+		Collection_Hndl * h_move_focus_to(int index);
+		int h_nextActionableIndex(int index) const; // returns _count if none found
+		int h_prevActionableIndex(int index) const; // returns -1 if none found
 
 	protected:
 		const int16_t _endPos; // 0-based character endIndex on the display for the end of this list; i.e. no of visible chars including end markers: < ... >.
@@ -468,7 +477,7 @@ namespace LCD_UI {
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = viewAll())
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = viewAllRecycle())
 			: Collection<noOfObjects>(collection, behaviour)
 			, UI_IteratedCollection_Hoist(endPos)
 		{}
@@ -483,15 +492,24 @@ namespace LCD_UI {
 		//int objectIndex() const override { return collection()->objectIndex(); }
 
 		//bool isCollection() const override { return collection()->isCollection(); }
-		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
 
+		//int endIndex() const override { return h_endIndex(); }
+		
+		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
+		int	focusIndex() const override {return _itFocus;}
+		//int nextActionableIndex(int index) const override { return h_nextActionableIndex(index); }
+		//int prevActionableIndex(int index) const override { return h_prevActionableIndex(index); }
+		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
 		int firstVisibleItem() const override { return h_firstVisibleItem(); }
 		int fieldEndPos() const override { return _endPos; }
 		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override {return h_listStatus(streamIndex);}
 		void endVisibleItem(bool thisWasShown, int streamIndex) const override { h_endVisibleItem(thisWasShown, streamIndex); }
-		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
 
 		// Polymorphic Modifiers
+		void setFocusIndex(int focus) override { _itFocus = focus; }
+		//Collection_Hndl * move_focus_to(int index) override { return h_move_focus_to(index); }
+
+
 		//I_SafeCollection * collection() override { return _nestedCollection->collection(); }
 		//const I_SafeCollection * collection() const override { return _nestedCollection->collection(); }
 
