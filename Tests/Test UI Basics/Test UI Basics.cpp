@@ -6,23 +6,29 @@
 #include "LocalDisplay.h"
 #include "Logging.h"
 #include "A_Top_UI.h"
-//#include "EEPROM.h"
-//#include <Conversions.h>
+#include "EEPROM.h"
 
 #include <iostream>
 #include <iomanip>
 
-//#define ZPSIM
 #define BASIC_TESTS
 #define UI_ELEMENT_TESTS
 
 using namespace LCD_UI;
-//using namespace client_data_structures;
-//using namespace RelationalDatabase;
 using namespace HardwareInterfaces;
-//using namespace GP_LIB;
-//using namespace Date_Time;
+
 using namespace std;
+Logger & logger() {
+	static Serial_Logger _log(9600);
+	return _log;
+}
+
+I2C_Talk rtc{ Wire1, 100000 };
+
+EEPROMClass & eeprom() {
+	static EEPROMClass_T<rtc> _eeprom_obj{ 0x50 };
+	return _eeprom_obj;
+}
 
 std::string	test_stream(UI_DisplayBuffer & buffer) {
 	std::string result = buffer.toCStr();
@@ -43,16 +49,16 @@ class LazyPage : public LCD_UI::LazyCollection {
 public:
 	using I_SafeCollection::item;
 	LazyPage() : LazyCollection(5,viewAllRecycle()) {}
-	Collection_Hndl & item(int newIndex) override {
-		if (newIndex == objectIndex() && object().get() != 0) return object();
+	Collection_Hndl * item(int newIndex) override {
+		if (newIndex == objectIndex() && object().get() != 0) return &object();
 		setObjectIndex(newIndex);
 		switch (validIndex(objectIndex())) {
-		case 0: return swap(new UI_Label("L5"));
-		case 1: return swap(new UI_Cmd("C6", 0));
-		case 2: return swap(new UI_Label("L6", hidden()));
-		case 3: return swap(new UI_Label("L7"));
-		case 4: return swap(new UI_Cmd("C7", 0));
-		default: return object();
+		case 0: return &swap(new UI_Label("L5"));
+		case 1: return &swap(new UI_Cmd("C6", 0));
+		case 2: return &swap(new UI_Label("L6", hidden()));
+		case 3: return &swap(new UI_Label("L7"));
+		case 4: return &swap(new UI_Cmd("C7", 0));
+		default: return &object();
 		};
 	}
 };
@@ -79,6 +85,8 @@ TEST_CASE("Lazy Page of Cmd/Label") {
 	const LazyPage lazyPage_c;
 	auto display1_c = makeDisplay(lazyPage_c);
 	auto display1_h = A_Top_UI(display1_c);
+	ui_Objects()[(long)&lazyPage_c] = "lazyPage_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	//cout << "lazyPage_c Addr: " << hex << (long long)&lazyPage_c << endl;
 	//cout << "LazyElCount : " << lazyPage_c.count() << endl << endl;
@@ -235,7 +243,7 @@ TEST_CASE("Multi-Page Command Changes Element Focus", "[Display]") {
 
 	C1.set_OnSelFn_TargetUI(display1_c.item(0));
 	C2.set_OnSelFn_TargetUI(display1_c.item(0));
-	C3.set_OnSelFn_TargetUI(display1_h);
+	C3.set_OnSelFn_TargetUI(&display1_h);
 
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 C1     L2 C2");
 	display1_h.rec_select(); // Make page_1 recipient of commands.
@@ -262,8 +270,8 @@ TEST_CASE("Multi-Page Command Changes Page", "[Display]") {
 
 	C1.set_OnSelFn_TargetUI(display1_c.item(0));
 	C2.set_OnSelFn_TargetUI(display1_c.item(0));
-	C3.set_OnSelFn_TargetUI(display1_h);
-	C4.set_OnSelFn_TargetUI(display1_h);
+	C3.set_OnSelFn_TargetUI(&display1_h);
+	C4.set_OnSelFn_TargetUI(&display1_h);
 
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 C1     L2 C3 C2");
 	display1_h.rec_left_right(1);
@@ -294,8 +302,8 @@ TEST_CASE("Multi-Page Changed Page retains Selection", "[Display]") {
 
 	C1.set_OnSelFn_TargetUI(display1_c.item(0));
 	C2.set_OnSelFn_TargetUI(display1_c.item(0));
-	C3.set_OnSelFn_TargetUI(display1_h);
-	C4.set_OnSelFn_TargetUI(display1_h);
+	C3.set_OnSelFn_TargetUI(&display1_h);
+	C4.set_OnSelFn_TargetUI(&display1_h);
 
 	display1_h.rec_select(); // Make page_1 recipient of commands, C1 is ActiveUI.
 	display1_h.rec_left_right(1); // Move to C3

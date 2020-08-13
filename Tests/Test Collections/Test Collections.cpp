@@ -112,29 +112,29 @@ TEST_CASE("Collection_Clock_MoveFocus_non_const") {
 }
 
 TEST_CASE("Collection_MoveFocus_non_const") {
-	Cmd C0(0,0, hidden()), C1(1,0), C2(2,0, hidden()), C3(3,0), C4(4, 0,hidden());
-	auto page_c = makeCollection(C0, C1, C2, C3, C4); // .removeBehaviour(Behaviour::b_RecycleInList);
-	auto page_h = Collection_Hndl{ page_c, 2};// non-clock behaviour
-	// 1st valid element after default 
-	CHECK(page_h.focusIndex() == 3);
-	// moves to prev valid element
-	auto succeeded = page_h.move_focus_by(-1);
-	CHECK(page_h.focusIndex() == 1);
-	CHECK(succeeded == true);
-	// won't move before first valid element
-	succeeded = page_h.move_focus_by(-1);
-	CHECK(page_h.focusIndex() == 1);
-	CHECK(succeeded == false);
-	// can't move to invalid element
-	page_h.move_focus_to(2);
-	CHECK(page_h.focusIndex() == 1);
-	// moves to valid element
-	page_h.move_focus_to(3);
-	CHECK(page_h.focusIndex() == 3);
-	// won't move past last valid element
-	succeeded = page_h.move_focus_by(1);
-	CHECK(page_h.focusIndex() == 3);
-	CHECK(succeeded == false);
+	//Cmd C0(0,0, hidden()), C1(1,0), C2(2,0, hidden()), C3(3,0), C4(4, 0,hidden());
+	//auto page_c = makeCollection(C0, C1, C2, C3, C4); // .removeBehaviour(Behaviour::b_RecycleInList);
+	//auto page_h = Collection_Hndl{ page_c, 2};// non-clock behaviour
+	//// 1st valid element after default 
+	//CHECK(page_h.focusIndex() == 3);
+	//// moves to prev valid element
+	//auto succeeded = page_h.move_focus_by(-1);
+	//CHECK(page_h.focusIndex() == 1);
+	//CHECK(succeeded == true);
+	//// won't move before first valid element
+	//succeeded = page_h.move_focus_by(-1);
+	//CHECK(page_h.focusIndex() == 1);
+	//CHECK(succeeded == false);
+	//// can't move to invalid element
+	//page_h.move_focus_to(2);
+	//CHECK(page_h.focusIndex() == 1);
+	//// moves to valid element
+	//page_h.move_focus_to(3);
+	//CHECK(page_h.focusIndex() == 3);
+	//// won't move past last valid element
+	//succeeded = page_h.move_focus_by(1);
+	//CHECK(page_h.focusIndex() == 3);
+	//CHECK(succeeded == false);
 }
 
 TEST_CASE("Collection_NoValidElement") {

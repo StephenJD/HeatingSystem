@@ -10,7 +10,7 @@ namespace LCD_UI {
 		// 110 :view, sel, ViewAll, EditOnNextItem, Recycle
 		// 94 : view, sel, ViewAll, UpDn, Recycle
 		// 86 : view, sel, ViewOne, UpDn, Recycle
-		// 78 : view, sel, ViewOne, Recycle
+		// 78 : view, sel, ViewAll, Recycle
 		// 38 : view, sel, ViewOne, UpDn
 		// 30 : view, sel, ViewAll, UpDn
 		// 22 : view, sel, ViewOne, UpDn
