@@ -78,11 +78,11 @@ namespace LCD_UI {
 
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
-		//if (auto collection = get()->collection()) {
-		//	collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
-		//	set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
-		//	move_focus_by(0); // recycle if allowed. 
-		//}
+		if (auto collection = get()->collection()) {
+			collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
+			set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+			move_focus_by(0); // recycle if allowed. 
+		}
 	}
 
 	CursorMode Collection_Hndl::cursorMode(const Object_Hndl * activeElement) const {
@@ -266,7 +266,7 @@ namespace LCD_UI {
 					cout << F("\tSet Active to 0: ") << endl;
 				}
 				if (active) {
-					cout << F("\tActive member is: ") << ui_Objects()[(long)active->get()] << " Active Focus is: " << active->focusIndex() << " Act ObjectInd: " << active->get()->collection()->objectIndex() << endl;
+					cout << F("\tActive member is: ") << ui_Objects()[(long)active->get()] << " Active Focus is: " << active->focusIndex() << " Act ObjectInd: " << (active->get()->collection() ? active->get()->collection()->objectIndex() : 0) << endl;
 					active->streamElement(buffer, activeElement, shortColl, streamIndex);
 				}
 			}

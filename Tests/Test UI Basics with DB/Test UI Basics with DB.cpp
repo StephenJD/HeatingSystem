@@ -1615,6 +1615,7 @@ TEST_CASE("Edit CurrentDateTime", "[Display]") {
 	cout << test_stream(display1_h.stream(tb)) << endl;
 	display1_h.rec_select();
 	display1_h.stream(tb);
+	clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
 	CHECK(test_stream(display1_h.stream(tb)) == "08:15:00a_m          Mon 31/Jul/2017     DST Hours: 1");
 	display1_h.rec_left_right(1); // moves focus
 	CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Mon 31/Jul/201_7     DST Hours: 1");

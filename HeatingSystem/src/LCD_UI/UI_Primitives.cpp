@@ -272,7 +272,7 @@ namespace LCD_UI {
 			editSr[currStrLength] = 0;
 			streamStr[cursorPos] = _thisChar;
 		}
-		else {
+		else { // e.g. changing selected program instead of editing name. Test line 1920
 			Field_Interface_h * fldInt_h = static_cast<Field_Interface_h *>(backUI());
 			auto status = fldInt_h->getData()->data()->move_by(move);
 			if (status != TB_OK && fldInt_h->behaviour().is_recycle_on_next()) {
