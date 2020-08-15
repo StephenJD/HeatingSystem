@@ -70,6 +70,7 @@ namespace LCD_UI {
 #ifdef ZPSIM
 			logger() << F("oneVal at: ") << L_hex << (long)this << L_endl;
 			logger() << F("\tas UI_Object at: ") << L_hex << (long)(UI_Object*)this << L_endl;
+			ui_Objects()[(long)this] = "OneVal";
 #endif
 		};
 		void setParent(I_SafeCollection * parent) { _parent = parent; }
@@ -79,7 +80,7 @@ namespace LCD_UI {
 		Behaviour & behaviour() override { return _behaviour; }
 	private:
 		I_SafeCollection * _parent;
-		Behaviour _behaviour;
+		Behaviour _behaviour = viewOne();
 	};
 
 	/// <summary>

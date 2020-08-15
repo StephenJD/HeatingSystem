@@ -60,33 +60,53 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * A_Top_UI::set_leftRightUI_from(Collection_Hndl * topUI, int direction) {
-		if (!topUI->behaviour().is_viewAll()) {
-			topUI = topUI->backUI();
-		}
-		_leftRightBackUI = topUI;
-		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
-		auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
-		if (innerLeftRight) {
-			auto inner_UI_h = innerLeftRight;
-			auto innerIsCollection = false;
-			do {
-				logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
-				if (inner_UI_h->behaviour().is_viewAll()) {
-					logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
-					_leftRightBackUI = inner_UI_h;
-					inner_UI_h->enter_collection(direction);
-				}
-				innerIsCollection = inner_UI_h->get()->isCollection();
-				if (innerIsCollection) {
-					innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
-					if (innerLeftRight == 0) break;
-					inner_UI_h = innerLeftRight;
-				}
-			} while (innerIsCollection);
-			if (inner_UI_h->behaviour().is_viewAll()) {
-				_leftRightBackUI = inner_UI_h;
+		// LR passes to the innermost ViewAll-collection	
+		//while (topUI->behaviour().is_viewOne() || topUI->behaviour().is_NextActive_On_LR()) {
+		//	logger() << F("SetLR-topUI: ") << ui_Objects()[(long)(topUI->get())].c_str()
+		//		<< (topUI->behaviour().is_NextActive_On_LR() ? " LR-Active" : (topUI->behaviour().is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;
+		//	topUI = topUI->backUI();
+		//}
+		auto tryLeftRight = topUI->activeUI();
+		auto gotLeftRight = _leftRightBackUI;
+		while (tryLeftRight->get()->isCollection()) { // can only pass LR to activeUI, if it is a collection.
+			auto try_behaviour = tryLeftRight->behaviour();
+			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str() 
+				<< (try_behaviour.is_NextActive_On_LR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;
+			if (try_behaviour.is_NextActive_On_LR()) {
+				tryLeftRight = tryLeftRight->activeUI();
+				if(tryLeftRight->get()->isCollection()) gotLeftRight = tryLeftRight/*->activeUI()*/;
+				//break;
+			} else if (try_behaviour.is_viewAll()) {
+				gotLeftRight = tryLeftRight;
 			}
+			tryLeftRight = tryLeftRight->activeUI();
 		}
+		if (_leftRightBackUI != gotLeftRight) {
+			_leftRightBackUI = gotLeftRight;
+			_leftRightBackUI->enter_collection(direction);
+		}
+		//auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
+		//if (innerLeftRight) {
+		//	auto inner_UI_h = innerLeftRight;
+		//	auto innerIsCollection = false;
+		//	do {
+		//		logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
+		//		if (inner_UI_h->behaviour().is_viewAll()) {
+		//			logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
+		//			_leftRightBackUI = inner_UI_h;
+		//			inner_UI_h->enter_collection(direction);
+		//		}
+		//		innerIsCollection = inner_UI_h->get()->isCollection();
+		//		if (innerIsCollection) {
+		//			innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
+		//			if (innerLeftRight == 0) break;
+		//			inner_UI_h = innerLeftRight;
+		//		}
+		//	} while (innerIsCollection);
+		//	if (inner_UI_h->behaviour().is_viewAll()) {
+		//		_leftRightBackUI = inner_UI_h;
+		//	}
+		//}
 		return topUI;
 	}
 
@@ -94,12 +114,13 @@ namespace LCD_UI {
 		// The innermost handle with UpDown behaviour gets the call.
 		/*if (this_UI_h->behaviour().is_UpDnAble())*/ _upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
-			auto active = this_UI_h->activeUI();
-			//if (active->behaviour().is_UpDnAble()) {
-			if (active->behaviour().is_selectable()) {
-				_upDownUI = active;
+			auto tryUD = this_UI_h->activeUI();
+			auto tryIsUpDnAble = tryUD->behaviour().is_next_on_UpDn();
+			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
+			if (tryIsUpDnAble) {
+				_upDownUI = tryUD;
 			}
-			this_UI_h = active;
+			this_UI_h = tryUD;
 		}
 	}
 
@@ -109,11 +130,11 @@ namespace LCD_UI {
 		set_leftRightUI_from(selectedPage_h(),0);
 		set_UpDownUI_from(selectedPage_h());
 #ifdef ZPSIM 
-		logger() << F("\n\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
+		logger() << F("\nselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
 		logger() << F("\n\tselectedPage focus: ") << selectedPage_h()->focusIndex() << L_endl;
 		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 		logger() << F("\t_upDownUI focus: ") << _upDownUI->focusIndex() << L_endl;
-		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " LRColl addr: " << (long)selectedPage_h()->get()->collection()->leftRight_Collection() << L_endl;
+		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		
 		//logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
 		logger() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
@@ -157,7 +178,7 @@ namespace LCD_UI {
 			do {
 				do {
 					_leftRightBackUI = _leftRightBackUI->backUI();
-				} while (_leftRightBackUI != this && !_leftRightBackUI->behaviour().is_viewAll());
+				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_NextActive_On_LR()));
 
 				hasMoved = _leftRightBackUI->move_focus_by(move);
 			} while (!hasMoved && _leftRightBackUI != this);
@@ -173,10 +194,10 @@ namespace LCD_UI {
 			rec_edit();
 
 #ifdef ZPSIM
-		logger() << F("\tselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		logger() << F("selectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
 		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
+		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 		logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
 #endif
 	}
@@ -184,7 +205,7 @@ namespace LCD_UI {
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
 		auto haveMoved = false;
 
-		if (_upDownUI->get()->isCollection() && _upDownUI->behaviour().is_viewOneUpDn_Next()) {
+		if (/*_upDownUI->get()->isCollection() &&*/ _upDownUI->behaviour().is_viewOneUpDn_Next()) {
 			if (_upDownUI->backUI()->cursorMode(_upDownUI->backUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 				move = -move; // reverse up/down when in edit.
 			}
@@ -213,9 +234,10 @@ namespace LCD_UI {
 
 	void A_Top_UI::notifyAllOfFocusChange(Collection_Hndl * top) {
 		top->get()->focusHasChanged(top == _upDownUI);
-//return;
-		for (int i = top->get()->collection()->nextActionableIndex(0); !top->atEnd(i); i = top->get()->collection()->nextActionableIndex(++i)) { // need to check all elements on the page
-			auto element_h = static_cast<Collection_Hndl *>(top->get()->collection()->item(i));
+		auto topCollection = top->get()->collection();
+		if (topCollection == 0) return;
+		for (int i = topCollection->nextActionableIndex(0); !top->atEnd(i); i = topCollection->nextActionableIndex(++i)) { // need to check all elements on the page
+			auto element_h = static_cast<Collection_Hndl *>(topCollection->item(i));
 			if (element_h->get()->isCollection()) {
 #ifdef ZPSIM
 				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_tabs << L_hex << (long)(element_h->get()) << L_endl;
@@ -263,8 +285,9 @@ namespace LCD_UI {
 			_cursorUI = this;
 			_leftRightBackUI = this;
 			_upDownUI = this;
-		} else {
+		} else { // take out of edit
 			if (newFocus) setBackUI(newFocus);
+			_leftRightBackUI = backUI()/*->backUI()*/;
 			selectPage();
 		}
 	}

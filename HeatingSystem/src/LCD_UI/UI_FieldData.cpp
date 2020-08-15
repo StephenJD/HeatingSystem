@@ -99,26 +99,10 @@ namespace LCD_UI {
 		return &_field_Interface_h;
 	}
 
-	const char * UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		// only called for viewall.	
-#ifdef ZPSIM
-		//cout << "UI_FieldData::stream all Elements of " << ui_Objects()[(long)this] << endl;
-		//cout << "UI_FieldData::one Element of " << ui_Objects()[(long)this] << endl;
-#endif
-		//auto focus_index = LazyCollection::focusIndex();
-		//for (auto & element : *this) {
-		//	auto endVisibleIndex = shortColl->endVisibleItem();
-			auto objIndex = objectIndex();
-		//	if (endVisibleIndex) {
-		//		if (objIndex < shortColl->firstVisibleItem()) continue;
-		//		if (objIndex > shortColl->endVisibleItem()) break;
-		//	}
-
-			auto activeEl = activeElement;
-			//if (objIndex != focus_index) activeEl = 0;
-			_field_Interface_h.streamElement(buffer, activeEl, shortColl, objIndex);
-		//}
-		return buffer.toCStr();
+	bool UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+		auto objIndex = objectIndex();
+		auto activeEl = activeElement;
+		return _field_Interface_h.streamElement(buffer, activeEl, shortColl, objIndex);
 	}
 
 	Collection_Hndl * UI_FieldData::saveEdit(const I_UI_Wrapper * data) {

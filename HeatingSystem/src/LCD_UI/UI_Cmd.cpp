@@ -33,7 +33,7 @@ namespace LCD_UI {
 	}
 
 
-	const char * UI_Cmd::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool UI_Cmd::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		return streamToBuffer(text, buffer, activeElement, shortColl,streamIndex);
 	}
 
@@ -46,7 +46,7 @@ namespace LCD_UI {
 #endif
 	}
 
-	const char * UI_Label::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool UI_Label::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		return streamToBuffer(text, buffer, activeElement, shortColl,streamIndex);
 	}
 

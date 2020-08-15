@@ -19,7 +19,7 @@ namespace LCD_UI {
 	//	using UI_Object::behaviour;
 	//	Behaviour & behaviour() override { return _collection->behaviour(); }
 	//	bool isCollection() const override { return _collection->isCollection(); }
-	//	const char * streamElement(UI_DisplayBuffer & buffer
+	//	bool streamElement(UI_DisplayBuffer & buffer
 	//		, const Object_Hndl * activeElement
 	//		, const I_SafeCollection * shortColl
 	//		, int streamIndex) const override {

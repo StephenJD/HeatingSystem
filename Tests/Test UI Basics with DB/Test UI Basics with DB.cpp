@@ -392,7 +392,7 @@ TEST_CASE("View-One with Names", "[Display]") {
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewOneRecycle()); // non-recyclable
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewOneNonRecycle()); // non-recyclable
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -403,16 +403,17 @@ TEST_CASE("View-One with Names", "[Display]") {
 	//auto dwellZRS = q_dwellingZones.begin();
 	//dwellZRS.begin();
 	//dwellRS.query().moveTo(0);
-	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, progNameUI_c, C3);
-	cout << "\nDisplay     Collection\n";
-	auto display1_c = makeDisplay(page1_c);
-	auto display1_h = A_Top_UI(display1_c);
-
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
 	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
 	ui_Objects()[(long)&C3] = "C3";
 	ui_Objects()[(long)&L1] = "L1";
+
+	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, progNameUI_c, C3);
+	cout << "\nDisplay     Collection\n";
+	auto display1_c = makeDisplay(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
 	ui_Objects()[(long)&display1_c] = "display1_c";
 	ui_Objects()[(long)&page1_c] = "page1_c";
 
@@ -421,8 +422,8 @@ TEST_CASE("View-One with Names", "[Display]") {
 		cout << dwellng.rec().name << endl;
 	}
 	q_dwellings.begin();
-	display1_h.stream(tb);
 	cout << test_stream(display1_h.stream(tb)) << endl;
+	display1_h.stream(tb);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs   At Home             C3");
 	display1_h.rec_up_down(1); // up-down no other pages, so stay put
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs   At Home             C3");
@@ -539,7 +540,7 @@ TEST_CASE("View-All with Names", "[Display]") {
 	// UI Element Arrays / Collections
 	cout << "\npage1 Collection\n";
 	auto iterated_zoneNames = UI_IteratedCollection{ 32,makeCollection(zoneNameUI_c) };
-	auto iterated_progNames = UI_IteratedCollection{ 56,makeCollection(progNameUI_c) };
+	auto iterated_progNames = UI_IteratedCollection{ 60,makeCollection(progNameUI_c) };
 	auto page1_c = makeCollection(L1, dwellNameUI_c, iterated_zoneNames, iterated_progNames, C3);
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeDisplay(page1_c);
@@ -658,16 +659,18 @@ TEST_CASE("View-All with Edit Names", "[Display]") {
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
 
 	// UI Elements
 	UI_Label L1("L1");
 	UI_Cmd C3("C3", 0);
 
-	// UI Element Arays / Collections
+	// UI Element Arrays / Collections
+	auto iterated_zoneName_c = UI_IteratedCollection{ 40, makeCollection(zoneNameUI_c) };
+	auto iterated_progName_c = UI_IteratedCollection{ 80, makeCollection(progNameUI_c) };
 	cout << "\npage1 Collection\n";
-	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, progNameUI_c, C3);
+	auto page1_c = makeCollection(L1, dwellNameUI_c, iterated_zoneName_c, iterated_progName_c, C3);
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeDisplay(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -798,14 +801,22 @@ TEST_CASE("Short List Items", "[Display]") {
 	UI_Cmd C1("C1", 0), C2("C2",0), C3("C3", 0),C4("C4", 0);
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
+	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+
 	auto label_c = makeCollection(C1, C2, C3, C4);
+	ui_Objects()[(long)&label_c] = "label_c";
 
 	cout << "\n **** Next create Short-collection wrappers ****\n";
 	auto zoneName_sc = UI_IteratedCollection{19, makeCollection(zoneNameUI_c)};
 	auto progName_sc = UI_IteratedCollection{30, makeCollection(progNameUI_c)};
 	auto label_sc = UI_IteratedCollection{3, makeCollection(label_c) };
+	ui_Objects()[(long)&zoneName_sc] = "zoneName_sc";
+	ui_Objects()[(long)&progName_sc] = "progName_sc";
+	ui_Objects()[(long)&label_sc] = "label_sc";
 
 	// UI Element Arays / Collections	cout << "\npage1 Collection\n";
 	cout << "\npage1 Collection\n";
@@ -817,6 +828,10 @@ TEST_CASE("Short List Items", "[Display]") {
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeDisplay(page1_c, page2_c, page3_c);
 	auto display1_h = A_Top_UI(display1_c);
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&page2_c] = "page2_c";
+	ui_Objects()[(long)&page3_c] = "page3_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	cout << " **** All Constructed ****\n\n";
 
@@ -825,10 +840,12 @@ TEST_CASE("Short List Items", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs> At Home>");
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs> At Home>");
 	display1_h.rec_up_down(1); // next page
-
+	cout << test_stream(display1_h.stream(tb)) << endl;
 	CHECK(test_stream(display1_h.stream(tb)) == "C1> House   UpStrs> At Home>");
 	display1_h.rec_up_down(1); // next page
-	//CHECK(test_stream(display1_h.stream(tb)) == "C1 C2>");
+	cout << test_stream(display1_h.stream(tb)) << endl;
+	display1_h.stream(tb);
+	CHECK(test_stream(display1_h.stream(tb)) == "C1 C2>");
 	display1_h.rec_up_down(1); // next page
 
 	display1_h.rec_select();
@@ -915,8 +932,8 @@ TEST_CASE("Edit String Values", "[Display]") {
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewOneRecycle(), editRecycle());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewOneRecycle());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewOneRecycle(), viewAllRecycle());
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -1815,26 +1832,28 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewAllUpDn().make_newLine());
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name,0,0, viewAllUpDn().make_newLine());
-	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date,0,0, editActiveMember_onUpDn(), editRecycle());
-	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, &dwellSpellUI_c, Dataset_Spell::e_progID, viewOneRecycle().make_newLine(), editRecycle().make_unEditable());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
+	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date,0,0, editActiveMember_onUpDn(), viewAllRecycle());
+	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, &dwellSpellUI_c, Dataset_Spell::e_progID, viewOneRecycle().make_newLine()/*, viewAllRecycle().make_unEditable()*/);
 
 	// UI Elements
+	auto iteratedZoneName = UI_IteratedCollection{30,makeCollection(zoneNameUI_c), viewAllRecycle().make_newLine() };
+	auto iteratedProgName = UI_IteratedCollection{60,makeCollection(progNameUI_c), viewAllRecycle().make_newLine() };
 	UI_Cmd _dwellingZoneCmd = {"Zones",0}, _dwellingCalendarCmd = { "Calendar",0}, _dwellingProgCmd = { "Programs",0 };
 	InsertSpell_Cmd _fromCmd = { "From", 0, viewOneRecycle().make_newLine() };
 	UI_Label _insert = { "Insert-Prog", hidden().make_sameLine() };
 
 	// UI Element Arays / Collections
 	cout << "\nzone_subpage Elements Collection\n";
-	auto zone_subpage_c = makeCollection(_dwellingZoneCmd, zoneNameUI_c);
-	zone_subpage_c.set(viewAllUpDn());
+	auto zone_subpage_c = makeCollection(_dwellingZoneCmd, iteratedZoneName);
+	//zone_subpage_c.set(viewAllUpDn());
 	cout << "\ncalendar_subpage Elements Collection\n";
 	auto calendar_subpage_c = makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, dwellSpellUI_c, spellProgUI_c);
-	calendar_subpage_c.set(viewAllUpDn());
+	//calendar_subpage_c.set(viewAllUpDn());
 	cout << "\nprog_subpage Elements Collection\n";
-	auto prog_subpage_c = makeCollection(_dwellingProgCmd, progNameUI_c);
-	prog_subpage_c.set(viewAllUpDn());
+	auto prog_subpage_c = makeCollection(_dwellingProgCmd, iteratedProgName);
+	//prog_subpage_c.set(viewAllUpDn());
 	_fromCmd.set_UpDn_Target(calendar_subpage_c.item(3));
 
 	cout << "\npage1 sub-page Collection\n";
@@ -2196,7 +2215,7 @@ TEST_CASE("View-one nested Profile element", "[Display]") {
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
 	auto zoneAbbrevUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_abbrev, 0, 0, viewOneRecycle());
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewOneRecycle());
-	auto profileDaysUI_c = UI_FieldData(&rec_profile, Dataset_ProfileDays::e_days, &progNameUI_c, Dataset_Program::e_id, viewOneRecycle(), editRecycle());
+	auto profileDaysUI_c = UI_FieldData(&rec_profile, Dataset_ProfileDays::e_days, &progNameUI_c, Dataset_Program::e_id, viewOneRecycle(), viewAllRecycle());
 
 	// UI Elements
 	UI_Label _prog = { "Prog:", viewable().make_sameLine() };
@@ -2300,9 +2319,9 @@ TEST_CASE("TimeTemps", "[Display]") {
 	cout << "\tzone\n";
 	auto _zoneAbbrevUI_c = UI_FieldData{ &_rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneRecycle() };
 	cout << "\tprofile\n";
-	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneRecycle(), editRecycle() };
+	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneRecycle(), viewAllRecycle() };
 	cout << "\ttimeTemp\n";
-	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAllRecycle().make_newLine().make_editOnUpDn(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
+	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewAllRecycle().make_newLine().make_editOnUpDn(), viewAllNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
 	auto _iterated_timeTempUI = UI_IteratedCollection{ 80, makeCollection(_timeTempUI_c) };
 
 	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, viewOneRecycle().make_hidden().make_newLine()};

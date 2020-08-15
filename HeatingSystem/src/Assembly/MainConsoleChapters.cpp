@@ -22,11 +22,11 @@ namespace Assembly {
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneRecycle() }
 		
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneRecycle() }
-		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editActiveMember_onUpDn(), editRecycle()}
-		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, viewOneRecycle().make_newLine(), editRecycle().make_unEditable() }
-		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneRecycle(), editRecycle() }
+		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editActiveMember_onUpDn(), viewAllRecycle()}
+		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, viewOneRecycle().make_newLine()/*, viewAllRecycle().make_unEditable()*/ }
+		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneRecycle(), viewAllRecycle() }
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewOneRecycle().make_newLine().make_editOnUpDn(), editNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewOneRecycle().make_newLine().make_editOnUpDn(), viewAllNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAllRecycle().make_newLine() }
 		
 		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name }

@@ -36,8 +36,9 @@ namespace LCD_UI {
 	Collection_Hndl * I_Field_Interface::edit(Collection_Hndl * from) {
 		editItem().setBackUI(from);
 #ifdef ZPSIM
-		cout << F("edit->back ") << ui_Objects()[(long)parent()->backUI()->get()] << endl; // Collection with field to be edited
-		cout << F("edit->back->focus ") << parent()->backUI()->focusIndex() << endl;
+		cout << F("Edit Interface: ") << ui_Objects()[(long)this] << endl;
+		cout << F("\tedit->back ") << ui_Objects()[(long)parent()->backUI()->get()] << endl; // Collection with field to be edited
+		cout << F("\tedit->back->focus ") << parent()->backUI()->focusIndex() << endl;
 #endif	
 		parent()->set_focus(editItem().getEditCursorPos()); // copy data to edit
 		removeBehaviour(Behaviour::b_ViewOne);
@@ -91,16 +92,17 @@ namespace LCD_UI {
 	// *********************************************
 
 	Field_Interface_h::Field_Interface_h(I_Field_Interface & fieldInterfaceObj, Behaviour editBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
-		: Collection_Hndl(fieldInterfaceObj), _editBehaviour(editBehaviour), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
+		: Collection_Hndl(fieldInterfaceObj), _editBehaviour(editBehaviour.removeBehaviour(Behaviour::b_UD_NextActive)), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
 	{
-		fieldInterfaceObj.behaviour() = viewOneRecycle();
+		fieldInterfaceObj.behaviour() = parent->behaviour();
+		fieldInterfaceObj.behaviour().removeBehaviour(Behaviour::b_UD_NextActive); // shared stringInterface must be given behaviour of its parent
 	}
 
 	void Field_Interface_h::set_OnSelFn_TargetUI(Collection_Hndl * obj) {
 		_onSelect.setTarget(obj);
 	}
 
-	const char * Field_Interface_h::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool Field_Interface_h::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		auto cursor_mode = cursorMode(activeElement);
 		if (activeElement && !cursor_mode) activeElement = 0;
 

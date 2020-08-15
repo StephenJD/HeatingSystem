@@ -38,7 +38,7 @@ namespace LCD_UI {
 #ifdef ZPSIM
 		logger() << F("\tEdit_Int_h Addr: ") << L_hex << long(this) << L_endl;
 		logger() << F("\tEdit_Int_h Edit Addr: ") << L_hex << long(&editVal) << L_endl;
-		ui_Objects()[(long)get()] = "Edit_Int";
+		ui_Objects()[(long)&editVal] = "Permitted_Ints";
 #endif
 	}
 
@@ -150,7 +150,7 @@ namespace LCD_UI {
 #ifdef ZPSIM
 		logger() << F("\tEdit_Char_h Addr:") << L_hex << long(this) << L_endl;
 		logger() << F("\teditChar Addr:") << L_hex << long(&editChar) << L_endl;
-		ui_Objects()[(long)get()] = "Edit_Char";
+		ui_Objects()[(long)&editChar] = "Permitted_Chars";
 #endif
 	}
 
@@ -189,7 +189,7 @@ namespace LCD_UI {
 
 	bool Edit_Char_h::move_focus_by(int move) { // Change character at the cursor. Modify the copy held by Edit_Char_h
 		if (move == 0) return false;
-		if (backUI()->behaviour().is_Editable()) {
+		//if (backUI()->behaviour().is_Editable()) {
 			char * editSr = _currValue.str();
 			char * streamStr = stream_edited_copy;
 			int cursorPos = focusIndex();
@@ -271,19 +271,19 @@ namespace LCD_UI {
 			editSr[cursorPos] = _thisChar;
 			editSr[currStrLength] = 0;
 			streamStr[cursorPos] = _thisChar;
-		}
-		else {
-			Field_Interface_h * fldInt_h = static_cast<Field_Interface_h *>(backUI());
-			auto status = fldInt_h->getData()->data()->move_by(move);
-			if (status != TB_OK && fldInt_h->behaviour().is_recycle()) {
-				if (status == TB_BEFORE_BEGIN) 
-					fldInt_h->getData()->data()->last();
-				else fldInt_h->getData()->data()->move_to(0);
-				//fldInt_h->getData()->data()->setRecordID(fldInt_h->getData()->data()->recordID());
-			}
-			_currValue.val = fldInt_h->getData()->data()->record().id();
-			return fldInt_h->getData()->data()->record().status() == TB_OK;
-		}
+		//}
+		//else { // for changing selection rather than editing name
+		//	Field_Interface_h * fldInt_h = static_cast<Field_Interface_h *>(backUI());
+		//	auto status = fldInt_h->getData()->data()->move_by(move);
+		//	if (status != TB_OK && fldInt_h->behaviour().is_recycle()) {
+		//		if (status == TB_BEFORE_BEGIN) 
+		//			fldInt_h->getData()->data()->last();
+		//		else fldInt_h->getData()->data()->move_to(0);
+		//		//fldInt_h->getData()->data()->setRecordID(fldInt_h->getData()->data()->recordID());
+		//	}
+		//	_currValue.val = fldInt_h->getData()->data()->record().id();
+		//	return fldInt_h->getData()->data()->record().status() == TB_OK;
+		//}
 		return true;
 	}
 
@@ -322,9 +322,9 @@ namespace LCD_UI {
 		if (isActiveElement) {
 			auto fieldInterface_h = parent();
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
-				if (fieldInterface_h->editBehaviour().is_Editable()) {
+				//if (fieldInterface_h->editBehaviour().is_Editable()) {
 					return _editItem.stream_edited_copy;
-				}
+				//}
 			}
 		} 
 		return strWrapper->str();

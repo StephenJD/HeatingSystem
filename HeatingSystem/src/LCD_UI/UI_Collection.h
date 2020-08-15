@@ -25,11 +25,11 @@ namespace LCD_UI {
 		virtual const I_SafeCollection * collection() const { return 0; }
 		// Queries supporting streaming
 		using HI_BD = HardwareInterfaces::LCD_Display;
-		virtual const char *		streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const { return 0; }
+		virtual bool				streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const { return false; }
 		virtual HI_BD::CursorMode	cursorMode(const Object_Hndl * activeElement) const;
 		virtual int					cursorOffset(const char * data) const;
 		virtual bool				upDn_IsSet() { return false; }
-		const char *				streamToBuffer(const char * data, UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const;
+		bool						streamToBuffer(const char * data, UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const;
 		const Behaviour				behaviour() const { return const_cast<UI_Object*>(this)->behaviour(); }
 		// Modifiers
 		virtual I_SafeCollection *	collection() { return 0; }
@@ -106,7 +106,7 @@ namespace LCD_UI {
 		Object_Hndl &			operator=(const UI_Object & rhs) { _objectHndl = &rhs; return *this; }
 
 		// Polymorphic Queries
-		virtual const char *	streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const /*override*/;
+		virtual bool			streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const /*override*/;
 
 		// New Queries
 		bool					empty() const { return _objectHndl == 0; }
@@ -176,7 +176,7 @@ namespace LCD_UI {
 		virtual CursorMode cursorMode(const Object_Hndl * activeElement) const;
 		virtual int cursorOffset(const char * data) const;
 		// Polymorphic Modifiers
-		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
 
 		virtual Collection_Hndl * on_back() { return backUI(); }   // function is called on the active object to notify it has been de-selected. Used by Edit_Data.
 		virtual Collection_Hndl * on_select() { return backUI(); } // action performed when saving. Used by Edit_Data.
@@ -239,7 +239,7 @@ namespace LCD_UI {
 		I_SafeCollection(int count, Behaviour behaviour);
 		// Polymorphic Queries
 		bool isCollection() const override { return true; }
-		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
 		virtual Collection_Hndl * leftRight_Collection();
 
 		// Polymorphic short-list query functions
@@ -444,7 +444,7 @@ namespace LCD_UI {
 
 		int h_firstVisibleItem() const;
 		void h_focusHasChanged(bool hasFocus);
-		const char * h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const;
+		bool h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const;
 		UI_DisplayBuffer::ListStatus h_listStatus(int streamIndex) const;
 		void h_endVisibleItem(bool thisWasShown, int streamIndex) const;
 		Collection_Hndl * h_item(int newIndex);
@@ -462,7 +462,6 @@ namespace LCD_UI {
 		mutable int16_t _endShow = 0; // streamIndex after the last visible element
 		int16_t _beginIndex = 0; // required streamIndex of first element in collection
 		int16_t _itFocus = 0;
-		mutable int16_t _itIndex = 0;
 	};
 
 
@@ -477,10 +476,14 @@ namespace LCD_UI {
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = viewAllRecycle())
-			: Collection<noOfObjects>(collection, behaviour)
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = nextActiveMember_onLR())
+			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all.
 			, UI_IteratedCollection_Hoist(endPos)
-		{}
+		{
+			if (behaviour.is_NextActive_On_LR()) {
+				activeUI()->get()->behaviour() = behaviour;
+			}
+		}
 
 		// Polymorphic Queries
 		const I_SafeCollection * iterated_collection() const override { return this; }
@@ -495,7 +498,7 @@ namespace LCD_UI {
 
 		//int endIndex() const override { return h_endIndex(); }
 		
-		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
 		int	focusIndex() const override {return _itFocus;}
 		//int nextActionableIndex(int index) const override { return h_nextActionableIndex(index); }
 		//int prevActionableIndex(int index) const override { return h_prevActionableIndex(index); }

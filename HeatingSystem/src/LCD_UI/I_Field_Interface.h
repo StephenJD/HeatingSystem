@@ -42,7 +42,7 @@ namespace LCD_UI {
 
 		void setWrapper(I_UI_Wrapper * wrapper);
 	protected:
-		I_Field_Interface() : I_SafeCollection(0,viewAllRecycle()) {
+		I_Field_Interface() : I_SafeCollection(0, viewable()) {
 #ifdef ZPSIM
 		logger() << F("\tI_Field_Interface Addr: ") << L_hex << long(this) << L_endl;
 #endif
@@ -57,7 +57,7 @@ namespace LCD_UI {
 		Field_Interface_h(I_Field_Interface & fieldInterfaceObj, Behaviour editBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect = 0);
 		
 		// Polymorphic Queries
-		const char * streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
 		CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override { 
 			return f_interface().editItem().currValue().valRange._cursorPos;

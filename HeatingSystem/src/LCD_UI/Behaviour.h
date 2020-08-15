@@ -4,30 +4,34 @@
 namespace LCD_UI {
 	extern const char NEW_LINE_CHR;
 
+	/// <summary>
+	/// 228: view, sel, ViewOne, LR-MoveFocus, UD-NextActive, Recycle
+	/// 226: view, sel, ViewOne, LR-MoveFocus, No-UD, Recycle
+	/// 224: view, sel, ViewOne, LR-MoveFocus, No-UD, Recycle
+	/// 210: view, sel, ViewAll, LR-NextActive, No-UD, No-recycle
+	/// 208: view, sel, ViewAll, LR-NextActive, No-UD, Recycle
+	/// 198: view, sel, ViewAll, LR-MoveFocus, UD-NextActive, No-Recycle
+	/// 196: view, sel, ViewAll, LR-MoveFocus, UD-NextActive, Recycle
+	/// 194: view, sel, ViewAll, LR-MoveFocus, No-UD, No-Recycle
+	/// 192: view, sel, ViewAll, LR-MoveFocus, No-UD, Recycle
+	/// </summary>
 	class Behaviour {
 	public:
 		//enum BehaviourFlags : uint8_t { b_Hidden, b_NewLine, b_Viewable = 2, b_Selectable = 4, b_ViewAll = 8, b_NextItemOnUpDown = 16, b_EditOnUpDn = 32, b_Recycle = 64, b_NotEditable = 128 };
-		enum BehaviourFlags : uint8_t { b_NewLine = 1, b_NonRecycle = 2, b_spare1 = 4, b_spare2 = 8, b_UD_NextActive = 16, b_UD_Edit = 32, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_LR_ActiveMember = 64, b_ViewOne = 128, b_Hidden = b_ViewOne };
+		enum BehaviourFlags : uint8_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_LR_ActiveMember = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128 };
 		// Largest value for least often encountered : Selectible == (b_UD_NextActive || b_UD_Edit). Hidden == (b_ViewOne && NotCollection), Viewable == (IsCollection || !b_ViewOne)
-		// 110 :view, sel, ViewAll, EditOnNextItem, Recycle
-		// 94 : view, sel, ViewAll, UpDn, Recycle
-		// 86 : view, sel, ViewOne, UpDn, Recycle
-		// 78 : view, sel, ViewAll, Recycle
-		// 38 : view, sel, ViewOne, UpDn
-		// 30 : view, sel, ViewAll, UpDn
-		// 22 : view, sel, ViewOne, UpDn
-		// 21 : newLine, sel, UpDown
 		Behaviour() = default;
+		Behaviour(BehaviourFlags b) : _behaviour(b) {}
 		explicit Behaviour(int b) : _behaviour(b) {}
 
 		// Queries
 		explicit operator uint8_t() const { return _behaviour; }
 		bool is(Behaviour b) const { return (_behaviour & uint8_t(b)) == uint8_t(b); }
 
-		bool is_viewable() const		{ return _behaviour < b_Hidden; }
-		bool is_selectable() const /*has cursor*/ { return _behaviour >= b_UD_NextActive; }
-		bool is_viewAll() const			{ return _behaviour < b_ViewOne; }
-		bool is_viewOne() const			{ return _behaviour >= b_ViewOne; }
+		bool is_viewable() const		{ return _behaviour >= b_Visible; }
+		bool is_selectable() const		{ return _behaviour >= b_Visible + b_Selectible; } /*has cursor*/ 
+		bool is_viewOne() const			{ return _behaviour & b_ViewOne; }
+		bool is_viewAll() const			{ return !is_viewOne(); }
 		//bool is_UpDnAble() const		{ return is_selectable(); }
 		bool is_next_on_UpDn() const	{ return (_behaviour & b_UD_NextActive) && !(_behaviour & b_UD_Edit); }
 		bool is_edit_on_UD() const		{ return _behaviour & b_UD_Edit; }
@@ -41,8 +45,8 @@ namespace LCD_UI {
 		//bool is_Editable() const		{ return (_behaviour & b_NotEditable) == 0; }
 		// Modifiers
 		Behaviour & operator = (int b) { _behaviour = b; return *this; }
-		Behaviour make_hidden() { _behaviour |= b_Hidden; return *this; }
-		Behaviour make_visible() { _behaviour &= ~b_Hidden; return *this; }
+		Behaviour make_visible() { _behaviour |= b_Visible; return *this; }
+		Behaviour make_hidden() { _behaviour &= ~b_Visible; return *this; }
 		Behaviour make_visible(bool show) {return show ? make_visible() : make_hidden(); }
 		Behaviour make_newLine() { _behaviour |= b_NewLine; return *this; }
 		Behaviour make_newLine(bool newLine) { return newLine ? make_newLine() : make_sameLine(); }
@@ -59,29 +63,27 @@ namespace LCD_UI {
 	};
 
 	inline Behaviour operator + (Behaviour lhs, Behaviour rhs) {
-		return Behaviour{ uint8_t(lhs) + uint8_t(rhs) };
+		return Behaviour{ uint8_t(lhs) | uint8_t(rhs) };
 	}
-	// Create Individual Behaviours. Default is Visible, View-all, Unselectable, UD-NextActiveMember, LR-MovesCursor, Recycle, Same-Line.  
-	inline Behaviour hidden() { return Behaviour{ Behaviour::b_Hidden }; }
-	inline Behaviour viewable() { return Behaviour{ 0 }; }
-	inline Behaviour viewOneRecycle() { return Behaviour{ Behaviour::b_ViewOne }; }
-	inline Behaviour nextActiveMember_onLR() { return Behaviour{ Behaviour::b_LR_ActiveMember }; }
-	inline Behaviour nextActiveMember_onUpDn() { return Behaviour{ Behaviour::b_UD_NextActive }; }
-	inline Behaviour editActiveMember_onUpDn() { return Behaviour{ Behaviour::b_UD_Edit }; }
-	inline Behaviour saveEditActiveMember_onUpDn() { return Behaviour{ Behaviour::b_UD_SaveEdit }; }
-	inline Behaviour selectable() { return nextActiveMember_onUpDn(); }
-	inline Behaviour nonRecycle() { return Behaviour{ Behaviour::b_NonRecycle }; }
-	inline Behaviour newLine() { return Behaviour{ Behaviour::b_NewLine }; }
+
+	inline Behaviour operator + (Behaviour::BehaviourFlags lhs, Behaviour::BehaviourFlags rhs) {
+		return Behaviour{ uint8_t(lhs) | uint8_t(rhs) };
+	}	
+	
+	// Create Individual Behaviours. Default(0) is Hidden, View-all, Unselectable, UD-NextActiveMember, LR-MovesCursor, Recycle, Same-Line.  
+	inline Behaviour hidden() { return Behaviour{ 0 }; }
+	inline Behaviour viewable() { return Behaviour::b_Visible; } // Set flag required for filtering
 	// Default combined behaviours
-	inline Behaviour viewAllRecycle() { return nextActiveMember_onUpDn(); }
-	inline Behaviour viewAllNonRecycle() { return nextActiveMember_onUpDn() + nonRecycle(); }
-	//inline Behaviour editNonRecycle() { return Behaviour{ Behaviour::b_Viewable | Behaviour::b_Selectable | Behaviour::b_ViewAll }; }
-
-	//inline Behaviour viewable() /*no cursor*/ { return Behaviour{ Behaviour::b_Viewable }; }
-	//inline Behaviour viewOneRecycle() { return Behaviour{ Behaviour::b_Viewable | Behaviour::b_Selectable | Behaviour::b_NextItemOnUpDown }; }
-	//inline Behaviour viewAllUpDn() { return Behaviour{ Behaviour::b_Viewable | Behaviour::b_Selectable | Behaviour::b_ViewAll  | Behaviour::b_NextItemOnUpDown}; }
-	//inline Behaviour viewAllUpDnRecycle() { return Behaviour{ Behaviour::b_Viewable | Behaviour::b_Selectable | Behaviour::b_ViewAll | Behaviour::b_NextItemOnUpDown | Behaviour::b_Recycle }; }
-	//// Edit Behaviours
-	//inline Behaviour editRecycle() { return Behaviour{ Behaviour::b_Viewable | Behaviour::b_Selectable | Behaviour::b_ViewAll | Behaviour::b_Recycle }; }
-
+	inline Behaviour selectable() { return viewable() + Behaviour::b_Selectible; } // Set flags required for filtering
+	inline Behaviour nextActiveMember_onLR() { return selectable() + Behaviour::b_LR_ActiveMember + Behaviour::b_NonRecycle; } // For iterated collection
+	inline Behaviour nextActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_NextActive; }
+	inline Behaviour editActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_Edit; }
+	inline Behaviour saveEditActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_SaveEdit; }
+	inline Behaviour nonRecycle() { return selectable() + Behaviour::b_NonRecycle; }
+	inline Behaviour newLine() { return viewable() + Behaviour::b_NewLine; }
+	inline Behaviour viewOne() { return viewable() + Behaviour::b_ViewOne; }
+	inline Behaviour viewOneRecycle() { return selectable() + nextActiveMember_onUpDn() + viewOne(); }
+	inline Behaviour viewAllRecycle() { return selectable() + nextActiveMember_onUpDn(); }
+	inline Behaviour viewAllNonRecycle() { return selectable() + nextActiveMember_onUpDn() + nonRecycle(); }
+	inline Behaviour viewOneNonRecycle() { return selectable() + viewOneRecycle() + nonRecycle(); }
 }

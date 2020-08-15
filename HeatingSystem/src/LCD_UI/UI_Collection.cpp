@@ -39,7 +39,7 @@ namespace LCD_UI {
 		return data ? strlen(data) - 1 : 0;
 	}
 
-	const char * UI_Object::streamToBuffer(const char * data, UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool UI_Object::streamToBuffer(const char * data, UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		auto hasAdded = buffer.hasAdded
 		(data
 			, cursorMode(activeElement)
@@ -49,14 +49,14 @@ namespace LCD_UI {
 		);
 
 		if (shortColl) shortColl->endVisibleItem(hasAdded, streamIndex); // requires index of streamed object
-		return buffer.toCStr();
+		return hasAdded;
 	}
 
 	///////////////////////////////////////////
 	// ************   Object_Hndl *************
 	///////////////////////////////////////////
 
-	const char * Object_Hndl::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool Object_Hndl::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		return get()->streamElement(buffer, activeElement, shortColl, streamIndex);
 	}
 
@@ -73,8 +73,10 @@ namespace LCD_UI {
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
 		if (auto collection = get()->collection()) {
+			logger() << F("\Collection_Hndl set defaultFocus for ") << ui_Objects()[(long)get()].c_str() << L_endl;
 			collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
-			set_focus(collection->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+			auto validFocus = collection->nextActionableIndex(default_focus);
+			set_focus(validFocus); // must call on mixed collection of Objects and collections
 			move_focus_by(0); // recycle if allowed. 
 		}
 	}
@@ -210,74 +212,76 @@ namespace LCD_UI {
 		}
 	}
 
-	const char * Collection_Hndl::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool Collection_Hndl::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+		bool hasStreamed = false;
 		if (behaviour().is_viewable()) {
 			auto collectionPtr = get()->collection();
-			if (behaviour().is_viewAll()) {
-				collectionPtr->filter(viewable());
-				cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()] << (activeElement? " HasActive":" Inactive") << endl;
-				if (activeUI() && activeUI()->get()->isCollection()) {
-					Collection_Hndl actionHdl = activeUI()->get();
-					actionHdl->collection()->setObjectIndex(0);
-					auto activeActionObject = actionHdl.activeUI()->get();
-					if (activeActionObject && activeActionObject->isCollection()) {
-						activeActionObject->collection()->setObjectIndex(activeActionObject->collection()->focusIndex());
-#ifdef ZPSIM
-						//cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()];
-						cout << F("\n\t firstActObject is ") << ui_Objects()[(long)activeUI()->get()];
-						cout << " activeActionObject is " << ui_Objects()[(long)activeActionObject] << endl;
-#endif		
-					}
-				}
-				
-				for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
-					auto ith_objectPtr = collectionPtr->item(i)->get();
-					cout << F("Streaming ") << ui_Objects()[(long)ith_objectPtr] << endl;
 
-					auto ith_collectionPtr = ith_objectPtr->collection();
-					if (ith_objectPtr->behaviour().is_OnNewLine())
-						buffer.newLine();
-					auto endVisibleIndex = collectionPtr->endVisibleItem();
-					if (endVisibleIndex) {
-						if (i < collectionPtr->firstVisibleItem()) continue;
-						if (i > collectionPtr->endVisibleItem()) break;
+			if (collectionPtr) {
+				if (behaviour().is_viewAll()) {
+					hasStreamed = get()->streamElement(buffer, activeElement, shortColl, streamIndex);
+//					collectionPtr->filter(viewable());
+//					cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()] << (activeElement ? " HasActive" : " Inactive") << endl;
+//					if (activeUI() && activeUI()->get()->isCollection()) {
+//						Collection_Hndl actionHdl = activeUI()->get();
+//						actionHdl->collection()->setObjectIndex(0);
+//						auto activeActionObject = actionHdl.activeUI()->get();
+//						if (activeActionObject && activeActionObject->isCollection()) {
+//							activeActionObject->collection()->setObjectIndex(activeActionObject->collection()->focusIndex());
+//#ifdef ZPSIM
+//							//cout << F("\nStreaming each member of: ") << ui_Objects()[(long)get()];
+//							cout << F("\n\t firstActObject is ") << ui_Objects()[(long)activeUI()->get()];
+//							cout << " activeActionObject is " << ui_Objects()[(long)activeActionObject] << endl;
+//#endif		
+//						}
+//					}
+//
+//					for (int i = collectionPtr->nextActionableIndex(0); !atEnd(i); i = collectionPtr->nextActionableIndex(++i)) { // need to check all elements on the page
+//						auto ith_objectPtr = collectionPtr->item(i)->get();
+//						cout << F("Streaming ") << ui_Objects()[(long)ith_objectPtr] << endl;
+//
+//						auto ith_collectionPtr = ith_objectPtr->collection();
+//						if (ith_objectPtr->behaviour().is_OnNewLine())
+//							buffer.newLine();
+//						auto endVisibleIndex = collectionPtr->endVisibleItem();
+//						if (endVisibleIndex) {
+//							if (i < collectionPtr->firstVisibleItem()) continue;
+//							if (i > collectionPtr->endVisibleItem()) break;
+//						}
+//
+//						if (ith_collectionPtr && ith_collectionPtr->behaviour().is_viewAll()) { // get the handle pointing to the nested collection
+//							auto thisActiveObj = activeElement;
+//							//logger() << "ClHdl::ObjectIndex: " << get()->collection()->objectIndex() << " Focus: " << focusIndex() << L_endl;
+//							//if (focusIndex() != i) {
+//							//	thisActiveObj = 0;
+//							//}
+//							cout << F("Streaming ViewAll ") << ui_Objects()[(long)ith_collectionPtr] << " Active: " << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
+//							hasStreamed = ith_collectionPtr->streamElement(buffer, thisActiveObj, static_cast<const I_SafeCollection *>(ith_objectPtr), i);
+//						} else {
+//							//cout << F("Streaming Object  ") << ui_Objects()[(long)ith_objectPtr->get()] << endl;
+//							hasStreamed = collectionPtr->item(i)->streamElement(buffer, activeElement, shortColl, streamIndex);
+//						}
+//						auto debug = buffer.toCStr();
+//					}
+				} else {  // View-one
+					auto active = activeUI();
+					cout << F("\nStreaming active member of: ") << ui_Objects()[(long)get()] << " Focus is: " << focusIndex() << " Active: " << ui_Objects()[(long)active->get()] << endl;
+					cout << F("\tStreaming SubPage. Active element is: ") << ui_Objects()[(long)active->activeUI()->get()] << " Act Focus: " << active->activeUI()->focusIndex() << endl;
+					//if (ui_Objects()[(long)active->activeUI()->get()] != "Edit_Int" && active->activeUI()->focusIndex() != focusIndex()) {
+					//	//activeElement = 0;
+					//	cout << F("\tSet Active to 0: ") << endl;
+					//}
+					if (active) {
+						cout << F("\tActive member is: ") << ui_Objects()[(long)active->get()] << " Active Focus is: " << active->focusIndex() << " Act ObjectInd: " << (active->get()->collection() ? active->get()->collection()->objectIndex() : 0) << endl;
+						hasStreamed = active->streamElement(buffer, activeElement, shortColl, streamIndex);
 					}
-
-					if (ith_collectionPtr && ith_collectionPtr->behaviour().is_viewAll()) { // get the handle pointing to the nested collection
-						auto thisActiveObj = activeElement;
-						//logger() << "ClHdl::ObjectIndex: " << get()->collection()->objectIndex() << " Focus: " << focusIndex() << L_endl;
-						//if (focusIndex() != i) {
-						//	thisActiveObj = 0;
-						//}
-						cout << F("Streaming ViewAll ") << ui_Objects()[(long)ith_collectionPtr] << " Active: " << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
-						ith_collectionPtr->streamElement(buffer, thisActiveObj, static_cast<const I_SafeCollection *>(ith_objectPtr), i);
-					}
-					else {
-						//cout << F("Streaming Object  ") << ui_Objects()[(long)ith_objectPtr->get()] << endl;
-						collectionPtr->item(i)->streamElement(buffer, activeElement, shortColl, streamIndex);
-					}
-					auto debug = buffer.toCStr();
-				}			
-			}
-			else if (collectionPtr) {
-				auto active = activeUI();
-				cout << F("\nStreaming active member of: ") << ui_Objects()[(long)get()] << " Focus is: " << focusIndex() << " Active: " << ui_Objects()[(long)active->get()] <<endl;
-				cout << F("\tStreaming SubPage. Active element is: ") << ui_Objects()[(long)active->activeUI()->get()]  << " Act Focus: " << active->activeUI()->focusIndex() << endl;
-				if (ui_Objects()[(long)active->activeUI()->get()] != "Edit_Int" && active->activeUI()->focusIndex() != focusIndex()) {
-					//activeElement = 0;
-					cout << F("\tSet Active to 0: ") << endl;
 				}
-				if (active) {
-					cout << F("\tActive member is: ") << ui_Objects()[(long)active->get()] << " Active Focus is: " << active->focusIndex() << " Act ObjectInd: " << (active->get()->collection() ? active->get()->collection()->objectIndex() : 0) << endl;
-					active->streamElement(buffer, activeElement, shortColl, streamIndex);
-				}
-			}
-			else {
-				cout << F("Streaming only member : ") << ui_Objects()[(long)get()] << endl;
-				get()->streamElement(buffer, activeElement, shortColl, streamIndex);
+			} else { // Not a collection
+				cout << F("Streaming Object: ") << ui_Objects()[(long)get()] << endl;
+				hasStreamed = get()->streamElement(buffer, activeElement, shortColl, streamIndex);
 			}
 		}
-		return 0;
+		return hasStreamed;
 	}
 
 	///////////////////////////////////////////
@@ -366,46 +370,53 @@ namespace LCD_UI {
 		return { this, this->objectIndex() };
 	}
 
-	const char * I_SafeCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool I_SafeCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// only called for viewall.
 		filter(viewable());
+		auto hasStreamed = false;
 #ifdef ZPSIM
 		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;
 #endif
-		for (int i = nextActionableIndex(0); !atEnd(i); i = nextActionableIndex(++i)) { // need to check all elements on the page
-			auto element = item(i)->get();
+//		for (int i = nextActionableIndex(0); !atEnd(i); i = nextActionableIndex(++i)) { // need to check all elements on the page
+//			auto element = item(i)->get();
+		if (behaviour().is_viewOne()) {
+			hasStreamed = activeUI()->streamElement(buffer, activeElement, shortColl, streamIndex);
+		} else {
+			for (auto & element : *this) {
+				auto i = objectIndex();
 #ifdef ZPSIM
-			cout << "\t[" << i << "]: " << ui_Objects()[(long)element] << endl;
+				cout << "\t[" << i << "]: " << ui_Objects()[(long)&element] << endl;
 #endif
-			if (element->behaviour().is_OnNewLine()) buffer.newLine();
-			auto endVisibleIndex = shortColl->endVisibleItem();
-			if (endVisibleIndex) {
-				if (i < shortColl->firstVisibleItem()) continue;
-				if (i > shortColl->endVisibleItem()) break;
-			}
-			if (element->collection() && element->behaviour().is_viewOne()) {
-				//auto objectIndex = element->collection()->nextActionableIndex(0);
-				auto objectIndex = element->collection()->objectIndex();
-				auto object = element->collection()->item(objectIndex); // object index ignored if it has a parent.
-				objectIndex = element->collection()->objectIndex();
+				if (element.behaviour().is_OnNewLine()) buffer.newLine();
+				//auto endVisibleIndex = shortColl->endVisibleItem();
+				//if (endVisibleIndex) {
+				//	if (i < shortColl->firstVisibleItem()) continue;
+				//	if (i > shortColl->endVisibleItem()) break;
+				//}
+				if (element.collection() && element.behaviour().is_viewOne()) {
+					//auto objectIndex = element->collection()->nextActionableIndex(0);
+					//auto objectIndex = element.collection()->objectIndex();
+					//auto object = element.collection()->item(objectIndex); // object index ignored if it has a parent.
+					auto & object = *element.activeUI(); // object index ignored if it has a parent.
+					//objectIndex = element.collection()->objectIndex();
 #ifdef ZPSIM
-				logger() << "\t\tObjInd: " << objectIndex << L_endl;
-				cout << F("\t\tView Object: ") << ui_Objects()[(long)object->get()] << endl << endl;				
+				//logger() << "\t\tObjInd: " << objectIndex << L_endl;
+					cout << F("\t\tView Object: ") << ui_Objects()[(long)object.get()] << endl << endl;
 #endif
-				object->streamElement(buffer, activeElement, shortColl, streamIndex);
-			}
-			else {
-				auto thisActiveObj = activeElement;
-				if (focusIndex() != i) {
-					thisActiveObj = 0;
+					hasStreamed = object.streamElement(buffer, activeElement, shortColl, streamIndex);
+				} else {
+					auto thisActiveObj = activeElement;
+					if (focusIndex() != i) {
+						thisActiveObj = 0;
+					}
+#ifdef ZPSIM
+					cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
+#endif
+					hasStreamed = element.streamElement(buffer, thisActiveObj, shortColl, i);
 				}
-#ifdef ZPSIM
-				cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") <<endl;
-#endif
-				element->streamElement(buffer, thisActiveObj, shortColl, i);
 			}
 		}
-		return buffer.toCStr();
+		return hasStreamed;
 	}
 
 	Collection_Hndl * I_SafeCollection::move_focus_to(int index) {
@@ -422,14 +433,16 @@ namespace LCD_UI {
 	}
 
 	void Collection_Hndl::enter_collection(int direction) {
-		if (direction < 0) {
-			set_focus(endIndex());
-			move_focus_by(-1);
-		} else if (direction > 0) {
-			auto focus = focusIndex();
-			if (atEnd(focus) || focus == -1) { // if we previously left from the right and have cycled round to re-enter from the left, start at 0.
-				set_focus(0);
-				move_focus_by(0);
+		if (get()->isCollection()) {
+			if (direction < 0) {
+				set_focus(endIndex());
+				move_focus_by(-1);
+			} else if (direction > 0) {
+				auto focus = focusIndex();
+				if (atEnd(focus) || focus == -1) { // if we previously left from the right and have cycled round to re-enter from the left, start at 0.
+					set_focus(0);
+					move_focus_by(0);
+				}
 			}
 		}
 	}
@@ -487,49 +500,66 @@ namespace LCD_UI {
 		//} else return 0;
 	}
 
-	const char * UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		// Set the activeUI to object-index 0 and Stream all the elements
 		// Then move the activeUI to the next object-index and re-stream all the elements
 		// Keep going till all members of the activeUI have been streamed
+		/*
+							Coll-Focus
+								v
+						{L1, Active[0], Slave[0]} // Active-ObjectIndex must change on each iteration to get the next data shown.
+		Active-focus ->	{L1, Active[1], Slave[1]} // Active-focus shows which iteration has the cursor.
+						{L1, Active[2], Slave[2]} 
+		*/
 
-		auto focus = iterated_collection()->I_SafeCollection::focusIndex();
+		auto coll_focus = activeElement ? iterated_collection()->I_SafeCollection::focusIndex() : -1;
 		// lambdas
 		auto endOfBufferSoFar = [&buffer]() {return strlen(buffer.toCStr());};
 		auto thisElementIsOnAnewLine = [&buffer](size_t bufferStart) {return buffer.toCStr()[bufferStart -1] == '~';};
 		auto removeNewLineSymbol = [](size_t & bufferStart) {--bufferStart; };
-		auto elementHasfocus = [focus, this]() {return (focus >= 0 && focus < iterated_collection()->endIndex()) ? true : false; };
+		auto collectionHasfocus = [coll_focus, this]() {return (coll_focus >= 0 && coll_focus < iterated_collection()->I_SafeCollection::endIndex()) ? true : false; };
 		auto startThisField = [&buffer](size_t bufferStart, bool newLine) {
 			buffer.truncate(bufferStart);
 			if (newLine) buffer.newLine();
 		};
 
 		// algorithm
+		auto hasStreamed = false;
 		auto & iteratedActiveUI_h = *const_cast<I_SafeCollection*>(iterated_collection())->activeUI();
 		auto numberOfIterations = 1;
-		if (iteratedActiveUI_h->isCollection()) {
+		auto itIndex = 0;
+		auto activeFocus = 0;
+		if (iteratedActiveUI_h.get()->isCollection()) {
 			numberOfIterations = iteratedActiveUI_h->endIndex();
+			itIndex = iteratedActiveUI_h->nextActionableIndex(0);
+			activeFocus = iteratedActiveUI_h->validIndex(iteratedActiveUI_h->focusIndex());
 		}
-		
-		for (_itIndex = iteratedActiveUI_h->nextActionableIndex(0); 
-			_itIndex < iteratedActiveUI_h->endIndex(); 
-			_itIndex = iteratedActiveUI_h->nextActionableIndex(++_itIndex)) {
+		do {
+			auto streamActive = activeElement;
+			if (itIndex != activeFocus){
+				streamActive = 0;
+			}			
 			for (auto & object : *iterated_collection()) {
-				cout << F("Iteration-Streaming [") << _itIndex << "] " << ui_Objects()[(long)&object] << " Active: " << (activeElement? ui_Objects()[(long)activeElement->get()] : "") <<  endl;
-				if (activeElement && _itIndex != object.focusIndex())
-					activeElement = 0;
+				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << " Active: " << (activeElement ? ui_Objects()[(long)activeElement->get()] : "") << endl;
 				auto bufferStart = endOfBufferSoFar();
 				auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
 				if (mustStartNewLine) removeNewLineSymbol(bufferStart);
-				auto hasFocus = elementHasfocus();
+				auto collHasfocus = collectionHasfocus();
 
-				do {
+				/*do {*/
 					startThisField(bufferStart, mustStartNewLine);
-					object.streamElement(buffer, activeElement, iterated_collection(), streamIndex);
-				} while (hasFocus && _beginShow != _endShow && (focus < _beginShow || focus >= _endShow));
+					hasStreamed = object.streamElement(buffer, streamActive, iterated_collection(), streamIndex);
+					if (collHasfocus && _beginShow != _endShow && (activeFocus < _beginShow || activeFocus >= _endShow)) {
+						startThisField(bufferStart, mustStartNewLine);
+					}
+					if (!hasStreamed)
+						itIndex = numberOfIterations;
+						break;
+				//} while (collHasfocus && _beginShow != _endShow && (activeFocus < _beginShow || activeFocus >= _endShow));
 			}
-		}
-
-		return 0;
+			++itIndex;
+		} while (itIndex < numberOfIterations && (itIndex = iteratedActiveUI_h->nextActionableIndex(itIndex)) < numberOfIterations);
+		return hasStreamed;
 	}
 
 	Collection_Hndl * UI_IteratedCollection_Hoist::h_item(int newIndex) {// return member without moving focus
