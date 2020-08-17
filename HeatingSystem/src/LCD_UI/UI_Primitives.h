@@ -68,7 +68,7 @@ namespace LCD_UI {
 	public:
 		OneVal(I_SafeCollection * parent) : Collection_Hndl((const UI_Object*)this), _parent(parent) {
 #ifdef ZPSIM
-			ui_Objects()[(long)this] = "OneVal";
+			ui_Objects()[(long)(UI_Object*)this] = "OneVal";
 #endif
 		};
 		void setParent(I_SafeCollection * parent) { _parent = parent; }

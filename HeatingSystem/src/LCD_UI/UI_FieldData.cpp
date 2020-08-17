@@ -106,8 +106,12 @@ namespace LCD_UI {
 			auto activeEl = activeElement;
 			hasStreamed = _field_Interface_h.streamElement(buffer, activeEl, shortColl, objIndex);
 		} else {
+			auto focus_index = LazyCollection::focusIndex();
 			for (auto & element : *this) {
-				hasStreamed = _field_Interface_h.streamElement(buffer, activeElement, shortColl, streamIndex);
+				auto objIndex = objectIndex();
+				auto activeEl = activeElement;
+				if (objIndex != focus_index) activeEl = 0;
+				hasStreamed = _field_Interface_h.streamElement(buffer, activeEl, shortColl, objIndex);
 			}
 		}
 		return hasStreamed;
