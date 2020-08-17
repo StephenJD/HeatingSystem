@@ -545,7 +545,7 @@ namespace LCD_UI {
 			//}
 			if (focus >= 0 && _beginShow > focus)
 				_beginShow = focus; // move back through the list
-			if (_endShow <= focus) { // move forward through the list
+			if (_endShow > 0 && _endShow <= focus) { // move forward through the list
 				_beginShow = coll.nextIndex(_beginShow);
 				_endShow = coll.endIndex();
 			}

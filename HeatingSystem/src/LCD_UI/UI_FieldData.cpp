@@ -15,7 +15,7 @@ namespace LCD_UI {
 	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent, int selectFldID
 		, Behaviour selectBehaviour, Behaviour editBehaviour
 		, OnSelectFnctr onSelect)
-		: LazyCollection(dataset->count(), selectBehaviour.make_viewOne())
+		: LazyCollection(dataset->count(), selectBehaviour/*.make_viewOne()*/)
 		, _data(dataset)
 		, _parentFieldData(parent)
 		, _field_Interface_h(_data->initialiseRecord(fieldID)->ui(), editBehaviour,fieldID, this, onSelect)
@@ -100,9 +100,17 @@ namespace LCD_UI {
 	}
 
 	bool UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		auto objIndex = objectIndex();
-		auto activeEl = activeElement;
-		return _field_Interface_h.streamElement(buffer, activeEl, shortColl, objIndex);
+		auto hasStreamed = false;
+		if (behaviour().is_viewOne()) {
+			auto objIndex = objectIndex();
+			auto activeEl = activeElement;
+			hasStreamed = _field_Interface_h.streamElement(buffer, activeEl, shortColl, objIndex);
+		} else {
+			for (auto & element : *this) {
+				hasStreamed = _field_Interface_h.streamElement(buffer, activeElement, shortColl, streamIndex);
+			}
+		}
+		return hasStreamed;
 	}
 
 	Collection_Hndl * UI_FieldData::saveEdit(const I_UI_Wrapper * data) {

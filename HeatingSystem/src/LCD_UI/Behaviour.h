@@ -32,7 +32,7 @@ namespace LCD_UI {
 		bool is_selectable() const		{ return _behaviour >= b_Visible + b_Selectible; } /*has cursor*/ 
 		bool is_viewOne() const			{ return _behaviour & b_ViewOne; }
 		bool is_viewAll() const			{ return !is_viewOne(); }
-		//bool is_UpDnAble() const		{ return is_selectable(); }
+		bool is_UpDnAble() const		{ return (_behaviour & b_UD_NextActive) || (_behaviour & b_UD_Edit); }
 		bool is_next_on_UpDn() const	{ return (_behaviour & b_UD_NextActive) && !(_behaviour & b_UD_Edit); }
 		bool is_edit_on_UD() const		{ return _behaviour & b_UD_Edit; }
 		bool is_save_on_UD() const		{ return is(Behaviour{ b_UD_NextActive | b_UD_Edit }); }

@@ -52,6 +52,9 @@ namespace client_data_structures {
 	/// </summary>
 	class ReqIsTemp_Interface : public I_Field_Interface {
 	public:
+#ifdef ZPSIM
+		ReqIsTemp_Interface() { ui_Objects()[(long)this] = "ReqIsTemp_Interface"; }
+#endif
 		using I_Field_Interface::editItem;
 		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }

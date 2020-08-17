@@ -27,9 +27,9 @@ namespace LCD_UI {
 		setBackUI(this);
 		set_CursorUI_from(this);
 		notifyAllOfFocusChange(this);
-#ifdef ZPSIM
-		logger() << F("A_Top_UI is a Collection_Hndl at Addr:") << L_hex << long(this) << F(" pointing at : ") << (long)get() << L_endl;
-#endif
+//#ifdef ZPSIM
+//		logger() << F("A_Top_UI is a Collection_Hndl at Addr:") << L_hex << long(this) << F(" pointing at : ") << (long)get() << L_endl;
+//#endif
 	}
 
 	/// <summary>
@@ -87,7 +87,7 @@ namespace LCD_UI {
 		/*if (this_UI_h->behaviour().is_UpDnAble())*/ _upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto tryUD = this_UI_h->activeUI();
-			auto tryIsUpDnAble = tryUD->behaviour().is_next_on_UpDn();
+			auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble();
 			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
 			if (tryIsUpDnAble) {
 				_upDownUI = tryUD;
@@ -103,7 +103,7 @@ namespace LCD_UI {
 		set_UpDownUI_from(selectedPage_h());
 #ifdef ZPSIM 
 		logger() << F("\nselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		logger() << F("\n\tselectedPage focus: ") << selectedPage_h()->focusIndex() << L_endl;
+		logger() << F("\tselectedPage focus: ") << selectedPage_h()->focusIndex() << L_endl;
 		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 		logger() << F("\t_upDownUI focus: ") << _upDownUI->focusIndex() << L_endl;
 		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;

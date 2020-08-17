@@ -191,8 +191,6 @@ namespace HardwareInterfaces {
 
 #ifdef DATABASE
 //bool debugStop;
-
-
 SCENARIO("Create a Database", "[Database]") {
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -368,8 +366,7 @@ SCENARIO("Create a Database", "[Database]") {
 #endif
 
 #ifdef UI_DB_DISPLAY_VIEW_ONE
-
-SCENARIO("Simple Page Scrolling", "[Chapters]") {
+SCENARIO("Simple Page Scrolling", "[Chapter]") {
 	// On each run through a TEST_CASE, Catch2 executes one SECTION/WHEN/THEN and skips the others.Next time, it executes the second section, and so on.
 	// Sections may be nested. A section with no inner section is a LEAF and is executed just once.
 	// To cascade tests (one follows the previous) they must be nested in the previous test.
@@ -522,11 +519,10 @@ SCENARIO("Simple Page Scrolling", "[Chapters]") {
 		}
 	}
 }
-
 #endif
 
 #ifdef UI_DB_DISPLAY_VIEW_ALL
-SCENARIO("View-All with Names", "[Chapters]") {
+SCENARIO("View-All scroll and edit", "[Chapter]") {
 	cout << "\n*********************************\n**** View-All with Names ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -576,7 +572,8 @@ SCENARIO("View-All with Names", "[Chapters]") {
 
 	cout << "\n **** All Constructed ****\n\n";
 	display1_h.rec_select();
-	GIVEN("Iterated Names") {
+	GIVEN("Moving Focus on Iterated Names") {
+		//cout << test_stream(display1_h.stream(tb)) << endl;
 		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 		//                                           012345678901234567890123456789012345678901234567890123456789
 		WHEN("Right, focus moves to first iterated name") {
@@ -636,48 +633,46 @@ SCENARIO("View-All with Names", "[Chapters]") {
 				REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 			}
 		}
-
-		GIVEN("Iterated Names") {
-			display1_h.rec_select();
-			WHEN("Doing UP on view-one name we go into Edit") {
-				display1_h.rec_up_down(1);
-				REQUIRE(test_stream(display1_h.stream(tb)) == "L1 #House|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-				THEN("Left does not recycle") {
-					display1_h.rec_left_right(-1);
-					CHECK(test_stream(display1_h.stream(tb)) == "L1 #House|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-					THEN("Right moves to next edit position") {
-						display1_h.rec_left_right(1);
-						CHECK(test_stream(display1_h.stream(tb)) == "L1 H#ouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-						THEN("Up upper-cases the character") {
-							display1_h.rec_up_down(-1);
-							CHECK(test_stream(display1_h.stream(tb)) == "L1 H#Ouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-							THEN("Up moves to next character")
-								display1_h.rec_up_down(-1);
-							CHECK(test_stream(display1_h.stream(tb)) == "L1 H#Puse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-							THEN("Down lower-cases the character") {
+	}
+	GIVEN("View-One names Edit on SELECT") {
+		display1_h.rec_select();
+		display1_h.rec_up_down(-1);
+		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 #Iouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+		THEN("Left does not recycle") {
+			display1_h.rec_left_right(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "L1 #Iouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+			THEN("Right moves to next edit position") {
+				display1_h.rec_left_right(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "L1 I#ouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+				THEN("Up upper-cases the character") {
+					display1_h.rec_up_down(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "L1 I#Ouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+					THEN("Up moves to next character") {
+						display1_h.rec_up_down(-1);
+						CHECK(test_stream(display1_h.stream(tb)) == "L1 I#Puse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+						THEN("Down lower-cases the character") {
+							display1_h.rec_up_down(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "L1 I#puse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+							THEN("Down moves the prev character") {
 								display1_h.rec_up_down(1);
-								CHECK(test_stream(display1_h.stream(tb)) == "L1 H#puse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-								THEN("Down moves the prev character") {
-									display1_h.rec_up_down(1);
-									CHECK(test_stream(display1_h.stream(tb)) == "L1 H#ouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-									THEN("Right moves edit pos to blank") {
-										display1_h.rec_left_right(1);
-										CHECK(test_stream(display1_h.stream(tb)) == "L1 Ho#use|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-										display1_h.rec_left_right(1);
-										CHECK(test_stream(display1_h.stream(tb)) == "L1 Hou#se|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-										display1_h.rec_left_right(1);
-										CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous#e|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-										display1_h.rec_left_right(1);
-										CHECK(test_stream(display1_h.stream(tb)) == "L1 House#|| UpStrs DnStrs DHW    At Home At Work Away    C3");
-										display1_h.rec_left_right(1);
-										CHECK(test_stream(display1_h.stream(tb)) == "L1 House|#| UpStrs DnStrs DHW    At Home At Work Away    C3");
-										THEN("Up starts at A") {
-											display1_h.rec_up_down(-1);
-											CHECK(test_stream(display1_h.stream(tb)) == "L1 House #A UpStrs DnStrs DHW    At Home At Work Away    C3");
-											AND_THEN("Back cancels edit") {
-												display1_h.rec_prevUI(); // cancel edit
-												REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
-											}
+								CHECK(test_stream(display1_h.stream(tb)) == "L1 I#ouse|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+								THEN("Right moves edit pos to blank") {
+									display1_h.rec_left_right(1);
+									CHECK(test_stream(display1_h.stream(tb)) == "L1 Io#use|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+									display1_h.rec_left_right(1);
+									CHECK(test_stream(display1_h.stream(tb)) == "L1 Iou#se|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+									display1_h.rec_left_right(1);
+									CHECK(test_stream(display1_h.stream(tb)) == "L1 Ious#e|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+									display1_h.rec_left_right(1);
+									CHECK(test_stream(display1_h.stream(tb)) == "L1 Iouse#|| UpStrs DnStrs DHW    At Home At Work Away    C3");
+									display1_h.rec_left_right(1);
+									CHECK(test_stream(display1_h.stream(tb)) == "L1 Iouse|#| UpStrs DnStrs DHW    At Home At Work Away    C3");
+									THEN("Up starts at A") {
+										display1_h.rec_up_down(-1);
+										CHECK(test_stream(display1_h.stream(tb)) == "L1 Iouse #A UpStrs DnStrs DHW    At Home At Work Away    C3");
+										AND_THEN("Back cancels edit") {
+											display1_h.rec_prevUI(); // cancel edit
+											REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 										}
 									}
 								}
@@ -686,36 +681,37 @@ SCENARIO("View-All with Names", "[Chapters]") {
 					}
 				}
 			}
-			WHEN("Doing SELECT on second iterated name puts it in edit") {
+		}
+	}
+	GIVEN("Iterated names Edit on SELECT") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		display1_h.rec_left_right(1);
+		display1_h.rec_left_right(1);
+		display1_h.rec_select();
+		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #DnStrs DHW    At Home At Work Away    C3");
+		THEN("Left does not move") {
+			display1_h.rec_left_right(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #DnStrs DHW    At Home At Work Away    C3");
+			THEN("Right-Left moves edit pos") {
 				display1_h.rec_left_right(1);
-				display1_h.rec_left_right(1);
-				display1_h.rec_select();
-				REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #DnStrs DHW    At Home At Work Away    C3");
-				THEN("Left does not move") {
-					display1_h.rec_left_right(-1);
-					CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #DnStrs DHW    At Home At Work Away    C3");
-					THEN("Right-Left moves edit pos") {
-						display1_h.rec_left_right(1);
-						CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs D#nStrs DHW    At Home At Work Away    C3");
-						display1_h.rec_left_right(-1);
-						CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #DnStrs DHW    At Home At Work Away    C3");
-						AND_THEN("Up changes to next upper-char") {
-							display1_h.rec_up_down(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs D#nStrs DHW    At Home At Work Away    C3");
+				display1_h.rec_left_right(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #DnStrs DHW    At Home At Work Away    C3");
+				AND_THEN("Up changes to next upper-char") {
+					display1_h.rec_up_down(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #EnStrs DHW    At Home At Work Away    C3");
+					THEN("Save comes out of edit") {
+						display1_h.rec_select();
+						CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs EnStr_s DHW    At Home At Work Away    C3");
+						AND_THEN("SELECT re-edits") {
+							display1_h.rec_select();
 							CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #EnStrs DHW    At Home At Work Away    C3");
-							THEN("Save comes out of edit") {
+							THEN("re-edit and save") {
+								display1_h.rec_up_down(1);
+								display1_h.rec_up_down(1);
+								display1_h.rec_up_down(-1);
 								display1_h.rec_select();
-								CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs EnStr_s DHW    At Home At Work Away    C3");
-								AND_THEN("SELECT re-edits") {
-									display1_h.rec_select();
-									CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs #EnStrs DHW    At Home At Work Away    C3");
-									THEN("re-edit and save") {
-										display1_h.rec_up_down(1);
-										display1_h.rec_up_down(1);
-										display1_h.rec_up_down(-1);
-										display1_h.rec_select();
-										REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStr_s DHW    At Home At Work Away    C3");
-									}
-								}
+								REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStr_s DHW    At Home At Work Away    C3");
 							}
 						}
 					}
@@ -727,7 +723,7 @@ SCENARIO("View-All with Names", "[Chapters]") {
 #endif
 
 #ifdef UI_DB_SHORT_LISTS
-SCENARIO("Multiple pages with Short List Items", "[Chapter]") {
+SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 	cout << "\n*********************************\n**** Short List Names ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -859,7 +855,6 @@ SCENARIO("Multiple pages with Short List Items", "[Chapter]") {
 		}
 	}
 }
-
 #endif
 
 #ifdef EDIT_NAMES_NUMS
@@ -1014,7 +1009,6 @@ TEST_CASE("Edit Strings", "[Chapter]") {
 	display1_h.rec_select();
 	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s At Home C3");
 }
-
 #endif
 
 #ifdef EDIT_INTS
@@ -1297,7 +1291,7 @@ TEST_CASE("Edit Decimal Data", "[Display]") {
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////
 #ifdef EDIT_DATES
-TEST_CASE("Edit Date Data", "[Display]") {
+TEST_CASE("Edit Date Data", "[Chapter]") {
 	cout << "\n*********************************\n**** Edit Date Data ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -1468,7 +1462,6 @@ TEST_CASE("Edit Date Data", "[Display]") {
 	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:20pm Tomor'_w");
 	cout << test_stream(display1_h.stream(tb));
 }
-
 #endif
 
 #ifdef EDIT_CURRENT_DATETIME
@@ -1477,28 +1470,20 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 	using namespace client_data_structures;
 	using namespace Assembly;
 
-
 	LCD_Display_Buffer<20, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
-
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	cout << " **** Next create DB Record Interfaces ****\n";
 	auto rec_currTime = Dataset_WithoutQuery();
 
-	cout << " **** Next create DB UIs ****\n";
-	auto currTimeUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editActiveMember_onUpDn());
-	auto currDateUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editActiveMember_onUpDn());
-	auto dstUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editActiveMember_onUpDn());
+	auto currTimeUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editActiveMember_onUpDn().make_viewOne());
+	auto currDateUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editActiveMember_onUpDn().make_viewOne());
+	auto dstUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editActiveMember_onUpDn().make_viewOne());
 	// UI Elements
 	UI_Label L1("DST Hours:");
 	
-
 	// UI Collections
-	cout << "\npage1 Collection\n";
 	auto page1_c = makeCollection(currTimeUI_c, currDateUI_c, L1, dstUI_c);
-
-	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
@@ -1509,33 +1494,37 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 	ui_Objects()[(long)&page1_c] = "page1_c";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
-	cout << " **** All Constructed ****\n\n";
 	clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
-	display1_h.stream(tb);
-	cout << test_stream(display1_h.stream(tb)) << endl;
-	display1_h.rec_select();
-	display1_h.stream(tb);
-	REQUIRE(test_stream(display1_h.stream(tb)) == "08:15:00a_m          Mon 31/Jul/2017     DST Hours: 1");
-	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Mon 31/Jul/201_7     DST Hours: 1");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201#8     DST Hours: 1");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201_8     DST Hours: 1");
-	cout << test_stream(display1_h.stream(tb)) << endl;
-	display1_h.rec_left_right(1); // moves focus
-	display1_h.rec_select();
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #0");
-	display1_h.rec_select();
-	REQUIRE(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: _0");
+	GIVEN("Custom UI_Wrapper with Edit-on-up-down") {
+		display1_h.rec_select();
+		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00a_m          Mon 31/Jul/2017     DST Hours: 1");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Mon 31/Jul/201_7     DST Hours: 1");
+		THEN("On up-down we start edit") {
+			clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
+			clock_().refresh();
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201#8     DST Hours: 1");
+			AND_THEN("On Select we save") {
+				display1_h.rec_select();
+				CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201_8     DST Hours: 1");
+				THEN("Also edits on SELECT") {
+					display1_h.rec_left_right(1); // moves focus
+					display1_h.rec_select();
+					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #1");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #0");
+					display1_h.rec_select();
+					REQUIRE(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: _0");
+				}
+			}
+		}
+	}
 }
-
 #endif
 
 #ifdef EDIT_RUN
-
-TEST_CASE("Display / Edit Run Data", "[Display]") {
+TEST_CASE("Display / Edit Run Data", "[Chapter]") {
 	cout << "\n*********************************\n**** Display / Edit Run Data ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -1557,7 +1546,7 @@ TEST_CASE("Display / Edit Run Data", "[Display]") {
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	
 	cout << " **** Next create DB UIs ****\n";
-	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editActiveMember_onUpDn().make_viewAll());
+	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editActiveMember_onUpDn());
 	// UI Collections
 	cout << "\npage1 Collection\n";
 	auto page1_c = makeCollection(zoneReqTempUI_c);
@@ -1565,6 +1554,10 @@ TEST_CASE("Display / Edit Run Data", "[Display]") {
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&zoneReqTempUI_c] = "zoneReqTempUI_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	cout << " **** All Constructed ****\n\n";
 	//for (auto & z : zoneArr) z.setFlowTemp(); // Can't setflowtemp and get heating requirement unless constructed a thermstore and backboiler...

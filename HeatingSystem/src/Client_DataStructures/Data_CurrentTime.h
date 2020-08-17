@@ -37,10 +37,6 @@ namespace client_data_structures {
 	public:
 		using I_Edit_Hndl::currValue;
 		Edit_CurrentTime_h() : I_Edit_Hndl(&editVal) {
-#ifdef ZPSIM
-			logger() << F("\tEdit_CurrentTime_h Addr: ") << L_hex << long(this) << L_endl;
-			//ui_Objects()[(long)this] = "Edit_CurrentTime_h";
-#endif
 		}
 		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
@@ -101,11 +97,6 @@ namespace client_data_structures {
 	public:
 		using I_Edit_Hndl::currValue;
 		Edit_CurrentDate_h() : I_Edit_Hndl(&editVal) {
-#ifdef ZPSIM
-			logger() << F("\tEdit_CurrentDate_h Addr: ") << L_hex << long(this) << L_endl;
-			//ui_Objects()[(long)this] = "Edit_CurrentDate_h";
-#endif
-			/*editVal.setBackUI(this); */ 
 		}
 		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit

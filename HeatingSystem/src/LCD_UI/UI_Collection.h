@@ -407,12 +407,12 @@ namespace LCD_UI {
 		using I_SafeCollection::item;
 
 		Collection(ArrayWrapper<noOfObjects, Collection_Hndl> arrayWrp, Behaviour behaviour) :I_SafeCollection(noOfObjects, behaviour), _array(arrayWrp) {
-#ifdef ZPSIM
-			logger() << F("Collection at : ") << L_hex << (long)(this) << L_endl;
-			for (int i = 0; i < noOfObjects; ++i)
-				logger() << F("   Has Element at : ") << (long)&_array[i] << F(" Pointing to : ") << (long)_array[i].get() << L_endl;
-			std::cout << std::endl;
-#endif
+//#ifdef ZPSIM
+//			logger() << F("Collection at : ") << L_hex << (long)(this) << L_endl;
+//			for (int i = 0; i < noOfObjects; ++i)
+//				logger() << F("   Has Element at : ") << (long)&_array[i] << F(" Pointing to : ") << (long)_array[i].get() << L_endl;
+//			std::cout << std::endl;
+//#endif
 			_filter = selectable();
 			setFocusIndex(nextActionableIndex(0));
 			filter(viewable());
@@ -477,12 +477,13 @@ namespace LCD_UI {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
 		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = nextActiveMember_onLR())
-			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all.
+			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
 			if (behaviour.is_NextActive_On_LR()) {
 				activeUI()->get()->behaviour() = behaviour;
 			}
+			activeUI()->get()->behaviour().make_viewOne();
 		}
 
 		// Polymorphic Queries

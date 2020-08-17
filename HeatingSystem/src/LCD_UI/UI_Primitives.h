@@ -68,8 +68,6 @@ namespace LCD_UI {
 	public:
 		OneVal(I_SafeCollection * parent) : Collection_Hndl((const UI_Object*)this), _parent(parent) {
 #ifdef ZPSIM
-			logger() << F("oneVal at: ") << L_hex << (long)this << L_endl;
-			logger() << F("\tas UI_Object at: ") << L_hex << (long)(UI_Object*)this << L_endl;
 			ui_Objects()[(long)this] = "OneVal";
 #endif
 		};
@@ -91,9 +89,8 @@ namespace LCD_UI {
 	public:
 		Permitted_Vals() :I_SafeCollection(0, viewOneRecycle()), _oneVal(this) {
 #ifdef ZPSIM
-			logger() << F("\tPermitted_Vals Addr: ") << L_hex << long(this) << L_endl;
+			ui_Objects()[(long)this] = "Permitted_Vals";
 #endif
-			/*_oneVal.setParent(this);*/ 
 		}
 		Collection_Hndl * select(Collection_Hndl * from) override;
 
