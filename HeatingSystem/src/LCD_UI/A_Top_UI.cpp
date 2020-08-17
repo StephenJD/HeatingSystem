@@ -61,12 +61,7 @@ namespace LCD_UI {
 
 	Collection_Hndl * A_Top_UI::set_leftRightUI_from(Collection_Hndl * topUI, int direction) {
 		// LR passes to the innermost ViewAll-collection	
-		//while (topUI->behaviour().is_viewOne() || topUI->behaviour().is_NextActive_On_LR()) {
-		//	logger() << F("SetLR-topUI: ") << ui_Objects()[(long)(topUI->get())].c_str()
-		//		<< (topUI->behaviour().is_NextActive_On_LR() ? " LR-Active" : (topUI->behaviour().is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;
-		//	topUI = topUI->backUI();
-		//}
-		auto tryLeftRight = topUI->activeUI();
+		auto tryLeftRight = topUI;
 		auto gotLeftRight = _leftRightBackUI;
 		while (tryLeftRight->get()->isCollection()) { // can only pass LR to activeUI, if it is a collection.
 			auto try_behaviour = tryLeftRight->behaviour();
@@ -74,8 +69,7 @@ namespace LCD_UI {
 				<< (try_behaviour.is_NextActive_On_LR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;
 			if (try_behaviour.is_NextActive_On_LR()) {
 				tryLeftRight = tryLeftRight->activeUI();
-				if(tryLeftRight->get()->isCollection()) gotLeftRight = tryLeftRight/*->activeUI()*/;
-				//break;
+				if(tryLeftRight->get()->isCollection()) gotLeftRight = tryLeftRight;
 			} else if (try_behaviour.is_viewAll()) {
 				gotLeftRight = tryLeftRight;
 			}
@@ -85,28 +79,6 @@ namespace LCD_UI {
 			_leftRightBackUI = gotLeftRight;
 			_leftRightBackUI->enter_collection(direction);
 		}
-		//auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
-		//if (innerLeftRight) {
-		//	auto inner_UI_h = innerLeftRight;
-		//	auto innerIsCollection = false;
-		//	do {
-		//		logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
-		//		if (inner_UI_h->behaviour().is_viewAll()) {
-		//			logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
-		//			_leftRightBackUI = inner_UI_h;
-		//			inner_UI_h->enter_collection(direction);
-		//		}
-		//		innerIsCollection = inner_UI_h->get()->isCollection();
-		//		if (innerIsCollection) {
-		//			innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
-		//			if (innerLeftRight == 0) break;
-		//			inner_UI_h = innerLeftRight;
-		//		}
-		//	} while (innerIsCollection);
-		//	if (inner_UI_h->behaviour().is_viewAll()) {
-		//		_leftRightBackUI = inner_UI_h;
-		//	}
-		//}
 		return topUI;
 	}
 
@@ -240,7 +212,7 @@ namespace LCD_UI {
 			auto element_h = static_cast<Collection_Hndl *>(topCollection->item(i));
 			if (element_h->get()->isCollection()) {
 #ifdef ZPSIM
-				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_tabs << L_hex << (long)(element_h->get()) << L_endl;
+				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
 #endif
 				element_h->focusHasChanged(element_h == _upDownUI);
 				auto inner = element_h->activeUI();

@@ -5,6 +5,7 @@ namespace LCD_UI {
 	extern const char NEW_LINE_CHR;
 
 	/// <summary>
+	/// 232: view, sel, ViewOne, LR-MoveFocus, UD-Edit, Recycle
 	/// 228: view, sel, ViewOne, LR-MoveFocus, UD-NextActive, Recycle
 	/// 226: view, sel, ViewOne, LR-MoveFocus, No-UD, Recycle
 	/// 224: view, sel, ViewOne, LR-MoveFocus, No-UD, Recycle
@@ -17,9 +18,8 @@ namespace LCD_UI {
 	/// </summary>
 	class Behaviour {
 	public:
-		//enum BehaviourFlags : uint8_t { b_Hidden, b_NewLine, b_Viewable = 2, b_Selectable = 4, b_ViewAll = 8, b_NextItemOnUpDown = 16, b_EditOnUpDn = 32, b_Recycle = 64, b_NotEditable = 128 };
+		// Flags must have 1 for filterable attributes (i.e. Visible & Selectible). Otherwise use 0 for default values.
 		enum BehaviourFlags : uint8_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_LR_ActiveMember = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128 };
-		// Largest value for least often encountered : Selectible == (b_UD_NextActive || b_UD_Edit). Hidden == (b_ViewOne && NotCollection), Viewable == (IsCollection || !b_ViewOne)
 		Behaviour() = default;
 		Behaviour(BehaviourFlags b) : _behaviour(b) {}
 		explicit Behaviour(int b) : _behaviour(b) {}

@@ -15,7 +15,7 @@ namespace LCD_UI {
 	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent, int selectFldID
 		, Behaviour selectBehaviour, Behaviour editBehaviour
 		, OnSelectFnctr onSelect)
-		: LazyCollection(dataset->count(), selectBehaviour)
+		: LazyCollection(dataset->count(), selectBehaviour.make_viewOne())
 		, _data(dataset)
 		, _parentFieldData(parent)
 		, _field_Interface_h(_data->initialiseRecord(fieldID)->ui(), editBehaviour,fieldID, this, onSelect)

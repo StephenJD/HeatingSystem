@@ -80,9 +80,9 @@ namespace Assembly {
 		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}
 
 		// Display - Collection of Page Handles
-		, _user_chapter_c{ makeDisplay(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
+		, _user_chapter_c{ makeChapter(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{_user_chapter_c}
-		, _info_chapter_c{ makeDisplay(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c) }
+		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c) }
 		, _info_chapter_h{_info_chapter_c}
 	{
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));

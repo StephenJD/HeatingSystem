@@ -39,6 +39,7 @@ namespace client_data_structures {
 		Edit_CurrentTime_h() : I_Edit_Hndl(&editVal) {
 #ifdef ZPSIM
 			logger() << F("\tEdit_CurrentTime_h Addr: ") << L_hex << long(this) << L_endl;
+			//ui_Objects()[(long)this] = "Edit_CurrentTime_h";
 #endif
 		}
 		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
@@ -59,6 +60,9 @@ namespace client_data_structures {
 	class CurrentTime_Interface : public I_Field_Interface {
 	public:
 		using  I_Field_Interface::editItem;
+#ifdef ZPSIM
+		CurrentTime_Interface() { ui_Objects()[(long)this] = "CurrentTime_Interface"; }
+#endif
 		// Queries
 
 		const char * streamData(bool isActiveElement) const override;
@@ -99,6 +103,7 @@ namespace client_data_structures {
 		Edit_CurrentDate_h() : I_Edit_Hndl(&editVal) {
 #ifdef ZPSIM
 			logger() << F("\tEdit_CurrentDate_h Addr: ") << L_hex << long(this) << L_endl;
+			//ui_Objects()[(long)this] = "Edit_CurrentDate_h";
 #endif
 			/*editVal.setBackUI(this); */ 
 		}
@@ -120,6 +125,9 @@ namespace client_data_structures {
 	class CurrentDate_Interface : public I_Field_Interface {
 	public:
 		using  I_Field_Interface::editItem;
+#ifdef ZPSIM
+		CurrentDate_Interface() { ui_Objects()[(long)this] = "CurrentDate_Interface"; }
+#endif
 		// Queries
 		const char * streamData(bool isActiveElement) const override;
 		DateTime valAsDate() const { return DateTime(_editItem.currValue().val); }

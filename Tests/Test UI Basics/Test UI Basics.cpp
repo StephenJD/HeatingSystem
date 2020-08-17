@@ -78,7 +78,7 @@ TEST_CASE("Hidden Commands and Labels", "[Cmd/Label]") {
 	UI_Label L1("L1"), L2("L2",hidden()), L3("L3"), L4("L4",hidden());
 	UI_Cmd C1("C1", 0, hidden()), C2("C2", 0), C3("C3", 0), C4("C4", 0, hidden());
 	auto page1_c = makeCollection(L1, C1, L2, C2, L3, C3, L4, C4);
-	auto display1_c = makeDisplay(page1_c);
+	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 	display1_h.stream(tb);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 C2     L3 C3");
@@ -90,7 +90,7 @@ TEST_CASE("Lazy Page of Cmd/Label") {
 	UI_DisplayBuffer tb(lcd);
 
 	const LazyPage lazyPage_c;
-	auto display1_c = makeDisplay(lazyPage_c);
+	auto display1_c = makeChapter(lazyPage_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	//cout << "lazyPage_c Addr: " << hex << (long long)&lazyPage_c << endl;
@@ -110,7 +110,7 @@ TEST_CASE("Check page Focus is valid", "[Page]") {
 	UI_Label L1("L1");
 	UI_Cmd C1("C1", 0);
 	auto page1_c = makeCollection(L1, C1);
-	auto display1_c = makeDisplay(page1_c);
+	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	cout <<  hex << "L1 addr: " << (long long)&L1 << endl;
@@ -133,7 +133,7 @@ TEST_CASE("Check display Focus is valid", "[Page]") {
 	UI_Label L1("L1");
 	UI_Cmd C1("C1", 0);
 	auto page1_c = makeCollection(L1, C1);
-	auto display1_c = makeDisplay(page1_c);
+	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	cout <<  hex << "L1 addr: " << (long long)&L1 << endl;
@@ -158,7 +158,7 @@ TEST_CASE("Move to next Selectable Element - recycle", "[Page]") {
 	UI_Cmd C1("C1", 0), C2("C2", 0), C3("C3", 0);
 
 	auto page1_c = makeCollection(L1, C1, L2, C2, C3);
-	auto display1_c = makeDisplay(page1_c);
+	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	display1_h.rec_select();
@@ -190,7 +190,7 @@ TEST_CASE("Command Changes Element Focus", "[Page]") {
 	UI_Cmd C2("C2", { &Collection_Hndl::move_focus_to,4 });
 	UI_Cmd C3("C3", { &Collection_Hndl::move_focus_to,1 });
 	auto page1_c = makeCollection(L1, C0, C1, C2, C3);
-	auto display1_c = makeDisplay(page1_c);
+	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	C1.set_OnSelFn_TargetUI(display1_c.item(0));
@@ -223,7 +223,7 @@ TEST_CASE("Pages are selectable", "[Display]") {
 
 	auto page1_c = makeCollection(L1, C1, C2);
 	auto page2_c = makeCollection(L2, C3);
-	auto display1_c = makeDisplay(Collection_Hndl { page1_c,2 }, Collection_Hndl{ page2_c,1 });
+	auto display1_c = makeChapter(Collection_Hndl { page1_c,2 }, Collection_Hndl{ page2_c,1 });
 	auto display1_h = A_Top_UI(display1_c);
 	display1_h.stream(tb);
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 C1 C2");
@@ -243,7 +243,7 @@ TEST_CASE("Multi-Page Command Changes Element Focus", "[Display]") {
 
 	auto page1_c = makeCollection(L1, C1, L2, Ch, C2);
 	auto page2_c = makeCollection(L2, C3);
-	auto display1_c = makeDisplay(page1_c, page2_c);
+	auto display1_c = makeChapter(page1_c, page2_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	C1.set_OnSelFn_TargetUI(display1_c.item(0));
@@ -270,7 +270,7 @@ TEST_CASE("Multi-Page Command Changes Page", "[Display]") {
 
 	auto page1_c = makeCollection(L1, C1, L2, C3, C2);
 	auto page2_c = makeCollection(L2, C4);
-	auto display1_c = makeDisplay(page1_c, page2_c);
+	auto display1_c = makeChapter(page1_c, page2_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	C1.set_OnSelFn_TargetUI(display1_c.item(0));
@@ -302,7 +302,7 @@ TEST_CASE("Multi-Page Changed Page retains Selection", "[Display]") {
 
 	auto page1_c = makeCollection(L1, C1, L2, C3, C2);
 	auto page2_c = makeCollection(L2, C4);
-	auto display1_c = makeDisplay(page1_c, page2_c);
+	auto display1_c = makeChapter(page1_c, page2_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	C1.set_OnSelFn_TargetUI(display1_c.item(0));
@@ -339,7 +339,7 @@ TEST_CASE("Page-element which is a view-all collection", "[Display]") {
 	cout << " page1_c Coll of Collection_Hndl\n";
 	auto page1_c = makeCollection(L1, cmdGroup_c, L3, C4);
 	cout << " display1_c Coll of Collection_Hndl\n";
-	auto display1_c = makeDisplay(page1_c);
+	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	display1_h.stream(tb);
@@ -388,7 +388,7 @@ TEST_CASE("Page-element which is a view-one collection", "[Display]") {
 	cout << " page1_c Coll of Collection_Hndl\n";
 	auto page1_c = makeCollection(L1, cmdGroup_c, L3, C4);
 	cout << " display1_c Coll of Collection_Hndl\n";
-	auto display1_c = makeDisplay(page1_c);
+	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
 	display1_h.stream(tb);

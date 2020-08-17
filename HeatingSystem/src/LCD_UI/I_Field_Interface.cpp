@@ -104,7 +104,7 @@ namespace LCD_UI {
 
 	bool Field_Interface_h::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
 		auto cursor_mode = cursorMode(activeElement);
-		if (activeElement && !cursor_mode) activeElement = 0;
+		if (activeElement && cursor_mode == HI_BD::e_unselected) activeElement = 0;
 
 		const char * dataStream = f_interface().streamData(activeElement);
 #ifdef ZPSIM
