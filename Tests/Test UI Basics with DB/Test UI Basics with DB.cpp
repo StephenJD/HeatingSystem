@@ -812,6 +812,19 @@ TEST_CASE("Short List Items", "[Display]") {
 	auto display1_c = makeDisplay(page1_c, page2_c, page3_c);
 	auto display1_h = A_Top_UI(display1_c);
 
+	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[(long)&zoneName_sc] = "zoneName_sc";
+	ui_Objects()[(long)&progName_sc] = "progName_sc";
+	ui_Objects()[(long)&label_sc] = "label_sc";
+	ui_Objects()[(long)&C1] = "C1";
+	ui_Objects()[(long)&L1] = "L1";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&page2_c] = "page2_c";
+	ui_Objects()[(long)&page3_c] = "page3_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
 	cout << " **** All Constructed ****\n\n";
 
 	cout << test_stream(display1_h.stream(tb)) << endl;
