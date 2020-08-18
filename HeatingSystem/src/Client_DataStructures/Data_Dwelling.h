@@ -42,9 +42,9 @@ namespace client_data_structures {
 		enum streamable { e_name };
 		enum subAssembly { s_zone, s_program };
 		Dataset_Dwelling(Query & query, VolatileData * volData, I_Record_Interface * parent);
-		//I_UI_Wrapper * getFieldAt(int fieldID, int elementIndex ) override;
-		I_UI_Wrapper * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override;
+		//I_Data_Formatter * getFieldAt(int fieldID, int elementIndex ) override;
+		I_Data_Formatter * getField(int fieldID) override;
+		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 
 	private:
 		StrWrapper _name;

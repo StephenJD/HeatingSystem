@@ -51,6 +51,8 @@ namespace LCD_UI {
 		Behaviour make_newLine() { _behaviour |= b_NewLine; return *this; }
 		Behaviour make_newLine(bool newLine) { return newLine ? make_newLine() : make_sameLine(); }
 		Behaviour make_sameLine() { _behaviour &= ~b_NewLine; return *this; }
+		Behaviour make_Recycle() { _behaviour &= ~b_NonRecycle; return *this; }
+		Behaviour make_nonRecycle() { _behaviour |= b_NonRecycle; return *this; }
 		Behaviour make_viewOne() { _behaviour |= b_ViewOne; return *this; }
 		Behaviour make_viewAll() { _behaviour &= ~b_ViewOne; return *this; }
 		Behaviour make_editOnUpDn() { _behaviour |= b_UD_Edit; return *this; }
@@ -77,13 +79,13 @@ namespace LCD_UI {
 	inline Behaviour selectable() { return viewable() + Behaviour::b_Selectible; } // Set flags required for filtering
 	inline Behaviour nextActiveMember_onLR() { return selectable() + Behaviour::b_LR_ActiveMember + Behaviour::b_NonRecycle; } // For iterated collection
 	inline Behaviour nextActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_NextActive; }
-	inline Behaviour editActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_Edit; }
-	inline Behaviour saveEditActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_SaveEdit; }
+	inline Behaviour editActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_Edit + Behaviour::b_NonRecycle; }
+	inline Behaviour saveEditActiveMember_onUpDn() { return selectable() + Behaviour::b_UD_SaveEdit + Behaviour::b_NonRecycle; }
 	inline Behaviour nonRecycle() { return selectable() + Behaviour::b_NonRecycle; }
 	inline Behaviour newLine() { return viewable() + Behaviour::b_NewLine; }
-	inline Behaviour viewOne() { return viewable() + Behaviour::b_ViewOne; }
-	inline Behaviour viewOneRecycle() { return selectable() + nextActiveMember_onUpDn() + viewOne(); }
-	inline Behaviour viewAllRecycle() { return selectable() + nextActiveMember_onUpDn(); }
-	inline Behaviour viewAllNonRecycle() { return selectable() + nextActiveMember_onUpDn() + nonRecycle(); }
-	inline Behaviour viewOneNonRecycle() { return selectable() + viewOneRecycle() + nonRecycle(); }
+	inline Behaviour viewAllRecycle() { return nextActiveMember_onUpDn(); }
+	inline Behaviour viewAllNonRecycle() { return nextActiveMember_onUpDn() + nonRecycle(); }
+	inline Behaviour viewOne() { return selectable() + Behaviour::b_ViewOne; }
+	inline Behaviour viewOneRecycle() { return nextActiveMember_onUpDn() + viewOne(); }
+	inline Behaviour viewOneNonRecycle() { return viewOneRecycle() + nonRecycle(); }
 }

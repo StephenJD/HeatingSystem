@@ -2,7 +2,7 @@
 #include "UI_LazyCollection.h"
 
 namespace LCD_UI {
-	class I_UI_Wrapper;
+	class I_Data_Formatter;
 	class Permitted_Vals;
 	class ValRange;
 	// New interface classes that know how to edit themselves
@@ -27,14 +27,14 @@ namespace LCD_UI {
 
 		// Polymorphic Modifiers
 		Collection_Hndl * on_back() override; // function is called on the active object to notify it has been cancelled.
-		virtual int gotFocus(const I_UI_Wrapper * data) = 0; // returns select focus
-		virtual int editMemberSelection(const I_UI_Wrapper * _wrapper, int recordID) { return gotFocus(_wrapper); }; // returns select focus
+		virtual int gotFocus(const I_Data_Formatter * data) = 0; // returns select focus
+		virtual int editMemberSelection(const I_Data_Formatter * _data_formatter, int recordID) { return gotFocus(_data_formatter); }; // returns select focus
 		virtual int getEditCursorPos() { return cursorFromFocus(focusIndex()); }
-		virtual I_UI_Wrapper & currValue() = 0;
+		virtual I_Data_Formatter & currValue() = 0;
 		virtual void saveEdit() {}
 
 		// Queries
-		const I_UI_Wrapper & currValue() const { return const_cast<I_Edit_Hndl *>(this)->currValue(); }
+		const I_Data_Formatter & currValue() const { return const_cast<I_Edit_Hndl *>(this)->currValue(); }
 
 		// Modifiers
 		virtual void setInRangeValue();

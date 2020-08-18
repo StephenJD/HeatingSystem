@@ -20,7 +20,7 @@ namespace client_data_structures {
 		_minutesOn(0, ValRange(e_fixedWidth | e_editAll, 0, 240))
 	{}
 
-	I_UI_Wrapper * Dataset_TowelRail::getField(int fieldID) {
+	I_Data_Formatter * Dataset_TowelRail::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_name:
@@ -41,7 +41,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_TowelRail::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+	bool Dataset_TowelRail::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		switch (fieldID) {
 		case e_name: {
 			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(newValue));

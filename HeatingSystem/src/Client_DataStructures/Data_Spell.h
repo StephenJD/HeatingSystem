@@ -47,8 +47,8 @@ namespace client_data_structures {
 	public:
 		enum streamable { e_date, e_progID };
 		Dataset_Spell(Query & query, VolatileData * volData, I_Record_Interface * parent);
-		I_UI_Wrapper * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override;
+		I_Data_Formatter * getField(int fieldID) override;
+		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 		void insertNewData() override;
 		int recordField(int selectFieldID) const override { 
 			return record().rec().field(selectFieldID);

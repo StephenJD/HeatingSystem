@@ -14,8 +14,12 @@ namespace LCD_UI {
 	class Object_Hndl;
 	class Collection_Hndl;
 	class I_SafeCollection;
+	template<int noOfObjects> class UI_IteratedCollection;
+	class UI_Cmd;
+
 	/// <summary>
-	/// Base-class for Arbitrary sized streamable element types, pointed to by Object_Handles.
+	/// Stateless Abstract Base-class for Arbitrary sized streamable element types, pointed to by Object_Handles.
+	/// All concrete classes have behaviour data member, but a stateless baseclass reduces object size. 
 	/// Public interface provides for streaming, run-time switchable bahaviour and selection.
 	/// </summary>
 	class UI_Object {
@@ -74,7 +78,7 @@ namespace LCD_UI {
 		Custom_Select(OnSelectFnctr onSelect, Behaviour behaviour);
 		using UI_Object::behaviour;
 		// Query
-		bool				upDn_IsSet() override { return _onUpDown != 0; }
+		bool				upDn_IsSet() override { return _upDownTarget != 0; }
 
 		// Modifiers
 		Behaviour &			behaviour() override { return _behaviour; }
@@ -86,15 +90,16 @@ namespace LCD_UI {
 		virtual ~Custom_Select() = default;
 	private:
 		OnSelectFnctr _onSelectFn;
-		Collection_Hndl * _onUpDown = 0;
+		Collection_Hndl * _upDownTarget = 0;
 		Behaviour _behaviour;
 	};
 
 	/// <summary>
-	/// Collectible pointer wrapper, to give type-safety and a name to a pointer.
+	/// Collectible pointer wrapper with no additional state, to give type-safety and a name to a pointer.
 	/// Provides streaming of the pointed-to object.
 	/// Offers empty() and get()
 	/// Object_Hndl will outward static_cast to the underlying UI_Object reference for use.
+	/// Object size: 8 bytes
 	/// </summary>
 	class Object_Hndl {
 	public:
@@ -136,13 +141,12 @@ namespace LCD_UI {
 	//////////////////////////////////////////////////////////////////////
 	//                   Collection Handle Base Class                   //
 	//////////////////////////////////////////////////////////////////////
-	class I_SafeCollection;
-	template<int noOfObjects> class UI_IteratedCollection;
-	class UI_Cmd;
+	
 	/// <summary>
 	/// An Object_Hndl pointing to an I_SafeCollection - possibly a nested collection of Collection_Hndl
 	/// Provides atEnd(int pos) and getItem()
-	/// Adds backUI.
+	/// Adds state: backUI.
+	/// Object size: 12 bytes
 	/// </summary>
 	class Collection_Hndl : public Object_Hndl {
 	public:
@@ -204,8 +208,6 @@ namespace LCD_UI {
 		Collection_Hndl * _backUI = 0;
 	};
 
-	class I_SafeCollection;
-
 	class Coll_Iterator {
 	public:
 		Coll_Iterator(const I_SafeCollection * collection, int index) : _collection(const_cast<I_SafeCollection *>(collection)), _index(index) {}
@@ -232,7 +234,8 @@ namespace LCD_UI {
 	/// The Public Interface for rangeable collections.
 	/// It assumes the elements are Object_Hndl objects.
 	/// It implements streamElement() to stream all its elements
-	/// Provides atEnd(int pos), behavour(), focus(). objectIndex() used by lazy-derivatives. Object size: 8 bytes.
+	/// Provides atEnd(int pos), behavour(), focus(). objectIndex() used by lazy-derivatives. 
+	/// Object size: 8 bytes.
 	/// </summary>
 	class I_SafeCollection : public UI_Object {
 	public:
@@ -399,7 +402,7 @@ namespace LCD_UI {
 	/// <summary>
 	/// Template-class for holding static SafeCollections of any type.
 	/// Objects are held in an array in this object.
-	/// This class is not collectible.
+	/// This class is not collectible since it has arbitrary size.
 	/// </summary>
 	template<int noOfObjects>
 	class Collection : public I_SafeCollection {
@@ -465,13 +468,18 @@ namespace LCD_UI {
 	};
 
 
-/// <summary>
-/// A View-all Collection which iterates its active member and provides limited-width.
-/// It maintains an ItFocus() for the iteration that has the focus and ItIndex() for the iteration currently being streamed.
-/// ItIndex is used to allow each iteration to select the next activeMember index.
-/// If the active member is EditOnUpDn/SaveAfterEdit, Up/Down edits and <> moves to the next page, otherwise Up/Down moves to the next page and <> moves within the page.
-/// When shared across different displays, it is used as a viewOne-iteration.
-/// </summary>
+	/// <summary>
+	/// A View-all Collection which iterates its active member and provides limited-width.
+	/// The Iteration may be view-all(default) or view-one, but the nested elements are always internally set to view-one, as the iteration selects which member is shown.
+	/// If the active member is EditOnUpDn/SaveAfterEdit, Up/Down edits and LR moves to the next iteration, otherwise Up/Down moves to the next iteration and LR moves within the collection.
+	/// When shared across different displays, it is used as a viewOne-iteration.
+	///
+	///		Coll-Focus (moved by LR if not set to b_LR_ActiveMember)
+	///			|
+	///	{L1, Active[0], Slave[0]}
+	///	{L1, Active[1], Slave[1]} -- Active-focus (moved by LR if set to b_LR_ActiveMember)
+	///	{L1, Active[2], Slave[2]}
+	/// </summary>
 	template<int noOfObjects>
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
@@ -527,8 +535,6 @@ namespace LCD_UI {
 		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
 		//void setObjectIndex(int index) const override { I_SafeCollection::setObjectIndex(index); collection()->setObjectIndex(index); }
 		//void setFocusIndex(int focus) override { I_SafeCollection::setFocusIndex(focus); collection()->I_SafeCollection::setFocusIndex(focus); }
-
-	private:
 	};
 
 	/// <summary>

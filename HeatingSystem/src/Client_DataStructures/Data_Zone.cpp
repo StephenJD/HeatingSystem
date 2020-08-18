@@ -14,13 +14,13 @@ namespace client_data_structures {
 
 	//*************ReqIsTemp_Wrapper****************
 
-	ReqIsTemp_Wrapper::ReqIsTemp_Wrapper(ValRange valRangeArg) : I_UI_Wrapper(19, valRangeArg) {}
+	ReqIsTemp_Wrapper::ReqIsTemp_Wrapper(ValRange valRangeArg) : I_Data_Formatter(19, valRangeArg) {}
 
-	I_Field_Interface & ReqIsTemp_Wrapper::ui() { return reqIsTemp_UI; }
+	I_Streaming_Tool & ReqIsTemp_Wrapper::ui() { return reqIsTemp_UI; }
 
 	//************Edit_ReqIsTemp_h***********************
 
-	int Edit_ReqIsTemp_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	int Edit_ReqIsTemp_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		setDecade(1);
 		currValue().valRange._cursorPos = 12;
@@ -35,9 +35,9 @@ namespace client_data_structures {
 
 	void Edit_ReqIsTemp_h::setInRangeValue() {
 		I_Edit_Hndl::setInRangeValue();
-		Field_Interface_h & f_int_h = static_cast<Field_Interface_h&>(*backUI());
+		Field_StreamingTool_h & f_int_h = static_cast<Field_StreamingTool_h&>(*backUI());
 		f_int_h.backUI()->getItem(f_int_h.backUI()->focusIndex());
-		auto wrapper = const_cast<I_UI_Wrapper *>(f_int_h.f_interface().getWrapper());
+		auto wrapper = const_cast<I_Data_Formatter *>(f_int_h.f_interface().getDataFormatter());
 		auto req_wrapper = static_cast<ReqIsTemp_Wrapper*>(wrapper);
 		auto tempOffset = f_int_h.getData()->data()->getField(Dataset_Zone::e_offset)->val;
 		auto & zoneData  = static_cast<Dataset_Zone &>(*f_int_h.getData()->data());
@@ -52,7 +52,7 @@ namespace client_data_structures {
 	//************ReqIsTemp_Interface***********************
 
 	const char * ReqIsTemp_Interface::streamData(bool isActiveElement) const {
-		const ReqIsTemp_Wrapper * reqIsTemp = static_cast<const ReqIsTemp_Wrapper *>(_wrapper);
+		const ReqIsTemp_Wrapper * reqIsTemp = static_cast<const ReqIsTemp_Wrapper *>(_data_formatter);
 		int streamVal = getData(isActiveElement);
 		strcpy(scratch, reqIsTemp->name);
 		int nameLen = strlen(scratch);
@@ -62,7 +62,7 @@ namespace client_data_structures {
 		}
 		scratch[nameLen] = 0;
 		strcat(scratch, "Req$");
-		strcat(scratch, intToString(streamVal, _wrapper->valRange.editablePlaces));
+		strcat(scratch, intToString(streamVal, _data_formatter->valRange.editablePlaces));
 
 		strcat(scratch, " is:");
 		strcat(scratch, intToString(reqIsTemp->isTemp));
@@ -85,7 +85,7 @@ namespace client_data_structures {
 	{
 	}
 
-	I_UI_Wrapper * Dataset_Zone::getField(int fieldID) {
+	I_Data_Formatter * Dataset_Zone::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_name:
@@ -128,7 +128,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Zone::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+	bool Dataset_Zone::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 
 		switch (fieldID) {
 		case e_name: {

@@ -14,10 +14,10 @@ namespace client_data_structures {
 
 	//*************ReqIsTemp_Wrapper****************
 
-	ProfileDaysWrapper::ProfileDaysWrapper(int8_t daysVal, ValRange valRangeArg) : I_UI_Wrapper(daysVal, valRangeArg) {}
-	ProfileDaysWrapper::ProfileDaysWrapper(int8_t daysVal) : I_UI_Wrapper(daysVal, { e_editAll, 0, 127, 0, 7 }) {}
+	ProfileDaysWrapper::ProfileDaysWrapper(int8_t daysVal, ValRange valRangeArg) : I_Data_Formatter(daysVal, valRangeArg) {}
+	ProfileDaysWrapper::ProfileDaysWrapper(int8_t daysVal) : I_Data_Formatter(daysVal, { e_editAll, 0, 127, 0, 7 }) {}
 
-	I_Field_Interface & ProfileDaysWrapper::ui() { return profileDays_UI; }
+	I_Streaming_Tool & ProfileDaysWrapper::ui() { return profileDays_UI; }
 
 	//*************Edit_ProfileDays_h****************
 
@@ -37,7 +37,7 @@ namespace client_data_structures {
 		return focusIndex;
 	}
 
-	int Edit_ProfileDays_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	int Edit_ProfileDays_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(6); // initial cursorPos when selected (not in edit)
 		return Dataset_ProfileDays::firstIncludedDayPosition(currValue().val)+1;
@@ -99,7 +99,7 @@ namespace client_data_structures {
 		return Record_Interface::resetCount();
 	}
 
-	I_UI_Wrapper * Dataset_ProfileDays::getField(int fieldID) {
+	I_Data_Formatter * Dataset_ProfileDays::getField(int fieldID) {
 		if (recordID() == -1) return 0;
 		setMatchArgs();
 		switch (fieldID) {
@@ -110,7 +110,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_ProfileDays::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+	bool Dataset_ProfileDays::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		// Every Profile needs at least one TT
 		// The collection of profiles for this Program/Zone must include all days just once
 		// The first missing day up to that profile must be the first included day in the next profile.

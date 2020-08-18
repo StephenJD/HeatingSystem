@@ -20,7 +20,7 @@ namespace LCD_UI {
 	//OneVal Permitted_Vals::_oneVal(0);
 
 
-	char I_Field_Interface::scratch[81]; // Buffer for constructing strings of wrapped values
+	char I_Streaming_Tool::scratch[81]; // Buffer for constructing strings of wrapped values
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	//                 Permitted Vals 
@@ -42,7 +42,7 @@ namespace LCD_UI {
 #endif
 	}
 
-	int Edit_Int_h::gotFocus(const I_UI_Wrapper * data) { // returns edit focus
+	int Edit_Int_h::gotFocus(const I_Data_Formatter * data) { // returns edit focus
 		if (data) _currValue = static_cast<const IntWrapper &>(*data);
 		_decade = 1;
 		cursorFromFocus(); //Sets CursorPos.
@@ -133,12 +133,12 @@ namespace LCD_UI {
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	const char * Int_Interface::streamData(bool isActiveElement) const {
-		strcpy(scratch,intToString(getData(isActiveElement), _wrapper->valRange.editablePlaces,'0',_wrapper->valRange.format));
+		strcpy(scratch,intToString(getData(isActiveElement), _data_formatter->valRange.editablePlaces,'0',_data_formatter->valRange.format));
 		return scratch;
 	}
 
 	const char * Decimal_Interface::streamData(bool isActiveElement) const {
-		strcpy(scratch,decToString(getData(isActiveElement),_wrapper->valRange.editablePlaces, _wrapper->valRange.noOfDecPlaces,_wrapper->valRange.format));
+		strcpy(scratch,decToString(getData(isActiveElement),_data_formatter->valRange.editablePlaces, _data_formatter->valRange.noOfDecPlaces,_data_formatter->valRange.format));
 		return scratch;
 	}
 
@@ -154,7 +154,7 @@ namespace LCD_UI {
 #endif
 	}
 
-	int Edit_Char_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	int Edit_Char_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(data));
 		if(strWrapper) _currValue = *strWrapper;
 		auto strEnd = static_cast<uint8_t>(strlen(_currValue.str())) - 1;
@@ -164,7 +164,7 @@ namespace LCD_UI {
 		return 0;
 	}
 
-	int Edit_Char_h::editMemberSelection(const I_UI_Wrapper * data, int recordID) { // returns initial edit focus
+	int Edit_Char_h::editMemberSelection(const I_Data_Formatter * data, int recordID) { // returns initial edit focus
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(data));
 		if (strWrapper) _currValue = *strWrapper;
 		_currValue.val = recordID;
@@ -273,7 +273,7 @@ namespace LCD_UI {
 			streamStr[cursorPos] = _thisChar;
 		//}
 		//else { // for changing selection rather than editing name
-		//	Field_Interface_h * fldInt_h = static_cast<Field_Interface_h *>(backUI());
+		//	Field_StreamingTool_h * fldInt_h = static_cast<Field_StreamingTool_h *>(backUI());
 		//	auto status = fldInt_h->getData()->data()->move_by(move);
 		//	if (status != TB_OK && fldInt_h->behaviour().is_recycle()) {
 		//		if (status == TB_BEFORE_BEGIN) 
@@ -291,7 +291,7 @@ namespace LCD_UI {
 	//                 String Interface
 	/////////////////////////////////////////////////////////////////////////////////////////
 	StrWrapper::StrWrapper(const char* strVal, ValRange valRangeArg)
-		: I_UI_Wrapper(0, valRangeArg) {
+		: I_Data_Formatter(0, valRangeArg) {
 		strcpy(_str, strVal);
 		auto lenStr = static_cast<uint8_t>(strlen(strVal));
 		valRange._cursorPos = lenStr - 1;
@@ -316,13 +316,13 @@ namespace LCD_UI {
 	}
 
 	const char * String_Interface::streamData(bool isActiveElement) const {
-		if (_wrapper == 0) return 0;
-		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(_wrapper));
+		if (_data_formatter == 0) return 0;
+		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(_data_formatter));
 
 		if (isActiveElement) {
-			auto fieldInterface_h = parent();
+			auto fieldInterface_h = dataSource();
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
-				//if (fieldInterface_h->editBehaviour().is_Editable()) {
+				//if (fieldInterface_h->activeBehaviour().is_Editable()) {
 					return _editItem.stream_edited_copy;
 				//}
 			}
@@ -330,8 +330,8 @@ namespace LCD_UI {
 		return strWrapper->str();
 	}
 
-	I_Field_Interface & IntWrapper::ui() { return int_UI; }
-	I_Field_Interface & DecWrapper::ui() {	return dec_UI; }
-	I_Field_Interface & StrWrapper::ui() { return string_UI; }
+	I_Streaming_Tool & IntWrapper::ui() { return int_UI; }
+	I_Streaming_Tool & DecWrapper::ui() {	return dec_UI; }
+	I_Streaming_Tool & StrWrapper::ui() { return string_UI; }
 }
 

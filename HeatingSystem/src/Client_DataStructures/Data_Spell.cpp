@@ -17,7 +17,7 @@ namespace client_data_structures {
 		_startDate(DateTime{ 0 }, ValRange(e_editAll, 0, JUDGEMEMT_DAY.asInt(),0, e_NO_OF_DT_EDIT_POS)) {
 	}
 
-	I_UI_Wrapper * Dataset_Spell::getField(int fieldID) {
+	I_Data_Formatter * Dataset_Spell::getField(int fieldID) {
 		if (recordID() == -1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
 		case e_date: {
@@ -28,7 +28,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Spell::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+	bool Dataset_Spell::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		switch (fieldID) {
 		case e_date: {
 				_startDate.val = newValue->val;

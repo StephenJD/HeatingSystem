@@ -6,7 +6,7 @@
 namespace LCD_UI {
 	using namespace GP_LIB; // for client use of formatting enum
 
-	class I_Field_Interface;
+	class I_Streaming_Tool;
 
 	// ************** valrange ******************
 
@@ -17,7 +17,7 @@ namespace LCD_UI {
 	*/
 
 	/// <summary>
-	/// Formatting information used to interpret data held by I_UI_Wrapper.
+	/// Formatting information used to interpret data held by I_Data_Formatter.
 	///	format is e_edOneShort by default : Only allow editing at one position. Only show significant digits.
 	///		may be modified by any/all of : 
 	///		e_editAll : Editing at all positions.
@@ -44,20 +44,18 @@ namespace LCD_UI {
 	};
 
 	/// <summary>
-	/// This class wraps data values, typically obtained from a database.
-	/// It is constructed with the value and a ValRange formatting object.
-	/// It facilitates streaming and editing by providing a reference to an I_Field_Interface object via ui().
+	/// This abstract class wraps data values with ValRange formatting information.
+	/// Derived classes direct streaming and editing to an I_Streaming_Tool object via ui().
 	/// </summary>
-	class I_UI_Wrapper {
+	class I_Data_Formatter {
 	public:
-		I_UI_Wrapper() = default;
-		I_UI_Wrapper(int32_t initialVal, ValRange valRangeArg)
+		I_Data_Formatter() = default;
+		I_Data_Formatter(int32_t initialVal, ValRange valRangeArg)
 			: val(initialVal), valRange(valRangeArg) {
 		}
-		virtual const I_Field_Interface & ui() const { return const_cast<I_UI_Wrapper*>(this)->ui(); }
-		virtual I_Field_Interface & ui() = 0;
-		I_UI_Wrapper & operator= (int32_t valArg) { val = valArg; return *this; }
-		//I_UI_Wrapper & operator= (const I_UI_Wrapper & wrapper) { val = wrapper.val; valRange = wrapper.valRange; return *this; }
+		virtual const I_Streaming_Tool & ui() const { return const_cast<I_Data_Formatter*>(this)->ui(); }
+		virtual I_Streaming_Tool & ui() = 0;
+		I_Data_Formatter & operator= (int32_t valArg) { val = valArg; return *this; }
 		int32_t val;
 		ValRange valRange;
 	};

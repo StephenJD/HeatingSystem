@@ -1,6 +1,6 @@
 #pragma once
 #include "..\..\..\DateTime\src\Date_Time.h"
-#include "..\LCD_UI\ValRange.h"
+#include "..\LCD_UI\I_Data_Formatter.h"
 #include "..\LCD_UI\UI_Primitives.h"
 
 namespace client_data_structures {
@@ -17,12 +17,12 @@ namespace client_data_structures {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static DateTime_Interface object via ui().
 	/// </summary>
-	class DateTimeWrapper : public I_UI_Wrapper {
+	class DateTimeWrapper : public I_Data_Formatter {
 	public:
-		using I_UI_Wrapper::ui;
+		using I_Data_Formatter::ui;
 		DateTimeWrapper() = default;
 		DateTimeWrapper(DateTime dateVal, ValRange valRangeArg);
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 	};
 
 	/// <summary>
@@ -35,10 +35,10 @@ namespace client_data_structures {
 	public:
 		using I_Edit_Hndl::currValue;
 		Edit_DateTime_h();
-		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
+		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
 		int getEditCursorPos() override;
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
-		I_UI_Wrapper & currValue() override { return _currValue; }
+		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:
 		DateTimeWrapper _currValue; // copy value for editing
@@ -51,9 +51,9 @@ namespace client_data_structures {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the DateTime.
 	/// </summary>
-	class DateTime_Interface : public I_Field_Interface {
+	class DateTime_Interface : public I_Streaming_Tool {
 	public:
-		using  I_Field_Interface::editItem;
+		using  I_Streaming_Tool::editItem;
 		// Queries
 		const char * streamData(bool isActiveElement) const override;
 		DateTime valAsDate() const { return DateTime(_editItem.currValue().val); }

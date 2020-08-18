@@ -1,7 +1,7 @@
 #pragma once
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
-#include "..\LCD_UI\ValRange.h"
+#include "..\LCD_UI\I_Data_Formatter.h"
 #include "..\..\..\RDB\src\RDB.h"
 #include "..\..\..\DateTime\src\Date_Time.h"
 #include "..\HardwareInterfaces\TowelRail.h"
@@ -42,8 +42,8 @@ namespace client_data_structures {
 	public:
 		enum streamable { e_name, e_onTemp, e_minutesOn, e_secondsToGo, e_TowelRailID };
 		Dataset_TowelRail(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
-		I_UI_Wrapper * getField(int _fieldID) override;
-		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;
+		I_Data_Formatter * getField(int _fieldID) override;
+		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
 		HardwareInterfaces::TowelRail & towelRail(int index) { return static_cast<HardwareInterfaces::TowelRail*>(runTimeData())[index]; }
 	private:
 		StrWrapper _name;

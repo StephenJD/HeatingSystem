@@ -18,10 +18,10 @@ namespace client_data_structures {
 	//***************************************************
 
 	CurrentTimeWrapper::CurrentTimeWrapper(TimeOnly dateVal, ValRange valRangeArg)
-		: I_UI_Wrapper(dateVal.asInt(), valRangeArg) {
+		: I_Data_Formatter(dateVal.asInt(), valRangeArg) {
 	}
 
-	I_Field_Interface & CurrentTimeWrapper::ui() { return currentTime_UI; }
+	I_Streaming_Tool & CurrentTimeWrapper::ui() { return currentTime_UI; }
 
 	bool Edit_CurrentTime_h::move_focus_by(int moveBy) { // Change character at the cursor. Modify copy held by currValue
 		if (moveBy == 0) return false;
@@ -57,7 +57,7 @@ namespace client_data_structures {
 		return focusIndex;
 	}
 
-	int Edit_CurrentTime_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	int Edit_CurrentTime_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(e_time); // initial cursorPos when selected (not in edit)
 		return e_mins;
@@ -83,10 +83,10 @@ namespace client_data_structures {
 	//***************************************************
 
 	CurrentDateWrapper::CurrentDateWrapper(DateOnly dateVal, ValRange valRangeArg)
-		: I_UI_Wrapper(dateVal.asInt(), valRangeArg) {
+		: I_Data_Formatter(dateVal.asInt(), valRangeArg) {
 	}
 
-	I_Field_Interface & CurrentDateWrapper::ui() { return currentDate_UI; }
+	I_Streaming_Tool & CurrentDateWrapper::ui() { return currentDate_UI; }
 
 	bool Edit_CurrentDate_h::move_focus_by(int moveBy) { // Change character at the cursor. Modify copy held by currValue
 		if (moveBy == 0) return false;
@@ -126,7 +126,7 @@ namespace client_data_structures {
 		return focusIndex;
 	}
 
-	int Edit_CurrentDate_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	int Edit_CurrentDate_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(e_date); // initial cursorPos when selected (not in edit)
 		return e_yrs;
@@ -156,11 +156,11 @@ namespace client_data_structures {
 		, _SDCard{"",5}
 	{}
 
-	I_UI_Wrapper * Dataset_WithoutQuery::getFieldAt(int fieldID, int elementIndex) {
+	I_Data_Formatter * Dataset_WithoutQuery::getFieldAt(int fieldID, int elementIndex) {
 		return getField(fieldID);
 	}
 
-	I_UI_Wrapper * Dataset_WithoutQuery::getField(int fieldID) {
+	I_Data_Formatter * Dataset_WithoutQuery::getField(int fieldID) {
 		_currTime.val = clock_().time().asInt();
 		_currDate.val = clock_().date().asInt();
 		_dst.val = clock_().autoDSThours();
@@ -174,7 +174,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_WithoutQuery::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+	bool Dataset_WithoutQuery::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		switch (fieldID) {
 		case e_currTime:
 			// Note: minute units are written to clock_() as they are edited.

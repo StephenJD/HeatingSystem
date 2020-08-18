@@ -250,7 +250,7 @@ namespace LCD_UI {
 	}
 
 	void Custom_Select::set_UpDn_Target(Collection_Hndl * obj) {
-		_onUpDown = obj;
+		_upDownTarget = obj;
 	}
 
 	Collection_Hndl * Custom_Select::select(Collection_Hndl *) {
@@ -261,8 +261,8 @@ namespace LCD_UI {
 	}
 
 	bool Custom_Select::move_focus_by(int moveBy) {
-		if (_onUpDown) {
-			return _onUpDown->move_focus_by(moveBy);
+		if (_upDownTarget) {
+			return _upDownTarget->move_focus_by(moveBy);
 		}
 		else return false;
 	}
@@ -441,13 +441,11 @@ namespace LCD_UI {
 		// Set the activeUI to object-index 0 and Stream all the elements
 		// Then move the activeUI to the next object-index and re-stream all the elements
 		// Keep going till all members of the activeUI have been streamed
-		/*
-							Coll-Focus
-								v
-						{L1, Active[0], Slave[0]} // Active-ObjectIndex must change on each iteration to get the next data shown.
-		Active-focus ->	{L1, Active[1], Slave[1]} // Active-focus shows which iteration has the cursor.
-						{L1, Active[2], Slave[2]} 
-		*/
+		///		Coll-Focus (moved by LR if not set to b_LR_ActiveMember)
+		///			v
+		///	{L1, Active[0], Slave[0]}
+		///	{L1, Active[1], Slave[1]} <- Active-focus (moved by LR if set to b_LR_ActiveMember)
+		///	{L1, Active[2], Slave[2]}
 
 		auto coll_focus = activeElement ? iterated_collection()->I_SafeCollection::focusIndex() : -1;
 		// lambdas

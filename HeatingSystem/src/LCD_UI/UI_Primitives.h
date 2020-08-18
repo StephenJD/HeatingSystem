@@ -1,6 +1,6 @@
 #pragma once
-#include "ValRange.h"
-#include "I_Field_Interface.h"
+#include "I_Data_Formatter.h"
+#include "I_Streaming_Tool.h"
 #include "I_Edit_Hndl.h"
 #include "UI_LazyCollection.h"
 
@@ -22,12 +22,12 @@ namespace LCD_UI {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static Int_Interface object via ui().
 	/// </summary>
-	class IntWrapper : public I_UI_Wrapper /* from ValRange.h */ {
+	class IntWrapper : public I_Data_Formatter /* from I_Data_Formatter.h */ {
 	public:
 		IntWrapper() = default;
-		IntWrapper(int32_t val, ValRange valRangeArg) : I_UI_Wrapper(val, valRangeArg) {}
-		IntWrapper & operator= (const I_UI_Wrapper & wrapper) { I_UI_Wrapper::operator=(wrapper); return *this; }
-		I_Field_Interface & ui() override;
+		IntWrapper(int32_t val, ValRange valRangeArg) : I_Data_Formatter(val, valRangeArg) {}
+		IntWrapper & operator= (const I_Data_Formatter & wrapper) { I_Data_Formatter::operator=(wrapper); return *this; }
+		I_Streaming_Tool & ui() override;
 	};
 
 	/// <summary>
@@ -35,12 +35,12 @@ namespace LCD_UI {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static Decimal_Interface object via ui().
 	/// </summary>
-	class DecWrapper : public I_UI_Wrapper {
+	class DecWrapper : public I_Data_Formatter {
 	public:
 		DecWrapper() = default;
-		DecWrapper(int32_t val, ValRange valRangeArg) : I_UI_Wrapper(val, valRangeArg) {}
-		DecWrapper & operator= (const I_UI_Wrapper & wrapper) { I_UI_Wrapper::operator=(wrapper); return *this; }
-		I_Field_Interface & ui() override;
+		DecWrapper(int32_t val, ValRange valRangeArg) : I_Data_Formatter(val, valRangeArg) {}
+		DecWrapper & operator= (const I_Data_Formatter & wrapper) { I_Data_Formatter::operator=(wrapper); return *this; }
+		I_Streaming_Tool & ui() override;
 	};
 
 	/// <summary>
@@ -48,13 +48,13 @@ namespace LCD_UI {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static String_Interface object via ui().
 	/// </summary>
-	class StrWrapper : public I_UI_Wrapper {
+	class StrWrapper : public I_Data_Formatter {
 	public:
 		StrWrapper() = default;
 		StrWrapper(const char* strVal, ValRange valRangeArg);
 		StrWrapper & operator= (const char* strVal);
 
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 		char * str() { return _str; }
 		const char * str() const { return _str; }
 	private:
@@ -112,9 +112,9 @@ namespace LCD_UI {
 	class Edit_Int_h : public I_Edit_Hndl {
 	public:
 		Edit_Int_h();
-		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
+		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
-		I_UI_Wrapper & currValue() override { return _currValue; }
+		I_Data_Formatter & currValue() override { return _currValue; }
 		void setInRangeValue() override;
 		void setDecade(int focus);
 		int cursorFromFocus(int = 0) override; // arg not used. Sets CursorPos
@@ -135,10 +135,10 @@ namespace LCD_UI {
 	class Edit_Char_h : public I_Edit_Hndl {
 	public:
 		Edit_Char_h();
-		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
-		int editMemberSelection(const I_UI_Wrapper * _wrapper, int recordID) override; // returns select focus
+		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
+		int editMemberSelection(const I_Data_Formatter * _data_formatter, int recordID) override; // returns select focus
 		int getEditCursorPos() override;  // copy data to edit
-		I_UI_Wrapper & currValue() override { return _currValue; }
+		I_Data_Formatter & currValue() override { return _currValue; }
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
 	private:
 		friend String_Interface;
@@ -157,12 +157,12 @@ namespace LCD_UI {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the integer.
 	/// </summary>
-	class Int_Interface : public I_Field_Interface { // Shared stateless UI interface
+	class Int_Interface : public I_Streaming_Tool { // Shared stateless UI interface
 	public:
 #ifdef ZPSIM
 		Int_Interface() { ui_Objects()[(long)this] = "Int_Interface"; }
 #endif
-		using I_Field_Interface::editItem;
+		using I_Streaming_Tool::editItem;
 		void haveMovedTo(int currFocus) override;
 
 		const char * streamData(bool isActiveElement) const override;
@@ -188,12 +188,12 @@ namespace LCD_UI {
 	/// It behaves like a UI_Object when not in edit and like an I_SafeCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the string.
 	/// </summary>
-	class String_Interface : public I_Field_Interface {
+	class String_Interface : public I_Streaming_Tool {
 	public:
 #ifdef ZPSIM
 		String_Interface() { ui_Objects()[(long)this] = "String_Interface"; }
 #endif
-		using I_Field_Interface::editItem;
+		using I_Streaming_Tool::editItem;
 		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	private:

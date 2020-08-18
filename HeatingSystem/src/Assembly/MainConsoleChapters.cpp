@@ -104,13 +104,13 @@ namespace Assembly {
 		// Create infinite loop
 		//display1_h.stream(mainDisplayBuffer);
 #ifdef ZPSIM
-		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getInterface().f_interface().editItem().get();
+		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getStreamingTool().f_interface().editItem().get();
 		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";
-		auto & tt_Field_Interface = _timeTempUI_c.getInterface().f_interface();
+		auto & tt_Field_Interface = _timeTempUI_c.getStreamingTool().f_interface();
 		ui_Objects()[(long)&tt_Field_Interface] = "tt_Field_Interface";
-		auto & zone_Field_Interface = _zoneAbbrevUI_c.getInterface().f_interface();
+		auto & zone_Field_Interface = _zoneAbbrevUI_c.getStreamingTool().f_interface();
 		ui_Objects()[(long)&zone_Field_Interface] = "string_Interface";
-		auto & profileDays_Field_Interface = _profileDaysUI_c.getInterface().f_interface();
+		auto & profileDays_Field_Interface = _profileDaysUI_c.getStreamingTool().f_interface();
 		ui_Objects()[(long)&profileDays_Field_Interface] = "profileDays_Field_Interface";
 		
 		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";

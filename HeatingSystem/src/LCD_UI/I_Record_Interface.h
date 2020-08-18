@@ -1,5 +1,5 @@
 #pragma once
-#include "ValRange.h" // likely to be needed by all inheriting classes
+#include "I_Data_Formatter.h" // likely to be needed by all inheriting classes
 #include "..\..\..\RDB\src\RDB.h"
 
 namespace RelationalDatabase {
@@ -32,18 +32,18 @@ namespace LCD_UI {
 		int recordID() const { return _recordID; }
 		const Query & query() const { return _recSel.query(); }
 		int count() const { return _count; }
-		I_UI_Wrapper * getFieldAt(int fieldID, int elementIndex) const { return const_cast<I_Record_Interface *>(this)->getFieldAt(fieldID, elementIndex); }
-		I_UI_Wrapper * getField(int fieldID) const { return const_cast<I_Record_Interface *>(this)->getField(fieldID); }
+		I_Data_Formatter * getFieldAt(int fieldID, int elementIndex) const { return const_cast<I_Record_Interface *>(this)->getFieldAt(fieldID, elementIndex); }
+		I_Data_Formatter * getField(int fieldID) const { return const_cast<I_Record_Interface *>(this)->getField(fieldID); }
 		virtual int recordField(int selectFieldID) const { return recordID(); }
 		virtual const Answer_Locator & record() const = 0;
-		I_UI_Wrapper * initialiseRecord(int fieldID);
+		I_Data_Formatter * initialiseRecord(int fieldID);
 		bool indexIsInDataRange(int index) { return index >= query().begin().id() && index <= query().last().id(); }
 
 		// Polymorphic Modifiers
 		virtual Answer_Locator & record() = 0;
-		virtual I_UI_Wrapper * getFieldAt(int fieldID, int elementIndex); // moves to first valid record at id or past id from current position
-		virtual I_UI_Wrapper * getField(int fieldID) = 0;
-		virtual bool setNewValue(int fieldID, const I_UI_Wrapper * val) = 0;
+		virtual I_Data_Formatter * getFieldAt(int fieldID, int elementIndex); // moves to first valid record at id or past id from current position
+		virtual I_Data_Formatter * getField(int fieldID) = 0;
+		virtual bool setNewValue(int fieldID, const I_Data_Formatter * val) = 0;
 		virtual void insertNewData() {};
 
 		TB_Status move_by(int move);

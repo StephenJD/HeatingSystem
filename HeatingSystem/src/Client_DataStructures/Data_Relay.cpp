@@ -16,7 +16,7 @@ namespace client_data_structures {
 		, _name("", 6)
 		, _status{ 0, ValRange(e_edOneShort, 0, 1) } {}
 
-	I_UI_Wrapper * Dataset_Relay::getField(int fieldID) {
+	I_Data_Formatter * Dataset_Relay::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		//logger() << "Relay recordID(): " << int(recordID()) << " " << record().rec() << L_endl;
 		switch (fieldID) {
@@ -35,7 +35,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Relay::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+	bool Dataset_Relay::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		switch (fieldID) {
 		case e_name:
 		{

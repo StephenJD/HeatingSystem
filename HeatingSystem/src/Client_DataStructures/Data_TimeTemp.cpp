@@ -16,10 +16,10 @@ namespace client_data_structures {
 
 	//*************ReqIsTemp_Wrapper****************
 
-	TimeTempWrapper::TimeTempWrapper(int16_t ttVal, ValRange valRangeArg) : I_UI_Wrapper(ttVal, valRangeArg) {}
-	TimeTempWrapper::TimeTempWrapper(int16_t ttVal) : I_UI_Wrapper(ttVal, { e_editAll, 0, uint16_t(-1), 0, Edit_TimeTemp_h::e_NO_OF_EDIT_POS }) {}
+	TimeTempWrapper::TimeTempWrapper(int16_t ttVal, ValRange valRangeArg) : I_Data_Formatter(ttVal, valRangeArg) {}
+	TimeTempWrapper::TimeTempWrapper(int16_t ttVal) : I_Data_Formatter(ttVal, { e_editAll, 0, uint16_t(-1), 0, Edit_TimeTemp_h::e_NO_OF_EDIT_POS }) {}
 
-	I_Field_Interface & TimeTempWrapper::ui() { return timeTemp_UI; }
+	I_Streaming_Tool & TimeTempWrapper::ui() { return timeTemp_UI; }
 
 	//*************Edit_ProfileDays_h****************
 
@@ -70,7 +70,7 @@ namespace client_data_structures {
 		return focusIndex;
 	}
 
-	int Edit_TimeTemp_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	int Edit_TimeTemp_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(e_temp); // initial cursorPos when selected (not in edit)
 		return e_temp;
@@ -96,7 +96,7 @@ namespace client_data_structures {
 		, _timeTemp(0, ValRange(e_editAll, 0, uint16_t(-1), 0, Edit_TimeTemp_h::e_NO_OF_EDIT_POS))
 	{}
 
-	I_UI_Wrapper * Dataset_TimeTemp::getField(int fieldID) {
+	I_Data_Formatter * Dataset_TimeTemp::getField(int fieldID) {
 		if (recordID() == -1) return 0;
 		switch (fieldID) {
 		case e_TimeTemp:
@@ -106,7 +106,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_TimeTemp::setNewValue(int fieldID, const I_UI_Wrapper * newValue) {
+	bool Dataset_TimeTemp::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		// Every Profile needs at least one TT
 		switch (fieldID) {
 		case e_TimeTemp: {

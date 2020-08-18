@@ -2,7 +2,7 @@
 #include "..\..\..\RDB\src\RDB.h"
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
-#include "..\LCD_UI\ValRange.h"
+#include "..\LCD_UI\I_Data_Formatter.h"
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -33,15 +33,15 @@ namespace client_data_structures {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static Profile_Interface object via ui().
 	/// </summary>
-	class ProfileDaysWrapper : public I_UI_Wrapper {
+	class ProfileDaysWrapper : public I_Data_Formatter {
 	public:
-		using I_UI_Wrapper::ui;
+		using I_Data_Formatter::ui;
 		ProfileDaysWrapper() = default;
 		ProfileDaysWrapper(int8_t daysVal);
 		ProfileDaysWrapper(int8_t daysVal, ValRange valRangeArg);
-		ProfileDaysWrapper & operator= (const I_UI_Wrapper & wrapper) { I_UI_Wrapper::operator=(wrapper); return *this; }
+		ProfileDaysWrapper & operator= (const I_Data_Formatter & wrapper) { I_Data_Formatter::operator=(wrapper); return *this; }
 
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 	};
 
 	/// <summary>
@@ -53,9 +53,9 @@ namespace client_data_structures {
 	class Edit_ProfileDays_h : public Edit_Int_h {
 	public:
 		using I_Edit_Hndl::currValue;
-		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
+		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
-		I_UI_Wrapper & currValue() override { return _currValue; }
+		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:
 
@@ -70,9 +70,9 @@ namespace client_data_structures {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the Days.
 	/// </summary>
-	class ProfileDays_Interface : public I_Field_Interface {
+	class ProfileDays_Interface : public I_Streaming_Tool {
 	public:
-		using I_Field_Interface::editItem;
+		using I_Streaming_Tool::editItem;
 		const char * streamData(bool isActiveElement) const override;
 		bool isActionableObjectAt(int index) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
@@ -98,8 +98,8 @@ namespace client_data_structures {
 		Dataset_ProfileDays(Query & query, VolatileData * volData, I_Record_Interface * dwellProgs, I_Record_Interface * dwellZone);
 		int resetCount() override;
 		void setMatchArgs();
-		I_UI_Wrapper * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override;
+		I_Data_Formatter * getField(int fieldID) override;
+		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 		static int firstIncludedDay(int days, int * pos = 0);
 		static int firstIncludedDayPosition(int days);
 		static int firstMissingDay(int days);

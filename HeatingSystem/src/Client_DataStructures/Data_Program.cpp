@@ -30,7 +30,7 @@ namespace client_data_structures {
 	//	return Record_Interface::resetCount();
 	//}
 
-	I_UI_Wrapper * Dataset_Program::getField(int fieldID) {
+	I_Data_Formatter * Dataset_Program::getField(int fieldID) {
 		if (recordID() == -1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
 		//case e_id:
@@ -42,7 +42,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Program::setNewValue(int fieldID, const I_UI_Wrapper * newVal) {
+	bool Dataset_Program::setNewValue(int fieldID, const I_Data_Formatter * newVal) {
 		switch (fieldID) {
 		case e_name: {
 			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(newVal));

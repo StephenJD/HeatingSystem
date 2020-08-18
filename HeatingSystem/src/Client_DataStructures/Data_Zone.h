@@ -1,7 +1,7 @@
 #pragma once
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
-#include "..\LCD_UI\ValRange.h"
+#include "..\LCD_UI\I_Data_Formatter.h"
 #include "..\..\..\RDB\src\RDB.h"
 #include "..\..\..\DateTime\src\Date_Time.h"
 #include "..\HardwareInterfaces\Zone.h"
@@ -17,12 +17,12 @@ namespace client_data_structures {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static ReqIsTemp_Interface object via ui().
 	/// </summary>
-	class ReqIsTemp_Wrapper : public I_UI_Wrapper {
+	class ReqIsTemp_Wrapper : public I_Data_Formatter {
 	public:
-		using I_UI_Wrapper::ui;
+		using I_Data_Formatter::ui;
 		ReqIsTemp_Wrapper() = default;
 		ReqIsTemp_Wrapper(ValRange valRangeArg);
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 
 		char name[7];
 		uint8_t isTemp;
@@ -38,7 +38,7 @@ namespace client_data_structures {
 	class Edit_ReqIsTemp_h : public Edit_Int_h {
 	public:
 		using I_Edit_Hndl::currValue;
-		int gotFocus(const I_UI_Wrapper * data) override;  // returns initial edit focus
+		int gotFocus(const I_Data_Formatter * data) override;  // returns initial edit focus
 		int cursorFromFocus(int focusIndex) override;
 		void setInRangeValue() override;
 	private:
@@ -50,12 +50,12 @@ namespace client_data_structures {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the ReqIsTemp.
 	/// </summary>
-	class ReqIsTemp_Interface : public I_Field_Interface {
+	class ReqIsTemp_Interface : public I_Streaming_Tool {
 	public:
 #ifdef ZPSIM
 		ReqIsTemp_Interface() { ui_Objects()[(long)this] = "ReqIsTemp_Interface"; }
 #endif
-		using I_Field_Interface::editItem;
+		using I_Streaming_Tool::editItem;
 		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	protected:
@@ -114,8 +114,8 @@ namespace client_data_structures {
 	public:
 		enum streamable { e_name, e_abbrev, e_reqTemp, e_isTemp, e_factor, e_reqIsTemp, e_offset	};
 		Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
-		I_UI_Wrapper * getField(int _fieldID) override;
-		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;
+		I_Data_Formatter * getField(int _fieldID) override;
+		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
 		HardwareInterfaces::Zone & zone(int index) { return static_cast<HardwareInterfaces::Zone*>(runTimeData())[index]; }
 	private:
 		StrWrapper _name;

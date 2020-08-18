@@ -150,7 +150,7 @@ namespace client_data_structures {
 				_hasInsertedNew = true;
 			}
 			tt_field_interface_h->get()->edit(tt_field_interface_h);
-			static_cast<Field_Interface_h*>(tt_field_interface_h)->setEditFocus(0);
+			static_cast<Field_StreamingTool_h*>(tt_field_interface_h)->setEditFocus(0);
 		}
 		else {// is delete command
 			target()->on_back();

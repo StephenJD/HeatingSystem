@@ -40,12 +40,12 @@ namespace client_data_structures {
 /// It is constructed with the value and a ValRange formatting object.
 /// It provides streaming and editing by delegation to a file-static TempSensor_Interface object via ui().
 /// </summary>
-	class TempSensor_Wrapper : public I_UI_Wrapper {
+	class TempSensor_Wrapper : public I_Data_Formatter {
 	public:
-		using I_UI_Wrapper::ui;
+		using I_Data_Formatter::ui;
 		TempSensor_Wrapper() = default;
 		TempSensor_Wrapper(ValRange valRangeArg);
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 		
 		char name[5];
 		uint8_t address;
@@ -61,7 +61,7 @@ namespace client_data_structures {
 	//class Edit_TempSensor_h : public Edit_Int_h {
 	//public:
 	//	using I_Edit_Hndl::currValue;
-	//	int gotFocus(const I_UI_Wrapper * data) override;  // returns initial edit focus
+	//	int gotFocus(const I_Data_Formatter * data) override;  // returns initial edit focus
 	//	int cursorFromFocus(int focusIndex) override;
 	//	void setInRangeValue() override;
 	//private:
@@ -77,10 +77,10 @@ namespace client_data_structures {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the ReqIsTemp.
 	/// </summary>
-	class TempSensor_UIinterface : public I_Field_Interface
+	class TempSensor_UIinterface : public I_Streaming_Tool
 	{
 	public:
-		using I_Field_Interface::editItem;
+		using I_Streaming_Tool::editItem;
 		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() override { return _editItem; }
 	protected:
@@ -118,8 +118,8 @@ namespace client_data_structures {
 	public:
 		enum streamable { e_name_temp, e_temp };
 		Dataset_TempSensor(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
-		I_UI_Wrapper * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override {return true;}
+		I_Data_Formatter * getField(int fieldID) override;
+		bool setNewValue(int fieldID, const I_Data_Formatter * val) override {return true;}
 		//void insertNewData() override;
 		int recordField(int) const override {
 			return record().rec().address;

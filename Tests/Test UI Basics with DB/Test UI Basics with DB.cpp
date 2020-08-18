@@ -47,15 +47,15 @@
 
 #define EDIT_DECIMAL
 #define EDIT_DATES
-#define EDIT_CURRENT_DATETIME
+//#define EDIT_CURRENT_DATETIME
 #define EDIT_RUN
 
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
 #define VIEW_ONE_NESTED_PROFILE_PAGE
-#define CONTRAST
-#define TIME_TEMP_EDIT
-#define MAIN_CONSOLE_PAGES
-#define INFO_CONSOLE_PAGES
+//#define CONTRAST
+//#define TIME_TEMP_EDIT
+//#define MAIN_CONSOLE_PAGES
+//#define INFO_CONSOLE_PAGES
 
 //#define HEATING_SYSTEM
 //#define CMD_MENU
@@ -389,9 +389,9 @@ SCENARIO("Simple Page Scrolling", "[Chapter]") {
 	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
 
 	//cout << "\n **** Next create DB UIs ****\n";
-	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, 0, 0, viewOneNonRecycle()); // non-recyclable
+	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name,0,0, viewOneRecycle());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewOneRecycle());
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name); // non-recyclable
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -877,7 +877,7 @@ TEST_CASE("Edit Strings", "[Chapter]") {
 	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
 
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewOneRecycle(), viewAllRecycle());
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,0,0, viewOneNonRecycle(), editActiveMember_onUpDn().make_Recycle());
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
 
 	UI_Label L1("L1");
@@ -940,74 +940,76 @@ TEST_CASE("Edit Strings", "[Chapter]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UqS _A  At Home C3");
 	display1_h.rec_select(); 
 	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   #UqS A| At Home C3");
-	display1_h.rec_left_right(-1); // moves focus within zoneNameUI to nect char
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UqS A#| At Home C3");
-	display1_h.rec_left_right(-4); // moves focus within zoneNameUI to nect char
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   U#qS A| At Home C3");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   U#pS A| At Home C3");
-	display1_h.rec_left_right(2); // moves focus within zoneNameUI to nect char
-	display1_h.rec_up_down(1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#||| At Home C3");
-	display1_h.rec_up_down(-1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS# A| At Home C3");
-	display1_h.rec_up_down(-1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#AA| At Home C3");
-	display1_h.rec_up_down(-1); // B
-	display1_h.rec_up_down(-1); // C
-	display1_h.rec_up_down(-1); // D
-	display1_h.rec_up_down(-1); // E
-	display1_h.rec_up_down(-1); // F
-	display1_h.rec_up_down(-1); // G
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#GA| At Home C3");
-	display1_h.rec_up_down(-1); // select prev permissible char at this position
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#LA| At Home C3");
-	display1_h.rec_up_down(-1); // select prev permissible char at this position
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#QA| At Home C3");
-	display1_h.rec_up_down(-1); // select prev permissible char at this position
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(-1); 
-	display1_h.rec_up_down(1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#tA| At Home C3");
-	display1_h.rec_left_right(1); // moves focus within zoneNameUI to next char
-	display1_h.rec_up_down(-1); // B 
-	display1_h.rec_up_down(-1); // C
-	display1_h.rec_up_down(-1); // D 
-	display1_h.rec_up_down(-1); // E 
-	display1_h.rec_up_down(-1); // F 
-	display1_h.rec_up_down(-1); // G 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpSt#G| At Home C3");
-	display1_h.rec_up_down(-1); // H 
-	display1_h.rec_up_down(-1); // I
-	display1_h.rec_up_down(-1); // J 
-	display1_h.rec_up_down(-1); // K 
-	display1_h.rec_up_down(-1); // L 
-	display1_h.rec_up_down(-1); // M 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpSt#M| At Home C3");
-	display1_h.rec_up_down(-1); // N 
-	display1_h.rec_up_down(-1); // O 
-	display1_h.rec_up_down(-1); // P
-	display1_h.rec_up_down(-1); // Q 
-	display1_h.rec_up_down(-1); // R 
-	display1_h.rec_up_down(1); // r 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpSt#r| At Home C3");
-	display1_h.rec_left_right(1); // moves focus within zoneNameUI to next char
-	display1_h.rec_up_down(-1); // r 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr#r At Home C3");
-	display1_h.rec_up_down(-1); // R 
-	display1_h.rec_up_down(-1); // S 
-	display1_h.rec_up_down(1); // s 
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr#s At Home C3");
-	display1_h.rec_select();
-	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s At Home C3");
+	THEN("Move left recycles wiyhin edit") {
+		display1_h.rec_left_right(-1); // moves focus within zoneNameUI to nect char
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UqS A#| At Home C3");
+		display1_h.rec_left_right(-4); // moves focus within zoneNameUI to nect char
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   U#qS A| At Home C3");
+		display1_h.rec_up_down(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   U#pS A| At Home C3");
+		display1_h.rec_left_right(2); // moves focus within zoneNameUI to nect char
+		display1_h.rec_up_down(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#||| At Home C3");
+		display1_h.rec_up_down(-1);
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS# A| At Home C3");
+		display1_h.rec_up_down(-1);
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#AA| At Home C3");
+		display1_h.rec_up_down(-1); // B
+		display1_h.rec_up_down(-1); // C
+		display1_h.rec_up_down(-1); // D
+		display1_h.rec_up_down(-1); // E
+		display1_h.rec_up_down(-1); // F
+		display1_h.rec_up_down(-1); // G
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#GA| At Home C3");
+		display1_h.rec_up_down(-1); // select prev permissible char at this position
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#LA| At Home C3");
+		display1_h.rec_up_down(-1); // select prev permissible char at this position
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#QA| At Home C3");
+		display1_h.rec_up_down(-1); // select prev permissible char at this position
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpS#tA| At Home C3");
+		display1_h.rec_left_right(1); // moves focus within zoneNameUI to next char
+		display1_h.rec_up_down(-1); // B 
+		display1_h.rec_up_down(-1); // C
+		display1_h.rec_up_down(-1); // D 
+		display1_h.rec_up_down(-1); // E 
+		display1_h.rec_up_down(-1); // F 
+		display1_h.rec_up_down(-1); // G 
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpSt#G| At Home C3");
+		display1_h.rec_up_down(-1); // H 
+		display1_h.rec_up_down(-1); // I
+		display1_h.rec_up_down(-1); // J 
+		display1_h.rec_up_down(-1); // K 
+		display1_h.rec_up_down(-1); // L 
+		display1_h.rec_up_down(-1); // M 
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpSt#M| At Home C3");
+		display1_h.rec_up_down(-1); // N 
+		display1_h.rec_up_down(-1); // O 
+		display1_h.rec_up_down(-1); // P
+		display1_h.rec_up_down(-1); // Q 
+		display1_h.rec_up_down(-1); // R 
+		display1_h.rec_up_down(1); // r 
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpSt#r| At Home C3");
+		display1_h.rec_left_right(1); // moves focus within zoneNameUI to next char
+		display1_h.rec_up_down(-1); // r 
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr#r At Home C3");
+		display1_h.rec_up_down(-1); // R 
+		display1_h.rec_up_down(-1); // S 
+		display1_h.rec_up_down(1); // s 
+		CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr#s At Home C3");
+		display1_h.rec_select();
+		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s At Home C3");
+	}
 }
 #endif
 
@@ -1115,7 +1117,7 @@ TEST_CASE("Edit Formatted Integer Data", "[Display]") {
 			e_editAllShort, e_editAllShortPlus, e_editAllFixed3, e_editAllFixed3Plus
 		};
 				
-		I_UI_Wrapper * getField(int fieldID) override {
+		I_Data_Formatter * getField(int fieldID) override {
 			switch (fieldID) {
 			case e_edit1short:
 				return &_edit1short;
@@ -1129,11 +1131,11 @@ TEST_CASE("Edit Formatted Integer Data", "[Display]") {
 			};
 		}
 
-		I_UI_Wrapper * getFieldAt(int fieldID, int elementIndex) {
+		I_Data_Formatter * getFieldAt(int fieldID, int elementIndex) {
 			return getField(fieldID);
 		}
 
-		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override { return false; }
+		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override { return false; }
 	private:
 		IntWrapper _edit1short;
 		IntWrapper _edit1shortPlus;
@@ -1334,7 +1336,7 @@ TEST_CASE("Edit Date Data", "[Chapter]") {
 	auto display1_h = A_Top_UI(display1_c);
 
 	cout << "Size of UI_FieldData is " << dec << sizeof(dwellSpellUI_c) << endl;
-	cout << "Size of Field_Interface_h is " << dec << sizeof(Field_Interface_h) << endl;
+	cout << "Size of Field_StreamingTool_h is " << dec << sizeof(Field_StreamingTool_h) << endl;
 	cout << "Size of LazyCollection is " << dec << sizeof(LazyCollection) << endl;
 	cout << "Size of I_SafeCollection is " << dec << sizeof(I_SafeCollection) << endl;
 	cout << "Size of Collection_Hndl is " << dec << sizeof(Collection_Hndl) << endl;
@@ -1524,7 +1526,7 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 #endif
 
 #ifdef EDIT_RUN
-TEST_CASE("Display / Edit Run Data", "[Chapter]") {
+SCENARIO("Non-iterated View-all giving Edit on UD", "[Chapter]") {
 	cout << "\n*********************************\n**** Display / Edit Run Data ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -1539,19 +1541,13 @@ TEST_CASE("Display / Edit Run Data", "[Chapter]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	cout << "\tand some Queries are created" << endl;
 	auto q_zones = db.tableQuery(TB_Zone);
 
-	cout << " **** Next create DB Record Interfaces ****\n";
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	
-	cout << " **** Next create DB UIs ****\n";
 	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editActiveMember_onUpDn());
 	// UI Collections
-	cout << "\npage1 Collection\n";
 	auto page1_c = makeCollection(zoneReqTempUI_c);
-	
-	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
@@ -1559,41 +1555,52 @@ TEST_CASE("Display / Edit Run Data", "[Chapter]") {
 	ui_Objects()[(long)&page1_c] = "page1_c";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
-	cout << " **** All Constructed ****\n\n";
 	//for (auto & z : zoneArr) z.setFlowTemp(); // Can't setflowtemp and get heating requirement unless constructed a thermstore and backboiler...
 	display1_h.rec_select();
-
-	//display1_h.rec_left_right(1); // moves focus
-	display1_h.stream(tb);
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$2_0 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$20 is:19 DHW    Req$4_5 is:55 Flat   Req$21 is:21 ");
-	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2_1 is:21 ");
-	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	
-	//display1_h.rec_select();
-	cout << "***** Up/Down to Edit *****\n";
-	display1_h.rec_up_down(-1); // increment 1 degree puts into edit
-	display1_h.stream(tb);
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1#8 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#18 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	display1_h.rec_up_down(1); // decrement 10 degree
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#10 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	display1_h.rec_up_down(-1); // increment 10 degree
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
-	display1_h.rec_left_right(-1); // moves focus - save current and move to next field
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#1 is:21 ");
-	display1_h.rec_up_down(-1); // increment 1 degree
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#2 is:21 ");
-	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$#22 is:21 ");
-	display1_h.rec_left_right(-1); // moves focus - save current and move to next field
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$4#5 is:55 Flat   Req$22 is:21 ");
+	GIVEN("Self-iterating View-all can be scrolled through") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$2_0 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$20 is:19 DHW    Req$4_5 is:55 Flat   Req$21 is:21 ");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2_1 is:21 ");
+		THEN("Recycles focus") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+			AND_THEN("Edits on UP") {
+				display1_h.rec_up_down(-1); // increment 1 degree puts into edit
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1#8 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+				THEN("Allows Edit of 10's") {
+					display1_h.rec_left_right(-1); // moves focus
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#18 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+					AND_THEN("On decrementing 10 shows minimum") {
+						display1_h.rec_up_down(1); // decrement 10 degree
+						CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#10 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+						AND_THEN("Allows incrementing 10") {
+							display1_h.rec_up_down(-1); // increment 10 degree
+							CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+							AND_THEN("Left saves and edits last iteration") {
+								display1_h.rec_left_right(-1); // moves focus - save current and move to next field
+								CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#1 is:21 ");
+								THEN("Will not allow more than one degree increase") {
+									display1_h.rec_up_down(-1); // increment 1 degree
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#2 is:21 ");
+									display1_h.rec_left_right(-1); // moves focus
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$#22 is:21 ");
+									THEN("SELECT to save") {
+										display1_h.rec_select();
+										REQUIRE(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2_2 is:21 ");
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 #endif
 
@@ -1683,69 +1690,74 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	cout << "\tand some Queries are created" << endl;
-	cout << "q_dwellings       Table : ";
 	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	cout << "q_dwellingZones    Link : ";
 	auto q_dwellingZones = QueryL_T<R_DwellingZone, R_Zone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	cout << "q_dwellingProgs  Filter : ";
 	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
-	cout << "q_dwellingSpells Lookup : ";
 	auto q_dwellingSpells = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
-	cout << "q_spellProg        Join : ";
 	auto q_spellProg = QueryIJ_T<R_Spell>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 0 };
 
-	cout << " **** Next create DB Record Interface ****\n";
 	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
 	auto rec_dwZone = Dataset_Zone(q_dwellingZones, noVolData, &rec_dwelling);
 	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
 	auto rec_dwSpells = Dataset_Spell(q_dwellingSpells, noVolData, &rec_dwelling);
 	auto rec_spellProg = Dataset_Program(q_spellProg, noVolData, &rec_dwSpells);
 
-	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
-	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date,0,0, editActiveMember_onUpDn(), viewAllRecycle());
-	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, &dwellSpellUI_c, Dataset_Spell::e_progID, viewOneRecycle().make_newLine()/*, viewAllRecycle().make_unEditable()*/);
+	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, 0, 0, editActiveMember_onUpDn().make_viewOne(), viewAllRecycle());
+	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, &dwellSpellUI_c, Dataset_Spell::e_progID, viewOneRecycle().make_newLine(), nextActiveMember_onUpDn());
+
+	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[(long)&dwellSpellUI_c] = "dwellSpellUI_c";
+	ui_Objects()[(long)&spellProgUI_c] = "spellProgUI_c";
 
 	// UI Elements
-	auto iteratedZoneName = UI_IteratedCollection{30,makeCollection(zoneNameUI_c), viewAllRecycle().make_newLine() };
-	auto iteratedProgName = UI_IteratedCollection{60,makeCollection(progNameUI_c), viewAllRecycle().make_newLine() };
-	UI_Cmd _dwellingZoneCmd = {"Zones",0}, _dwellingCalendarCmd = { "Calendar",0}, _dwellingProgCmd = { "Programs",0 };
-	InsertSpell_Cmd _fromCmd = { "From", 0, viewOneRecycle().make_newLine() };
+	auto iteratedZoneName = UI_IteratedCollection{ 60,makeCollection(zoneNameUI_c), nextActiveMember_onLR().make_newLine() };
+	auto iteratedProgName = UI_IteratedCollection{ 60,makeCollection(progNameUI_c), nextActiveMember_onLR().make_newLine() };
+	UI_Cmd _dwellingZoneCmd = { "Zones",0 }, _dwellingCalendarCmd = { "Calendar",0 }, _dwellingProgCmd = { "Programs",0 };
+	InsertSpell_Cmd _fromCmd = { "From", 0, nextActiveMember_onUpDn().make_newLine() };
 	UI_Label _insert = { "Insert-Prog", hidden().make_sameLine() };
 
+	ui_Objects()[(long)&iteratedZoneName] = "iteratedZoneName";
+	ui_Objects()[(long)&iteratedProgName] = "iteratedProgName";
+	ui_Objects()[(long)&_dwellingZoneCmd] = "_dwellingZoneCmd";
+	ui_Objects()[(long)&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
+	ui_Objects()[(long)&_dwellingProgCmd] = "_dwellingProgCmd";
+	ui_Objects()[(long)&_fromCmd] = "_fromCmd";
+	ui_Objects()[(long)&_insert] = "_insert";
+
 	// UI Element Arays / Collections
-	cout << "\nzone_subpage Elements Collection\n";
 	auto zone_subpage_c = makeCollection(_dwellingZoneCmd, iteratedZoneName);
-	//zone_subpage_c.set(viewAllUpDn());
-	cout << "\ncalendar_subpage Elements Collection\n";
 	auto calendar_subpage_c = makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, dwellSpellUI_c, spellProgUI_c);
-	//calendar_subpage_c.set(viewAllUpDn());
-	cout << "\nprog_subpage Elements Collection\n";
 	auto prog_subpage_c = makeCollection(_dwellingProgCmd, iteratedProgName);
-	//prog_subpage_c.set(viewAllUpDn());
+	zone_subpage_c.behaviour().make_nonRecycle();
+	calendar_subpage_c.behaviour().make_nonRecycle();
+	prog_subpage_c.behaviour().make_nonRecycle();
+	
+	ui_Objects()[(long)&zone_subpage_c] = "zone_subpage_c";
+	ui_Objects()[(long)&calendar_subpage_c] = "calendar_subpage_c";
+	ui_Objects()[(long)&prog_subpage_c] = "prog_subpage_c";
+
 	_fromCmd.set_UpDn_Target(calendar_subpage_c.item(3));
 
-	cout << "\npage1 sub-page Collection\n";
 	auto page1_subpage_c = makeCollection(zone_subpage_c, calendar_subpage_c, prog_subpage_c);
 	page1_subpage_c.set(viewOneRecycle());
-	
 	_fromCmd.set_OnSelFn_TargetUI(page1_subpage_c.item(1));
-	cout << "page1_subpage_c at: " << (long long)&page1_subpage_c << endl;
 
-	cout << "\npage1 Collection\n";
 	auto page1_c = makeCollection(dwellNameUI_c, page1_subpage_c);
 	_dwellingZoneCmd.set_UpDn_Target(page1_c.item(1));
 	_dwellingCalendarCmd.set_UpDn_Target(page1_c.item(1));
 	_dwellingProgCmd.set_UpDn_Target(page1_c.item(1));
 
-	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	cout << "\n **** All Constructed ****\n\n";
+	ui_Objects()[(long)&page1_subpage_c] = "page1_subpage_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	for (Answer_R<R_Program>program : q_dwellingProgs) {
 		cout << (int)program.id() << " " << program.rec().name << endl;
@@ -1754,306 +1766,316 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 	}
-
 	cout << endl;
-	display1_h.stream(tb);
-	cout << test_stream(display1_h.stream(tb)) << endl;;
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(1); // left-right so select page
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Zones       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(1); // right
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	
-	display1_h.rec_up_down(-1); // next Menu
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Program_s    At Home At Work     Away   ");
-	display1_h.rec_up_down(-1); // next Menu
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm Tomor'wAt Home");
-	display1_h.rec_up_down(-1); // next Menu
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(1); // right
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStr_s DnStrs DHW   ");
-	display1_h.rec_left_right(1); // right
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStr_s DHW   ");
-	display1_h.rec_left_right(1); // right
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStrs DH_W   ");
-	display1_h.rec_left_right(1); // right
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Zones       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(1); // right
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(1); // right
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStr_s DnStrs DHW   ");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Zones       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStrs DH_W   ");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStr_s DHW   ");
-	display1_h.rec_left_right(-1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStr_s DnStrs DHW   ");
-	display1_h.rec_left_right(-1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Zones       UpStrs DnStrs DHW   ");
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
-	display1_h.rec_up_down(1); // next Menu
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm Tomor'wAt Home");
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
 
-	// cycle through possible programs
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Work");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#Away   ");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
-	display1_h.rec_prevUI();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-	// insert and cancel
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm #Tomor'wAt Home");
-	display1_h.rec_prevUI();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-	
-	cout << "\n **** Cancelled insert spell ****\n\n";
-
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+	GIVEN("Sub-Page with Cmd functions can be scrolled") {
+		display1_h.stream(tb);
+		cout << test_stream(display1_h.stream(tb)) << endl;;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStrs DHW   ");
+		//											 0123456789012345678901234567890123456789
+		display1_h.rec_left_right(1); // left-right so select page
+		CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Zones       UpStrs DnStrs DHW   ");
+		THEN("Command accepts focus and selection does nothing") {
+			display1_h.rec_left_right(1); // right
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
+			display1_h.rec_select();
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
+			AND_THEN("UP selects next sub-page and recycles") {
+				display1_h.rec_up_down(-1); // next Menu
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Program_s    At Home At Work     Away   ");
+				display1_h.rec_up_down(-1); // next Menu
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm Tomor'wAt Home");
+				display1_h.rec_up_down(-1); // next Menu
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
+				THEN("The sub-page can be scrolled into") {
+					display1_h.rec_left_right(1); // right
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStr_s DnStrs DHW   ");
+					display1_h.rec_left_right(1); // right
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStr_s DHW   ");
+					display1_h.rec_left_right(1); // right
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Zones       UpStrs DnStrs DH_W   ");
+					display1_h.rec_left_right(1); // right
+					REQUIRE(test_stream(display1_h.stream(tb)) == "Hous_e   Zones       UpStrs DnStrs DHW   ");
+				}
+			}
+		}
 	}
 
-	// Modify first spell
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
-	display1_h.rec_up_down(-1);
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 0#3Aug  At Home");
-	display1_h.rec_select();
+	GIVEN("Calendar Sub-Page - selected prog can be changed") {
+		display1_h.rec_left_right(1); // left-right so select page
+		display1_h.rec_left_right(1);
+		display1_h.rec_up_down(1); // next Menu
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm Tomor'wAt Home");
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
 
-	cout << "\n **** Saved Modified first spell ****\n\n";
+		// cycle through possible programs
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
+		THEN("SELECT program allows programs to be cycled through") {
+			display1_h.rec_select();
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Work");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#Away   ");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
+			AND_THEN("BACK restores original program") {
+				display1_h.rec_prevUI();
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
+				THEN("SELECT on From inserts a program") {
+					display1_h.rec_left_right(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
+					display1_h.rec_left_right(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+					display1_h.rec_select();
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm #Tomor'wAt Home");
+					AND_THEN("BACK cancels the insert") {
+						display1_h.rec_prevUI();
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
 
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+						cout << "\n **** Cancelled insert spell ****\n\n";
+
+						for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+							logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+						}
+					}
+				}
+			}
+		}
 	}
 
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 0_3Aug  At Home");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 05:30pm 03Sep  Away   ");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
+	GIVEN("Calendar Sub-Page - Spell can be edited") {
+		display1_h.rec_left_right(1); // left-right so select page
+		display1_h.rec_left_right(1);
+		display1_h.rec_up_down(1); // next Menu
+		display1_h.rec_left_right(1);
+		display1_h.rec_left_right(1);
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
 
+		// Modify first spell
+		display1_h.rec_up_down(-1);
+		display1_h.rec_up_down(-1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 0#3Aug  At Home");
+		display1_h.rec_select();
 
-	//Insert new spell before first
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#3Aug  At Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#2Aug  At Home");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
-	//Insert new spell after first
-	display1_h.rec_select();
-	display1_h.rec_up_down(-1);
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#4Aug  At Home");
-	
-	cout << "\n Insert new spell before first...\n";
-	
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+		cout << "\n **** Saved Modified first spell ****\n\n";
+
+		for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+			logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+		}
+
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 0_3Aug  At Home");
+		THEN("Spells can be scrolled on From") {
+			display1_h.rec_left_right(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
+			display1_h.rec_up_down(1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 05:30pm 03Sep  Away   ");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
+			THEN("Insert new spell before first") {
+				display1_h.rec_select();
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#3Aug  At Home");
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#2Aug  At Home");
+				display1_h.rec_select();
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
+				THEN("Insert new spell after first") {
+					display1_h.rec_select();
+					display1_h.rec_up_down(-1);
+					display1_h.rec_up_down(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#4Aug  At Home");
+
+					cout << "\n Insert new spell before first...\n";
+
+					for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+						logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+					}
+
+					cout << "\n Insert new spell after first...\n";
+
+					display1_h.rec_select();
+
+					for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+						logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+					}
+
+					display1_h.stream(tb);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 04Aug  At Home");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 05:30pm 03Sep  Away   ");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 07:30am 12Sep  At Work");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Sep  Away   ");
+					THEN("Edit last spell") {
+						display1_h.rec_left_right(1);
+						display1_h.rec_select();
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 2#2Sep  Away   ");
+						display1_h.rec_left_right(1);
+						display1_h.rec_up_down(-1);
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 22#Oct  Away   ");
+						display1_h.rec_select();
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 2_2Oct  Away   ");
+
+						cout << "\n Edit last spell...\n";
+						for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+							logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+						}
+
+						THEN("Insert new spell before last") {
+							display1_h.rec_left_right(-1);
+							CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Oct  Away   ");
+							display1_h.rec_select();
+							display1_h.rec_up_down(1);
+							display1_h.rec_up_down(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 03:00pm 2#0Oct  Away   ");
+							display1_h.rec_select();
+							CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 20Oct  Away   ");
+
+							cout << "\n Insert new spell before last...\n";
+							for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+								logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+							}
+
+							THEN("Insert new spell after last") {
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Oct  Away   ");
+								display1_h.rec_select();
+								display1_h.rec_up_down(-1);
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 03:00pm 2#4Oct  Away   ");
+								display1_h.rec_select();
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 24Oct  Away   ");
+
+								cout << "\n All spells after last...\n";
+								for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+
+								// Check all entries correct
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 24Oct  Away   ");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 04Aug  At Home");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 05:30pm 03Sep  Away   ");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 07:30am 12Sep  At Work");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 20Oct  Away   ");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Oct  Away   ");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 24Oct  Away   ");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
+								display1_h.rec_left_right(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm 02Aug  At Home");
+								display1_h.rec_left_right(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Calendar    From 10:20pm 02Aug  At Home");
+
+								cout << "\n House Spells before prog-change...\n";
+								for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Calendar    From Now            Occup'd");
+								display1_h.rec_left_right(1);
+								display1_h.rec_left_right(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m 10:00am 30Sep  Empty  ");
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
+								// cancel insert
+								display1_h.rec_select();
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Insert-Prog From #Now            Occup'd");
+								display1_h.rec_prevUI();
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
+
+								cout << "\n Flat Spells before prog-change...\n";
+								for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+								cout << "\n All spells before prog-change...\n";
+								for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+
+								// Change   Program
+								display1_h.rec_left_right(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From No_w            Occup'd");
+								display1_h.rec_left_right(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Occup'_d");
+								display1_h.rec_select();
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            #Occup'd");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            #Empty  ");
+								display1_h.rec_select();
+								cout << "\n After Change program...\n";
+								for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+								cout << "\n All spells After Change program...\n";
+								for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Empt_y  ");
+								display1_h.rec_left_right(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From No_w            Empty  ");
+								display1_h.rec_left_right(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Empty  ");
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m 10:00am 30Sep  Empty  ");
+								display1_h.rec_left_right(1);
+								display1_h.rec_left_right(1);
+								display1_h.rec_select();
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  #Empty  ");
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  #Occup'd");
+								display1_h.rec_select();
+								display1_h.rec_up_down(-1);
+								display1_h.rec_up_down(1);
+
+								cout << "\n After Change next program...\n";
+								for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+								cout << "\n All spells After Change next program...\n";
+								for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
+									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+								}
+
+								display1_h.stream(tb);
+								cout << test_stream(display1_h.stream(tb)) << endl;
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  Occup'_d");
+								display1_h.rec_left_right(-1);
+								display1_h.rec_left_right(-1);
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Empty  ");
+								// Change current program
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m 10:00am 30Sep  Occup'd");
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Empty  ");
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-	
-	cout << "\n Insert new spell after first...\n";
-
-	display1_h.rec_select();
-	
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-
-	display1_h.stream(tb);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 04Aug  At Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 05:30pm 03Sep  Away   ");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 07:30am 12Sep  At Work");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Sep  Away   ");
-	// Edit last
-	display1_h.rec_left_right(1);
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 2#2Sep  Away   ");
-	display1_h.rec_left_right(1);
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 22#Oct  Away   ");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 2_2Oct  Away   ");
-	
-	cout << "\n Edit last spell...\n";
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-
-	//Insert new spell before last
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Oct  Away   ");
-	display1_h.rec_select();
-	display1_h.rec_up_down(1);
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 03:00pm 2#0Oct  Away   ");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 20Oct  Away   ");
-
-	cout << "\n Insert new spell before last...\n";
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-
-	//Insert new spell after last
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Oct  Away   ");
-	display1_h.rec_select();
-	display1_h.rec_up_down(-1);
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 03:00pm 2#4Oct  Away   ");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 24Oct  Away   ");
-
-	cout << "\n All spells after last...\n";
-	for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-
-	// Check all entries correct
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 04Aug  At Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 05:30pm 03Sep  Away   ");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 07:30am 12Sep  At Work");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 20Oct  Away   ");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Oct  Away   ");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 24Oct  Away   ");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm 02Aug  At Home");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Calendar    From 10:20pm 02Aug  At Home");
-	
-	cout << "\n House Spells before prog-change...\n";
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Calendar    From Now            Occup'd");
-	display1_h.rec_left_right(1);
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m 10:00am 30Sep  Empty  ");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
-	// cancel insert
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Insert-Prog From #Now            Occup'd");
-	display1_h.rec_prevUI();
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
-	
-	cout << "\n Flat Spells before prog-change...\n";
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-	cout << "\n All spells before prog-change...\n";
-	for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-
-	// Change   Program
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From No_w            Occup'd");
-	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Occup'_d");
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            #Occup'd");
-	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            #Empty  ");
-	display1_h.rec_select();
-	cout << "\n After Change program...\n";
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-	cout << "\n All spells After Change program...\n";
-	for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}	
-	
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Empt_y  ");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From No_w            Empty  ");
-	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Empty  ");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m 10:00am 30Sep  Empty  ");
-	display1_h.rec_left_right(1);
-	display1_h.rec_left_right(1);
-	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  #Empty  ");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  #Occup'd");
-	display1_h.rec_select();
-	display1_h.rec_up_down(-1);
-	display1_h.rec_up_down(1);
-	
-	cout << "\n After Change next program...\n";
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}
-	cout << "\n All spells After Change next program...\n";
-	for (Answer_R<R_Spell> spell : db.tableQuery(TB_Spell)) {
-		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-	}	
-
-	display1_h.stream(tb);
-	cout << test_stream(display1_h.stream(tb)) << endl;
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  Occup'_d");
-	display1_h.rec_left_right(-1);
-	display1_h.rec_left_right(-1);
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Empty  ");
-	// Change current program
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m 10:00am 30Sep  Occup'd");
-	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Empty  ");
-
 }
 #endif
 

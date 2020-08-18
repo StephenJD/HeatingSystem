@@ -11,13 +11,13 @@ namespace client_data_structures {
 
 	//************* TempSensor_Wrapper ****************
 
-	TempSensor_Wrapper::TempSensor_Wrapper(ValRange valRangeArg) : I_UI_Wrapper(0, valRangeArg) {}
+	TempSensor_Wrapper::TempSensor_Wrapper(ValRange valRangeArg) : I_Data_Formatter(0, valRangeArg) {}
 
-	I_Field_Interface & TempSensor_Wrapper::ui() { return tempSensor_UI; }
+	I_Streaming_Tool & TempSensor_Wrapper::ui() { return tempSensor_UI; }
 
 	////************ Edit_TempSensor_h ***********************
 	//
-	//int Edit_TempSensor_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	//int Edit_TempSensor_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 	//	if (data) currValue() = *data;
 	//	//setDecade(1);
 	//	//currValue().valRange._cursorPos = 12;
@@ -32,9 +32,9 @@ namespace client_data_structures {
 
 	//void Edit_TempSensor_h::setInRangeValue() {
 	//	I_Edit_Hndl::setInRangeValue();
-	//	Field_Interface_h & f_int_h = static_cast<Field_Interface_h&>(*backUI());
+	//	Field_StreamingTool_h & f_int_h = static_cast<Field_StreamingTool_h&>(*backUI());
 	//	f_int_h.backUI()->getItem(f_int_h.backUI()->focusIndex());
-	//	//auto wrapper = f_int_h.f_interface().getWrapper();
+	//	//auto wrapper = f_int_h.f_interface().getDataFormatter();
 	//}
 
 	//***************************************************
@@ -42,7 +42,7 @@ namespace client_data_structures {
 	//***************************************************
 
 	const char * TempSensor_UIinterface::streamData(bool isActiveElement) const {
-		const TempSensor_Wrapper * tempSensor = static_cast<const TempSensor_Wrapper *>(_wrapper);
+		const TempSensor_Wrapper * tempSensor = static_cast<const TempSensor_Wrapper *>(_data_formatter);
 		strcpy(scratch, tempSensor->name);
 		int nameLen = strlen(scratch);
 		while (nameLen < sizeof(tempSensor->name)) {
@@ -70,7 +70,7 @@ namespace client_data_structures {
 	{
 	}
 
-	I_UI_Wrapper * Dataset_TempSensor::getField(int fieldID) {
+	I_Data_Formatter * Dataset_TempSensor::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_temp:

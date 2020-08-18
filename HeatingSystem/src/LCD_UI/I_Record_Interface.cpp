@@ -15,7 +15,7 @@ namespace LCD_UI {
 		,_count(query.end().id())
 	{}
 
-	I_UI_Wrapper * I_Record_Interface::initialiseRecord(int fieldID) {
+	I_Data_Formatter * I_Record_Interface::initialiseRecord(int fieldID) {
 		query().setMatchArg(parentIndex());
 		record() = *_recSel.begin();
 		setRecordID(_recSel.id());
@@ -41,7 +41,7 @@ namespace LCD_UI {
 	}
 
 	
-	I_UI_Wrapper * I_Record_Interface::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
+	I_Data_Formatter * I_Record_Interface::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
 		move_to(id);
 		return getField(fieldID);
 	}

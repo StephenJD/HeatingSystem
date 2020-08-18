@@ -1,7 +1,7 @@
 #pragma once
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
-#include "..\LCD_UI\ValRange.h"
+#include "..\LCD_UI\I_Data_Formatter.h"
 #include "..\..\..\RDB\src\RDB.h"
 #include "..\..\..\DateTime\src\Date_Time.h"
 
@@ -19,12 +19,12 @@ namespace client_data_structures {
 	/// It provides streaming and editing by delegation to a file-static CurrentTime_Interface object via ui().
 	/// The streamed value is held in the base-class as .val
 	/// </summary>
-	class CurrentTimeWrapper : public I_UI_Wrapper {
+	class CurrentTimeWrapper : public I_Data_Formatter {
 	public:
-		using I_UI_Wrapper::ui;
+		using I_Data_Formatter::ui;
 		CurrentTimeWrapper() = default;
 		CurrentTimeWrapper(TimeOnly dateVal, ValRange valRangeArg);
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 	};
 
 	/// <summary>
@@ -38,9 +38,9 @@ namespace client_data_structures {
 		using I_Edit_Hndl::currValue;
 		Edit_CurrentTime_h() : I_Edit_Hndl(&editVal) {
 		}
-		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
+		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
-		I_UI_Wrapper & currValue() override { return _currValue; }
+		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:
 		CurrentTimeWrapper _currValue; // copy value for editing
@@ -53,9 +53,9 @@ namespace client_data_structures {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the CurrentTime.
 	/// </summary>
-	class CurrentTime_Interface : public I_Field_Interface {
+	class CurrentTime_Interface : public I_Streaming_Tool {
 	public:
-		using  I_Field_Interface::editItem;
+		using  I_Streaming_Tool::editItem;
 #ifdef ZPSIM
 		CurrentTime_Interface() { ui_Objects()[(long)this] = "CurrentTime_Interface"; }
 #endif
@@ -79,12 +79,12 @@ namespace client_data_structures {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static CurrentDate_Interface object via ui().
 	/// </summary>
-	class CurrentDateWrapper : public I_UI_Wrapper {
+	class CurrentDateWrapper : public I_Data_Formatter {
 	public:
-		using I_UI_Wrapper::ui;
+		using I_Data_Formatter::ui;
 		CurrentDateWrapper() = default;
 		CurrentDateWrapper(DateOnly dateVal, ValRange valRangeArg);
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 	};
 
 	/// <summary>
@@ -98,9 +98,9 @@ namespace client_data_structures {
 		using I_Edit_Hndl::currValue;
 		Edit_CurrentDate_h() : I_Edit_Hndl(&editVal) {
 		}
-		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
+		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
-		I_UI_Wrapper & currValue() override { return _currValue; }
+		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:
 		CurrentDateWrapper _currValue; // copy value for editing
@@ -113,9 +113,9 @@ namespace client_data_structures {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the CurrentDate.
 	/// </summary>
-	class CurrentDate_Interface : public I_Field_Interface {
+	class CurrentDate_Interface : public I_Streaming_Tool {
 	public:
-		using  I_Field_Interface::editItem;
+		using  I_Streaming_Tool::editItem;
 #ifdef ZPSIM
 		CurrentDate_Interface() { ui_Objects()[(long)this] = "CurrentDate_Interface"; }
 #endif
@@ -146,9 +146,9 @@ namespace client_data_structures {
 	public:
 		enum {e_currTime, e_currDate, e_dst, e_sdcard};
 		Dataset_WithoutQuery();
-		I_UI_Wrapper * getFieldAt(int fieldID, int elementIndex) override;
-		I_UI_Wrapper * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override;
+		I_Data_Formatter * getFieldAt(int fieldID, int elementIndex) override;
+		I_Data_Formatter * getField(int fieldID) override;
+		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 	private:
 		CurrentTimeWrapper _currTime; // size is 32 bits.
 		CurrentDateWrapper _currDate; // size is 32 bits.

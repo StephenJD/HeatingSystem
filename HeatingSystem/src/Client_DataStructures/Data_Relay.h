@@ -1,7 +1,7 @@
 #pragma once
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
-#include "..\LCD_UI\ValRange.h"
+#include "..\LCD_UI\I_Data_Formatter.h"
 #include <Relay_Bitwise.h>
 
 namespace HardwareInterfaces {
@@ -55,8 +55,8 @@ namespace client_data_structures {
 	public:
 		enum streamable { e_name, e_state };
 		Dataset_Relay(Query & query, VolatileData * runtimeData);
-		I_UI_Wrapper * getField(int _fieldID) override;
-		bool setNewValue(int _fieldID, const I_UI_Wrapper * val) override;
+		I_Data_Formatter * getField(int _fieldID) override;
+		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
 		HardwareInterfaces::UI_Bitwise_Relay & relay(int index) { return static_cast<HardwareInterfaces::UI_Bitwise_Relay*>(runTimeData())[index]; }
 	private:
 		StrWrapper _name;

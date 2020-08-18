@@ -2,7 +2,7 @@
 #include "..\..\..\RDB\src\RDB.h"
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
-#include "..\LCD_UI\ValRange.h"
+#include "..\LCD_UI\I_Data_Formatter.h"
 #include "..\..\..\DateTime\src\Time_Only.h"
 #include <Logging.h>
 
@@ -61,15 +61,15 @@ namespace client_data_structures {
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static TimeTemp_Interface object via ui().
 	/// </summary>
-	class TimeTempWrapper : public I_UI_Wrapper {
+	class TimeTempWrapper : public I_Data_Formatter {
 	public:
-		using I_UI_Wrapper::ui;
+		using I_Data_Formatter::ui;
 		TimeTempWrapper() = default;
 		TimeTempWrapper(int16_t daysVal);
 		TimeTempWrapper(int16_t daysVal, ValRange valRangeArg);
-		TimeTempWrapper & operator= (const I_UI_Wrapper & wrapper) { I_UI_Wrapper::operator=(wrapper); return *this; }
+		TimeTempWrapper & operator= (const I_Data_Formatter & wrapper) { I_Data_Formatter::operator=(wrapper); return *this; }
 
-		I_Field_Interface & ui() override;
+		I_Streaming_Tool & ui() override;
 	};
 
 	/// <summary>
@@ -82,9 +82,9 @@ namespace client_data_structures {
 	public:
 		enum { e_hours, e_10Mins, e_am_pm, e_10Temp, e_temp, e_NO_OF_EDIT_POS };
 		using I_Edit_Hndl::currValue;
-		int gotFocus(const I_UI_Wrapper * data) override; // returns select focus
+		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
 		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
-		I_UI_Wrapper & currValue() override { return _currValue; }
+		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:
 		TimeTempWrapper _currValue; // copy value for editing
@@ -97,12 +97,12 @@ namespace client_data_structures {
 	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
 	/// It provides streaming and delegates editing of the TimeTemp.
 	/// </summary>
-	class TimeTemp_Interface : public I_Field_Interface {
+	class TimeTemp_Interface : public I_Streaming_Tool {
 	public:
 #ifdef ZPSIM
 		TimeTemp_Interface() { ui_Objects()[(long)this] = "TimeTemp_Interface"; }
 #endif
-		using I_Field_Interface::editItem;
+		using I_Streaming_Tool::editItem;
 		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	protected:
@@ -124,8 +124,8 @@ namespace client_data_structures {
 	public:
 		enum streamable { e_TimeTemp, e_profileID };
 		Dataset_TimeTemp(Query & query, VolatileData * volData, I_Record_Interface * parent);
-		I_UI_Wrapper * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_UI_Wrapper * val) override;
+		I_Data_Formatter * getField(int fieldID) override;
+		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 		void insertNewData() override;
 		int recordField(int selectFieldID) const override {
 			return record().rec().field(selectFieldID);

@@ -19,7 +19,7 @@ namespace client_data_structures {
 		: Record_Interface(query, volData, parent), _name("", 7) {
 	}
 
-	I_UI_Wrapper * Dataset_Dwelling::getField(int fieldID) {
+	I_Data_Formatter * Dataset_Dwelling::getField(int fieldID) {
 		if (recordID()==-1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
 		case e_name:
@@ -29,7 +29,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Dwelling::setNewValue(int fieldID, const I_UI_Wrapper * val) {
+	bool Dataset_Dwelling::setNewValue(int fieldID, const I_Data_Formatter * val) {
 		switch (fieldID) {
 		case e_name: {
 			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(val));

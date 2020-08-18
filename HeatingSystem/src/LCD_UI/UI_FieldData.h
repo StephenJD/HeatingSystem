@@ -1,8 +1,8 @@
 #pragma once
 #include "UI_LazyCollection.h"
-#include "ValRange.h"
+#include "I_Data_Formatter.h"
 #include <RDB.h>
-#include "I_Field_Interface.h"
+#include "I_Streaming_Tool.h"
 
 //#include <string>
 //#include <iostream>
@@ -16,22 +16,19 @@ namespace LCD_UI {
 	void notifyDataIsEdited(); // global function prototype for notifying anyone who needs to know
 
 	// **********************  Interface to Editable data ******************
-	// Objects are constructed with an fieldID to obtain the particular item required from the target data-UI-interface object of type <Dataset_Type>.
-	// The UI points to a collection of data belonging to the parent, e.g. all zones for the parent dwelling.
-	// To make the data editable, set the bahaviour to editable.
-	// streamElement(buffer) returns the data from the target object. 40 byte Objects.
-	// Multiple UI_FieldData objects may share the same I_Record_Interface dataset, but selecting a different field.
-	// If any field moves to a different record, all fields need to see the new record.
-	// Therefore the collection-focus needs to be derived from the record, rather than the record being set by the UI element.
-
+	/// <summary>
+	/// Objects are constructed with the target record-interface and a fieldID to specify the record-field required.
+	/// The UI may obtain its recordID from a given field of a parent UI_FieldData.
+	/// collectionBehaviour may be (default first) One/All, non-Recycle/Recycle, NotNewline/Newline, LR-MoveCursor/LR-NextMember, UD-Nothing/UD-NextActive/UD-Edit/UD-Save, Selectible/Unselectible, Visible/Hidden.
+	/// activeBehaviour may be (default first) One(not in edit)/All(during edit), LR-nonRecycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
+	/// </summary>
 	class UI_FieldData : public LazyCollection {
 	public:
 		UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent = 0, int selectFldID = 0
-			, Behaviour selectBehaviour = viewOneRecycle(), Behaviour editBehaviour = viewAllNonRecycle()
+			, Behaviour collectionBehaviour = viewOneNonRecycle(), Behaviour activeBehaviour = editActiveMember_onUpDn()
 			, OnSelectFnctr onSelect = 0);
 
 		// Queries
-		int	focusIndex() const override;
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex=0) const override;
 		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override;
@@ -48,14 +45,14 @@ namespace LCD_UI {
 		void deleteData();
 		void set_OnSelFn_TargetUI(Collection_Hndl * obj);
 		 
-		Collection_Hndl * saveEdit(const I_UI_Wrapper * data);
-		Field_Interface_h & getInterface() { return _field_Interface_h; }
+		Collection_Hndl * saveEdit(const I_Data_Formatter * data);
+		Field_StreamingTool_h & getStreamingTool() { return _field_StreamingTool_h; }
 	private:
-		int fieldID() { return _field_Interface_h.fieldID(); }
+		int fieldID() { return _field_StreamingTool_h.fieldID(); }
 		void moveToSavedRecord();
 		I_Record_Interface * _data;
 		UI_FieldData * _parentFieldData;
-		Field_Interface_h _field_Interface_h;
+		Field_StreamingTool_h _field_StreamingTool_h;
 		signed char _selectFieldID;
 	};
 }

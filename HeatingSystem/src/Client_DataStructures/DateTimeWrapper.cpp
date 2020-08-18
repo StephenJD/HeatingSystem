@@ -20,10 +20,10 @@ namespace client_data_structures {
 	//***************************************************
 
 	DateTimeWrapper::DateTimeWrapper(DateTime dateVal, ValRange valRangeArg)
-		: I_UI_Wrapper(dateVal.asInt(), valRangeArg) {
+		: I_Data_Formatter(dateVal.asInt(), valRangeArg) {
 	}
 
-	I_Field_Interface & DateTimeWrapper::ui() { return datetime_UI; }
+	I_Streaming_Tool & DateTimeWrapper::ui() { return datetime_UI; }
 
 	Edit_DateTime_h::Edit_DateTime_h() : 
 		I_Edit_Hndl(&editVal) { 
@@ -116,7 +116,7 @@ namespace client_data_structures {
 		return focusIndex;
 	}
 
-	int Edit_DateTime_h::gotFocus(const I_UI_Wrapper * data) { // returns initial edit focus
+	int Edit_DateTime_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(e_month); // initial cursorPos when selected (not in edit)
 		return e_day;
