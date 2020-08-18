@@ -63,20 +63,20 @@ namespace LCD_UI {
 			topUI = topUI->backUI();
 		}
 		_leftRightBackUI = topUI;
-		//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		auto innerLeftRight = _leftRightBackUI->get()->collection()->leftRight_Collection();
 		if (innerLeftRight) {
 			auto inner_UI_h = innerLeftRight;
 			auto innerIsCollection = false;
 			do {
-				//logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
+				logger() << " Inner: " << ui_Objects()[(long)(inner_UI_h->get())].c_str() << L_endl;
 				if (inner_UI_h->get()->behaviour().is_viewAll()) {
-					//logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
+					logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << " Inner: " << ui_Objects()[(long)(innerLeftRight->get())].c_str() << L_endl;
 					_leftRightBackUI = inner_UI_h;
 					inner_UI_h->enter_collection(direction);
 				}
 				innerIsCollection = inner_UI_h->get()->isCollection();
-				if (innerIsCollection) {
+ 				if (innerIsCollection) {
 					innerLeftRight = inner_UI_h->get()->collection()->leftRight_Collection();
 					if (innerLeftRight == 0) break;
 					inner_UI_h = innerLeftRight;
@@ -94,6 +94,8 @@ namespace LCD_UI {
 		if (this_UI_h->behaviour().is_UpDnAble()) _upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto active = this_UI_h->activeUI();
+			logger() << F("\t_try UpDownUI: ") << ui_Objects()[(long)(this_UI_h->get())].c_str() << " Active: " << ui_Objects()[(long)(active->get())].c_str() << L_endl;
+
 			if (active->behaviour().is_UpDnAble()) {
 				_upDownUI = active;
 			}

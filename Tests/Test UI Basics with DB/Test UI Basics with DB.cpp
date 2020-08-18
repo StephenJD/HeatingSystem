@@ -1864,6 +1864,20 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	auto display1_c = makeDisplay(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
+	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[(long)&dwellSpellUI_c] = "dwellSpellUI_c";
+	ui_Objects()[(long)&spellProgUI_c] = "spellProgUI_c";
+	ui_Objects()[(long)&_dwellingZoneCmd] = "_dwellingZoneCmd";
+	ui_Objects()[(long)&_fromCmd] = "_fromCmd";
+	ui_Objects()[(long)&_insert] = "_insert";
+	ui_Objects()[(long)&zone_subpage_c] = "zone_subpage_c";
+	ui_Objects()[(long)&calendar_subpage_c] = "calendar_subpage_c";
+	ui_Objects()[(long)&prog_subpage_c] = "prog_subpage_c";
+	ui_Objects()[(long)&page1_subpage_c] = "page1_subpage_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
 	cout << "\n **** All Constructed ****\n\n";
 
 	for (Answer_R<R_Program>program : q_dwellingProgs) {
