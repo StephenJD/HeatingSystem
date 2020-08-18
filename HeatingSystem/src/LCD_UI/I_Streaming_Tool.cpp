@@ -42,7 +42,8 @@ namespace LCD_UI {
 #endif	
 		dataSource()->set_focus(editItem().getEditCursorPos()); // copy data to edit
 		dataSource()->setCursorMode(HI_BD::e_inEdit);
-		if (dataSource()->activeBehaviour().is_edit_on_UD()) dataSource()->activeBehaviour().make_viewAll();
+		//if (dataSource()->activeBehaviour().is_edit_on_UD()) 
+			dataSource()->activeBehaviour().make_viewAll();
 		behaviour() = dataSource()->activeBehaviour();
 		return 0;
 	}
@@ -80,6 +81,7 @@ namespace LCD_UI {
 		auto streamVal = _data_formatter->val;
 		if (isActiveElement) {
 			auto fieldInterface_h = dataSource();
+			//if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
 			}
@@ -109,8 +111,9 @@ namespace LCD_UI {
 		bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
 		auto non_UD_capturing_activeBehaviour = Behaviour(_activeBehaviour).removeBehaviour(Behaviour::BehaviourFlags(Behaviour::b_UD_NextActive | Behaviour::b_UD_Edit));
 		if (inEdit) {
-			if (_activeBehaviour.is_next_on_UpDn()) return non_UD_capturing_activeBehaviour;
-			else return _activeBehaviour;
+			//if (_activeBehaviour.is_next_on_UpDn()) return non_UD_capturing_activeBehaviour;
+			//else 
+			return _activeBehaviour;
 		} else return non_UD_capturing_activeBehaviour;
 	}
 

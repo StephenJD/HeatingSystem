@@ -189,7 +189,7 @@ namespace LCD_UI {
 
 	bool Edit_Char_h::move_focus_by(int move) { // Change character at the cursor. Modify the copy held by Edit_Char_h
 		if (move == 0) return false;
-		//if (backUI()->behaviour().is_Editable()) {
+		if (backUI()->behaviour().is_edit_on_UD()) {
 			char * editSr = _currValue.str();
 			char * streamStr = stream_edited_copy;
 			int cursorPos = focusIndex();
@@ -271,19 +271,19 @@ namespace LCD_UI {
 			editSr[cursorPos] = _thisChar;
 			editSr[currStrLength] = 0;
 			streamStr[cursorPos] = _thisChar;
-		//}
-		//else { // for changing selection rather than editing name
-		//	Field_StreamingTool_h * fldInt_h = static_cast<Field_StreamingTool_h *>(backUI());
-		//	auto status = fldInt_h->getData()->data()->move_by(move);
-		//	if (status != TB_OK && fldInt_h->behaviour().is_recycle()) {
-		//		if (status == TB_BEFORE_BEGIN) 
-		//			fldInt_h->getData()->data()->last();
-		//		else fldInt_h->getData()->data()->move_to(0);
-		//		//fldInt_h->getData()->data()->setRecordID(fldInt_h->getData()->data()->recordID());
-		//	}
-		//	_currValue.val = fldInt_h->getData()->data()->record().id();
-		//	return fldInt_h->getData()->data()->record().status() == TB_OK;
-		//}
+		}
+		else { // for changing selection rather than editing name
+			Field_StreamingTool_h * fldInt_h = static_cast<Field_StreamingTool_h *>(backUI());
+			auto status = fldInt_h->getData()->data()->move_by(move);
+			if (status != TB_OK && fldInt_h->behaviour().is_recycle()) {
+				if (status == TB_BEFORE_BEGIN) 
+					fldInt_h->getData()->data()->last();
+				else fldInt_h->getData()->data()->move_to(0);
+				//fldInt_h->getData()->data()->setRecordID(fldInt_h->getData()->data()->recordID());
+			}
+			_currValue.val = fldInt_h->getData()->data()->record().id();
+			return fldInt_h->getData()->data()->record().status() == TB_OK;
+		}
 		return true;
 	}
 
