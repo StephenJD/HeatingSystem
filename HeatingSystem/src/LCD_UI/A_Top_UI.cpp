@@ -216,9 +216,9 @@ namespace LCD_UI {
 		for (int i = top->get()->collection()->nextActionableIndex(0); !top->atEnd(i); i = top->get()->collection()->nextActionableIndex(++i)) { // need to check all elements on the page
 			auto element_h = static_cast<Collection_Hndl *>(top->get()->collection()->item(i));
 			if (element_h->get()->isCollection()) {
-//#ifdef ZPSIM
+#ifdef ZPSIM
 				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
-//#endif
+#endif
 				element_h->focusHasChanged(element_h == _upDownUI);
 				auto inner = element_h->activeUI();
 				if (inner && inner->get()->isCollection()) notifyAllOfFocusChange(inner);
