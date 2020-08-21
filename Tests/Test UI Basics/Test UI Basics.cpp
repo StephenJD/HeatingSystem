@@ -55,14 +55,14 @@ std::string	test_stream(UI_DisplayBuffer & buffer) {
 class LazyPage : public LCD_UI::LazyCollection {
 public:
 	using I_SafeCollection::item;
-	LazyPage() : LazyCollection(5,viewAllRecycle()) {}
+	LazyPage() : LazyCollection(5,Behaviour{V+S+Vn+UD_A+R}) {}
 	Collection_Hndl * item(int newIndex) override {
 		if (newIndex == objectIndex() && object().get() != 0) return &object();
 		setObjectIndex(newIndex);
 		switch (validIndex(objectIndex())) {
 		case 0: return &swap(new UI_Label("L5"));
 		case 1: return &swap(new UI_Cmd("C6", 0));
-		case 2: return &swap(new UI_Label("L6", hidden()));
+		case 2: return &swap(new UI_Label("L6", { H + S + UD_A }));
 		case 3: return &swap(new UI_Label("L7"));
 		case 4: return &swap(new UI_Cmd("C7", 0));
 		default: return &object();
@@ -75,8 +75,8 @@ TEST_CASE("Hidden Commands and Labels", "[Cmd/Label]") {
 	LCD_Display_Buffer<10, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
 
-	UI_Label L1("L1"), L2("L2",hidden()), L3("L3"), L4("L4",hidden());
-	UI_Cmd C1("C1", 0, hidden()), C2("C2", 0), C3("C3", 0), C4("C4", 0, hidden());
+	UI_Label L1("L1"), L2("L2", { H }), L3("L3"), L4("L4", { H });
+	UI_Cmd C1("C1", 0, { H + S + UD_A }), C2("C2", 0), C3("C3", 0), C4("C4", 0, { H + S + UD_A });
 	auto page1_c = makeCollection(L1, C1, L2, C2, L3, C3, L4, C4);
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -185,7 +185,7 @@ TEST_CASE("Command Changes Element Focus", "[Page]") {
 	UI_DisplayBuffer tb(lcd);
 
 	UI_Label L1("L1");
-	UI_Cmd C0("C0", 0, hidden());
+	UI_Cmd C0("C0", 0, { H + S + UD_A });
 	UI_Cmd	C1("C1", { &Collection_Hndl::move_focus_to,0 });
 	UI_Cmd C2("C2", { &Collection_Hndl::move_focus_to,4 });
 	UI_Cmd C3("C3", { &Collection_Hndl::move_focus_to,1 });
@@ -238,7 +238,7 @@ TEST_CASE("Multi-Page Command Changes Element Focus", "[Display]") {
 	UI_DisplayBuffer tb(lcd);
 
 	UI_Label L1("L1"), L2("L2");
-	UI_Cmd C1("C1", { &Collection_Hndl::move_focus_to,4 }), C2("C2", { &Collection_Hndl::move_focus_to,1 }), Ch("Ch", 0, hidden());
+	UI_Cmd C1("C1", { &Collection_Hndl::move_focus_to,4 }), C2("C2", { &Collection_Hndl::move_focus_to,1 }), Ch("Ch", 0, { H+S+UD_A });
 	UI_Cmd C3("C3", { &Collection_Hndl::move_focus_to,0 });
 
 	auto page1_c = makeCollection(L1, C1, L2, Ch, C2);
@@ -383,7 +383,7 @@ TEST_CASE("Page-element which is a view-one collection", "[Display]") {
 
 	cout << " CmdGroup Coll of Object_Hndl\n";
 	auto cmdGroup_c = makeCollection(C1, C2, C3);
-	cmdGroup_c.behaviour()= viewOneRecycle();
+	cmdGroup_c.behaviour()= Behaviour{V+S+V1+UD_A+R};
 
 	cout << " page1_c Coll of Collection_Hndl\n";
 	auto page1_c = makeCollection(L1, cmdGroup_c, L3, C4);

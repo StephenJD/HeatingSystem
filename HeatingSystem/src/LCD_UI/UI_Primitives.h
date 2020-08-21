@@ -2,7 +2,7 @@
 #include "I_Data_Formatter.h"
 #include "I_Streaming_Tool.h"
 #include "I_Edit_Hndl.h"
-#include "UI_LazyCollection.h"
+#include "UI_Collection.h"
 
 #ifdef ZPSIM
 	#include <iostream>
@@ -78,7 +78,7 @@ namespace LCD_UI {
 		Behaviour & behaviour() override { return _behaviour; }
 	private:
 		I_SafeCollection * _parent;
-		Behaviour _behaviour = viewOne();
+		Behaviour _behaviour = {V+S+V1+R};
 	};
 
 	/// <summary>
@@ -87,7 +87,7 @@ namespace LCD_UI {
 	/// </summary>
 	class Permitted_Vals : public I_SafeCollection {
 	public:
-		Permitted_Vals() :I_SafeCollection(0, viewOneRecycle()), _oneVal(this) {
+		Permitted_Vals() :I_SafeCollection(0, Behaviour{V+S+V1+R+UD_A}), _oneVal(this) {
 #ifdef ZPSIM
 			ui_Objects()[(long)this] = "Permitted_Vals";
 #endif

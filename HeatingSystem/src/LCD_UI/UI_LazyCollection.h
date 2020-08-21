@@ -9,7 +9,7 @@ namespace LCD_UI {
 	//class UI_MenuCollection : public I_SafeCollection {
 	//public:
 	//	UI_MenuCollection(const I_SafeCollection & hiddenCollection, I_SafeCollection & safeCollection)
-	//		: I_SafeCollection(safeCollection.count(), viewOneRecycle()())
+	//		: I_SafeCollection(safeCollection.count(), Behaviour{V+S+V1+UD_A+R}())
 	//		, _hidden_pages_hndl(hiddenCollection)
 	//		, _collection(&safeCollection)
 	//	{
@@ -50,7 +50,7 @@ namespace LCD_UI {
 	/// </summary>
 	class LazyCollection : public I_SafeCollection { // array-semantics wrapper for lazy-initialisation
 	public:
-		LazyCollection(int count, Behaviour behaviour = viewOneRecycle()) : I_SafeCollection(count, behaviour) {}
+		LazyCollection(int count, Behaviour behaviour = {V+S+R+V1+UD_A}) : I_SafeCollection(count, behaviour) {}
 
 		// Modifiers
 		Collection_Hndl * item(int newIndex) override = 0;

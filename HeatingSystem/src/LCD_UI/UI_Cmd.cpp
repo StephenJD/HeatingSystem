@@ -14,7 +14,6 @@ namespace LCD_UI {
 	UI_Cmd::UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour)
 		: Collection_Hndl(this), Custom_Select(onSelect, behaviour), text(label_text) {
 #ifdef ZPSIM
-		logger() << F("UI_Cmd ") << label_text << F(" Addr:") << L_hex << long(this) << L_endl;
 		ui_Objects()[(long)get()] = "UI_Cmd";
 #endif
 	}

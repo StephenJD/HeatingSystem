@@ -63,7 +63,11 @@ namespace LCD_UI {
 		// LR passes to the innermost ViewAll-collection	
 		auto tryLeftRight = topUI;
 		auto gotLeftRight = _leftRightBackUI;
-		while (tryLeftRight->get()->isCollection()) { // can only pass LR to activeUI, if it is a collection.
+		while (tryLeftRight->get()->isCollection() || tryLeftRight->behaviour().is_NextActive_On_LR()) {
+			if (!tryLeftRight->get()->isCollection()) {
+				gotLeftRight = tryLeftRight;
+				break;
+			}
 			auto try_behaviour = tryLeftRight->behaviour();
 			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str() 
 				<< (try_behaviour.is_NextActive_On_LR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;

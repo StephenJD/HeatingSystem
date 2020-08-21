@@ -1,7 +1,7 @@
 
 // *********************** Tests *********************
 #include <catch.hpp>
-#include "UI_LazyCollection.h"
+#include "UI_Collection.h"
 #include "A_Top_UI.h"
 #include "UI_Collection.h"
 #include "Logging.h"

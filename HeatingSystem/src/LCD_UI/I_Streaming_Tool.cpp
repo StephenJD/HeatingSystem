@@ -102,17 +102,15 @@ namespace LCD_UI {
 	/// It may have a parent field set, from which it obtains its object index.
 	/// </summary>
 	Field_StreamingTool_h::Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
-		: Collection_Hndl(streamingTool), _activeBehaviour(activeBehaviour.make_viewOne()), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
+		: Collection_Hndl(streamingTool), _activeBehaviour(activeBehaviour + V+S+V1), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
 	{
 		//streamingTool.behaviour().make_viewOne(); // And must be view-one until in edit.
 	}
 
 	const Behaviour Field_StreamingTool_h::behaviour() const {
 		bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
-		auto non_UD_capturing_activeBehaviour = Behaviour(_activeBehaviour).removeBehaviour(Behaviour::BehaviourFlags(Behaviour::b_UD_NextActive | Behaviour::b_UD_Edit));
+		auto non_UD_capturing_activeBehaviour = Behaviour(_activeBehaviour).make_noUD();
 		if (inEdit) {
-			//if (_activeBehaviour.is_next_on_UpDn()) return non_UD_capturing_activeBehaviour;
-			//else 
 			return _activeBehaviour;
 		} else return non_UD_capturing_activeBehaviour;
 	}
@@ -176,7 +174,7 @@ namespace LCD_UI {
 		Collection_Hndl * retVal = this;
 		if (_cursorMode == HI_BD::e_inEdit) {
 			setCursorMode(HI_BD::e_unselected);
-			get()->addBehaviour(Behaviour::b_ViewOne);
+			get()->behaviour().make_viewOne();
 			f_interface().editItem().setBackUI(0);
 			f_interface().setCount(0);
 			retVal = 0;

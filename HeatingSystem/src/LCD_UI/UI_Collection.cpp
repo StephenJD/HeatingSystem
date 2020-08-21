@@ -1,5 +1,4 @@
 #include "UI_Collection.h"
-#include "UI_LazyCollection.h"
 #include "UI_Cmd.h"
 #include "Logging.h"
 
@@ -73,8 +72,8 @@ namespace LCD_UI {
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
 		if (auto collection = get()->collection()) {
-			logger() << F("\Collection_Hndl set defaultFocus for ") << ui_Objects()[(long)get()].c_str() << L_endl;
-			collection->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
+			logger() << F("Collection_Hndl set defaultFocus for ") << ui_Objects()[(long)get()].c_str() << L_endl;
+			collection->filter(filter_selectable()); // collection() returns the _objectHndl, cast as a collection.
 			auto validFocus = collection->nextActionableIndex(default_focus);
 			set_focus(validFocus); // must call on mixed collection of Objects and collections
 			move_focus_by(0); // recycle if allowed. 
@@ -158,14 +157,11 @@ namespace LCD_UI {
 			auto firstValidIndexLookingForwards = [this](int index) {return get()->collection()->nextActionableIndex(index); };
 			auto firstValidIndexLookingBackwards = [this](int index) {return get()->collection()->prevActionableIndex(index); };
 			auto needToRecycle = [this](int index) {return atEnd(index) && behaviour().is_recycle(); };
-			auto tryMovingForwardByOne = [this](int index) {++index; return index; };
-			auto tryMovingBackwardByOne = [this](int index) {if (index > -1) { --index; } return index; };
-			auto weHaveMoved = [startFocus](int index) {return startFocus != index; };
 			const auto weCouldNotMove = startFocus;
 			////////////////////////////////////////////////////////////////////
 			//************************  Algorithm ****************************//
 			////////////////////////////////////////////////////////////////////
-			get()->collection()->filter(selectable());
+			get()->collection()->filter(filter_selectable());
 			if (wantToCheckCurrentPosIsOK) {
 				setFocusIndex(firstValidIndexLookingForwards(startFocus));
 				if (needToRecycle(focusIndex())) setFocusIndex(firstValidIndexLookingForwards(0));
@@ -174,12 +170,12 @@ namespace LCD_UI {
 			}
 			else {
 				while (wantToMoveForward(nth)) {
-					auto newFocus = tryMovingForwardByOne(focusIndex());
-					if (newFocus != focusIndex()) {
+					auto newFocus = focusIndex() + 1;
+					//if (newFocus != focusIndex()) {
 						newFocus = firstValidIndexLookingForwards(newFocus);
 						setFocusIndex(newFocus);
-					}
-					if (!weHaveMoved(newFocus))  break;
+					//}
+					if (newFocus <= startFocus) break;
 					else if (!atEnd(newFocus)) --nth; // We have a valid element
 					else if (behaviour().is_recycle()) setFocusIndex(-1);
 					else { // at end, can't recycle
@@ -188,10 +184,10 @@ namespace LCD_UI {
 					}
 				}
 				while (wantToMoveBackwards(nth)) {  // Assume move-back from a valid start-point or focusIndex() of -1 (no actionable elements)
-					auto newFocus = tryMovingBackwardByOne(focusIndex());
+					auto newFocus = focusIndex() - 1;
 					newFocus = firstValidIndexLookingBackwards(newFocus);
 					setFocusIndex(newFocus); // if no prev, is now -1.
-					if (!weHaveMoved(newFocus)) break;
+					if (newFocus >= startFocus) break;
 					else if (newFocus >= 0) ++nth; // We found one!
 					else if (behaviour().is_recycle()) {
 						setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
@@ -204,7 +200,7 @@ namespace LCD_UI {
 					}
 				}
 			}
-			return weHaveMoved(focusIndex()) && !atEnd(focusIndex()) && focusIndex() > -1;
+			return startFocus != focusIndex() && !atEnd(focusIndex()) && focusIndex() > -1;
 		}
 		else {
 			if (nth) get()->focusHasChanged(nth > 0);
@@ -241,7 +237,7 @@ namespace LCD_UI {
 	///////////////////////////////////////////
 
 	Custom_Select::Custom_Select(OnSelectFnctr onSelect, Behaviour behaviour)
-		: _behaviour(behaviour)
+		: _behaviour(behaviour.make_viewAll()) // required to get object to handle Up-Down
 		, _onSelectFn(onSelect)
 	{}
 
@@ -270,7 +266,7 @@ namespace LCD_UI {
 	///////////////////////////////////////////
 	// **********   I_SafeCollection **********
 	///////////////////////////////////////////
-	Behaviour I_SafeCollection::_filter = viewable();
+	Behaviour I_SafeCollection::_filter = filter_viewable();
 
 	I_SafeCollection::I_SafeCollection(int count, Behaviour behaviour) :_count(count), _behaviour(behaviour) {}
 
@@ -316,7 +312,7 @@ namespace LCD_UI {
 	}
 
 	bool I_SafeCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		filter(viewable());
+		filter(filter_viewable());
 		auto hasStreamed = false;
 #ifdef ZPSIM
 		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;

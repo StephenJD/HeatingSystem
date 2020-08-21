@@ -1,5 +1,5 @@
 #pragma once
-#include "UI_LazyCollection.h"
+#include "UI_Collection.h"
 
 namespace LCD_UI {
 	class I_Data_Formatter;

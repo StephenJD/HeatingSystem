@@ -41,8 +41,8 @@ namespace LCD_UI {
 		virtual Collection_Hndl *	edit(Collection_Hndl * from) { return select(from); }
 		virtual bool				back() { return true; }
 		virtual Behaviour &			behaviour() = 0;
-		UI_Object &					addBehaviour(Behaviour::BehaviourFlags b) { behaviour().addBehaviour(b); return *this; }
-		UI_Object &					removeBehaviour(Behaviour::BehaviourFlags b) { behaviour().removeBehaviour(b); return *this; }
+		//UI_Object &					addBehaviour(Behaviour::BehaviourFlags b) { behaviour().addBehaviour(b); return *this; }
+		//UI_Object &					removeBehaviour(Behaviour::BehaviourFlags b) { behaviour().removeBehaviour(b); return *this; }
 		virtual void				focusHasChanged(bool hasFocus) {}
 
 		virtual ~UI_Object() = default;
@@ -371,7 +371,7 @@ namespace LCD_UI {
 	/// </summary>
 	//class UI_IterateSubCollection : public I_SafeCollection {
 	//public:
-	//	UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = viewAllRecycle());
+	//	UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = {V+S+Vn+UD_A+R});
 	//	// Polymorphic Queries
 	//	Collection_Hndl * leftRight_Collection() override;
 	//	// Polymorphic Modifiers
@@ -416,9 +416,9 @@ namespace LCD_UI {
 //				logger() << F("   Has Element at : ") << (long)&_array[i] << F(" Pointing to : ") << (long)_array[i].get() << L_endl;
 //			std::cout << std::endl;
 //#endif
-			_filter = selectable();
+			_filter = filter_selectable();
 			setFocusIndex(nextActionableIndex(0));
-			filter(viewable());
+			_filter = filter_viewable();
 		}		
 		
 		Collection(const Collection<noOfObjects> & collection, Behaviour behaviour) 
@@ -434,6 +434,34 @@ namespace LCD_UI {
 
 	private:
 		ArrayWrapper<noOfObjects, Collection_Hndl> _array;
+	};
+
+	//////////////////////////////////////////////////////////////////////
+	//                   Lazy-Collection Base Class                     //
+	//////////////////////////////////////////////////////////////////////
+
+	/// <summary>
+	/// The Base-class for Lazy-Loading SafeCollections of Collection_Hndl.
+	/// Derived classes must provide object() & item(int newIndex) override;
+	/// and "using I_SafeCollection::item;" Objects size: 20 bytes
+	/// </summary>
+	class LazyCollection : public I_SafeCollection { // array-semantics wrapper for lazy-initialisation
+	public:
+		LazyCollection(int count, Behaviour behaviour = { V + S + R + V1 + UD_A }) : I_SafeCollection(count, behaviour) {}
+
+		// Modifiers
+		Collection_Hndl * item(int newIndex) override = 0;
+		Collection_Hndl & object() { return _handle; }
+
+		~LazyCollection() { delete _handle.get(); }
+	protected:
+		Collection_Hndl & swap(const UI_Object * newObj) {
+			delete _handle.get();
+			_handle = newObj;
+			return _handle;
+		}
+	private:
+		Collection_Hndl _handle;
 	};
 
 ////////////////////////////////////////////////////////////////////////
@@ -484,7 +512,7 @@ namespace LCD_UI {
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = nextActiveMember_onLR())
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> & collection, Behaviour behaviour = { V + S + Vn + LR_A + UD_0 + R0 })
 			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
@@ -496,21 +524,46 @@ namespace LCD_UI {
 
 		// Polymorphic Queries
 		const I_SafeCollection * iterated_collection() const override { return this; }
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
+		int	focusIndex() const override {return _itFocus;}
+		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
+		int firstVisibleItem() const override { return h_firstVisibleItem(); }
+		int fieldEndPos() const override { return _endPos; }
+		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override {return h_listStatus(streamIndex);}
+		void endVisibleItem(bool thisWasShown, int streamIndex) const override { h_endVisibleItem(thisWasShown, streamIndex); }
+
+		// Polymorphic Modifiers
 		I_SafeCollection * iterated_collection() override { return this; }
-		//using UI_Object::behaviour;
-		//Behaviour & behaviour() override { return collection()->behaviour(); }
-		//HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override { return collection()->cursorMode(activeElement); }
-		//int cursorOffset(const char * data) const override { return collection()->cursorOffset(data); }
-		//int objectIndex() const override { return collection()->objectIndex(); }
+		void setFocusIndex(int focus) override { _itFocus = focus; }
+		Collection_Hndl * leftRight_Collection() { return h_leftRight_Collection(); }
 
-		//bool isCollection() const override { return collection()->isCollection(); }
+		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
+	};
+	
+	template<>
+	class UI_IteratedCollection<1> : public Collection<1>, public UI_IteratedCollection_Hoist {
+	public:
+		// Zero-based endPos, endPos=0 means no characters are displayed. 
+		UI_IteratedCollection(int endPos, Collection<1> & collection)
+			: Collection<1>(collection, Behaviour(collection[0].get()->behaviour()+LR_A+R0).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			, UI_IteratedCollection_Hoist(endPos)
+		{
+			collection[0].get()->behaviour() = (collection[0].get()->behaviour() + V1+LR_A+R0) & ~UD_A;
+		}
 
-		//int endIndex() const override { return h_endIndex(); }
+		UI_IteratedCollection(int endPos, I_SafeCollection & collection)
+			: Collection<1>{ {Collection_Hndl{collection}}, (collection.behaviour()).make_viewAll() } // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			, UI_IteratedCollection_Hoist(endPos)
+		{
+			activeUI()->get()->behaviour().make_viewOne();
+		}
+
+		// Polymorphic Queries
+		const I_SafeCollection * iterated_collection() const override { return this; }
+		I_SafeCollection * iterated_collection() override { return this; }
 		
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
 		int	focusIndex() const override {return _itFocus;}
-		//int nextActionableIndex(int index) const override { return h_nextActionableIndex(index); }
-		//int prevActionableIndex(int index) const override { return h_prevActionableIndex(index); }
 		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
 		int firstVisibleItem() const override { return h_firstVisibleItem(); }
 		int fieldEndPos() const override { return _endPos; }
@@ -519,22 +572,9 @@ namespace LCD_UI {
 
 		// Polymorphic Modifiers
 		void setFocusIndex(int focus) override { _itFocus = focus; }
-		//Collection_Hndl * move_focus_to(int index) override { return h_move_focus_to(index); }
-
-
-		//I_SafeCollection * collection() override { return _nestedCollection->collection(); }
-		//const I_SafeCollection * collection() const override { return _nestedCollection->collection(); }
-
-		//Collection_Hndl * item(int newIndex) override {// return member without moving focus
-			
-			//return h_item(newIndex);
-		//}
-
 		Collection_Hndl * leftRight_Collection() { return h_leftRight_Collection(); }
 
 		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
-		//void setObjectIndex(int index) const override { I_SafeCollection::setObjectIndex(index); collection()->setObjectIndex(index); }
-		//void setFocusIndex(int focus) override { I_SafeCollection::setFocusIndex(focus); collection()->I_SafeCollection::setFocusIndex(focus); }
 	};
 
 	/// <summary>
@@ -544,7 +584,7 @@ namespace LCD_UI {
 	/// </summary>
 	template<typename... Args>
 	auto makeCollection(Args & ... args) -> Collection<sizeof...(args)> {
-		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, viewAllRecycle());
+		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, Behaviour{V+S+Vn+UD_A+R});
 	}
 
 }

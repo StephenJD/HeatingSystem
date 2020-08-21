@@ -1,6 +1,6 @@
 #pragma once
 #include "I_Edit_Hndl.h"
-#include "UI_LazyCollection.h"
+#include "UI_Collection.h"
 #include "I_Data_Formatter.h"
 
 namespace LCD_UI {
@@ -43,7 +43,7 @@ namespace LCD_UI {
 
 		void setWrapper(I_Data_Formatter * wrapper);
 	protected:
-		I_Streaming_Tool() : I_SafeCollection(0, viewOne()) {
+		I_Streaming_Tool() : I_SafeCollection(0, Behaviour{V+S+V1}) {
 #ifdef ZPSIM
 		logger() << F("\tI_Field_Interface Addr: ") << L_hex << long(this) << L_endl;
 #endif
@@ -82,6 +82,7 @@ namespace LCD_UI {
 		CursorMode cursor_Mode() const { return _cursorMode; }
 		int fieldID() const { return _fieldID; }
 		const UI_FieldData * getData() const { return _parentColln; }
+		Behaviour activeBehaviour() const { return _activeBehaviour; }
 		// New modifiers
 		UI_FieldData * getData() { return _parentColln; }
 		OnSelectFnctr & onSelect() { return _onSelect; }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UI_LazyCollection.h"
+#include "UI_Collection.h"
 
 namespace LCD_UI {
 	class A_Top_UI;
@@ -68,7 +68,7 @@ namespace LCD_UI {
 	/// </summary>
 	template<typename... Args>
 	auto makeChapter(Args & ... args) -> Collection<sizeof...(args)> {
-		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, viewOneRecycle());
+		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, Behaviour{V+S+V1+UD_A+R});
 	}
 }
 

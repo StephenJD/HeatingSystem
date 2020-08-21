@@ -12,22 +12,22 @@ namespace Assembly {
 		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)
-		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, editActiveMember_onUpDn() }
-		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, editActiveMember_onUpDn() }
-		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst,0,0, editActiveMember_onUpDn() }
-		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard,0,0, viewable()}
+		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime,0,0, Behaviour{V+S+Vn+UD_E+R0} }
+		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate,0,0, Behaviour{V+S+Vn+UD_E+R0} }
+		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst,0,0, Behaviour{V+S+Vn+UD_E+R0} }
+		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard,0,0, {V + L0} }
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, editActiveMember_onUpDn() }
+		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp,0,0, Behaviour{V+S+Vn+UD_E+R0} }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name }
-		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, viewOneRecycle() }
+		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev,0,0, Behaviour{V+S+V1+UD_A+R} }
 		
-		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, viewOneRecycle() }
-		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, editActiveMember_onUpDn(), viewAllRecycle()}
-		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, viewOneRecycle().make_newLine()/*, viewAllRecycle().make_unEditable()*/ }
-		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, viewOneRecycle(), viewAllRecycle() }
+		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,0,0, Behaviour{V+S+V1+UD_A+R} }
+		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date,0,0, Behaviour{V + S + Vn + UD_E + R0}, Behaviour{UD_A + R} }
+		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name,&_dwellSpellUI_c,Dataset_Spell::e_progID, Behaviour{V + S +L+ V1 + UD_A + R}, Behaviour{UD_A+R} }
+		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days,0,0, Behaviour{V+S+V1+UD_A+R}, Behaviour{UD_E + R}}
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, viewOneRecycle().make_newLine().make_editOnUpDn(), viewAllNonRecycle(), { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
-		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, viewAllRecycle().make_newLine() }
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp,0,0, Behaviour{V + S +L+ V1 + UD_E + R}, Behaviour{UD_A + R0}, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp,0,0, Behaviour{V + S +L+ Vn + UD_A + R}}
 		
 		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name }
 		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, &_towelRailNameUI_c }
@@ -35,22 +35,22 @@ namespace Assembly {
 		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo, &_towelRailNameUI_c }
 		
 		, _relayStateUI_c{ &db._rec_relay, Dataset_Relay::e_state}
-		, _relayNameUI_c{ &db._rec_relay, Dataset_Relay::e_name, &_relayStateUI_c, 0, viewable() }
+		, _relayNameUI_c{ &db._rec_relay, Dataset_Relay::e_name, &_relayStateUI_c, 0, {V + L0} }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}
-		, _prog{"Prg:", viewable().make_sameLine() }
+		, _prog{"Prg:", {V + L0} }
 		, _zone{"Zne:"}
-		, _backlightCmd{"Backlight",0, viewOneRecycle().make_newLine() }
-		, _contrastCmd{"Contrast",0, viewOneRecycle() }
+		, _backlightCmd{"Backlight",0, Behaviour{V + S +L + UD_A} }
+		, _contrastCmd{"Contrast",0, Behaviour{V+S+UD_A} }
 		, _dwellingZoneCmd{"Zones",0 }
 		, _dwellingCalendarCmd{ "Calendar",0 }
 		, _dwellingProgCmd{ "Programs",0 }
 		, _profileDaysCmd{ "Ds:",0}
-		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, viewOneRecycle().make_newLine() }
-		, _deleteTTCmd{ "Delete", 0, viewOneRecycle().make_hidden().make_newLine() }
-		, _editTTCmd{ "Edit", 0, viewOneRecycle().make_hidden().make_viewAll() }
-		, _newTTCmd{ "New", 0, viewOneRecycle().make_hidden() }
+		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, Behaviour{V+S+L+UD_A} }
+		, _deleteTTCmd{ "Delete", 0, Behaviour{H+S+L+UD_A+R} }
+		, _editTTCmd{ "Edit", 0, Behaviour{H+S+UD_A}}
+		, _newTTCmd{ "New", 0, Behaviour{H + S + UD_A} }
 		, _towelRailsLbl{"Room Temp OnFor ToGo"}
 
 		// Pages & sub-pages - Collections of UI handles

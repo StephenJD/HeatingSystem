@@ -1,5 +1,5 @@
 #pragma once
-#include "UI_LazyCollection.h"
+#include "UI_Collection.h"
 #include "I_Data_Formatter.h"
 #include <RDB.h>
 #include "I_Streaming_Tool.h"
@@ -25,7 +25,7 @@ namespace LCD_UI {
 	class UI_FieldData : public LazyCollection {
 	public:
 		UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent = 0, int selectFldID = 0
-			, Behaviour collectionBehaviour = viewOneNonRecycle(), Behaviour activeBehaviour = editActiveMember_onUpDn()
+			, Behaviour collectionBehaviour = { V + S + V1 + R0 + UD_A }, Behaviour activeBehaviour = {UD_E+R0}
 			, OnSelectFnctr onSelect = 0);
 
 		// Queries
