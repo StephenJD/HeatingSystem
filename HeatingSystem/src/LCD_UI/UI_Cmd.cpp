@@ -32,8 +32,8 @@ namespace LCD_UI {
 	}
 
 
-	bool UI_Cmd::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		return streamToBuffer(text, buffer, activeElement, shortColl,streamIndex);
+	bool UI_Cmd::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
+		return streamToBuffer(text, buffer, activeElement, endPos , listStatus);
 	}
 
 	// ********************* Concrete UI_Label *******************
@@ -45,8 +45,8 @@ namespace LCD_UI {
 #endif
 	}
 
-	bool UI_Label::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
-		return streamToBuffer(text, buffer, activeElement, shortColl,streamIndex);
+	bool UI_Label::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
+		return streamToBuffer(text, buffer, activeElement, endPos, listStatus);
 	}
 
 }

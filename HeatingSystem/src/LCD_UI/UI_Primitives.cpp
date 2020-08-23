@@ -322,7 +322,7 @@ namespace LCD_UI {
 		if (isActiveElement) {
 			auto fieldInterface_h = dataSource();
 			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
-				if (fieldInterface_h->activeBehaviour().is_edit_on_UD()) {
+				if (fieldInterface_h->activeEditBehaviour().is_edit_on_UD()) {
 					return _editItem.stream_edited_copy;
 				}
 			}

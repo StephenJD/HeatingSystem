@@ -20,16 +20,16 @@ namespace LCD_UI {
 	/// Objects are constructed with the target record-interface and a fieldID to specify the record-field required.
 	/// The UI may obtain its recordID from a given field of a parent UI_FieldData.
 	/// collectionBehaviour may be (default first) One/All, non-Recycle/Recycle, NotNewline/Newline, LR-MoveCursor/LR-NextMember, UD-Nothing/UD-NextActive/UD-Edit/UD-Save, Selectible/Unselectible, Visible/Hidden.
-	/// activeBehaviour may be (default first) One(not in edit)/All(during edit), LR-nonRecycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
+	/// activeEditBehaviour may be (default first) One(not in edit)/All(during edit), LR-nonRecycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
 	/// </summary>
 	class UI_FieldData : public LazyCollection {
 	public:
 		UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent = 0, int selectFldID = 0
-			, Behaviour collectionBehaviour = { V + S + V1 + R0 + UD_A }, Behaviour activeBehaviour = {UD_E+R0}
+			, Behaviour collectionBehaviour = { V + S + V1 + R0 + UD_A }, Behaviour activeEditBehaviour = {UD_E+R0}
 			, OnSelectFnctr onSelect = 0);
 
 		// Queries
-		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex=0) const override;
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override;
 		I_Record_Interface * data() const { return _data; }

@@ -55,17 +55,17 @@ namespace LCD_UI {
 
 	/// <summary>
 	/// Points to the shared Streaming_Tool-Collection which performs streaming and editing.
-	/// Has edit-behaviour member to modify the Streaming_Tool-Collection behaviour when in edit:
-	/// activeBehaviour may be (default first) One(not in edit)/All(during edit), non-Recycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
+	/// Has active-edit-behaviour member to modify the Streaming_Tool-Collection behaviour when in edit:
+	/// activeEditBehaviour may be (default first) One(not in edit)/All(during edit), non-Recycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
 	/// Can have an alternative Select function set.
 	/// It may have a parent field set, from which it obtains its object index.
 	/// </summary>
 	class Field_StreamingTool_h : public Collection_Hndl { // base-class points to streamingTool
 	public:
-		Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect = 0);
+		Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect = 0);
 		
 		// Polymorphic Queries
-		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
+		bool streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override { 
 			return f_interface().editItem().currValue().valRange._cursorPos;
@@ -82,11 +82,11 @@ namespace LCD_UI {
 		CursorMode cursor_Mode() const { return _cursorMode; }
 		int fieldID() const { return _fieldID; }
 		const UI_FieldData * getData() const { return _parentColln; }
-		Behaviour activeBehaviour() const { return _activeBehaviour; }
+		Behaviour activeEditBehaviour() const { return _activeEditBehaviour; }
 		// New modifiers
 		UI_FieldData * getData() { return _parentColln; }
 		OnSelectFnctr & onSelect() { return _onSelect; }
-		Behaviour & activeBehaviour() { return _activeBehaviour; }
+		Behaviour & activeEditBehaviour() { return _activeEditBehaviour; }
 		void setCursorMode(CursorMode mode) { _cursorMode = mode; }
 		void set_OnSelFn_TargetUI(Collection_Hndl * obj);
 		void setEditFocus(int focus);
@@ -95,7 +95,7 @@ namespace LCD_UI {
 		I_Streaming_Tool & f_interface() { return static_cast<I_Streaming_Tool&>(*get()); }
 	private:
 		CursorMode _cursorMode = HardwareInterfaces::LCD_Display::e_unselected;
-		Behaviour _activeBehaviour;
+		Behaviour _activeEditBehaviour;
 		const uint8_t _fieldID; // placed here to reduce padding
 		UI_FieldData * _parentColln; // LazyCollection
 		OnSelectFnctr _onSelect;

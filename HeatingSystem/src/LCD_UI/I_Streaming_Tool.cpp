@@ -42,9 +42,12 @@ namespace LCD_UI {
 #endif	
 		dataSource()->set_focus(editItem().getEditCursorPos()); // copy data to edit
 		dataSource()->setCursorMode(HI_BD::e_inEdit);
-		//if (dataSource()->activeBehaviour().is_edit_on_UD()) 
-			dataSource()->activeBehaviour().make_viewAll();
-		behaviour() = dataSource()->activeBehaviour();
+		
+		dataSource()->activeEditBehaviour().make_viewAll();
+		behaviour() = dataSource()->activeEditBehaviour();
+		if (behaviour().is_next_on_UpDn()) {
+			editItem().currValue().val = dataSource()->getData()->data()->record().id();
+		}
 		return 0;
 	}
 
@@ -52,13 +55,13 @@ namespace LCD_UI {
 	int I_Streaming_Tool::setInitialCount(Field_StreamingTool_h * parent) {
 		_dataSource = parent;
 		int initialEditFocus;
-		//if (parent->activeBehaviour().is_Editable()) {
-			initialEditFocus = editItem().gotFocus(_data_formatter); // gotFocus copies data to currValue
-		//}
-		//else {
-		//	UI_FieldData * fieldData = parent->getData();
-		//	initialEditFocus = editItem().editMemberSelection(_data_formatter, fieldData->data()->recordID());
-		//}
+		//if (parent->activeEditBehaviour().is_Editable()) {
+		initialEditFocus = editItem().gotFocus(_data_formatter); // gotFocus copies data to currValue
+	//}
+	//else {
+	//	UI_FieldData * fieldData = parent->getData();
+	//	initialEditFocus = editItem().editMemberSelection(_data_formatter, fieldData->data()->recordID());
+	//}
 		setCount(editItem().currValue().valRange.editablePlaces);
 		return initialEditFocus;
 	}
@@ -97,21 +100,21 @@ namespace LCD_UI {
 	/// <summary>
 	/// Points to the shared Streaming_Tool which performs streaming and editing.
 	/// Has edit-behaviour member to determin the Streaming_Tool behaviour when in edit:
-	/// activeBehaviour may be (default first) One(not in edit)/All(during edit), non-Recycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
+	/// activeEditBehaviour may be (default first) One(not in edit)/All(during edit), non-Recycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
 	/// Can have an alternative Select function set.
 	/// It may have a parent field set, from which it obtains its object index.
 	/// </summary>
-	Field_StreamingTool_h::Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
-		: Collection_Hndl(streamingTool), _activeBehaviour(activeBehaviour + V+S+V1), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
+	Field_StreamingTool_h::Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
+		: Collection_Hndl(streamingTool), _activeEditBehaviour(activeEditBehaviour + V+S+V1), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
 	{
 		//streamingTool.behaviour().make_viewOne(); // And must be view-one until in edit.
 	}
 
 	const Behaviour Field_StreamingTool_h::behaviour() const {
 		bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
-		auto non_UD_capturing_activeBehaviour = Behaviour(_activeBehaviour).make_noUD();
+		auto non_UD_capturing_activeBehaviour = Behaviour(_activeEditBehaviour).make_noUD();
 		if (inEdit) {
-			return _activeBehaviour;
+			return _activeEditBehaviour;
 		} else return non_UD_capturing_activeBehaviour;
 	}
 
@@ -119,7 +122,7 @@ namespace LCD_UI {
 		_onSelect.setTarget(obj);
 	}
 
-	bool Field_StreamingTool_h::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool Field_StreamingTool_h::streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
 		auto cursor_mode = cursorMode(activeElement);
 		if (activeElement && cursor_mode == HI_BD::e_unselected) activeElement = 0;
 
@@ -129,7 +132,7 @@ namespace LCD_UI {
 			//<< F("\n\t\tObjectIndex: ") << f_interface().objectIndex() << L_endl;
 #endif		
 		const UI_Object * streamObject = backUI() ? backUI()->get() : get();
-		return streamObject->streamToBuffer(dataStream, buffer, activeElement, shortColl, streamIndex);
+		return streamObject->streamToBuffer(dataStream, buffer, activeElement, endPos, listStatus);
 	}
 
 	bool Field_StreamingTool_h::move_focus_by(int nth) {

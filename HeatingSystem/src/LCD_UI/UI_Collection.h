@@ -10,7 +10,6 @@
 #endif
 
 namespace LCD_UI {
-	class UI_DisplayBuffer;
 	class Object_Hndl;
 	class Collection_Hndl;
 	class I_SafeCollection;
@@ -29,11 +28,11 @@ namespace LCD_UI {
 		virtual const I_SafeCollection * collection() const { return 0; }
 		// Queries supporting streaming
 		using HI_BD = HardwareInterfaces::LCD_Display;
-		virtual bool				streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const { return false; }
+		virtual bool				streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const { return false; }
 		virtual HI_BD::CursorMode	cursorMode(const Object_Hndl * activeElement) const;
 		virtual int					cursorOffset(const char * data) const;
 		virtual bool				upDn_IsSet() { return false; }
-		bool						streamToBuffer(const char * data, UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const;
+		bool						streamToBuffer(const char * data, UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
 		const Behaviour				behaviour() const { return const_cast<UI_Object*>(this)->behaviour(); }
 		// Modifiers
 		virtual I_SafeCollection *	collection() { return 0; }
@@ -41,8 +40,6 @@ namespace LCD_UI {
 		virtual Collection_Hndl *	edit(Collection_Hndl * from) { return select(from); }
 		virtual bool				back() { return true; }
 		virtual Behaviour &			behaviour() = 0;
-		//UI_Object &					addBehaviour(Behaviour::BehaviourFlags b) { behaviour().addBehaviour(b); return *this; }
-		//UI_Object &					removeBehaviour(Behaviour::BehaviourFlags b) { behaviour().removeBehaviour(b); return *this; }
 		virtual void				focusHasChanged(bool hasFocus) {}
 
 		virtual ~UI_Object() = default;
@@ -111,7 +108,7 @@ namespace LCD_UI {
 		Object_Hndl &			operator=(const UI_Object & rhs) { _objectHndl = &rhs; return *this; }
 
 		// Polymorphic Queries
-		virtual bool			streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const /*override*/;
+		virtual bool			streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const;
 
 		// New Queries
 		bool					empty() const { return _objectHndl == 0; }
@@ -180,7 +177,7 @@ namespace LCD_UI {
 		virtual CursorMode cursorMode(const Object_Hndl * activeElement) const;
 		virtual int cursorOffset(const char * data) const;
 		// Polymorphic Modifiers
-		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
+		bool streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 
 		virtual Collection_Hndl * on_back() { return backUI(); }   // function is called on the active object to notify it has been de-selected. Used by Edit_Data.
 		virtual Collection_Hndl * on_select() { return backUI(); } // action performed when saving. Used by Edit_Data.
@@ -242,7 +239,7 @@ namespace LCD_UI {
 		I_SafeCollection(int count, Behaviour behaviour);
 		// Polymorphic Queries
 		bool isCollection() const override { return true; }
-		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl = 0, int streamIndex = 0) const override;
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		virtual Collection_Hndl * leftRight_Collection();
 
 		// Polymorphic short-list query functions
@@ -338,50 +335,6 @@ namespace LCD_UI {
 	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->setFocusIndex(index); }
 	inline int Collection_Hndl::endIndex() const { return get()->collection()->endIndex(); }
 
-	////////////////////////////////////////////////////////////////////////
-	////                        Dummy-Collection                          //
-	////////////////////////////////////////////////////////////////////////
-
-	///// <summary>
-	///// Dummy Collection of Collection_Hndl.
-	///// </summary>
-	//class DummyCollection : public I_SafeCollection {
-	//public:
-	//	DummyCollection(int count, Behaviour behaviour) : I_SafeCollection(count, behaviour), _handle(this) {}
-	//	using I_SafeCollection::item;
-	//	// Modifiers
-	//	Collection_Hndl * item(int newIndex) { return &_handle; }
-	//	Collection_Hndl & object() { return _handle; }
-	//private:
-	//	Collection_Hndl _handle;
-	//};
-
-	/////////////////////////////////////////////////////////////////////////
-	//         UI_IterateSubCollection decorator for any I_SafeCollection derivative 
-	/////////////////////////////////////////////////////////////////////////
-
-	/// <summary>
-	/// A Collection-Wrapper providing iteration of its sub-collection.
-	/// UI_IterateSubCollection = {child, parent, child, child...}
-	/// View_All -> Show the nested collection for each member of the active ui. Focus matches nested focus.
-	/// View_One -> Show the nested collection once, but on multiple displays each showing a different member. Focus indicates member in edit. 
-	/// The sub-collection may contain any number of fields.
-	/// The active (parent) field of the sub-collection determins the underlying records to be used.
-	/// Thus iterating this wrapper results in the sub-collection showing its fields for each member of the active field.
-	/// </summary>
-	//class UI_IterateSubCollection : public I_SafeCollection {
-	//public:
-	//	UI_IterateSubCollection(I_SafeCollection & safeCollection, Behaviour behaviour = {V+S+Vn+UD_A+R});
-	//	// Polymorphic Queries
-	//	Collection_Hndl * leftRight_Collection() override;
-	//	// Polymorphic Modifiers
-	//	Object_Hndl * item(int newIndex) override;
-	//	void setFocusIndex(int focus) override;
-
-	//private:
-	//	Collection_Hndl _nestedCollection;
-	//};
-
 	//////////////////////////////////////////////////////////////////////
 	//                   Static Collection Base Class                   //
 	//////////////////////////////////////////////////////////////////////
@@ -428,7 +381,7 @@ namespace LCD_UI {
 		Collection_Hndl * item(int index) override {
 			setObjectIndex(index);
 			return indexIsInRange(index) ? &_array[index] : 0;
-		} // can't return Collection_Hndl *
+		}
 
 		Collection & set(Behaviour behaviour) { _behaviour = behaviour; return *this; }
 
@@ -469,29 +422,24 @@ namespace LCD_UI {
 /////////////////////////////////////////////////////////////////////////
 	class UI_IteratedCollection_Hoist {
 	public:
+	protected:
 		UI_IteratedCollection_Hoist(int endPos)
 			: _endPos(endPos)
 		{}
 
 		int h_firstVisibleItem() const;
 		void h_focusHasChanged(bool hasFocus);
-		bool h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const;
+		bool h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
 		UI_DisplayBuffer::ListStatus h_listStatus(int streamIndex) const;
 		void h_endVisibleItem(bool thisWasShown, int streamIndex) const;
 		Collection_Hndl * h_item(int newIndex);
 		virtual const I_SafeCollection * iterated_collection() const = 0;
 		virtual I_SafeCollection * iterated_collection() = 0;
 		Collection_Hndl * h_leftRight_Collection();
-		int h_endIndex() const;
-		Collection_Hndl * h_move_focus_to(int index);
-		int h_nextActionableIndex(int index) const; // returns _count if none found
-		int h_prevActionableIndex(int index) const; // returns -1 if none found
-
-	protected:
 		const int16_t _endPos; // 0-based character endIndex on the display for the end of this list; i.e. no of visible chars including end markers: < ... >.
 		mutable int16_t _beginShow = 0; // streamIndex of first visible element
 		mutable int16_t _endShow = 0; // streamIndex after the last visible element
-		int16_t _beginIndex = 0; // required streamIndex of first element in collection
+		mutable int16_t _beginIndex = 0; // required streamIndex of first element in collection
 		int16_t _itFocus = 0;
 	};
 
@@ -524,7 +472,9 @@ namespace LCD_UI {
 
 		// Polymorphic Queries
 		const I_SafeCollection * iterated_collection() const override { return this; }
-		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override {
+			return h_streamElement(buffer, activeElement, endPos, listStatus); 
+		}
 		int	focusIndex() const override {return _itFocus;}
 		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
 		int firstVisibleItem() const override { return h_firstVisibleItem(); }
@@ -562,7 +512,9 @@ namespace LCD_UI {
 		const I_SafeCollection * iterated_collection() const override { return this; }
 		I_SafeCollection * iterated_collection() override { return this; }
 		
-		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const override { return h_streamElement(buffer, activeElement, shortColl, streamIndex); }
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override {
+			return h_streamElement(buffer, activeElement, endPos, listStatus);
+		}
 		int	focusIndex() const override {return _itFocus;}
 		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
 		int firstVisibleItem() const override { return h_firstVisibleItem(); }

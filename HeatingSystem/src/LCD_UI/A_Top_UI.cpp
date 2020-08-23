@@ -27,9 +27,6 @@ namespace LCD_UI {
 		setBackUI(this);
 		set_CursorUI_from(this);
 		notifyAllOfFocusChange(this);
-//#ifdef ZPSIM
-//		logger() << F("A_Top_UI is a Collection_Hndl at Addr:") << L_hex << long(this) << F(" pointing at : ") << (long)get() << L_endl;
-//#endif
 	}
 
 	/// <summary>
@@ -88,7 +85,7 @@ namespace LCD_UI {
 
 	void A_Top_UI::set_UpDownUI_from(Collection_Hndl * this_UI_h) {
 		// The innermost handle with UpDown behaviour gets the call.
-		/*if (this_UI_h->behaviour().is_UpDnAble())*/ _upDownUI = this_UI_h;
+		_upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto tryUD = this_UI_h->activeUI();
 			auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble();
@@ -111,12 +108,9 @@ namespace LCD_UI {
 		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 		logger() << F("\t_upDownUI focus: ") << _upDownUI->focusIndex() << L_endl;
 		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
-		
-		//logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
 		logger() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
 		if (_cursorUI->get()) logger() << F("\t_cursorUI() focus: ") << _cursorUI->focusIndex() << L_endl;
 #endif
-		//if (_leftRightBackUI->cursorMode(_leftRightBackUI) == HardwareInterfaces::LCD_Display::e_selected) {
 		if (selectedPage_h()->get()->collection()->leftRight_Collection() == 0 && _leftRightBackUI->cursorMode(_leftRightBackUI) != HardwareInterfaces::LCD_Display::e_inEdit) {
 			selectedPage_h()->setFocusIndex(_upDownUI->focusIndex());
 			logger() << F("\n\tselectedPage focus now: ") << selectedPage_h()->focusIndex() << L_endl;
@@ -160,11 +154,10 @@ namespace LCD_UI {
 			} while (!hasMoved && _leftRightBackUI != this);
 		}
 
-		set_CursorUI_from(set_leftRightUI_from(_leftRightBackUI, move));
+		set_CursorUI_from(set_leftRightUI_from(_leftRightBackUI->backUI(), move));
 
 		set_UpDownUI_from(_leftRightBackUI);
 		_cursorUI->setCursorPos();
-		//_leftRightBackUI->move_focus_by(0);
 		_upDownUI->move_focus_by(0);
 		if (wasInEdit)
 			rec_edit();
@@ -181,7 +174,7 @@ namespace LCD_UI {
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
 		auto haveMoved = false;
 
-		if (/*_upDownUI->get()->isCollection() &&*/ _upDownUI->behaviour().is_viewOneUpDn_Next()) {
+		if (_upDownUI->behaviour().is_viewOneUpDn_Next()) {
 			if (_upDownUI->backUI()->cursorMode(_upDownUI->backUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 				move = -move; // reverse up/down when in edit.
 			}
@@ -195,7 +188,6 @@ namespace LCD_UI {
 			} else if (_upDownUI->behaviour().is_edit_on_UD()) {
 				rec_edit();
 				haveMoved = _upDownUI->move_focus_by(-move); // reverse up/down when in edit.
-				//_upDownUI->on_select();
 			} 
 		}
 		
@@ -216,7 +208,7 @@ namespace LCD_UI {
 			auto element_h = static_cast<Collection_Hndl *>(topCollection->item(i));
 			if (element_h->get()->isCollection()) {
 #ifdef ZPSIM
-				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
+				//logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
 #endif
 				element_h->focusHasChanged(element_h == _upDownUI);
 				auto inner = element_h->activeUI();
@@ -270,7 +262,7 @@ namespace LCD_UI {
 
 	UI_DisplayBuffer & A_Top_UI::stream(UI_DisplayBuffer & buffer) const { // Top-level stream
 		buffer.reset();
-		selectedPage_h()->streamElement(buffer, _cursorUI);
+		selectedPage_h()->streamElement_h(buffer, _cursorUI);
 		return buffer;
 	}
 }

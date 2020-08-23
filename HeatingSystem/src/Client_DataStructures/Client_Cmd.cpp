@@ -103,7 +103,7 @@ namespace client_data_structures {
 
 	Collection_Hndl * InsertTimeTemp_Cmd::enableCmds(int cmd_to_show) {
 		auto ttSubPageHndl = target();
-		auto & ttListHndl = *ttSubPageHndl->get()->collection()->item(e_TTs);
+		auto & ttListHndl = *static_cast<Collection_Hndl *>(ttSubPageHndl->get()->collection()->item(e_TTs));
 		auto & ttDeleteHndl = *ttSubPageHndl->get()->collection()->item(e_DelCmd);
 		auto & ttNewHndl = *ttSubPageHndl->get()->collection()->item(e_NewCmd);
 		auto newFocus = cmd_to_show == e_allCmds ? e_EditCmd : e_TTs;
@@ -122,13 +122,13 @@ namespace client_data_structures {
 
 		if (cmd_to_show == e_none) {
 			ttListHndl->behaviour().make_viewAll();
-			//ttListHndl->behaviour().addBehaviour(Behaviour::b_Selectable);
+			ttListHndl->focusHasChanged(true);
 			behaviour().make_viewAll();
-			removeCommandForEdit(ttListHndl);
+			removeCommandForEdit(*ttListHndl.activeUI());
 		} else {
 			if (cmd_to_show != e_allCmds) behaviour().make_viewOne();
 			ttListHndl->behaviour().make_viewOne();
-			insertCommandForEdit(ttListHndl);
+			insertCommandForEdit(*ttListHndl.activeUI());
 			if (cmd_to_show == e_NewCmd) select(this);
 		}
 		return static_cast<Collection_Hndl*>(&ttListHndl);
@@ -138,14 +138,14 @@ namespace client_data_structures {
 		auto ttSubPageHndl = target();
 		if (get()->collection()) {
 			ttSubPageHndl->move_focus_to(e_TTs);
-			auto tt_UI_FieldData = ttSubPageHndl->activeUI()->get();
-			auto tt_field_interface_h = ttSubPageHndl->activeUI()->activeUI();
+			auto tt_UI_FieldData_h = ttSubPageHndl->activeUI()->activeUI();
+			auto tt_field_interface_h = tt_UI_FieldData_h->activeUI();
 			tt_field_interface_h->setCursorPos();
 			if (behaviour().is_viewAll()) { // must be "Edit" command 
 				enableCmds(e_EditCmd);
 			}
 			else {// must be "New" command 
-				auto  ttData = static_cast<UI_FieldData *>(tt_UI_FieldData->collection());
+				auto  ttData = static_cast<UI_FieldData *>(tt_UI_FieldData_h->get()->collection());
 				ttData->insertNewData();
 				_hasInsertedNew = true;
 			}
@@ -172,7 +172,7 @@ namespace client_data_structures {
 
 	Collection_Hndl * InsertTimeTemp_Cmd::on_back() { // Cancel insert/edit
 		auto ttUI_h = enableCmds(e_none);
-		auto ttData = static_cast<UI_FieldData *>(ttUI_h->get()->collection());
+		auto ttData = static_cast<UI_FieldData *>(ttUI_h->activeUI()->get()->collection());
 		if (_hasInsertedNew) {
 			auto thisTT = ttData->data()->recordID();
 			bool isOnlyTT = ttData->data()->last() == ttData->data()->query().begin().id();

@@ -13,20 +13,16 @@ namespace LCD_UI {
 	using namespace RelationalDatabase;
 
 	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent, int selectFldID
-		, Behaviour collectionBehaviour, Behaviour activeBehaviour
+		, Behaviour collectionBehaviour, Behaviour activeEditBehaviour
 		, OnSelectFnctr onSelect)
 		: LazyCollection(dataset->count(), collectionBehaviour)
 		, _data(dataset)
 		, _parentFieldData(parent)
-		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), activeBehaviour,fieldID, this, onSelect)
+		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), activeEditBehaviour,fieldID, this, onSelect)
 		, _selectFieldID(selectFldID)
 	{
 		setFocusIndex(_data->recordID());
 		setObjectIndex(focusIndex());
-#ifdef ZPSIM
-		//logger() << F("LazyCollection UI_FieldData Addr: ") << L_hex << long(this) << L_endl;
-		//logger() << F("   Field_StreamingTool_h Addr: ") << L_hex << long(&_field_StreamingTool_h) << L_endl << L_endl;
-#endif
 	} 
 
 	void UI_FieldData::set_OnSelFn_TargetUI(Collection_Hndl * obj) {
@@ -46,11 +42,12 @@ namespace LCD_UI {
 #endif		
 		bool focusWasInRange = objectAtFocus.status() == TB_OK;
 	    setCount(_data->resetCount());
-		setObjectIndex(_data->recordID());
+		auto newStart = _data->recordID();
+		setObjectIndex(newStart);
 		objectAtFocus = _data->query()[focusIndex()];
 		bool focusStillInRange = objectAtFocus.status() == TB_OK;
 		if (hasFocus || (focusWasInRange && !focusStillInRange))
-			setFocusIndex(objectIndex());
+			setFocusIndex(newStart);
 
 //#ifdef ZPSIM
 //		logger() <<  L_tabs << F("\tNew FocusIndex: ") << focusIndex()
@@ -89,19 +86,17 @@ namespace LCD_UI {
 		return &_field_StreamingTool_h;
 	}
 
-	bool UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, const I_SafeCollection * shortColl, int streamIndex) const {
+	bool UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
 		auto hasStreamed = false;
 		if (behaviour().is_viewOne()) {
-			auto objIndex = objectIndex();
-			auto activeEl = activeElement;
-			hasStreamed = _field_StreamingTool_h.streamElement(buffer, activeEl, shortColl, objIndex);
+			hasStreamed = _field_StreamingTool_h.streamElement_h(buffer, activeElement, endPos, listStatus);
 		} else {
 			auto focus_index = LazyCollection::focusIndex();
 			for (auto & element : *this) {
 				auto objIndex = objectIndex();
 				auto activeEl = activeElement;
 				if (objIndex != focus_index) activeEl = 0;
-				hasStreamed = _field_StreamingTool_h.streamElement(buffer, activeEl, shortColl, objIndex);
+				hasStreamed = _field_StreamingTool_h.streamElement_h(buffer, activeEl, endPos, listStatus);
 			}
 		}
 		return hasStreamed;
