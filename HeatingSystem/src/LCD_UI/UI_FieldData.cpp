@@ -82,21 +82,23 @@ namespace LCD_UI {
 		auto wrapper = _data->getFieldAt(fieldID(), elementIndex);
 		LazyCollection::setObjectIndex(_data->recordID());
 		if (atEnd(objectIndex()) || objectIndex() == -1) return 0;
+		_field_StreamingTool_h.f_interface().setDataSource(&_field_StreamingTool_h);
 		_field_StreamingTool_h.f_interface().setWrapper(wrapper);
+	
 		return &_field_StreamingTool_h;
 	}
 
 	bool UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
 		auto hasStreamed = false;
 		if (behaviour().is_viewOne()) {
-			hasStreamed = _field_StreamingTool_h.streamElement_h(buffer, activeElement, endPos, listStatus);
+			hasStreamed = _field_StreamingTool_h->streamElement(buffer, activeElement, endPos, listStatus);
 		} else {
 			auto focus_index = LazyCollection::focusIndex();
 			for (auto & element : *this) {
 				auto objIndex = objectIndex();
 				auto activeEl = activeElement;
 				if (objIndex != focus_index) activeEl = 0;
-				hasStreamed = _field_StreamingTool_h.streamElement_h(buffer, activeEl, endPos, listStatus);
+				hasStreamed = _field_StreamingTool_h->streamElement(buffer, activeEl, endPos, listStatus);
 			}
 		}
 		return hasStreamed;

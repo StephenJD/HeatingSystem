@@ -49,15 +49,6 @@ namespace LCD_UI {
 	}
 
 	///////////////////////////////////////////
-	// ************   Object_Hndl *************
-	///////////////////////////////////////////
-
-	bool Object_Hndl::streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, ListStatus listStatus) const {
-		return get()->streamElement(buffer, activeElement, endPos, listStatus);
-	}
-
-
-	///////////////////////////////////////////
 	// ************   Collection_Hndl *********
 	///////////////////////////////////////////
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection) : Collection_Hndl(safeCollection, safeCollection.focusIndex()) {}
@@ -200,26 +191,6 @@ namespace LCD_UI {
 		}
 	}
 
-	bool Collection_Hndl::streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, ListStatus listStatus) const {
-		bool hasStreamed = false;
-		if (behaviour().is_viewable()) {
-			auto collectionPtr = get()->collection();
-			if (collectionPtr) {
-				if (behaviour().is_viewAll()) {
-					hasStreamed = get()->streamElement(buffer, activeElement,endPos , listStatus);
-				} else {  // View-one
-					auto active = activeUI();
-					if (active) {
-						hasStreamed = active->streamElement_h(buffer, activeElement,endPos , listStatus);
-					}
-				}
-			} else { // Not a collection
-				hasStreamed = get()->streamElement(buffer, activeElement,endPos ,listStatus );
-			}
-		}
-		return hasStreamed;
-	}
-
 	///////////////////////////////////////////
 	// ************   Coll_Iterator ***********
 	///////////////////////////////////////////
@@ -334,7 +305,7 @@ namespace LCD_UI {
 		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;
 #endif
 		if (behaviour().is_viewOne()) {
-			hasStreamed = activeUI()->streamElement_h(buffer, activeElement,endPos , listStatus);
+			hasStreamed = activeUI()->get()->streamElement(buffer, activeElement,endPos , listStatus);
 		} else {
 			for (auto & element : *this) {
 				auto i = objectIndex();
@@ -343,14 +314,11 @@ namespace LCD_UI {
 #endif
 				if (element.behaviour().is_OnNewLine()) buffer.newLine();
 				if (element.collection() && element.behaviour().is_viewOne()) {
-					//auto & object = *element.activeUI()->get();
-					auto & object = *element.activeUI();
+					auto & object = *element.activeUI()->get();
 #ifdef ZPSIM
-					//cout << F("\t\tView Object: ") << ui_Objects()[(long)&object] << endl << endl;
-					cout << F("\t\tView Object: ") << ui_Objects()[(long)object.get()] << endl << endl;
+					cout << F("\t\tView Object: ") << ui_Objects()[(long)&object] << endl << endl;
 #endif
-					//hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
-					hasStreamed = object.streamElement_h(buffer, activeElement, endPos, listStatus);
+					hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
 				} else {
 					auto thisActiveObj = activeElement;
 					if (focusIndex() != i) {

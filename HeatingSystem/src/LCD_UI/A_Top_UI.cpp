@@ -111,10 +111,10 @@ namespace LCD_UI {
 		logger() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
 		if (_cursorUI->get()) logger() << F("\t_cursorUI() focus: ") << _cursorUI->focusIndex() << L_endl;
 #endif
-		if (selectedPage_h()->get()->collection()->leftRight_Collection() == 0 && _leftRightBackUI->cursorMode(_leftRightBackUI) != HardwareInterfaces::LCD_Display::e_inEdit) {
-			selectedPage_h()->setFocusIndex(_upDownUI->focusIndex());
-			logger() << F("\n\tselectedPage focus now: ") << selectedPage_h()->focusIndex() << L_endl;
-		}
+		//if (selectedPage_h()->get()->collection()->leftRight_Collection() == 0 && _leftRightBackUI->cursorMode(_leftRightBackUI) != HardwareInterfaces::LCD_Display::e_inEdit) {
+		//	selectedPage_h()->setFocusIndex(_upDownUI->focusIndex());
+		//	logger() << F("\n\tselectedPage focus now: ") << selectedPage_h()->focusIndex() << L_endl;
+		//}
 		_cursorUI->setCursorPos();
 	}
 
@@ -262,7 +262,7 @@ namespace LCD_UI {
 
 	UI_DisplayBuffer & A_Top_UI::stream(UI_DisplayBuffer & buffer) const { // Top-level stream
 		buffer.reset();
-		selectedPage_h()->streamElement_h(buffer, _cursorUI);
+		selectedPage_h()->get()->streamElement(buffer, _cursorUI);
 		return buffer;
 	}
 }

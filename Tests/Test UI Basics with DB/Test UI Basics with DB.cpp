@@ -571,8 +571,8 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 	ui_Objects()[(long)&page1_c] = "page1_c";
 
 	cout << "\n **** All Constructed ****\n\n";
-	display1_h.rec_select();
 	GIVEN("Moving Focus on Iterated Names") {
+		display1_h.rec_select();
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 		//                                           012345678901234567890123456789012345678901234567890123456789
@@ -635,6 +635,7 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 		}
 	}
 	GIVEN("View-One names Edit on SELECT") {
+		display1_h.rec_select();
 		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 		display1_h.rec_select();
 		CHECK(test_stream(display1_h.stream(tb)) == "L1 #House|| UpStrs DnStrs DHW    At Home At Work Away    C3");
@@ -686,6 +687,7 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 		}
 	}
 	GIVEN("Iterated names Edit on SELECT") {
+		display1_h.rec_select();
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);

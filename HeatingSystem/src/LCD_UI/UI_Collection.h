@@ -107,9 +107,6 @@ namespace LCD_UI {
 		Object_Hndl(const Object_Hndl & rhs) : _objectHndl(rhs.get()) {}
 		Object_Hndl &			operator=(const UI_Object & rhs) { _objectHndl = &rhs; return *this; }
 
-		// Polymorphic Queries
-		virtual bool			streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const;
-
 		// New Queries
 		bool					empty() const { return _objectHndl == 0; }
 		bool					operator==(Object_Hndl rhs) const { return _objectHndl == rhs._objectHndl; }
@@ -176,8 +173,6 @@ namespace LCD_UI {
 		const Collection_Hndl * backUI() const { return _backUI; }
 		virtual CursorMode cursorMode(const Object_Hndl * activeElement) const;
 		virtual int cursorOffset(const char * data) const;
-		// Polymorphic Modifiers
-		bool streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 
 		virtual Collection_Hndl * on_back() { return backUI(); }   // function is called on the active object to notify it has been de-selected. Used by Edit_Data.
 		virtual Collection_Hndl * on_select() { return backUI(); } // action performed when saving. Used by Edit_Data.

@@ -34,19 +34,20 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * I_Streaming_Tool::edit(Collection_Hndl * from) {
+		auto fieldInterface_h = static_cast<Field_StreamingTool_h*>(from);
 		editItem().setBackUI(from);
 #ifdef ZPSIM
 		cout << F("Edit Interface: ") << ui_Objects()[(long)this] << endl;
-		cout << F("\tedit->back ") << ui_Objects()[(long)dataSource()->backUI()->get()] << endl; // Collection with field to be edited
-		cout << F("\tedit->back->focus ") << dataSource()->backUI()->focusIndex() << endl;
+		cout << F("\tedit->back ") << ui_Objects()[(long)fieldInterface_h->backUI()->get()] << endl; // Collection with field to be edited
+		cout << F("\tedit->back->focus ") << fieldInterface_h->backUI()->focusIndex() << endl;
 #endif	
-		dataSource()->set_focus(editItem().getEditCursorPos()); // copy data to edit
-		dataSource()->setCursorMode(HI_BD::e_inEdit);
+		fieldInterface_h->set_focus(editItem().getEditCursorPos()); // copy data to edit
+		fieldInterface_h->setCursorMode(HI_BD::e_inEdit);
 		
-		dataSource()->activeEditBehaviour().make_viewAll();
-		behaviour() = dataSource()->activeEditBehaviour();
+		fieldInterface_h->activeEditBehaviour().make_viewAll();
+		behaviour() = fieldInterface_h->activeEditBehaviour();
 		if (behaviour().is_next_on_UpDn()) {
-			editItem().currValue().val = dataSource()->getData()->data()->record().id();
+			editItem().currValue().val = fieldInterface_h->getData()->data()->record().id();
 		}
 		return 0;
 	}
@@ -55,13 +56,7 @@ namespace LCD_UI {
 	int I_Streaming_Tool::setInitialCount(Field_StreamingTool_h * parent) {
 		_dataSource = parent;
 		int initialEditFocus;
-		//if (parent->activeEditBehaviour().is_Editable()) {
 		initialEditFocus = editItem().gotFocus(_data_formatter); // gotFocus copies data to currValue
-	//}
-	//else {
-	//	UI_FieldData * fieldData = parent->getData();
-	//	initialEditFocus = editItem().editMemberSelection(_data_formatter, fieldData->data()->recordID());
-	//}
 		setCount(editItem().currValue().valRange.editablePlaces);
 		return initialEditFocus;
 	}
@@ -70,7 +65,7 @@ namespace LCD_UI {
 		return _data_formatter->valRange.editablePlaces;
 	}
 
-	Collection_Hndl * I_Streaming_Tool::item(int elementIndex) {
+	Collection_Hndl * I_Streaming_Tool::item(int) {
 		return &editItem();
 	}
 
@@ -84,13 +79,20 @@ namespace LCD_UI {
 		auto streamVal = _data_formatter->val;
 		if (isActiveElement) {
 			auto fieldInterface_h = dataSource();
-			//if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
-			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
+			if (fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
 			}
 			else const_cast<I_Edit_Hndl&>(editItem()).currValue().val = streamVal;
 		}
 		return streamVal;
+	}
+
+	bool I_Streaming_Tool::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
+		auto cursor_mode = dataSource()->cursorMode(activeElement);
+		if (activeElement && cursor_mode == HI_BD::e_unselected) activeElement = 0;
+		const char * dataStream = streamData(activeElement);	
+		const UI_Object * streamObject = dataSource()->backUI() ? dataSource()->backUI()->get() : this;
+		return streamObject->streamToBuffer(dataStream, buffer, activeElement, endPos, listStatus);
 	}
 
 	// *********************************************
@@ -106,9 +108,7 @@ namespace LCD_UI {
 	/// </summary>
 	Field_StreamingTool_h::Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
 		: Collection_Hndl(streamingTool), _activeEditBehaviour(activeEditBehaviour + V+S+V1), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
-	{
-		//streamingTool.behaviour().make_viewOne(); // And must be view-one until in edit.
-	}
+	{}
 
 	const Behaviour Field_StreamingTool_h::behaviour() const {
 		bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
@@ -120,19 +120,6 @@ namespace LCD_UI {
 
 	void Field_StreamingTool_h::set_OnSelFn_TargetUI(Collection_Hndl * obj) {
 		_onSelect.setTarget(obj);
-	}
-
-	bool Field_StreamingTool_h::streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
-		auto cursor_mode = cursorMode(activeElement);
-		if (activeElement && cursor_mode == HI_BD::e_unselected) activeElement = 0;
-
-		const char * dataStream = f_interface().streamData(activeElement);
-#ifdef ZPSIM
-		//logger() << F("\tstreamElement ") << dataStream << L_tabs
-			//<< F("\n\t\tObjectIndex: ") << f_interface().objectIndex() << L_endl;
-#endif		
-		const UI_Object * streamObject = backUI() ? backUI()->get() : get();
-		return streamObject->streamToBuffer(dataStream, buffer, activeElement, endPos, listStatus);
 	}
 
 	bool Field_StreamingTool_h::move_focus_by(int nth) {
@@ -187,5 +174,4 @@ namespace LCD_UI {
 		setBackUI(0);
 		return retVal;
 	}
-
 }

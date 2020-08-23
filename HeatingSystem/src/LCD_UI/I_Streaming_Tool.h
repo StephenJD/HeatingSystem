@@ -28,8 +28,9 @@ namespace LCD_UI {
 		Collection_Hndl * select(Collection_Hndl * from) override;
 		Collection_Hndl * edit(Collection_Hndl * from) override;
 		Field_StreamingTool_h * dataSource() { return _dataSource; }
-
+		void setDataSource(Field_StreamingTool_h * dataSource) { _dataSource = dataSource; }
 		// New Queries
+		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const override;
 		const Field_StreamingTool_h * dataSource() const { return _dataSource; }
 		int getFieldWidth() const;
 		int setInitialCount(Field_StreamingTool_h * parent);
@@ -65,7 +66,6 @@ namespace LCD_UI {
 		Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect = 0);
 		
 		// Polymorphic Queries
-		bool streamElement_h(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override { 
 			return f_interface().editItem().currValue().valRange._cursorPos;
