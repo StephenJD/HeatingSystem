@@ -253,10 +253,6 @@ namespace LCD_UI {
 
 	I_SafeCollection::I_SafeCollection(int count, Behaviour behaviour) :_count(count), _behaviour(behaviour) {}
 
-	Collection_Hndl * I_SafeCollection::leftRight_Collection() {
-		return activeUI();
-	}
-
 	bool I_SafeCollection::isActionableObjectAt(int index) const {
 		auto object = item(index);
 		if (object) return object->get()->behaviour().is(_filter);
@@ -383,11 +379,6 @@ namespace LCD_UI {
 //#endif
 //	}
 
-	Collection_Hndl * UI_IteratedCollection_Hoist::h_leftRight_Collection() {
-		auto activeHdl = iterated_collection()->activeUI();
-		return activeHdl;
-	}
-
 	bool UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, ListStatus listStatus) const {
 		// Set the activeUI to object-index 0 and Stream all the elements
 		// Then move the activeUI to the next object-index and re-stream all the elements
@@ -411,7 +402,7 @@ namespace LCD_UI {
 
 		// algorithm
 		auto hasStreamed = false;
-		auto & iteratedActiveUI_h = *const_cast<I_SafeCollection*>(iterated_collection())->activeUI();
+		auto & iteratedActiveUI_h = *const_cast<I_SafeCollection*>(iterated_collection())->activeUI(); // This must be the parent field.
 		
 		auto numberOfIterations = 1;
 		auto itIndex = iteratedActiveUI_h.get()->isCollection() ? iteratedActiveUI_h->focusIndex() : 0;

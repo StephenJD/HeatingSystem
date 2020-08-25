@@ -33,7 +33,7 @@ namespace LCD_UI {
 		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override;
 		I_Record_Interface * data() const { return _data; }
-		int nextIndex(int id) const override;
+		int nextIndex(int index) const override;
 		const Coll_Iterator end() const { return Coll_Iterator( this, endIndex() ); }
 
 		// Modifiers

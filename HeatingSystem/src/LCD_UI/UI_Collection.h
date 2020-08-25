@@ -237,24 +237,24 @@ namespace LCD_UI {
 		// Polymorphic Queries
 		bool isCollection() const override { return true; }
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
-		virtual Collection_Hndl * leftRight_Collection();
 
 		// New Polymorphic Queries
-		virtual int objectIndex() const { return _index; }
 		virtual int nextIndex(int index) const { return ++index; }
-		virtual int	focusIndex() const { return _focusIndex; }
 		virtual bool isActionableObjectAt(int index) const;
+
+		// New Non-Polymorphic Queries
 		/// <summary>
 		/// Returns first valid index starting from index and going forwards.
 		/// </summary>
-		virtual int nextActionableIndex(int index) const; // returns _count if none found
-
+		int nextActionableIndex(int index) const; // returns _count if none found
+		
 		/// <summary>
 		/// Returns first valid index starting from index and going backwards.
-		/// </summary>
-		virtual int prevActionableIndex(int index) const; // returns -1 if none found
-
-		// New Non-Polymorphic Queries
+		/// </summary>		
+		int prevActionableIndex(int index) const; // returns -1 if none found
+		
+		int objectIndex() const { return _index; }
+		int	focusIndex() const { return _focusIndex; }
 		int endIndex() const { return _count; }
 		const Collection_Hndl * activeUI() const { return static_cast<const Collection_Hndl*>(item(validIndex(focusIndex()))); }
 
@@ -436,12 +436,10 @@ namespace LCD_UI {
 		Collection_Hndl * h_item(int newIndex);
 		virtual const I_SafeCollection * iterated_collection() const = 0;
 		virtual I_SafeCollection * iterated_collection() = 0;
-		Collection_Hndl * h_leftRight_Collection();
 		const int16_t _endPos; // 0-based character endIndex on the display for the end of this list; i.e. no of visible chars including end markers: < ... >.
 		mutable int16_t _beginShow = 0; // streamIndex of first visible element
 		mutable int16_t _endShow = 0; // streamIndex after the last visible element
 		mutable int16_t _beginIndex = 0; // required streamIndex of first element in collection
-		int16_t _itFocus = 0;
 	};
 
 
@@ -479,9 +477,6 @@ namespace LCD_UI {
 
 		// Polymorphic Modifiers
 		I_SafeCollection * iterated_collection() override { return this; }
-		void setFocusIndex(int focus) override { _itFocus = focus; }
-		Collection_Hndl * leftRight_Collection() { return h_leftRight_Collection(); }
-
 		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
 	};
 	
@@ -512,9 +507,6 @@ namespace LCD_UI {
 		}
 
 		// Polymorphic Modifiers
-		void setFocusIndex(int focus) override { _itFocus = focus; }
-		Collection_Hndl * leftRight_Collection() { return h_leftRight_Collection(); }
-
 		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
 	};
 
