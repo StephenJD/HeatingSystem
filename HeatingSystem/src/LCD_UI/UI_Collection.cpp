@@ -392,7 +392,7 @@ namespace LCD_UI {
 		// Set the activeUI to object-index 0 and Stream all the elements
 		// Then move the activeUI to the next object-index and re-stream all the elements
 		// Keep going till all members of the activeUI have been streamed
-		///		Coll-Focus (moved by LR if not set to b_LR_Captured)
+		///		Coll-Focus (moved by LR if set to LR_0)
 		///			v
 		///	{L1, Active[0], Slave[0]}
 		///	{L1, Active[1], Slave[1]} <- Active-focus (moved by LR if set to b_LR_Captured)
@@ -427,6 +427,7 @@ namespace LCD_UI {
 		auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
 		if (mustStartNewLine) removeNewLineSymbol(bufferStart);
 		startThisField(bufferStart, mustStartNewLine);
+		iterated_collection()->filter(filter_viewable());
 		do {
 			auto streamActive = activeElement;
 			if (itIndex != activeFocus){

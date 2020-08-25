@@ -41,6 +41,11 @@ namespace LCD_UI {
 		cout << F("\tedit->back ") << ui_Objects()[(long)fieldInterface_h->backUI()->get()] << endl; // Collection with field to be edited
 		cout << F("\tedit->back->focus ") << fieldInterface_h->backUI()->focusIndex() << endl;
 #endif	
+		auto sourceCollection = fieldInterface_h->backUI()->get()->collection();
+		if (sourceCollection->objectIndex() != sourceCollection->focusIndex()) {
+			fieldInterface_h->backUI()->move_focus_by(0); // get data loaded for V1 lterated (remote displays)
+			editItem().gotFocus(getDataFormatter()); // copy data to dataFormatter for V1 lterated (remote displays)
+		}
 		fieldInterface_h->set_focus(editItem().getEditCursorPos()); // copy data to edit
 		fieldInterface_h->setCursorMode(HI_BD::e_inEdit);
 		

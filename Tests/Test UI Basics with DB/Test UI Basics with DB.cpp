@@ -32,26 +32,26 @@
 #include <iostream>
 #include <iomanip>
 
-//#define DATABASE
-//#define UI_DB_DISPLAY_VIEW_ONE
-//#define UI_DB_DISPLAY_VIEW_ALL
-//#define UI_DB_DISPLAY_EDITS
-//#define UI_DB_SHORT_LISTS
-//#define EDIT_NAMES_NUMS
-//#define BACK_TRACKING
-//////#define EDIT_INTS
-//
-//////#define EDIT_FORMATTED_INTS
-//
-//#define EDIT_DECIMAL
-//#define EDIT_DATES
-////#define EDIT_CURRENT_DATETIME
-//#define EDIT_RUN
-//
-//#define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define CONTRAST
-//#define TIME_TEMP_EDIT
+#define DATABASE
+#define UI_DB_DISPLAY_VIEW_ONE
+#define UI_DB_DISPLAY_VIEW_ALL
+#define UI_DB_DISPLAY_EDITS
+#define UI_DB_SHORT_LISTS
+#define EDIT_NAMES_NUMS
+#define BACK_TRACKING
+////#define EDIT_INTS
+
+////#define EDIT_FORMATTED_INTS
+
+#define EDIT_DECIMAL
+#define EDIT_DATES
+//#define EDIT_CURRENT_DATETIME
+#define EDIT_RUN
+
+#define VIEW_ONE_NESTED_CALENDAR_PAGE
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define CONTRAST
+#define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
 #define INFO_CONSOLE_PAGES
 

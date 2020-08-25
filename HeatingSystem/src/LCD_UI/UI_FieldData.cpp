@@ -89,6 +89,7 @@ namespace LCD_UI {
 	}
 
 	bool UI_FieldData::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const {
+		filter(filter_viewable());
 		auto hasStreamed = false;
 		if (behaviour().is_viewOne()) {
 			hasStreamed = _field_StreamingTool_h->streamElement(buffer, activeElement, endPos, listStatus);

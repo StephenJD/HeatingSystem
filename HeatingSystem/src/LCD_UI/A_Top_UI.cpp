@@ -186,8 +186,12 @@ namespace LCD_UI {
 				set_UpDownUI_from(selectedPage_h());
 				set_CursorUI_from(selectedPage_h());
 			} else if (_upDownUI->behaviour().is_edit_on_UD()) {
+				auto isSave = _upDownUI->behaviour().is_save_on_UD();
 				rec_edit();
 				haveMoved = _upDownUI->move_focus_by(-move); // reverse up/down when in edit.
+				if (isSave) {
+					rec_select();
+				}
 			} 
 		}
 		

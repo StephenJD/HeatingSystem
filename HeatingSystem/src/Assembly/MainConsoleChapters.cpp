@@ -17,7 +17,7 @@ namespace Assembly {
 		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst, Behaviour{V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+Vn+UD_E+R0} }
+		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+Vn+UD_E+LR+R0} }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + Vn + LR + UD_0 + R0} }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev}
 		
@@ -75,7 +75,7 @@ namespace Assembly {
 		// Info Pages
 		, _iterated_tempSensorUI{ 80, _tempSensorUI_c}
 		
-		, _iterated_towelRails_info_c{80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c) }
+		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+Vn+R0} }
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _iterated_towelRails_info_c) }
 		
 		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}

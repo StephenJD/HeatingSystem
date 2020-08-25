@@ -28,6 +28,7 @@ namespace Assembly {
 		ui_Objects()[(long)&_remote_chapter_c] = "_remote_chapter_c";
 #endif
 		_remote_chapter_h.selectPage();
+		_remote_chapter_h.rec_select();
 	}
 
 	LCD_UI::A_Top_UI & RemoteConsoleChapters::operator()(int) {
