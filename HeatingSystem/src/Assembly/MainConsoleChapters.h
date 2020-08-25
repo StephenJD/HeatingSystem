@@ -67,7 +67,7 @@ namespace Assembly {
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<7> _page_currTime_c;
 		LCD_UI::UI_IteratedCollection<1> _iterated_zoneReqTemp_c;
-		LCD_UI::Collection<5> _calendar_subpage_c;
+		LCD_UI::Collection<4> _calendar_subpage_c;
 		LCD_UI::UI_IteratedCollection<1> _iterated_prog_name_c;
 		LCD_UI::Collection<2> _prog_subpage_c;
 
@@ -78,6 +78,7 @@ namespace Assembly {
 		LCD_UI::Collection<2> _page_dwellingMembers_c;
 
 		LCD_UI::UI_IteratedCollection<1> _iterated_timeTempUI;
+		LCD_UI::Collection<4>_tt_SubPage_c;
 		LCD_UI::Collection<8> _page_profile_c;
 		// Info pages
 		LCD_UI::UI_IteratedCollection<1> _iterated_tempSensorUI;

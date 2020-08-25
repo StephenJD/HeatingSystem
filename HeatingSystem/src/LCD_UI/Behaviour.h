@@ -19,7 +19,7 @@ namespace LCD_UI {
 	class Behaviour {
 	public:
 		// Flags must have 1 for filterable attributes (i.e. Visible & Selectible). Otherwise use 0 for default values.
-		enum BehaviourFlags : uint8_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_LR_ActiveMember = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128 };
+		enum BehaviourFlags : uint8_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_LR_Captured = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128 };
 
 		Behaviour() = default;
 		Behaviour(BehaviourFlags b) : _behaviour(b) {}
@@ -40,8 +40,7 @@ namespace LCD_UI {
 		bool is_viewOneUpDn_Next() const { return is_viewOne() && is_next_on_UpDn(); }
 		bool is_recycle() const			{ return !(_behaviour & b_NonRecycle); }
 		bool is_OnNewLine() const		{ return _behaviour & b_NewLine; }
-		bool is_NextActive_On_LR() const{ return _behaviour & b_LR_ActiveMember; }
-		bool is_MoveFocus_On_LR() const	{ return !is_NextActive_On_LR(); }
+		bool is_CaptureLR() const{ return _behaviour & b_LR_Captured; }
 
 		// Modifiers
 		Behaviour & operator = (int b) { _behaviour = b; return *this; }
@@ -53,6 +52,7 @@ namespace LCD_UI {
 		Behaviour make_viewOne() { _behaviour |= b_ViewOne; return *this; }
 		Behaviour make_viewAll() { _behaviour &= ~b_ViewOne; return *this; }
 		Behaviour make_noUD() { _behaviour &= ~(b_UD_NextActive | b_UD_Edit); return *this; }
+		Behaviour make_noRecycle() { _behaviour |= b_NonRecycle; return *this; }
 
 	private:
 		Behaviour make_sameLine() { _behaviour &= ~b_NewLine; return *this; }
@@ -65,7 +65,7 @@ namespace LCD_UI {
 		, S0 = 0, S = Behaviour::b_Selectible
 		, Vn = 0, V1 = Behaviour::b_ViewOne
 		, R = 0, R0 = Behaviour::b_NonRecycle
-		, LR_C = 0, LR_A = Behaviour::b_LR_ActiveMember
+		, LR_0 = 0, LR = Behaviour::b_LR_Captured
 		, UD_0 = 0, UD_A = Behaviour::b_UD_NextActive, UD_E = Behaviour::b_UD_Edit, UD_S = Behaviour::b_UD_SaveEdit
 	};
 	

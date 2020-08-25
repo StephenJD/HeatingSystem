@@ -1,6 +1,7 @@
 #pragma once
 #include "Behaviour.h"
 #include "UI_DisplayBuffer.h"
+#include <cassert>
 
 #ifdef ZPSIM 
 	#include <iostream> 
@@ -160,11 +161,11 @@ namespace LCD_UI {
 			}
 		
 		// Polymorphic Queries
-		bool atEnd(int pos) const;
 		virtual const Behaviour behaviour() const { return get()->behaviour(); }
-		const Collection_Hndl * activeUI() const { return const_cast<Collection_Hndl *>(this)->activeUI(); }
 
 		// New Queries
+		bool atEnd(int pos) const;
+		const Collection_Hndl * activeUI() const { return const_cast<Collection_Hndl *>(this)->activeUI(); }
 		const I_SafeCollection & operator*() const { return const_cast<Collection_Hndl *>(this)->operator*(); }
 		const I_SafeCollection * operator->() const { return const_cast<Collection_Hndl *>(this)->operator->(); }
 		UI_Object * getItem(int index) const { return const_cast<Collection_Hndl*>(this)->getItem(index); } // Must return polymorphicly		
@@ -174,14 +175,15 @@ namespace LCD_UI {
 		virtual CursorMode cursorMode(const Object_Hndl * activeElement) const;
 		virtual int cursorOffset(const char * data) const;
 
+		// Polymorphic Modifiers
 		virtual Collection_Hndl * on_back() { return backUI(); }   // function is called on the active object to notify it has been de-selected. Used by Edit_Data.
 		virtual Collection_Hndl * on_select() { return backUI(); } // action performed when saving. Used by Edit_Data.
-		Collection_Hndl * activeUI(); //  returns validated focus element - index is made in-range
 		virtual bool move_focus_by(int moveBy); // true if moved
 		virtual int	set_focus(int index); // Range-checked. Returns new focus.
 		virtual void setCursorPos() {}
 
 		// New Modifiers
+		Collection_Hndl * activeUI(); //  returns validated focus element - index is made in-range
 		UI_Object * getItem(int index); // Must return polymorphicly
 		I_SafeCollection & operator*() { return *get()->collection(); }
 		I_SafeCollection * operator->() { return get()->collection(); }
@@ -237,43 +239,11 @@ namespace LCD_UI {
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		virtual Collection_Hndl * leftRight_Collection();
 
-		// Polymorphic short-list query functions
-		virtual int firstVisibleItem() const { return 0; }
-		virtual int endVisibleItem() const { return 0; }
-		virtual int fieldEndPos() const { return 0; }
-		virtual UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const { return UI_DisplayBuffer::e_showingAll; }
-		virtual void endVisibleItem(bool thisWasShown, int streamIndex) const {}
+		// New Polymorphic Queries
 		virtual int objectIndex() const { return _index; }
-
-		// New Queries
-		virtual int	focusIndex() const { return _focusIndex; }
-		Collection_Hndl * activeUI() {
-			return static_cast<Collection_Hndl*>(item(validIndex(focusIndex())));
-		}
-
-		const Collection_Hndl * activeUI() const {
-			return static_cast<const Collection_Hndl*>(item(validIndex(focusIndex())));
-		}
-
-		bool atEnd(int pos) const {
-			return pos >= endIndex();
-		}
 		virtual int nextIndex(int index) const { return ++index; }
-		int validIndex(int index) const { return index < 0 ? 0 : (atEnd(index) ? endIndex() - 1 : index); }
-		bool indexIsInRange(int index) const { return index >= 0 && !atEnd(index); }
-		const Object_Hndl * item(int index) const { return const_cast<I_SafeCollection*>(this)->item(index); }
-		const Object_Hndl & operator[](int index) const { return const_cast<I_SafeCollection*>(this)->operator[](index); }
-		virtual int endIndex() const { return _count; }
-		Coll_Iterator begin() const { return const_cast<I_SafeCollection*>(this)->begin(); }
-		Coll_Iterator end() const { return const_cast<I_SafeCollection*>(this)->end(); }
-
-		const I_SafeCollection & filter(Behaviour behaviour) const { return const_cast<I_SafeCollection*>(this)->filter(behaviour); }
-		virtual bool isActionableObjectAt(int index) const {
-			auto object = item(index);
-			if (object) return object->get()->behaviour().is(_filter);
-			else return false;
-		}
-
+		virtual int	focusIndex() const { return _focusIndex; }
+		virtual bool isActionableObjectAt(int index) const;
 		/// <summary>
 		/// Returns first valid index starting from index and going forwards.
 		/// </summary>
@@ -284,23 +254,41 @@ namespace LCD_UI {
 		/// </summary>
 		virtual int prevActionableIndex(int index) const; // returns -1 if none found
 
+		// New Non-Polymorphic Queries
+		int endIndex() const { return _count; }
+		const Collection_Hndl * activeUI() const { return static_cast<const Collection_Hndl*>(item(validIndex(focusIndex()))); }
+
+		bool atEnd(int pos) const {	return pos >= endIndex();}
+		int validIndex(int index) const { return index < 0 ? 0 : (atEnd(index) ? endIndex() - 1 : index); }
+		bool indexIsInRange(int index) const { return index >= 0 && !atEnd(index); }
+		const Object_Hndl * item(int index) const { return const_cast<I_SafeCollection*>(this)->item(index); }
+		const Object_Hndl & operator[](int index) const { return const_cast<I_SafeCollection*>(this)->operator[](index); }
+		Coll_Iterator begin() const { return const_cast<I_SafeCollection*>(this)->begin(); }
+		Coll_Iterator end() const { return const_cast<I_SafeCollection*>(this)->end(); }
+
+		const I_SafeCollection & filter(Behaviour behaviour) const { return const_cast<I_SafeCollection*>(this)->filter(behaviour); }
+
 		template <typename RT>
 		explicit operator const RT & () const { return static_cast<const RT &>(*static_cast<const UI_Object*>(this)); }
 
-		// Modifiers
+		// Specialised Polymorphic Modifiers
 		I_SafeCollection * collection() override { return this; }
 		const I_SafeCollection * collection() const override { return this; }
+		using UI_Object::behaviour;
+		Behaviour & behaviour() override { return _behaviour; }
+		
+		// New Polymorphic Modifiers
 		virtual Object_Hndl * item(int index) = 0; // returns object pointer at index [-1 to end()], if it exists.
 		virtual void setObjectIndex(int index) const { _index = index; }
 		virtual void setFocusIndex(int focus) { _focusIndex = focus; }
-		Behaviour & behaviour() override { return _behaviour; }
+		virtual Collection_Hndl * move_focus_to(int index);
 		
+		// Non-Polymorphic Modifiers
+		Collection_Hndl * activeUI() { return static_cast<Collection_Hndl*>(item(validIndex(focusIndex()))); }		
 		Coll_Iterator begin();
 		Coll_Iterator end() { return { this, endIndex() }; }
 		void setCount(int count) { _count = count; }
 		I_SafeCollection & filter(Behaviour behaviour) { _filter = behaviour; return *this; }
-		using UI_Object::behaviour;
-		virtual Collection_Hndl * move_focus_to(int index);
 		Collection_Hndl * move_to_object(int index); // Move to object without changing focus.
 
 		template <typename RT>
@@ -366,12 +354,30 @@ namespace LCD_UI {
 //#endif
 			_filter = filter_selectable();
 			setFocusIndex(nextActionableIndex(0));
-			_filter = filter_viewable();
+			_filter = filter_viewable();	
 		}		
 		
 		Collection(const Collection<noOfObjects> & collection, Behaviour behaviour) 
 			: I_SafeCollection(noOfObjects, behaviour)
-			, _array(collection._array) {}
+			, _array(collection._array) 
+		{
+			_filter = filter_selectable();
+			setFocusIndex(nextActionableIndex(0));
+			_filter = filter_viewable();	
+		}
+
+		Collection(const Collection<noOfObjects> & collection) 
+			: I_SafeCollection(collection)
+			, _array(collection._array) 
+		{
+			if (noOfObjects != collection.endIndex()) {
+				logger() << F("\n!!! Collection size missmatch. Capacity is ") << noOfObjects << F(" Size is ") << collection.endIndex() << L_endl;
+				assert(false);
+			}
+			_filter = filter_selectable();
+			setFocusIndex(nextActionableIndex(0));
+			_filter = filter_viewable();	
+		}
 
 		Collection_Hndl * item(int index) override {
 			setObjectIndex(index);
@@ -445,24 +451,24 @@ namespace LCD_UI {
 	/// If the active member is EditOnUpDn/SaveAfterEdit, Up/Down edits and LR moves to the next iteration, otherwise Up/Down moves to the next iteration and LR moves within the collection.
 	/// When shared across different displays, it is used as a viewOne-iteration.
 	///
-	///		Coll-Focus (moved by LR if not set to b_LR_ActiveMember)
+	///		Coll-Focus (moved by LR if not set to b_LR_Captured)
 	///			|
 	///	{L1, Active[0], Slave[0]}
-	///	{L1, Active[1], Slave[1]} -- Active-focus (moved by LR if set to b_LR_ActiveMember)
+	///	{L1, Active[1], Slave[1]} -- Active-focus (moved by LR if set to b_LR_Captured)
 	///	{L1, Active[2], Slave[2]}
 	/// </summary>
 	template<int noOfObjects>
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> & collection, Behaviour behaviour = { V + S + Vn + LR_A + UD_0 + R0 })
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> & collection, Behaviour behaviour = { V + S + Vn + LR + UD_0 + R0 })
 			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
-			if (behaviour.is_NextActive_On_LR()) {
-				activeUI()->get()->behaviour() = behaviour;
+			_filter = filter_viewable();
+			for (auto & object : collection) {
+				object.behaviour().make_viewOne();
 			}
-			activeUI()->get()->behaviour().make_viewOne();
 		}
 
 		// Polymorphic Queries
@@ -470,12 +476,6 @@ namespace LCD_UI {
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override {
 			return h_streamElement(buffer, activeElement, endPos, listStatus); 
 		}
-		int	focusIndex() const override {return _itFocus;}
-		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
-		int firstVisibleItem() const override { return h_firstVisibleItem(); }
-		int fieldEndPos() const override { return _endPos; }
-		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override {return h_listStatus(streamIndex);}
-		void endVisibleItem(bool thisWasShown, int streamIndex) const override { h_endVisibleItem(thisWasShown, streamIndex); }
 
 		// Polymorphic Modifiers
 		I_SafeCollection * iterated_collection() override { return this; }
@@ -490,17 +490,17 @@ namespace LCD_UI {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
 		UI_IteratedCollection(int endPos, Collection<1> & collection)
-			: Collection<1>(collection, Behaviour(collection[0].get()->behaviour()+LR_A+R0).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			: Collection<1>(collection, Behaviour(collection[0].get()->behaviour()+LR+R0).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
-			collection[0].get()->behaviour() = (collection[0].get()->behaviour() + V1+LR_A+R0) & ~UD_A;
+			item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1+LR+R0) & ~UD_A;
 		}
 
 		UI_IteratedCollection(int endPos, I_SafeCollection & collection)
 			: Collection<1>{ {Collection_Hndl{collection}}, (collection.behaviour()).make_viewAll() } // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
-			activeUI()->get()->behaviour().make_viewOne();
+			item(0)->get()->behaviour().make_viewOne();
 		}
 
 		// Polymorphic Queries
@@ -510,12 +510,6 @@ namespace LCD_UI {
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override {
 			return h_streamElement(buffer, activeElement, endPos, listStatus);
 		}
-		int	focusIndex() const override {return _itFocus;}
-		int endVisibleItem() const override { return _endShow; } // streamIndex after the last visible 
-		int firstVisibleItem() const override { return h_firstVisibleItem(); }
-		int fieldEndPos() const override { return _endPos; }
-		UI_DisplayBuffer::ListStatus listStatus(int streamIndex) const override {return h_listStatus(streamIndex);}
-		void endVisibleItem(bool thisWasShown, int streamIndex) const override { h_endVisibleItem(thisWasShown, streamIndex); }
 
 		// Polymorphic Modifiers
 		void setFocusIndex(int focus) override { _itFocus = focus; }

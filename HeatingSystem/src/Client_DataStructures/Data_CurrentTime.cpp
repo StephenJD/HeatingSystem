@@ -149,7 +149,7 @@ namespace client_data_structures {
 	//***************************************************
 
 	Dataset_WithoutQuery::Dataset_WithoutQuery()
-		: Record_Interface{ nullQuery,0,0 }
+		: Record_Interface{ nullQuery }
 		, _currTime{ clock_().time(), ValRange(e_fixedWidth | e_editAll,0,uint16_t(-1),0,e_time) }
 		, _currDate{ clock_().date(), ValRange(e_fixedWidth | e_editAll, 0, uint16_t(-1),0,e_date)}
 		, _dst{ clock_().autoDSThours(),ValRange(e_edOneShort,0,2)}

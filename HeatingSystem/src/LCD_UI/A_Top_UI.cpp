@@ -60,15 +60,15 @@ namespace LCD_UI {
 		// LR passes to the innermost ViewAll-collection	
 		auto tryLeftRight = topUI;
 		auto gotLeftRight = _leftRightBackUI;
-		while (tryLeftRight->get()->isCollection() || tryLeftRight->behaviour().is_NextActive_On_LR()) {
+		while (tryLeftRight->get()->isCollection() || tryLeftRight->behaviour().is_CaptureLR()) {
 			if (!tryLeftRight->get()->isCollection()) {
 				gotLeftRight = tryLeftRight;
 				break;
 			}
 			auto try_behaviour = tryLeftRight->behaviour();
 			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str() 
-				<< (try_behaviour.is_NextActive_On_LR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;
-			if (try_behaviour.is_NextActive_On_LR()) {
+				<< (try_behaviour.is_CaptureLR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;
+			if (try_behaviour.is_CaptureLR()) {
 				tryLeftRight = tryLeftRight->activeUI();
 				if(tryLeftRight->get()->isCollection()) gotLeftRight = tryLeftRight;
 			} else if (try_behaviour.is_viewAll()) {
@@ -148,7 +148,7 @@ namespace LCD_UI {
 			do {
 				do {
 					_leftRightBackUI = _leftRightBackUI->backUI();
-				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_NextActive_On_LR()));
+				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_CaptureLR()));
 
 				hasMoved = _leftRightBackUI->move_focus_by(move);
 			} while (!hasMoved && _leftRightBackUI != this);
@@ -204,16 +204,21 @@ namespace LCD_UI {
 		top->get()->focusHasChanged(top == _upDownUI);
 		auto topCollection = top->get()->collection();
 		if (topCollection == 0) return;
-		for (int i = topCollection->nextActionableIndex(0); !top->atEnd(i); i = topCollection->nextActionableIndex(++i)) { // need to check all elements on the page
+		for (int i = topCollection->nextActionableIndex(0); !top->atEnd(i); /*i = topCollection->nextActionableIndex(++i)*/) { // need to check all elements on the page
 			auto element_h = static_cast<Collection_Hndl *>(topCollection->item(i));
 			if (element_h->get()->isCollection()) {
 #ifdef ZPSIM
-				//logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
+				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
 #endif
 				element_h->focusHasChanged(element_h == _upDownUI);
 				auto inner = element_h->activeUI();
 				if (inner && inner->get()->isCollection()) notifyAllOfFocusChange(inner);
 			}
+			auto next_i = topCollection->nextActionableIndex(++i);
+			if (next_i >= i)
+				i = next_i; 
+			else 
+				break;
 		}
 	}
 

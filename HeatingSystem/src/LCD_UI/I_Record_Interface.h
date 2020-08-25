@@ -72,7 +72,7 @@ namespace LCD_UI {
 	class Record_Interface : public I_Record_Interface {
 	public:
 		typedef Record RecordType;
-		Record_Interface(Query & query, VolatileData * runtimeData, I_Record_Interface * parent) : I_Record_Interface(query,runtimeData,parent) {}
+		Record_Interface(Query & query, VolatileData * runtimeData = 0, I_Record_Interface * parent = 0) : I_Record_Interface(query,runtimeData,parent) {}
 		const Answer_R<Record> & record() const override { return _record; }
 		Answer_R<Record> & record() override { return _record; }
 	private:

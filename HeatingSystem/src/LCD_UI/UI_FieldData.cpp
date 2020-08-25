@@ -12,9 +12,9 @@ using namespace std;
 namespace LCD_UI {
 	using namespace RelationalDatabase;
 
-	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent, int selectFldID
+	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID
 		, Behaviour collectionBehaviour, Behaviour activeEditBehaviour
-		, OnSelectFnctr onSelect)
+		, UI_FieldData * parent, int selectFldID, OnSelectFnctr onSelect)
 		: LazyCollection(dataset->count(), collectionBehaviour)
 		, _data(dataset)
 		, _parentFieldData(parent)

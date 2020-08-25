@@ -257,6 +257,12 @@ namespace LCD_UI {
 		return activeUI();
 	}
 
+	bool I_SafeCollection::isActionableObjectAt(int index) const {
+		auto object = item(index);
+		if (object) return object->get()->behaviour().is(_filter);
+		else return false;
+	}
+
 	int I_SafeCollection::nextActionableIndex(int index) const { // index must be in valid range including endIndex()
 		// returns endIndex() if none found
 		if (objectIndex() > index) {// Current position must be <= requested index to get correct answer
@@ -386,10 +392,10 @@ namespace LCD_UI {
 		// Set the activeUI to object-index 0 and Stream all the elements
 		// Then move the activeUI to the next object-index and re-stream all the elements
 		// Keep going till all members of the activeUI have been streamed
-		///		Coll-Focus (moved by LR if not set to b_LR_ActiveMember)
+		///		Coll-Focus (moved by LR if not set to b_LR_Captured)
 		///			v
 		///	{L1, Active[0], Slave[0]}
-		///	{L1, Active[1], Slave[1]} <- Active-focus (moved by LR if set to b_LR_ActiveMember)
+		///	{L1, Active[1], Slave[1]} <- Active-focus (moved by LR if set to b_LR_Captured)
 		///	{L1, Active[2], Slave[2]}
 
 		auto coll_focus = activeElement ? iterated_collection()->I_SafeCollection::focusIndex() : -1;
@@ -408,14 +414,14 @@ namespace LCD_UI {
 		auto & iteratedActiveUI_h = *const_cast<I_SafeCollection*>(iterated_collection())->activeUI();
 		
 		auto numberOfIterations = 1;
-		auto itIndex = 0;
-		auto activeFocus = 0;
-		if (iteratedActiveUI_h.get()->isCollection()) {
+		auto itIndex = iteratedActiveUI_h.get()->isCollection() ? iteratedActiveUI_h->focusIndex() : 0;
+		auto activeFocus = itIndex;
+		if (iterated_collection()->behaviour().is_viewAll() && iteratedActiveUI_h.get()->isCollection()) {
 			numberOfIterations = iteratedActiveUI_h->endIndex();
 			itIndex = iteratedActiveUI_h->nextActionableIndex(0); // required!
-			_beginIndex = itIndex;
 			activeFocus = iteratedActiveUI_h->validIndex(iteratedActiveUI_h->focusIndex());
 		}
+		_beginIndex = itIndex;
 
 		auto bufferStart = endOfBufferSoFar();
 		auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
@@ -427,12 +433,12 @@ namespace LCD_UI {
 				streamActive = 0;
 			}			
 			for (auto & object : *iterated_collection()) {
-				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << " Active: " << (activeElement ? ui_Objects()[(long)activeElement->get()] : "") << endl;
+				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << endl;
 				auto collHasfocus = collectionHasfocus();
 				auto firstVisIndex = h_firstVisibleItem();
 				if (itIndex < firstVisIndex)
 					break;
-
+				if(object.isCollection()) object.item(itIndex);
 				hasStreamed = object.streamElement(buffer, streamActive, _endPos, h_listStatus(itIndex));
 				h_endVisibleItem(hasStreamed, itIndex);
 

@@ -24,9 +24,9 @@ namespace LCD_UI {
 	/// </summary>
 	class UI_FieldData : public LazyCollection {
 	public:
-		UI_FieldData(I_Record_Interface * dataset, int fieldID, UI_FieldData * parent = 0, int selectFldID = 0
-			, Behaviour collectionBehaviour = { V + S + V1 + R0 + UD_A }, Behaviour activeEditBehaviour = {UD_E+R0}
-			, OnSelectFnctr onSelect = 0);
+		UI_FieldData(I_Record_Interface * dataset, int fieldID
+			, Behaviour collectionBehaviour = { V + S + V1 + R + UD_A }, Behaviour activeEditBehaviour = {UD_E+R0}
+			, UI_FieldData * parent = 0, int selectFldID = 0, OnSelectFnctr onSelect = 0);
 
 		// Queries
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
@@ -38,6 +38,7 @@ namespace LCD_UI {
 
 		// Modifiers
 		Collection_Hndl * item(int elementIndex) override;
+
 		void focusHasChanged(bool hasFocus) override;
 		void setFocusIndex(int focus) override;
 		void setObjectIndex(int index) const override {;} // done by item()
