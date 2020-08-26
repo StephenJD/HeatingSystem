@@ -67,17 +67,21 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * UI_FieldData::item(int elementIndex) { // return 0 if record invalid
-		if (_parentFieldData) { // where a parent points to a single child, this allows the child object to be chosen
+		//if (_parentFieldData) { // where a parent points to a single child, this allows the child object to be chosen
 			if (_field_StreamingTool_h.cursorMode(&_field_StreamingTool_h) == HI_BD::e_inEdit) {
-				elementIndex = _data->move_to(_field_StreamingTool_h.f_interface().editItem().currValue().val);
+				if (_field_StreamingTool_h.activeEditBehaviour().is_next_on_UpDn()) {
+					elementIndex = _data->move_to(_field_StreamingTool_h.f_interface().editItem().currValue().val);
+				} else {
+					return &_field_StreamingTool_h;
+				}
 			}
-			else {
-				// get selectionField of parentRecord pointing to its child object
-				// used by SpellProgram UI which depends upon the Spell RecordInterface.
-				auto selectedID = _parentFieldData->data()->recordField(_selectFieldID);
-				elementIndex = _data->move_to(selectedID);
-			}
-		}
+		//	else {
+		//		// get selectionField of parentRecord pointing to its child object
+		//		// used by SpellProgram UI which depends upon the Spell RecordInterface.
+		//		auto selectedID = _parentFieldData->data()->recordField(_selectFieldID);
+		//		elementIndex = _data->move_to(selectedID);
+		//	}
+		//}
 		
 		auto wrapper = _data->getFieldAt(fieldID(), elementIndex);
 		LazyCollection::setObjectIndex(_data->recordID());

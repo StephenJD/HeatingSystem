@@ -316,10 +316,12 @@ namespace LCD_UI {
 #endif
 				if (element.behaviour().is_OnNewLine()) buffer.newLine();
 				if (element.collection() && element.behaviour().is_viewOne()) {
-					auto & object = *element.activeUI()->get();
+					auto thisActiveObj = element.activeUI();
+					auto & object = *thisActiveObj->get();
 #ifdef ZPSIM
-					cout << F("\t\tView Object: ") << ui_Objects()[(long)&object] << endl << endl;
+					cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
 #endif
+					//if (activeElement == 0) thisActiveObj = 0;
 					hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
 				} else {
 					auto thisActiveObj = activeElement;

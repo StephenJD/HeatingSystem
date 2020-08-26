@@ -60,21 +60,26 @@ namespace LCD_UI {
 		// LR passes to the innermost ViewAll-collection	
 		auto tryLeftRight = topUI;
 		auto gotLeftRight = _leftRightBackUI;
-		while (tryLeftRight->get()->isCollection() || tryLeftRight->behaviour().is_CaptureLR()) {
-			if (!tryLeftRight->get()->isCollection()) {
+		bool tryIsCollection;
+		while (tryIsCollection = tryLeftRight->get()->isCollection() || tryLeftRight->behaviour().is_CaptureLR()) {
+			if (!tryIsCollection) {
 				gotLeftRight = tryLeftRight;
 				break;
 			}
 			auto try_behaviour = tryLeftRight->behaviour();
-			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str() 
-				<< (try_behaviour.is_CaptureLR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive")) << L_endl;
+			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
+				<< (try_behaviour.is_CaptureLR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive"));
+			auto tryActive_h = tryLeftRight->activeUI();
+			logger() << " ActiveObj: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 			if (try_behaviour.is_CaptureLR()) {
-				tryLeftRight = tryLeftRight->activeUI();
-				if(tryLeftRight->get()->isCollection()) gotLeftRight = tryLeftRight;
+				tryLeftRight = tryActive_h;
+				if(tryLeftRight->get()->isCollection()) 
+					gotLeftRight = tryLeftRight;
 			} else if (try_behaviour.is_viewAll()) {
 				gotLeftRight = tryLeftRight;
 			}
 			tryLeftRight = tryLeftRight->activeUI();
+			//if (tryLeftRight == 0) break;
 		}
 		if (_leftRightBackUI != gotLeftRight) {
 			_leftRightBackUI = gotLeftRight;
@@ -88,6 +93,7 @@ namespace LCD_UI {
 		_upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto tryUD = this_UI_h->activeUI();
+			//if (tryUD == 0) break;
 			auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble();
 			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
 			if (tryIsUpDnAble) {

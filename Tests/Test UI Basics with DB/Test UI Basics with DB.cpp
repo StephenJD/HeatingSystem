@@ -39,21 +39,21 @@
 #define UI_DB_SHORT_LISTS
 #define EDIT_NAMES_NUMS
 #define BACK_TRACKING
-////#define EDIT_INTS
-
-////#define EDIT_FORMATTED_INTS
-
+//////#define EDIT_INTS
+//
+//////#define EDIT_FORMATTED_INTS
+//
 #define EDIT_DECIMAL
 #define EDIT_DATES
-//#define EDIT_CURRENT_DATETIME
+////#define EDIT_CURRENT_DATETIME
 #define EDIT_RUN
 
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
-#define VIEW_ONE_NESTED_PROFILE_PAGE
-#define CONTRAST
-#define TIME_TEMP_EDIT
-#define MAIN_CONSOLE_PAGES
-#define INFO_CONSOLE_PAGES
+//#define VIEW_ONE_NESTED_PROFILE_PAGE
+//#define CONTRAST
+//#define TIME_TEMP_EDIT
+//#define MAIN_CONSOLE_PAGES
+//#define INFO_CONSOLE_PAGES
 
 //#define TEST_RELAYS
 //#define CMD_MENU
@@ -1273,10 +1273,17 @@ TEST_CASE("Edit Decimal Data", "[Display]") {
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
 	auto zoneFactorUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_factor);
+	
+	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[(long)&zoneFactorUI_c] = "zoneFactorUI_c";
 
 	// UI Elements
 	UI_Label L1("L1");
 	UI_Cmd C3("C3", 0);
+	ui_Objects()[(long)&L1] = "L1";
+	ui_Objects()[(long)&C3] = "C3";
 
 	// UI Collections
 	cout << "\npage1 Collection\n";
@@ -1285,6 +1292,9 @@ TEST_CASE("Edit Decimal Data", "[Display]") {
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	cout << " **** All Constructed ****\n\n";
 	display1_h.rec_select();
@@ -1733,7 +1743,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,Behaviour{V+S+L+Vn+LR+UD_0+R0});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S + L + Vn + LR + UD_0 + R0});
 	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, Behaviour{ V + S + V1 + UD_E }, Behaviour{UD_E});
-	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{ V + S +L+ V1 }, Behaviour{ UD_A + R }, &dwellSpellUI_c, Dataset_Spell::e_progID);
+	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{ V + S +L+ V1 }, Behaviour{ UD_A + R }/*, &dwellSpellUI_c, Dataset_Spell::e_progID*/);
 
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";

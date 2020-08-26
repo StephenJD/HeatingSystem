@@ -36,8 +36,6 @@ namespace LCD_UI {
 
 	Edit_Int_h::Edit_Int_h() : I_Edit_Hndl(&editVal) {
 #ifdef ZPSIM
-		logger() << F("\tEdit_Int_h Addr: ") << L_hex << long(this) << L_endl;
-		logger() << F("\tEdit_Int_h Edit Addr: ") << L_hex << long(&editVal) << L_endl;
 		ui_Objects()[(long)&editVal] = "Permitted_Ints";
 #endif
 	}
@@ -148,8 +146,6 @@ namespace LCD_UI {
 
 	Edit_Char_h::Edit_Char_h() : I_Edit_Hndl(&editChar) {
 #ifdef ZPSIM
-		logger() << F("\tEdit_Char_h Addr:") << L_hex << long(this) << L_endl;
-		logger() << F("\teditChar Addr:") << L_hex << long(&editChar) << L_endl;
 		ui_Objects()[(long)&editChar] = "Permitted_Chars";
 #endif
 	}

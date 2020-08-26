@@ -179,6 +179,9 @@ namespace LCD_UI {
 	/// </summary>
 	class Decimal_Interface : public Int_Interface {
 	public:
+#ifdef ZPSIM
+		Decimal_Interface() { ui_Objects()[(long)this] = "Decimal_Interface"; }
+#endif
 		const char * streamData(bool isActiveElement) const override;
 	};
 

@@ -29,6 +29,8 @@ namespace LCD_UI {
 			, UI_FieldData * parent = 0, int selectFldID = 0, OnSelectFnctr onSelect = 0);
 
 		// Queries
+		bool isCollection() const override { return _parentFieldData == 0; }
+
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override;
