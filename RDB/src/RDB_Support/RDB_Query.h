@@ -371,8 +371,14 @@ namespace RelationalDatabase {
 		Query & resultsQ() override { return *_result_query; }
 
 	private:
-		Answer_Locator getMatch(RecordSelector & recSel, int, int) {
+		Answer_Locator getMatch(RecordSelector & recSel, int, int matchArg) {
+			//recSel.setID(matchArg);
+			if (matchArg != recSel.id()) {
+				auto debug = false;
+				recSel.tableNavigator().moveToThisRecord(matchArg);
+			}
 			Answer_R<JoinRecordType> select = recSel.incrementRecord();
+			//select.rec();
 			if (select.status() == TB_OK) {
 				return (*_result_query)[select.field(_select_f)];
 			}

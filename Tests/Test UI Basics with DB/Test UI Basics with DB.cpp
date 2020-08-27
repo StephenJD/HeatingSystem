@@ -1743,7 +1743,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,Behaviour{V+S+L+Vn+LR+UD_0+R0});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S + L + Vn + LR + UD_0 + R0});
 	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, Behaviour{ V + S + V1 + UD_E }, Behaviour{UD_E});
-	auto spellProgUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{ V + S +L+ V1 }, Behaviour{ UD_A + R }/*, &dwellSpellUI_c, Dataset_Spell::e_progID*/);
+	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, Behaviour{ V + S +L+ V1 }, Behaviour{ UD_A + R }/*, &dwellSpellUI_c, Dataset_Spell::e_progID*/);
 
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
@@ -1839,53 +1839,6 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 		}
 	}
 
-	GIVEN("Calendar Sub-Page - possible progs can be scrolled through") {
-		display1_h.rec_left_right(1); // left-right so select page
-		display1_h.rec_left_right(1);
-		display1_h.rec_up_down(1); // Calendar Subpage
-		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm Tomor'wAt Home");
-		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
-
-		// cycle through possible programs
-		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
-		THEN("SELECT program allows programs to be cycled through") {
-			display1_h.rec_select();
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
-			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Work");
-			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#Away   ");
-			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
-			AND_THEN("BACK restores original program") {
-				display1_h.rec_prevUI();
-				CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
-				THEN("SELECT on From inserts a program") {
-					display1_h.rec_left_right(-1);
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
-					display1_h.rec_left_right(-1);
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-					display1_h.rec_select();
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm #Tomor'wAt Home");
-					AND_THEN("BACK cancels the insert") {
-						display1_h.rec_prevUI();
-						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
-
-						cout << "\n **** Cancelled insert spell ****\n\n";
-
-						for (Answer_R<R_Spell> spell : q_dwellingSpells) {
-							logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
-						}
-					}
-				}
-			}
-		}
-	}
-
 	GIVEN("Calendar Sub-Page - Spell can be edited") {
 		display1_h.rec_left_right(1); // left-right so select page
 		display1_h.rec_left_right(1);
@@ -1904,6 +1857,10 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 		for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 			logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 		}
+		cout << "\n **** Spell-Progs ****\n\n";
+		for (Answer_R<R_Program> prog : q_spellProg) {
+			logger() << (int)prog.id() << ": " << prog.rec() << L_endl;
+		}
 
 		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 0_3Aug  At Home");
 		THEN("Spells can be scrolled on From") {
@@ -1911,7 +1868,11 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
 			display1_h.rec_up_down(1);
 			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 05:30pm 03Sep  Away   ");
-			display1_h.rec_up_down(-1);
+			display1_h.rec_up_down(1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 07:30am 12Sep  At Work");
+			display1_h.rec_up_down(1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 22Sep  Away   ");
+			display1_h.rec_up_down(1);
 			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
 			THEN("Insert new spell before first") {
 				display1_h.rec_select();
@@ -1953,12 +1914,17 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 						display1_h.rec_up_down(-1);
 						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 22#Oct  Away   ");
 						display1_h.rec_select();
-						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 2_2Oct  Away   ");
 
 						cout << "\n Edit last spell...\n";
 						for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 							logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 						}
+						cout << "\n SpellProgs...\n";
+						for (Answer_R<R_Program> prog : q_spellProg) {
+							logger() << (int)prog.id() << ": " << prog.rec() << L_endl;
+						}
+
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:00pm 2_2Oct  Away   ");
 
 						THEN("Insert new spell before last") {
 							display1_h.rec_left_right(-1);
@@ -2016,6 +1982,53 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 								display1_h.rec_left_right(-1);
 								CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Calendar    From 10:20pm 02Aug  At Home");
 							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	GIVEN("Calendar Sub-Page - possible progs can be scrolled through") {
+		display1_h.rec_left_right(1); // left-right so select page
+		display1_h.rec_left_right(1);
+		display1_h.rec_up_down(1); // Calendar Subpage
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm Tomor'wAt Home");
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
+
+		// cycle through possible programs
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
+		THEN("SELECT program allows programs to be cycled through") {
+			display1_h.rec_select();
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Work");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#Away   ");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
+			AND_THEN("BACK restores original program") {
+				display1_h.rec_prevUI();
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
+				THEN("SELECT on From inserts a program") {
+					display1_h.rec_left_right(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
+					display1_h.rec_left_right(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+					display1_h.rec_select();
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm #Tomor'wAt Home");
+					AND_THEN("BACK cancels the insert") {
+						display1_h.rec_prevUI();
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+
+						cout << "\n **** Cancelled insert spell ****\n\n";
+
+						for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+							logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 						}
 					}
 				}
