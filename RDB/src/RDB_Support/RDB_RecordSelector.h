@@ -52,7 +52,7 @@ namespace RelationalDatabase {
 		void next_IncrementQ(int moveBy); // Moves the Increment TableQuery to the next used record, without applying a match.
 
 		// Retrieval
-		Answer_Locator incrementRecord() const; // Returns the incrementRecord() insted of the results record.
+		Answer_Locator incrementRecord() const; // Returns the incrementRecord() instead of the results record.
 		TB_Status status() const { return currentPos().status(); }
 		int id() const { return currentPos().id(); }
 		int signed_id() const { return currentPos().signed_id(); }

@@ -369,13 +369,14 @@ namespace RelationalDatabase {
 		) : CustomQuery(join_query), _resultsTableQ(result_query), _result_query(&_resultsTableQ), _select_f(select_f) {}
 		
 		Query & resultsQ() override { return *_result_query; }
-
+		Answer_Locator operator[](int index) override { setMatchArg(index); return Query::operator[](index); }
+		void next(RecordSelector & recSel, int moveBy) override { setMatchArg(matchArg() + moveBy); Query::next(recSel, moveBy); }
 	private:
 		Answer_Locator getMatch(RecordSelector & recSel, int, int matchArg) {
 			//recSel.setID(matchArg);
 			if (matchArg != recSel.id()) {
 				auto debug = false;
-				recSel.tableNavigator().moveToThisRecord(matchArg);
+				recSel.query().incrementTableQ().moveTo(recSel, matchArg);
 			}
 			Answer_R<JoinRecordType> select = recSel.incrementRecord();
 			//select.rec();
