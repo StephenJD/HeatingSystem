@@ -74,9 +74,10 @@ namespace LCD_UI {
 
 	Collection_Hndl * UI_FieldData::item(int elementIndex) { // return 0 if record invalid
 		//if (_parentFieldData) { // where a parent points to a single child, this allows the child object to be chosen
-			if (/*elementIndex == focusIndex() &&*/ _field_StreamingTool_h.cursorMode(&_field_StreamingTool_h) == HI_BD::e_inEdit) {
+			if (_field_StreamingTool_h.cursorMode(&_field_StreamingTool_h) == HI_BD::e_inEdit) {
 				if (_field_StreamingTool_h.activeEditBehaviour().is_next_on_UpDn()) {
-					elementIndex = _data->move_to(_field_StreamingTool_h.f_interface().editItem().currValue().val);
+					auto newRecID = _field_StreamingTool_h.f_interface().editItem().currValue().val; //progID for SpellProg
+					elementIndex = _data->move_to(newRecID);
 				} 
 				//else {
 				//	_field_StreamingTool_h.f_interface().setDataSource(&_field_StreamingTool_h);

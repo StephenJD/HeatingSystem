@@ -316,9 +316,9 @@ namespace LCD_UI {
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(_data_formatter));
 
 		if (isActiveElement) {
-			auto fieldInterface_h = dataSource();
-			if (fieldInterface_h && fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
-				if (fieldInterface_h->activeEditBehaviour().is_edit_on_UD()) {
+			auto field_streamingTool_h = dataSource();
+			if (field_streamingTool_h && field_streamingTool_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
+				if (field_streamingTool_h->activeEditBehaviour().is_edit_on_UD()) {
 					return _editItem.stream_edited_copy;
 				}
 			}

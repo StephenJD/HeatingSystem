@@ -23,9 +23,9 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * I_Streaming_Tool::select(Collection_Hndl * from) { // start edit
-		auto fieldInterface_h = static_cast<Field_StreamingTool_h&>(*from);
-		if (fieldInterface_h.onSelect().targetIsSet()) {
-			fieldInterface_h.onSelect()();
+		auto field_streamingTool_h = static_cast<Field_StreamingTool_h&>(*from);
+		if (field_streamingTool_h.onSelect().targetIsSet()) {
+			field_streamingTool_h.onSelect()();
 		} 
 		else {
 			edit(from);
@@ -34,25 +34,27 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * I_Streaming_Tool::edit(Collection_Hndl * from) {
-		auto fieldInterface_h = static_cast<Field_StreamingTool_h*>(from);
+		// Exit from edit handled by Field_StreamingTool_h::on_back() at the end of this file
+		auto field_streamingTool_h = static_cast<Field_StreamingTool_h*>(from);
 		editItem().setBackUI(from);
 #ifdef ZPSIM
 		cout << F("Edit Interface: ") << ui_Objects()[(long)this] << endl;
-		cout << F("\tedit->back ") << ui_Objects()[(long)fieldInterface_h->backUI()->get()] << endl; // Collection with field to be edited
-		cout << F("\tedit->back->focus ") << fieldInterface_h->backUI()->focusIndex() << endl;
+		cout << F("\tedit->back ") << ui_Objects()[(long)field_streamingTool_h->backUI()->get()] << endl; // Collection with field to be edited
+		cout << F("\tedit->back->focus ") << field_streamingTool_h->backUI()->focusIndex() << endl;
 #endif	
-		auto sourceCollection = fieldInterface_h->backUI()->get()->collection();
+		auto sourceCollection = field_streamingTool_h->backUI()->get()->collection();
 		if (sourceCollection->objectIndex() != sourceCollection->focusIndex()) {
-			fieldInterface_h->backUI()->move_focus_by(0); // get data loaded for V1 lterated (remote displays)
+			field_streamingTool_h->backUI()->move_focus_by(0); // get data loaded for V1 lterated (remote displays)
 			editItem().gotFocus(getDataFormatter()); // copy data to dataFormatter for V1 lterated (remote displays)
 		}
-		fieldInterface_h->set_focus(editItem().getEditCursorPos()); // copy data to edit
-		fieldInterface_h->setCursorMode(HI_BD::e_inEdit);
+		field_streamingTool_h->set_focus(editItem().getEditCursorPos()); // copy data to edit
+		field_streamingTool_h->setCursorMode(HI_BD::e_inEdit);
 		
-		fieldInterface_h->activeEditBehaviour().make_viewAll();
-		behaviour() = fieldInterface_h->activeEditBehaviour();
+		field_streamingTool_h->activeEditBehaviour().make_viewAll(); // Allows UP/DOWN to go to edit collection
+		behaviour() = field_streamingTool_h->activeEditBehaviour();
 		if (behaviour().is_next_on_UpDn()) {
-			editItem().currValue().val = fieldInterface_h->getData()->data()->record().id();
+			editItem().currValue().val = field_streamingTool_h->getData()->data()->record().id();
+			field_streamingTool_h->getData()->data()->setEditMode(true);
 		}
 		return 0;
 	}
@@ -83,8 +85,8 @@ namespace LCD_UI {
 		if (_data_formatter == 0) return 0;
 		auto streamVal = _data_formatter->val;
 		if (isActiveElement) {
-			auto fieldInterface_h = dataSource();
-			if (fieldInterface_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
+			auto field_streamingTool_h = dataSource();
+			if (field_streamingTool_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
 			}
 			else const_cast<I_Edit_Hndl&>(editItem()).currValue().val = streamVal;
@@ -169,7 +171,8 @@ namespace LCD_UI {
 		Collection_Hndl * retVal = this;
 		if (_cursorMode == HI_BD::e_inEdit) {
 			setCursorMode(HI_BD::e_unselected);
-			get()->behaviour().make_viewOne();
+			get()->behaviour().make_viewOne(); // Prevents UP/DOWN going to edit collection
+			getData()->data()->setEditMode(false); 
 			f_interface().editItem().setBackUI(0);
 			f_interface().setCount(0);
 			retVal = 0;

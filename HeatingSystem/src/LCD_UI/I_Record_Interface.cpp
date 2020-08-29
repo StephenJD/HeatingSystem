@@ -67,47 +67,49 @@ namespace LCD_UI {
 		//logger() << F(" move_to : ") << L_dec <<  pos << F(" Record().id is :")  << (int)record().id() << F(" IncrementQ id: ") << query().incrementQ().signed_id() << L_endl;
 
 		query().setMatchArg(parentIndex());
+		auto & recSel = (_inEdit ? query().resultsQ() : _recSel);
 		if (pos < 0) {
-			record() = *_recSel.begin();
+			record() = *recSel.begin();
 			record().setStatus(TB_BEFORE_BEGIN);
 			setRecordID(-1);
 		}
 		else if (pos == 0) {
-			record() = *_recSel.begin();
-			setRecordID(_recSel.signed_id());
+			record() = *recSel.begin();
+			setRecordID(recSel.signed_id());
 		}
 		else {
 			auto wasNotAtEndStop = record().status() != TB_END_STOP;
 			// Refresh current Record in case parent has changed 
-			bool noMoveRequested = _recSel.signed_id() == pos;
-			if (_recSel.signed_id() >= 0) {
-				query().next(_recSel, 0);
+			bool noMoveRequested = recSel.signed_id() == pos;
+			if (recSel.signed_id() >= 0) {
+				query().next(recSel, 0);
 			}
-			record() = *_recSel;
+			record() = *recSel;
 
-			int matchID = _recSel.signed_id();
+			int matchID = recSel.signed_id();
 
 			if (wasNotAtEndStop && record().status() == TB_END_STOP) {
-				record() = *(--_recSel);
+				record() = *(--recSel);
 			}
-			int direction = pos > _recSel.signed_id() ? 1 : -1;
 			setRecordID(matchID);
 
-			auto copyAnswer = record();
-			bool directionSign = direction < 0;
-			int difference = pos - matchID;
-			bool differenceSign = difference < 0;
-			while ( difference && directionSign == differenceSign) {
-				copyAnswer = *(_recSel += direction);
-				matchID = _recSel.signed_id();
-				difference = pos - matchID;
-				differenceSign = difference < 0;
-				if (copyAnswer.status() != TB_OK) break;
-			}
-			if (((difference == 0 || directionSign != differenceSign) && copyAnswer.status() == TB_OK) || copyAnswer.status() != TB_OK)
-			{
-				record() = copyAnswer;
-				setRecordID(matchID);
+			if (!query().uniqueMatch()) {
+				int direction = pos > recSel.signed_id() ? 1 : -1;
+				auto copyAnswer = record();
+				bool directionSign = direction < 0;
+				int difference = pos - matchID;
+				bool differenceSign = difference < 0;
+				while (difference && directionSign == differenceSign) {
+					copyAnswer = *(recSel += direction);
+					matchID = recSel.signed_id();
+					difference = pos - matchID;
+					differenceSign = difference < 0;
+					if (copyAnswer.status() != TB_OK) break;
+				}
+				if (((difference == 0 || directionSign != differenceSign) && copyAnswer.status() == TB_OK) || copyAnswer.status() != TB_OK) {
+					record() = copyAnswer;
+					setRecordID(matchID);
+				}
 			}
 		}
 		return recordID();

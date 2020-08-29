@@ -56,7 +56,7 @@ namespace LCD_UI {
 		Query & query() { return _recSel.query(); }
 		VolatileData * runTimeData() { return _runtimeData; }
 		I_Record_Interface * parent() { return _parent; }
-
+		void setEditMode(bool inEdit) { _inEdit = inEdit; }
 	protected:
 		I_Record_Interface(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		// Data
@@ -66,6 +66,7 @@ namespace LCD_UI {
 		I_Record_Interface * _parent = 0;
 		int _count = 1;
 		int _recordID = -1;
+		bool _inEdit = false;
 	};
 
 	template<typename Record>

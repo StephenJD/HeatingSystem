@@ -46,6 +46,7 @@ namespace RelationalDatabase {
 		//virtual void refresh();
 		virtual void setMatchArg(int matchArg) {}
 		virtual RecordSelector findMatch(RecordSelector & recSel);
+		virtual bool uniqueMatch() { return false; }
 		
 		template <typename Record_T>
 		RecordSelector insert(const Record_T & record);
@@ -345,8 +346,8 @@ namespace RelationalDatabase {
 
 	/// <summary>
 	/// Inner-Join query.
-	/// Selects records from the Results table, using Join-Table select-field,
-	/// where the firstMatch argument is the ID of the Join-Table record.
+	/// Select the unique record from the Results table, using Join-Table select-field,
+	/// where the Match argument is the ID of the Join-Table record.
 	/// Provide a Join-Table Query, 
 	/// a Result-Table Query,
 	/// the field_index of the select-field in the Join table,
@@ -371,6 +372,8 @@ namespace RelationalDatabase {
 		Query & resultsQ() override { return *_result_query; }
 		Answer_Locator operator[](int index) override { setMatchArg(index); return Query::operator[](index); }
 		void next(RecordSelector & recSel, int moveBy) override { setMatchArg(matchArg() + moveBy); Query::next(recSel, moveBy); }
+		bool uniqueMatch() override { return true; }
+
 	private:
 		Answer_Locator getMatch(RecordSelector & recSel, int, int matchArg) {
 			//recSel.setID(matchArg);
