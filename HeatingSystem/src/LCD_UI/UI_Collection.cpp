@@ -87,7 +87,7 @@ namespace LCD_UI {
 			auto newObject = collection->item(validFocus);
 			if (newObject == 0) {
 				newObject = collection->item(0);
-				collection->setFocusIndex(collection->objectIndex());
+				setFocusIndex(collection->objectIndex());
 			}
 			return static_cast<Collection_Hndl*>(newObject);
 		}
