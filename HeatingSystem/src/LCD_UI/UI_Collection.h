@@ -315,7 +315,7 @@ namespace LCD_UI {
 
 	inline bool Collection_Hndl::atEnd(int pos) const { return empty() ? 0 : get()->collection()->atEnd(pos); }
 	inline int Collection_Hndl::focusIndex() const { return get()->collection() ? get()->collection()->focusIndex() : 0; }
-	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->setFocusIndex(index); }
+	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->I_SafeCollection::setFocusIndex(index); }
 	inline int Collection_Hndl::endIndex() const { return get()->collection()->endIndex(); }
 
 	//////////////////////////////////////////////////////////////////////
