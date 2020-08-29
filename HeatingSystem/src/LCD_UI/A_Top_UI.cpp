@@ -216,7 +216,7 @@ namespace LCD_UI {
 #ifdef ZPSIM
 				logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
 #endif
-				element_h->focusHasChanged(element_h == _upDownUI);
+				if (element_h != _upDownUI) element_h->focusHasChanged();
 				auto inner = element_h->activeUI();
 				if (inner && inner->get()->isCollection()) notifyAllOfFocusChange(inner);
 			}

@@ -1993,37 +1993,37 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 		display1_h.rec_left_right(1); // left-right so select page
 		display1_h.rec_left_right(1);
 		display1_h.rec_up_down(1); // Calendar Subpage
-		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm Tomor'wAt Home");
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 10:20pm 02Aug  At Home");
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 0_2Aug  At Home");
 
 		// cycle through possible programs
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  At Hom_e");
 		THEN("SELECT program allows programs to be cycled through") {
 			display1_h.rec_select();
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  #At Home");
 			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Work");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  #At Work");
 			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#Away   ");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  #Away   ");
 			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'w#At Home");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  #At Home");
 			AND_THEN("BACK restores original program") {
 				display1_h.rec_prevUI();
-				CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'wAt Hom_e");
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  At Hom_e");
 				THEN("SELECT on From inserts a program") {
 					display1_h.rec_left_right(-1);
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm Tomor'_wAt Home");
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Au_g  At Home");
 					display1_h.rec_left_right(-1);
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
 					display1_h.rec_select();
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm #Tomor'wAt Home");
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm #02Aug  At Home");
 					AND_THEN("BACK cancels the insert") {
 						display1_h.rec_prevUI();
-						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm Tomor'wAt Home");
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
 
 						cout << "\n **** Cancelled insert spell ****\n\n";
 

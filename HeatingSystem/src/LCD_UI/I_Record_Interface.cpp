@@ -48,17 +48,20 @@ namespace LCD_UI {
 
 	TB_Status I_Record_Interface::move_by(int move) {
 		query().setMatchArg(parentIndex());
-		record() = *(_recSel += move);
-		setRecordID(_recSel.signed_id());
+		RecordSelector & recSel = (_inEdit ? query().resultsQ().begin() : _recSel);
+		recSel.setID(recordID());
+		record() = *(recSel += move);
+		setRecordID(recSel.signed_id());
 		return record().status();
 	}
 
 	int I_Record_Interface::last() {
 		query().setMatchArg(parentIndex());
-		_recSel.end();
-		--_recSel;
-		record() = *_recSel;
-		return _recSel.signed_id();
+		RecordSelector & recSel = (_inEdit ? query().resultsQ().begin() : _recSel);
+		recSel.end();
+		--recSel;
+		record() = *recSel;
+		return recSel.signed_id();
 	}
 
 	int I_Record_Interface::move_to(int pos) {
@@ -67,7 +70,8 @@ namespace LCD_UI {
 		//logger() << F(" move_to : ") << L_dec <<  pos << F(" Record().id is :")  << (int)record().id() << F(" IncrementQ id: ") << query().incrementQ().signed_id() << L_endl;
 
 		query().setMatchArg(parentIndex());
-		auto & recSel = (_inEdit ? query().resultsQ() : _recSel);
+		RecordSelector & recSel = (_inEdit ? query().resultsQ().begin() : _recSel);
+		recSel.setID(recordID());
 		if (pos < 0) {
 			record() = *recSel.begin();
 			record().setStatus(TB_BEFORE_BEGIN);
@@ -82,7 +86,7 @@ namespace LCD_UI {
 			// Refresh current Record in case parent has changed 
 			bool noMoveRequested = recSel.signed_id() == pos;
 			if (recSel.signed_id() >= 0) {
-				query().next(recSel, 0);
+				recSel.query().next(recSel, 0);
 			}
 			record() = *recSel;
 
@@ -93,7 +97,7 @@ namespace LCD_UI {
 			}
 			setRecordID(matchID);
 
-			if (!query().uniqueMatch()) {
+			if (!recSel.query().uniqueMatch()) {
 				int direction = pos > recSel.signed_id() ? 1 : -1;
 				auto copyAnswer = record();
 				bool directionSign = direction < 0;

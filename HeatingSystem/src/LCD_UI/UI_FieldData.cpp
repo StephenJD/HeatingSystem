@@ -33,7 +33,7 @@ namespace LCD_UI {
 		_field_StreamingTool_h.set_OnSelFn_TargetUI(obj);
 	}
 
-	void UI_FieldData::focusHasChanged(bool hasFocus) {
+	void UI_FieldData::focusHasChanged(bool) {
 		// parent field might have been changed
 		auto objectAtFocus = _data->query()[focusIndex()];
 #ifdef ZPSIM
@@ -45,14 +45,17 @@ namespace LCD_UI {
 		//	<< L_endl;
 #endif		
 		bool focusWasInRange = objectAtFocus.status() == TB_OK;
-	    setCount(_data->resetCount());
+		//if (_data->parent())
+		//	_data->query().setMatchArg(_data->parentIndex());
+	    
+		setCount(_data->resetCount());
 		auto newStart = _data->recordID();
-		setObjectIndex(newStart);
-		if (_data->parent())
-			LazyCollection::setFocusIndex(_data->parentIndex());
+		//setObjectIndex(newStart);
+		//if (_data->parent())
+		//	LazyCollection::setFocusIndex(_data->parentIndex());
 		objectAtFocus = _data->query()[focusIndex()];
 		bool focusStillInRange = objectAtFocus.status() == TB_OK;
-		if (hasFocus || (focusWasInRange && !focusStillInRange))
+		if (focusWasInRange && !focusStillInRange)
 			setFocusIndex(newStart);
 
 //#ifdef ZPSIM

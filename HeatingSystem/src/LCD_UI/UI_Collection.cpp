@@ -101,14 +101,8 @@ namespace LCD_UI {
 		return index;
 	}
 
-	void Collection_Hndl::focusHasChanged(bool hasFocus) {
-		get()->focusHasChanged(hasFocus);
-		if (hasFocus) {
-#ifdef ZPSIM
-			//logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)get()].c_str() << L_tabs << L_hex << (long)get() << L_endl;
-#endif
-			move_focus_by(0);
-		}
+	void Collection_Hndl::focusHasChanged() {
+		get()->focusHasChanged(false);
 	}
 
 	Collection_Hndl * Collection_Hndl::move_focus_to(int index) {
@@ -461,7 +455,7 @@ namespace LCD_UI {
 		return active;
 	}
 
-	void UI_IteratedCollection_Hoist::h_focusHasChanged(bool hasFocus) {
+	void UI_IteratedCollection_Hoist::h_focusHasChanged() {
 		auto & coll = *iterated_collection();
 		auto iteratedActiveUI_h = coll.activeUI();
 		_endShow = 1; _beginIndex = 0; _beginShow = 0;

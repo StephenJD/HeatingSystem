@@ -187,7 +187,7 @@ namespace LCD_UI {
 		UI_Object * getItem(int index); // Must return polymorphicly
 		I_SafeCollection & operator*() { return *get()->collection(); }
 		I_SafeCollection * operator->() { return get()->collection(); }
-		void focusHasChanged(bool hasFocus);
+		void focusHasChanged();
 		void setFocusIndex(int index);
 		void enter_collection(int direction);
 
@@ -429,7 +429,7 @@ namespace LCD_UI {
 		{}
 
 		int h_firstVisibleItem() const;
-		void h_focusHasChanged(bool hasFocus);
+		void h_focusHasChanged();
 		bool h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
 		UI_DisplayBuffer::ListStatus h_listStatus(int streamIndex) const;
 		void h_endVisibleItem(bool thisWasShown, int streamIndex) const;
@@ -477,7 +477,7 @@ namespace LCD_UI {
 
 		// Polymorphic Modifiers
 		I_SafeCollection * iterated_collection() override { return this; }
-		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
+		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
 	};
 	
 	template<>
@@ -507,7 +507,7 @@ namespace LCD_UI {
 		}
 
 		// Polymorphic Modifiers
-		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
+		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
 	};
 
 	/// <summary>
