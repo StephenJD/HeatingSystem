@@ -14,7 +14,7 @@ namespace RelationalDatabase {
 	/// A Query is a Rangeable RecordSet lazy generator.
 	/// It applies a given rule to one or more source tables or sub - queries
 	/// such that the records it returns satisfy the Query criteria.
-	/// It provides RecordSelectors from begin(), last() and end() which can iterate over the Query.
+	/// It provides begin(), last() and end() returning RecordSelectors which can iterate over the Query.
 	/// RecordSelectors delegate to the Query for Increment and dereferencing.
 	/// begin() points to the first valid record.
 	/// begin() may be decremented to return an ID of -1, with status TB_BEFORE_BEGIN.
@@ -45,6 +45,7 @@ namespace RelationalDatabase {
 		// Modify Query
 		//virtual void refresh();
 		virtual void setMatchArg(int matchArg) {}
+		virtual void acceptMatch(RecordSelector & recSel) {}
 		virtual RecordSelector findMatch(RecordSelector & recSel);
 		virtual bool uniqueMatch() { return false; }
 		
@@ -144,6 +145,8 @@ namespace RelationalDatabase {
 
 	/// <summary>
 	/// A base Query for building complex queries.
+	/// It adds matchArg used to restrict the returned records in some way.
+	/// It adds incrementQ() and resultsQ() referring to the sub-queries used for incrementing and returning the matching record.
 	/// </summary>	
 	class CustomQuery : public Query {
 	public:
@@ -157,6 +160,11 @@ namespace RelationalDatabase {
 
 		// Access
 		int matchArg() const override { return _matchArg; }
+
+		void acceptMatch(RecordSelector & recSel) override {
+			setMatchArg(recSel.id());
+		}
+
 		Query & incrementQ() override { return *_incrementQ; }
 		Query & resultsQ() override { return *_incrementQ; }
 
@@ -171,9 +179,9 @@ namespace RelationalDatabase {
 	//           Table Filter Query          //
 	//_______________________________________//
 	//      ResultsTable, match field {0}    //
-	//               {0} {1}                 //
+	// match(0)-------v                      //
 	//            [0] 1, fred                //
-	// match(0)-> [1] 0, john -> john        //
+	//            [1] 0, john -> john        //
 	///////////////////////////////////////////
 
 	/// <summary>
@@ -190,6 +198,11 @@ namespace RelationalDatabase {
 #ifdef ZPSIM
 			//logger() << F(" Filter Query at : ") << L_hex << (long)this << F("\n");
 #endif
+		}
+
+		void acceptMatch(RecordSelector & recSel) override {
+			Answer_R<ReturnedRecordType> currRec = *recSel;
+			setMatchArg(currRec.field(_match_f));
 		}
 
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int id) override {
@@ -213,10 +226,11 @@ namespace RelationalDatabase {
 	/////////////////////////////////////////////////////////
 	//            Link-Table Query                         //
 	//_____________________________________________________//
-	// LinkTable, link field {0}{1}      ResultsTable      //
-	//               {0} {1}              {0} {1}          //
-	// match(1)-> [0] 1,  1---\        [0] 1, fred         //
-	//            [1] 0,  0    \------>[1] 0, john -> john //
+	// LinkTable,  link field {0}{1}      ResultsTable     //
+	// match(1)-------v                                    //
+	//            [0] 1,  1---\        [0] fred            //
+	//            [1] 0,  0    \------>[1] john -> john    //
+	//            [2] 1,  2------------[2] jim  -> jim     //
 	/////////////////////////////////////////////////////////
 
 	/// <summary>
@@ -256,6 +270,11 @@ namespace RelationalDatabase {
 #endif
 		}
 		void setMatchArg(int matchArg) override { _linkQ.setMatchArg(matchArg); }
+		
+		void acceptMatch(RecordSelector & recSel) override {
+			_linkQ.acceptMatch(recSel);
+		}
+
 		int matchArg() const override { return _linkQ.matchArg(); }
 
 	private:
@@ -280,8 +299,8 @@ namespace RelationalDatabase {
 	//          Lookup Filter Query                           //
 	//________________________________________________________//
 	// ResultsTable filter {1}  LookupTable, match field {1}  //
-	//             {0}  {1}         {0} {1}                   //
-	// fred <- [0] fred, 0----->[0] SW1, 1 <-match(1)         //
+	//             {0}  {1}         {0}  v----match(1)        //
+	// fred <- [0] fred, 0----->[0] SW1, 1                    //
 	// john <- [1] john, 2--\   [1] SW2, 0                    //
 	//         [2] mary, 1   \->[2] SW3, 1                    //
 	////////////////////////////////////////////////////////////
@@ -313,6 +332,11 @@ namespace RelationalDatabase {
 		) : CustomQuery(result_query), _filterQuery(filter_query, filter_f), _select_f(select_f) {}
 
 		void setMatchArg(int matchArg) override { _filterQuery.setMatchArg(matchArg); }
+		
+		void acceptMatch(RecordSelector & recSel) override {
+			_filterQuery.acceptMatch(recSel);
+		}
+
 		int matchArg() const override { return _filterQuery.matchArg(); }
 
 	private:
@@ -323,7 +347,6 @@ namespace RelationalDatabase {
 				auto select = tryMatch.field(_select_f);
 				auto filter = _filterQuery[select];
 				if (filter.status() == TB_OK) break;
-				//recSel.next_IncrementQ(direction);
 				incrementQ().next(recSel, direction);
 				tryMatch = recSel.incrementRecord();
 			}
@@ -335,12 +358,81 @@ namespace RelationalDatabase {
 		int _select_f; // Field in Result-Table used to select Lookup
 	};
 
+	////////////////////////////////////////////////////////////
+	//          Link Filter Query                             //
+	//________________________________________________________//
+	//    LinkTable{1}       ResultTable, Filter field {1}    //
+	//             {0}  {1}         {0} {1}                   //
+	// match-->[0] fred, 0----->[0] SW1, 1 --> SW1            //
+	//         [1] john, 2      [1] SW2, 0                    //
+	//         [2] mary, 1      [2] SW3, 1 --> SW3            //
+	////////////////////////////////////////////////////////////
+
+	/// <summary>
+	/// LinkTable filter query.
+	/// Returns records where the Filter-field value matches the Filter-field value of the selected result-record.
+	/// Provide a Link-Table Query, 
+	/// a Results-Table Query to be filtered,
+	/// the field_index in the Link-Table to select the first result record.
+	/// the field_index in the Results-Table for filtering.
+	/// </summary>	
+	template <typename LinkRecordType, typename ReturnedRecordType>
+	class QueryLinkF_T : public CustomQuery {
+		// all derived queries inherit from the root, rather from each other, so the virtual return-types can be derived-type.
+	public:
+		QueryLinkF_T(
+			Query & link_query
+			, Query & result_query
+			, int select_f
+			, int filter_f
+		) : CustomQuery(link_query), _filterQuery(result_query, filter_f), _select_f(select_f) {}
+
+		QueryLinkF_T(
+			const TableQuery & link_query
+			, const TableQuery & result_query
+			, int select_f
+			, int filter_f
+		) : CustomQuery(link_query), _filterQuery(result_query, filter_f), _select_f(select_f) {}
+
+		void setMatchArg(int matchArg) override { link_query.setMatchArg(matchArg); }
+
+		void acceptMatch(RecordSelector & recSel) override {
+			_filterQuery.acceptMatch(recSel);
+		}
+
+		int matchArg() const override { return link_query.matchArg(); }
+
+	private:
+
+		Answer_Locator getMatch(RecordSelector & recSel, int direction, int matchArg) override {
+			if (matchArg != recSel.id()) {
+				recSel.query().incrementTableQ().moveTo(recSel, matchArg);
+			}
+			Answer_R<LinkRecordType> link = *recSel;
+			auto selectedResultID = link.field(select_f);
+			_filterQuery.incrementTableQ()[selectedResultID];
+			_filterQuery.acceptMatch();
+			//while (tryMatch.status() == TB_OK) {
+			//	auto select = tryMatch.field(_select_f);
+			//	auto filter = _filterQuery[select];
+			//	if (filter.status() == TB_OK) break;
+			//	incrementQ().next(recSel, direction);
+			//	tryMatch = recSel.incrementRecord();
+			//}
+			recSel.setStatus(tryMatch.status() == TB_RECORD_UNUSED ? (direction >= 0 ? TB_END_STOP : TB_BEFORE_BEGIN) : tryMatch.status());
+			return *recSel;
+		}
+
+		QueryF_T<ReturnedRecordType> _filterQuery;
+		int _select_f; // Field in link_query used to select filter query record
+	};
+
 	////////////////////////////////////////////////////
 	//            Inner-Join Query                    //
 	//________________________________________________//
 	// JoinTable, join field {1}     ResultsTable     //
 	//                {0}  {1}          {0} {1}       //
-	// match(0)-> [0] fred, 1---\    [0] 1, SW1       //
+	// match(0)-->[0] fred, 1---\    [0] 1, SW1       //
 	//            [1] john, 0    \-->[1] 0, SW2 ->SW2 //
 	////////////////////////////////////////////////////
 
@@ -371,18 +463,20 @@ namespace RelationalDatabase {
 		
 		Query & resultsQ() override { return *_result_query; }
 		Answer_Locator operator[](int index) override { setMatchArg(index); return Query::operator[](index); }
+		
+		void acceptMatch(RecordSelector & recSel) override {
+			setMatchArg(recSel.id());
+		}
+
 		void next(RecordSelector & recSel, int moveBy) override { setMatchArg(matchArg() + moveBy); Query::next(recSel, moveBy); }
 		bool uniqueMatch() override { return true; }
 
 	private:
 		Answer_Locator getMatch(RecordSelector & recSel, int, int matchArg) {
-			//recSel.setID(matchArg);
 			if (matchArg != recSel.id()) {
-				auto debug = false;
 				recSel.query().incrementTableQ().moveTo(recSel, matchArg);
 			}
 			Answer_R<JoinRecordType> select = recSel.incrementRecord();
-			//select.rec();
 			if (select.status() == TB_OK) {
 				return (*_result_query)[select.field(_select_f)];
 			}
