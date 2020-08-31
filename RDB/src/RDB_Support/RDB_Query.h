@@ -201,7 +201,7 @@ namespace RelationalDatabase {
 		}
 
 		void acceptMatch(RecordSelector & recSel) override {
-			Answer_R<ReturnedRecordType> currRec = *recSel;
+			Answer_R<ReturnedRecordType> currRec = recSel.incrementRecord();
 			setMatchArg(currRec.field(_match_f));
 		}
 
@@ -394,33 +394,40 @@ namespace RelationalDatabase {
 			, int filter_f
 		) : CustomQuery(link_query), _filterQuery(result_query, filter_f), _select_f(select_f) {}
 
-		void setMatchArg(int matchArg) override { link_query.setMatchArg(matchArg); }
+		RecordSelector begin() override {
+			auto rs = RecordSelector{ *this, _filterQuery.begin() };
+			getMatch(rs, 1, matchArg());
+			return rs;
+		}
+
+		void setMatchArg(int matchArg) override { 
+			Answer_R<LinkRecordType> link = (*this)[matchArg];
+			auto selectedResultID = link.field(_select_f);
+			auto recSel = end();
+			recSel.setID(selectedResultID);
+			_filterQuery.acceptMatch(recSel);
+		}
+
+		RecordSelector end() override { return { *this, _filterQuery.end() }; }
+		
+		RecordSelector last() override {
+			auto match = RecordSelector{ *this, _filterQuery.last() };
+			if (match.status() == TB_OK) getMatch(match, -1, matchArg());
+			return { match };
+		}
 
 		void acceptMatch(RecordSelector & recSel) override {
 			_filterQuery.acceptMatch(recSel);
 		}
 
-		int matchArg() const override { return link_query.matchArg(); }
+		void next(RecordSelector & recSel, int moveBy) override { 
+			_filterQuery.next(recSel, moveBy);
+		}
 
 	private:
 
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int matchArg) override {
-			if (matchArg != recSel.id()) {
-				recSel.query().incrementTableQ().moveTo(recSel, matchArg);
-			}
-			Answer_R<LinkRecordType> link = *recSel;
-			auto selectedResultID = link.field(select_f);
-			_filterQuery.incrementTableQ()[selectedResultID];
-			_filterQuery.acceptMatch();
-			//while (tryMatch.status() == TB_OK) {
-			//	auto select = tryMatch.field(_select_f);
-			//	auto filter = _filterQuery[select];
-			//	if (filter.status() == TB_OK) break;
-			//	incrementQ().next(recSel, direction);
-			//	tryMatch = recSel.incrementRecord();
-			//}
-			recSel.setStatus(tryMatch.status() == TB_RECORD_UNUSED ? (direction >= 0 ? TB_END_STOP : TB_BEFORE_BEGIN) : tryMatch.status());
-			return *recSel;
+			return recSel;
 		}
 
 		QueryF_T<ReturnedRecordType> _filterQuery;
