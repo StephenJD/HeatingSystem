@@ -202,7 +202,7 @@ namespace RelationalDatabase {
 
 		void acceptMatch(RecordSelector & recSel) override {
 			Answer_R<ReturnedRecordType> currRec = recSel.incrementRecord();
-			setMatchArg(currRec.field(_match_f));
+			CustomQuery::setMatchArg(currRec.field(_match_f));
 		}
 
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int id) override {
@@ -226,6 +226,54 @@ namespace RelationalDatabase {
 	/////////////////////////////////////////////////////////
 	//            Link-Table Query                         //
 	//_____________________________________________________//
+	// LinkTable,  link field{1}      ResultsTable         //
+	//                                                     //
+	//            [0] a, 1---\        [0] fred             //
+	//            [1] b, 0    \------>[1] john -> john     //
+	//            [2] c, 2------------[2] jim  -> jim      //
+	/////////////////////////////////////////////////////////
+
+	/// <summary>
+	/// Link-Table query.
+	/// A Select Query on the Results table, using Link-Table select-field,
+	/// Provide a Link-Table Query, 
+	/// a Result-Table Query,
+	/// and the field_index in the Link table for selecting the record in the Result-Table.
+	/// </summary>	
+	template <typename LinkRecordType, typename ReturnedRecordType >
+	class QueryL_T : public CustomQuery {
+	public:
+		QueryL_T(
+			Query & link_Query,
+			Query & result_Query,
+			int select_f
+		) : CustomQuery(link_Query), _resultQ(result_Query), _select_f{ select_f } {}
+
+		QueryL_T(
+			const TableQuery & link_Query,
+			const TableQuery & result_Query,
+			int select_f
+		) : CustomQuery(link_Query), _resultQ(result_Query), _select_f{ select_f } {}
+		
+	private:
+
+		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
+			Answer_R<LinkRecordType> match = recSel.incrementRecord();
+			if (match.status() == TB_OK) {
+				auto selectID = match.field(_select_f);
+				return _resultQ[selectID];
+			} else if (match.status() == TB_BEFORE_BEGIN)  {
+				return _resultQ[-1];
+			} else return _resultQ.end();
+		}
+
+		CustomQuery _resultQ;
+		int _select_f; // Field in Link-Table used to select Results
+	};
+	
+	/////////////////////////////////////////////////////////
+	//            Filter-Link-Table Query                         //
+	//_____________________________________________________//
 	// LinkTable,  link field {0}{1}      ResultsTable     //
 	// match(1)-------v                                    //
 	//            [0] 1,  1---\        [0] fred            //
@@ -234,7 +282,7 @@ namespace RelationalDatabase {
 	/////////////////////////////////////////////////////////
 
 	/// <summary>
-	/// Link-Table query.
+	/// Filter-Link-Table query.
 	/// A Select Query on the Results table, using Link-Table select-field,
 	/// where the Link-Table is Filtered on the Match argument.
 	/// Provide a Link-Table Query, 
@@ -243,10 +291,10 @@ namespace RelationalDatabase {
 	/// and the field_index in the Link table for selecting the record in the Result-Table.
 	/// </summary>	
 	template <typename LinkRecordType, typename ReturnedRecordType >
-	class QueryL_T : public CustomQuery {
+	class QueryFL_T : public CustomQuery {
 		// base-class holds the match argument for the Filter.
 	public:
-		QueryL_T(
+		QueryFL_T(
 			Query & link_Query,
 			Query & result_Query,
 			int filter_f,
@@ -258,7 +306,7 @@ namespace RelationalDatabase {
 #endif
 		}
 
-		QueryL_T(
+		QueryFL_T(
 			const TableQuery & link_Query,
 			const TableQuery & result_Query,
 			int filter_f,
@@ -315,7 +363,6 @@ namespace RelationalDatabase {
 	/// </summary>	
 	template <typename ReturnedRecordType, typename FilterRecordType>
 	class QueryLF_T : public CustomQuery {
-		// all derived queries inherit from the root, rather from each other, so the virtual return-types can be derived-type.
 	public:
 		QueryLF_T(
 			Query & result_query
@@ -377,7 +424,7 @@ namespace RelationalDatabase {
 	/// the field_index in the Results-Table for filtering.
 	/// </summary>	
 	template <typename LinkRecordType, typename ReturnedRecordType>
-	class QueryLinkF_T : public CustomQuery {
+	class QueryLinkF_T : public QueryF_T<ReturnedRecordType> {
 		// all derived queries inherit from the root, rather from each other, so the virtual return-types can be derived-type.
 	public:
 		QueryLinkF_T(
@@ -385,53 +432,50 @@ namespace RelationalDatabase {
 			, Query & result_query
 			, int select_f
 			, int filter_f
-		) : CustomQuery(link_query), _filterQuery(result_query, filter_f), _select_f(select_f) {}
+		) : QueryF_T<ReturnedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
 
 		QueryLinkF_T(
 			const TableQuery & link_query
 			, const TableQuery & result_query
 			, int select_f
 			, int filter_f
-		) : CustomQuery(link_query), _filterQuery(result_query, filter_f), _select_f(select_f) {}
+		) : QueryF_T<ReturnedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
 
 		RecordSelector begin() override {
-			auto rs = RecordSelector{ *this, _filterQuery.begin() };
+			auto rs = RecordSelector{ *this, incrementQ().begin() };
 			getMatch(rs, 1, matchArg());
 			return rs;
 		}
 
-		void setMatchArg(int matchArg) override { 
-			Answer_R<LinkRecordType> link = (*this)[matchArg];
-			auto selectedResultID = link.field(_select_f);
-			auto recSel = end();
-			recSel.setID(selectedResultID);
-			_filterQuery.acceptMatch(recSel);
+		void setMatchArg(int matchArg) override {
+			auto resultRec = _linkQuery[matchArg];
+			QueryF_T<ReturnedRecordType>::acceptMatch(RecordSelector{ *this,resultRec });
 		}
 
-		RecordSelector end() override { return { *this, _filterQuery.end() }; }
+		RecordSelector end() override { return { *this, incrementQ().end() }; }
 		
 		RecordSelector last() override {
-			auto match = RecordSelector{ *this, _filterQuery.last() };
+			auto match = RecordSelector{ *this, incrementQ().last() };
 			if (match.status() == TB_OK) getMatch(match, -1, matchArg());
 			return { match };
 		}
 
 		void acceptMatch(RecordSelector & recSel) override {
-			_filterQuery.acceptMatch(recSel);
+			incrementQ().acceptMatch(recSel);
 		}
 
 		void next(RecordSelector & recSel, int moveBy) override { 
-			_filterQuery.next(recSel, moveBy);
+			QueryF_T<ReturnedRecordType>::next(recSel, moveBy);
 		}
 
 	private:
 
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int matchArg) override {
+			QueryF_T<ReturnedRecordType>::getMatch(recSel, direction, matchArg);
 			return recSel;
 		}
 
-		QueryF_T<ReturnedRecordType> _filterQuery;
-		int _select_f; // Field in link_query used to select filter query record
+		QueryL_T<LinkRecordType, ReturnedRecordType> _linkQuery;
 	};
 
 	////////////////////////////////////////////////////
@@ -460,7 +504,7 @@ namespace RelationalDatabase {
 			Query & join_query,
 			Query & result_query,
 			int select_f
-		) : CustomQuery(join_query), _result_query(result_query), _select_f(select_f) {}
+		) : CustomQuery(join_query), _result_query(&result_query), _select_f(select_f) {}
 
 		QueryIJ_T(
 			const TableQuery & join_query,
@@ -485,6 +529,9 @@ namespace RelationalDatabase {
 			}
 			Answer_R<JoinRecordType> select = recSel.incrementRecord();
 			if (select.status() == TB_OK) {
+				auto resultRS = _result_query->end();
+				resultRS.setID(select.field(_select_f));
+				_result_query->acceptMatch(resultRS);
 				return (*_result_query)[select.field(_select_f)];
 			}
 			else return _result_query->end();

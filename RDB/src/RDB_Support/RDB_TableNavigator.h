@@ -97,6 +97,7 @@ namespace RelationalDatabase {
 	public:
 		TableNavigator();
 		TableNavigator(Table * t);
+		TableNavigator(Answer_Locator & answerLoc);
 		TableNavigator(int id, TB_Status status);
 		
 		// Queries

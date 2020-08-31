@@ -1731,7 +1731,8 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	auto q_dwellingZones = QueryL_T<R_DwellingZone, R_Zone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
 	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 	auto q_dwellingSpells = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
-	auto q_spellProg = QueryIJ_T<R_Spell>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 0 };
+	auto q_spellProgs = QueryLinkF_T<R_Spell, R_Program> { q_dwellingSpells, db.tableQuery(TB_Program), 1 ,1 };
+	auto q_spellProg = QueryIJ_T<R_Spell>{ db.tableQuery(TB_Spell), q_spellProgs, 0 };
 
 	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
 	auto rec_dwZone = Dataset_Zone(q_dwellingZones, noVolData, &rec_dwelling);
