@@ -27,7 +27,7 @@ namespace RelationalDatabase {
 
 	void RecordSelector::next_IncrementQ(int moveBy) {
 		setID(signed_id() + moveBy);
-		_query->incrementQ().moveTo(*this, id());
+		_query->iterationQ().moveTo(*this, id());
 	}
 
 	Answer_Locator RecordSelector::operator*() const {

@@ -285,7 +285,6 @@ namespace RelationalDatabase {
 		Answer_Locator operator[](int index) override {
 			// the resultsQ might be a lookup-filter. It must have its match-arg set.
 			auto linkRec = CustomQuery::end();
-			
 			linkRec.query().incrementTableQ()[index];
 			acceptMatch(RecordSelector{ *this, linkRec });
 			return getMatch(linkRec,1,0);

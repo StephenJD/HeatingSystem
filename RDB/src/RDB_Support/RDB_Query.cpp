@@ -8,24 +8,32 @@ namespace RelationalDatabase {
 	//void Query::refresh() { incrementTableQ().refresh(); }
 
 	RecordSelector Query::begin() {
-		auto rs = RecordSelector{ *this, incrementQ().begin() };
+		auto rs = RecordSelector{};
+		if (&resultsQ() == this) 
+			rs = RecordSelector{ *this, incrementTableQ().begin() };
+		else 
+			rs = RecordSelector{ *this, iterationQ().begin() };
 		getMatch(rs, 1, matchArg());
 		return rs;
 	}
 
 	RecordSelector Query::end() {
-		return {*this, incrementQ().end() };
+		//if (&resultsQ() == this) 
+		//	return {*this, incrementTableQ().end() };
+		//else 
+			return {*this, iterationQ().incrementTableQ().end() };
 	}
 
 	RecordSelector Query::last() {
 		if (&resultsQ() != this) resultsQ().last();
-		auto match = RecordSelector{ *this, incrementQ().last() };
+		//auto match = RecordSelector{ *this, iterationQ().last() };
+		auto match = RecordSelector{ *this, incrementTableQ().last() };
 		if (match.status() == TB_OK) getMatch(match, -1, matchArg());
 		return { match };
 	}
 
 	void Query::next(RecordSelector & recSel, int moveBy) {
-		if (&incrementQ() != this) incrementQ().next(recSel, moveBy);
+		/*if (&iterationQ() != this) */iterationQ().next(recSel, moveBy);
 		moveBy = moveBy ? moveBy : 1;
 		getMatch(recSel, moveBy, matchArg());
 	}
@@ -36,14 +44,14 @@ namespace RelationalDatabase {
 	}
 
 	void Query::moveTo(RecordSelector & rs, int index) {
-		if (&incrementQ() != this) 
-			incrementQ().moveTo(rs, index);
-		incrementQ().next(rs, 0);
+		if (&iterationQ() != this) 
+			iterationQ().moveTo(rs, index);
+		iterationQ().next(rs, 0);
 		findMatch(rs);
 	}
 
 	Answer_Locator Query::operator[](int index) {
-		auto rs = incrementQ().begin();
+		auto rs = iterationQ().end();
 		moveTo(rs, index);
 		auto result = getMatch(rs, 1, matchArg());
 		if (rs.id() != index) {

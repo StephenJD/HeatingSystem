@@ -27,11 +27,12 @@ namespace Assembly {
 		RelationalDatabase::TableQuery _q_displays;
 		RelationalDatabase::TableQuery _q_dwellings;
 		RelationalDatabase::TableQuery _q_zones;
-		RelationalDatabase::QueryL_T<client_data_structures::R_DwellingZone, client_data_structures::R_Zone> _q_dwellingZones;
-		RelationalDatabase::QueryL_T<client_data_structures::R_DwellingZone, client_data_structures::R_Dwelling> _q_zoneDwellings;
+		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_dwellingZones;
+		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_zoneDwellings;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_dwellingProgs;
 		RelationalDatabase::QueryLF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_dwellingSpells;
-		RelationalDatabase::QueryIJ_T<client_data_structures::R_Spell> _q_spellProg;
+		RelationalDatabase::QueryLinkF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_spellProgs;
+		RelationalDatabase::QueryML_T<client_data_structures::R_Spell> _q_spellProg;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_progProfiles;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_zoneProfiles;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_profile;

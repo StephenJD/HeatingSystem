@@ -86,9 +86,9 @@ namespace client_data_structures {
 		query().setMatchArg(parentIndex()); // parent is ProgramID. Required here
 		Answer_R<R_Zone> zone = _dwellZone->record();
 		auto zoneID = zone.id();
-		auto prevMatchArg = query().incrementQ().matchArg();
+		auto prevMatchArg = query().iterationQ().matchArg();
 		if (zoneID != prevMatchArg) {
-			query().incrementQ().setMatchArg(zoneID);
+			query().iterationQ().setMatchArg(zoneID);
 			record() = *(_recSel.begin());
 			setRecordID(_recSel.id());
 		}

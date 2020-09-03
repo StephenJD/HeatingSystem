@@ -65,9 +65,9 @@ namespace LCD_UI {
 	}
 
 	int I_Record_Interface::move_to(int pos) {
-		// pos is the required incrementQ().id
+		// pos is the required iterationQ().id
 		// Move to the next matching record past the current, depending on the direction of traversal 
-		//logger() << F(" move_to : ") << L_dec <<  pos << F(" Record().id is :")  << (int)record().id() << F(" IncrementQ id: ") << query().incrementQ().signed_id() << L_endl;
+		//logger() << F(" move_to : ") << L_dec <<  pos << F(" Record().id is :")  << (int)record().id() << F(" IncrementQ id: ") << query().iterationQ().signed_id() << L_endl;
 
 		query().setMatchArg(parentIndex());
 		RecordSelector & recSel = (_inEdit ? query().resultsQ().begin() : _recSel);

@@ -15,7 +15,8 @@ namespace Assembly {
 		, _q_zoneDwellings{ rdb.tableQuery(TB_DwellingZone), rdb.tableQuery(TB_Dwelling), 1, 0 }
 		, _q_dwellingProgs{ rdb.tableQuery(TB_Program), 1 }
 		, _q_dwellingSpells{ rdb.tableQuery(TB_Spell), rdb.tableQuery(TB_Program), 1, 1 }
-		, _q_spellProg{ rdb.tableQuery(TB_Spell), rdb.tableQuery(TB_Program),0 }
+		, _q_spellProgs{ _q_dwellingSpells, rdb.tableQuery(TB_Program), 1 ,1 }
+		, _q_spellProg{ rdb.tableQuery(TB_Spell), _q_spellProgs, 0 }
 		, _q_progProfiles{ rdb.tableQuery(TB_Profile), 0 }
 		, _q_zoneProfiles{ rdb.tableQuery(TB_Profile), 1 }
 		, _q_profile{ _q_zoneProfiles, 0 }
