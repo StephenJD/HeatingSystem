@@ -55,8 +55,11 @@ namespace LCD_UI {
 		//	LazyCollection::setFocusIndex(_data->parentIndex());
 		objectAtFocus = _data->query()[focusIndex()];
 		bool focusStillInRange = objectAtFocus.status() == TB_OK;
-		if (focusWasInRange && !focusStillInRange)
-			setFocusIndex(newStart);
+		if (focusWasInRange) {
+			//if (!focusStillInRange) setFocusIndex(newStart);
+			if (objectAtFocus.id() != focusIndex()) setFocusIndex(newStart);
+			//else setFocusIndex(objectAtFocus.id());
+		}
 
 //#ifdef ZPSIM
 //		logger() <<  L_tabs << F("\tNew FocusIndex: ") << focusIndex()
@@ -124,16 +127,16 @@ namespace LCD_UI {
 		return hasStreamed;
 	}
 
-	Collection_Hndl * UI_FieldData::saveEdit(const I_Data_Formatter * data) {
-		if (_parentFieldData) {
+	Collection_Hndl * UI_FieldData::saveEdit(const I_Data_Formatter * newData) {
+		if (data()->inParentEditMode()) {
 			auto newID = IntWrapper(objectIndex(),0);
-			if (_parentFieldData->data()->setNewValue(_selectFieldID, &newID)) {
-				_parentFieldData->setFocusIndex(_parentFieldData->data()->recordID());
+			if (data()->setNewValue(_selectFieldID, &newID)) {
+				//_parentFieldData->setFocusIndex(_parentFieldData->data()->recordID());
 			}
 		}
 		else {
 			_data->move_to(focusIndex());
-			if (_data->setNewValue(fieldID(), data)) {
+			if (_data->setNewValue(fieldID(), newData)) {
 				moveToSavedRecord();
 				item(focusIndex());
 			}

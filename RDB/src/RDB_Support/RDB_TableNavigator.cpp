@@ -26,7 +26,12 @@ namespace RelationalDatabase {
 		else _currRecord.setStatus(TB_INVALID_TABLE);
 	}
 
-	TableNavigator::TableNavigator(Answer_Locator & answerLoc) : TableNavigator(answerLoc.table()) {}
+	TableNavigator::TableNavigator(Answer_Locator & answerLoc) : 
+		TableNavigator(answerLoc.table())
+	{
+		_currRecord = answerLoc;
+		moveToThisRecord(id());
+	}
 
 
 	TableNavigator::TableNavigator(int id, TB_Status status) :

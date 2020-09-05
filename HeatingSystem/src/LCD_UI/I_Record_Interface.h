@@ -57,6 +57,7 @@ namespace LCD_UI {
 		VolatileData * runTimeData() { return _runtimeData; }
 		I_Record_Interface * parent() { return _parent; }
 		void setEditMode(bool inEdit) { _inEdit = inEdit; }
+		bool inParentEditMode() { return _inEdit; }
 	protected:
 		I_Record_Interface(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		// Data

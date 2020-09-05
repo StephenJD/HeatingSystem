@@ -7,8 +7,13 @@ namespace RelationalDatabase {
 	RecordSelector::RecordSelector(Query & query) : _query(&query) { }
 	RecordSelector::RecordSelector(Query & query, RecordSelector rs) : _query(&query), _tableNav(rs.tableNavigator()){}
 	RecordSelector::RecordSelector(Query & query, Table * table) : _query(&query), _tableNav(table) { }
-	RecordSelector::RecordSelector(Query & query, Answer_Locator & answer) : _query(&query), _tableNav(answer) { setID(answer.id()); setStatus(answer.status()); }
 	RecordSelector::RecordSelector(Query & query, int id, TB_Status status) : _query(&query), _tableNav(id, status) {}
+	
+	RecordSelector::RecordSelector(Query & query, Answer_Locator & answer) : 
+		_query(&query), _tableNav(answer) { 
+		setID(answer.id()); 
+		setStatus(answer.status());
+	}
 
 	RecordSelector & RecordSelector::begin() { query().moveTo(*this, 0); return *this; }
 	RecordSelector & RecordSelector::end() { query().moveTo(*this, query().end().id()); return *this; }
@@ -49,6 +54,4 @@ namespace RelationalDatabase {
 	}
 
 	Answer_Locator RecordSelector::operator[](int index) { query().moveTo(*this, index); return *this; }
-
-
 }

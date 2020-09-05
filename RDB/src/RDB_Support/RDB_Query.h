@@ -49,7 +49,7 @@ namespace RelationalDatabase {
 		// Modify Query
 		//virtual void refresh();
 		virtual void setMatchArg(int matchArg) {}
-		virtual void acceptMatch(RecordSelector & recSel) {}
+		virtual Answer_Locator acceptMatch(int recordID) { return { 0 }; }
 		virtual RecordSelector findMatch(RecordSelector & recSel);
 		virtual bool uniqueMatch() { return false; }
 		
@@ -111,6 +111,7 @@ namespace RelationalDatabase {
 		Answer_Locator operator[](int index) override;
 		void moveTo(RecordSelector & rs, int index) override;
 		TableQuery & incrementTableQ() override { return *this; }
+		Answer_Locator acceptMatch(int recordID) override { return (*this)[recordID]; }
 
 		// New Non-Polymorphic modifiers	
 		template <typename Record_T>
@@ -157,6 +158,8 @@ namespace RelationalDatabase {
 		Query & iterationQ() override { return *_query; }
 		Query & resultsQ() override { return *_query; }
 
+		Answer_Locator acceptMatch(int recordID) override { return iterationQ().acceptMatch(recordID); }
+
 	private:
 		Query * _query;
 		TableQuery _tableQ;
@@ -202,15 +205,13 @@ namespace RelationalDatabase {
 		}
 
 		// Polymorphic specialisations
-		void setMatchArg(int matchArg) override { 
-			_matchArg = matchArg; 
-			//getMatch(recSel, 1, matchArg);
-		}
+		void setMatchArg(int matchArg) override { _matchArg = matchArg; }
 		int matchArg() const override { return _matchArg; }
 
-		void acceptMatch(RecordSelector & recSel) override {
-			Answer_R<IteratedRecordType> currRec = recSel.incrementRecord();
+		Answer_Locator acceptMatch(int recordID) override {
+			Answer_R<IteratedRecordType> currRec = iterationQ().acceptMatch(recordID);
 			QueryF_T::setMatchArg(currRec.field(_match_f));
+			return currRec;
 		}		
 		
 		void next(RecordSelector & recSel, int moveBy) override {
@@ -270,24 +271,15 @@ namespace RelationalDatabase {
 		
 		Query & resultsQ() override { return _resultQ.resultsQ(); }
 
-		void acceptMatch(RecordSelector & recSel) override {
+		Answer_Locator acceptMatch(int recordID) override {
 			// the resultsQ might be a lookup-filter. It must have its match-arg set.
-			//getMatch(recSel, 0, 0);
-			resultsQ().acceptMatch(recSel);
-			//Answer_R<IteratedRecordType> match = recSel.incrementRecord();
-			//if (match.status() == TB_OK) {
-			//	auto selectID = match.field(_select_f);
-			//	auto result = resultsQ().CustomQuery::operator[](selectID);
-			//	resultsQ().acceptMatch(RecordSelector{*this,result});
-			//}
+			Answer_R<IteratedRecordType> currRec = iterationQ().acceptMatch(recordID);
+			return _resultQ.acceptMatch(currRec.field(_select_f));  
 		}
 
 		Answer_Locator operator[](int index) override {
 			// the resultsQ might be a lookup-filter. It must have its match-arg set.
-			auto linkRec = CustomQuery::end();
-			
-			linkRec.query().incrementTableQ()[index];
-			acceptMatch(RecordSelector{ *this, linkRec });
+			auto linkRec = RecordSelector{ *this, CustomQuery::operator[](index) };
 			return getMatch(linkRec,1,0);
 		}
 
@@ -300,6 +292,8 @@ namespace RelationalDatabase {
 				return resultsQ().CustomQuery::operator[](-1);
 			} else return resultsQ().end();
 		}
+
+		int select_f() const { return _select_f; };
 
 	protected:
 		CustomQuery _resultQ;
@@ -344,6 +338,12 @@ namespace RelationalDatabase {
 		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
 
 		Query & resultsQ() override { return _resultQ.resultsQ(); }
+
+		Answer_Locator acceptMatch(int recordID) override {
+			// the resultsQ might be a lookup-filter. It must have its match-arg set.
+			QueryF_T<IteratedRecordType>::acceptMatch(recordID);
+			return _resultQ.acceptMatch(recordID);
+		}
 
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int matchArg) override {
 			QueryF_T<IteratedRecordType>::getMatch(recSel, direction, matchArg);
@@ -393,8 +393,10 @@ namespace RelationalDatabase {
 
 		void setMatchArg(int matchArg) override { _filterQuery.setMatchArg(matchArg); }
 		
-		void acceptMatch(RecordSelector & recSel) override {
-			_filterQuery.acceptMatch(recSel);
+		Answer_Locator acceptMatch(int recordID) override {
+			Answer_R<FilterRecordType> selectedRec = QueryL_T<IteratedRecordType>::acceptMatch(recordID);
+			_filterQuery.acceptMatch(selectedRec.id());
+			return (*this)[recordID];
 		}
 
 		int matchArg() const override { return _filterQuery.matchArg(); }
@@ -420,10 +422,10 @@ namespace RelationalDatabase {
 	//          Linked Filter Query                           //
 	//________________________________________________________//
 	//    LinkTable{1}       IteratedTable, Filter field {1}  //
-	//             {0}  {1}         {0} {1}                   //
-	// match-->[0] fred, 0----->[0] SW1, 1 --> SW1            //
-	//         [1] john, 2      [1] SW2, 0                    //
-	//         [2] mary, 1      [2] SW3, 1 --> SW3            //
+	//                {0}  {1}        {0} {1}                 //
+	// match(0)-->[0] fred, 0---->[0] SW1, 1 --> SW1          //
+	// LF_T[2]--->[1] john, 2-\   [1] SW2, 0                  //
+	//            [2] mary, 1  \->[2] SW3, 1 --> SW3          //
 	////////////////////////////////////////////////////////////
 
 	/// <summary>
@@ -462,19 +464,17 @@ namespace RelationalDatabase {
 		void next(RecordSelector & recSel, int moveBy) override { QueryF_T<IteratedRecordType>::next(recSel, moveBy); }
 
 		Answer_Locator operator[](int index) override {
-			auto linkRec = _linkQuery[index];
-			acceptMatch(RecordSelector{ *this, linkRec });
-			return linkRec;
+			return acceptMatch(index);
 		}
 
-		void setMatchArg(int index) override {
-			operator[](index);
+		void setMatchArg(int recordID) override {
+			Answer_R<IteratedRecordType> currRec = _linkQuery.acceptMatch(recordID);
+			QueryF_T<IteratedRecordType>::acceptMatch(currRec.id());
 		}
 
-		void acceptMatch(RecordSelector & recSel) override {
-			auto iteratedRS = end();
-			iteratedRS.setID(recSel.id());
-			QueryF_T<IteratedRecordType>::acceptMatch(iteratedRS);
+		Answer_Locator acceptMatch(int recordID) override {
+			// When accepting match, assume interatedQ has already been aaccepted. 
+			return QueryF_T<IteratedRecordType>::acceptMatch(recordID);
 		}
 
 	protected:
@@ -491,12 +491,13 @@ namespace RelationalDatabase {
 	////////////////////////////////////////////////////
 
 	/// <summary>
-	/// Matched Lookup query is a Lookup Query using matchArg to select the Iterated-record.
+	/// Matched Lookup query is a Lookup Query using matchArg or [] to select the Iterated-record.
 	/// Select the unique record from the Results table, using IteratedTable select-field,
 	/// where the Match argument is the ID of the Iterated record.
 	/// Provide an IteratedTable Query, 
 	/// a Result-Table Query,
-	/// the field_index of the select-field in the IteratedTable,
+	/// the field_index of the select-field in the IteratedTable.
+	/// Setting the MatchArg or indexing[] sends AcceptMatch message to all nested queries.
 	/// </summary>	
 	template <typename IteratedRecordType>
 	class QueryML_T : public QueryL_T<IteratedRecordType> {
@@ -520,36 +521,33 @@ namespace RelationalDatabase {
 		
 		// Polymorphic specialisations
 		Answer_Locator operator[](int index) override {
-			_matchArg = index;
-			return QueryL_T<IteratedRecordType>::operator[](index);
+			return acceptMatch(index);
 		}
 
 		void setMatchArg(int index) override {
-			auto selected = operator[](index);
-			acceptMatch(RecordSelector{*this, selected});
+			acceptMatch(index);
 		}
 
-		void acceptMatch(RecordSelector & recSel) override {
-			//_matchArg = recSel.id();
-			QueryL_T<IteratedRecordType>::acceptMatch(recSel);
+		int matchArg() const override { return _matchArg; }
+
+		Answer_Locator acceptMatch(int recordID) override {
+			_matchArg = recordID;
+			return QueryL_T<IteratedRecordType>::acceptMatch(recordID);
 		}
 
 		void next(RecordSelector & recSel, int moveBy) override {
 			if (moveBy == 0) {
 				getMatch(recSel, 1, 0);
-			}
-			else if (moveBy > 0)
+			} else if (moveBy > 0) {
 				recSel = recSel.query().end();
-			else if (moveBy < 0) {
+			} else if (moveBy < 0) {
 				recSel.setID(-1);
 				recSel.setStatus(TB_BEFORE_BEGIN);
 			}
-			//auto endID = recSel.query().end().id();
-			//recSel.setID(endID);
 		}
 		
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
-			recSel.setID(_matchArg);
+			recSel.tableNavigator().moveToThisRecord(_matchArg);
 			return QueryL_T<IteratedRecordType>::getMatch(recSel,direction,0);
 		}
 

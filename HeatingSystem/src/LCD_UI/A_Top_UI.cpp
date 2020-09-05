@@ -61,7 +61,7 @@ namespace LCD_UI {
 		auto tryLeftRight = topUI;
 		auto gotLeftRight = _leftRightBackUI;
 		bool tryIsCollection;
-		while (tryIsCollection = tryLeftRight->get()->isCollection() || tryLeftRight->behaviour().is_CaptureLR()) {
+		while ((tryIsCollection = tryLeftRight->get()->isCollection()) || tryLeftRight->behaviour().is_CaptureLR()) {
 			if (!tryIsCollection) {
 				gotLeftRight = tryLeftRight;
 				break;
@@ -75,6 +75,8 @@ namespace LCD_UI {
 				tryLeftRight = tryActive_h;
 				if(tryLeftRight->get()->isCollection()) 
 					gotLeftRight = tryLeftRight;
+				//else 
+					//continue;
 			} else if (try_behaviour.is_viewAll()) {
 				gotLeftRight = tryLeftRight;
 			}

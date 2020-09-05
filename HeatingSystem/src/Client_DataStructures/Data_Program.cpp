@@ -50,6 +50,11 @@ namespace client_data_structures {
 			strcpy(record().rec().name, _name.str());
 			setRecordID(record().update());
 			break; }
+		case e_id: { // edit parent spell.program
+			Answer_R<R_Spell> spell = query().iterationQ().incrementTableQ()[query().matchArg()];
+			spell.rec().programID = newVal->val;
+			spell.update();
+			}
 		}
 		return false;
 	}

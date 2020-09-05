@@ -49,9 +49,9 @@
 #define EDIT_RUN
 
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define CONTRAST
-//#define TIME_TEMP_EDIT
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define CONTRAST
+#define TIME_TEMP_EDIT
 //#define MAIN_CONSOLE_PAGES
 //#define INFO_CONSOLE_PAGES
 
@@ -2017,7 +2017,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 				CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  At Hom_e");
 				THEN("SELECT on From inserts a program") {
 					display1_h.rec_left_right(-1);
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Au_g  At Home");
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 0_2Aug  At Home");
 					display1_h.rec_left_right(-1);
 					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 02Aug  At Home");
 					display1_h.rec_select();
@@ -2040,12 +2040,18 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	GIVEN("Calendar Sub-Page - Program can be changed") {
 		display1_h.rec_left_right(1); // left-right so select page
 		display1_h.rec_up_down(1); // next Dwelling
+		CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Zones       Flat   DHW   ");
 		display1_h.rec_left_right(1);
 		display1_h.rec_up_down(1); // Calendar Subpage
+		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calenda_r    From Now            Occup'd");
 		display1_h.rec_left_right(1); // From field
 		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    Fro_m Now            Occup'd");
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		cout << test_stream(display1_h.stream(tb)) << endl;
 		display1_h.rec_left_right(1); // Spell field
+		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From No_w            Occup'd");
 		display1_h.rec_left_right(1); // Prog field
+		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Occup'_d");
 
 		cout << "\n Appt spells  Before Change program...\n";
 		for (Answer_R<R_Spell> spell : q_dwellingSpells) {
@@ -2085,7 +2091,9 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 		display1_h.rec_up_down(-1);
 		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  #Occup'd");
 		display1_h.rec_select();
+		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  Occup'_d");
 		display1_h.rec_up_down(-1);
+		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From 10:00am 30Sep  Occup'_d");
 		display1_h.rec_up_down(1);
 		display1_h.stream(tb);
 		cout << test_stream(display1_h.stream(tb)) << endl;

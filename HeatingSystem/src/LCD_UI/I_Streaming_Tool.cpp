@@ -34,7 +34,8 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * I_Streaming_Tool::edit(Collection_Hndl * from) {
-		// Exit from edit handled by Field_StreamingTool_h::on_back() at the end of this file
+		// Save handled by Field_StreamingTool_h::on_select() at the end of this file.
+		// Cancel edit handled by Field_StreamingTool_h::on_back() at the end of this file.
 		auto field_streamingTool_h = static_cast<Field_StreamingTool_h*>(from);
 		editItem().setBackUI(from);
 #ifdef ZPSIM
@@ -156,7 +157,7 @@ namespace LCD_UI {
 		set_focus(f_interface().editItem().cursorFromFocus(focus));
 	}
 
-	Collection_Hndl * Field_StreamingTool_h::on_select() {
+	Collection_Hndl * Field_StreamingTool_h::on_select() { // Saves edit
 #ifdef ZPSIM
 		cout << F("on_select ") << ui_Objects()[(long)backUI()->get()] << endl;
 #endif	
