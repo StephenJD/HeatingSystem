@@ -10,7 +10,7 @@ namespace RelationalDatabase {
 	RecordSelector Query::begin() {
 		auto rs = RecordSelector{};
 		if (&resultsQ() == this) 
-			rs = RecordSelector{ *this, incrementTableQ().begin() };
+			rs = RecordSelector{ *this, incrementTableQ().TableQuery::begin() };
 		else 
 			rs = RecordSelector{ *this, iterationQ().begin() };
 		getMatch(rs, 1, matchArg());

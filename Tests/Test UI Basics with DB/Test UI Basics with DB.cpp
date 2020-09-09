@@ -52,7 +52,7 @@
 #define VIEW_ONE_NESTED_PROFILE_PAGE
 #define CONTRAST
 #define TIME_TEMP_EDIT
-//#define MAIN_CONSOLE_PAGES
+#define MAIN_CONSOLE_PAGES
 //#define INFO_CONSOLE_PAGES
 
 //#define TEST_RELAYS
@@ -1744,7 +1744,7 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,Behaviour{V+S+L+Vn+LR+UD_0+R0});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S + L + Vn + LR + UD_0 + R0});
 	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, Behaviour{ V + S + V1 + UD_E }, Behaviour{UD_E});
-	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, Behaviour{ V + S +L+ V1 }, Behaviour{ UD_A + R }/*, &dwellSpellUI_c, Dataset_Spell::e_progID*/);
+	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, Behaviour{ V + S +L+ V1 }, Behaviour{ UD_A + R });
 
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
@@ -1782,20 +1782,20 @@ TEST_CASE("View-one nested Calendar element", "[Display]") {
 
 	_fromCmd.set_UpDn_Target(calendar_subpage_c.item(3));
 
-	auto page1_subpage_c = makeCollection(zone_subpage_c, calendar_subpage_c, prog_subpage_c);
-	page1_subpage_c.set(Behaviour{V+S+V1+UD_A+R});
-	_fromCmd.set_OnSelFn_TargetUI(page1_subpage_c.item(1));
+	auto _page_dwellingMembers_subpage_c = makeCollection(zone_subpage_c, calendar_subpage_c, prog_subpage_c);
+	_page_dwellingMembers_subpage_c.set(Behaviour{V+S+V1+UD_A+R});
+	_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(1));
 
-	auto page1_c = makeCollection(dwellNameUI_c, page1_subpage_c);
-	_dwellingZoneCmd.set_UpDn_Target(page1_c.item(1));
-	_dwellingCalendarCmd.set_UpDn_Target(page1_c.item(1));
-	_dwellingProgCmd.set_UpDn_Target(page1_c.item(1));
+	auto _page_dwellingMembers_c = makeCollection(dwellNameUI_c, _page_dwellingMembers_subpage_c);
+	_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+	_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+	_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 
-	auto display1_c = makeChapter(page1_c);
+	auto display1_c = makeChapter(_page_dwellingMembers_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&page1_subpage_c] = "page1_subpage_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&_page_dwellingMembers_subpage_c] = "_page_dwellingMembers_subpage_c";
+	ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	for (Answer_R<R_Program>program : q_dwellingProgs) {

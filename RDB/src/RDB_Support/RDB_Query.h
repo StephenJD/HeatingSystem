@@ -70,16 +70,6 @@ namespace RelationalDatabase {
 		Query() = default;
 	};
 
-	class Null_Query : public Query {
-	public:
-		RecordSelector begin() { return { *this, 0, TB_INVALID_TABLE }; }
-		RecordSelector end() { return { *this, 1, TB_INVALID_TABLE }; }
-		RecordSelector last() { return begin(); }
-		void moveTo(RecordSelector & rs, int index) override {}
-	private:
-	};
-	extern Null_Query nullQuery;
-
 	///////////////////////////////////////////
 	//           Simple Table Query          //
 	//        Table                          //
@@ -143,6 +133,17 @@ namespace RelationalDatabase {
 		static_assert(!typetraits::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 		return incrementTableQ().insert(record);
 	}
+
+	class Null_Query : public Query {
+	public:
+		TableQuery & incrementTableQ() override { return _nulltableQ; }
+		void next(RecordSelector & recSel, int moveBy) override { recSel.setID(0); recSel.setStatus(TB_INVALID_TABLE); }
+
+		void moveTo(RecordSelector & rs, int index) override {}
+	private:
+		TableQuery _nulltableQ = {};
+	};
+	extern Null_Query nullQuery;
 
 	/// <summary>
 	/// A base Query for building complex queries.

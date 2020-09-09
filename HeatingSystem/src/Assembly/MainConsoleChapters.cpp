@@ -23,7 +23,7 @@ namespace Assembly {
 		
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V+S+Vn+LR+UD_0+R0} }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, Behaviour{V + S + V1 + UD_E}, Behaviour{UD_E} }
-		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S +L+ V1}, Behaviour{UD_A+R}, &_dwellSpellUI_c,Dataset_Spell::e_progID }
+		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S +L+ V1}, Behaviour{UD_A+R}}
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, Behaviour{V+S+V1+UD_A+R}, Behaviour{UD_E + R}}
 		
 		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, Behaviour{V + S +L+ Vn + LR+ UD_E + R0}, Behaviour{UD_E + R0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
@@ -46,6 +46,7 @@ namespace Assembly {
 		, _dwellingZoneCmd{"Zones",0 }
 		, _dwellingCalendarCmd{ "Calendar",0 }
 		, _dwellingProgCmd{ "Programs",0 }
+		, _insert{ "Insert-Prog", Behaviour{H + L0} }
 		, _profileDaysCmd{ "Ds:",0}
 		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, Behaviour{V+S+L+UD_A} }
 		, _deleteTTCmd{ "Delete", 0, Behaviour{H+S+L+ LR} }
@@ -58,7 +59,7 @@ namespace Assembly {
 
 		, _iterated_zoneReqTemp_c{80, _zoneIsReq_UI_c }
 
-		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) }
+		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) }
 		, _iterated_prog_name_c{80, _progNameUI_c}
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c) }
 

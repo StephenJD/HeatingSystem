@@ -70,42 +70,42 @@ namespace LCD_UI {
 		//logger() << F(" move_to : ") << L_dec <<  pos << F(" Record().id is :")  << (int)record().id() << F(" IncrementQ id: ") << query().iterationQ().signed_id() << L_endl;
 
 		query().setMatchArg(parentIndex());
-		RecordSelector & recSel = (_inEdit ? query().resultsQ().begin() : _recSel);
-		recSel.setID(recordID());
+		RecordSelector * recSel = (_inEdit ? &query().resultsQ().begin() : &_recSel);
+		recSel->setID(recordID());
 		if (pos < 0) {
-			record() = *recSel.begin();
+			record() = *(recSel->begin());
 			record().setStatus(TB_BEFORE_BEGIN);
 			setRecordID(-1);
 		}
 		else if (pos == 0) {
-			record() = *recSel.begin();
-			setRecordID(recSel.signed_id());
+			record() = *(recSel->begin());
+			setRecordID(recSel->signed_id());
 		}
 		else {
 			auto wasNotAtEndStop = record().status() != TB_END_STOP;
 			// Refresh current Record in case parent has changed 
-			bool noMoveRequested = recSel.signed_id() == pos;
-			if (recSel.signed_id() >= 0) {
-				recSel.query().next(recSel, 0);
+			bool noMoveRequested = recSel->signed_id() == pos;
+			if (recSel->signed_id() >= 0) {
+				recSel->query().next(*recSel, 0);
 			}
-			record() = *recSel;
+			record() = **recSel;
 
-			int matchID = recSel.signed_id();
+			int matchID = recSel->signed_id();
 
 			if (wasNotAtEndStop && record().status() == TB_END_STOP) {
-				record() = *(--recSel);
+				record() = *(--(*recSel));
 			}
 			setRecordID(matchID);
 
-			if (!recSel.query().uniqueMatch()) {
-				int direction = pos > recSel.signed_id() ? 1 : -1;
+			if (!recSel->query().uniqueMatch()) {
+				int direction = pos > recSel->signed_id() ? 1 : -1;
 				auto copyAnswer = record();
 				bool directionSign = direction < 0;
 				int difference = pos - matchID;
 				bool differenceSign = difference < 0;
 				while (difference && directionSign == differenceSign) {
-					copyAnswer = *(recSel += direction);
-					matchID = recSel.signed_id();
+					copyAnswer = *((*recSel) += direction);
+					matchID = recSel->signed_id();
 					difference = pos - matchID;
 					differenceSign = difference < 0;
 					if (copyAnswer.status() != TB_OK) break;

@@ -49,7 +49,7 @@ namespace LCD_UI {
 		//	_data->query().setMatchArg(_data->parentIndex());
 	    
 		setCount(_data->resetCount());
-		auto newStart = _data->recordID();
+		auto newStart = _data->query().begin().id();
 		//setObjectIndex(newStart);
 		//if (_data->parent())
 		//	LazyCollection::setFocusIndex(_data->parentIndex());

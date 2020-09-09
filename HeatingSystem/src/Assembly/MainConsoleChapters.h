@@ -57,6 +57,7 @@ namespace Assembly {
 		LCD_UI::UI_Label _dst, _prog, _zone;
 		client_data_structures::Contrast_Brightness_Cmd  _backlightCmd, _contrastCmd;
 		LCD_UI::UI_Cmd _dwellingZoneCmd, _dwellingCalendarCmd, _dwellingProgCmd;
+		LCD_UI::UI_Label _insert;
 		LCD_UI::UI_Cmd _profileDaysCmd;
 		client_data_structures::InsertSpell_Cmd _fromCmd;
 		client_data_structures::InsertTimeTemp_Cmd _deleteTTCmd;
@@ -67,7 +68,7 @@ namespace Assembly {
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<7> _page_currTime_c;
 		LCD_UI::UI_IteratedCollection<1> _iterated_zoneReqTemp_c;
-		LCD_UI::Collection<4> _calendar_subpage_c;
+		LCD_UI::Collection<5> _calendar_subpage_c;
 		LCD_UI::UI_IteratedCollection<1> _iterated_prog_name_c;
 		LCD_UI::Collection<2> _prog_subpage_c;
 
