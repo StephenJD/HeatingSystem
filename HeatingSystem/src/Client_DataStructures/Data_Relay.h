@@ -54,7 +54,7 @@ namespace client_data_structures {
 	class Dataset_Relay : public Record_Interface<R_Relay> {
 	public:
 		enum streamable { e_name, e_state };
-		Dataset_Relay(Query & query, VolatileData * runtimeData);
+		Dataset_Relay(Query & query, VolatileData * runtimeData, I_Record_Interface * parent = 0);
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
 		HardwareInterfaces::UI_Bitwise_Relay & relay(int index) { return static_cast<HardwareInterfaces::UI_Bitwise_Relay*>(runTimeData())[index]; }

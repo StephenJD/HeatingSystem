@@ -40,7 +40,7 @@ namespace LCD_UI {
 #endif
 	}
 
-	int Edit_Int_h::gotFocus(const I_Data_Formatter * data) { // returns edit focus
+	int Edit_Int_h::gotFocus(const I_Data_Formatter * data) { // Copies data to _currVal. Returns initial edit focus
 		if (data) _currValue = static_cast<const IntWrapper &>(*data);
 		_decade = 1;
 		cursorFromFocus(); //Sets CursorPos.
@@ -150,7 +150,7 @@ namespace LCD_UI {
 #endif
 	}
 
-	int Edit_Char_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
+	int Edit_Char_h::gotFocus(const I_Data_Formatter * data) { // Copies data to _currVal. Returns initial edit focus
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(data));
 		if(strWrapper) _currValue = *strWrapper;
 		auto strEnd = static_cast<uint8_t>(strlen(_currValue.str())) - 1;

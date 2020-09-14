@@ -29,13 +29,13 @@ namespace Assembly {
 		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, Behaviour{V + S +L+ Vn + LR+ UD_E + R0}, Behaviour{UD_E + R0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp, Behaviour{V + S + Vn + LR + R}}
 		
-		, _towelRailNameUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_name }
-		, _towelRailTempUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_onTemp, Behaviour{V+S+V1+UD_E}, Behaviour{UD_E}, &_towelRailNameUI_c }
-		, _towelRailOnTimeUI_c{ &db._rec_towelRails, Dataset_TowelRail::e_minutesOn, Behaviour{V + S + V1 + UD_E}, Behaviour{UD_E}, &_towelRailNameUI_c }
-		, _towelRailStatus_c{ &db._rec_towelRails, Dataset_TowelRail::e_secondsToGo, Behaviour{V + V1}, {}, &_towelRailNameUI_c }
+		, _towelRailNameUI_c{ &db._rec_towelRailParent, Dataset_TowelRail::e_name }
+		, _towelRailTempUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_onTemp, Behaviour{V+S+V1}, Behaviour{UD_E} }
+		, _towelRailOnTimeUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_minutesOn, Behaviour{V + S + V1}, Behaviour{UD_E} }
+		, _towelRailStatus_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_secondsToGo, Behaviour{V + V1}, {} }
 		
-		, _relayStateUI_c{ &db._rec_relay, Dataset_Relay::e_state,{V + S + V1 + UD_E} }
-		, _relayNameUI_c{ &db._rec_relay, Dataset_Relay::e_name, Behaviour{V+V1},{},&_relayStateUI_c }
+		, _relayStateUI_c{ &db._rec_relayParent, Dataset_Relay::e_state,{V + S + V1 + UD_E} }
+		, _relayNameUI_c{ &db._rec_relayChild, Dataset_Relay::e_name, Behaviour{V+V1},{} }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}
@@ -76,7 +76,7 @@ namespace Assembly {
 		// Info Pages
 		, _iterated_tempSensorUI{ 80, _tempSensorUI_c}
 		
-		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+Vn+R0} }
+		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+Vn+UD_A+R} }
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _iterated_towelRails_info_c) }
 		
 		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}

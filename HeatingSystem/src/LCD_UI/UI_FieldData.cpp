@@ -21,10 +21,6 @@ namespace LCD_UI {
 		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), activeEditBehaviour,fieldID, this, onSelect)
 		, _selectFieldID(selectFldID)
 	{
-		//if (_data->parent())
-		//	LazyCollection::setFocusIndex(_data->parentIndex());
-		//else 
-		//	LazyCollection::setFocusIndex(_data->recordID());
 		_data->move_to(focusIndex());
 		setObjectIndex(focusIndex());
 	} 
@@ -45,20 +41,14 @@ namespace LCD_UI {
 		//	<< L_endl;
 #endif		
 		bool focusWasInRange = objectAtFocus.status() == TB_OK;
-		//if (_data->parent())
-		//	_data->query().setMatchArg(_data->parentIndex());
 	    
 		setCount(_data->resetCount());
-		auto newStart = _data->query().begin().id();
-		//setObjectIndex(newStart);
-		//if (_data->parent())
-		//	LazyCollection::setFocusIndex(_data->parentIndex());
-		objectAtFocus = _data->query()[focusIndex()];
-		bool focusStillInRange = objectAtFocus.status() == TB_OK;
+		auto newRS = _data->query().begin();
+		auto newStart = newRS.id();
+		_data->query().moveTo(newRS, focusIndex());
+		bool focusStillInRange = newRS.status() == TB_OK;
 		if (focusWasInRange) {
-			//if (!focusStillInRange) setFocusIndex(newStart);
-			if (objectAtFocus.id() != focusIndex()) setFocusIndex(newStart);
-			//else setFocusIndex(objectAtFocus.id());
+			if (newRS.id() != focusIndex()) setFocusIndex(newStart);
 		}
 
 //#ifdef ZPSIM
@@ -79,27 +69,12 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * UI_FieldData::item(int elementIndex) { // return 0 if record invalid
-		//if (_parentFieldData) { // where a parent points to a single child, this allows the child object to be chosen
-			if (_field_StreamingTool_h.cursorMode(&_field_StreamingTool_h) == HI_BD::e_inEdit) {
-				if (_field_StreamingTool_h.activeEditBehaviour().is_next_on_UpDn()) {
-					auto newRecID = _field_StreamingTool_h.f_interface().editItem().currValue().val; //progID for SpellProg
-					elementIndex = _data->move_to(newRecID);
-				} 
-				//else {
-				//	_field_StreamingTool_h.f_interface().setDataSource(&_field_StreamingTool_h);
-				//	LazyCollection::setObjectIndex(elementIndex);
-				//	return &_field_StreamingTool_h;
-				//}
-			} else {
-				//if (_data->parent()) elementIndex = _data->parentIndex();
-			}
-		//	else {
-		//		// get selectionField of parentRecord pointing to its child object
-		//		// used by SpellProgram UI which depends upon the Spell RecordInterface.
-		//		auto selectedID = _parentFieldData->data()->recordField(_selectFieldID);
-		//		elementIndex = _data->move_to(selectedID);
-		//	}
-		//}
+		if (_field_StreamingTool_h.cursorMode(&_field_StreamingTool_h) == HI_BD::e_inEdit) {
+			if (_field_StreamingTool_h.activeEditBehaviour().is_next_on_UpDn()) {
+				auto newRecID = _field_StreamingTool_h.f_interface().editItem().currValue().val; //progID for SpellProg
+				elementIndex = _data->move_to(newRecID);
+			} 
+		} 
 		
 		auto wrapper = _data->getFieldAt(fieldID(), elementIndex);
 		LazyCollection::setObjectIndex(_data->recordID());

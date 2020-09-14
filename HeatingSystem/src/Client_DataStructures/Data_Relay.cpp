@@ -11,8 +11,8 @@ namespace client_data_structures {
 	//              Dataset_Relay
 	//***************************************************
 
-	Dataset_Relay::Dataset_Relay(Query & query, VolatileData * runtimeData)
-		: Record_Interface(query, runtimeData, 0)
+	Dataset_Relay::Dataset_Relay(Query & query, VolatileData * runtimeData, I_Record_Interface * parent)
+		: Record_Interface(query, runtimeData, parent)
 		, _name("", 6)
 		, _status{ 0, ValRange(e_edOneShort, 0, 1) } {}
 

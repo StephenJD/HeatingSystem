@@ -97,23 +97,22 @@ namespace LCD_UI {
 			}
 			setRecordID(matchID);
 
-			if (!recSel->query().uniqueMatch()) {
-				int direction = pos > recSel->signed_id() ? 1 : -1;
-				auto copyAnswer = record();
-				bool directionSign = direction < 0;
-				int difference = pos - matchID;
-				bool differenceSign = difference < 0;
-				while (difference && directionSign == differenceSign) {
-					copyAnswer = *((*recSel) += direction);
-					matchID = recSel->signed_id();
-					difference = pos - matchID;
-					differenceSign = difference < 0;
-					if (copyAnswer.status() != TB_OK) break;
-				}
-				if (((difference == 0 || directionSign != differenceSign) && copyAnswer.status() == TB_OK) || copyAnswer.status() != TB_OK) {
-					record() = copyAnswer;
-					setRecordID(matchID);
-				}
+			int direction = pos > recSel->signed_id() ? 1 : -1;
+			auto copyAnswer = record();
+			bool directionSign = direction < 0;
+			int difference = pos - matchID;
+			bool differenceSign = difference < 0;
+			while (difference && directionSign == differenceSign) {
+				(*recSel) += direction;
+				copyAnswer = *recSel;
+				matchID = recSel->signed_id();
+				difference = pos - matchID;
+				differenceSign = difference < 0;
+				if (copyAnswer.status() != TB_OK) break;
+			}
+			if (((difference == 0 || directionSign != differenceSign) && copyAnswer.status() == TB_OK) || copyAnswer.status() != TB_OK) {
+				record() = copyAnswer;
+				setRecordID(matchID);
 			}
 		}
 		return recordID();

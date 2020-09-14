@@ -27,6 +27,7 @@ namespace Assembly {
 		RelationalDatabase::TableQuery _q_displays;
 		RelationalDatabase::TableQuery _q_dwellings;
 		RelationalDatabase::TableQuery _q_zones;
+		RelationalDatabase::QueryM_T _q_zoneChild;
 		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_dwellingZones;
 		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_zoneDwellings;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_dwellingProgs;
@@ -38,13 +39,16 @@ namespace Assembly {
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_profile;
 		RelationalDatabase::QueryF_T<client_data_structures::R_TimeTemp> _q_timeTemps;
 		RelationalDatabase::TableQuery _q_tempSensors;
-		RelationalDatabase::TableQuery _q_towelRails;
-		RelationalDatabase::TableQuery _q_relays;
+		RelationalDatabase::TableQuery _q_towelRailParent;
+		RelationalDatabase::QueryM_T _q_towelRailChild;
+		RelationalDatabase::TableQuery _q_relayParent;
+		RelationalDatabase::QueryM_T _q_relayChild;
 
 		// DB Record Interfaces
 		client_data_structures::Dataset_WithoutQuery _rec_currTime;
 		client_data_structures::Dataset_Dwelling _rec_dwelling;
 		client_data_structures::Dataset_Zone _rec_zones;
+		client_data_structures::Dataset_Zone _rec_zone_child;
 		client_data_structures::Dataset_Zone _rec_dwZones;
 		client_data_structures::Dataset_Program _rec_dwProgs;
 		client_data_structures::Dataset_Spell _rec_dwSpells;
@@ -52,8 +56,10 @@ namespace Assembly {
 		client_data_structures::Dataset_ProfileDays _rec_profile;
 		client_data_structures::Dataset_TimeTemp _rec_timeTemps;
 		client_data_structures::Dataset_TempSensor _rec_tempSensors;
-		client_data_structures::Dataset_TowelRail _rec_towelRails;
-		client_data_structures::Dataset_Relay _rec_relay;
+		client_data_structures::Dataset_TowelRail _rec_towelRailParent;
+		client_data_structures::Dataset_TowelRail _rec_towelRailChild;
+		client_data_structures::Dataset_Relay _rec_relayParent;
+		client_data_structures::Dataset_Relay _rec_relayChild;
 	};
 
 }

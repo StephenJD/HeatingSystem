@@ -53,7 +53,7 @@
 #define CONTRAST
 #define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
-//#define INFO_CONSOLE_PAGES
+#define INFO_CONSOLE_PAGES
 
 //#define TEST_RELAYS
 //#define CMD_MENU

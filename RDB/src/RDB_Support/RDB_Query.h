@@ -51,7 +51,6 @@ namespace RelationalDatabase {
 		virtual void setMatchArg(int matchArg) {}
 		virtual Answer_Locator acceptMatch(int recordID) { return { 0 }; }
 		virtual RecordSelector findMatch(RecordSelector & recSel);
-		virtual bool uniqueMatch() { return false; }
 		
 		template <typename Record_T>
 		RecordSelector insert(const Record_T & record);
@@ -126,6 +125,56 @@ namespace RelationalDatabase {
 		//void refresh() override;
 	private:
 		Table * _table = 0;
+	};
+
+	///////////////////////////////////////////
+	//           Match Table Query           //
+	//        Table                          //
+	// Match(0)->[0]                         //
+	//           [1]                         //
+	///////////////////////////////////////////
+
+	/// <summary>
+	/// A Query on a Table selected by the matchArg.
+	/// Returned from RBD::table(matchArg);
+	/// </summary>
+	class QueryM_T : public TableQuery {
+	public:
+		using TableQuery::TableQuery;
+		QueryM_T(const TableQuery & tableQ) :TableQuery(tableQ) {}
+		
+		// Non-Polymorphic specialisations
+		RecordSelector begin() { return TableQuery::begin(); }
+		RecordSelector end() { return TableQuery::end(); }
+		RecordSelector last() { return TableQuery::last(); }
+
+		// Polymorphic specialisations
+		int matchArg() const override { return _matchArg; }
+		void setMatchArg(int matchArg) override { _matchArg = matchArg; }
+		Answer_Locator acceptMatch(int recordID) override { _matchArg = recordID; return TableQuery::operator[](recordID); }
+		
+		Answer_Locator operator[](int index) override {
+			return acceptMatch(index);
+		}
+
+		void next(RecordSelector & recSel, int moveBy) override {
+			if (moveBy == 0) {
+				getMatch(recSel, 1, 0);
+			} else if (moveBy > 0) {
+				recSel = recSel.query().end();
+			} else if (moveBy < 0) {
+				recSel.setID(-1);
+				recSel.setStatus(TB_BEFORE_BEGIN);
+			}
+		}
+
+		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
+			recSel.tableNavigator().moveToThisRecord(_matchArg);
+			return TableQuery::getMatch(recSel, direction, 0);
+		}
+
+	private:
+		RecordID _matchArg = 0;
 	};
 
 	template <typename Record_T>
@@ -551,8 +600,6 @@ namespace RelationalDatabase {
 			recSel.tableNavigator().moveToThisRecord(_matchArg);
 			return QueryL_T<IteratedRecordType>::getMatch(recSel,direction,0);
 		}
-
-		bool uniqueMatch() override { return true; }
 
 	protected:
 		RecordID _matchArg = 0;

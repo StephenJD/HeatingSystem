@@ -364,17 +364,6 @@ namespace LCD_UI {
 	// **********   UI_IteratedCollection **********
 	///////////////////////////////////////////
 
-//	UI_IteratedCollection::UI_IteratedCollection(int endPos, I_SafeCollection & safeCollection)
-//		: I_SafeCollection(safeCollection.endIndex(), viewable())
-//		, _nestedCollection(&safeCollection)
-//		, _endPos(endPos)
-//		, _endShow(endIndex())
-//	{
-//#ifdef ZPSIM
-//		logger() << F("Sort_Coll at: ") << (long)this << F(" with collHdl at ") << (long)&_nestedCollection << F(" to: ") << (long)collection() << L_endl;
-//#endif
-//	}
-
 	bool UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, ListStatus listStatus) const {
 		// Set the activeUI to object-index 0 and Stream all the elements
 		// Then move the activeUI to the next object-index and re-stream all the elements
@@ -398,8 +387,9 @@ namespace LCD_UI {
 
 		// algorithm
 		auto hasStreamed = false;
-		auto & iteratedActiveUI_h = *const_cast<I_SafeCollection*>(iterated_collection())->activeUI(); // This must be the parent field.
-		
+		auto & iteratedActiveUI_h = *const_cast<I_SafeCollection*>(iterated_collection())->move_to_object(_iteratedMemberIndex); // This must be the parent field.
+		auto & activeMember_h = *const_cast<I_SafeCollection*>(iterated_collection())->activeUI();
+		// Initialise for single iteration of remote displays, based on activeMember focus.
 		auto numberOfIterations = 1;
 		auto itIndex = iteratedActiveUI_h.get()->isCollection() ? iteratedActiveUI_h->focusIndex() : 0;
 		auto activeFocus = itIndex;
@@ -421,7 +411,7 @@ namespace LCD_UI {
 				streamActive = 0;
 			}			
 			for (auto & object : *iterated_collection()) {
-				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << endl;
+				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << endl;
 				auto collHasfocus = collectionHasfocus();
 				auto firstVisIndex = h_firstVisibleItem();
 				if (itIndex < firstVisIndex)
@@ -441,6 +431,7 @@ namespace LCD_UI {
 			}
 			++itIndex;
 		} while (itIndex < numberOfIterations && (itIndex = iteratedActiveUI_h->nextActionableIndex(itIndex)) < numberOfIterations);
+		logger() << L_endl;
 		return hasStreamed;
 	}
 
@@ -457,10 +448,10 @@ namespace LCD_UI {
 
 	void UI_IteratedCollection_Hoist::h_focusHasChanged() {
 		auto & coll = *iterated_collection();
-		auto iteratedActiveUI_h = coll.activeUI();
+		auto & iteratedActiveUI_h = *coll.move_to_object(_iteratedMemberIndex); // This must be the parent field.
 		_endShow = 1; _beginIndex = 0; _beginShow = 0;
-		if (iteratedActiveUI_h->get()->isCollection()) {
-			auto & iteratedActiveColl = *iteratedActiveUI_h->get()->collection();
+		if (iteratedActiveUI_h.get()->isCollection()) {
+			auto & iteratedActiveColl = *iteratedActiveUI_h.get()->collection();
 			_beginIndex = iteratedActiveColl.nextActionableIndex(0);
 			_endShow = iteratedActiveColl.endIndex();
 			_beginShow = _beginIndex;

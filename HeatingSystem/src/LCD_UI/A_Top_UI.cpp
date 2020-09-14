@@ -87,6 +87,7 @@ namespace LCD_UI {
 			_leftRightBackUI = gotLeftRight;
 			_leftRightBackUI->enter_collection(direction);
 		}
+		logger() << F("\tLeftRightUI is: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 		return topUI;
 	}
 
@@ -103,6 +104,7 @@ namespace LCD_UI {
 			}
 			this_UI_h = tryUD;
 		}
+		logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 	}
 
 	void A_Top_UI::selectPage() {
@@ -183,6 +185,16 @@ namespace LCD_UI {
 				move = -move; // reverse up/down when in edit.
 			}
 			haveMoved = _upDownUI->move_focus_by(move);
+		} else if (_upDownUI->behaviour().is_next_on_UpDn()) { // an iterated collection
+			auto & iteratedCollection = *_upDownUI->get()->collection();
+			auto & iteratedActiveObject_h = *iteratedCollection.move_to_object(iteratedCollection.iterableObjectIndex());
+			haveMoved = iteratedActiveObject_h.move_focus_by(move);
+			//auto nextIdx = iteratedActiveObject_h.focusIndex();
+			//iteratedCollection.filter(filter_selectable());
+			//for (auto & thisObj : iteratedCollection) {
+			//	if (&thisObj == iteratedActiveObject_h.get()) continue;
+			//	thisObj.setFocusIndex(nextIdx);
+			//}
 		}
 		if (!haveMoved) {
 			if (_upDownUI->get()->upDn_IsSet()) {
