@@ -432,6 +432,7 @@ namespace LCD_UI {
 			++itIndex;
 		} while (itIndex < numberOfIterations && (itIndex = iteratedActiveUI_h->nextActionableIndex(itIndex)) < numberOfIterations);
 		logger() << L_endl;
+		iteratedActiveUI_h->move_to_object(iteratedActiveUI_h->focusIndex());
 		return hasStreamed;
 	}
 

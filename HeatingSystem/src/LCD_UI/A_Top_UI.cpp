@@ -186,15 +186,17 @@ namespace LCD_UI {
 			}
 			haveMoved = _upDownUI->move_focus_by(move);
 		} else if (_upDownUI->behaviour().is_next_on_UpDn()) { // an iterated collection
-			auto & iteratedCollection = *_upDownUI->get()->collection();
-			auto & iteratedActiveObject_h = *iteratedCollection.move_to_object(iteratedCollection.iterableObjectIndex());
-			haveMoved = iteratedActiveObject_h.move_focus_by(move);
-			//auto nextIdx = iteratedActiveObject_h.focusIndex();
-			//iteratedCollection.filter(filter_selectable());
-			//for (auto & thisObj : iteratedCollection) {
-			//	if (&thisObj == iteratedActiveObject_h.get()) continue;
-			//	thisObj.setFocusIndex(nextIdx);
-			//}
+			if (_upDownUI->get()->isCollection()) {
+				auto & iteratedCollection = *_upDownUI->get()->collection();
+				auto & iteratedActiveObject_h = *iteratedCollection.move_to_object(iteratedCollection.iterableObjectIndex());
+				haveMoved = iteratedActiveObject_h.move_focus_by(move);
+				auto nextIdx = iteratedActiveObject_h.focusIndex();
+				iteratedCollection.filter(filter_selectable());
+				for (auto & thisObj : iteratedCollection) {
+					if (&thisObj == iteratedActiveObject_h.get()) continue;
+					thisObj.setFocusIndex(nextIdx);
+				}
+			}
 		}
 		if (!haveMoved) {
 			if (_upDownUI->get()->upDn_IsSet()) {

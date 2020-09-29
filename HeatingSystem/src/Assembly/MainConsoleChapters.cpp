@@ -23,7 +23,7 @@ namespace Assembly {
 		
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V+S+Vn+LR+UD_0+R0} }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, Behaviour{V + S + V1 + UD_E}, Behaviour{UD_E} }
-		, _spellProgUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S +L+ V1}, Behaviour{UD_A+R}}
+		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, Behaviour{V + S +L+ V1}, Behaviour{UD_A+R}}
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, Behaviour{V+S+V1+UD_A+R}, Behaviour{UD_E + R}}
 		
 		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, Behaviour{V + S +L+ Vn + LR+ UD_E + R0}, Behaviour{UD_E + R0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
@@ -99,7 +99,7 @@ namespace Assembly {
 		_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));
 		_fromCmd.set_UpDn_Target(_calendar_subpage_c.item(3));
-		_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(1));
+		_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(0));
 		_deleteTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
 		_editTTCmd.set_OnSelFn_TargetUI(_page_profile_c.item(7));
 		_newTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);

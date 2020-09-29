@@ -18,7 +18,7 @@ namespace LCD_UI {
 		: LazyCollection(dataset->count(), collectionBehaviour)
 		, _data(dataset)
 		, _parentFieldData(parent)
-		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), activeEditBehaviour,fieldID, this, onSelect)
+		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), activeEditBehaviour, fieldID, this, onSelect)
 		, _selectFieldID(selectFldID)
 	{
 		_data->move_to(focusIndex());
@@ -33,12 +33,11 @@ namespace LCD_UI {
 		// parent field might have been changed
 		auto objectAtFocus = _data->query()[focusIndex()];
 #ifdef ZPSIM
-		//logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)_field_StreamingTool_h.get()].c_str() <<  L_tabs 
-		//	<< F("\n\t\tFocusIndex was: ") << focusIndex()
-		//	<< F("\n\t\tObjectIndex was: ") << objectIndex()
-		//	//<< F("Obj ID was: ") << objectAtFocus.id()
-		//	<< F("Parent ID was: ") << (_parentFieldData ? _parentFieldData->data()->record().id() : 0)
-		//	<< L_endl;
+		logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)_field_StreamingTool_h.get()].c_str() <<  L_tabs 
+			<< F("\n\t\tFocusIndex was: ") << focusIndex()
+			<< F("\n\t\tObjectIndex was: ") << objectIndex()
+			<< F(" Parent ID was: ") << _data->parentIndex()
+			<< L_endl;
 #endif		
 		bool focusWasInRange = objectAtFocus.status() == TB_OK;
 	    
@@ -46,10 +45,12 @@ namespace LCD_UI {
 		auto newRS = _data->query().begin();
 		auto newStart = newRS.id();
 		_data->query().moveTo(newRS, focusIndex());
+		_data->query().next(newRS, 0);
 		bool focusStillInRange = newRS.status() == TB_OK;
 		if (focusWasInRange) {
 			if (newRS.id() != focusIndex()) setFocusIndex(newStart);
 		}
+		_data->setRecordID(focusIndex());
 
 //#ifdef ZPSIM
 //		logger() <<  L_tabs << F("\tNew FocusIndex: ") << focusIndex()

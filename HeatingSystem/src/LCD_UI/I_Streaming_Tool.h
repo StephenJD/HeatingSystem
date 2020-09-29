@@ -83,6 +83,7 @@ namespace LCD_UI {
 		int fieldID() const { return _fieldID; }
 		const UI_FieldData * getData() const { return _parentColln; }
 		Behaviour activeEditBehaviour() const { return _activeEditBehaviour; }
+		const I_Streaming_Tool & f_interface() const { return static_cast<const I_Streaming_Tool&>(*get()); }
 		// New modifiers
 		UI_FieldData * getData() { return _parentColln; }
 		OnSelectFnctr & onSelect() { return _onSelect; }
@@ -90,8 +91,6 @@ namespace LCD_UI {
 		void setCursorMode(CursorMode mode) { _cursorMode = mode; }
 		void set_OnSelFn_TargetUI(Collection_Hndl * obj);
 		void setEditFocus(int focus);
-
-		const I_Streaming_Tool & f_interface() const { return static_cast<const I_Streaming_Tool&>(*get()); }
 		I_Streaming_Tool & f_interface() { return static_cast<I_Streaming_Tool&>(*get()); }
 	private:
 		CursorMode _cursorMode = HardwareInterfaces::LCD_Display::e_unselected;

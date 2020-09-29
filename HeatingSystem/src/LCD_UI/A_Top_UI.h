@@ -49,7 +49,7 @@ namespace LCD_UI {
 		/// </summary>
 		Collection_Hndl * rec_activeUI();
 		void selectPage();
-	private:	
+	//private:	
 		// Modifiers
 		void set_CursorUI_from(Collection_Hndl * topUI);
 		Collection_Hndl * set_leftRightUI_from(Collection_Hndl * topUI, int direction);
