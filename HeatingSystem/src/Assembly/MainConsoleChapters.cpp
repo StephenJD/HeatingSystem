@@ -12,16 +12,16 @@ namespace Assembly {
 		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)
-		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime, Behaviour{V+S+Vn+UD_E+R0} }
-		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate, Behaviour{V+S+Vn+UD_E+R0} }
+		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime, Behaviour{V+S+V1+UD_E+R0} }
+		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate, Behaviour{V+S+V1+UD_E+R0} }
 		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst, Behaviour{V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneIsReq_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+Vn+UD_E+LR+R0} }
+		, _zoneReqIs_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+Vn+UD_E+R0+LR} }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + Vn + LR + UD_0 + R0} }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev}
 		
-		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V+S+Vn+LR+UD_0+R0} }
+		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V+S+V1+UD_A} }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, Behaviour{V + S + V1 + UD_E}, Behaviour{UD_E} }
 		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, Behaviour{V + S +L+ V1}, Behaviour{UD_A+R}}
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, Behaviour{V+S+V1+UD_A+R}, Behaviour{UD_E + R}}
@@ -41,14 +41,14 @@ namespace Assembly {
 		, _dst{"DST Hours:"}
 		, _prog{"Prg:", {V + L0} }
 		, _zone{"Zne:"}
-		, _backlightCmd{"Backlight",0, Behaviour{V + S +L + UD_A} }
-		, _contrastCmd{"Contrast",0, Behaviour{V+S+UD_A} }
+		, _backlightCmd{"Backlight",0, Behaviour{V + S +L + UD_S} }
+		, _contrastCmd{"Contrast",0, Behaviour{V+S+UD_S} }
 		, _dwellingZoneCmd{"Zones",0 }
 		, _dwellingCalendarCmd{ "Calendar",0 }
 		, _dwellingProgCmd{ "Programs",0 }
 		, _insert{ "Insert-Prog", Behaviour{H + L0} }
 		, _profileDaysCmd{ "Ds:",0}
-		, _fromCmd{ "From", { &Collection_Hndl::move_focus_to,3 }, Behaviour{V+S+L+UD_A} }
+		, _fromCmd{ "From", 0, Behaviour{V+S+L+UD_A} }
 		, _deleteTTCmd{ "Delete", 0, Behaviour{H+S+L+ LR} }
 		, _editTTCmd{ "Edit", 0, Behaviour{H+S+ LR}}
 		, _newTTCmd{ "New", 0, Behaviour{H + S } }
@@ -57,7 +57,7 @@ namespace Assembly {
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection(_currTimeUI_c, _SDCardUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
 
-		, _iterated_zoneReqTemp_c{80, _zoneIsReq_UI_c }
+		, _iterated_zoneReqTemp_c{80, _zoneReqIs_UI_c }
 
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) }
 		, _iterated_prog_name_c{80, _progNameUI_c}
@@ -121,10 +121,16 @@ namespace Assembly {
 		ui_Objects()[(long)&profileDays_Field_Interface] = "profileDays_Field_Interface";
 		
 		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
-		ui_Objects()[(long)&_zoneIsReq_UI_c] = "_zoneIsReq_UI_c";
+		ui_Objects()[(long)&_zoneReqIs_UI_c] = "_zoneReqIs_UI_c";
 		ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
 		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
 		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
+		ui_Objects()[(long)&_calendar_subpage_c] = "_calendar_subpage_c";
+		ui_Objects()[(long)&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
+		ui_Objects()[(long)&_insert] = "_insert";
+		ui_Objects()[(long)&_fromCmd] = "_fromCmd";
+		ui_Objects()[(long)&_dwellSpellUI_c] = "_dwellSpellUI_c";
+		ui_Objects()[(long)&_spellProgUI_c] = "_spellProgUI_c";
 
 		ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
 		ui_Objects()[(long)&_towelRailsLbl] = "_towelRailsLbl";

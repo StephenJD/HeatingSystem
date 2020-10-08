@@ -2449,7 +2449,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 
 	LCD_Display_Buffer<20, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
-	clock_().setTime({ 31,7,17 }, { 8,10 }, 0);
+	clock_().setTime({ 31,7,19 }, { 16,10 }, 0);
 	unsigned long timeOfReset_mS = 0;
 
 	HeatingSystem hs{};
@@ -2466,14 +2466,14 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 
 	auto & display1_h = hs.mainConsoleChapters()(0);
 	cout << test_stream(display1_h.stream(tb)) << endl;
-	clock_().setTime({ 31,7,17 }, { 8,10 }, 0);
+	clock_().setTime({ 31,7,19 }, {16,10 }, 0);
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "08:10:00a_m SD OK    Mon 31/Jul/2017     DST Hours: 1        Backlight Contrast");
+	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00p_m SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "08:10:00am SD OK    Mon 31/Jul/2017     DST Hours: 1        Backlight Contras_t");
+	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contras_t");
 	display1_h.rec_up_down(-1);
 	display1_h.rec_prevUI();
-	CHECK(test_stream(display1_h.stream(tb)) == "08:10:00am SD OK    Mon 31/Jul/2017     DST Hours: 1        Backlight Contrast");
+	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
@@ -2481,11 +2481,25 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	//											 Line[0]			 Line[1]			 Line[2]			 Line[3]
 	cout << test_stream(display1_h.stream(tb)) << endl;
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 03:20pm 31Jul19At Home");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            At Home");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Calendar    From 03:20pm 31Jul19At Home");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Calendar    From Now            At Home");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From 03:20pm 31Jul19At Home");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From Now            At Home");
+	display1_h.rec_left_right(1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m Now            At Home");
+	display1_h.rec_left_right(1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From No_w            At Home");
+	display1_h.rec_left_right(1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            At Hom_e");
+	display1_h.rec_select();
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            #At Home");
+	display1_h.rec_up_down(-1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            #At Work");
+	display1_h.rec_select();
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            At Wor_k");
+	display1_h.rec_left_right(1);
+	display1_h.rec_left_right(1);
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
 	display1_h.rec_up_down(-1);
@@ -2508,6 +2522,10 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
 	display1_h.rec_left_right(1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
+	display1_h.rec_up_down(1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
+	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
 	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 0900p18");
@@ -2718,14 +2736,14 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 									CHECK(test_stream(display1_h.stream(tb)) == "Room Temp OnFor ToGoEnSuite  50 060 0   #Family|| 51 061 0   Flat     52 062 0");
 									display1_h.rec_up_down(1);
 									display1_h.rec_select();
-									showActive(display1_h._leftRightBackUI);
+									//showActive(display1_h._leftRightBackUI);
 									CHECK(test_stream(display1_h.stream(tb)) == "Room Temp OnFor ToGoEnSuite  50 060 0   famil_y   51 061 0   Flat     52 062 0");
 									AND_THEN("middle row temp can be edited") {
-										showActive(display1_h._leftRightBackUI);
+										//showActive(display1_h._leftRightBackUI);
 										display1_h.rec_left_right(1);
-										showActive(display1_h._leftRightBackUI); // 1,1,1, - 2,-1,-1
+										//showActive(display1_h._leftRightBackUI); // 1,1,1, - 2,-1,-1
 										CHECK(test_stream(display1_h.stream(tb)) == "Room Temp OnFor ToGoEnSuite  50 060 0   family   5_1 061 0   Flat     52 062 0");
-										showActive(display1_h._leftRightBackUI); // 1,1,1 - 2,2,2 
+										//showActive(display1_h._leftRightBackUI); // 1,1,1 - 2,2,2 
 										display1_h.rec_select();
 										CHECK(test_stream(display1_h.stream(tb)) == "Room Temp OnFor ToGoEnSuite  50 060 0   family   5#1 061 0   Flat     52 062 0");
 										display1_h.rec_up_down(-1);

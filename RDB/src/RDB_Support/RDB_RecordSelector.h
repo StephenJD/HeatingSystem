@@ -30,7 +30,7 @@ namespace RelationalDatabase {
 		RecordSelector(Query & query);
 		RecordSelector(Query & query, RecordSelector rs);
 		RecordSelector(Query & query, Table * table);
-		RecordSelector(Query & query, Answer_Locator & answer);
+		RecordSelector(Query & query, const Answer_Locator & answer);
 		RecordSelector(Query & query, int id, TB_Status status); // for NullQuery
 		RecordSelector & operator=(TableNavigator & tableNavigator);
 		

@@ -34,7 +34,7 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _SDCardUI_c;
 
 		LCD_UI::UI_FieldData _dwellNameUI_c;
-		LCD_UI::UI_FieldData _zoneIsReq_UI_c;
+		LCD_UI::UI_FieldData _zoneReqIs_UI_c;
 		LCD_UI::UI_FieldData _zoneNameUI_c;
 		LCD_UI::UI_FieldData _zoneAbbrevUI_c;
 		LCD_UI::UI_FieldData _progNameUI_c;

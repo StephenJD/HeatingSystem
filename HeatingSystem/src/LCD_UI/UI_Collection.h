@@ -154,12 +154,7 @@ namespace LCD_UI {
 		explicit Collection_Hndl(const I_SafeCollection & safeCollection);
 		explicit Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus);
 		template<int noOfObjects>
-		explicit Collection_Hndl::Collection_Hndl(const UI_IteratedCollection<noOfObjects> & shortList_Hndl, int default_focus)
-			: Object_Hndl(shortList_Hndl) {
-				get()->collection()->filter(selectable()); // collection() returns the _objectHndl, cast as a collection.
-				set_focus(get()->collection()->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
-				move_focus_by(0); // recycle if allowed. 
-			}
+		Collection_Hndl(const UI_IteratedCollection<noOfObjects> & shortList_Hndl, int default_focus);
 		
 		// Polymorphic Queries
 		virtual const Behaviour behaviour() const { return get()->behaviour(); }
@@ -242,7 +237,7 @@ namespace LCD_UI {
 		// New Polymorphic Queries
 		virtual int nextIndex(int index) const { return ++index; }
 		virtual bool isActionableObjectAt(int index) const;
-		virtual int iterableObjectIndex() const { return 0; }
+		virtual int iterableObjectIndex() const { return focusIndex(); }
 
 		// New Non-Polymorphic Queries
 		/// <summary>
@@ -287,7 +282,14 @@ namespace LCD_UI {
 		virtual Collection_Hndl * move_focus_to(int index);
 		
 		// Non-Polymorphic Modifiers
-		Collection_Hndl * activeUI() { return static_cast<Collection_Hndl*>(item(validIndex(focusIndex()))); }		
+		Collection_Hndl * activeUI() {
+			auto obj_hdl = item(validIndex(focusIndex()));
+			if (obj_hdl == 0) {
+				setFocusIndex(prevActionableIndex(focusIndex()));
+				obj_hdl = item(focusIndex());
+			}
+			return static_cast<Collection_Hndl*>(obj_hdl);
+		}		
 		Coll_Iterator begin();
 		Coll_Iterator end() { return { this, endIndex() }; }
 		void setCount(int count) { _count = count; }
@@ -320,6 +322,14 @@ namespace LCD_UI {
 	inline int Collection_Hndl::focusIndex() const { return get()->collection() ? get()->collection()->focusIndex() : 0; }
 	inline void Collection_Hndl::setFocusIndex(int index) { get()->collection()->I_SafeCollection::setFocusIndex(index); }
 	inline int Collection_Hndl::endIndex() const { return get()->collection()->endIndex(); }
+
+	template<int noOfObjects>
+	Collection_Hndl::Collection_Hndl(const UI_IteratedCollection<noOfObjects> & shortList_Hndl, int default_focus)
+		: Object_Hndl(shortList_Hndl) {
+		get()->collection()->filter(filter_selectable()); // collection() returns the _objectHndl, cast as a collection.
+		set_focus(get()->collection()->nextActionableIndex(default_focus)); // must call on mixed collection of Objects and collections
+		move_focus_by(0); // recycle if allowed. 
+	}
 
 	//////////////////////////////////////////////////////////////////////
 	//                   Static Collection Base Class                   //
@@ -360,7 +370,7 @@ namespace LCD_UI {
 			_filter = filter_viewable();	
 		}		
 		
-		Collection(const Collection<noOfObjects> & collection, Behaviour behaviour) 
+		Collection(Collection<noOfObjects> collection, Behaviour behaviour) 
 			: I_SafeCollection(noOfObjects, behaviour)
 			, _array(collection._array) 
 		{
@@ -466,18 +476,18 @@ namespace LCD_UI {
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> & collection, Behaviour behaviour = { V + S + Vn + LR + UD_0 + R0 })
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + Vn + LR + UD_0 + R0 })
 			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos) {
-			_filter = filter_viewable();
+			Collection<noOfObjects>::_filter = filter_viewable();
 			for (auto & object : collection) {
 				object.behaviour().make_viewOne();
 			}
-			_iteratedMemberIndex = focusIndex();
+			_iteratedMemberIndex = Collection<noOfObjects>::focusIndex();
 		}
 
 		// Polymorphic Queries
-		bool hasFocus() const override { return (focusIndex() == objectIndex()) && activeUI()->get()->hasFocus(); }
+		bool hasFocus() const override { return (Collection<noOfObjects>::focusIndex() == Collection<noOfObjects>::objectIndex()) && Collection<noOfObjects>::activeUI()->get()->hasFocus(); }
 		const I_SafeCollection * iterated_collection() const override { return this; }
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override {
 			return h_streamElement(buffer, activeElement, endPos, listStatus);
@@ -494,7 +504,7 @@ namespace LCD_UI {
 	class UI_IteratedCollection<1> : public Collection<1>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<1> & collection)
+		UI_IteratedCollection(int endPos, Collection<1> collection)
 			: Collection<1>(collection, Behaviour(collection[0].get()->behaviour()+LR+R0).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
@@ -502,9 +512,10 @@ namespace LCD_UI {
 		}
 
 		UI_IteratedCollection(int endPos, I_SafeCollection & collection)
-			: Collection<1>{ {Collection_Hndl{collection}}, (collection.behaviour()).make_viewAll() } // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			: Collection<1>{ ArrayWrapper<1,Collection_Hndl>{Collection_Hndl{collection}}, (collection.behaviour()).make_viewAll() } // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
+			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + LR + R0) & ~UD_A;
 			item(0)->get()->behaviour().make_viewOne();
 		}
 

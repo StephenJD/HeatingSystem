@@ -9,7 +9,7 @@ namespace RelationalDatabase {
 	RecordSelector::RecordSelector(Query & query, Table * table) : _query(&query), _tableNav(table) { }
 	RecordSelector::RecordSelector(Query & query, int id, TB_Status status) : _query(&query), _tableNav(id, status) {}
 	
-	RecordSelector::RecordSelector(Query & query, Answer_Locator & answer) : 
+	RecordSelector::RecordSelector(Query & query, const Answer_Locator & answer) : 
 		_query(&query), _tableNav(answer) { 
 		setID(answer.id()); 
 		setStatus(answer.status());

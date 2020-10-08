@@ -49,7 +49,9 @@ namespace LCD_UI {
 		while (_cursorUI->get()->isCollection()) {
 			auto parent = _cursorUI;
 			auto newActive = _cursorUI->activeUI(); // the focus lies in a nested collection
+#ifdef ZPSIM
 			logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << " Active: " << (newActive? ui_Objects()[(long)(newActive->get())].c_str():"") << L_endl;
+#endif
 			if (newActive == 0) break;
 			_cursorUI = newActive;
 			if (_cursorUI->backUI() == 0) _cursorUI->setBackUI(parent);
@@ -67,10 +69,14 @@ namespace LCD_UI {
 				break;
 			}
 			auto try_behaviour = tryLeftRight->behaviour();
+#ifdef ZPSIM
 			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
 				<< (try_behaviour.is_CaptureLR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive"));
+#endif
 			auto tryActive_h = tryLeftRight->activeUI();
+#ifdef ZPSIM
 			logger() << " ActiveObj: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
+#endif
 			if (try_behaviour.is_CaptureLR()) {
 				tryLeftRight = tryActive_h;
 				if(tryLeftRight->get()->isCollection()) 
@@ -87,7 +93,9 @@ namespace LCD_UI {
 			_leftRightBackUI = gotLeftRight;
 			_leftRightBackUI->enter_collection(direction);
 		}
+#ifdef ZPSIM
 		logger() << F("\tLeftRightUI is: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+#endif
 		return topUI;
 	}
 
@@ -98,13 +106,17 @@ namespace LCD_UI {
 			auto tryUD = this_UI_h->activeUI();
 			//if (tryUD == 0) break;
 			auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble();
+#ifdef ZPSIM
 			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
+#endif
 			if (tryIsUpDnAble) {
 				_upDownUI = tryUD;
 			}
 			this_UI_h = tryUD;
 		}
+#ifdef ZPSIM
 		logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+#endif
 	}
 
 	void A_Top_UI::selectPage() {

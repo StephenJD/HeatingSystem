@@ -60,7 +60,6 @@ namespace LCD_UI {
 	Collection_Hndl::Collection_Hndl(const I_SafeCollection & safeCollection, int default_focus)
 		: Object_Hndl(safeCollection) {
 		if (auto collection = get()->collection()) {
-			logger() << F("Collection_Hndl set defaultFocus for ") << ui_Objects()[(long)get()].c_str() << L_endl;
 			collection->filter(filter_selectable()); // collection() returns the _objectHndl, cast as a collection.
 			auto validFocus = collection->nextActionableIndex(default_focus);
 			set_focus(validFocus); // must call on mixed collection of Objects and collections
@@ -124,7 +123,9 @@ namespace LCD_UI {
 	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
 		auto collection = get()->collection();
 		if (collection) {
+#ifdef ZPSIM
 			logger() << F("\tmove_focus_by on ") << ui_Objects()[(long)collection].c_str() << L_endl;
+#endif
 			move_focus_to(focusIndex());
 			const int startFocus = focusIndex(); // might be endIndex()
 			////////////////////////////////////////////////////////////////////
@@ -311,12 +312,19 @@ namespace LCD_UI {
 				if (element.behaviour().is_OnNewLine()) buffer.newLine();
 				if (element.collection() && element.behaviour().is_viewOne()) {
 					auto thisActiveObj = element.activeUI();
-					auto & object = *thisActiveObj->get();
+					if (thisActiveObj) {
+						auto & object = *thisActiveObj->get();
 #ifdef ZPSIM
-					cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
+						cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
 #endif
-					//if (activeElement == 0) thisActiveObj = 0;
-					hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
+						//if (activeElement == 0) thisActiveObj = 0;
+						hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
+					} 
+#ifdef ZPSIM
+					else {
+						cout << F("\n\!!!!!!!!!!!! ERROR: View Object empty !!!!!!!!!! \n\n");
+					}
+#endif
 				} else {
 					auto thisActiveObj = activeElement;
 					if (focusIndex() != i) {
@@ -411,7 +419,9 @@ namespace LCD_UI {
 				streamActive = 0;
 			}			
 			for (auto & object : *iterated_collection()) {
+#ifdef ZPSIM
 				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << endl;
+#endif
 				auto collHasfocus = collectionHasfocus();
 				auto firstVisIndex = h_firstVisibleItem();
 				if (itIndex < firstVisIndex)
@@ -431,16 +441,18 @@ namespace LCD_UI {
 			}
 			++itIndex;
 		} while (itIndex < numberOfIterations && (itIndex = iteratedActiveUI_h->nextActionableIndex(itIndex)) < numberOfIterations);
+#ifdef ZPSIM
 		logger() << L_endl;
-		iteratedActiveUI_h->move_to_object(iteratedActiveUI_h->focusIndex());
+#endif
+		if (iteratedActiveUI_h.get()->isCollection()) iteratedActiveUI_h->move_to_object(iteratedActiveUI_h->focusIndex());
 		return hasStreamed;
 	}
 
 	Collection_Hndl * UI_IteratedCollection_Hoist::h_item(int newIndex) {// return member without moving focus
-		cout << F("\tUI_IteratedCollection: ") << ui_Objects()[(long)iterated_collection()] << endl;
 		auto active = iterated_collection()->activeUI();
 		active->get()->collection()->move_to_object(newIndex);
 #ifdef ZPSIM
+		cout << F("\tUI_IteratedCollection: ") << ui_Objects()[(long)iterated_collection()] << endl;
 		cout << F("\t\tactive item: ") << ui_Objects()[(long)active->get()->collection()];
 		cout << " NewIndex : " << newIndex << " SubCollection obj: " << iterated_collection()->objectIndex() << " SubCollection Focus: " << iterated_collection()->focusIndex() << endl;
 #endif

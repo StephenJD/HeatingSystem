@@ -188,7 +188,7 @@ namespace RelationalDatabase {
 		TableQuery & incrementTableQ() override { return _nulltableQ; }
 		void next(RecordSelector & recSel, int moveBy) override { recSel.setID(0); recSel.setStatus(TB_INVALID_TABLE); }
 
-		void moveTo(RecordSelector & rs, int index) override {}
+		void moveTo(RecordSelector & rs, int index) override { next(rs,0); }
 	private:
 		TableQuery _nulltableQ = {};
 	};
@@ -349,9 +349,9 @@ namespace RelationalDatabase {
 			Answer_R<IteratedRecordType> match = recSel.incrementRecord();
 			if (match.status() == TB_OK) {
 				auto selectID = match.field(_select_f);
-				return resultsQ().CustomQuery::operator[](selectID);
+				return resultsQ().Query::operator[](selectID);
 			} else if (match.status() == TB_BEFORE_BEGIN)  {
-				return resultsQ().CustomQuery::operator[](-1);
+				return resultsQ().Query::operator[](-1);
 			} else return resultsQ().end();
 		}
 
@@ -494,10 +494,10 @@ namespace RelationalDatabase {
 		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
 			Answer_R<IteratedRecordType> tryMatch = recSel.incrementRecord();
 			while (tryMatch.status() == TB_OK) {
-				auto select = tryMatch.field(_select_f);
+				auto select = tryMatch.field(QueryL_T<IteratedRecordType>::_select_f);
 				auto filter = _filterQuery[select];
 				if (filter.status() == TB_OK) break;
-				iterationQ().next(recSel, direction);
+				QueryL_T<IteratedRecordType>::iterationQ().next(recSel, direction);
 				tryMatch = recSel.incrementRecord();
 			}
 			recSel.setStatus(tryMatch.status() == TB_RECORD_UNUSED ? (direction >= 0 ? TB_END_STOP : TB_BEFORE_BEGIN) : tryMatch.status());

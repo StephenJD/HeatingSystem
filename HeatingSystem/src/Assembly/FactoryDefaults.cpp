@@ -36,9 +36,9 @@ namespace Assembly {
 
 	constexpr R_Display displays_f[] = {
 		{"Main", 0, 16, 20, 16, 250, 70, 30}
-		,{"US", 0x24, 0, 0, 0, 0, 0, 0}
-		,{"DS", 0x26, 0, 0, 0, 0, 0, 0}
-		,{"Flat", 0x25, 0, 0, 0, 0, 0, 0}
+		,{"US", US_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 0}
+		,{"DS", DS_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 0}
+		,{"Flat", FL_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 0}
 	};
 
 	constexpr R_Relay relays_f[] = {

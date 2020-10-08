@@ -16,7 +16,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 36;
+	constexpr uint8_t VERSION = 38;
 
 	/////////////////// Pin assignments & misc. ///////////////////
 	constexpr uint8_t RESET_OUT_PIN = 14;  // active low.
@@ -84,7 +84,6 @@ namespace HardwareInterfaces {
 	const uint8_t US_REMOTE_ADDRESS = 0x24;
 	const uint8_t FL_REMOTE_ADDRESS = 0x25;
 	const uint8_t DS_REMOTE_ADDRESS = 0x26;
-	const uint8_t REM_DISPL_ADDR[] = { 0x24, 0x25, 0x26 };
 	const uint8_t IO8_PORT_OptCoupl = 0x20;
 	const uint8_t IO8_PORT_MixValves = 0x27;
 	const uint8_t IO8_PORT_OptCouplActive = 0;

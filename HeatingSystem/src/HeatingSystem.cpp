@@ -80,7 +80,7 @@ HeatingSystem::HeatingSystem()
 	, mainDisplay(&_hs_queries._q_displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
 	, remoteKeypad{ {remDispl[0].displ()},{remDispl[0].displ()},{remDispl[0].displ()} }
-	, remDispl{ {_recover, US_REMOTE_ADDRESS}, FL_REMOTE_ADDRESS, DS_REMOTE_ADDRESS }
+	, remDispl{ {_recover, US_REMOTE_ADDRESS}, DS_REMOTE_ADDRESS, FL_REMOTE_ADDRESS } // must be same order as zones
 	, _mainConsoleChapters{ _hs_queries, _tempController, *this}
 	, _remoteConsoleChapters{_hs_queries}
 	, _sequencer(_hs_queries, _tempController)
@@ -102,16 +102,16 @@ void HeatingSystem::serviceTemperatureController() {
 
 void HeatingSystem::serviceConsoles() {
 	_mainConsole.processKeys();
-	auto i = 0;
+	auto zoneIndex = 0;
 	
 	for (auto & remote : _remoteConsole) {
 		auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
 		//cout << "\nRemote activeField: " << ui_Objects()[(long)activeField->get()] << endl;
-		activeField->setFocusIndex(i);
+		activeField->setFocusIndex(zoneIndex);
 		//logger() << "Remote PageGroup focus: " << _remoteConsoleChapters._remote_page_group_c.focusIndex() << L_endl;
 		remote.processKeys();
-		++i;
-		if (i == 2) ++i;
+		++zoneIndex;
+		if (zoneIndex == 2) ++zoneIndex;
 	}
 }
 

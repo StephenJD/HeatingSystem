@@ -25,6 +25,7 @@ namespace RelationalDatabase {
 		void update(const void * rec);
 		Answer_Locator * operator->() { return this; } // supports -> dereferencing on RecordSelector, returning an Answer_Locator
 		AnswerID operator*() { return *this; }
+		Table * table() const {return _tb;}
 		Table * table() {return _tb;}
 	protected:
 		// Modifiers

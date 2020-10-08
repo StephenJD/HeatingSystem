@@ -9,6 +9,7 @@ namespace LCD_UI {
 	/// 228: view, sel, ViewOne, LR-MoveFocus, UD-NextActive, Recycle
 	/// 226: view, sel, ViewOne, LR-MoveFocus, No-UD, Recycle
 	/// 224: view, sel, ViewOne, LR-MoveFocus, No-UD, Recycle
+	/// 216: view, sel, ViewOne, LR-MoveFocus, UD_Edit, Recycle
 	/// 210: view, sel, ViewAll, LR-NextActive, No-UD, No-recycle
 	/// 208: view, sel, ViewAll, LR-NextActive, No-UD, Recycle
 	/// 198: view, sel, ViewAll, LR-MoveFocus, UD-NextActive, No-Recycle
