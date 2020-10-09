@@ -55,7 +55,7 @@ std::string	test_stream(UI_DisplayBuffer & buffer) {
 class LazyPage : public LCD_UI::LazyCollection {
 public:
 	using I_SafeCollection::item;
-	LazyPage() : LazyCollection(5,Behaviour{V+S+Vn+UD_A+R}) {}
+	LazyPage() : LazyCollection(5,Behaviour{V+S+VnLR+UD_A+R}) {}
 	Collection_Hndl * item(int newIndex) override {
 		if (newIndex == objectIndex() && object().get() != 0) return &object();
 		setObjectIndex(newIndex);

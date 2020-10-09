@@ -63,7 +63,7 @@ namespace LCD_UI {
 		auto tryLeftRight = topUI;
 		auto gotLeftRight = _leftRightBackUI;
 		bool tryIsCollection;
-		while ((tryIsCollection = tryLeftRight->get()->isCollection()) || tryLeftRight->behaviour().is_CaptureLR()) {
+		while ((tryIsCollection = tryLeftRight->get()->isCollection()) || tryLeftRight->behaviour().is_viewAll_LR()) {
 			if (!tryIsCollection) {
 				gotLeftRight = tryLeftRight;
 				break;
@@ -71,19 +71,21 @@ namespace LCD_UI {
 			auto try_behaviour = tryLeftRight->behaviour();
 #ifdef ZPSIM
 			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
-				<< (try_behaviour.is_CaptureLR() ? " LR-Active" : (try_behaviour.is_viewAll() ? " ViewAll" : " ViewActive"));
+				<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive");
+				//<< (try_behaviour.is_CaptureLR() ? " LR-Active" : (try_behaviour.is_viewAll_LR() ? " ViewAll" : " ViewActive"));
 #endif
 			auto tryActive_h = tryLeftRight->activeUI();
 #ifdef ZPSIM
-			logger() << " ActiveObj: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
+			logger() << " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
-			if (try_behaviour.is_CaptureLR()) {
-				tryLeftRight = tryActive_h;
-				if(tryLeftRight->get()->isCollection()) 
-					gotLeftRight = tryLeftRight;
-				//else 
-					//continue;
-			} else if (try_behaviour.is_viewAll()) {
+			//if (try_behaviour.is_viewAll_LR()) {
+			//	tryLeftRight = tryActive_h;
+			//	if(tryLeftRight->get()->isCollection()) 
+			//		gotLeftRight = tryLeftRight;
+			//	//else 
+			//		//continue;
+			//} else 
+				if (try_behaviour.is_viewAll_LR()) {
 				gotLeftRight = tryLeftRight;
 			}
 			tryLeftRight = tryLeftRight->activeUI();
@@ -166,7 +168,7 @@ namespace LCD_UI {
 			do {
 				do {
 					_leftRightBackUI = _leftRightBackUI->backUI();
-				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_CaptureLR()));
+				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() /*|| _leftRightBackUI->behaviour().is_CaptureLR()*/));
 
 				hasMoved = _leftRightBackUI->move_focus_by(move);
 			} while (!hasMoved && _leftRightBackUI != this);

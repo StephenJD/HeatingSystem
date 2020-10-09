@@ -21,7 +21,7 @@ namespace LCD_UI {
 		
 		// Polymorphic Queries
 		virtual const char * streamData(bool isActiveElement) const = 0;
-		bool isCollection() const override { return behaviour().is_viewAll(); }
+		bool isCollection() const override { return behaviour().is_viewAll_LR(); }
 
 		// Polymorphic Modifiers
 		Collection_Hndl * item(int elementIndex) override; // used only when in edit
@@ -63,7 +63,7 @@ namespace LCD_UI {
 	/// </summary>
 	class Field_StreamingTool_h : public Collection_Hndl { // base-class points to streamingTool
 	public:
-		Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect = 0);
+		Field_StreamingTool_h(I_Streaming_Tool & streamingTool, uint16_t activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect = 0);
 		
 		// Polymorphic Queries
 		CursorMode cursorMode(const Object_Hndl * activeElement) const override;

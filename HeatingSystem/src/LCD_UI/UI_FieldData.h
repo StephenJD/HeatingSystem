@@ -25,7 +25,7 @@ namespace LCD_UI {
 	class UI_FieldData : public LazyCollection {
 	public:
 		UI_FieldData(I_Record_Interface * dataset, int fieldID
-			, Behaviour collectionBehaviour = { V + S + V1 + R + UD_A }, Behaviour activeEditBehaviour = {UD_E+R0}
+			, uint16_t collectionBehaviour = { V + S + V1 + R + UD_A + ER0}
 			, UI_FieldData * parent = 0, int selectFldID = 0, OnSelectFnctr onSelect = 0);
 
 		// Queries

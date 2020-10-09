@@ -35,25 +35,24 @@
 #define DATABASE
 #define UI_DB_DISPLAY_VIEW_ONE
 #define UI_DB_DISPLAY_VIEW_ALL
-#define UI_DB_DISPLAY_EDITS
 #define UI_DB_SHORT_LISTS
-#define EDIT_NAMES_NUMS
-#define BACK_TRACKING
-//////#define EDIT_INTS
+//#define EDIT_NAMES_NUMS
+//#define BACK_TRACKING
+////////#define EDIT_INTS
+////
+////////#define EDIT_FORMATTED_INTS
+////
+//#define EDIT_DECIMAL
+//#define EDIT_DATES
+//////#define EDIT_CURRENT_DATETIME
+//#define EDIT_RUN
 //
-//////#define EDIT_FORMATTED_INTS
-//
-#define EDIT_DECIMAL
-#define EDIT_DATES
-////#define EDIT_CURRENT_DATETIME
-#define EDIT_RUN
-
-#define VIEW_ONE_NESTED_CALENDAR_PAGE
-#define VIEW_ONE_NESTED_PROFILE_PAGE
-#define CONTRAST
-#define TIME_TEMP_EDIT
-#define MAIN_CONSOLE_PAGES
-#define INFO_CONSOLE_PAGES
+//#define VIEW_ONE_NESTED_CALENDAR_PAGE
+//#define VIEW_ONE_NESTED_PROFILE_PAGE
+//#define CONTRAST
+//#define TIME_TEMP_EDIT
+//#define MAIN_CONSOLE_PAGES
+//#define INFO_CONSOLE_PAGES
 
 //#define TEST_RELAYS
 //#define CMD_MENU
@@ -387,13 +386,13 @@ SCENARIO("Simple Page Scrolling", "[Chapter]") {
 	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
 
 	//cout << "\n **** Next create DB UIs ****\n";
-	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name, Behaviour{V+S+V1+UD_A+R});
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, Behaviour{V+S+V1+UD_A+R});
+	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name, {V+S+V1+UD_A+R});
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, {V+S+V1+UD_A+R});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name); // non-recyclable
 
 	// UI Elements
 	UI_Label L1("L1");
-	UI_Cmd C3("C3", 0, Behaviour{ V + S + L + UD_A});
+	UI_Cmd C3("C3", 0, Behaviour{ V + S + L + V1 + UD_A});
 
 	// UI Element Arays / Collections
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
@@ -542,8 +541,8 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, {V+S+VnLR+R0+ER0 });
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, { V + S + VnLR + R0 + ER0 });
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -551,9 +550,7 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 
 	// UI Element Arrays / Collections
 	cout << "\npage1 Collection\n";
-	auto iterated_zoneNames = UI_IteratedCollection{ 32,makeCollection(zoneNameUI_c)/*,{ V + S + Vn + LR + UD_0 + R0 }*/ };
-	auto iterated_progNames = UI_IteratedCollection{ 60,makeCollection(progNameUI_c) };
-	auto page1_c = makeCollection(L1, dwellNameUI_c, iterated_zoneNames, iterated_progNames, C3);
+	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, progNameUI_c, C3);
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -561,29 +558,27 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
 	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&iterated_zoneNames] = "iterated_zoneNames";
-	ui_Objects()[(long)&iterated_progNames] = "iterated_progNames";
 	ui_Objects()[(long)&C3] = "C3";
 	ui_Objects()[(long)&L1] = "L1";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 	ui_Objects()[(long)&page1_c] = "page1_c";
 
 	cout << "\n **** All Constructed ****\n\n";
-	GIVEN("Moving Focus on Iterated Names") {
+	GIVEN("Moving Focus on ViewAll Names") {
 		display1_h.rec_select();
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
 		//                                           012345678901234567890123456789012345678901234567890123456789
-		WHEN("Right, focus moves to first iterated name") {
+		WHEN("Right, focus moves to first ViewAll name") {
 			display1_h.rec_left_right(1); // moves page focus to zones
 			CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s DnStrs DHW    At Home At Work Away    C3");
 			THEN("Left moves back to View-one name") {
 				display1_h.rec_left_right(-1);
 				CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs DnStrs DHW    At Home At Work Away    C3");
-				AND_THEN("Up displays next iterated names") {
+				AND_THEN("Up displays next ViewAll names") {
 					display1_h.rec_up_down(1);
 					CHECK(test_stream(display1_h.stream(tb)) == "L1 HolApp_t Flat   DHW    Occup'd Empty   C3");
-					AND_THEN("Right moves to first iterated name") {
+					AND_THEN("Right moves to first ViewAll name") {
 						display1_h.rec_left_right(1); // moves page focus to zones
 						REQUIRE(test_stream(display1_h.stream(tb)) == "L1 HolAppt Fla_t   DHW    Occup'd Empty   C3");
 					}
@@ -591,7 +586,7 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 			}
 		}
 
-		WHEN("Right on first iterated name, focus moves to next iterated name") {
+		WHEN("Right on first ViewAll name, focus moves to next ViewAll name") {
 			display1_h.rec_left_right(1); // moves page focus to zones
 			REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s DnStrs DHW    At Home At Work Away    C3");
 			display1_h.rec_left_right(1); // moves Zone focus to 1
@@ -599,7 +594,7 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 			CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStr_s DHW    At Home At Work Away    C3");
 			display1_h.rec_left_right(1); // moves Zone focus to 2
 			CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStrs DH_W    At Home At Work Away    C3");
-			THEN("Right on last iterated name, focus moves to next iterated name") {
+			THEN("Right on last ViewAll name, focus moves to next ViewAll name") {
 				display1_h.rec_left_right(1); // moves page focus to 3
 				CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStrs DHW    At Hom_e At Work Away    C3");
 				display1_h.rec_left_right(1); // moves prog focus to 1
@@ -611,12 +606,12 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 			}
 		}
 
-		WHEN("Left on first iterated name, focus moves to last iterated name") {
+		WHEN("Left on first ViewAll name, focus moves to last ViewAll name") {
 			display1_h.rec_left_right(-1);
 			REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStrs DHW    At Home At Work Away    C_3");
 			display1_h.rec_left_right(-1);
 			CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStrs DHW    At Home At Work Awa_y    C3");
-			THEN("Left moves back through the iterated names to the start") {
+			THEN("Left moves back through the ViewAll names to the start") {
 				display1_h.rec_left_right(-1);
 				CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs DnStrs DHW    At Home At Wor_k Away    C3");
 				display1_h.rec_left_right(-1);
@@ -684,7 +679,7 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 			}
 		}
 	}
-	GIVEN("Iterated names Edit on SELECT") {
+	GIVEN("ViewAll names Edit on SELECT") {
 		display1_h.rec_select();
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		display1_h.rec_left_right(1);
@@ -762,16 +757,16 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 	ui_Objects()[(long)&label_c] = "label_c";
 
 	//cout << "\n **** Next create Short-collection wrappers ****\n";
-	auto zoneName_sc = UI_IteratedCollection{ 19, makeCollection(zoneNameUI_c) };
-	auto progName_sc = UI_IteratedCollection{ 30, makeCollection(progNameUI_c) };
-	auto label_sc = UI_IteratedCollection{ 3, makeCollection(label_c) };
-	ui_Objects()[(long)&zoneName_sc] = "zoneName_sc";
-	ui_Objects()[(long)&progName_sc] = "progName_sc";
-	ui_Objects()[(long)&label_sc] = "label_sc";
+	auto iterated_zoneName = UI_IteratedCollection{ 19, makeCollection(zoneNameUI_c) };
+	auto iterated_progName = UI_IteratedCollection{ 30, makeCollection(progNameUI_c) };
+	auto iterated_label = UI_IteratedCollection{ 3, makeCollection(label_c) };
+	ui_Objects()[(long)&iterated_zoneName] = "iterated_zoneName";
+	ui_Objects()[(long)&iterated_progName] = "iterated_progName";
+	ui_Objects()[(long)&iterated_label] = "iterated_label";
 
 	// UI Element Arays / Collections	cout << "\npage1 Collection\n";
-	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneName_sc, progName_sc);
-	auto page2_c = makeCollection(label_sc, dwellNameUI_c, zoneName_sc, progName_sc);
+	auto page1_c = makeCollection(L1, dwellNameUI_c, iterated_zoneName, iterated_progName);
+	auto page2_c = makeCollection(iterated_label, dwellNameUI_c, iterated_zoneName, iterated_progName);
 	auto page3_c = UI_IteratedCollection(7, makeCollection(C1, C2, C3, C4));
 	//cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c, page2_c, page3_c);
@@ -904,7 +899,7 @@ TEST_CASE("Edit Strings", "[Chapter]") {
 	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
 
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, Behaviour{V+S+V1+R0+UD_A}, Behaviour{ V + S + Vn + UD_E + R });
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, Behaviour{V+S+V1+R0+UD_A+ER});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
 
 	UI_Label L1("L1");
@@ -1582,7 +1577,7 @@ SCENARIO("Non-iterated View-all giving Edit on UD", "[Chapter]") {
 
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	
-	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+Vn+UD_E+R0});
+	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+VnLR+UD_E+R0});
 	// UI Collections
 	auto page1_c = makeCollection(zoneReqTempUI_c);
 	auto display1_c = makeChapter(page1_c);
@@ -1741,10 +1736,10 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto rec_spellProg = Dataset_Program(q_spellProg, noVolData, &rec_dwSpells);
 
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,Behaviour{V+S+L+Vn+LR+UD_0+R0});
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S + L + Vn + LR + UD_0 + R0});
-	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, Behaviour{ V + S + V1 + UD_E }, Behaviour{UD_E});
-	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, Behaviour{ V + S +L+ V1 }, Behaviour{ UD_A + R });
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,Behaviour{V+S+L+VnLR+UD_0+R0});
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S + L + VnLR + UD_0 + R0});
+	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, Behaviour{ V + S + V1 + UD_E });
+	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, Behaviour{ V + S +L+ V1+ER });
 
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
@@ -2152,7 +2147,7 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
 	auto zoneAbbrevUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_abbrev, Behaviour{V+S+V1+UD_A+R});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V+S+V1+UD_A+R});
-	auto profileDaysUI_c = UI_FieldData(&rec_profile, Dataset_ProfileDays::e_days, Behaviour{V+S+V1+UD_A+R}, Behaviour{ UD_A + R }, &progNameUI_c, Dataset_Program::e_id);
+	auto profileDaysUI_c = UI_FieldData(&rec_profile, Dataset_ProfileDays::e_days, Behaviour{V+S+V1+UD_A+R + ER}, &progNameUI_c, Dataset_Program::e_id);
 
 	// UI Elements
 	UI_Label _prog = { "Prog:", {V + L0} };
@@ -2255,14 +2250,14 @@ SCENARIO("TimeTemps", "[Display]") {
 	cout << "\tzone\n";
 	auto _zoneAbbrevUI_c = UI_FieldData{ &_rec_dwZones, Dataset_Zone::e_abbrev, Behaviour{V + S + V1 + UD_A + R} };
 	cout << "\tprofile\n";
-	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days, Behaviour{V + S + V1 + UD_A + R}, Behaviour{UD_E + R} };
+	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days, Behaviour{V + S + V1 + UD_A + R + ER}};
 	cout << "\ttimeTemp\n";
-	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, Behaviour{ V + L + S + Vn + UD_E + R0 }, Behaviour{ UD_E + R0 }, 0, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
+	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, Behaviour{ V + L + S + VnLR + UD_E + R0 +ER0 }, 0, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
 	auto _iterated_timeTempUI = UI_IteratedCollection{ 80, makeCollection(_timeTempUI_c) };
 	//auto _iterated_timeTempUI = UI_IteratedCollection<1>{ 80, _timeTempUI_c};
 
-	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, Behaviour{H + L + S + LR} };
-	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, Behaviour{H + S + LR} };
+	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, Behaviour{H + L + S + VnLR} };
+	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, Behaviour{H + S + VnLR} };
 	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, Behaviour{H + S} };
 
 	// Pages & sub-pages - Collections of UI handles

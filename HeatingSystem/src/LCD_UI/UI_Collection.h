@@ -70,7 +70,7 @@ namespace LCD_UI {
 	}
 
 	/// <summary>
-	/// The Base-class for UI_Objects that perform a special action on select or up/dn.
+	/// The Base-class for UI_Objects that perform a special action on select, up/dn or LR.
 	/// </summary>
 	class Custom_Select : public UI_Object {
 	public:
@@ -476,13 +476,13 @@ namespace LCD_UI {
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + Vn + LR + UD_0 + R0 })
-			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + VnLR + UD_0 + R0 })
+			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
 			, UI_IteratedCollection_Hoist(endPos) {
-			Collection<noOfObjects>::_filter = filter_viewable();
-			for (auto & object : collection) {
-				object.behaviour().make_viewOne();
-			}
+			//Collection<noOfObjects>::_filter = filter_viewable();
+			//for (auto & object : collection) {
+			//	object.behaviour().make_viewOne();
+			//}
 			_iteratedMemberIndex = Collection<noOfObjects>::focusIndex();
 		}
 
@@ -505,10 +505,10 @@ namespace LCD_UI {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
 		UI_IteratedCollection(int endPos, Collection<1> collection)
-			: Collection<1>(collection, Behaviour(collection[0].get()->behaviour()+LR+R0).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			: Collection<1>(collection, Behaviour((collection[0].get()->behaviour()+R0)).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
-			item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1+LR+R0) & ~UD_A;
+			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1+LR+R0) & ~UD_A;
 		}
 
 		UI_IteratedCollection(int endPos, I_SafeCollection & collection)
@@ -516,7 +516,7 @@ namespace LCD_UI {
 			, UI_IteratedCollection_Hoist(endPos)
 		{
 			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + LR + R0) & ~UD_A;
-			item(0)->get()->behaviour().make_viewOne();
+			//item(0)->get()->behaviour().make_viewOne();
 		}
 
 		// Polymorphic Queries
@@ -540,7 +540,7 @@ namespace LCD_UI {
 	/// </summary>
 	template<typename... Args>
 	auto makeCollection(Args & ... args) -> Collection<sizeof...(args)> {
-		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, Behaviour{V+S+Vn+UD_A+R});
+		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, Behaviour{V+S+VnLR+UD_A+R});
 	}
 
 }

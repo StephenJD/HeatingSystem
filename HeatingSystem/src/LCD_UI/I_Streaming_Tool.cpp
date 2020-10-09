@@ -114,8 +114,8 @@ namespace LCD_UI {
 	/// Can have an alternative Select function set.
 	/// It may have a parent field set, from which it obtains its object index.
 	/// </summary>
-	Field_StreamingTool_h::Field_StreamingTool_h(I_Streaming_Tool & streamingTool, Behaviour activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
-		: Collection_Hndl(streamingTool), _activeEditBehaviour(activeEditBehaviour + V+S+V1), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
+	Field_StreamingTool_h::Field_StreamingTool_h(I_Streaming_Tool & streamingTool, uint16_t activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
+		: Collection_Hndl(streamingTool), _activeEditBehaviour(V+S+V1+UD_E+(activeEditBehaviour & Behaviour::b_EditNoRecycle ? R0 : R)), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
 	{}
 
 	const Behaviour Field_StreamingTool_h::behaviour() const {

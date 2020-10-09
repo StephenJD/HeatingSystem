@@ -12,46 +12,46 @@ namespace Assembly {
 		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)
-		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime, Behaviour{V+S+V1+UD_E+R0} }
-		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate, Behaviour{V+S+V1+UD_E+R0} }
-		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst, Behaviour{V+S+V1+UD_E+R0} }
+		, _currTimeUI_c {&db._rec_currTime, Dataset_WithoutQuery::e_currTime, {V+S+V1+UD_E+R0} }
+		, _currDateUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_currDate, {V+S+V1+UD_E+R0} }
+		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst, {V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneReqIs_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+Vn+UD_E+R0+LR} }
-		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + Vn + LR + UD_0 + R0} }
+		, _zoneReqIs_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, {V+S+VnLR+UD_E+R0} }
+		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + VnLR + UD_0 + R0} }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev}
 		
-		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, Behaviour{V+S+V1+UD_A} }
-		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, Behaviour{V + S + V1 + UD_E}, Behaviour{UD_E} }
-		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, Behaviour{V + S +L+ V1}, Behaviour{UD_A+R}}
-		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, Behaviour{V+S+V1+UD_A+R}, Behaviour{UD_E + R}}
+		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A} }
+		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, {V + S + V1 + UD_E} }
+		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, {V + S +L+ V1}}
+		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R}}
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, Behaviour{V + S +L+ Vn + LR+ UD_E + R0}, Behaviour{UD_E + R0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
-		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp, Behaviour{V + S + Vn + LR + R}}
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, {V + S + L + VnLR + UD_E + R0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp, {V + S + VnLR + R}}
 		
 		, _towelRailNameUI_c{ &db._rec_towelRailParent, Dataset_TowelRail::e_name }
-		, _towelRailTempUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_onTemp, Behaviour{V+S+V1}, Behaviour{UD_E} }
-		, _towelRailOnTimeUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_minutesOn, Behaviour{V + S + V1}, Behaviour{UD_E} }
-		, _towelRailStatus_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_secondsToGo, Behaviour{V + V1}, {} }
+		, _towelRailTempUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_onTemp, {V+S+V1} }
+		, _towelRailOnTimeUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_minutesOn, {V + S + V1} }
+		, _towelRailStatus_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_secondsToGo, {V + V1} }
 		
 		, _relayStateUI_c{ &db._rec_relayParent, Dataset_Relay::e_state,{V + S + V1 + UD_E} }
-		, _relayNameUI_c{ &db._rec_relayChild, Dataset_Relay::e_name, Behaviour{V+V1},{} }
+		, _relayNameUI_c{ &db._rec_relayChild, Dataset_Relay::e_name, {V+V1} }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}
 		, _prog{"Prg:", {V + L0} }
 		, _zone{"Zne:"}
-		, _backlightCmd{"Backlight",0, Behaviour{V + S +L + UD_S} }
-		, _contrastCmd{"Contrast",0, Behaviour{V+S+UD_S} }
+		, _backlightCmd{"Backlight",0, {V + S +L + UD_S} }
+		, _contrastCmd{"Contrast",0, {V+S+UD_S} }
 		, _dwellingZoneCmd{"Zones",0 }
 		, _dwellingCalendarCmd{ "Calendar",0 }
 		, _dwellingProgCmd{ "Programs",0 }
-		, _insert{ "Insert-Prog", Behaviour{H + L0} }
+		, _insert{ "Insert-Prog", {H + L0} }
 		, _profileDaysCmd{ "Ds:",0}
-		, _fromCmd{ "From", 0, Behaviour{V+S+L+UD_A} }
-		, _deleteTTCmd{ "Delete", 0, Behaviour{H+S+L+ LR} }
-		, _editTTCmd{ "Edit", 0, Behaviour{H+S+ LR}}
-		, _newTTCmd{ "New", 0, Behaviour{H + S } }
+		, _fromCmd{ "From", 0, {V+S+L+UD_A} }
+		, _deleteTTCmd{ "Delete", 0, {H+S+L+ VnLR} }
+		, _editTTCmd{ "Edit", 0, {H+S+ VnLR}}
+		, _newTTCmd{ "New", 0, {H + S } }
 		, _towelRailsLbl{"Room Temp OnFor ToGo"}
 
 		// Pages & sub-pages - Collections of UI handles
@@ -76,7 +76,7 @@ namespace Assembly {
 		// Info Pages
 		, _iterated_tempSensorUI{ 80, _tempSensorUI_c}
 		
-		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+Vn+UD_A+R} }
+		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+VnLR+UD_A+R} }
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _iterated_towelRails_info_c) }
 		
 		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}

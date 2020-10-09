@@ -215,7 +215,8 @@ namespace LCD_UI {
 	///////////////////////////////////////////
 
 	Custom_Select::Custom_Select(OnSelectFnctr onSelect, Behaviour behaviour)
-		: _behaviour(behaviour.make_viewAll()) // required to get object to handle Up-Down
+		//: _behaviour(behaviour.make_viewAll()) // required to get object to handle Up-Down
+		: _behaviour(behaviour)
 		, _onSelectFn(onSelect)
 	{}
 
@@ -376,10 +377,10 @@ namespace LCD_UI {
 		// Set the activeUI to object-index 0 and Stream all the elements
 		// Then move the activeUI to the next object-index and re-stream all the elements
 		// Keep going till all members of the activeUI have been streamed
-		///		Coll-Focus (moved by LR if set to LR_0)
+		///		Coll-Focus (moved by LR)
 		///			v
 		///	{L1, Active[0], Slave[0]}
-		///	{L1, Active[1], Slave[1]} <- Active-focus (moved by LR if set to b_LR_Captured)
+		///	{L1, Active[1], Slave[1]} <- Active-focus (moved by LR if UD_E)
 		///	{L1, Active[2], Slave[2]}
 
 		auto coll_focus = activeElement ? iterated_collection()->I_SafeCollection::focusIndex() : -1;
@@ -401,7 +402,7 @@ namespace LCD_UI {
 		auto numberOfIterations = 1;
 		auto itIndex = iteratedActiveUI_h.get()->isCollection() ? iteratedActiveUI_h->focusIndex() : 0;
 		auto activeFocus = itIndex;
-		if (iterated_collection()->behaviour().is_viewAll() && iteratedActiveUI_h.get()->isCollection()) {
+		if (iterated_collection()->behaviour().is_viewAll_LR() && iteratedActiveUI_h.get()->isCollection()) {
 			numberOfIterations = iteratedActiveUI_h->endIndex();
 			itIndex = iteratedActiveUI_h->nextActionableIndex(0); // required!
 			activeFocus = iteratedActiveUI_h->validIndex(iteratedActiveUI_h->focusIndex());
@@ -427,7 +428,10 @@ namespace LCD_UI {
 				if (itIndex < firstVisIndex)
 					break;
 				if(object.isCollection()) object.item(itIndex);
+				auto originalBehaviour = object.behaviour();
+				object.behaviour().make_viewOne();
 				hasStreamed = object.streamElement(buffer, streamActive, _endPos, h_listStatus(itIndex));
+				object.behaviour() = originalBehaviour;
 				h_endVisibleItem(hasStreamed, itIndex);
 
 				if (_beginShow == -1) {

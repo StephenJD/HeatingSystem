@@ -13,12 +13,12 @@ namespace LCD_UI {
 	using namespace RelationalDatabase;
 
 	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID
-		, Behaviour collectionBehaviour, Behaviour activeEditBehaviour
+		, uint16_t collectionBehaviour
 		, UI_FieldData * parent, int selectFldID, OnSelectFnctr onSelect)
-		: LazyCollection(dataset->count(), collectionBehaviour)
+		: LazyCollection(dataset->count(), Behaviour(collectionBehaviour))
 		, _data(dataset)
 		, _parentFieldData(parent)
-		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), activeEditBehaviour, fieldID, this, onSelect)
+		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), collectionBehaviour, fieldID, this, onSelect)
 		, _selectFieldID(selectFldID)
 	{
 		_data->move_to(focusIndex());

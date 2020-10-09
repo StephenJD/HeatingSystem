@@ -141,7 +141,7 @@ namespace client_data_structures {
 			auto tt_UI_FieldData_h = ttSubPageHndl->activeUI()->activeUI();
 			auto tt_field_interface_h = tt_UI_FieldData_h->activeUI();
 			tt_field_interface_h->setCursorPos();
-			if (behaviour().is_viewAll()) { // must be "Edit" command 
+			if (behaviour().is_viewAll_LR()) { // must be "Edit" command 
 				enableCmds(e_EditCmd);
 			}
 			else {// must be "New" command 
