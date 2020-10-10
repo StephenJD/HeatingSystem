@@ -479,10 +479,10 @@ namespace LCD_UI {
 		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + VnLR + UD_0 + R0 })
 			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
 			, UI_IteratedCollection_Hoist(endPos) {
-			//Collection<noOfObjects>::_filter = filter_viewable();
-			//for (auto & object : collection) {
-			//	object.behaviour().make_viewOne();
-			//}
+			Collection<noOfObjects>::_filter = filter_viewable();
+			for (auto & object : collection) {
+				object.behaviour().make_viewOne();
+			}
 			_iteratedMemberIndex = Collection<noOfObjects>::focusIndex();
 		}
 
@@ -508,7 +508,8 @@ namespace LCD_UI {
 			: Collection<1>(collection, Behaviour((collection[0].get()->behaviour()+R0)).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
-			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1+LR+R0) & ~UD_A;
+			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + R0) & ~UD_A;
+			item(0)->get()->behaviour().make_viewOne();
 		}
 
 		UI_IteratedCollection(int endPos, I_SafeCollection & collection)
@@ -516,7 +517,7 @@ namespace LCD_UI {
 			, UI_IteratedCollection_Hoist(endPos)
 		{
 			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + LR + R0) & ~UD_A;
-			//item(0)->get()->behaviour().make_viewOne();
+			item(0)->get()->behaviour().make_viewOne();
 		}
 
 		// Polymorphic Queries
