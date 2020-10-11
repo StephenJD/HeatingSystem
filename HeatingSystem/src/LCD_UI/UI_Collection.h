@@ -476,8 +476,8 @@ namespace LCD_UI {
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + VnLR + UD_0 + R0 })
-			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + VnLR + IR0 })
+			: Collection<noOfObjects>(collection, behaviour.make_Iterated()) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
 			, UI_IteratedCollection_Hoist(endPos) {
 			Collection<noOfObjects>::_filter = filter_viewable();
 			for (auto & object : collection) {
@@ -505,7 +505,7 @@ namespace LCD_UI {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
 		UI_IteratedCollection(int endPos, Collection<1> collection)
-			: Collection<1>(collection, Behaviour((collection[0].get()->behaviour()+R0)).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			: Collection<1>(collection, Behaviour((collection[0].get()->behaviour()+IR0)).make_viewAll().make_Iterated()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
 			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + R0) & ~UD_A;
@@ -513,7 +513,7 @@ namespace LCD_UI {
 		}
 
 		UI_IteratedCollection(int endPos, I_SafeCollection & collection)
-			: Collection<1>{ ArrayWrapper<1,Collection_Hndl>{Collection_Hndl{collection}}, (collection.behaviour()).make_viewAll() } // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			: Collection<1>{ ArrayWrapper<1,Collection_Hndl>{Collection_Hndl{collection}}, Behaviour(collection.behaviour()+IR0).make_viewAll().make_Iterated() } // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
 			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + LR + R0) & ~UD_A;
@@ -541,7 +541,7 @@ namespace LCD_UI {
 	/// </summary>
 	template<typename... Args>
 	auto makeCollection(Args & ... args) -> Collection<sizeof...(args)> {
-		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, Behaviour{V+S+VnLR+UD_A+R});
+		return Collection<sizeof...(args)>(ArrayWrapper<sizeof...(args), Collection_Hndl>{Collection_Hndl{ args }...}, Behaviour{V+S+VnLR+R});
 	}
 
 }

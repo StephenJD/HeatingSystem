@@ -36,15 +36,15 @@
 #define UI_DB_DISPLAY_VIEW_ONE
 #define UI_DB_DISPLAY_VIEW_ALL
 #define UI_DB_SHORT_LISTS
-//#define EDIT_NAMES_NUMS
-//#define BACK_TRACKING
+#define EDIT_NAMES_NUMS
+#define BACK_TRACKING
 ////////#define EDIT_INTS
 ////
 ////////#define EDIT_FORMATTED_INTS
 ////
-//#define EDIT_DECIMAL
-//#define EDIT_DATES
-//////#define EDIT_CURRENT_DATETIME
+#define EDIT_DECIMAL
+#define EDIT_DATES
+//*#define EDIT_CURRENT_DATETIME
 //#define EDIT_RUN
 //
 //#define VIEW_ONE_NESTED_CALENDAR_PAGE
@@ -899,7 +899,7 @@ TEST_CASE("Edit Strings", "[Chapter]") {
 	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
 
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, Behaviour{V+S+V1+R0+UD_A+ER});
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name, {V+S+V1+R0+UD_A+ER});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
 
 	UI_Label L1("L1");
@@ -1510,9 +1510,9 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 
 	auto rec_currTime = Dataset_WithoutQuery();
 
-	auto currTimeUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currTime, Behaviour{ V + S + V1 + UD_E + R0 });
-	auto currDateUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currDate, Behaviour{ V + S + V1 + UD_E + R0 });
-	auto dstUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_dst, Behaviour{V+S+V1+UD_E+R0});
+	auto currTimeUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currTime, { V + S + V1 + UD_E + R0 });
+	auto currDateUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_currDate, { V + S + V1 + UD_E + R0 });
+	auto dstUI_c = UI_FieldData(&rec_currTime, Dataset_WithoutQuery::e_dst, {V+S+V1+UD_E+R0});
 	// UI Elements
 	UI_Label L1("DST Hours:");
 	
@@ -1544,6 +1544,7 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 				CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201_8     DST Hours: 1");
 				THEN("Also edits on SELECT") {
 					display1_h.rec_left_right(1); // moves focus
+					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: _1");
 					display1_h.rec_select();
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #1");
 					display1_h.rec_up_down(1);

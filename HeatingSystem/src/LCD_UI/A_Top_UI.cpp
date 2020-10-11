@@ -78,14 +78,14 @@ namespace LCD_UI {
 #ifdef ZPSIM
 			logger() << " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
-			//if (try_behaviour.is_viewAll_LR()) {
-			//	tryLeftRight = tryActive_h;
+			if (try_behaviour.is_Iterated()) {
+				tryLeftRight = tryActive_h;
 			//	if(tryLeftRight->get()->isCollection()) 
-			//		gotLeftRight = tryLeftRight;
+				gotLeftRight = tryLeftRight;
 			//	//else 
 			//		//continue;
-			//} else 
-				if (try_behaviour.is_viewAll_LR()) {
+			} else 
+			if (try_behaviour.is_viewAll_LR() || try_behaviour.is_Iterated()) {
 				gotLeftRight = tryLeftRight;
 			}
 			tryLeftRight = tryLeftRight->activeUI();
@@ -168,7 +168,7 @@ namespace LCD_UI {
 			do {
 				do {
 					_leftRightBackUI = _leftRightBackUI->backUI();
-				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() /*|| _leftRightBackUI->behaviour().is_CaptureLR()*/));
+				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_Iterated()));
 
 				hasMoved = _leftRightBackUI->move_focus_by(move);
 			} while (!hasMoved && _leftRightBackUI != this);
@@ -199,7 +199,7 @@ namespace LCD_UI {
 				move = -move; // reverse up/down when in edit.
 			}
 			haveMoved = _upDownUI->move_focus_by(move);
-		} else if (_upDownUI->behaviour().is_next_on_UpDn()) { // an iterated collection
+		} else if (_upDownUI->behaviour().is_Iterated()) {
 			if (_upDownUI->get()->isCollection()) {
 				auto & iteratedCollection = *_upDownUI->get()->collection();
 				auto & iteratedActiveObject_h = *iteratedCollection.move_to_object(iteratedCollection.iterableObjectIndex());

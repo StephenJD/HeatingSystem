@@ -136,15 +136,19 @@ namespace LCD_UI {
 			auto wantToMoveBackwards = [](int nth) {return nth < 0; };
 			auto firstValidIndexLookingForwards = [this](int index) {return get()->collection()->nextActionableIndex(index); };
 			auto firstValidIndexLookingBackwards = [this](int index) {return get()->collection()->prevActionableIndex(index); };
-			auto needToRecycle = [this](int index) {return atEnd(index) && behaviour().is_recycle(); };
 			const auto weCouldNotMove = startFocus;
+			auto isInNonRecycleIteration = [this]() {return backUI() ? backUI()->behaviour().is_IteratedNoRecycle() : false; };
 			////////////////////////////////////////////////////////////////////
 			//************************  Algorithm ****************************//
 			////////////////////////////////////////////////////////////////////
+			bool canRecycle = behaviour().is_recycle() && !isInNonRecycleIteration();
+			bool isViewOne = behaviour().is_viewOne() && (backUI() ? !backUI()->behaviour().is_Iterated() : true);
+			//bool isViewOne = behaviour().is_viewOneUpDn_Next() && !backUI()->behaviour().is_Iterated();
+
 			get()->collection()->filter(filter_selectable());
 			if (wantToCheckCurrentPosIsOK) {
 				setFocusIndex(firstValidIndexLookingForwards(startFocus));
-				if (needToRecycle(focusIndex())) setFocusIndex(firstValidIndexLookingForwards(0));
+				if (atEnd(focusIndex()) && canRecycle) setFocusIndex(firstValidIndexLookingForwards(0));
 				else if (atEnd(focusIndex()))
 					Collection_Hndl::move_focus_by(-1);
 			}
@@ -155,9 +159,9 @@ namespace LCD_UI {
 					setFocusIndex(newFocus);
 					if (newFocus <= startFocus) break;
 					else if (!atEnd(newFocus)) --nth; // We have a valid element
-					else if (behaviour().is_recycle()) setFocusIndex(-1);
+					else if (canRecycle) setFocusIndex(-1);
 					else { // at end, can't recycle
-						if (behaviour().is_viewOneUpDn_Next()) setFocusIndex(weCouldNotMove);
+						if (isViewOne) setFocusIndex(weCouldNotMove);
 						break;
 					}
 				}
@@ -167,13 +171,13 @@ namespace LCD_UI {
 					setFocusIndex(newFocus); // if no prev, is now -1.
 					if (newFocus >= startFocus) break;
 					else if (newFocus >= 0) ++nth; // We found one!
-					else if (behaviour().is_recycle()) {
+					else if (canRecycle) {
 						setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
 						move_focus_to(endIndex());
 						if (newFocus == 0) break;
 					}
 					else {
-						if (behaviour().is_viewOneUpDn_Next() || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
+						if (isViewOne || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
 						break;
 					}
 				}
@@ -323,7 +327,7 @@ namespace LCD_UI {
 					} 
 #ifdef ZPSIM
 					else {
-						cout << F("\n\!!!!!!!!!!!! ERROR: View Object empty !!!!!!!!!! \n\n");
+						cout << F("\n\n!!!!!!!!!!!! ERROR: View Object empty !!!!!!!!!! \n\n");
 					}
 #endif
 				} else {
