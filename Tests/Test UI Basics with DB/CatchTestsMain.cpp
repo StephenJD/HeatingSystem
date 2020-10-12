@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 	int result = Catch::Session().run(argc, argv);
 
 	// global clean-up...
-	GetConsolePos(&consoleLeft, &consoleTop, &consoleWidth, &consoleHeight);
+ 	GetConsolePos(&consoleLeft, &consoleTop, &consoleWidth, &consoleHeight);
 	if (!failed) {
 		WriteRegistry("Software\\ZoneProgSim", "ConsoleLeft", consoleLeft);
 		WriteRegistry("Software\\ZoneProgSim", "ConsoleTop", consoleTop);

@@ -247,7 +247,7 @@ namespace Assembly {
 		db.createTable(programs_f);
 		logger() << F("\nProfiles Table ");
 		db.createTable(profiles_f);
-		logger() << F("\nTimeTemps Table ") << F("Rec size: ") << sizeof(R_TimeTemp) << F(" TimeTemp size: ") << sizeof(TimeTemp);
+		logger() << F("\nTimeTemps Table ");
 		db.createTable(timeTemps_f, i_09_orderedInsert);
 		logger() << F("\nSpells Table ");
 		db.createTable(spells_f, i_09_orderedInsert);

@@ -44,10 +44,10 @@
 ////
 #define EDIT_DECIMAL
 #define EDIT_DATES
-//*#define EDIT_CURRENT_DATETIME
-//#define EDIT_RUN
+//#define EDIT_CURRENT_DATETIME
+#define EDIT_RUN
 //
-//#define VIEW_ONE_NESTED_CALENDAR_PAGE
+#define VIEW_ONE_NESTED_CALENDAR_PAGE
 //#define VIEW_ONE_NESTED_PROFILE_PAGE
 //#define CONTRAST
 //#define TIME_TEMP_EDIT
@@ -1578,7 +1578,7 @@ SCENARIO("Non-iterated View-all giving Edit on UD", "[Chapter]") {
 
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	
-	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp, Behaviour{V+S+VnLR+UD_E+R0});
+	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp, {V+S+VnLR+UD_E+R0+ER0});
 	// UI Collections
 	auto page1_c = makeCollection(zoneReqTempUI_c);
 	auto display1_c = makeChapter(page1_c);
@@ -1737,10 +1737,10 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto rec_spellProg = Dataset_Program(q_spellProg, noVolData, &rec_dwSpells);
 
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,Behaviour{V+S+L+VnLR+UD_0+R0});
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S + L + VnLR + UD_0 + R0});
-	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, Behaviour{ V + S + V1 + UD_E });
-	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, Behaviour{ V + S +L+ V1+ER });
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,{V+S+L+VnLR+UD_0+R0});
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V + S + L + VnLR + UD_0 + R0});
+	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, { V + S + V1 + UD_E });
+	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, { V + S +L+ V1+ER });
 
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
@@ -1753,7 +1753,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto iteratedZoneName = UI_IteratedCollection{ 60,makeCollection(zoneNameUI_c) };
 	auto iteratedProgName = UI_IteratedCollection{ 60,makeCollection(progNameUI_c) };
 	UI_Cmd _dwellingZoneCmd = { "Zones",0 }, _dwellingCalendarCmd = { "Calendar",0 }, _dwellingProgCmd = { "Programs",0 };
-	InsertSpell_Cmd _fromCmd = { "From", 0, Behaviour{V + S + L+ UD_A} };
+	InsertSpell_Cmd _fromCmd = { "From", 0, Behaviour{V + S + L+ V1+UD_A} };
 	UI_Label _insert = { "Insert-Prog", Behaviour{H+L0} };
 
 	ui_Objects()[(long)&iteratedZoneName] = "iteratedZoneName";

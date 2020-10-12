@@ -120,7 +120,7 @@ namespace LCD_UI {
 
 	const Behaviour Field_StreamingTool_h::behaviour() const {
 		bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
-		auto non_UD_capturing_activeBehaviour = Behaviour(_activeEditBehaviour).make_noUD();
+		auto non_UD_capturing_activeBehaviour = Behaviour(_activeEditBehaviour).make_noUD().make_viewOne();
 		if (inEdit) {
 			return _activeEditBehaviour;
 		} else return non_UD_capturing_activeBehaviour;
@@ -173,7 +173,7 @@ namespace LCD_UI {
 		Collection_Hndl * retVal = this;
 		if (_cursorMode == HI_BD::e_inEdit) {
 			setCursorMode(HI_BD::e_unselected);
-			get()->behaviour().make_viewOne(); // Prevents UP/DOWN going to edit collection
+			get()->behaviour().make_viewOne(); // Prevents LR going to the SteamingTool
 			getData()->data()->setEditMode(false); 
 			f_interface().editItem().setBackUI(0);
 			f_interface().setCount(0);
