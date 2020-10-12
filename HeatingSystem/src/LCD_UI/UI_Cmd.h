@@ -7,7 +7,7 @@ namespace LCD_UI {
 	{
 	public:
 		using Custom_Select::behaviour;
-		UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour = {V+S+L0+V1+UD_A});
+		UI_Cmd(const char * label_text, OnSelectFnctr onSelect, Behaviour behaviour = {V+S+L0+V1});
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 
 		void insertCommandForEdit(Object_Hndl & ui_fieldData_collection);

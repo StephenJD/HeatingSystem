@@ -69,14 +69,11 @@ namespace LCD_UI {
 				break;
 			}
 			auto try_behaviour = tryLeftRight->behaviour();
-#ifdef ZPSIM
-			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
-				<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive");
-				//<< (try_behaviour.is_CaptureLR() ? " LR-Active" : (try_behaviour.is_viewAll_LR() ? " ViewAll" : " ViewActive"));
-#endif
 			auto tryActive_h = tryLeftRight->activeUI();
 #ifdef ZPSIM
-			logger() << " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
+			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
+				<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
+				<< " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
 			if (try_behaviour.is_Iterated()) {
 				tryLeftRight = tryActive_h;
@@ -174,9 +171,9 @@ namespace LCD_UI {
 			} while (!hasMoved && _leftRightBackUI != this);
 		}
 
+		set_UpDownUI_from(_leftRightBackUI->backUI());
 		set_CursorUI_from(set_leftRightUI_from(_leftRightBackUI->backUI(), move));
 
-		set_UpDownUI_from(_leftRightBackUI);
 		_cursorUI->setCursorPos();
 		_upDownUI->move_focus_by(0);
 		if (wasInEdit)

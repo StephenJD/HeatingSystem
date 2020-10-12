@@ -1753,7 +1753,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto iteratedZoneName = UI_IteratedCollection{ 60,makeCollection(zoneNameUI_c) };
 	auto iteratedProgName = UI_IteratedCollection{ 60,makeCollection(progNameUI_c) };
 	UI_Cmd _dwellingZoneCmd = { "Zones",0 }, _dwellingCalendarCmd = { "Calendar",0 }, _dwellingProgCmd = { "Programs",0 };
-	InsertSpell_Cmd _fromCmd = { "From", 0, Behaviour{V + S + L+ V1+UD_A} };
+	InsertSpell_Cmd _fromCmd = { "From", 0, Behaviour{V + S + L+ V1} };
 	UI_Label _insert = { "Insert-Prog", Behaviour{H+L0} };
 
 	ui_Objects()[(long)&iteratedZoneName] = "iteratedZoneName";
@@ -1783,9 +1783,9 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(1));
 
 	auto _page_dwellingMembers_c = makeCollection(dwellNameUI_c, _page_dwellingMembers_subpage_c);
-	_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-	_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-	_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+	//_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+	//_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+	//_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 
 	auto display1_c = makeChapter(_page_dwellingMembers_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -1839,6 +1839,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	GIVEN("Calendar Sub-Page") {
 		display1_h.rec_left_right(1); // left-right so select page
 		display1_h.rec_left_right(1);
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
 		display1_h.rec_up_down(1); // Calendar Subpage
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);

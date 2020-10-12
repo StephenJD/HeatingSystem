@@ -186,7 +186,8 @@ namespace LCD_UI {
 		}
 		else {
 			if (nth) get()->focusHasChanged(nth > 0);
-			return true;
+			return false;
+			//return true;
 		}
 	}
 
@@ -230,6 +231,7 @@ namespace LCD_UI {
 
 	void Custom_Select::set_UpDn_Target(Collection_Hndl * obj) {
 		_upDownTarget = obj;
+		behaviour().make_UD();
 	}
 
 	Collection_Hndl * Custom_Select::select(Collection_Hndl *) {
