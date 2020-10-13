@@ -42,7 +42,7 @@ namespace LCD_UI {
 		virtual Collection_Hndl *	edit(Collection_Hndl * from) { return select(from); }
 		virtual bool				back() { return true; }
 		virtual Behaviour &			behaviour() = 0;
-		virtual void				focusHasChanged(bool hasFocus) {}
+		virtual bool				focusHasChanged(bool hasFocus) { return false; }
 
 		virtual ~UI_Object() = default;
 	};
@@ -237,7 +237,7 @@ namespace LCD_UI {
 		// New Polymorphic Queries
 		virtual int nextIndex(int index) const { return ++index; }
 		virtual bool isActionableObjectAt(int index) const;
-		virtual int iterableObjectIndex() const { return focusIndex(); }
+		virtual int iterableObjectIndex() const { return -1; }
 
 		// New Non-Polymorphic Queries
 		/// <summary>
@@ -449,7 +449,7 @@ namespace LCD_UI {
 		int16_t h_iterableObjectIndex() const { return _iteratedMemberIndex; }
 
 		virtual I_SafeCollection * iterated_collection() = 0;
-		void h_focusHasChanged();
+		bool h_focusHasChanged();
 		Collection_Hndl * h_item(int newIndex);
 
 		int16_t _iteratedMemberIndex = 0;
@@ -476,8 +476,8 @@ namespace LCD_UI {
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + VnLR + IR0 })
-			: Collection<noOfObjects>(collection, behaviour.make_Iterated()) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + VnLR + UD_A + IR0 })
+			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
 			, UI_IteratedCollection_Hoist(endPos) {
 			Collection<noOfObjects>::_filter = filter_viewable();
 			for (auto & object : collection) {
@@ -497,7 +497,7 @@ namespace LCD_UI {
 
 		// Polymorphic Modifiers
 		I_SafeCollection * iterated_collection() override { return this; }
-		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
+		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
 	};
 	
 	template<>
@@ -531,7 +531,7 @@ namespace LCD_UI {
 		bool hasFocus() const override { return (focusIndex() == objectIndex()) && activeUI()->get()->hasFocus(); }
 
 		// Polymorphic Modifiers
-		void focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
+		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
 	};
 
 	/// <summary>

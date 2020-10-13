@@ -185,9 +185,8 @@ namespace LCD_UI {
 			return startFocus != focusIndex() && !atEnd(focusIndex()) && focusIndex() > -1;
 		}
 		else {
-			if (nth) get()->focusHasChanged(nth > 0);
-			return false;
-			//return true;
+			if (nth) return get()->focusHasChanged(nth > 0);
+			else return false;
 		}
 	}
 
@@ -469,7 +468,7 @@ namespace LCD_UI {
 		return active;
 	}
 
-	void UI_IteratedCollection_Hoist::h_focusHasChanged() {
+	bool UI_IteratedCollection_Hoist::h_focusHasChanged() {
 		auto & coll = *iterated_collection();
 		auto & iteratedActiveUI_h = *coll.move_to_object(_iteratedMemberIndex); // This must be the parent field.
 		_endShow = 1; _beginIndex = 0; _beginShow = 0;
@@ -482,6 +481,7 @@ namespace LCD_UI {
 				_beginShow = iteratedActiveColl.prevActionableIndex(_endShow);
 			}
 		}
+		return true;
 	}
 
 	int UI_IteratedCollection_Hoist::h_firstVisibleItem() const {

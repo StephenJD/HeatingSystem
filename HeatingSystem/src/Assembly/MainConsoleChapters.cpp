@@ -17,16 +17,16 @@ namespace Assembly {
 		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst, {V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneReqIs_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, {V+S+VnLR+UD_E+R0} }
+		, _zoneReqIs_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, {V+S+VnLR+UD_E+R0+ER0} }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + VnLR + UD_0 + R0} }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev}
 		
-		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A} }
+		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A+R+IR0} }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, {V + S + V1 + UD_E} }
-		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, {V + S +L+ V1}}
-		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R}}
+		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, {V+S+L+V1+UD_A+ER+EA}}
+		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R+ER}}
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, {V + S + L + VnLR + UD_E + R0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, {V + S + L + VnLR + UD_E + R0 +ER0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp, {V + S + VnLR + R}}
 		
 		, _towelRailNameUI_c{ &db._rec_towelRailParent, Dataset_TowelRail::e_name }
@@ -76,7 +76,7 @@ namespace Assembly {
 		// Info Pages
 		, _iterated_tempSensorUI{ 80, _tempSensorUI_c}
 		
-		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+VnLR+UD_A+R} }
+		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+VnLR+R} }
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _iterated_towelRails_info_c) }
 		
 		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}
@@ -90,13 +90,13 @@ namespace Assembly {
 		_zone_subpage_c.behaviour().make_noRecycle();
 		_calendar_subpage_c.behaviour().make_noRecycle();
 		_prog_subpage_c.behaviour().make_noRecycle();
-		_page_dwellingMembers_subpage_c.behaviour().make_viewOne();
+		_page_dwellingMembers_subpage_c.set(Behaviour{ V+S+V1+UD_A+R });
 
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));
 		_contrastCmd.set_UpDn_Target(_contrastCmd.function(Contrast_Brightness_Cmd::e_contrast));
-		_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-		_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-		_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+		//_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+		//_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
+		//_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));
 		_fromCmd.set_UpDn_Target(_calendar_subpage_c.item(3));
 		_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(0));
@@ -127,6 +127,7 @@ namespace Assembly {
 		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 		ui_Objects()[(long)&_calendar_subpage_c] = "_calendar_subpage_c";
 		ui_Objects()[(long)&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
+		ui_Objects()[(long)&_page_dwellingMembers_subpage_c] = "_page_dwellingMembers_subpage_c";
 		ui_Objects()[(long)&_insert] = "_insert";
 		ui_Objects()[(long)&_fromCmd] = "_fromCmd";
 		ui_Objects()[(long)&_dwellSpellUI_c] = "_dwellSpellUI_c";
@@ -146,6 +147,7 @@ namespace Assembly {
 		ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
 		ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
 		ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
+		ui_Objects()[(long)&_tt_SubPage_c] = "_tt_SubPage_c";
 
 		ui_Objects()[(long)&_iterated_towelRails_info_c] = "_iterated_towelRails_info_c";
 		ui_Objects()[(long)&_page_towelRails_c] = "_page_towelRails_c";

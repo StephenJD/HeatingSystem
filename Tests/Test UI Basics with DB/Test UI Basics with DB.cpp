@@ -32,27 +32,27 @@
 #include <iostream>
 #include <iomanip>
 
-#define DATABASE
-#define UI_DB_DISPLAY_VIEW_ONE
-#define UI_DB_DISPLAY_VIEW_ALL
-#define UI_DB_SHORT_LISTS
-#define EDIT_NAMES_NUMS
-#define BACK_TRACKING
-////////#define EDIT_INTS
+//#define DATABASE
+//#define UI_DB_DISPLAY_VIEW_ONE
+//#define UI_DB_DISPLAY_VIEW_ALL
+//#define UI_DB_SHORT_LISTS
+//#define EDIT_NAMES_NUMS
+//#define BACK_TRACKING
+//////////#define EDIT_INTS
+//////
+//////////#define EDIT_FORMATTED_INTS
+//////
+//#define EDIT_DECIMAL
+//#define EDIT_DATES
+////#define EDIT_CURRENT_DATETIME
+//#define EDIT_RUN
 ////
-////////#define EDIT_FORMATTED_INTS
-////
-#define EDIT_DECIMAL
-#define EDIT_DATES
-//#define EDIT_CURRENT_DATETIME
-#define EDIT_RUN
-//
-#define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define CONTRAST
-//#define TIME_TEMP_EDIT
-//#define MAIN_CONSOLE_PAGES
-//#define INFO_CONSOLE_PAGES
+//#define VIEW_ONE_NESTED_CALENDAR_PAGE
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define CONTRAST
+#define TIME_TEMP_EDIT
+#define MAIN_CONSOLE_PAGES
+#define INFO_CONSOLE_PAGES
 
 //#define TEST_RELAYS
 //#define CMD_MENU
@@ -1740,7 +1740,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,{V+S+L+VnLR+UD_0+R0});
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V + S + L + VnLR + UD_0 + R0});
 	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, { V + S + V1 + UD_E });
-	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, { V + S +L+ V1+ER });
+	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, { V + S +L+ V1+UD_A+ER+EA });
 
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
@@ -2147,9 +2147,9 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneAbbrevUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_abbrev, Behaviour{V+S+V1+UD_A+R});
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, Behaviour{V+S+V1+UD_A+R});
-	auto profileDaysUI_c = UI_FieldData(&rec_profile, Dataset_ProfileDays::e_days, Behaviour{V+S+V1+UD_A+R + ER}, &progNameUI_c, Dataset_Program::e_id);
+	auto zoneAbbrevUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_abbrev, {V+S+V1+UD_A+R});
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A+R});
+	auto profileDaysUI_c = UI_FieldData(&rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R+ER}, &progNameUI_c, Dataset_Program::e_id);
 
 	// UI Elements
 	UI_Label _prog = { "Prog:", {V + L0} };
@@ -2168,6 +2168,27 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	cout << test_stream(display1_h.stream(tb)) << endl;
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Home             Zone: US  MT--F--");
 	//											 0123456789012345678901234567890123456789
+	GIVEN("we can scroll into Program") {
+		display1_h.rec_left_right(1);
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Hom_e             Zone: US  MT--F--");
+		THEN("we can cycle down the programs") {
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Wor_k             Zone: US  MT--F--");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       Awa_y             Zone: US  MT--F--");
+			display1_h.rec_up_down(-1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Hom_e             Zone: US  MT--F--");
+			AND_THEN("we can cycle up the programs") {
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       Awa_y             Zone: US  MT--F--");
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Wor_k             Zone: US  MT--F--");
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Hom_e             Zone: US  MT--F--");
+			}
+		}
+	}
 }
 #endif
 
@@ -2248,19 +2269,19 @@ SCENARIO("TimeTemps", "[Display]") {
 	cout << "\n\tdwelling\n";
 	auto _dwellNameUI_c = UI_FieldData{ &_rec_dwelling, Dataset_Dwelling::e_name };
 	cout << "\tprogram\n";
-	auto _progNameUI_c = UI_FieldData{ &_rec_dwProgs, Dataset_Program::e_name, Behaviour{V + S + V1 + UD_A + R} };
+	auto _progNameUI_c = UI_FieldData{ &_rec_dwProgs, Dataset_Program::e_name, {V + S + V1 + UD_A + R} };
 	cout << "\tzone\n";
-	auto _zoneAbbrevUI_c = UI_FieldData{ &_rec_dwZones, Dataset_Zone::e_abbrev, Behaviour{V + S + V1 + UD_A + R} };
+	auto _zoneAbbrevUI_c = UI_FieldData{ &_rec_dwZones, Dataset_Zone::e_abbrev, {V + S + V1 + UD_A + R} };
 	cout << "\tprofile\n";
-	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days, Behaviour{V + S + V1 + UD_A + R + ER}};
+	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days, {V + S + V1 + UD_A + R + ER}};
 	cout << "\ttimeTemp\n";
-	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, Behaviour{ V + L + S + VnLR + UD_E + R0 +ER0 }, 0, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
+	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, { V + L + S + VnLR + UD_E + R0 +ER0 }, 0, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
 	auto _iterated_timeTempUI = UI_IteratedCollection{ 80, makeCollection(_timeTempUI_c) };
 	//auto _iterated_timeTempUI = UI_IteratedCollection<1>{ 80, _timeTempUI_c};
 
-	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, Behaviour{H + L + S + VnLR} };
-	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, Behaviour{H + S + VnLR} };
-	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, Behaviour{H + S} };
+	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, {H + L + S + VnLR} };
+	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, {H + S + VnLR} };
+	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, {H + S} };
 
 	// Pages & sub-pages - Collections of UI handles
 	cout << "\ntt_page Elements Collection\n";
@@ -2497,6 +2518,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            At Wor_k");
 	display1_h.rec_left_right(1);
 	display1_h.rec_left_right(1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Calenda_r    From Now            At Work");
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Zone_s       UpStrs DnStrs DHW   ");
 	display1_h.rec_up_down(-1);
@@ -2521,7 +2543,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Ds: MTWTFSS0630a15 0900p18");
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
 	display1_h.rec_left_right(1);
@@ -2650,9 +2672,9 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 	HeatingSystem hs{};
 	setFactoryDefaults(hs.getDB(), 1);
 
-	auto showActive = [](auto ui) {
+	auto showActive = [](auto & ui) {
 		for (auto & obj : *ui->get()->collection()) {
-			auto fieldData = static_cast<UI_FieldData &>(obj);
+			UI_FieldData & fieldData = static_cast<UI_FieldData &>(obj);
 			cout << ui_Objects()[(long)&fieldData] << "\tFocus: " << fieldData.focusIndex() << " RecID: " << fieldData.data()->recordID() << endl;
 		}
 	};

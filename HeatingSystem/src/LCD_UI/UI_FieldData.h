@@ -41,7 +41,7 @@ namespace LCD_UI {
 		// Modifiers
 		Collection_Hndl * item(int elementIndex) override;
 
-		void focusHasChanged(bool hasFocus) override;
+		bool focusHasChanged(bool hasFocus) override;
 		void setFocusIndex(int focus) override;
 		void setObjectIndex(int index) const override {;} // done by item()
 		void insertNewData();

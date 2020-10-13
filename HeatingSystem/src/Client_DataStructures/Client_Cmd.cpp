@@ -92,13 +92,14 @@ namespace client_data_structures {
 #endif
 	}	
 	
-	void InsertTimeTemp_Cmd::focusHasChanged(bool moveRight) {
+	bool InsertTimeTemp_Cmd::focusHasChanged(bool moveRight) {
 		if (moveRight) {
 			enableCmds(e_NewCmd);
 		}
 		else {
 			enableCmds(e_DelCmd);
 		}
+		return true;
 	}
 
 	Collection_Hndl * InsertTimeTemp_Cmd::enableCmds(int cmd_to_show) {

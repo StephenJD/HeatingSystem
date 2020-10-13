@@ -20,7 +20,7 @@ namespace LCD_UI {
 	public:
 		// Flags must have 1 for filterable attributes (i.e. Visible & Selectible). Otherwise use 0 for default values.
 		//enum BehaviourFlags : uint8_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_LR_Captured = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128 };
-		enum BehaviourFlags : uint16_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_IteratedNoRecycle = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128, b_EditNoRecycle = 256 };
+		enum BehaviourFlags : uint16_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_IteratedNoRecycle = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128, b_EditNoRecycle = 256, b_Edit_Active = 512};
 
 		Behaviour() = default;
 		Behaviour(BehaviourFlags b) : _behaviour(b) {}
@@ -73,10 +73,13 @@ namespace LCD_UI {
 		, S0 = 0, S = Behaviour::b_Selectible
 		, VnLR = 0, V1 = Behaviour::b_ViewOne
 		, R = 0, R0 = Behaviour::b_NonRecycle
-		, ER = 0, ER0 = Behaviour::b_EditNoRecycle
 		, UD_0 = 0, UD_A = Behaviour::b_UD_NextActive, UD_E = Behaviour::b_UD_Edit, UD_S = Behaviour::b_UD_SaveEdit
 		, IR = 0, IR0 = Behaviour::b_IteratedNoRecycle
+		, ER = 0, ER0 = Behaviour::b_EditNoRecycle
+		, EA = Behaviour::b_Edit_Active
 	};
+
+	//using BehaviourFlags = Behaviour::BehaviourFlags;
 	
 	inline Behaviour::BehaviourFlags operator + (BehaviourAliases lhs, BehaviourAliases rhs) {
 		return Behaviour::BehaviourFlags( uint16_t(lhs) | uint16_t(rhs));

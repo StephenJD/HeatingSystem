@@ -29,7 +29,7 @@ namespace LCD_UI {
 		_field_StreamingTool_h.set_OnSelFn_TargetUI(obj);
 	}
 
-	void UI_FieldData::focusHasChanged(bool) {
+	bool UI_FieldData::focusHasChanged(bool) {
 		// parent field might have been changed
 		auto objectAtFocus = _data->query()[focusIndex()];
 #ifdef ZPSIM
@@ -56,6 +56,7 @@ namespace LCD_UI {
 //		logger() <<  L_tabs << F("\tNew FocusIndex: ") << focusIndex()
 //		<< F("New Obj ID: ") << objectAtFocus.id() << L_endl;
 //#endif
+		return true;
 	}
 
 	int UI_FieldData::nextIndex(int id) const {

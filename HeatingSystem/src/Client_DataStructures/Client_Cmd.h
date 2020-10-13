@@ -39,7 +39,7 @@ namespace client_data_structures {
 		enum TT_Cmds{ e_DelCmd, e_EditCmd, e_NewCmd, e_TTs , e_allCmds = 7, e_none};
 		InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour);
 		Collection_Hndl * enableCmds(int cmd_to_show);
-		void focusHasChanged(bool hasFocus) override ;
+		bool focusHasChanged(bool hasFocus) override ;
 		Collection_Hndl * select(Collection_Hndl * from) override;
 		bool back() override;
 		Collection_Hndl * on_back() override;

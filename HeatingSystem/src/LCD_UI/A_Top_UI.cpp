@@ -82,7 +82,7 @@ namespace LCD_UI {
 			//	//else 
 			//		//continue;
 			} else 
-			if (try_behaviour.is_viewAll_LR() || try_behaviour.is_Iterated()) {
+			if (try_behaviour.is_viewAll_LR() /*|| try_behaviour.is_Iterated()*/) {
 				gotLeftRight = tryLeftRight;
 			}
 			tryLeftRight = tryLeftRight->activeUI();
@@ -104,7 +104,7 @@ namespace LCD_UI {
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto tryUD = this_UI_h->activeUI();
 			//if (tryUD == 0) break;
-			auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble();
+			auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble() || (tryUD->get()->isCollection() ? tryUD->get()->collection()->iterableObjectIndex() >= 0 : false);
 #ifdef ZPSIM
 			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
 #endif
@@ -171,8 +171,9 @@ namespace LCD_UI {
 			} while (!hasMoved && _leftRightBackUI != this);
 		}
 
-		set_UpDownUI_from(_leftRightBackUI->backUI());
+		auto outerColl = _leftRightBackUI->backUI();
 		set_CursorUI_from(set_leftRightUI_from(_leftRightBackUI->backUI(), move));
+		set_UpDownUI_from(outerColl);
 
 		_cursorUI->setCursorPos();
 		_upDownUI->move_focus_by(0);
@@ -196,14 +197,15 @@ namespace LCD_UI {
 				move = -move; // reverse up/down when in edit.
 			}
 			haveMoved = _upDownUI->move_focus_by(move);
-		} else if (_upDownUI->behaviour().is_Iterated()) {
-			if (_upDownUI->get()->isCollection()) {
-				auto & iteratedCollection = *_upDownUI->get()->collection();
-				auto & iteratedActiveObject_h = *iteratedCollection.move_to_object(iteratedCollection.iterableObjectIndex());
+		} else if (_upDownUI->get()->isCollection()) {
+			auto & upColln = *_upDownUI->get()->collection();
+			auto iteratedIndex = upColln.iterableObjectIndex();
+			if (iteratedIndex >= 0) {
+				auto & iteratedActiveObject_h = *upColln.move_to_object(iteratedIndex);
 				haveMoved = iteratedActiveObject_h.move_focus_by(move);
 				auto nextIdx = iteratedActiveObject_h.focusIndex();
-				iteratedCollection.filter(filter_selectable());
-				for (auto & thisObj : iteratedCollection) {
+				upColln.filter(filter_selectable());
+				for (auto& thisObj : upColln) {
 					if (&thisObj == iteratedActiveObject_h.get()) continue;
 					thisObj.setFocusIndex(nextIdx);
 				}
