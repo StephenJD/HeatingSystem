@@ -44,9 +44,9 @@ namespace LCD_UI {
 		cout << F("\tedit->back->focus ") << field_streamingTool_h->backUI()->focusIndex() << endl;
 #endif	
 		auto sourceCollection = field_streamingTool_h->backUI()->get()->collection();
-		if (sourceCollection->objectIndex() != sourceCollection->focusIndex()) {
-			field_streamingTool_h->backUI()->move_focus_by(0); // get data loaded for V1 lterated (remote displays)
-			editItem().gotFocus(getDataFormatter()); // copy data to dataFormatter for V1 lterated (remote displays)
+		if (sourceCollection->objectIndex() != sourceCollection->focusIndex()) { // get data loaded for iterated collections
+			field_streamingTool_h->backUI()->move_focus_by(0); 
+			editItem().gotFocus(getDataFormatter()); 
 		}
 		field_streamingTool_h->set_focus(editItem().getEditCursorPos()); // copy data to edit
 		field_streamingTool_h->setCursorMode(HI_BD::e_inEdit);
@@ -90,7 +90,6 @@ namespace LCD_UI {
 			if (field_streamingTool_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
 				streamVal = editItem().currValue().val;
 			}
-			else const_cast<I_Edit_Hndl&>(editItem()).currValue().val = streamVal;
 		}
 		return streamVal;
 	}

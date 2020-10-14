@@ -26,11 +26,9 @@ namespace LCD_UI {
 	public:
 		UI_FieldData(I_Record_Interface * dataset, int fieldID
 			, uint16_t collectionBehaviour = { V + S + V1 + R + UD_A + ER0}
-			, UI_FieldData * parent = 0, int selectFldID = 0, OnSelectFnctr onSelect = 0);
+			, int selectFldID = 0, OnSelectFnctr onSelect = 0);
 
 		// Queries
-		bool isCollection() const override { return _parentFieldData == 0; }
-
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override;
@@ -40,7 +38,6 @@ namespace LCD_UI {
 
 		// Modifiers
 		Collection_Hndl * item(int elementIndex) override;
-
 		bool focusHasChanged(bool hasFocus) override;
 		void setFocusIndex(int focus) override;
 		void setObjectIndex(int index) const override {;} // done by item()
@@ -54,8 +51,7 @@ namespace LCD_UI {
 		int fieldID() { return _field_StreamingTool_h.fieldID(); }
 		void moveToSavedRecord();
 		I_Record_Interface * _data;
-		UI_FieldData * _parentFieldData;
 		Field_StreamingTool_h _field_StreamingTool_h;
-		signed char _selectFieldID;
+		uint8_t _selectFieldID;
 	};
 }

@@ -35,6 +35,7 @@ namespace client_data_structures {
 		case e_secondsToGo:
 		{
 			_secondsToGo.val = towelRail(recordID()).timeToGo();
+			if (_secondsToGo.val) logger() << "TowelRail::timeToGo: " << _secondsToGo.val << L_endl;
 			return &_secondsToGo;
 		}
 		default: return 0;

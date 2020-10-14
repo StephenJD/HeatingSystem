@@ -16,7 +16,9 @@ namespace HardwareInterfaces {
 	}	
 	
 	uint8_t TowelRail::relayPort() const { return _relay->port(); }
-	uint16_t TowelRail::timeToGo() const { return _timer > TWL_RAD_RISE_TIME ? _timer : 0; }
+	uint16_t TowelRail::timeToGo() const { 
+		return _timer > TWL_RAD_RISE_TIME ? _timer : 0; 
+	}
 
 	bool TowelRail::check() {
 		// En-suite and Family share a zone / relay, so need to prevent the OFF TR disabling the ON one.

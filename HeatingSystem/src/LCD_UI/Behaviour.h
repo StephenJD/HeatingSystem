@@ -5,6 +5,7 @@ namespace LCD_UI {
 	extern const char NEW_LINE_CHR;
 
 	/// <summary>
+	/// 244: view, sel, ViewOne, LR0, UD-NextActive, Recycle, IR0
 	/// 234: view, sel, ViewOne, LR0, UD-Edit, No-Recycle
 	/// 232: view, sel, ViewOne, LR0, UD-Edit, Recycle
 	/// 228: view, sel, ViewOne, LR0  UD-NextActive, Recycle
@@ -41,11 +42,11 @@ namespace LCD_UI {
 		bool is_edit_on_UD() const		{ return _behaviour & b_UD_Edit; }
 		bool is_save_on_UD() const		{ return is( b_UD_NextActive + b_UD_Edit); }
 		bool is_viewOneUpDn_Next() const { return is_viewOne() && is_next_on_UpDn(); }
-		bool is_recycle() const			{ return !(_behaviour & b_NonRecycle) && !(_behaviour & b_IteratedNoRecycle) ; }
+		bool is_recycle() const			{ return !(_behaviour & b_NonRecycle); }
 		bool is_OnNewLine() const		{ return _behaviour & b_NewLine; }
 		bool is_CaptureLR() const{ return is_viewAll_LR(); }
 		bool is_EditNoRecycle() const{ return _behaviour & b_EditNoRecycle;	}
-		bool is_Iterated() const{ return is_viewAll_LR() && is_next_on_UpDn();	}
+		bool is_IterateOne() const{ return is_viewAll_LR() && is_next_on_UpDn();	}
 		bool is_IteratedNoRecycle() const{ return _behaviour & b_IteratedNoRecycle;	}
 
 		// Modifiers
@@ -58,7 +59,7 @@ namespace LCD_UI {
 		Behaviour make_viewOne() { _behaviour |= b_ViewOne; return *this; }
 		Behaviour make_viewAll() { _behaviour &= ~b_ViewOne; return *this; }
 		Behaviour make_UD() { _behaviour |= b_UD_NextActive; return *this; }
-		Behaviour make_Iterated() { (_behaviour |= b_UD_NextActive) &= ~b_UD_Edit; return *this; }
+		Behaviour make_IterateOne() { (_behaviour |= b_UD_NextActive) &= ~b_UD_Edit; return *this; }
 		Behaviour make_noUD() { _behaviour &= ~(b_UD_NextActive | b_UD_Edit); return *this; }
 		Behaviour make_noRecycle() { _behaviour |= b_NonRecycle; return *this; }
 

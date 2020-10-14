@@ -128,6 +128,7 @@ namespace LCD_UI {
 #endif
 			move_focus_to(focusIndex());
 			const int startFocus = focusIndex(); // might be endIndex()
+			auto move_behaviour = behaviour();
 			////////////////////////////////////////////////////////////////////
 			//************* Lambdas evaluating algorithm *********************//
 			////////////////////////////////////////////////////////////////////
@@ -137,13 +138,18 @@ namespace LCD_UI {
 			auto firstValidIndexLookingForwards = [this](int index) {return get()->collection()->nextActionableIndex(index); };
 			auto firstValidIndexLookingBackwards = [this](int index) {return get()->collection()->prevActionableIndex(index); };
 			const auto weCouldNotMove = startFocus;
-			auto isInNonRecycleIteration = [this]() {return backUI() ? backUI()->behaviour().is_IteratedNoRecycle() : false; };
+			auto isInNonRecycleIteration = [this]() {
+				bool back_isIterated = false;
+				if (backUI() && backUI()->get()->isCollection()) {
+					back_isIterated = backUI()->get()->collection()->iterableObjectIndex() >= 0;
+				}
+				return back_isIterated ? backUI()->behaviour().is_IteratedNoRecycle() : false;
+			};
 			////////////////////////////////////////////////////////////////////
 			//************************  Algorithm ****************************//
 			////////////////////////////////////////////////////////////////////
-			bool canRecycle = behaviour().is_recycle() && !isInNonRecycleIteration();
-			bool isViewOne = behaviour().is_viewOne() && (backUI() ? !backUI()->behaviour().is_Iterated() : true);
-			//bool isViewOne = behaviour().is_viewOneUpDn_Next() && !backUI()->behaviour().is_Iterated();
+			bool canRecycle = move_behaviour.is_recycle() && !isInNonRecycleIteration();
+			bool isViewOne = move_behaviour.is_viewOne() && (backUI() ? !backUI()->behaviour().is_IterateOne() : true);
 
 			get()->collection()->filter(filter_selectable());
 			if (wantToCheckCurrentPosIsOK) {

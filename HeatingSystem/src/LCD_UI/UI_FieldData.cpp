@@ -14,10 +14,9 @@ namespace LCD_UI {
 
 	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID
 		, uint16_t collectionBehaviour
-		, UI_FieldData * parent, int selectFldID, OnSelectFnctr onSelect)
+		, int selectFldID, OnSelectFnctr onSelect)
 		: LazyCollection(dataset->count(), Behaviour(collectionBehaviour))
 		, _data(dataset)
-		, _parentFieldData(parent)
 		, _field_StreamingTool_h(_data->initialiseRecord(fieldID)->ui(), collectionBehaviour, fieldID, this, onSelect)
 		, _selectFieldID(selectFldID)
 	{
@@ -107,9 +106,7 @@ namespace LCD_UI {
 	Collection_Hndl * UI_FieldData::saveEdit(const I_Data_Formatter * newData) {
 		if (data()->inParentEditMode()) {
 			auto newID = IntWrapper(objectIndex(),0);
-			if (data()->setNewValue(_selectFieldID, &newID)) {
-				//_parentFieldData->setFocusIndex(_parentFieldData->data()->recordID());
-			}
+			data()->setNewValue(_selectFieldID, &newID);
 		}
 		else {
 			_data->move_to(focusIndex());

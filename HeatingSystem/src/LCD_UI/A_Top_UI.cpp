@@ -75,18 +75,19 @@ namespace LCD_UI {
 				<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
 				<< " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
-			if (try_behaviour.is_Iterated()) {
+			if (try_behaviour.is_IterateOne()) {
 				tryLeftRight = tryActive_h;
-			//	if(tryLeftRight->get()->isCollection()) 
 				gotLeftRight = tryLeftRight;
-			//	//else 
-			//		//continue;
-			} else 
-			if (try_behaviour.is_viewAll_LR() /*|| try_behaviour.is_Iterated()*/) {
+			} else if (try_behaviour.is_viewAll_LR()) {
 				gotLeftRight = tryLeftRight;
+				if (_leftRightBackUI != gotLeftRight) {
+					auto & colln = *gotLeftRight->get()->collection();
+					if (!colln.indexIsInRange(colln.focusIndex())) {
+						gotLeftRight->enter_collection(direction);
+					}
+				}
 			}
 			tryLeftRight = tryLeftRight->activeUI();
-			//if (tryLeftRight == 0) break;
 		}
 		if (_leftRightBackUI != gotLeftRight) {
 			_leftRightBackUI = gotLeftRight;
@@ -165,14 +166,14 @@ namespace LCD_UI {
 			do {
 				do {
 					_leftRightBackUI = _leftRightBackUI->backUI();
-				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_Iterated()));
+				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_IterateOne()));
 
 				hasMoved = _leftRightBackUI->move_focus_by(move);
 			} while (!hasMoved && _leftRightBackUI != this);
 		}
 
 		auto outerColl = _leftRightBackUI->backUI();
-		set_CursorUI_from(set_leftRightUI_from(_leftRightBackUI->backUI(), move));
+		set_CursorUI_from(set_leftRightUI_from(outerColl, move));
 		set_UpDownUI_from(outerColl);
 
 		_cursorUI->setCursorPos();

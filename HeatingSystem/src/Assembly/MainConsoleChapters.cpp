@@ -24,14 +24,14 @@ namespace Assembly {
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A+R+IR0} }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, {V + S + V1 + UD_E} }
 		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, {V+S+L+V1+UD_A+ER+EA}}
-		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R+ER}}
+		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R+ER}, Dataset_Program::e_id }
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, {V + S + L + VnLR + UD_E + R0 +ER0}, 0,0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, {V + S + L + VnLR + UD_E + R0 +ER0}, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp, {V + S + VnLR + R}}
 		
 		, _towelRailNameUI_c{ &db._rec_towelRailParent, Dataset_TowelRail::e_name }
-		, _towelRailTempUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_onTemp, {V+S+V1} }
-		, _towelRailOnTimeUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_minutesOn, {V + S + V1} }
+		, _towelRailTempUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_onTemp }
+		, _towelRailOnTimeUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_minutesOn }
 		, _towelRailStatus_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_secondsToGo, {V + V1} }
 		
 		, _relayStateUI_c{ &db._rec_relayParent, Dataset_Relay::e_state,{V + S + V1 + UD_E} }
@@ -59,14 +59,14 @@ namespace Assembly {
 
 		, _iterated_zoneReqTemp_c{80, _zoneReqIs_UI_c }
 
-		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) }
+		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) ,{ V + S + VnLR + R0 } }
 		, _iterated_prog_name_c{80, _progNameUI_c}
-		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c) }
+		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c),{ V + S + VnLR + R0 } }
 
 		, _iterated_zone_name_c{ 80, _zoneNameUI_c}
-		, _zone_subpage_c{makeCollection(_dwellingZoneCmd, _iterated_zone_name_c)}
+		, _zone_subpage_c{makeCollection(_dwellingZoneCmd, _iterated_zone_name_c),{ V + S + VnLR + R0 } }
 
-		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _zone_subpage_c) }
+		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _zone_subpage_c),{ V + S + V1 + UD_A + R } }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
 		
 		, _iterated_timeTempUI{80, _timeTempUI_c}
@@ -87,16 +87,8 @@ namespace Assembly {
 		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c) }
 		, _info_chapter_h{_info_chapter_c}
 	{
-		_zone_subpage_c.behaviour().make_noRecycle();
-		_calendar_subpage_c.behaviour().make_noRecycle();
-		_prog_subpage_c.behaviour().make_noRecycle();
-		_page_dwellingMembers_subpage_c.set(Behaviour{ V+S+V1+UD_A+R });
-
 		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));
 		_contrastCmd.set_UpDn_Target(_contrastCmd.function(Contrast_Brightness_Cmd::e_contrast));
-		//_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-		//_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-		//_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));
 		_fromCmd.set_UpDn_Target(_calendar_subpage_c.item(3));
 		_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(0));
@@ -106,10 +98,6 @@ namespace Assembly {
 		_timeTempUI_c.set_OnSelFn_TargetUI(&_editTTCmd);
 		_contrastCmd.setDisplay(hs.mainDisplay);
 		_backlightCmd.setDisplay(hs.mainDisplay);
-		//_user_chapter_h.rec_select();
-		//UI_DisplayBuffer mainDisplayBuffer(mainDisplay);
-		// Create infinite loop
-		//display1_h.stream(mainDisplayBuffer);
 #ifdef ZPSIM
 		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getStreamingTool().f_interface().editItem().get();
 		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";
