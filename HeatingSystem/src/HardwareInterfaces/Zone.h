@@ -2,10 +2,19 @@
 #include <RDB.h>
 #include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
 #include "Date_Time.h"
+#include "GetExpCurveConsts.h"
+#include "..\Assembly\HeatingSystemEnums.h"
 
 //***************************************************
 //              Zone Dynamic Class
 //***************************************************
+namespace client_data_structures {
+	struct R_Zone;
+}
+
+namespace Assembly {	
+	class TemperatureController;
+}
 
 namespace HardwareInterfaces {
 	class ThermalStore;
@@ -16,7 +25,15 @@ namespace HardwareInterfaces {
 	class Zone : public LCD_UI::VolatileData {
 	public:
 		Zone() = default;
-		void initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp);
+		void initialise(
+			int zoneID
+			, UI_TempSensor & callTS
+			, UI_Bitwise_Relay & callRelay
+			, ThermalStore & thermalStore
+			, MixValveController & mixValveController
+			, int8_t maxFlowTemp
+			, RelationalDatabase::RDB<Assembly::TB_NoOfTables> & db
+		);
 #ifdef ZPSIM
 		Zone(UI_TempSensor & ts, int reqTemp, UI_Bitwise_Relay & callRelay);
 #endif
@@ -41,10 +58,12 @@ namespace HardwareInterfaces {
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
 		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
+		void preHeatForNextTT();
 
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
-
+		auto zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone>;
+		RelationalDatabase::RDB<Assembly::TB_NoOfTables> * _db = 0;
 		UI_TempSensor * _callTS = 0;
 		UI_Bitwise_Relay * _relay = 0;
 		ThermalStore * _thermalStore = 0;
@@ -62,7 +81,7 @@ namespace HardwareInterfaces {
 		//long _aveFlow = 0;  // in degrees
 		//startTime * _sequence;
 		bool _isHeating = false; // just for logging
-		//GetExpCurveConsts _getExpCurve;
+		GetExpCurveConsts _getExpCurve{ 128 };
 	};
 
 	//extern Zone * zones; // Array of Zones provided by client

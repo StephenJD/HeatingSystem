@@ -72,6 +72,7 @@ namespace Assembly {
 				, thermalStore
 				, mixValveControllerArr[zone.rec().mixValve]
 				, zone.rec().maxFlowTemp
+				, db
 			);
 			++index;
 		}
@@ -93,7 +94,7 @@ namespace Assembly {
 
 	}
 
-	void TemperatureController::checkAndAdjust() {
+	void TemperatureController::checkAndAdjust() { // Called every Arduino loop
 		// once per second
 		static auto lastCheck = millis();
 		if (secondsSinceLastCheck(lastCheck) == 0) { return; } // Wait for next second.
@@ -102,10 +103,12 @@ namespace Assembly {
 			//logger() << F("TS: 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
 		}
+
 		if (clock_().seconds() == 0) { // each minute
 			checkZones();
 			//logger() << L_time << F("checkAndAdjust Zones checked.") << L_endl;
 		}
+
 		for (auto & mixValveControl : mixValveControllerArr) {
 			mixValveControl.check(); 
 			ui_yield(); 
@@ -132,8 +135,11 @@ namespace Assembly {
 	}
 
 	void TemperatureController::checkZones() {
+		auto checkForPreHeat = clock_().minUnits() == 0; // each 10 minutes
+
 		for (auto & zone : zoneArr) { 
-			zone.setFlowTemp(); 
+			zone.setFlowTemp();
+			if (checkForPreHeat) zone.preHeatForNextTT();
 			ui_yield();
 		}
 	}

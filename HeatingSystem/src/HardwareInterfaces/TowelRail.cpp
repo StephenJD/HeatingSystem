@@ -46,7 +46,10 @@ namespace HardwareInterfaces {
 	}
 
 	bool TowelRail::setFlowTemp() { // returns true if ON
-		if (_timer > 0) --_timer; // called every second
+		if (_timer > 0) {
+			logger() << L_time << "TowelRail tick " << _timer << L_endl;
+			--_timer; // called every second
+		}
 		_callFlowTemp = 0;
 
 		if (_timer > TWL_RAD_RISE_TIME || rapidTempRise()) {
@@ -72,7 +75,7 @@ namespace HardwareInterfaces {
 			else { // _timer running
 				if (hotWaterFlowTemp > _prevTemp + TWL_RAD_RISE_TEMP) {
 					_timer = _onTime * 60;
-					logger() << F("TowelR: RapidRise is: ") << hotWaterFlowTemp << L_endl;
+					logger() << L_time << F("TowelR: RapidRise is: ") << hotWaterFlowTemp << L_endl;
 					return true;
 				}
 				else if (hotWaterFlowTemp < _prevTemp) {

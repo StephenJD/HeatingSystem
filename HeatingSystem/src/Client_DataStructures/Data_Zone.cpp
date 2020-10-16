@@ -67,7 +67,6 @@ namespace client_data_structures {
 		strcat(scratch, " is:");
 		strcat(scratch, intToString(reqIsTemp->isTemp));
 		strcat(scratch, reqIsTemp->isHeating ? "!" : " ");
-		//logger() << "Call temp: " << reqIsTemp->name << " " << reqIsTemp->isTemp << L_endl;
 		return scratch;
 	}
 
@@ -96,7 +95,6 @@ namespace client_data_structures {
 			return &_abbrev;
 		case e_reqTemp:
 		{
-			//setNewValue(Dataset_Zone::e_reqTemp, &_requestTemp);
 			HardwareInterfaces::Zone & z = zone(record().id());
 			_requestTemp.val = z.currTempRequest();
 			return &_requestTemp;
@@ -112,8 +110,6 @@ namespace client_data_structures {
 			return &_factor;
 		case e_reqIsTemp:
 		{
-			//auto recordID = record();
-			//setNewValue(Dataset_Zone::e_reqTemp, &_reqIsTemp);
 			HardwareInterfaces::Zone & z = zone(record().id());
 			strcpy(_reqIsTemp.name, record().rec().name);
 			_reqIsTemp.isTemp = z.getCurrTemp();

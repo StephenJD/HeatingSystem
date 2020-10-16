@@ -2,8 +2,10 @@
 #include "..\Assembly\HeatingSystemEnums.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\Client_DataStructures\Data_Relay.h"
+#include "..\Client_DataStructures\Data_Zone.h"
 #include "ThermalStore.h"
 #include "MixValveController.h"
+#include "RDB.h"
 
 namespace HardwareInterfaces {
 
@@ -20,13 +22,14 @@ namespace HardwareInterfaces {
 		, _maxFlowTemp(65)
 	{}
 #endif
-	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp) {
+	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp, RelationalDatabase::RDB<TB_NoOfTables> & db) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
 		_thermalStore = &thermalStore;
 		_recordID = zoneID;
 		_maxFlowTemp = maxFlowTemp;
+		_db = &db;
 	}
 
 	void Zone::offsetCurrTempRequest(int8_t val) {
@@ -54,20 +57,10 @@ namespace HardwareInterfaces {
 
 	int8_t Zone::modifiedCallTemp(int8_t callTemp) const {
 		callTemp += _offsetT;
-		if (callTemp == 246) {
-			logger() << L_time << F("Zone::modifiedCallTemp. callTemp: ") << callTemp << F(" Offset: ") << _offsetT << L_endl;
-		}		
+		//if (callTemp == 246) {
+		//	logger() << L_time << F("Zone::modifiedCallTemp. callTemp: ") << callTemp << F(" Offset: ") << _offsetT << L_endl;
+		//}		
 		if (callTemp < MIN_ON_TEMP) callTemp = MIN_ON_TEMP;
-		//int8_t modifiedTemp;
-		//int8_t weatherSetback = epDI().getWeatherSetback();
-		//// if Outside temp + WeatherSB > CallTemp then set to 2xCallT-OSTemp-WeatherSB, else set to CallT
-		//int8_t outsideTemp = f->thermStoreR().getOutsideTemp();
-		//if (outsideTemp + weatherSetback > callTemp) {
-		//	modifiedTemp = 2 * callTemp - outsideTemp - weatherSetback;
-		//	if (modifiedTemp < (getFractionalCallSensTemp() >> 8) && modifiedTemp < callTemp) modifiedTemp = callTemp - 1;
-		//	callTemp = modifiedTemp;
-		//}
-
 		return callTemp;
 	}
 
@@ -82,9 +75,6 @@ namespace HardwareInterfaces {
 			logger() << L_endl << L_time << F("Zone_Run::setZFlowTemp\t") << msg << F(" Zone: ") << _recordID
 			<< F(" Req Temp: ") << currTempReq
 			<< F(" fractionalZoneTemp: ") << fractionalZoneTemp / 256.
-			//<< fractionalZoneTemp
-			//<< F("\n\t dbl-fractionalZoneTemp: ") << double(fractionalZoneTemp)
-			//<< F("\n\t dbl-fractionalZoneTemp/256: ") 	
 			<< F(" ReqFlowTemp: ") << myFlowTemp
 			<< F(" TempError: ") << tempError / 16. << (logger_RelayStatus ? F(" On") : F(" Off")) << L_endl;
 		};
@@ -147,4 +137,69 @@ namespace HardwareInterfaces {
 		return (tempError < 0);
 	}
 
+	auto Zone::zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> {
+		using namespace RelationalDatabase;
+		using namespace client_data_structures;
+		auto zones = _db->tableQuery(TB_Zone);
+		return zones[record()];
+	}
+
+	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
+		// Modifies _currProfileTempRequest to allow for heat-up for next event
+		// returns true when actual programmed time has expired.
+		using namespace Date_Time;
+		auto zoneAnswer = zoneRecord();
+		auto & zoneRec = zoneAnswer.rec();
+		auto currTempReq = currTempRequest();
+		auto nextTempReq = nextTempRequest();
+
+		auto currTemp = getFractionalCallSensTemp();
+		//double outsideDiff;
+		//if (isDHWzone()) {
+		//	outsideDiff = 0;
+		//	if (currTemp / 256 < nextTempReq) nextTempReq += THERM_STORE_HYSTERESIS;
+		//} else {
+		//	outsideDiff = nextTempReq - f->thermStoreR().getOutsideTemp();
+		//}
+
+		int minsToAdd = 0;
+		double fractFinalTempDiff = (nextTempReq * 256.) - currTemp; //- 128; // aim for 0.5 degree below requested temp
+		if (nextTempReq > currTempReq && currTemp / 256 < nextTempReq) { // if next temp is higher allow warm-up time
+			double limitTemp = zoneRec.autoFinalT; // fractFinalTempDiff +  * 25.6 * (1. - outsideDiff/25.) ;
+			if (limitTemp < nextTempReq + 2.) limitTemp = nextTempReq + 2.;
+			limitTemp *= 256;
+			double fractStartTempDiff = limitTemp - currTemp;
+			if (zoneRec.autoMode) {
+				double logRatio = 1. - (fractFinalTempDiff / fractStartTempDiff);
+				minsToAdd = int(-zoneRec.autoTimeC * log(logRatio));
+			} else {
+				minsToAdd = int(fractFinalTempDiff * zoneRec.manHeatTime * 2 + 128) / 256; // mins per 1/2 degree
+			}
+		}
+		int hrsToAdd = (minsToAdd / 60);
+		auto changeTime = _ttEndDateTime.addOffset({ hh,-(hrsToAdd) }).addOffset({ m10,(minsToAdd % 60) / 10 });
+		if (clock_().now() >= changeTime && currTempReq != nextTempReq) {
+			setProfileTempRequest(nextTempReq - offset());
+			_getExpCurve.firstValue(currTemp);
+			logger() << L_time << "Zone: " << zoneRec.name 
+				<< " Preheat.\tTimeToAdd(mins): " << (long)minsToAdd
+				<< " CurrTempReq: " << (long)currTempReq
+				<< " AutoLimit: " << (long)zoneRec.autoFinalT
+				<< " AutoConst: " << (long)zoneRec.autoTimeC << L_endl;
+		} else {
+			_getExpCurve.nextValue(currTemp);
+			if ((currTemp + 128) / 256 >= nextTempReq) {
+				GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
+				if (curveMatch.resultOK) { // within 0.5 degrees and enough temps recorded. recalc TL
+					logger() << L_time << "Zone: " << zoneRec.name 
+						<< " Preheat.\tNewLimit: " << long(curveMatch.limit)
+						<< " New TC: " << long(curveMatch.timeConst) << L_endl;
+					zoneRec.autoFinalT = curveMatch.limit / 256;
+					zoneRec.autoTimeC = (curveMatch.timeConst > 255 ? 255 : uint8_t(curveMatch.timeConst));
+					zoneAnswer.update();
+					_getExpCurve.firstValue(0); // prevent further updates
+				}
+			}
+		}
+	}
 }

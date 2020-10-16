@@ -20,7 +20,6 @@ namespace LCD_UI {
 	class Behaviour {
 	public:
 		// Flags must have 1 for filterable attributes (i.e. Visible & Selectible). Otherwise use 0 for default values.
-		//enum BehaviourFlags : uint8_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_LR_Captured = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128 };
 		enum BehaviourFlags : uint16_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_IteratedNoRecycle = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128, b_EditNoRecycle = 256, b_Edit_Active = 512};
 
 		Behaviour() = default;

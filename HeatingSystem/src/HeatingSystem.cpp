@@ -94,7 +94,7 @@ HeatingSystem::HeatingSystem()
 		_initialiser.i2C_Test();
 	}
 
-void HeatingSystem::serviceTemperatureController() {
+void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
 	if (_mainConsoleChapters.chapter() == 0) {
 		_tempController.checkAndAdjust();
 	}
