@@ -14,19 +14,14 @@ using namespace std;
 #endif
 	using namespace GP_LIB;
 
-	CStr_20 generateFileName(const char * filename, const Clock * clock) {
+	CStr_20 generateFileName(const char * fileNameStem, const Clock * clock) {
 		CStr_20 _fileName;
-		auto endName = strlen(filename) - 4; // remove extn.
-		if (endName > 4) endName = 4;
-		strncpy(_fileName.str(), filename, endName);
-		_fileName[endName] = 0;
+		strcpy(_fileName.str(), fileNameStem);
 		if (clock) {
 			clock->refresh();
-			if (endName > 4) _fileName[4] = 0;
 			strcat(_fileName.str(), intToString(clock->month(), 2));
 			strcat(_fileName.str(), intToString(clock->day(), 2));
 		} 
-		_fileName[8] = 0;
 		strcat(_fileName.str(), ".txt");
 		return _fileName;
 	}
@@ -121,19 +116,21 @@ using namespace std;
 
 	Serial_Logger SD_Logger::_serial;
 
-	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate) : Serial_Logger(baudRate), _fileName(fileName) {
+	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate) : Serial_Logger(baudRate) {
+		strncpy(_fileNameStem, fileName, 4);
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		SD.begin(chipSelect);
-		_dataFile = SD.open(_fileName, FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
+		_dataFile = SD.open(_fileNameStem, FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
 		Serial.print(F("\nSD_Logger Begun without Clock "));
 		Serial.print(isWorking() ? F("OK") : F("Failed"));
 		Serial.println();
 	}	
 	
-	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock), _fileName(fileName) {
+	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock) {
+		strncpy(_fileNameStem, fileName, 4);
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		SD.begin(chipSelect);
-		_dataFile = SD.open(_fileName, FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
+		_dataFile = SD.open(_fileNameStem, FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
 		Serial.print(F("\nSD_Logger Begun with clock "));
 		Serial.print(isWorking() ? F("OK") : F("Failed"));
 		Serial.println();
@@ -146,7 +143,7 @@ using namespace std;
 		if (SD.sd_exists(chipSelect)) {
 			if (!_dataFile) {
 				//auto t0 = micros();
-				_dataFile = SD.open(generateFileName(_fileName, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
+				_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
 				//auto d = micros() - t0;
 				//Serial.print("File re-opened on OK took "); Serial.println(d);
 			}
@@ -176,6 +173,7 @@ using namespace std;
 	}	
 	
 	Logger & SD_Logger::logTime() {
+		if(_clock->time().asInt() == 0 && _clock->minUnits() == 0 && _clock->seconds() == 0) _dataFile = File{};
 		Serial_Logger::logTime();
 		_SD_mustTabTime = true;
 		return *this;

@@ -176,7 +176,7 @@ SD.h/.cpp modified to provide sd_exists();
 
 		static Serial_Logger _serial;
 		File _dataFile;
-		const char * _fileName;
+		char _fileNameStem[5];
 		bool _SD_mustTabTime = false;
 	};
 

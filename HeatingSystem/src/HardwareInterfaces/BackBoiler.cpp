@@ -11,7 +11,7 @@ namespace HardwareInterfaces {
 
 	bool BackBoiler::check() { // start or stop pump as required
 		bool pumpOn = false;
-		if (UI_TempSensor::hasError()) {
+		if (_flowTS->hasError()) {
 			pumpOn = true;
 		}
 		else {

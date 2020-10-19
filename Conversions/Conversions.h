@@ -55,7 +55,8 @@ namespace GP_LIB {
 	/// only for values &lt; 1029
 	/// </summary>
 	inline int div10(int val) { // only valid for values < 1029
-		return (val * 205) >> 11;
+		return (val /10);
+		//return (val * 205) >> 11;
 	}
 	
 	/// <summary>

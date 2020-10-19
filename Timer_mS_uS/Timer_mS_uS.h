@@ -16,6 +16,7 @@
 		int32_t period() const { return _period; }
 		// Modifiers
 		void set_uS(int32_t period_uS) { _period = period_uS; }
+		void set_startTime_uS(int32_t start_uS) { _startTime = start_uS; }
 		void restart() { _startTime = micros(); }
 		void repeat() { _startTime += _period; }
 	private:
@@ -33,6 +34,7 @@
 		int32_t period() const { return _timer_uS.period() / 1000; }
 		// Modifiers
 		void set_mS(int32_t period_mS) { _timer_uS.set_uS(period_mS * 1000); }
+		void set_startTime_mS(int32_t start_mS) { _timer_uS.set_startTime_uS(start_mS * 1000); }
 		void restart() { _timer_uS.restart(); }
 		void repeat() { _timer_uS.repeat(); }
 	private:

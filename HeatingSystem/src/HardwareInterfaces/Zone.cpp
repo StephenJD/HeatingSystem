@@ -7,6 +7,8 @@
 #include "MixValveController.h"
 #include "RDB.h"
 
+Logger& zTempLogger();
+
 namespace HardwareInterfaces {
 
 	using namespace Assembly;
@@ -71,31 +73,35 @@ namespace HardwareInterfaces {
 
 	bool Zone::setFlowTemp() { // Called every minute. Sets flow temps. Returns true if needs heat.
 		// lambdas
-		auto logTemps = [this](const __FlashStringHelper * msg, long currTempReq, short fractionalZoneTemp, long myFlowTemp, long tempError, bool logger_RelayStatus) {
-			logger() << L_endl << L_time << F("Zone_Run::setZFlowTemp\t") << msg << F(" Zone: ") << _recordID
-			<< F(" Req Temp: ") << currTempReq
-			<< F(" fractionalZoneTemp: ") << fractionalZoneTemp / 256.
-			<< F(" ReqFlowTemp: ") << myFlowTemp
-			<< F(" TempError: ") << tempError / 16. << (logger_RelayStatus ? F(" On") : F(" Off")) << L_endl;
+		auto zoneNames = [](int id) -> const char * {
+			switch (id) {
+			case 0: return "US  ";
+			case 1: return "DS  ";
+			case 2: return "DHW ";
+			case 3: return "Flat";
+			default: return "";
+			}
+		};
+
+		auto logTemps = [this, zoneNames](const __FlashStringHelper * msg, long currTempReq, short fractionalZoneTemp, long myFlowTemp, long tempError, bool logger_RelayStatus) {
+			zTempLogger() << L_time << L_tabs << F("Zone::setZFlowTemp") << zoneNames(_recordID) << msg 
+			<< F("Req Temp:") << currTempReq
+			<< F("ZoneTemp:") << fractionalZoneTemp / 256.
+			<< F("ReqFlowTemp:") << myFlowTemp
+			<< F("TempError:") << tempError / 16. << (logger_RelayStatus ? F(" On") : F(" Off")) << L_endl;
 		};
 		
 		if (isDHWzone()) {
 			bool needHeat;
-			if (UI_TempSensor::hasError()) {
-				needHeat = false;
-				//logger() << F("Zone_Run::setZFlowTemp for DHW\tTS Error.\n");
-			}
-			else {
-				needHeat = _thermalStore->needHeat(currTempRequest(), nextTempRequest());
-				//logger() << F("Zone_Run::setZFlowTemp for DHW\t NeedHeat?") << needHeat << L_endl;
-			}
+			needHeat = _thermalStore->needHeat(currTempRequest(), nextTempRequest());
+			//logger() << F("Zone::setZFlowTemp for DHW\t NeedHeat?") << needHeat << L_endl;
 			_relay->set(needHeat);
 			return needHeat;
 		}
 
 		auto fractionalZoneTemp = getFractionalCallSensTemp(); // get fractional temp.msb is temp is degrees
-		if (UI_TempSensor::hasError()) {
-			logger() << L_endl << L_time << F("Zone_Run::setZFlowTemp\tCall TS Error for zone") << _recordID << L_endl;
+		if (_callTS->hasError()) {
+			logger() << L_endl << L_time << F("Zone::setZFlowTemp\tCall TS Error for zone ") << zoneNames(_recordID) << L_endl;
 			return false;
 		}
 
@@ -109,17 +115,17 @@ namespace HardwareInterfaces {
 		auto logger_RelayStatus = _relay->logicalState();
 		if (tempError > 7L) {
 			myFlowTemp = MIN_FLOW_TEMP;
-			logTemps(F("Too Warm"), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
+			logTemps(F("Too Warm."), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 		else if (tempError < -8L) {
 			myFlowTemp = _maxFlowTemp;
-			logTemps(F("Too Cool"), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
+			logTemps(F("Too Cool."), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 		else {
 			myFlowTemp = static_cast<long>((_maxFlowTemp + MIN_FLOW_TEMP) / 2. - tempError * (_maxFlowTemp - MIN_FLOW_TEMP) / 16.);
 			//U1_byte errorDivider = flowBoostDueToError > 16 ? 10 : 40; //40; 
 			//myFlowTemp = myTheoreticalFlow + (flowBoostDueToError + errorDivider/2) / errorDivider; // rounded to nearest degree
-			logTemps(F("In Range"), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
+			logTemps(F("In Range."), currTempReq, fractionalZoneTemp, myFlowTemp, tempError, logger_RelayStatus);
 		}
 
 		// check limits
@@ -161,10 +167,21 @@ namespace HardwareInterfaces {
 		//} else {
 		//	outsideDiff = nextTempReq - f->thermStoreR().getOutsideTemp();
 		//}
+		// Part 1: When nextTempReq is > currTempReq:
+		//	1. Calculate time to warm up.
+		//	2. Calculate the pre-heat time from _ttEndDateTime.
+		//  3. If now is after pre-heat time and CurrTempReq is not NextTempReq:
+		//		4. Set CurrTempReq to the NextTempReq. This will start heating and prevent further pre-heat calculations.
+		//		5. Register first Curve Temp.
+		// Part 2: When CurrTemp is <= currTempReq:
+		//	1. Record next temp point.
+		// Part 3: When temp reaches required:
+		//	1. Attempt curve-match
+		//	2. If successful, save new constants.
 
-		int minsToAdd = 0;
-		double fractFinalTempDiff = (nextTempReq * 256.) - currTemp; //- 128; // aim for 0.5 degree below requested temp
-		if (nextTempReq > currTempReq && currTemp / 256 < nextTempReq) { // if next temp is higher allow warm-up time
+		if (nextTempReq > currTempReq) { // if next profile temp is higher allow warm-up time
+			int minsToAdd = 0;
+			double fractFinalTempDiff = (nextTempReq * 256.) - currTemp; //- 128; // aim for 0.5 degree below requested temp
 			double limitTemp = zoneRec.autoFinalT; // fractFinalTempDiff +  * 25.6 * (1. - outsideDiff/25.) ;
 			if (limitTemp < nextTempReq + 2.) limitTemp = nextTempReq + 2.;
 			limitTemp *= 256;
@@ -175,31 +192,29 @@ namespace HardwareInterfaces {
 			} else {
 				minsToAdd = int(fractFinalTempDiff * zoneRec.manHeatTime * 2 + 128) / 256; // mins per 1/2 degree
 			}
-		}
-		int hrsToAdd = (minsToAdd / 60);
-		auto changeTime = _ttEndDateTime.addOffset({ hh,-(hrsToAdd) }).addOffset({ m10,(minsToAdd % 60) / 10 });
-		if (clock_().now() >= changeTime && currTempReq != nextTempReq) {
-			setProfileTempRequest(nextTempReq - offset());
-			_getExpCurve.firstValue(currTemp);
-			logger() << L_time << "Zone: " << zoneRec.name 
-				<< " Preheat.\tTimeToAdd(mins): " << (long)minsToAdd
-				<< " CurrTempReq: " << (long)currTempReq
-				<< " AutoLimit: " << (long)zoneRec.autoFinalT
-				<< " AutoConst: " << (long)zoneRec.autoTimeC << L_endl;
-		} else {
-			_getExpCurve.nextValue(currTemp);
-			if ((currTemp + 128) / 256 >= nextTempReq) {
-				GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
-				if (curveMatch.resultOK) { // within 0.5 degrees and enough temps recorded. recalc TL
-					logger() << L_time << "Zone: " << zoneRec.name 
-						<< " Preheat.\tNewLimit: " << long(curveMatch.limit)
-						<< " New TC: " << long(curveMatch.timeConst) << L_endl;
-					zoneRec.autoFinalT = curveMatch.limit / 256;
-					zoneRec.autoTimeC = (curveMatch.timeConst > 255 ? 255 : uint8_t(curveMatch.timeConst));
-					zoneAnswer.update();
-					_getExpCurve.firstValue(0); // prevent further updates
-				}
+			auto preheatTime = _ttEndDateTime;
+			/*if (minsToAdd > 0)*/ preheatTime.addOffset({ hh,-(minsToAdd / 60) }).addOffset({ m10,-(minsToAdd % 60) / 10 });
+			logger() << L_time << "Zone Preheat: " << zoneRec.name 
+				<< " TempIs: " << currTemp/256 << " NextReq: " << nextTempReq 
+				<< " HeatMins is : " << minsToAdd << " Start at: " << preheatTime << L_endl;
+			if (clock_().now() >= preheatTime && currTempReq != nextTempReq) {
+				setProfileTempRequest(nextTempReq - offset());
+				_getExpCurve.firstValue(currTemp);
+				logger() << "\tFirst Temp Registered. AutoLimit: " << (long)zoneRec.autoFinalT << " AutoConst: " << (long)zoneRec.autoTimeC << L_endl;
 			}
+		} else if (currTemp < (currTempReq * 256)) { // Heating up
+			_getExpCurve.nextValue(currTemp);
+		} else if (currTemp >= (currTempReq * 256)) { // Have got to the required temp.
+			GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
+			logger() << L_time << "Zone Preheat Curve: " << zoneRec.name;
+			if (curveMatch.resultOK) { // within 0.5 degrees and enough temps recorded. recalc TL
+				logger() << " New Limit: " << long(curveMatch.limit)
+					<< " New TC: " << long(curveMatch.timeConst) << L_endl;
+				zoneRec.autoFinalT = curveMatch.limit / 256;
+				zoneRec.autoTimeC = (curveMatch.timeConst > 255 ? 255 : uint8_t(curveMatch.timeConst));
+				zoneAnswer.update();
+				_getExpCurve.firstValue(0); // prevent further updates
+			} else logger() << " No Curve Result\n";
 		}
 	}
 }

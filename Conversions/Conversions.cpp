@@ -39,8 +39,8 @@ namespace GP_LIB {
 
 	CStr_20 intToString(int value) { // only valid for values < 1029
 		// TODO: implement using arduino Print / PString
-		if (abs(value) > 1028)
-			value = 1028;
+		//if (abs(value) > 1028)
+		//	value = 1028;
 		auto cstr_20 = CStr_20{};
 		char * p = cstr_20.str();
 		if (value < 0) {

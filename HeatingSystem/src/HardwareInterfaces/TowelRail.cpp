@@ -46,8 +46,9 @@ namespace HardwareInterfaces {
 	}
 
 	bool TowelRail::setFlowTemp() { // returns true if ON
+		//_temperatureController->towelRailArr[record()].
 		if (_timer > 0) {
-			logger() << L_time << "TowelRail tick " << _timer << L_endl;
+			//logger() << L_time << "TowelR " << record() << " tick: " << _timer << L_endl;
 			--_timer; // called every second
 		}
 		_callFlowTemp = 0;
@@ -64,26 +65,29 @@ namespace HardwareInterfaces {
 	bool TowelRail::rapidTempRise() const {
 		// If call-sensor increases by at least 5 degrees in 10 seconds, return true.
 		auto hotWaterFlowTemp = _callTS->get_temp();
+		if (_callTS->hasError()) return false;
+
 		if (_prevTemp == 0) _prevTemp = hotWaterFlowTemp;
 
 		if (abs(hotWaterFlowTemp - _prevTemp) > 1) {
 			if (_timer == 0) {
+				logger() << L_time << "TowelR " << record() << " TempDiff. Timer set to 60. Was: " << _prevTemp << " now: " << hotWaterFlowTemp << L_endl;
 				_timer = TWL_RAD_RISE_TIME;
 				_prevTemp = hotWaterFlowTemp;
-				logger() << L_time << F("TowelR: TempDiff. Timer 0; Reset prevTemp, Temp is: ") << hotWaterFlowTemp << L_endl;
 			}
 			else { // _timer running
 				if (hotWaterFlowTemp > _prevTemp + TWL_RAD_RISE_TEMP) {
 					_timer = _onTime * 60;
-					logger() << L_time << F("TowelR: RapidRise is: ") << hotWaterFlowTemp << L_endl;
+					logger() << L_time << "TowelR " << record() << " RapidRise from: " << _prevTemp << " to " << hotWaterFlowTemp << L_endl;
 					return true;
 				}
 				else if (hotWaterFlowTemp < _prevTemp) {
-					//logger() << F("Cool; Reset prevTemp") << L_endl;
+					logger() << L_time << "TowelR " << record() << " Cooled to " << hotWaterFlowTemp << L_endl;
 					_prevTemp = hotWaterFlowTemp;
 				}
 			}
 		}
+		//_timer = _onTime * 60;
 		return false;
 	}
 

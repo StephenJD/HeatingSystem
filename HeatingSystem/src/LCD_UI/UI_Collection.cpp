@@ -509,7 +509,8 @@ namespace LCD_UI {
 	ListStatus UI_IteratedCollection_Hoist::h_listStatus(int streamIndex) const {
 		auto thisListStatus = ListStatus::e_showingAll;
 		if (streamIndex == _beginShow && _beginShow > _beginIndex) thisListStatus = ListStatus::e_notShowingStart;
-		if (_endShow < iterated_collection()->endIndex()) {
+		auto activeObj = iterated_collection()->activeUI();
+		if (activeObj->get()->isCollection() && _endShow < activeObj->endIndex()) {
 			thisListStatus = ListStatus(thisListStatus | ListStatus::e_not_showingEnd);
 			if (streamIndex > _endShow) thisListStatus = ListStatus(thisListStatus | ListStatus::e_this_not_showing);
 		}

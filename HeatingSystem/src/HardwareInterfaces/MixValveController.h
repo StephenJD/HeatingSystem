@@ -43,7 +43,6 @@ namespace HardwareInterfaces {
 	private:
 		bool controlZoneRelayIsOn() const;
 		I2C_Talk_ErrorCodes::error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
-		uint8_t getStoreTemp() const;
 		//void setLimitZone(int mixValveIndex);
 
 		UI_TempSensor * _tempSensorArr = 0;

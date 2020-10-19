@@ -162,6 +162,16 @@ Logger & logger() {
 	return _log;
 }
 
+Logger & zTempLogger() {
+	static Serial_Logger _log(9600, clock_());
+	return _log;
+}
+
+Logger & mTempLogger() {
+	static Serial_Logger _log(9600, clock_());
+	return _log;
+}
+
 Clock & clock_() {
 	static Clock_EEPROM _clock(EEPROM_CLOCK_ADDR);
 	return _clock;

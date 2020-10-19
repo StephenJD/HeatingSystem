@@ -18,8 +18,8 @@ namespace HardwareInterfaces {
 		// Queries
 		int8_t get_temp() const;
 		int16_t get_fractional_temp() const;
-		static bool hasError() { return _error != I2C_Talk_ErrorCodes::_OK; }
-		static I2C_Talk_ErrorCodes::error_codes lastError() { return _error; }
+		/*static*/ bool hasError() { return _error != I2C_Talk_ErrorCodes::_OK; }
+		/*static*/ I2C_Talk_ErrorCodes::error_codes lastError() { return _error; }
 
 		// Modifiers
 		I2C_Talk_ErrorCodes::error_codes readTemperature();
@@ -32,7 +32,7 @@ namespace HardwareInterfaces {
 	protected:
 		auto checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::error_codes;
 		mutable int16_t _lastGood = 16 * 256;
-		static I2C_Talk_ErrorCodes::error_codes _error;
+		/*static*/ I2C_Talk_ErrorCodes::error_codes _error;
 #ifdef ZPSIM
 		mutable int16_t change = 256;
 #endif

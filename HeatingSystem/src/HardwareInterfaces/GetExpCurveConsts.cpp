@@ -20,7 +20,7 @@ namespace HardwareInterfaces {
 		_xy.firstRiseValue = 0; // Start temp. Zero indicates not started timing.
 		_xy.midRiseValue = 0; // 1st Temp - 
 		_xy.midRiseTime = 0; // 1st Time point - <=0 indicates not recorded 1st rise, -1 == have fixed start time.
-		_xy.lastRiseValue = currValue; // Current Temp. not_recording indicates not recording
+		_xy.lastRiseValue = currValue; // Current Temp. 0 indicates not recording
 		_xy.lastRiseTime = 0;	// Current Time, averaged at Current Temp.
 		_twiceMidRiseValue = 0; // last temp at doubled time
 		_twiceMidRiseTime = 0; // last doubled time
@@ -30,7 +30,7 @@ namespace HardwareInterfaces {
 		cout << "Started at " << currValue << '\n';
 #endif
 #ifdef LOG_SD
-		if (currValue == not_recording) logger() << "GetExpCurveConsts::stop\n"; else logger() << "GetExpCurveConsts::firstValue\n";
+		if (currValue == 0) logger() << "GetExpCurveConsts::stop\n"; else logger() << "GetExpCurveConsts::firstValue\n";
 #endif
 	}
 

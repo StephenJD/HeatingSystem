@@ -15,9 +15,9 @@ namespace client_data_structures {
 
 	Dataset_TowelRail::Dataset_TowelRail(Query & query, VolatileData * runtimeData, I_Record_Interface * parent)
 		: Record_Interface(query, runtimeData, parent),
-		_name("", 8),
-		_onTemp(90, ValRange(e_editAll, 10, 60)),
-		_minutesOn(0, ValRange(e_fixedWidth | e_editAll, 0, 240))
+		_name("", 8)
+		, _onTemp(90, ValRange(e_editAll, 10, 60))
+		, _minutesOn(0, ValRange(e_fixedWidth | e_editAll, 0, 240))
 	{}
 
 	I_Data_Formatter * Dataset_TowelRail::getField(int fieldID) {
@@ -34,8 +34,9 @@ namespace client_data_structures {
 			return &_minutesOn;
 		case e_secondsToGo:
 		{
+			towelRail(recordID()).check();
 			_secondsToGo.val = towelRail(recordID()).timeToGo();
-			if (_secondsToGo.val) logger() << L_time << "TowelRail::timeToGo: " << _secondsToGo.val << L_endl;
+			if (_secondsToGo.val) logger() << L_time << "TowelRail " << recordID() << " timeToGo: " << _secondsToGo.val << L_endl;
 			return &_secondsToGo;
 		}
 		default: return 0;

@@ -45,6 +45,7 @@ namespace HardwareInterfaces {
 		float _upperC, _midC, _bottomC; // calculated capacity factors
 		float _upperV, _midV, _bottomV; // calculated Volumes
 		uint8_t _groundT = 15;
+		mutable bool _tempSensorError = false;
 	};
 
 }

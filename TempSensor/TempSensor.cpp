@@ -8,7 +8,7 @@ namespace HardwareInterfaces {
 	const uint8_t DS75LX_Temp = 0x00;  // two bytes must be read. Temp is MS 9 bits, in 0.5 deg increments, with MSB indicating -ve temp.
 	const uint8_t DS75LX_Config = 0x01;
 	const uint8_t DS75LX_HYST_REG = 0x02;
-	error_codes TempSensor::_error;
+	//error_codes TempSensor::_error;
 
 	TempSensor::TempSensor(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice_Recovery(recover, addr) {
 		recover.i2C().setMax_i2cFreq(400000);
@@ -61,7 +61,7 @@ namespace HardwareInterfaces {
 		if (_error == _OK) {
 			if (_lastGood != 0 && abs(_lastGood - newTemp) > 1280) {
 				_error = _I2C_ReadDataWrong;
-				logger() << F("TempError. Was ") << _lastGood << F(" Now: ") << newTemp << L_endl;
+				logger() << F("TempError 0x") << L_hex << getAddress() << " . Was " << L_dec << _lastGood << F(" Now: ") << newTemp << L_endl;
 			} 
 		}
 		_lastGood = newTemp;
