@@ -25,7 +25,7 @@ SD.h/.cpp modified to provide sd_exists();
 	class Logger : public Print {
 	public:
 		Logger() = default;
-		Logger(const char * fileName, uint32_t baudRate, Clock & clock) {}
+		Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock) {}
 
 		Flags addFlag(Flags flag) { _flags = _flags + flag; return _flags; }
 		Flags removeFlag(Flags flag) { _flags = static_cast<Flags>(_flags & ~flag); return _flags; }
@@ -93,8 +93,8 @@ SD.h/.cpp modified to provide sd_exists();
 	/// </summary>
 	class RAM_Logger : public Logger {
 	public:
-		RAM_Logger(const char * fileName, uint16_t ramFile_size, bool keepSaving, Clock & clock);
-		RAM_Logger(const char * fileName, uint16_t ramFile_size, bool keepSaving);
+		RAM_Logger(const char * fileNameStem, uint16_t ramFile_size, bool keepSaving, Clock & clock);
+		RAM_Logger(const char * fileNameStem, uint16_t ramFile_size, bool keepSaving);
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
 		void readAll() override;
@@ -103,7 +103,7 @@ SD.h/.cpp modified to provide sd_exists();
 		bool is_tabs() override { return _ram_mustTabTime ? (_ram_mustTabTime = false, true) : _flags & L_tabs; }
 		bool _ram_mustTabTime = false;
 		uint8_t * _ramFile = 0;
-		const char * _fileName;
+		char _fileNameStem[5];
 		uint16_t _ramFile_size;
 		uint16_t _filePos = 0;
 		bool _keepSaving;
@@ -115,8 +115,8 @@ SD.h/.cpp modified to provide sd_exists();
 	/// </summary>
 	class EEPROM_Logger : public Logger {
 	public:
-		EEPROM_Logger(const char * fileName, uint16_t startAddr, uint16_t endAddr, bool keepSaving, Clock & clock);
-		EEPROM_Logger(const char * fileName, uint16_t startAddr, uint16_t endAddr, bool keepSaving);
+		EEPROM_Logger(const char * fileNameStem, uint16_t startAddr, uint16_t endAddr, bool keepSaving, Clock & clock);
+		EEPROM_Logger(const char * fileNameStem, uint16_t startAddr, uint16_t endAddr, bool keepSaving);
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
 		void readAll() override;
@@ -127,7 +127,7 @@ SD.h/.cpp modified to provide sd_exists();
 		void saveOnFirstCall();
 		void findStart();
 		bool _ee_mustTabTime = false;
-		const char * _fileName;
+		char _fileNameStem[5];
 		uint16_t _startAddr;
 		uint16_t _endAddr;
 		uint16_t _currentAddress = 0;
@@ -157,8 +157,8 @@ SD.h/.cpp modified to provide sd_exists();
 	/// </summary>	
 	class SD_Logger : public Serial_Logger {
 	public:
-		SD_Logger(const char * fileName, uint32_t baudRate, Clock & clock);
-		SD_Logger(const char * fileName, uint32_t baudRate);
+		SD_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock);
+		SD_Logger(const char * fileNameStem, uint32_t baudRate);
 		bool isWorking() override;
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;

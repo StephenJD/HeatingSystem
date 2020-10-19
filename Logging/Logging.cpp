@@ -15,15 +15,15 @@ using namespace std;
 	using namespace GP_LIB;
 
 	CStr_20 generateFileName(const char * fileNameStem, const Clock * clock) {
-		CStr_20 _fileName;
-		strcpy(_fileName.str(), fileNameStem);
+		CStr_20 fileName;
+		strcpy(fileName.str(), fileNameStem);
 		if (clock) {
 			clock->refresh();
-			strcat(_fileName.str(), intToString(clock->month(), 2));
-			strcat(_fileName.str(), intToString(clock->day(), 2));
+			strcat(fileName.str(), intToString(clock->month(), 2));
+			strcat(fileName.str(), intToString(clock->day(), 2));
 		} 
-		strcat(_fileName.str(), ".txt");
-		return _fileName;
+		strcat(fileName.str(), ".txt");
+		return fileName;
 	}
 
 	Logger::Logger(Clock & clock) : _clock(&clock) {}
@@ -116,21 +116,23 @@ using namespace std;
 
 	Serial_Logger SD_Logger::_serial;
 
-	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate) : Serial_Logger(baudRate) {
-		strncpy(_fileNameStem, fileName, 4);
+	SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate) : Serial_Logger(baudRate) {
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		SD.begin(chipSelect);
-		_dataFile = SD.open(_fileNameStem, FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
+		_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
 		Serial.print(F("\nSD_Logger Begun without Clock "));
 		Serial.print(isWorking() ? F("OK") : F("Failed"));
 		Serial.println();
 	}	
 	
-	SD_Logger::SD_Logger(const char * fileName, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock) {
-		strncpy(_fileNameStem, fileName, 4);
+	SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock) {
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
 		// Avoid calling Serial_Logger during construction, in case clock is broken.
 		SD.begin(chipSelect);
-		_dataFile = SD.open(_fileNameStem, FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
+		_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
 		Serial.print(F("\nSD_Logger Begun with clock "));
 		Serial.print(isWorking() ? F("OK") : F("Failed"));
 		Serial.println();
@@ -145,7 +147,7 @@ using namespace std;
 				//auto t0 = micros();
 				_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
 				//auto d = micros() - t0;
-				//Serial.print("File re-opened on OK took "); Serial.println(d);
+				Serial.print(generateFileName(_fileNameStem, _clock)); Serial.println(" File re - opened");
 			}
 			else {
 				//Serial.println("File OK");
@@ -183,24 +185,26 @@ using namespace std;
 //            RAM_Logger       //
 ////////////////////////////////////
 
-	RAM_Logger::RAM_Logger(const char * fileName, uint16_t ramFile_size, bool keepSaving, Clock & clock)
+	RAM_Logger::RAM_Logger(const char * fileNameStem, uint16_t ramFile_size, bool keepSaving, Clock & clock)
 		: Logger(clock)
 		, _ramFile(new uint8_t[ramFile_size])
-		, _fileName(fileName)
 		, _ramFile_size(ramFile_size)
 		, _keepSaving(keepSaving)
 	{
 		*_ramFile = 0u;
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
 	}
 
-	RAM_Logger::RAM_Logger(const char * fileName, uint16_t ramFile_size, bool keepSaving)
+	RAM_Logger::RAM_Logger(const char * fileNameStem, uint16_t ramFile_size, bool keepSaving)
 		: Logger()
 		, _ramFile(new uint8_t[ramFile_size])
-		, _fileName(fileName)
 		, _ramFile_size(ramFile_size)
 		, _keepSaving(keepSaving)
 	{
 		*_ramFile = 0u;
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
 	}
 
 	size_t RAM_Logger::write(uint8_t chr) {
@@ -235,7 +239,7 @@ using namespace std;
 	void RAM_Logger::readAll() {
 		auto start = millis();
 		if (SD.begin(chipSelect)) {
-			auto _dataFile = SD.open(generateFileName(_fileName, _clock), FILE_WRITE); // appends to file
+			auto _dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file
 			// Write from _filePos to end
 			Serial.print((const char *)(_ramFile + _filePos + 1));
 			_dataFile.print((const char *)(_ramFile + _filePos + 1));
@@ -268,27 +272,29 @@ using namespace std;
 //            EEPROM_Logger       //
 ////////////////////////////////////
 
-	EEPROM_Logger::EEPROM_Logger(const char * fileName, uint16_t startAddr, uint16_t endAddr, bool keepSaving, Clock & clock)
+	EEPROM_Logger::EEPROM_Logger(const char * fileNameStem, uint16_t startAddr, uint16_t endAddr, bool keepSaving, Clock & clock)
 		: Logger(clock)
-		, _fileName(fileName)
 		, _startAddr(startAddr)
 		, _endAddr(endAddr)
 		, _currentAddress(startAddr)
 		, _keepSaving(keepSaving)
 	{
 		findStart();
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
 		//saveOnFirstCall();
 	}
 
-	EEPROM_Logger::EEPROM_Logger(const char * fileName, uint16_t startAddr, uint16_t endAddr, bool keepSaving)
+	EEPROM_Logger::EEPROM_Logger(const char * fileNameStem, uint16_t startAddr, uint16_t endAddr, bool keepSaving)
 		: Logger()
-		, _fileName(fileName)
 		, _startAddr(startAddr)
 		, _endAddr(endAddr)
 		, _currentAddress(startAddr) 
 		, _keepSaving(keepSaving)
 	{
 		findStart();
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
 		//saveOnFirstCall();
 	}
 
@@ -350,7 +356,7 @@ using namespace std;
 	void EEPROM_Logger::readAll() {
 		auto start = millis();
 		if (SD.begin(chipSelect)) {
-			auto _dataFile = SD.open(generateFileName(_fileName,_clock), FILE_WRITE); // appends to file
+			auto _dataFile = SD.open(generateFileName(_fileNameStem,_clock), FILE_WRITE); // appends to file
 			// Write from _currentAddress to end
 			//Serial.print(F("\n * from last end addr: ")); Serial.println(_currentAddress + 1); Serial.print(F(" to end addr: ")); Serial.println(_endAddr);
 			//_dataFile.print(F("\n * from curr addr: ")); _dataFile.print(_currentAddress + 1); _dataFile.print(F(" to end addr: ")); _dataFile.print(_endAddr); _dataFile.print("\n");

@@ -45,7 +45,7 @@ megao.build.variant=mega
 megao.build.board=AVR_MEGA1280
 megao.upload.tool=avrdude
 
-7. When wanting to upload sketched to the Mega, you must now select Tools->Board->Arduino Mega1280 Optiboot
+7. When wanting to upload sketch to the Mega, you must now select Tools->Board->Arduino Mega1280 Optiboot
 
 */
 

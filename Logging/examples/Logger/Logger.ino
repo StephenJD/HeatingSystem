@@ -66,9 +66,13 @@ Logger & logger() {
 	return _log;
 }
 
-Logger & sdlogger() {
-	//static Serial_Logger _log(SERIAL_RATE);
-	static SD_Logger _log("testlog.txt", SERIAL_RATE, clock_());
+Logger & sdErrLogger() {
+	static SD_Logger _log("SDerz", 9600, clock_());
+	return _log;
+}
+
+Logger & sdLogLogger() {
+	static SD_Logger _log("SDlgz", 9600, clock_());
 	return _log;
 }
 
@@ -120,38 +124,45 @@ void setup() {
 	Serial.print("Logger print fixed took "); Serial.println(took);
 	
 	start = millis();
-	sdlogger(); // 85/87 mS Due/Mega
+	sdLogLogger(); // 85/87 mS Due/Mega
 	took = millis() - start;
 	Serial.print("SDLogger start took "); Serial.println(took);
 	
 	start = millis();
-	sdlogger() << L_time << L_endl; // 72/2 mS Due/Mega.
+	sdLogLogger() << L_time << L_endl; // 72/2 mS Due/Mega.
 	took = millis() - start;
 	Serial.print("SDLogger print time took "); Serial.println(took);
 
 	start = millis();
-	sdlogger() << L_tabs << L_fixed << "SD tabbed: Fixed 12.75:" << (12 * 256 + 128 + 64) << L_endl;
-	sdlogger() << L_time << L_tabs << "sd tabbed" << 5 << L_concat << "untabbed" << 6 << L_endl;
-	sdlogger() << L_time << "sd not tabbed" << 5 << L_endl;
-	sdlogger() << L_time << "sd log" << 5 << L_tabs << "tabbed" << 6 << L_endl;
-	sdlogger() << L_cout << "sd cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
-	sdlogger() << "sd log after cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+	sdLogLogger() << L_tabs << L_fixed << "SD tabbed: Fixed 12.75:" << (12 * 256 + 128 + 64) << L_endl;
+	sdLogLogger() << L_time << L_tabs << "sd tabbed" << 5 << L_concat << "untabbed" << 6 << L_endl;
+	sdLogLogger() << L_time << "sd not tabbed" << 5 << L_endl;
+	sdLogLogger() << L_time << "sd log" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+	sdLogLogger() << L_cout << "sd cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+	sdLogLogger() << "sd log after cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
 	took = millis() - start;
 	Serial.print("SDLogger stuff took "); Serial.println(took); // 8/14 mS Due/Mega. 
 
+	sdErrLogger() << L_tabs << L_fixed << "SD tabbed: Fixed 12.75:" << (12 * 256 + 128 + 64) << L_endl;
+	sdErrLogger() << L_time << L_tabs << "sd tabbed" << 5 << L_concat << "untabbed" << 6 << L_endl;
+	sdErrLogger() << L_time << "sd not tabbed" << 5 << L_endl;
+	sdErrLogger() << L_time << "sd log" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+	sdErrLogger() << L_cout << "sd cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+	sdErrLogger() << "sd log after cout" << 5 << L_tabs << "tabbed" << 6 << L_endl;
+
 	start = millis();
 	for (int i = 0; i < 10; ++i) { // 31/32 mS Due/Mega
-		sdlogger() << L_time << "sdlogger count " << i << L_endl;
+		sdLogLogger() << L_time << "sdLogLogger count " << i << L_endl;
 	}
 	took = millis() - start;
-	Serial.print("sdlogger time x10 took "); Serial.println(took);
+	Serial.print("sdLogLogger time x10 took "); Serial.println(took);
 
 	start = millis();
 	for (int i = 0; i < 10; ++i) { // 14/14 mS Due/Mega
-		sdlogger() << "sdlogger count " << i << L_endl;
+		sdLogLogger() << "sdLogLogger count " << i << L_endl;
 	}
 	took = millis() - start;
-	Serial.print("sdlogger no time x10 took "); Serial.println(took);
+	Serial.print("sdLogLogger no time x10 took "); Serial.println(took);
 
 	start = millis();
 	ramlogger(); // 0mS
@@ -222,8 +233,11 @@ void loop()
 {
 	static bool lastState;
 	static int i;
+	sdLogLogger() << L_time << "sdLog endl " << i << (SD.sd_exists(chipSelect) ? " OK" : " Failed") << L_endl;
+	sdErrLogger() << L_time << "sdErr endl " << i << (SD.sd_exists(chipSelect) ? " OK" : " Failed") << L_endl;
 
-	sdlogger() << L_time << "sd " << i << (SD.sd_exists(chipSelect) ? " OK" : " Failed") << L_endl;
+	sdLogLogger() << L_time << "sdLog flush " << i << (SD.sd_exists(chipSelect) ? " OK" : " Failed") << L_flush;
+	sdErrLogger() << L_time << "sdErr flush " << i++ << (SD.sd_exists(chipSelect) ? " OK" : " Failed") << L_flush;
 	//dataFile = SD.open("SD_Test.txt", FILE_WRITE);
 	delay(1000);
 }
