@@ -2,7 +2,7 @@
 #include <math.h>
 #include <Arduino.h>
 
-namespace HardwareInterfaces {
+namespace GP_LIB {
 	/// <summary>
 	/// Obtains the exponential curve Limit and Time-constant that matches three values obtained over a period of time. 
 	/// The constructor argument sets the minimum valid value rise since the previous value.
@@ -18,7 +18,15 @@ namespace HardwareInterfaces {
 			bool resultOK;
 		};
 		struct XY_Values; // only required public for testing purposes
+		
+		double uncompressTC(uint8_t compressed_tc) const {
+			return exp(compressed_tc / 50.) * 10;
+		}
 
+		uint8_t compressTC(double timeConst) const {
+			return static_cast<uint8_t>(log(timeConst/10) * 50. + 0.5);
+		}
+		
 		GetExpCurveConsts(int min_rise) : _min_rise(int16_t(min_rise)) {} //stop();
 
 		// ************** Queries **************
@@ -29,7 +37,7 @@ namespace HardwareInterfaces {
 		/// </summary>
 		/// <returns></returns>
 		CurveConsts matchCurve();
-		XY_Values getXY() const { return _xy; } // only required for testing purposes
+		XY_Values & getXY() { return _xy; } // only required for testing purposes
 
 		// ************** Modifiers **************
 		/// <summary>
@@ -44,6 +52,7 @@ namespace HardwareInterfaces {
 		/// </summary>
 		/// <param name="currValue">The curr value.</param>
 		void nextValue(int currValue);
+		void nextValue(double currValue) { nextValue(static_cast<int>(currValue)); }
 
 		struct XY_Values { // only required public for testing purposes
 			int16_t firstRiseValue;
@@ -57,16 +66,12 @@ namespace HardwareInterfaces {
 
 		// ************** Queries **************
 		bool needsStarting() const;
-		bool isSameVal() const;
-		bool isFirstRise() const;
 		bool hasRisenEnough() const;
 		bool periodIsDoublePreviousPeriod();
 
 		// ************** Modifiers **************
 		void startTiming();
 		void averageTimeAtThisValue();
-		void adjustStartingTime();
-		void createFirstRecord();
 		void shuffleRecordsAlong();
 		void recordCurrent();
 		uint16_t calcNewLimit(bool& OK) const;
@@ -75,10 +80,10 @@ namespace HardwareInterfaces {
 		// ************** Data **************
 		static int16_t _currValue;
 		XY_Values _xy;
-		int16_t _twiceMidRiseValue;
-		int16_t _twiceMidRiseTime;
-		int16_t _lastRiseStartTime;
-		int16_t _timeSinceStart;
+		int16_t _twiceMidRiseValue = 0;
+		int16_t _twiceMidRiseTime = 0;
+		int16_t _lastRiseStartTime = 0;
+		int16_t _timeSinceStart = 0;
 		int16_t _min_rise;
 	};
 
@@ -111,7 +116,7 @@ namespace HardwareInterfaces {
 		*/
 		enum { _maxiter = 50 };
 		int n = 2;
-		double x;
+		double x = 0;
 		while ((fabs(x1 - x0) > error) && (n <= _maxiter)) { // fabs is float-abs
 			double FnX0 = Fn(x0);
 			double FnX1 = Fn(x1);

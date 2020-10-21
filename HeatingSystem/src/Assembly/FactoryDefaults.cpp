@@ -208,10 +208,10 @@ namespace Assembly {
 	};	
 		
 	constexpr R_Zone zones_f[] = { 
-		{ "UpStrs","US",T_UR,R_UpSt,M_UpStrs,55,0,25,12,1,60 }
-		,{ "DnStrs","DS",T_DR,R_DnSt,M_DownStrs,45,0,25,12,1,60 }
-		,{ "DHW","DHW",T_GasF,R_Gas,M_UpStrs,80,0,60,12,1,3 }
-		,{ "Flat","Flt",T_FR,R_Flat,M_UpStrs,55,0,25,12,1,60 }
+		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,21,216,1,60 }
+		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,21,192,1,40 }
+		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,60,73,1,1 }
+		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,22,217,1,60 }
 	};
 
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {

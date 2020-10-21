@@ -29,6 +29,7 @@ Mix_Valve::Mix_Valve(TempSensor & temp_sensr, Pin_Wag & heat_relay, Pin_Wag & co
 	_state(e_Off),
 	_call_flowDiff(0),
 	_onTime(0),
+	_prevSensorTemp(30),
 	_sensorTemp(30),
 	_lastOKflowTemp(getTemperature()),
 	_valvePos(0),
@@ -92,10 +93,9 @@ void Mix_Valve::setRequestTemp(Role role) {
 int8_t Mix_Valve::getTemperature() const {
 	if (role == e_Master) {
 		temp_sensr->readTemperature();
-		return temp_sensr->get_temp();
-	} else {
-		return _sensorTemp;
+		_sensorTemp = temp_sensr->get_temp();
 	}
+	return _sensorTemp;
 }
 
 Mix_Valve::Mode Mix_Valve::getMode() const {
@@ -166,7 +166,7 @@ void Mix_Valve::correct_flow_temp(int new_call_flowDiff, int actualFlowTemp) {
 		_state = e_Off;
 		_lastOKflowTemp = _mixCallTemp;
 	}
-	else if ((actualFlowTemp - _sensorTemp) * oldDirection > 0) {// going in right direction so wait longer
+	else if ((actualFlowTemp - _prevSensorTemp) * oldDirection > 0) {// going in right direction so wait longer
 		_onTime = -_valve_wait_time;
 	}
 	else if (abs(new_call_flowDiff) > 0) { // We are not getting nearer
@@ -174,7 +174,7 @@ void Mix_Valve::correct_flow_temp(int new_call_flowDiff, int actualFlowTemp) {
 		adjustValve(new_call_flowDiff);
 	} // else we are stable on target
 	_call_flowDiff = new_call_flowDiff;
-	_sensorTemp = actualFlowTemp;
+	_prevSensorTemp = actualFlowTemp;
 }
 
 void Mix_Valve::adjustValve(int8_t tempDiff) {
@@ -227,7 +227,7 @@ void Mix_Valve::reverseOneDegree(int new_call_flowDiff, int actualFlowTemp) { //
 		_valvePos -= _onTime * _state;
 	}
 	_call_flowDiff = new_call_flowDiff;
-	_sensorTemp = actualFlowTemp;
+	_prevSensorTemp = actualFlowTemp;
 	adjustValve(-_state);   // 1 degree shift is expected. Will set _onTime.
 	//Serial.print(_mixCallTemp, DEC); Serial.print(" Overshoot. Time:"); Serial.println(_onTime, DEC);
 }

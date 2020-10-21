@@ -81,7 +81,7 @@ namespace HardwareInterfaces {
 		//long _aveFlow = 0;  // in degrees
 		//startTime * _sequence;
 		bool _isHeating = false; // just for logging
-		GetExpCurveConsts _getExpCurve{ 128 };
+		GP_LIB::GetExpCurveConsts _getExpCurve{ 128 };
 	};
 
 	//extern Zone * zones; // Array of Zones provided by client

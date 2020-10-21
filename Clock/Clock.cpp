@@ -248,7 +248,7 @@ using namespace GP_LIB;
 			date.setYear(fromBCD(data[6]));
 			minUnits = data[1] & 15;
 			seconds = fromBCD(data[0]);
-			logger() << F("RTC Time: ") << date << L_endl;
+			//logger() << F("RTC Time: ") << date << L_endl;
 		}
 		else {
 			logger() << F("RTC Bad date.") << I2C_Talk::getStatusMsg(status) << L_endl;
@@ -286,7 +286,7 @@ using namespace GP_LIB;
 			setSeconds(rtcSeconds);
 			_autoDST = dst >> 1;
 			_dstHasBeenSet = dst & 1;
-			logger() << L_time << F(" Clock Set from RTC") << L_endl;
+			//logger() << L_time << F(" Clock Set from RTC") << L_endl;
 		}
 		return status;
 	}

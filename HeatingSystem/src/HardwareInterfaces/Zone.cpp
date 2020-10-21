@@ -12,6 +12,7 @@ Logger& zTempLogger();
 namespace HardwareInterfaces {
 
 	using namespace Assembly;
+	using namespace GP_LIB;
 	//***************************************************
 	//              Zone Dynamic Class
 	//***************************************************
@@ -159,11 +160,11 @@ namespace HardwareInterfaces {
 		auto currTempReq = currTempRequest();
 		auto nextTempReq = nextTempRequest();
 
-		auto currTemp = getFractionalCallSensTemp();
+		auto currTemp_fractional = getFractionalCallSensTemp();
 		//double outsideDiff;
 		//if (isDHWzone()) {
 		//	outsideDiff = 0;
-		//	if (currTemp / 256 < nextTempReq) nextTempReq += THERM_STORE_HYSTERESIS;
+		//	if (currTemp_fractional / 256 < nextTempReq) nextTempReq += THERM_STORE_HYSTERESIS;
 		//} else {
 		//	outsideDiff = nextTempReq - f->thermStoreR().getOutsideTemp();
 		//}
@@ -181,40 +182,42 @@ namespace HardwareInterfaces {
 
 		if (nextTempReq > currTempReq) { // if next profile temp is higher allow warm-up time
 			int minsToAdd = 0;
-			double fractFinalTempDiff = (nextTempReq * 256.) - currTemp; //- 128; // aim for 0.5 degree below requested temp
-			double limitTemp = zoneRec.autoFinalT; // fractFinalTempDiff +  * 25.6 * (1. - outsideDiff/25.) ;
+			double finalDiff_fractional = (nextTempReq * 256.) - currTemp_fractional; //- 128; // aim for 0.5 degree below requested temp
+			double limitTemp = zoneRec.autoFinalT; // 25 or 60 finalDiff_fractional +  * 25.6 * (1. - outsideDiff/25.) ;
 			if (limitTemp < nextTempReq + 2.) limitTemp = nextTempReq + 2.;
-			limitTemp *= 256;
-			double fractStartTempDiff = limitTemp - currTemp;
+			double limitDiff_fractional = limitTemp * 256. - currTemp_fractional;
+			auto timeConst = _getExpCurve.uncompressTC(zoneRec.autoTimeC);
 			if (zoneRec.autoMode) {
-				double logRatio = 1. - (fractFinalTempDiff / fractStartTempDiff);
-				minsToAdd = int(-zoneRec.autoTimeC * log(logRatio));
+				double logRatio = 1. - (finalDiff_fractional / limitDiff_fractional);
+				minsToAdd = int(-timeConst * log(logRatio));
 			} else {
-				minsToAdd = int(fractFinalTempDiff * zoneRec.manHeatTime * 2 + 128) / 256; // mins per 1/2 degree
+				minsToAdd = int(finalDiff_fractional * zoneRec.manHeatTime * 2 + 128) / 256; // mins per 1/2 degree
 			}
 			auto preheatTime = _ttEndDateTime;
 			/*if (minsToAdd > 0)*/ preheatTime.addOffset({ hh,-(minsToAdd / 60) }).addOffset({ m10,-(minsToAdd % 60) / 10 });
 			logger() << L_time << "Zone Preheat: " << zoneRec.name 
-				<< " TempIs: " << currTemp/256 << " NextReq: " << nextTempReq 
+				<< " TempIs: " << currTemp_fractional/256 << " NextReq: " << nextTempReq 
 				<< " HeatMins is : " << minsToAdd << " Start at: " << preheatTime << L_endl;
-			if (clock_().now() >= preheatTime && currTempReq != nextTempReq) {
+			if (clock_().now() >= preheatTime) {
 				setProfileTempRequest(nextTempReq - offset());
-				_getExpCurve.firstValue(currTemp);
-				logger() << "\tFirst Temp Registered. AutoLimit: " << (long)zoneRec.autoFinalT << " AutoConst: " << (long)zoneRec.autoTimeC << L_endl;
+				_getExpCurve.firstValue(currTemp_fractional);
+				logger() << "\tFirst Temp Registered. AutoLimit: " << (long)limitTemp << " TConst: " << (long)timeConst << L_endl;
 			}
-		} else if (currTemp < (currTempReq * 256)) { // Heating up
-			_getExpCurve.nextValue(currTemp);
-		} else if (currTemp >= (currTempReq * 256)) { // Have got to the required temp.
-			GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
-			logger() << L_time << "Zone Preheat Curve: " << zoneRec.name;
-			if (curveMatch.resultOK) { // within 0.5 degrees and enough temps recorded. recalc TL
-				logger() << " New Limit: " << long(curveMatch.limit)
-					<< " New TC: " << long(curveMatch.timeConst) << L_endl;
-				zoneRec.autoFinalT = curveMatch.limit / 256;
-				zoneRec.autoTimeC = (curveMatch.timeConst > 255 ? 255 : uint8_t(curveMatch.timeConst));
-				zoneAnswer.update();
+		} else { // We are in pre-heat or nextReq lower than CurrReq
+			_getExpCurve.nextValue(currTemp_fractional); // Only registers if _getExpCurve.firstValue was non-zero
+			if (currTemp_fractional >= (currTempReq * 256)) {
+				logger() << L_time << "Zone Preheat OK. Curve: " << zoneRec.name;
+				GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
+				if (curveMatch.resultOK) { // within 0.5 degrees and enough temps recorded. recalc TL
+					logger() << " New Limit: " << long(curveMatch.limit)
+						<< " New TC: " << long(curveMatch.timeConst) << L_endl;
+					zoneRec.autoFinalT = (curveMatch.limit + 128) / 256;
+					auto timeConst = _getExpCurve.compressTC(curveMatch.timeConst);
+					zoneRec.autoTimeC = timeConst > 255 ? 255 : uint8_t(timeConst);
+					zoneAnswer.update();
+				} else logger() << " No Curve Result\n";
 				_getExpCurve.firstValue(0); // prevent further updates
-			} else logger() << " No Curve Result\n";
+			}
 		}
 	}
 }

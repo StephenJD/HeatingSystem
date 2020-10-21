@@ -134,7 +134,9 @@ namespace HardwareInterfaces {
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
 				auto mv_ReqTemp = readFromValve(Mix_Valve::request_temp);
-				if (mv_ReqTemp != _mixCallTemp) { logger() << L_time << L_tabs << F("\tConfirm request ") << _mixCallTemp << F("Failed. Read: ") << mv_ReqTemp << L_endl; }
+				if (mv_ReqTemp != _mixCallTemp) { 
+					logger() << L_time << F("MixValve Confirm 0x") << L_hex << getAddress() << F(" failed for Reg: ") << Mix_Valve::request_temp << F(" Wrote: ") << _mixCallTemp << F(" Read: ") << mv_ReqTemp << L_endl;
+				}
 			} else if (mv_FlowTemp != _mixCallTemp) {
 				mTempLogger() << L_time << L_tabs << F("MixValve Temp off target.");
 				mTempLogger() << relayName(zoneRelayID);
@@ -180,19 +182,19 @@ namespace HardwareInterfaces {
 			if (status) {
 				status = write_verify(uint8_t(reg + _index * 16), 1, &value); // attempt recovery-write
 				if (status) {
-					logger() << L_time << F("MixValveController::writeToValve failed. 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+					logger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << L_endl;
 				} else {
 					uint8_t readValue = 0;
 					read(reg + _index * 16, 1, &readValue);
 					status = (readValue == value? _OK : _I2C_ReadDataWrong);
 					if (status) {
-						logger() << L_time << F("MixValveController Failed for Reg: ") << reg << F(" Verify OK but then: Wrote ") << value << F(" Read: ") << readValue << L_endl;
+						logger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << F(" Verify OK but then Wrote: ") << L_dec << value << F(" Read: ") << readValue << L_endl;
 					} //else {
 						//logger() << F("\tMixValveController::writeToValve OK after recovery. Write: ") << value << F(" Read: ") << readValue << L_endl;
 					//}
 				}
 			} 
-		} else logger() << L_time << F("MixValveController write disabled");
+		} else logger() << L_time << F("MixValve Write disabled");
 		return status;
 	}
 
@@ -211,12 +213,12 @@ namespace HardwareInterfaces {
 			if (status) {
 				status = read(reg + _index * 16, 1, &value); // attempt recovery
 				if (status) {
-					logger() << L_time << F("MixValveController::readValve failed. 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+					logger() << L_time << F("MixValve Read 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << L_endl;
 				} else {
-					logger() << L_time << F("MixValveController::readValve OK after recovery.") << L_endl;
+					logger() << L_time << F("MixValve Read OK after recovery.") << L_endl;
 				}
 			}
-		} else logger() << L_time << F("MixValveController read disabled");
+		} else logger() << L_time << F("MixValve Read disabled");
 		return value;
 	}
 }

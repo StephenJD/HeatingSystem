@@ -2,7 +2,7 @@
 // This is the Arduino Mini Controller
 // ******** NOTE select Arduino Mini Pro 328P 8MHz **********
 // See A_SJD_MixerValve_Control.ini
-// Arduino Mini Pro must be upgraded with  boot-loader to enable watchdog timer.
+// Arduino Mini Pro must be upgraded with boot-loader to enable watchdog timer.
 // File->Preferences->Additional Boards Manager URLs: https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json
 // Tools->Board->Boards Manager->Install MiniCore
 // 1. In Arduino: Load File-> Examples->ArduinoISP->ArduinoISP
@@ -12,7 +12,7 @@
 // 5. External 8Mhz clock, BOD disabled, LTO enabled, Variant 328P, UART0.
 // 6. Tools->Programmer->Arduino as ISP
 // 7. Burn Bootloader
-// 8. Then upload your desired sketch to ordinary MiniPro board. Tools->Board->Arduino Pro Mini
+// 8. Then upload your desired sketch to ordinary MiniPro board. Tools->Board->Arduino Pro Mini / 328/3.3v/8MHz
 
 #include <Arduino.h>
 
@@ -85,7 +85,8 @@ private:
 	State _state; // the requirement to heat or cool, not the actual motion of the valve.
 	int8_t _call_flowDiff;
 	int16_t _onTime;
-	uint8_t _sensorTemp;
+	uint8_t _prevSensorTemp;
+	mutable uint8_t _sensorTemp;
 	uint8_t _lastOKflowTemp;
 	int16_t _valvePos;
 	unsigned long _lastTick;
