@@ -28,6 +28,7 @@ namespace RelationalDatabase {
 		Table * table() const {return _tb;}
 		Table * table() {return _tb;}
 		TableID addr() {return _recordAddress;}
+		uint32_t lastReadTime() const { return _lastRead; } // only for debugging
 	protected:
 		// Modifiers
 		/// <summary>
@@ -38,7 +39,7 @@ namespace RelationalDatabase {
 		Table * _tb = 0;
 	private:
 		TB_Status statusOnly();
-		mutable uint32_t _lastRead = 0; // initialized to _tb->lastModifiedTime() - 1
+		mutable uint32_t _lastRead = 0; // initialized to _tb->lastModifiedTime() - TIMER_INCREMENT
 		TableID _recordAddress = 0;
 		TableID _validRecordByteAddress = 0;
 		uint8_t _validRecordIndex = 0;

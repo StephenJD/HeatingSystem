@@ -84,6 +84,7 @@ namespace client_data_structures {
 		// The dwellingZone RecordInterface has a Link Query to DwellingZones as its source. Its Record() is a Zone.
 
 		query().setMatchArg(parentIndex()); // parent is ProgramID. Required here
+		//auto zone = static_cast<Answer_R<R_Zone> &>(_dwellZone->record());
 		Answer_R<R_Zone> zone = _dwellZone->record();
 		auto zoneID = zone.id();
 		auto prevMatchArg = query().iterationQ().matchArg();
@@ -104,6 +105,8 @@ namespace client_data_structures {
 		setMatchArgs();
 		switch (fieldID) {
 		case e_days:
+			logger() << "Curr Profile UpdateTime:" << record().lastReadTime() << " TableUpdate: " << record().table()->lastModifiedTime() << L_endl;
+			logger() << "Curr Profile: " << record().rec() << L_endl;
 			_days = record().rec().days;
 			return &_days;
 		default: return 0;
@@ -148,6 +151,7 @@ namespace client_data_structures {
 			Answer_R<R_Profile> profile = *(++_recSel);
 			if (profile.status() == TB_OK) {
 				addDays(profile, daysToAdd );
+				logger() << "Next Profile UpdateTime:" << profile.lastReadTime() << " TableUpdate: " << profile.table()->lastModifiedTime() << L_endl;
 			}
 			else {
 				createProfile(daysToAdd);

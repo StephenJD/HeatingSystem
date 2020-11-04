@@ -34,9 +34,13 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _SDCardUI_c;
 
 		LCD_UI::UI_FieldData _dwellNameUI_c;
-		LCD_UI::UI_FieldData _zoneReqIs_UI_c;
 		LCD_UI::UI_FieldData _zoneNameUI_c;
 		LCD_UI::UI_FieldData _zoneAbbrevUI_c;
+		LCD_UI::UI_FieldData _allZoneReqTemp_UI_c;
+		LCD_UI::UI_FieldData _allZoneNames_UI_c;
+		LCD_UI::UI_FieldData _allZoneIsTemp_UI_c;
+		LCD_UI::UI_FieldData _allZoneIsHeating_UI_c;
+
 		LCD_UI::UI_FieldData _progNameUI_c;
 		LCD_UI::UI_FieldData _dwellSpellUI_c;
 		LCD_UI::UI_FieldData _spellProgUI_c;
@@ -54,7 +58,7 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _relayNameUI_c;
 
 		// Basic UI Elements
-		LCD_UI::UI_Label _dst, _prog, _zone;
+		LCD_UI::UI_Label _dst, _reqestTemp, _is, _prog, _zone;
 		client_data_structures::Contrast_Brightness_Cmd  _backlightCmd, _contrastCmd;
 		LCD_UI::UI_Cmd _dwellingZoneCmd, _dwellingCalendarCmd, _dwellingProgCmd;
 		LCD_UI::UI_Label _insert;
@@ -67,7 +71,7 @@ namespace Assembly {
 		
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<7> _page_currTime_c;
-		LCD_UI::UI_IteratedCollection<1> _iterated_zoneReqTemp_c;
+		LCD_UI::UI_IteratedCollection<6> _iterated_zoneReqTemp_c;
 		LCD_UI::Collection<5> _calendar_subpage_c;
 		LCD_UI::UI_IteratedCollection<1> _iterated_prog_name_c;
 		LCD_UI::Collection<2> _prog_subpage_c;

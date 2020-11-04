@@ -2,7 +2,6 @@
 #include "..\Assembly\HeatingSystemEnums.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\Client_DataStructures\Data_Relay.h"
-#include "..\Client_DataStructures\Data_Zone.h"
 #include "ThermalStore.h"
 #include "MixValveController.h"
 #include "RDB.h"
@@ -33,6 +32,10 @@ namespace HardwareInterfaces {
 		_recordID = zoneID;
 		_maxFlowTemp = maxFlowTemp;
 		_db = &db;
+		using namespace RelationalDatabase;
+		using namespace client_data_structures;
+		auto zones = _db->tableQuery(TB_Zone);
+		_zoneRecord = zones[_recordID];
 	}
 
 	void Zone::offsetCurrTempRequest(int8_t val) {
@@ -144,11 +147,8 @@ namespace HardwareInterfaces {
 		return (tempError < 0);
 	}
 
-	auto Zone::zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> {
-		using namespace RelationalDatabase;
-		using namespace client_data_structures;
-		auto zones = _db->tableQuery(TB_Zone);
-		return zones[record()];
+	auto Zone::zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> & {
+		return _zoneRecord;
 	}
 
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
@@ -159,15 +159,15 @@ namespace HardwareInterfaces {
 		auto & zoneRec = zoneAnswer.rec();
 		auto currTempReq = currTempRequest();
 		auto nextTempReq = nextTempRequest();
-
 		auto currTemp_fractional = getFractionalCallSensTemp();
-		//double outsideDiff;
-		//if (isDHWzone()) {
-		//	outsideDiff = 0;
-		//	if (currTemp_fractional / 256 < nextTempReq) nextTempReq += THERM_STORE_HYSTERESIS;
-		//} else {
-		//	outsideDiff = nextTempReq - f->thermStoreR().getOutsideTemp();
+		auto outsideTemp = isDHWzone() ? uint8_t(20) : _thermalStore->getOutsideTemp();
+		
+		//if (clock_().now().asInt() == 0 && zoneRec.autoQuality > 1) { // reduce quality by 10% each day.
+		//	zoneRec.autoQuality -= uint8_t(zoneRec.autoQuality * 0.1 + .8);
+		//	zoneAnswer.update();
+		//	logger() << "autoQuality reduced to " << zoneRec.autoQuality << " for " << zoneRec.name;
 		//}
+
 		// Part 1: When nextTempReq is > currTempReq:
 		//	1. Calculate time to warm up.
 		//	2. Calculate the pre-heat time from _ttEndDateTime.
@@ -183,39 +183,62 @@ namespace HardwareInterfaces {
 		if (nextTempReq > currTempReq) { // if next profile temp is higher allow warm-up time
 			int minsToAdd = 0;
 			double finalDiff_fractional = (nextTempReq * 256.) - currTemp_fractional; //- 128; // aim for 0.5 degree below requested temp
-			double limitTemp = zoneRec.autoFinalT; // 25 or 60 finalDiff_fractional +  * 25.6 * (1. - outsideDiff/25.) ;
-			if (limitTemp < nextTempReq + 2.) limitTemp = nextTempReq + 2.;
-			double limitDiff_fractional = limitTemp * 256. - currTemp_fractional;
-			auto timeConst = _getExpCurve.uncompressTC(zoneRec.autoTimeC);
-			if (zoneRec.autoMode) {
-				double logRatio = 1. - (finalDiff_fractional / limitDiff_fractional);
-				minsToAdd = int(-timeConst * log(logRatio));
+			double limitTemp = zoneRec.autoRatio/256. * (_maxFlowTemp - outsideTemp) + outsideTemp; // 25 or 60 finalDiff_fractional +  * 25.6 * (1. - outsideDiff/25.) ;
+			if (zoneRec.autoRatio != 0 && limitTemp < nextTempReq + 1) {
+				logger() << zoneRec.name << " ********  MAX FLOW TEMOP IS TOO LOW ********* Ratio: " 
+					<< L_fixed << zoneRec.autoRatio << L_int << " Limit: " << limitTemp << " OS temp: "  << outsideTemp << " Max: " << _maxFlowTemp  << L_endl;
 			} else {
-				minsToAdd = int(finalDiff_fractional * zoneRec.manHeatTime * 2 + 128) / 256; // mins per 1/2 degree
-			}
-			auto preheatTime = _ttEndDateTime;
-			/*if (minsToAdd > 0)*/ preheatTime.addOffset({ hh,-(minsToAdd / 60) }).addOffset({ m10,-(minsToAdd % 60) / 10 });
-			logger() << L_time << "Zone Preheat: " << zoneRec.name 
-				<< " TempIs: " << currTemp_fractional/256 << " NextReq: " << nextTempReq 
-				<< " HeatMins is : " << minsToAdd << " Start at: " << preheatTime << L_endl;
-			if (clock_().now() >= preheatTime) {
-				setProfileTempRequest(nextTempReq - offset());
-				_getExpCurve.firstValue(currTemp_fractional);
-				logger() << "\tFirst Temp Registered. AutoLimit: " << (long)limitTemp << " TConst: " << (long)timeConst << L_endl;
+				double limitDiff_fractional = limitTemp * 256. - currTemp_fractional;
+				double timeConst;
+				if (zoneRec.autoQuality == 0) {
+					timeConst = _getExpCurve.uncompressTC(zoneRec.manHeatTime);
+				} else {
+					timeConst = _getExpCurve.uncompressTC(zoneRec.autoTimeC);
+				}
+				if (zoneRec.autoQuality == 0 || zoneRec.autoRatio == 0) {
+					minsToAdd = static_cast<int>(timeConst * finalDiff_fractional / 4 / 256); // timeConst is mins per 4 deg.
+				} else {
+					double logRatio = 1. - (finalDiff_fractional / limitDiff_fractional);
+					minsToAdd = int(-timeConst * log(logRatio));
+				}
+				minsToAdd += 5; // rounded to nearest 10 mins.
+				auto preheatTime = _ttEndDateTime;
+				if (minsToAdd > 0) preheatTime.addOffset({ hh,-(minsToAdd / 60) }).addOffset({ m10,-(minsToAdd % 60) / 10 });
+				logger() << L_time << zoneRec.name
+					<< " Preheat. TempIs: " << L_fixed << currTemp_fractional << " NextReq: " << L_int << nextTempReq
+					<< " HeatMins is : " << minsToAdd << " Start at: " << preheatTime << L_endl;
+				if (clock_().now() >= preheatTime) {
+					setProfileTempRequest(nextTempReq - offset());
+					_getExpCurve.firstValue(currTemp_fractional);
+					logger() << "\tFirst Temp Registered. AutoLimit: " << (long)limitTemp << " TConst: " << (long)timeConst << L_endl;
+				}
 			}
 		} else { // We are in pre-heat or nextReq lower than CurrReq
+			logger() << L_time << zoneRec.name << " Preheat. Record Temp:\t" << L_fixed << currTemp_fractional << L_endl;
 			_getExpCurve.nextValue(currTemp_fractional); // Only registers if _getExpCurve.firstValue was non-zero
-			if (currTemp_fractional >= (currTempReq * 256)) {
-				logger() << L_time << "Zone Preheat OK. Curve: " << zoneRec.name;
+
+			if (currTemp_fractional + 128 >= currTempReq * 256) {
 				GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
-				if (curveMatch.resultOK) { // within 0.5 degrees and enough temps recorded. recalc TL
-					logger() << " New Limit: " << long(curveMatch.limit)
-						<< " New TC: " << long(curveMatch.timeConst) << L_endl;
-					zoneRec.autoFinalT = (curveMatch.limit + 128) / 256;
+				auto resultQuality = curveMatch.range / 25;
+				logger() << L_time << zoneRec.name << " Preheat OK. Req " << currTempReq << " Range: " << resultQuality << L_endl;
+				if (zoneRec.autoQuality != 0 && resultQuality > zoneRec.autoQuality) {
+					logger() << " New Limit: " << L_fixed << long(curveMatch.limit)
+						<< " New TC: " << L_int << long(curveMatch.timeConst) 
+						<< " New Quality: " << L_int << resultQuality << " Old Quality: " << zoneRec.autoQuality << L_endl;		
+					
+					double limit = (curveMatch.limit + 128.) / 256.;
+					if (limit > _maxFlowTemp) { // treat as linear curve. 			
+						limit = outsideTemp; // Make ratio = 0 and TC = 4 x minutes-per-degree
+						curveMatch.timeConst = static_cast<uint16_t>(curveMatch.period * 4L * 256L / curveMatch.range);
+					}
 					auto timeConst = _getExpCurve.compressTC(curveMatch.timeConst);
-					zoneRec.autoTimeC = timeConst > 255 ? 255 : uint8_t(timeConst);
+					double newRatio = (limit - outsideTemp) / (_maxFlowTemp - outsideTemp);
+					zoneRec.autoRatio = static_cast<uint8_t>(newRatio * 256);
+					zoneRec.autoTimeC = timeConst;
+					zoneRec.autoQuality = resultQuality;
 					zoneAnswer.update();
-				} else logger() << " No Curve Result\n";
+					logger() << "\tSaved New Compressed TC: " << timeConst << " New Ratio: " << newRatio << L_endl;
+				} else logger() << " No Better Result\n";
 				_getExpCurve.firstValue(0); // prevent further updates
 			}
 		}

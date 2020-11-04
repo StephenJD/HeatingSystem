@@ -122,10 +122,10 @@ namespace LCD_UI {
 
 	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
 		auto collection = get()->collection();
+	#ifdef ZPSIM
+		logger() << F("\tmove_focus_by on ") << ui_Objects()[(long)get()].c_str() << L_endl;
+	#endif
 		if (collection) {
-#ifdef ZPSIM
-			logger() << F("\tmove_focus_by on ") << ui_Objects()[(long)collection].c_str() << L_endl;
-#endif
 			move_focus_to(focusIndex());
 			const int startFocus = focusIndex(); // might be endIndex()
 			auto move_behaviour = behaviour();
@@ -138,18 +138,27 @@ namespace LCD_UI {
 			auto firstValidIndexLookingForwards = [this](int index) {return get()->collection()->nextActionableIndex(index); };
 			auto firstValidIndexLookingBackwards = [this](int index) {return get()->collection()->prevActionableIndex(index); };
 			const auto weCouldNotMove = startFocus;
-			auto isInNonRecycleIteration = [this]() {
+			
+			auto isIteratedKeepFocus = [collection]() {
+				return collection->iterableObjectIndex() >= 0 && (*collection)[collection->iterableObjectIndex()]->behaviour().is_next_on_UpDn();
+			};
+
+			auto isInIteratedCollection = [this]() {
 				bool back_isIterated = false;
 				if (backUI() && backUI()->get()->isCollection()) {
 					back_isIterated = backUI()->get()->collection()->iterableObjectIndex() >= 0;
 				}
-				return back_isIterated ? backUI()->behaviour().is_IteratedNoRecycle() : false;
+				return back_isIterated;
+			};
+
+			auto iterationCanRecycle = [isInIteratedCollection, this]() {
+				return isInIteratedCollection() ? !backUI()->behaviour().is_IteratedNoRecycle() : false;
 			};
 			////////////////////////////////////////////////////////////////////
 			//************************  Algorithm ****************************//
 			////////////////////////////////////////////////////////////////////
-			bool canRecycle = move_behaviour.is_recycle() && !isInNonRecycleIteration();
-			bool isViewOne = move_behaviour.is_viewOne() && (backUI() ? !backUI()->behaviour().is_IterateOne() : true);
+			bool canRecycle = iterationCanRecycle() || !isInIteratedCollection() && move_behaviour.is_recycle();
+			bool mustKeepFocus = isIteratedKeepFocus() || (move_behaviour.is_viewOne() && (backUI() ? !backUI()->behaviour().is_IterateOne() : true));
 
 			get()->collection()->filter(filter_selectable());
 			if (wantToCheckCurrentPosIsOK) {
@@ -167,7 +176,7 @@ namespace LCD_UI {
 					else if (!atEnd(newFocus)) --nth; // We have a valid element
 					else if (canRecycle) setFocusIndex(-1);
 					else { // at end, can't recycle
-						if (isViewOne) setFocusIndex(weCouldNotMove);
+						if (mustKeepFocus) setFocusIndex(weCouldNotMove);
 						break;
 					}
 				}
@@ -183,12 +192,12 @@ namespace LCD_UI {
 						if (newFocus == 0) break;
 					}
 					else {
-						if (isViewOne || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
+						if (mustKeepFocus || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
 						break;
 					}
 				}
 			}
-			return startFocus != focusIndex() && !atEnd(focusIndex()) && focusIndex() > -1;
+			return isIteratedKeepFocus() || (startFocus != focusIndex() && !atEnd(focusIndex()) && focusIndex() > -1);
 		}
 		else {
 			if (nth) return get()->focusHasChanged(nth > 0);
@@ -225,7 +234,6 @@ namespace LCD_UI {
 	///////////////////////////////////////////
 
 	Custom_Select::Custom_Select(OnSelectFnctr onSelect, Behaviour behaviour)
-		//: _behaviour(behaviour.make_viewAll()) // required to get object to handle Up-Down
 		: _behaviour(behaviour)
 		, _onSelectFn(onSelect)
 	{}
@@ -311,7 +319,7 @@ namespace LCD_UI {
 		filter(filter_viewable());
 		auto hasStreamed = false;
 #ifdef ZPSIM
-		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;
+//		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;
 #endif
 		if (behaviour().is_viewOne()) {
 			hasStreamed = activeUI()->get()->streamElement(buffer, activeElement,endPos , listStatus);
@@ -319,7 +327,7 @@ namespace LCD_UI {
 			for (auto & element : *this) {
 				auto i = objectIndex();
 #ifdef ZPSIM
-				cout << "\t[" << i << "]: " << ui_Objects()[(long)&element] << endl;
+//				cout << "\t[" << i << "]: " << ui_Objects()[(long)&element] << endl;
 #endif
 				if (element.behaviour().is_OnNewLine()) buffer.newLine();
 				if (element.collection() && element.behaviour().is_viewOne()) {
@@ -327,9 +335,8 @@ namespace LCD_UI {
 					if (thisActiveObj) {
 						auto & object = *thisActiveObj->get();
 #ifdef ZPSIM
-						cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
+//						cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
 #endif
-						//if (activeElement == 0) thisActiveObj = 0;
 						hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
 					} 
 #ifdef ZPSIM
@@ -343,7 +350,7 @@ namespace LCD_UI {
 						thisActiveObj = 0;
 					}
 #ifdef ZPSIM
-					cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
+//					cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
 #endif
 					hasStreamed = element.streamElement(buffer, thisActiveObj,endPos , listStatus);
 				}
@@ -432,7 +439,7 @@ namespace LCD_UI {
 			}			
 			for (auto & object : *iterated_collection()) {
 #ifdef ZPSIM
-				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << endl;
+//				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << endl;
 #endif
 				auto collHasfocus = collectionHasfocus();
 				auto firstVisIndex = h_firstVisibleItem();
@@ -457,7 +464,7 @@ namespace LCD_UI {
 			++itIndex;
 		} while (itIndex < numberOfIterations && (itIndex = iteratedActiveUI_h->nextActionableIndex(itIndex)) < numberOfIterations);
 #ifdef ZPSIM
-		logger() << L_endl;
+//		logger() << L_endl;
 #endif
 		if (iteratedActiveUI_h.get()->isCollection()) iteratedActiveUI_h->move_to_object(iteratedActiveUI_h->focusIndex());
 		return hasStreamed;
@@ -467,9 +474,9 @@ namespace LCD_UI {
 		auto active = iterated_collection()->activeUI();
 		active->get()->collection()->move_to_object(newIndex);
 #ifdef ZPSIM
-		cout << F("\tUI_IteratedCollection: ") << ui_Objects()[(long)iterated_collection()] << endl;
-		cout << F("\t\tactive item: ") << ui_Objects()[(long)active->get()->collection()];
-		cout << " NewIndex : " << newIndex << " SubCollection obj: " << iterated_collection()->objectIndex() << " SubCollection Focus: " << iterated_collection()->focusIndex() << endl;
+		//cout << F("\tUI_IteratedCollection: ") << ui_Objects()[(long)iterated_collection()] << endl;
+		//cout << F("\t\tactive item: ") << ui_Objects()[(long)active->get()->collection()];
+		//cout << " NewIndex : " << newIndex << " SubCollection obj: " << iterated_collection()->objectIndex() << " SubCollection Focus: " << iterated_collection()->focusIndex() << endl;
 #endif
 		return active;
 	}

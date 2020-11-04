@@ -359,12 +359,6 @@ namespace LCD_UI {
 		using I_SafeCollection::item;
 
 		Collection(ArrayWrapper<noOfObjects, Collection_Hndl> arrayWrp, Behaviour behaviour) :I_SafeCollection(noOfObjects, behaviour), _array(arrayWrp) {
-//#ifdef ZPSIM
-//			logger() << F("Collection at : ") << L_hex << (long)(this) << L_endl;
-//			for (int i = 0; i < noOfObjects; ++i)
-//				logger() << F("   Has Element at : ") << (long)&_array[i] << F(" Pointing to : ") << (long)_array[i].get() << L_endl;
-//			std::cout << std::endl;
-//#endif
 			_filter = filter_selectable();
 			setFocusIndex(nextActionableIndex(0));
 			_filter = filter_viewable();	
@@ -463,21 +457,44 @@ namespace LCD_UI {
 	/// <summary>
 	/// A View-all Collection which iterates its active member and provides limited-width.
 	/// The Iteration may be view-all(default) or view-one, but the nested elements are always internally set to view-one, as the iteration selects which member is shown.
-	/// If the active member is EditOnUpDn/SaveAfterEdit, Up/Down edits and LR moves to the next iteration, otherwise Up/Down moves to the next iteration and LR moves within the collection.
+	/// If is UD_A, Up/Down moves to the next iteration. IR0 prevents recycling.
+	/// LR moves to the next field. R recycles within the current iteration. 
+	/// If is R0, LR passes to the next iteration.
 	/// When shared across different displays, it is used as a viewOne-iteration.
 	///
-	///		Coll-Focus (moved by LR if not set to b_LR_Captured)
+	///		Coll-Focus (moved by LR)
 	///			|
-	///	{L1, Active[0], Slave[0]}
-	///	{L1, Active[1], Slave[1]} -- Active-focus (moved by LR if set to b_LR_Captured)
+	///	{L1, Active[0], Slave[0]} -> LR (next iteration if R0)
+	///	{L1, Active[1], Slave[1]} -- Active-focus (moved by UD if set to UD_A)
 	///	{L1, Active[2], Slave[2]}
 	/// </summary>
 	template<int noOfObjects>
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
-		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour behaviour = { V + S + VnLR + UD_A + IR0 })
-			: Collection<noOfObjects>(collection, behaviour) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection) // Inherit behaviour from the active member
+			: Collection<noOfObjects>(collection, {}) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
+			, UI_IteratedCollection_Hoist(endPos) {
+			_iteratedMemberIndex = Collection<noOfObjects>::focusIndex();
+			Collection<noOfObjects>::_filter = filter_viewable();
+			auto activeBehaviour  = collection[_iteratedMemberIndex]->behaviour();
+			Collection<noOfObjects>::behaviour() = activeBehaviour;
+			for (auto & object : collection) {
+				object.behaviour().make_viewOne();
+				if (collection.objectIndex() != _iteratedMemberIndex) object.behaviour().make_noUD();
+			}
+			Collection<noOfObjects>::behaviour().make_noUD();
+			//if (activeBehaviour.is_no_UpDn()) { // UD0
+			//	collection[_iteratedMemberIndex]->behaviour().make_noUD();
+			//} else if (activeBehaviour.is_edit_on_UD()) { // UD_E
+			//	collection[_iteratedMemberIndex]->behaviour().make_EditUD();
+			//} else if (activeBehaviour.is_next_on_UpDn()) { // UD_A
+			//	collection[_iteratedMemberIndex]->behaviour().make_UD();
+			//}
+		}
+
+		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour itBehaviour)
+			: Collection<noOfObjects>(collection, itBehaviour) // behaviour is for the iteration. The collection is always view-all. All members set to view-one.
 			, UI_IteratedCollection_Hoist(endPos) {
 			_iteratedMemberIndex = Collection<noOfObjects>::focusIndex();
 			Collection<noOfObjects>::_filter = filter_viewable();
@@ -485,6 +502,15 @@ namespace LCD_UI {
 				object.behaviour().make_viewOne();
 				if (collection.objectIndex() != _iteratedMemberIndex) object.behaviour().make_noUD();
 			}
+			//if (itBehaviour.is_no_UpDn()) { // UD0
+			//	collection[_iteratedMemberIndex]->behaviour().make_noUD();
+			//} else if (itBehaviour.is_edit_on_UD()) { // UD_E
+			//	collection[_iteratedMemberIndex]->behaviour().make_EditUD();
+			//} else if (itBehaviour.is_next_on_UpDn()) { // UD_A
+			//	collection[_iteratedMemberIndex]->behaviour().make_UD();
+			//}
+			collection[_iteratedMemberIndex]->behaviour().copyUD(itBehaviour);
+			Collection<noOfObjects>::behaviour().make_noUD();
 		}
 
 		// Polymorphic Queries
@@ -509,15 +535,16 @@ namespace LCD_UI {
 			: Collection<1>(collection, Behaviour((collection[0].get()->behaviour()+IR0)).make_viewAll().make_IterateOne()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
-			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + R0) & ~UD_A;
 			item(0)->get()->behaviour().make_viewOne();
 		}
 
+		template<int collectionSize> // prevent construction from non-one collections.
+		UI_IteratedCollection(int endPos, Collection<collectionSize> collection) = delete;
+		
 		UI_IteratedCollection(int endPos, I_SafeCollection & collection)
 			: Collection<1>{ ArrayWrapper<1,Collection_Hndl>{Collection_Hndl{collection}}, Behaviour(collection.behaviour()+IR0).make_viewAll().make_IterateOne() } // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos)
 		{
-			//item(0)->get()->behaviour() = (collection[0].get()->behaviour() + V1 + LR + R0) & ~UD_A;
 			item(0)->get()->behaviour().make_viewOne();
 		}
 

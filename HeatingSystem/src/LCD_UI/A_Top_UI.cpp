@@ -137,6 +137,13 @@ namespace LCD_UI {
 
 	void A_Top_UI::rec_left_right(int move) { // left-right movement
 		using HI_BD = HardwareInterfaces::LCD_Display;
+		
+		auto isIteratedUD0 = [this]() -> bool {
+			if (_leftRightBackUI->get()->isCollection()) {
+				auto & itColl = *_leftRightBackUI->get()->collection();
+				return itColl.iterableObjectIndex() >= 0 && !itColl[itColl.iterableObjectIndex()]->behaviour().is_next_on_UpDn();
+			} else return false;
+		};
 
 		if (selectedPage_h() == this) {
 			setBackUI(activeUI());
@@ -162,13 +169,19 @@ namespace LCD_UI {
 			}
 		}
 		if (!hasMoved) {
-			do {
+			if (isIteratedUD0()) {
+				auto & itColl = *_leftRightBackUI->get()->collection();
+				hasMoved = static_cast<Collection_Hndl&>(itColl[itColl.iterableObjectIndex()]).move_focus_by(move);
+				if (move > 0) itColl.setFocusIndex(itColl.nextActionableIndex(0)); else itColl.setFocusIndex(itColl.prevActionableIndex(itColl.endIndex()));
+			} else {
 				do {
-					_leftRightBackUI = _leftRightBackUI->backUI();
-				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_IterateOne()));
+					do {
+						_leftRightBackUI = _leftRightBackUI->backUI();
+					} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_IterateOne()));
 
-				hasMoved = _leftRightBackUI->move_focus_by(move);
-			} while (!hasMoved && _leftRightBackUI != this);
+					hasMoved = _leftRightBackUI->move_focus_by(move);
+				} while (!hasMoved && _leftRightBackUI != this);
+			}
 		}
 
 		auto outerColl = _leftRightBackUI->backUI();
@@ -202,12 +215,14 @@ namespace LCD_UI {
 			auto iteratedIndex = upColln.iterableObjectIndex();
 			if (iteratedIndex >= 0) {
 				auto & iteratedActiveObject_h = *upColln.move_to_object(iteratedIndex);
-				haveMoved = iteratedActiveObject_h.move_focus_by(move);
-				auto nextIdx = iteratedActiveObject_h.focusIndex();
-				upColln.filter(filter_selectable());
-				for (auto& thisObj : upColln) {
-					if (&thisObj == iteratedActiveObject_h.get()) continue;
-					thisObj.setFocusIndex(nextIdx);
+				if (!iteratedActiveObject_h.behaviour().is_no_UpDn()) {
+					haveMoved = iteratedActiveObject_h.move_focus_by(move);
+					auto nextIdx = iteratedActiveObject_h.focusIndex();
+					upColln.filter(filter_selectable());
+					for (auto& thisObj : upColln) {
+						if (&thisObj == iteratedActiveObject_h.get()) continue;
+						thisObj.setFocusIndex(nextIdx);
+					}
 				}
 			}
 		}
@@ -241,7 +256,7 @@ namespace LCD_UI {
 		if (topCollection == 0) return;
 		for (int i = topCollection->nextActionableIndex(0); !top->atEnd(i); /*i = topCollection->nextActionableIndex(++i)*/) { // need to check all elements on the page
 			auto element_h = static_cast<Collection_Hndl *>(topCollection->item(i));
-			if (element_h->get()->isCollection()) {
+			if (element_h && element_h->get()->isCollection()) {
 				if (element_h != _upDownUI) {
 #ifdef ZPSIM
 					logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;

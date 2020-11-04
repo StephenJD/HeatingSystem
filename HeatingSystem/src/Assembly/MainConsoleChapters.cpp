@@ -17,10 +17,13 @@ namespace Assembly {
 		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst, {V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneReqIs_UI_c{ &db._rec_zones, Dataset_Zone::e_reqIsTemp, {V+S+VnLR+UD_E+R0+ER0} }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + VnLR + UD_0 + R0} }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev}
-		
+		, _allZoneReqTemp_UI_c{ &db._rec_zones, Dataset_Zone::e_reqTemp ,{V + S + VnLR + UD_0 + R0 + ER0},0,0 }
+		, _allZoneNames_UI_c{ &db._rec_zone_child, Dataset_Zone::e_name, {V + V1} }
+		,_allZoneIsTemp_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isTemp, {V + V1} }
+		,_allZoneIsHeating_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isHeating, {V + V1} }
+
 		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A+R+IR0} }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, {V + S + V1 + UD_E} }
 		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, {V+S+L+V1+UD_A+ER+EA}}
@@ -34,11 +37,13 @@ namespace Assembly {
 		, _towelRailOnTimeUI_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_minutesOn }
 		, _towelRailStatus_c{ &db._rec_towelRailChild, Dataset_TowelRail::e_secondsToGo, {V + V1} }
 		
-		, _relayStateUI_c{ &db._rec_relayParent, Dataset_Relay::e_state,{V + S + V1 + UD_E} }
+		, _relayStateUI_c{ &db._rec_relayParent, Dataset_Relay::e_state,{V + S + VnLR + UD_E} }
 		, _relayNameUI_c{ &db._rec_relayChild, Dataset_Relay::e_name, {V+V1} }
 
 		// Basic UI Elements
 		, _dst{"DST Hours:"}
+		, _reqestTemp{"Req$`"}
+		, _is{"is:`"}
 		, _prog{"Prg:", {V + L0} }
 		, _zone{"Zne:"}
 		, _backlightCmd{"Backlight",0, {V + S +L + UD_S} }
@@ -57,7 +62,7 @@ namespace Assembly {
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection(_currTimeUI_c, _SDCardUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
 
-		, _iterated_zoneReqTemp_c{80, _zoneReqIs_UI_c }
+		, _iterated_zoneReqTemp_c{ 80, makeCollection(_allZoneNames_UI_c,_reqestTemp,_allZoneReqTemp_UI_c,_is,_allZoneIsTemp_UI_c,_allZoneIsHeating_UI_c)}
 
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) ,{ V + S + VnLR + R0 } }
 		, _iterated_prog_name_c{80, _progNameUI_c}
@@ -76,7 +81,7 @@ namespace Assembly {
 		// Info Pages
 		, _iterated_tempSensorUI{ 80, _tempSensorUI_c}
 		
-		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+VnLR+R} }
+		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V+S+VnLR+UD_A} }
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _iterated_towelRails_info_c) }
 		
 		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}
@@ -109,8 +114,9 @@ namespace Assembly {
 		ui_Objects()[(long)&profileDays_Field_Interface] = "profileDays_Field_Interface";
 		
 		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
-		ui_Objects()[(long)&_zoneReqIs_UI_c] = "_zoneReqIs_UI_c";
 		ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
+		ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+		ui_Objects()[(long)&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
 		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
 		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 		ui_Objects()[(long)&_calendar_subpage_c] = "_calendar_subpage_c";

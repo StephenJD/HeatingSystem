@@ -2,10 +2,15 @@
 #include "RDB_ChunkHeader.h"
 #include "RDB_B.h"
 #include "RDB_Capacities.h"
+#include <Logging.h>
 
 extern bool debugStop;
 namespace RelationalDatabase {
-
+#ifdef ZPSIM
+	constexpr uint16_t TIMER_INCREMENT = 1;
+#else
+	constexpr uint16_t TIMER_INCREMENT = 1;
+#endif
 	/// <summary>
 	/// Holds data common to all chunks in the table
 	/// Similar concept to a Deque. Can be dynamically extended without invalidating its iterators.
@@ -24,6 +29,10 @@ namespace RelationalDatabase {
 		InsertionStrategy insertionStrategy() const {return _insertionStrategy;}
 		bool outOfDate(uint32_t lastRead) const {
 			//if (debugStop) logger() << F("outOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << _timeOfLastChange << F(" Returned: ") << (_timeOfLastChange >= lastRead) << L_endl;
+			//auto result = int32_t(_timeOfLastChange - lastRead);
+			//if (result > 0) {
+			//	logger() << F("outOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << _timeOfLastChange << F(" Returned: ") << int32_t(_timeOfLastChange - lastRead) << L_endl;
+			//}
 			return int32_t(_timeOfLastChange - lastRead) > 0;
 		}
 		uint32_t lastModifiedTime() const { return _timeOfLastChange; }

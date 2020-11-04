@@ -131,7 +131,7 @@ namespace RelationalDatabase {
 	}
 
 	void Table::tableIsChanged(bool reloadHeader) {
-		_timeOfLastChange = micros() + 1;
+		_timeOfLastChange = micros() + TIMER_INCREMENT;
 		if (reloadHeader) {
 			loadHeader(_tableID, _table_header);
 		}

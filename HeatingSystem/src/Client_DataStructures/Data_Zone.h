@@ -2,65 +2,14 @@
 #include "..\LCD_UI\I_Record_Interface.h"
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\I_Data_Formatter.h"
-#include "..\..\..\RDB\src\RDB.h"
-#include "..\..\..\DateTime\src\Date_Time.h"
-#include "..\HardwareInterfaces\Zone.h"
+#include <RDB.h>
+
+namespace HardwareInterfaces {
+	class Zone;
+}
 
 namespace client_data_structures {
 	using namespace LCD_UI;
-	//***************************************************
-	//              Zone UI Edit
-	//***************************************************
-
-	/// <summary>
-	/// This Object derivative wraps ReqIsTemp values.
-	/// It is constructed with the value and a ValRange formatting object.
-	/// It provides streaming and editing by delegation to a file-static ReqIsTemp_Interface object via ui().
-	/// </summary>
-	class ReqIsTemp_Wrapper : public I_Data_Formatter {
-	public:
-		using I_Data_Formatter::ui;
-		ReqIsTemp_Wrapper() = default;
-		ReqIsTemp_Wrapper(ValRange valRangeArg);
-		I_Streaming_Tool & ui() override;
-
-		char name[7];
-		uint8_t isTemp;
-		bool isHeating;
-	};
-
-	/// <summary>
-	/// This Collection_Hndl derivative provides editing of ReqIsTemp fields.
-	/// It is the recipient during edits and holds a copy of the data.
-	/// It maintains the focus for editing within a field.
-	/// The activeUI is the associated PermittedValues object.
-	/// </summary>
-	class Edit_ReqIsTemp_h : public Edit_Int_h {
-	public:
-		using I_Edit_Hndl::currValue;
-		int gotFocus(const I_Data_Formatter * data) override;  // returns initial edit focus
-		int cursorFromFocus(int focusIndex) override;
-		void setInRangeValue() override;
-	private:
-	};
-
-	/// <summary>
-	/// This LazyCollection derivative is the UI for ReqIsTemp
-	/// Base-class setWrapper() points the object to the wrapped value.
-	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
-	/// It provides streaming and delegates editing of the ReqIsTemp.
-	/// </summary>
-	class ReqIsTemp_Interface : public I_Streaming_Tool {
-	public:
-#ifdef ZPSIM
-		ReqIsTemp_Interface() { ui_Objects()[(long)this] = "ReqIsTemp_Interface"; }
-#endif
-		using I_Streaming_Tool::editItem;
-		const char * streamData(bool isActiveElement) const override;
-		I_Edit_Hndl & editItem() { return _editItem; }
-	protected:
-		Edit_ReqIsTemp_h _editItem;
-	};
 
 	//***************************************************
 	//              Zone RDB Tables
@@ -68,16 +17,16 @@ namespace client_data_structures {
 
 	struct R_Zone {
 		char name[7];
-		char abbrev[5];
+		char abbrev[4];
 		RecordID callTempSens;
 		RecordID callRelay;
 		RecordID mixValve;
-		int8_t maxFlowTemp;
+		uint8_t maxFlowTemp;
 		int8_t offsetT;
-		int8_t autoFinalT;
-		int8_t autoTimeC;
-		int8_t autoMode;
-		int8_t manHeatTime;
+		uint8_t autoRatio;
+		uint8_t autoTimeC;
+		uint8_t autoQuality; // If == 0, use manual.
+		uint8_t manHeatTime;
 		bool operator < (R_Zone rhs) const { return false; }
 		bool operator == (R_Zone rhs) const { return true; }
 	};
@@ -112,18 +61,21 @@ namespace client_data_structures {
 	/// </summary>
 	class Dataset_Zone : public Record_Interface<R_Zone> {
 	public:
-		enum streamable { e_name, e_abbrev, e_reqTemp, e_isTemp, e_factor, e_reqIsTemp, e_offset	};
+		enum streamable { e_name, e_abbrev, e_reqTemp, e_offset, e_isTemp, e_isHeating, e_ratio, e_timeConst, e_quality, e_minsPerHalfDegree	};
 		Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
-		HardwareInterfaces::Zone & zone(int index) { return static_cast<HardwareInterfaces::Zone*>(runTimeData())[index]; }
+		HardwareInterfaces::Zone& zone(int index);
 	private:
 		StrWrapper _name;
 		StrWrapper _abbrev;
 		IntWrapper _requestTemp;
 		IntWrapper _tempOffset;
 		IntWrapper _isTemp;
-		DecWrapper _factor;
-		ReqIsTemp_Wrapper _reqIsTemp;
+		StrWrapper _isHeating;
+		IntWrapper _autoRatio;
+		IntWrapper _autoTimeC;
+		IntWrapper _autoQuality;
+		IntWrapper _manHeatTime;
 	};
 }

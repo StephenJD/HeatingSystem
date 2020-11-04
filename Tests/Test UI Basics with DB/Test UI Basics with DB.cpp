@@ -32,27 +32,27 @@
 #include <iostream>
 #include <iomanip>
 
-#define DATABASE
-#define UI_DB_DISPLAY_VIEW_ONE
-#define UI_DB_DISPLAY_VIEW_ALL
-#define UI_DB_SHORT_LISTS
-#define EDIT_NAMES_NUMS
-#define BACK_TRACKING
-//////#define EDIT_INTS
-//
-//////#define EDIT_FORMATTED_INTS
-//
-#define EDIT_DATES
+//#define DATABASE
+//#define UI_DB_DISPLAY_VIEW_ONE
+//#define UI_DB_DISPLAY_VIEW_ALL
+//#define UI_DB_SHORT_LISTS
+//#define EDIT_NAMES_NUMS
+//#define BACK_TRACKING
+////////#define EDIT_INTS
+////
+////////#define EDIT_FORMATTED_INTS
+////
+//#define EDIT_DATES
 //#define EDIT_CURRENT_DATETIME
-#define ITERATION_VARIANTS
-#define EDIT_RUN
-
-#define VIEW_ONE_NESTED_CALENDAR_PAGE
-#define VIEW_ONE_NESTED_PROFILE_PAGE
-#define CONTRAST
-#define TIME_TEMP_EDIT
+//#define ITERATION_VARIANTS
+//#define EDIT_RUN
+//
+//#define VIEW_ONE_NESTED_CALENDAR_PAGE
+//#define VIEW_ONE_NESTED_PROFILE_PAGE
+//#define CONTRAST
+//#define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
-#define INFO_CONSOLE_PAGES
+//#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
 //////#define CMD_MENU
@@ -1461,24 +1461,24 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 	GIVEN("Custom UI_Wrapper with Edit-on-up-down") {
 		display1_h.rec_select();
 		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00a_m          Mon 31/Jul/2017     DST Hours: 1");
-		display1_h.rec_left_right(1); // moves focus
+		display1_h.rec_left_right(1); clock_().setSeconds(0); // moves focus
 		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Mon 31/Jul/201_7     DST Hours: 1");
 		THEN("On up-down we start edit") {
 			clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
 			clock_().refresh();
-			display1_h.rec_up_down(-1);
+			display1_h.rec_up_down(-1); clock_().setSeconds(0);
 			CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201#8     DST Hours: 1");
 			AND_THEN("On Select we save") {
-				display1_h.rec_select();
+				display1_h.rec_select(); clock_().setSeconds(0);
 				CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201_8     DST Hours: 1");
 				THEN("Also edits on SELECT") {
-					display1_h.rec_left_right(1); // moves focus
+					display1_h.rec_left_right(1); clock_().setSeconds(0);// moves focus
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: _1");
-					display1_h.rec_select();
+					display1_h.rec_select(); clock_().setSeconds(0);
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #1");
-					display1_h.rec_up_down(1);
+					display1_h.rec_up_down(1); clock_().setSeconds(0);
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #0");
-					display1_h.rec_select();
+					display1_h.rec_select(); clock_().setSeconds(0);
 					REQUIRE(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: _0");
 				}
 			}
@@ -2902,10 +2902,10 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	clock_().setTime({ 31,7,19 }, {16,10 }, 0);
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00p_m SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
-	display1_h.rec_left_right(-1);
+	display1_h.rec_left_right(-1); clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contras_t");
 	display1_h.rec_up_down(-1);
-	display1_h.rec_prevUI();
+	display1_h.rec_prevUI(); clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$10 is:16 DnStrs Req$10 is:16 DHW    Req$10 is:45 Flat   Req$10 is:16 ");

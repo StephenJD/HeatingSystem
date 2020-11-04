@@ -41,28 +41,8 @@ namespace RelationalDatabase {
 		Answer_R(const RecordSelector & rs) : Answer_Locator(rs) {}
 		Answer_R(const TableNavigator & tableNaviagator) : Answer_Locator(tableNaviagator) {}
 		Answer_R(const Answer_Locator & answerLocator) : Answer_Locator(answerLocator) {}
-		Answer_R() = default;
-
-		Answer_R & operator =(const RecordSelector_T<Record_T> & rs) {
-			Answer_Locator::operator=(rs);
-			return *this;
-		}
-
-		Answer_R & operator =(const RecordSelector & rs) {
-			Answer_Locator::operator=(rs);
-			return *this;
-		}
-
-		Answer_R & operator =(const Answer_Locator & answerLocator) {
-			Answer_Locator::operator=(answerLocator);
-			return *this;
-		}
-
-		Answer_R & operator =(const TableNavigator & tableNaviagator) {
-			Answer_Locator::operator=(tableNaviagator);
-			return *this;
-		}
-
+		Answer_R() = default;	
+		
 		// Queries
 		// Modifiers
 		RecordID field(int fieldIndex) { return rec().field(fieldIndex); }
@@ -225,6 +205,7 @@ namespace RelationalDatabase {
 		}
 		else {
 			Answer_Locator::update(&get());
+			logger() << "AR_Updated: " << rec() << L_endl;
 		}
 		return id();
 	}

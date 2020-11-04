@@ -16,7 +16,7 @@ namespace RelationalDatabase {
 		, _tb(&tableNav.table())
 	{
 		if (_tb) {
-			_lastRead = _tb->lastModifiedTime() - 1;
+			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = tableNav.recordAddress();
 			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
 			_validRecordIndex = tableNav.getValidRecordIndex();
@@ -28,7 +28,7 @@ namespace RelationalDatabase {
 		, _tb(rs.status() == TB_INVALID_TABLE ? 0 : &rs.tableNavigator().table())
 	{
 		if (_tb) {
-			_lastRead = _tb->lastModifiedTime() - 1;
+			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = rs.tableNavigator().recordAddress();
 			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
 			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
@@ -39,7 +39,7 @@ namespace RelationalDatabase {
 	Answer_Locator::Answer_Locator(const Answer_Locator & al) 
 		: AnswerID(al)
 		, _tb(al._tb)
-		, _lastRead(_tb ? _tb->lastModifiedTime() - 1 : 0)
+		, _lastRead(_tb ? _tb->lastModifiedTime() - TIMER_INCREMENT : 0)
 		, _recordAddress(al._recordAddress)
 		, _validRecordByteAddress(al._validRecordByteAddress)
 		, _validRecordIndex(al._validRecordIndex) 
@@ -49,7 +49,7 @@ namespace RelationalDatabase {
 		AnswerID::setID(tableNav.id());
 		AnswerID::setStatus(tableNav.status());
 		if (tableNav.status() != TB_INVALID_TABLE) {
-			_lastRead = _tb->lastModifiedTime() - 1;
+			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = tableNav.recordAddress();
 			_tb = &const_cast<TableNavigator &>(tableNav).table();
 			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
@@ -62,7 +62,7 @@ namespace RelationalDatabase {
 		AnswerID::setID(rs.id());
 		AnswerID::setStatus(rs.status());
 		if (rs.status() != TB_INVALID_TABLE) {
-			_lastRead = _tb->lastModifiedTime() - 1;
+			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = rs.tableNavigator().recordAddress();
 			_tb = &const_cast<TableNavigator &>(rs.tableNavigator()).table();
 			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
@@ -79,7 +79,7 @@ namespace RelationalDatabase {
 			if (_status == TB_OK) {
 				_tb->db()._readByte(_recordAddress, rec, _tb->recordSize());
 				_lastRead = micros();
-		//logger() << "AL_Refresh Addr: " << _recordAddress <<  L_endl;
+		logger() << "AL_Refresh: " << long(this) << " RecAddr: " << _recordAddress << " at: " << _lastRead << " Table: " << _tb->lastModifiedTime() <<  L_endl;
 				//if (_tb->tableID() == 344) {
 				//	auto & zone = *static_cast<const client_data_structures::R_Zone*>(rec);
 				//	logger() << "\tRefresh" << zone << " ID: " << (_recordAddress -_tb->tableID() - 4) / _tb->recordSize() << " ReadTime: " << _lastRead << L_endl;
