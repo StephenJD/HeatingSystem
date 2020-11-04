@@ -107,7 +107,7 @@ namespace Assembly {
 				logger() << F("\t\t\tCurrent Request for ") << zone.rec().name << F(" is ") << _tc->zoneArr[zone.id()].currTempRequest() << F("\tNext Request is ") << _tc->zoneArr[zone.id()].nextTempRequest() << L_endl;
 				logger() << F("\t\t\tNext ZoneEvent is at ") << _tc->zoneArr[zone.id()].nextEventTime() << L_endl;
 			} else {
-				logger() << F("\t\tNot time for first TT of today...\n");
+				logger() << F("\t\tNot time for next event...\n");
 			}
 			if (nextZoneEvent < _nextSystemEvent) setNextEventTime(nextZoneEvent);
 		}

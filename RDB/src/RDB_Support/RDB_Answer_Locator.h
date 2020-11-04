@@ -27,6 +27,7 @@ namespace RelationalDatabase {
 		AnswerID operator*() { return *this; }
 		Table * table() const {return _tb;}
 		Table * table() {return _tb;}
+		TableID addr() {return _recordAddress;}
 	protected:
 		// Modifiers
 		/// <summary>
@@ -37,7 +38,7 @@ namespace RelationalDatabase {
 		Table * _tb = 0;
 	private:
 		TB_Status statusOnly();
-		mutable unsigned long _lastRead = 0;
+		mutable uint32_t _lastRead = 0; // initialized to _tb->lastModifiedTime() - 1
 		TableID _recordAddress = 0;
 		TableID _validRecordByteAddress = 0;
 		uint8_t _validRecordIndex = 0;

@@ -130,7 +130,7 @@ namespace Assembly {
 
 	R_TimeTemp timeTemps_f[] = { // profileID,TT
 		{0, makeTT(7,30,15)}   // At Home US MTWTFSS
-		,{0, makeTT(21,00,18)} // At Home US MTWTFSS
+		,{0, makeTT(23,00,19)} // At Home US MTWTFSS
 		,{1, makeTT(7,45,19)}  // At Home DS MTWTF--
 		,{1, makeTT(23,00,16)} // At Home DS MTWTF--
 		,{2, makeTT(8,00,19)}  // At Home DS -----SS
@@ -145,7 +145,7 @@ namespace Assembly {
 		,{4, makeTT(15,00,45)} // At Home DHW -----SS
 		,{4, makeTT(22,30,30)} // At Home DHW -----SS
 		,{5, makeTT(6,30,15)} // At Work US MTWTFSS
-		,{5, makeTT(21,00,18)} // At Work US MTWTFSS
+		,{5, makeTT(23,00,19)} // At Work US MTWTFSS
 
 		,{6, makeTT(17,30,19)} // At Work DS MTWTF--
 		,{6, makeTT(23,00,16)} // At Work DS MTWTF--
@@ -208,10 +208,10 @@ namespace Assembly {
 	};	
 		
 	constexpr R_Zone zones_f[] = { 
-		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,21,216,1,60 }
-		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,21,192,1,40 }
-		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,60,73,1,1 }
-		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,22,217,1,60 }
+		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,102,216,1,194 }
+		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,125,192,1,173 }
+		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,0,35,1,35 }
+		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,107,217,1,194 }
 	};
 
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {

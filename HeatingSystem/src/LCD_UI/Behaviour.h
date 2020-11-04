@@ -10,6 +10,7 @@ namespace LCD_UI {
 	/// 232: view, sel, ViewOne, LR0, UD-Edit, Recycle
 	/// 228: view, sel, ViewOne, LR0  UD-NextActive, Recycle
 	/// 224: view, sel, ViewOne, LR0, No-UD, Recycle
+	/// 212: view, sel, ViewAll, LR,  UD-NextActive, IT-NoRecycle
 	/// 202: view, sel, ViewAll, LR,  UD_Edit, No-Recycle
 	/// 200: view, sel, ViewAll, LR,  UD_Edit, Recycle
 	/// 198: view, sel, ViewAll, LR,  UD-NextActive, No-Recycle
@@ -19,8 +20,8 @@ namespace LCD_UI {
 	/// </summary>
 	class Behaviour {
 	public:
-		// Flags must have 1 for filterable attributes (i.e. Visible & Selectible). Otherwise use 0 for default values.
-		enum BehaviourFlags : uint16_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_IteratedNoRecycle = 16, b_ViewOne = 32, b_Selectible = 64, b_Visible = 128, b_EditNoRecycle = 256, b_Edit_Active = 512};
+		// Flags must have 1 for filterable attributes (i.e. Visible & Selectable). Otherwise use 0 for default values.
+		enum BehaviourFlags : uint16_t { b_NewLine = 1, b_NonRecycle = 2, b_UD_NextActive = 4, b_UD_Edit = 8, b_UD_SaveEdit = b_UD_NextActive + b_UD_Edit, b_IteratedNoRecycle = 16, b_ViewOne = 32, b_Selectable = 64, b_Visible = 128, b_EditNoRecycle = 256, b_Edit_Active = 512};
 
 		Behaviour() = default;
 		Behaviour(BehaviourFlags b) : _behaviour(b) {}
@@ -33,11 +34,12 @@ namespace LCD_UI {
 		bool is(Behaviour b) const { return (_behaviour & uint8_t(b)) == uint8_t(b); }
 
 		bool is_viewable() const		{ return _behaviour & b_Visible; }
-		bool is_selectable() const		{ return is(b_Selectible + b_Visible); } /*has cursor*/ 
+		bool is_selectable() const		{ return is(b_Selectable + b_Visible); } /*has cursor*/ 
 		bool is_viewOne() const			{ return is(b_Visible + b_ViewOne); }
 		bool is_viewAll_LR() const		{ return is_viewable() && !is_viewOne(); }
 		bool is_UpDnAble() const		{ return (_behaviour & b_UD_NextActive) || (_behaviour & b_UD_Edit); }
 		bool is_next_on_UpDn() const	{ return (_behaviour & b_UD_NextActive) && !(_behaviour & b_UD_Edit); }
+		bool is_no_UpDn() const			{ return !(_behaviour & b_UD_NextActive) && !(_behaviour & b_UD_Edit); }
 		bool is_edit_on_UD() const		{ return _behaviour & b_UD_Edit; }
 		bool is_save_on_UD() const		{ return is( b_UD_NextActive + b_UD_Edit); }
 		bool is_viewOneUpDn_Next() const { return is_viewOne() && is_next_on_UpDn(); }
@@ -58,9 +60,11 @@ namespace LCD_UI {
 		Behaviour make_viewOne() { _behaviour |= b_ViewOne; return *this; }
 		Behaviour make_viewAll() { _behaviour &= ~b_ViewOne; return *this; }
 		Behaviour make_UD() { _behaviour |= b_UD_NextActive; return *this; }
-		Behaviour make_IterateOne() { (_behaviour |= b_UD_NextActive) &= ~b_UD_Edit; return *this; }
+		Behaviour make_EditUD() { _behaviour |= b_UD_Edit; return *this; }
+		Behaviour make_IterateOne() { (_behaviour |= b_UD_NextActive) &= ~b_UD_Edit; return *this; } // when there is only one Selectable member to be interated
 		Behaviour make_noUD() { _behaviour &= ~(b_UD_NextActive | b_UD_Edit); return *this; }
 		Behaviour make_noRecycle() { _behaviour |= b_NonRecycle; return *this; }
+		Behaviour copyUD(Behaviour ud) { make_noUD(); _behaviour |= (uint8_t(ud) | b_UD_NextActive); _behaviour |= (uint8_t(ud) & b_UD_Edit) ; return *this; }
 
 	private:
 		Behaviour make_sameLine() { _behaviour &= ~b_NewLine; return *this; }
@@ -70,7 +74,7 @@ namespace LCD_UI {
 	enum BehaviourAliases : uint16_t {
 		H = 0, V = Behaviour::b_Visible
 		, L0 = 0, L = Behaviour::b_NewLine
-		, S0 = 0, S = Behaviour::b_Selectible
+		, S0 = 0, S = Behaviour::b_Selectable
 		, VnLR = 0, V1 = Behaviour::b_ViewOne
 		, R = 0, R0 = Behaviour::b_NonRecycle
 		, UD_0 = 0, UD_A = Behaviour::b_UD_NextActive, UD_E = Behaviour::b_UD_Edit, UD_S = Behaviour::b_UD_SaveEdit

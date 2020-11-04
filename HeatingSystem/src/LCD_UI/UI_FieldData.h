@@ -19,7 +19,7 @@ namespace LCD_UI {
 	/// <summary>
 	/// Objects are constructed with the target record-interface and a fieldID to specify the record-field required.
 	/// The UI may obtain its recordID from a given field of a parent UI_FieldData.
-	/// collectionBehaviour may be (default first) One/All, non-Recycle/Recycle, NotNewline/Newline, LR-MoveCursor/LR-NextMember, UD-Nothing/UD-NextActive/UD-Edit/UD-Save, Selectible/Unselectible, Visible/Hidden.
+	/// collectionBehaviour may be (default first) One/All, non-Recycle/Recycle, NotNewline/Newline, LR-MoveCursor/LR-NextMember, UD-Nothing/UD-NextActive/UD-Edit/UD-Save, Selectable/UnSelectable, Visible/Hidden.
 	/// activeEditBehaviour may be (default first) One(not in edit)/All(during edit), LR-nonRecycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
 	/// </summary>
 	class UI_FieldData : public LazyCollection {

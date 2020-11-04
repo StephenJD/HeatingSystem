@@ -10,6 +10,9 @@
 #include <Timer_mS_uS.h>
 
 void ui_yield();
+Logger& zTempLogger();
+Logger& mTempLogger();
+
 
 namespace Assembly {
 	using namespace RelationalDatabase;
@@ -98,6 +101,10 @@ namespace Assembly {
 		// once per second
 		static auto lastCheck = millis();
 		if (secondsSinceLastCheck(lastCheck) == 0) { return; } // Wait for next second.
+		logger().close();
+		zTempLogger().close();
+		mTempLogger().close();
+
 		for (auto & ts : tempSensorArr) {
 			ts.readTemperature();
 			//logger() << F("TS: 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;

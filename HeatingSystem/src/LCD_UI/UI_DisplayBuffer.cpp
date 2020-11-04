@@ -11,6 +11,8 @@ namespace LCD_UI {
 		, CursorMode cursorMode, int cursorOffset, int endPos, ListStatus listStatus) {
 		// stream points to a single field
 		// spaces are inserted where necessary to avoid fields splitting across lines.
+		// '`' before or after a field inhibits space separating fields.
+		// '~' before a field starts it on a new line.
 		// check line ends, and max length. Insert < > if required.
 		if (stream == 0) return true;
 		if (endPos == 0) endPos = _lcd->size(); else endPos;
@@ -19,6 +21,13 @@ namespace LCD_UI {
 		bool hasShortListChar = (buffer[originalEnd] == '>');
 		bool onNewLine = (buffer[originalEnd] == '~');
 		while (buffer[originalEnd] == '~') --originalEnd;
+		bool noSpaceBefore = stream[0] == '`';
+		if (noSpaceBefore) ++stream;
+		bool noSpaceAfter = buffer[originalEnd] == '`';
+		if (noSpaceAfter) {
+			--originalEnd;
+			noSpaceBefore = true;
+		}
 		int appendPos = originalEnd + 1;
 		int addLen = strlen(stream);
 		////////////////////////////////////////////////////////////////////
@@ -30,15 +39,19 @@ namespace LCD_UI {
 		};
 		auto notAtStartOfLine = [this](int appendPos) -> bool { return appendPos % _lcd->cols() != 0; };
 		auto spaceFor_char = [endPos](int appendPos) -> bool {return appendPos < endPos; };
-		auto inserted_a_fieldSeparator = [onNewLine,buffer,addLen,this,insertSpaces] (int appendPos) -> decltype(appendPos)  {
-			buffer[appendPos] = ' ';
-			auto spacesToEndOfLine = _lcd->cols() - (appendPos % _lcd->cols()) -1;
-			++appendPos;
+		auto inserted_a_fieldSeparator = [onNewLine,buffer,addLen, noSpaceBefore,insertSpaces,this] (int appendPos) -> decltype(appendPos)  {
+			auto spacesToEndOfLine = _lcd->cols() - (appendPos % _lcd->cols());
 			if (onNewLine) {
 				appendPos = insertSpaces(spacesToEndOfLine, appendPos);
-			}
-			else if (spacesToEndOfLine < addLen) {
-				appendPos = insertSpaces(spacesToEndOfLine, appendPos);
+			} else {
+				if (!noSpaceBefore) {
+					buffer[appendPos] = ' ';
+					++appendPos;
+					--spacesToEndOfLine;
+				}
+				if (spacesToEndOfLine < addLen) {
+					appendPos = insertSpaces(spacesToEndOfLine, appendPos);
+				}
 			}
 			return appendPos;
 		};

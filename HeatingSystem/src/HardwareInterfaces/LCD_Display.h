@@ -64,5 +64,7 @@ namespace HardwareInterfaces {
 		bool operator < (R_Display rhs) const { return false; }
 		bool operator == (R_Display rhs) const { return true; }
 	};
-
+	inline Logger& operator << (Logger& stream, const R_Display & display) {
+		return stream << F("Display ") << (int)display.name;
+	}
 }

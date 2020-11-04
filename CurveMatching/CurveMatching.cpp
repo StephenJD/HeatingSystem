@@ -7,7 +7,9 @@
 	using namespace std;
 #endif
 
-#include "GetExpCurveConsts.h"
+#include <CurveMatching.h>
+#include <Logging.h>
+//#include <Arduino.h>
 
 //#define LOG_SD;
 //#define debug
@@ -39,10 +41,10 @@ namespace GP_LIB {
 
 	void GetExpCurveConsts::nextValue(int currValue) {
 		_currValue = currValue;
+		_timeSinceStart += 10;
 		if (needsStarting()) {
 			startTiming();
 		} else {
-			_timeSinceStart += 10;
 			if (periodIsDoublePreviousPeriod()) {
 				shuffleRecordsAlong();
 			}
@@ -52,6 +54,7 @@ namespace GP_LIB {
 				averageTimeAtThisValue();
 			}
 		}
+		logger() << "\tMC_Time: " << _timeSinceStart << " [0]: " << L_fixed << _xy.firstRiseValue << "[1]: " << _xy.midRiseValue << " [2]: " << _xy.lastRiseValue << L_endl;
 #ifdef debug
 		cout << "\n\t_timeSinceStart : " << _timeSinceStart << " TryValue : " << currValue << '\n'; // Start temp. Zero indicates not started timing.
 		cout << "\tfirstRiseValue : " << _xy.firstRiseValue << '\n'; // Start temp. Zero indicates not started timing.
@@ -72,7 +75,13 @@ namespace GP_LIB {
 			result.resultOK = true;
 			result.limit = calcNewLimit(result.resultOK);
 			result.timeConst = calcNewTimeConst(result.limit, result.resultOK);
+		} else {
+			if (_xy.lastRiseValue == 0) _xy.lastRiseValue = _currValue;
+			if (_xy.firstRiseValue == 0) _xy.firstRiseValue = _xy.lastRiseValue;
+			result.limit = 0x7FFF;
 		}
+		result.range = _currValue - _xy.firstRiseValue;
+		result.period = _timeSinceStart;
 		return result;
 	}
 
@@ -80,7 +89,8 @@ namespace GP_LIB {
 
 	uint16_t GetExpCurveConsts::calcNewLimit(bool& OK) const {
 		double result = SecantMethodForEquation(LimitTemp(_xy), _currValue + 1, _currValue + 2, 0.1);
-		if (result < _currValue || result > 0xEFFF) OK = false;
+		if (result < _currValue) OK = false;
+		if (result > 0xEFFF) result = 0xEFFF;
 		return static_cast<int16_t>(result);
 	}
 
@@ -97,7 +107,7 @@ namespace GP_LIB {
 	}
 
 	int16_t GetExpCurveConsts::_currValue;
-	bool GetExpCurveConsts::needsStarting() const { return _xy.firstRiseValue == 0 && hasRisenEnough(); }
+	bool GetExpCurveConsts::needsStarting() const { return _xy.firstRiseValue == 0; }
 
 	bool GetExpCurveConsts::hasRisenEnough() const { return _currValue >= _xy.lastRiseValue + _min_rise; }
 
@@ -106,8 +116,7 @@ namespace GP_LIB {
 	}
 
 	void GetExpCurveConsts::startTiming() {
-		if (_xy.lastRiseValue) {
-			_timeSinceStart = 10;
+		if (_xy.lastRiseValue && hasRisenEnough()) {
 			_xy.firstRiseValue = _xy.lastRiseValue;
 			_xy.midRiseValue = _currValue;
 			_xy.midRiseTime = _timeSinceStart;
@@ -218,23 +227,23 @@ TEST_CASE("Average Mid/Final-Time", "[GetExpCurveConsts]") {
 	cout << "\n\n**** Adjust Mid-Time ****\n\n";
 	GetExpCurveConsts h1(2);
 	h1.firstValue(18); // start timing,
-	h1.nextValue(20); // t==10
-	h1.nextValue(20); // t==20, adj = 15
-	h1.nextValue(20); // t==30, adj = 20
-	h1.nextValue(20); // t==40, adj = 25
-	h1.nextValue(21); // t=50, adj = 30
-	h1.nextValue(21); // t=60, adj = 35
-	h1.nextValue(22); // t=70 [2] = 20
-	h1.nextValue(22); // t=80, ave = 75
-	h1.nextValue(22); // t=90, ave = 80
-	h1.nextValue(23); // t=100, ave = 85
+	h1.nextValue(19); // t=10
+	h1.nextValue(20); // t=20,
+	h1.nextValue(20); // t=30, adj LastRiseTime: 25
+	h1.nextValue(20); // t=40, adj LastRiseTime: 30
+	h1.nextValue(21); // t=50, adj LastRiseTime: 35
+	h1.nextValue(21); // t=60, adj LastRiseTime: 40
+	h1.nextValue(22); // t=70 [1] = 20@40; [2] = 22@70
+	h1.nextValue(22); // t=80, adj LastRiseTime: 75
+	h1.nextValue(22); // t=90, adj LastRiseTime: 80
+	h1.nextValue(23); // t=100, adj LastRiseTime: 85
 	h1.nextValue(24); // t=110, recorded, but not shuffled.
-	h1.nextValue(24); // t=120, ave 115
-	h1.nextValue(24); // t=130, ave 120
-	h1.nextValue(25); // t=140, ave 125
-	h1.nextValue(25); // t=150, ave 130
+	h1.nextValue(24); // t=120, adj LastRiseTime: 115
+	h1.nextValue(24); // t=130, adj LastRiseTime: 120
+	h1.nextValue(25); // t=140, adj LastRiseTime: 125
+	h1.nextValue(25); // t=150, adj LastRiseTime: 130
 	CHECK(h1.getXY().midRiseValue == 20);
-	CHECK(h1.getXY().midRiseTime == 35);
+	CHECK(h1.getXY().midRiseTime == 40);
 	CHECK(h1.getXY().lastRiseValue == 24);
 	CHECK(h1.getXY().lastRiseTime == 130);
 }
@@ -350,8 +359,20 @@ TEST_CASE("Actual Data", "[GetExpCurveConsts]") {
 	h1.getXY().lastRiseTime = 60;
 	r = h1.matchCurve();
 	CHECK(r.resultOK == true);
-	cout << "DHW Limit: " << r.limit / 256 << endl;
-	cout << "DHW TC:    " << r.timeConst << endl;
-	cout << "DHW CompTC:" << (int)h1.compressTC(r.timeConst) << endl;
+	cout << "DHW1 Limit: " << r.limit / 256 << endl;
+	cout << "DHW1 TC:    " << r.timeConst << endl;
+	cout << "DHW1 CompTC:" << (int)h1.compressTC(r.timeConst) << endl;
+	
+	h1.firstValue(40*256);
+	h1.nextValue(42 * 256); //= 4864
+	h1.nextValue(44 * 256); //= 4864
+	h1.nextValue(46 * 256); //= 4864
+	h1.nextValue(48 * 256); //= 4864
+	h1.nextValue(50 * 256); //= 4992
+	r = h1.matchCurve();
+	CHECK(r.resultOK == true);
+	cout << "DHW2 Limit: " << r.limit / 256 << endl;
+	cout << "DHW2 TC:    " << r.timeConst << endl;
+	cout << "DHW2 CompTC:" << (int)h1.compressTC(r.timeConst) << endl;
 }
 #endif

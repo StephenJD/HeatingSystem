@@ -31,6 +31,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestRelayLog", "TestRelayLo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E620AD9-804F-4C1E-90EE-1AC002A26043}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\..\Arduino_Install\libraries\SD\src\File.cpp = ..\..\..\Arduino_Install\libraries\SD\src\File.cpp
+		..\..\..\Arduino_Install\libraries\SD\src\SD.cpp = ..\..\..\Arduino_Install\libraries\SD\src\SD.cpp
+		..\..\..\Arduino_Install\libraries\SD\src\SD.h = ..\..\..\Arduino_Install\libraries\SD\src\SD.h
+		..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h = ..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h
+		..\..\..\Arduino_Install\libraries\SD\src\utility\SdFile.cpp = ..\..\..\Arduino_Install\libraries\SD\src\utility\SdFile.cpp
 		..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits = ..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits
 	EndProjectSection
 EndProject

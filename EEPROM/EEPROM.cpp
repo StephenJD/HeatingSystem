@@ -119,7 +119,8 @@ error_codes EEPROMClass::write(int iAddr, uint8_t iVal)
 }
 
 error_codes EEPROMClass::update(int iAddr, uint8_t iVal) {
-	if (iVal != read(iAddr)) return write(iAddr,iVal);
+	if (iVal != read(iAddr)) 
+		return write(iAddr,iVal);
 	else return _OK; // ++iAddr;
 }
 

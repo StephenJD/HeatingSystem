@@ -22,13 +22,15 @@ namespace RelationalDatabase {
 		TableID tableID() const { return _tableID; }
 		RDB_B & db() const { return *_db; }
 		InsertionStrategy insertionStrategy() const {return _insertionStrategy;}
+		bool outOfDate(uint32_t lastRead) const {
+			//if (debugStop) logger() << F("outOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << _timeOfLastChange << F(" Returned: ") << (_timeOfLastChange >= lastRead) << L_endl;
+			return int32_t(_timeOfLastChange - lastRead) > 0;
+		}
+		uint32_t lastModifiedTime() const { return _timeOfLastChange; }
+		NoOf_Recs_t maxRecordsInTable() const { return _max_NoOfRecords_in_table; }
+		// Modifiers
 		void openTable();
 		void openNextTable();
-		bool outOfDate(unsigned long lastRead) {
-			//if (debugStop) logger() << F("outOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << _timeOfLastChange << F(" Returned: ") << (_timeOfLastChange >= lastRead) << L_endl;
-			return int(_timeOfLastChange - lastRead) > 0;
-		}
-		NoOf_Recs_t maxRecordsInTable() const { return _max_NoOfRecords_in_table; }
 		//void refresh();
 	protected:
 

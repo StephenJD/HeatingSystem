@@ -17,6 +17,11 @@ namespace LCD_UI {
 		int cursorPos() { return _lcd->cursorPos(); }
 		//bool requestingNewLine() {return toCStr()[strlen(toCStr()) - 1] == '~';}
 		// Modifiers
+		
+		/// <summary>	
+		/// '`' before or after a field inhibits space separating fields.
+		/// '~' before a field starts it on a new line.
+		/// </summary>
 		bool hasAdded(const char * stream, CursorMode cursorMode, int cursorOffset, int endPos, ListStatus listStatus);
 		void newLine();
 		void reset() {_lcd->reset();}

@@ -18,8 +18,8 @@
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
 using namespace Date_Time;
-static constexpr uint8_t _I2C_DATA1_PIN = 70; 	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
-static constexpr uint8_t _I2C_CLOCK1_PIN = 71; 	//_I2C_CLOCK_PIN(wire_port == Wire ? 20 : 71)
+//static constexpr uint8_t _I2C_DATA1_PIN = 70; 	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
+//static constexpr uint8_t _I2C_CLOCK1_PIN = 71; 	//_I2C_CLOCK_PIN(wire_port == Wire ? 20 : 71)
 
 #define RTC_ADDRESS 0x68
 #define EEPROM_ADDR 0x50
@@ -52,7 +52,7 @@ uint8_t resetRTC(I2C_Talk & i2c, int) {
 	digitalWrite(RTC_RESET, HIGH);
 	delayMicroseconds(5000);
 	digitalWrite(RTC_RESET, LOW);
-	i2c.restart();
+	i2c.begin();
 	delayMicroseconds(200000);
 	return I2C_Talk_ErrorCodes::_OK;
 }
@@ -84,7 +84,7 @@ void setup() {
 
 	//Serial.print("Scan Wire 1 addr "); Serial.println((long)&Wire1);
 
-	scan.show_all();
+	//scan.show_all();
 
 	uint8_t status = rtc.status(0x50);
 	Serial.print("EEPROM Status"); Serial.println(rtc.getStatusMsg(status));
@@ -141,12 +141,12 @@ error_codes testEEPROM() {
 	char verify[sizeof(test)] = { 0 };
 	if (status == _OK) {
 		status = EEPROM.readEP(1000, sizeof(verify), verify);
-		logger().log(verify);
+		logger() << verify << L_endl;
 		if (status == _OK) {
 			return status;
 		}
 	}
-	logger().log("testEEPROM failed with", status, EEPROM.getStatusMsg(status));
+	logger() << "testEEPROM failed with" << status << I2C_Talk::getStatusMsg(status) << L_endl;
 	return status;
 }
 
@@ -160,7 +160,7 @@ void checkPoem() {
 //	if (status != 0) break;
 //}
 //runTime = micros() - runTime;
-//Serial.print("\n\twriteByte took uS "); Serial.print(runTime); Serial.println(EEPROM.getStatusMsg(status)); Serial.flush();
+//Serial.print("\n\twriteByte took uS "); Serial.print(runTime); Serial.println(I2C_Talk::getStatusMsg(status)); Serial.flush();
 
 //Serial.println("\nTEST: readBlock\n");
 //for (char & chr : readPoem) { chr = 0; }
@@ -172,7 +172,7 @@ void checkPoem() {
 //if (readCount == sizeof(readPoem)) status = _OK; else status = _Insufficient_data_returned;
 //runTime = micros() - runTime;
 //Serial.println(readPoem);
-//Serial.print("\n\treadBlock took uS "); Serial.print(runTime); Serial.println(EEPROM.getStatusMsg(status)); Serial.flush();
+//Serial.print("\n\treadBlock took uS "); Serial.print(runTime); Serial.println(I2C_Talk::getStatusMsg(status)); Serial.flush();
 
 	Serial.println("\nTEST: Write whole poem");
 	EEPROM.writeEP(30, sizeof(blankLines), (uint8_t *)blankLines);
@@ -180,7 +180,7 @@ void checkPoem() {
 	auto status = EEPROM.writeEP(30, sizeof(poem), poem);
 	runTime = micros() - runTime;
 
-	Serial.print("\n\tWriting whole poem took mS "); Serial.print(runTime / 1000); Serial.println(EEPROM.getStatusMsg(status)); Serial.flush();
+	Serial.print("\n\tWriting whole poem took mS "); Serial.print(runTime / 1000); Serial.println(I2C_Talk::getStatusMsg(status)); Serial.flush();
 
 	Serial.println("\nTEST: Read whole poem\n");
 	for (char & chr : readPoem) { chr = 0; }
@@ -191,7 +191,7 @@ void checkPoem() {
 	Serial.println();
 	Serial.println(readPoem);
 
-	Serial.print("\n\tReading whole poem took mS "); Serial.print(runTime / 1000); Serial.println(EEPROM.getStatusMsg(status)); Serial.flush();
+	Serial.print("\n\tReading whole poem took mS "); Serial.print(runTime / 1000); Serial.println(I2C_Talk::getStatusMsg(status)); Serial.flush();
 
 	Serial.println("\nTEST: Write poem by char\n"); Serial.flush();
 	EEPROM.writeEP(30, sizeof(blankLines), (uint8_t *)blankLines);
@@ -203,7 +203,7 @@ void checkPoem() {
 	}
 	runTime = micros() - runTime;
 	Serial.print("\n\tWrote chars: "); Serial.print(i);
-	Serial.print("\n\tWriting poem by char took mS "); Serial.print(runTime / 1000); Serial.println(EEPROM.getStatusMsg(status)); Serial.flush();
+	Serial.print("\n\tWriting poem by char took mS "); Serial.print(runTime / 1000); Serial.println(I2C_Talk::getStatusMsg(status)); Serial.flush();
 
 	Serial.println("\nTEST: Read poem by char\n"); Serial.flush();
 	for (char & chr : readPoem) { chr = 0; }
@@ -217,5 +217,5 @@ void checkPoem() {
 
 	Serial.println();
 	Serial.println(readPoem);
-	Serial.print("\n\tReading poem by char took mS "); Serial.print(runTime / 1000); ; Serial.print(" Status: ");  Serial.print(status); Serial.println(EEPROM.getStatusMsg(status)); Serial.flush();
+	Serial.print("\n\tReading poem by char took mS "); Serial.print(runTime / 1000); ; Serial.print(" Status: ");  Serial.print(status); Serial.println(I2C_Talk::getStatusMsg(status)); Serial.flush();
 }

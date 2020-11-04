@@ -7,6 +7,8 @@
 
 #ifdef DEBUG_TALK
 #include <Logging.h>
+Logger & logger();
+
 // For use when debugging twi.c
 extern "C" void I2C_Talk_msg(const char * str) {
 	logger() << str << L_endl;
@@ -157,14 +159,14 @@ error_codes I2C_Talk::writeEP(int deviceAddr, int pageAddress, int numberBytes, 
 		uint8_t bytesOnThisPage = min(numberBytes, bytesUntilPageBoundary);
 		return min(bytesOnThisPage, TWI_BUFFER_SIZE - 2);
 	};
-	//Serial.print("\twriteEP Wire:"); Serial.print((long)&_wire_port); Serial.print(", addr:"); Serial.print(deviceAddr); Serial.print(", page:"); Serial.print(pageAddress);
-	//Serial.print(", NoOfBytes:"); Serial.println(numberBytes); 
-	//Serial.print(" BuffSize:"); Serial.print(TWI_BUFFER_SIZE);
-	//Serial.print(", PageSize:"); Serial.println(I2C_EEPROM_PAGESIZE);
+
 
 	while (returnStatus == _OK && numberBytes > 0) {
 		uint8_t bytesOnThisPage = calcBytesOnThisPage(pageAddress, numberBytes);
-		returnStatus = _writeEP_block(pageAddress, numberBytes, dataBuffer);
+		returnStatus = _writeEP_block(pageAddress, bytesOnThisPage, dataBuffer);
+#ifdef DEBUG_TALK
+		logger() << "\twriteEP page: " << pageAddress << ", NoOfBytes:" << bytesOnThisPage << L_endl;
+#endif
 		pageAddress += bytesOnThisPage;
 		dataBuffer += bytesOnThisPage;
 		numberBytes -= bytesOnThisPage;

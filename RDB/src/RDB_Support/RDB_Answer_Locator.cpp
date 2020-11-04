@@ -3,6 +3,8 @@
 #include "RDB_Query.h"
 #include "RDB_Table.h"
 
+#include "../../../HeatingSystem/src/Client_DataStructures/Data_Zone.h"
+
 namespace RelationalDatabase {
 
 	////////////////////////////////////////////////////////////////////////////
@@ -10,11 +12,11 @@ namespace RelationalDatabase {
 	////////////////////////////////////////////////////////////////////////////
 
 	Answer_Locator::Answer_Locator(const TableNavigator & tableNav)
-		: AnswerID(tableNav.answerID()),
-		_lastRead(0),
-		_tb(&tableNav.table())
+		: AnswerID(tableNav.answerID())
+		, _tb(&tableNav.table())
 	{
 		if (_tb) {
+			_lastRead = _tb->lastModifiedTime() - 1;
 			_recordAddress = tableNav.recordAddress();
 			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
 			_validRecordIndex = tableNav.getValidRecordIndex();
@@ -22,11 +24,11 @@ namespace RelationalDatabase {
 	}
 
 	Answer_Locator::Answer_Locator(const RecordSelector & rs)
-		: AnswerID(rs),
-		_lastRead(0),
-		_tb(rs.status() == TB_INVALID_TABLE ? 0 : &rs.tableNavigator().table())
+		: AnswerID(rs)
+		, _tb(rs.status() == TB_INVALID_TABLE ? 0 : &rs.tableNavigator().table())
 	{
 		if (_tb) {
+			_lastRead = _tb->lastModifiedTime() - 1;
 			_recordAddress = rs.tableNavigator().recordAddress();
 			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
 			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
@@ -37,29 +39,17 @@ namespace RelationalDatabase {
 	Answer_Locator::Answer_Locator(const Answer_Locator & al) 
 		: AnswerID(al)
 		, _tb(al._tb)
+		, _lastRead(_tb ? _tb->lastModifiedTime() - 1 : 0)
 		, _recordAddress(al._recordAddress)
 		, _validRecordByteAddress(al._validRecordByteAddress)
 		, _validRecordIndex(al._validRecordIndex) 
 	{}
 
-	//Answer_Locator::Answer_Locator(Query & query) : 
-	//	AnswerID(query.currentPos())
-	//	, _lastRead(0)
-	//	, _tb(&query.tableNavigator().table())
-	//{
-	//	if (_tb) {
-	//		query.next(query.current(), 0);
-	//		_recordAddress = query.tableNavigator().recordAddress();
-	//		_validRecordByteAddress = query.tableNavigator().getAvailabilityByteAddress();
-	//		_validRecordIndex = query.tableNavigator().getValidRecordIndex();
-	//	}
-	//}
-
 	Answer_Locator & Answer_Locator::operator = (const TableNavigator & tableNav) {
 		AnswerID::setID(tableNav.id());
 		AnswerID::setStatus(tableNav.status());
 		if (tableNav.status() != TB_INVALID_TABLE) {
-			_lastRead = 0;
+			_lastRead = _tb->lastModifiedTime() - 1;
 			_recordAddress = tableNav.recordAddress();
 			_tb = &const_cast<TableNavigator &>(tableNav).table();
 			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
@@ -72,7 +62,7 @@ namespace RelationalDatabase {
 		AnswerID::setID(rs.id());
 		AnswerID::setStatus(rs.status());
 		if (rs.status() != TB_INVALID_TABLE) {
-			_lastRead = 0;
+			_lastRead = _tb->lastModifiedTime() - 1;
 			_recordAddress = rs.tableNavigator().recordAddress();
 			_tb = &const_cast<TableNavigator &>(rs.tableNavigator()).table();
 			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
@@ -83,10 +73,18 @@ namespace RelationalDatabase {
 	}
 
 	void Answer_Locator::rec(void * rec) {
+		//logger() << "AL_Read Addr: " << _recordAddress << " lastRead: " << _lastRead << " TableMod: " << _tb->lastModifiedTime() <<  L_endl;
 		if (_tb && _tb->outOfDate(_lastRead)) {
 			statusOnly();
-			if (_status == TB_OK) _tb->db()._readByte(_recordAddress, rec, _tb->recordSize());
-			_lastRead = micros();
+			if (_status == TB_OK) {
+				_tb->db()._readByte(_recordAddress, rec, _tb->recordSize());
+				_lastRead = micros();
+		//logger() << "AL_Refresh Addr: " << _recordAddress <<  L_endl;
+				//if (_tb->tableID() == 344) {
+				//	auto & zone = *static_cast<const client_data_structures::R_Zone*>(rec);
+				//	logger() << "\tRefresh" << zone << " ID: " << (_recordAddress -_tb->tableID() - 4) / _tb->recordSize() << " ReadTime: " << _lastRead << L_endl;
+				//}
+			}
 		}
 	}
 
@@ -124,6 +122,11 @@ namespace RelationalDatabase {
 
 	void Answer_Locator::update(const void * rec) {
 		if (statusOnly() == TB_OK) {
+			//logger() << "AL_Update Addr: " << _recordAddress << L_endl;
+			//if (_tb->tableID() == 344) {
+			//	auto & zone = *static_cast<const client_data_structures::R_Zone*>(rec);
+			//	logger() << "AL_Update: " << zone << " ID: " << (_recordAddress -_tb->tableID() - 4) / _tb->recordSize() << " RecSize: " << _tb->recordSize() << L_endl;
+			//}
 			_tb->db()._writeByte(_recordAddress, rec, _tb->recordSize());
 			_lastRead = micros();
 			_tb->tableIsChanged(false);

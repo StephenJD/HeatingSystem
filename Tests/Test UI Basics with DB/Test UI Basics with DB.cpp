@@ -38,15 +38,15 @@
 #define UI_DB_SHORT_LISTS
 #define EDIT_NAMES_NUMS
 #define BACK_TRACKING
-////////#define EDIT_INTS
-////
-////////#define EDIT_FORMATTED_INTS
-////
-#define EDIT_DECIMAL
-#define EDIT_DATES
-////#define EDIT_CURRENT_DATETIME
-#define EDIT_RUN
+//////#define EDIT_INTS
 //
+//////#define EDIT_FORMATTED_INTS
+//
+#define EDIT_DATES
+//#define EDIT_CURRENT_DATETIME
+#define ITERATION_VARIANTS
+#define EDIT_RUN
+
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
 #define VIEW_ONE_NESTED_PROFILE_PAGE
 #define CONTRAST
@@ -54,8 +54,8 @@
 #define MAIN_CONSOLE_PAGES
 #define INFO_CONSOLE_PAGES
 
-//#define TEST_RELAYS
-//#define CMD_MENU
+//////#define TEST_RELAYS
+//////#define CMD_MENU
 
 using namespace LCD_UI;
 using namespace RelationalDatabase;
@@ -1251,88 +1251,7 @@ TEST_CASE("Edit Formatted Integer Data", "[Display]") {
 }
 
 #endif
-#ifdef EDIT_DECIMAL
-TEST_CASE("Edit Decimal Data", "[Display]") {
-	cout << "\n*********************************\n**** Edit Decimal Data ****\n********************************\n\n";
-	using namespace client_data_structures;
-	using namespace Assembly;
 
-	LCD_Display_Buffer<80,1> lcd;
-	UI_DisplayBuffer tb(lcd);
-
-	//enum tableIndex { TB_Dwelling, TB_Program, TB_DwellingZone, TB_TimeTemp, TB_Spell, TB_Profile, TB_Zone, TB_NoOfTables };
-	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
-
-	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
-
-	cout << " **** Next create DB Record Interfaces ****\n";
-	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
-	auto rec_dwZone = Dataset_Zone(q_dwellingZones, noVolData, &rec_dwelling);
-	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
-
-	cout << " **** Next create DB UIs ****\n";
-	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
-	auto zoneFactorUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_factor);
-	
-	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
-	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&zoneFactorUI_c] = "zoneFactorUI_c";
-
-	// UI Elements
-	UI_Label L1("L1");
-	UI_Cmd C3("C3", 0);
-	ui_Objects()[(long)&L1] = "L1";
-	ui_Objects()[(long)&C3] = "C3";
-
-	// UI Collections
-	cout << "\npage1 Collection\n";
-	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, zoneFactorUI_c, progNameUI_c, C3);
-
-	cout << "\nDisplay     Collection\n";
-	auto display1_c = makeChapter(page1_c);
-	auto display1_h = A_Top_UI(display1_c);
-
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
-
-	cout << " **** All Constructed ****\n\n";
-	display1_h.rec_select();
-	cout << test_stream(display1_h.stream(tb));
-	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs  +1.2 At Home C3");
-	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s  +1.2 At Home C3");
-	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs  +1._2 At Home C3");
-	display1_h.rec_select();
-	cout << "***** Have made first select into Edit *****\n";
-	cout << test_stream(display1_h.stream(tb));
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs  +1.#2 At Home C3");
-	display1_h.rec_up_down(-1); // increment 1
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs  +1.#3 At Home C3");
-	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs  +#1.3 At Home C3");
-	display1_h.rec_up_down(1); // decrement 10
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs  +#0.3 At Home C3");
-	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs  #+0.3 At Home C3");
-	display1_h.rec_up_down(-1); // decrement 10
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs +#10.0 At Home C3");
-	display1_h.rec_up_down(1); // decrement 10
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs  #+0.0 At Home C3");
-	display1_h.rec_up_down(1); // decrement 10
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -#10.0 At Home C3");
-	display1_h.rec_select();
-	cout << "***** Have made first exit from Edit *****\n";
-	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10._0 At Home C3");
-	cout << test_stream(display1_h.stream(tb));
-}
-#endif
 ///////////////////////////////////////////////////////////////////////////////////////
 #ifdef EDIT_DATES
 TEST_CASE("Edit Date Data", "[Chapter]") {
@@ -1363,7 +1282,7 @@ TEST_CASE("Edit Date Data", "[Chapter]") {
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
 	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name);
-	auto zoneFactorUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_factor);
+	auto zoneFactorUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_timeConst);
 	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date);
 
 	// UI Elements
@@ -1388,122 +1307,122 @@ TEST_CASE("Edit Date Data", "[Chapter]") {
 	cout << " **** All Constructed ****\n\n";
 	display1_h.rec_select();
 	display1_h.stream(tb);
-	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs -10.0 At Home Now");
+	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs 012 At Home Now");
 	display1_h.rec_left_right(1); // moves focus
 	display1_h.rec_left_right(1); // moves focus
 	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Hom_e Now");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Hom_e Now");
 	display1_h.rec_left_right(1); // moves focus
 	display1_h.stream(tb);
 	cout << test_stream(display1_h.stream(tb));
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home No_w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home No_w");
 	clock_().setTime({ 31,7,17 }, { 8,10 }, 0);
 
 	display1_h.rec_select();
 	cout << "***** Have made first select into Edit *****\n";
 	cout << test_stream(display1_h.stream(tb));
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm #Today");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm #Today");
 	display1_h.rec_up_down(-1); // increment 1 day
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm #Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm #Tomor'w");
 	display1_h.rec_up_down(-1); // increment 1 day
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm 0#2Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm 0#2Aug");
 	display1_h.rec_up_down(-1); // increment 1 day
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm 0#3Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm 0#3Aug");
 	display1_h.rec_up_down(1); // increment 1 day
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm 0#2Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm 0#2Aug");
 	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm 02#Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm 02#Aug");
 	display1_h.rec_up_down(-1); // increment 1 month
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm 02#Sep");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm 02#Sep");
 	display1_h.rec_up_down(1); // decrement 1 month
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 03:20pm 02#Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 03:20pm 02#Aug");
 	display1_h.rec_up_down(1); // decrement 1 month
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home #Now");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home #Now");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home No_w"); // 31st July
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home No_w"); // 31st July
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home #Now");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home #Now");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home #Now");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home #Now");
 	display1_h.rec_up_down(-1); // increment 1 day	
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am #Tomor'w"); // 1st Aug
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am #Tomor'w"); // 1st Aug
 	display1_h.rec_left_right(1); // should not result in incrementing month
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am #Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am #Tomor'w");
 	display1_h.rec_up_down(-1); // increment 1 day
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 0#2Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 0#2Aug");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 02#Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 02#Aug");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 02#Sep");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 02#Sep");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 0#2Sep");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 0#2Sep");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 0#1Sep");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 0#1Sep");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 3#1Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 3#1Aug");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 31#Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 31#Aug");
 	display1_h.rec_up_down(-1); // increment 1 month
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 31#Sep");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 31#Sep");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 31#Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 31#Aug");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am 3#1Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am 3#1Aug");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am #31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am #31Aug");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10#am 31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10#am 31Aug");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:#10am 31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:#10am 31Aug");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 0#8:10am 31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 0#8:10am 31Aug");
 	display1_h.rec_up_down(-2); // increment 2 hrs
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 1#0:10am 31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 1#0:10am 31Aug");
 	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:#10am 31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:#10am 31Aug");
 	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10#am 31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10#am 31Aug");
 	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10am #31Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10am #31Aug");
 	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10am 3#1Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10am 3#1Aug");
 	display1_h.rec_up_down(-2); // increment 2 days
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10am 0#2Sep");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10am 0#2Sep");
 	display1_h.rec_left_right(1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10am 02#Sep");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10am 02#Sep");
 	display1_h.rec_up_down(1); // decrement 1 month
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10am 02#Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10am 02#Aug");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10am 0#2Aug");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10am 0#2Aug");
 	display1_h.rec_up_down(2); // decrement 2 days
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:10am #Today");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:10am #Today");
 	display1_h.rec_up_down(1); // decrement 1 days
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home #Now");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home #Now");
 	display1_h.rec_up_down(-1); // increment 1 days
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am #Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am #Tomor'w");
 	display1_h.rec_select();
 	cout << "***** Have made save from Edit *****\n";
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am Tomor'_w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am Tomor'_w");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10am #Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10am #Tomor'w");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10#am Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10#am Tomor'w");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:10#pm Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:10#pm Tomor'w");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:#10pm Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:#10pm Tomor'w");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 08:#20pm Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 08:#20pm Tomor'w");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 0#8:20pm Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 0#8:20pm Tomor'w");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 0#9:20pm Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 0#9:20pm Tomor'w");
 	display1_h.rec_left_right(-1); // moves focus
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 0#9:20pm Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 0#9:20pm Tomor'w");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 1#0:20pm Tomor'w");
+	CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 1#0:20pm Tomor'w");
 	display1_h.rec_select();
-	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs -10.0 At Home 10:20pm Tomor'_w");
+	REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs 012 At Home 10:20pm Tomor'_w");
 	cout << test_stream(display1_h.stream(tb));
 }
 #endif
@@ -1568,9 +1487,9 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 }
 #endif
 
-#ifdef EDIT_RUN
-SCENARIO("Non-iterated View-all giving Edit on UD", "[Chapter]") {
-	cout << "\n*********************************\n**** Display / Edit Run Data ****\n********************************\n\n";
+#ifdef ITERATION_VARIANTS
+SCENARIO("Iterated View-all Variants UD_A", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated View-all Variants ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
 	using namespace HardwareInterfaces;
@@ -1585,16 +1504,486 @@ SCENARIO("Non-iterated View-all giving Edit on UD", "[Chapter]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
 
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
+	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
+
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_A} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V+S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S+ER0} };
 	
-	auto zoneReqTempUI_c = UI_FieldData(&rec_zones, Dataset_Zone::e_reqIsTemp, {V+S+VnLR+UD_E+R0+ER0});
+	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
+
 	// UI Collections
-	auto page1_c = makeCollection(zoneReqTempUI_c);
+	auto page1_c = makeCollection(_iterated_AllZones_c);
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&zoneReqTempUI_c] = "zoneReqTempUI_c";
+	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
+	display1_h.rec_select();
+	GIVEN("Self-iterating View-all can be scrolled LR") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		THEN("LR Recycles focus") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			AND_THEN("Edits on Select") {
+				display1_h.rec_select(); 
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02#5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+				THEN("Allows Edit of 10's / 100's") {
+					display1_h.rec_left_right(-1); // moves focus
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 0#25 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+					display1_h.rec_left_right(-1); // moves focus
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 #025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+					AND_THEN("LR Recycles edit  pos") {
+						display1_h.rec_left_right(-1); // moves focus
+						CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02#5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+						display1_h.rec_left_right(1); // moves focus
+						CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 #025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+						display1_h.rec_prevUI();
+						CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+						AND_THEN("UD Moves to next iteration") {
+							display1_h.rec_up_down(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 02_5 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+							display1_h.rec_up_down(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 06_0 012Flat   Flt 0 025 012");
+							display1_h.rec_up_down(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 02_5 012");
+							AND_THEN("UP-Recycles") {
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+								display1_h.rec_up_down(-1);
+								CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 02_5 012");
+								AND_THEN("Ratio LR won't edit-recycle") {
+									display1_h.rec_left_right(1); // moves focus
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 01_2");
+									display1_h.rec_select();
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 01#2");
+									display1_h.rec_left_right(1); // moves focus
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 01#2");
+									display1_h.rec_left_right(-1); // moves focus
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 0#12");
+									display1_h.rec_left_right(-1); // moves focus
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 #012");
+									display1_h.rec_left_right(-1); // moves focus
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 #012");
+									display1_h.rec_prevUI();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	GIVEN("Self-iterating IR0 doesn't recycle on UD") {
+		_iterated_AllZones_c.behaviour() = uint16_t(_iterated_AllZones_c.behaviour()) | Behaviour::b_IteratedNoRecycle;
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		THEN("LR Recycles focus") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			AND_THEN("UP - Won't Recycle") {
+				display1_h.rec_up_down(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+				AND_THEN("DOWN - Moves to next iteration") {
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 02_5 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 06_0 012Flat   Flt 0 025 012");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 02_5 012");
+					AND_THEN("DOWN-Won't Recycle") {
+						display1_h.rec_up_down(1);
+						CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 02_5 012");
+					}
+				}
+			}
+		}
+	}
+
+	GIVEN("Self-iterating R0 doesn't recycle on LR") {
+		_iterated_AllZones_c.behaviour() = uint16_t(_iterated_AllZones_c.behaviour()) | Behaviour::b_IteratedNoRecycle;
+		_iterated_AllZones_c.behaviour().make_noRecycle();
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		THEN("R won't Recycle focus") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			AND_THEN("L - Won't Recycle") {
+				display1_h.rec_left_right(-1); // moves focus
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			}
+		}
+	}
+}
+
+SCENARIO("Iterated View-all Variants UD_0", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated View-all Variants UD_0 ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace HardwareInterfaces;
+
+	LCD_Display_Buffer<20,4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
+	HardwareInterfaces::UI_Bitwise_Relay relays[4];
+	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+
+	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
+	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
+
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_0 +R0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V+S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S+ER0} };
+	
+	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
+
+	// UI Collections
+	auto page1_c = makeCollection(_iterated_AllZones_c);
+	auto display1_c = makeChapter(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
+	display1_h.rec_select();
+	GIVEN("Self-iterating UD_0 moves to next iteration at end of collection on LR ") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		THEN("LR Moves to next iteration") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			AND_THEN("UD Does Nothing") {
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+				display1_h.rec_up_down(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			}
+		}
+	}
+}
+
+SCENARIO("Iterated View-all Variants UD_E", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated View-all Variants UD_E ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace HardwareInterfaces;
+
+	LCD_Display_Buffer<20,4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
+	HardwareInterfaces::UI_Bitwise_Relay relays[4];
+	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+
+	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
+	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
+
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_E + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V+S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S+ER0} };
+	
+	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
+
+	// UI Collections
+	auto page1_c = makeCollection(_iterated_AllZones_c);
+	auto display1_c = makeChapter(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
+	display1_h.rec_select();
+	GIVEN("Self-iterating UD_E ER0 moves to next field on LR") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		THEN("LR Moves to next Iteration") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(1); // moves focus
+			display1_h.rec_left_right(1); // moves focus
+			display1_h.rec_left_right(1); // moves focus
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DH_W    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(1); // moves focus
+			display1_h.rec_left_right(1); // moves focus
+			display1_h.rec_left_right(1); // moves focus
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+			AND_THEN("UD starts edit") {
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012#flat|| Flt 0 025 012");
+				AND_THEN("RIGHT moves edit to next field") {
+					display1_h.rec_left_right(-1);
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 01#2flat   Flt 0 025 012");
+					display1_h.rec_select();
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 01_2flat   Flt 0 025 012");
+				}
+			}
+		}
+	}
+}
+
+SCENARIO("Iterated View-all Variants UD_S", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated View-all Variants UD_S ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace HardwareInterfaces;
+
+	LCD_Display_Buffer<20,4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
+	HardwareInterfaces::UI_Bitwise_Relay relays[4];
+	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+
+	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
+	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
+
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_S + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V+S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S+ER0} };
+	
+	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
+
+	// UI Collections
+	auto page1_c = makeCollection(_iterated_AllZones_c);
+	auto display1_c = makeChapter(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
+	display1_h.rec_select();
+	GIVEN("Self-iterating UD_E ER0 moves to next field on LR") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 012");
+		THEN("LR Moves to next iteration") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 012");
+			display1_h.rec_left_right(-3); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012flat   Flt 0 025 01_2");
+			display1_h.rec_left_right(-3); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012fla_t   Flt 0 025 012");
+			AND_THEN("UD edits and saves") {
+				display1_h.rec_up_down(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+			}
+		}
+	}
+}
+
+SCENARIO("Iterated SingleSel Variants UD_A", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated SingleSel Variants UD_A ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace HardwareInterfaces;
+
+	LCD_Display_Buffer<20,4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
+	HardwareInterfaces::UI_Bitwise_Relay relays[4];
+	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+
+	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
+	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
+
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_0 + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V} };
+	
+	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
+
+	// UI Collections
+	auto page1_c = makeCollection(_iterated_AllZones_c);
+	auto display1_c = makeChapter(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
+	display1_h.rec_select();
+	GIVEN("Self-iterating UD_0 moves to next iteration on LR") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DH_W    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+		THEN("LR Recycles focus") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+			AND_THEN("UD does nothing") {
+				display1_h.rec_up_down(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+			}
+		}
+	}
+}
+#endif
+
+#ifdef EDIT_RUN
+SCENARIO("Iterated Request Temps", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated Request Temps ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace HardwareInterfaces;
+
+	LCD_Display_Buffer<20,4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
+	HardwareInterfaces::UI_Bitwise_Relay relays[4];
+	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
+
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+
+	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
+	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
+	
+	auto _allZoneReqTemp_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_reqTemp ,{V + S + VnLR + UD_E +ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_name, {V + V1} };
+	auto _allZoneIsTemp_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_isTemp, {V + V1} };
+	auto _allZoneIsHeating_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_isHeating, {V + V1} };
+	
+	auto _reqestTemp = UI_Label{ "Req$`" };
+	auto _is = UI_Label{ "is:`" };
+	
+
+	auto _iterated_zoneReqTemp_c = UI_IteratedCollection<6>{ 80, makeCollection(_allZoneNames_UI_c,_reqestTemp,_allZoneReqTemp_UI_c,_is,_allZoneIsTemp_UI_c,_allZoneIsHeating_UI_c) };
+
+	// UI Collections
+	auto page1_c = makeCollection(_iterated_zoneReqTemp_c);
+	auto display1_c = makeChapter(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
 	ui_Objects()[(long)&page1_c] = "page1_c";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
@@ -1623,18 +2012,18 @@ SCENARIO("Non-iterated View-all giving Edit on UD", "[Chapter]") {
 						CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#10 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
 						AND_THEN("Allows incrementing 10") {
 							display1_h.rec_up_down(-1); // increment 10 degree
-							CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+							CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#19 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
 							AND_THEN("Left saves and edits last iteration") {
 								display1_h.rec_left_right(-1); // moves focus - save current and move to next field
-								CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#1 is:21 ");
+								CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$19 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#1 is:21 ");
 								THEN("Will not allow more than one degree increase") {
 									display1_h.rec_up_down(-1); // increment 1 degree
-									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#2 is:21 ");
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$19 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2#2 is:21 ");
 									display1_h.rec_left_right(-1); // moves focus
-									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$#22 is:21 ");
+									CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$19 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$#22 is:21 ");
 									THEN("SELECT to save") {
 										display1_h.rec_select();
-										REQUIRE(test_stream(display1_h.stream(tb)) == "UpStrs Req$20 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2_2 is:21 ");
+										REQUIRE(test_stream(display1_h.stream(tb)) == "UpStrs Req$19 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2_2 is:21 ");
 									}
 								}
 							}
@@ -2344,128 +2733,128 @@ SCENARIO("TimeTemps", "[Display]") {
 	GIVEN("we can scroll into a TT") {
 		display1_h.stream(tb);
 		cout << test_stream(display1_h.stream(tb)) << endl;
-		REQUIRE(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a15 0900p18");
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a15 1100p19");
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFS_S             0730a15 0900p18");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFS_S             0730a15 1100p19");
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_5 0900p18");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_5 1100p19");
 		THEN("up-dn edits the temp") {
 			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1#6 0900p18");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1#6 1100p19");
 			AND_THEN("LR saves and edits the next temp") {
 				display1_h.rec_left_right(1);
-				CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p1#8");
+				CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1#9");
 				AND_THEN("SELECT when in EDIT saves the temp") {
 					display1_h.rec_select();
-					CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p1_8");
+					CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
 					AND_THEN("SELECT offers Delete/Edit/New") {
 						display1_h.rec_select();
-						CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0900p18");
+						CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1100p19");
 						THEN("RIGHT immediatly inserts new") {
 							display1_h.rec_left_right(1);
-							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#900p18");
+							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#100p19");
 							cout << test_stream(display1_h.stream(tb)) << endl;
 							display1_h.rec_up_down(-1);
-							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#000p18");
+							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p19");
 							THEN("SAVE returns to TT list") {
 								display1_h.rec_select();
 								display1_h.stream(tb);
 								cout << test_stream(display1_h.stream(tb)) << endl;
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p18     1000p1_8");
-								display1_h.rec_up_down(-1);
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p18     1000p1#9");
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p18     1000p1#9");
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1_9");
+								display1_h.rec_up_down(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1#8");
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1#8");
 								display1_h.rec_select();
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p18     1000p1_9");
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1_8");
 								THEN("Cancelled NEW deletes the inserted TT") {
 									display1_h.rec_select();
-									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1000p19");
+									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1200p18");
 									display1_h.rec_left_right(1);
-									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#000p19");
+									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p18");
 									display1_h.rec_up_down(1);
-									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#900p19");
+									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#100p18");
 									display1_h.rec_prevUI();
-									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p18     1000p1_9");
+									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1_8");
 									AND_THEN("DELETE removes seected TT") {
 										display1_h.rec_select();
-										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1000p19");
+										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1200p18");
 										display1_h.rec_left_right(-1);
-										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delet_e              1000p19");
+										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delet_e              1200p18");
 										display1_h.rec_select();
-										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p1_8");
+										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
 										THEN("EDIT and DELETE can be cancelled") {
 											display1_h.rec_select();
-											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0900p18");
+											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1100p19");
 											display1_h.rec_prevUI();
-											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p1_8");
+											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
 											display1_h.rec_select();
-											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0900p18");
+											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1100p19");
 											display1_h.rec_left_right(-1);
-											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delet_e              0900p18");
+											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delet_e              1100p19");
 											display1_h.rec_prevUI();
-											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p1_8");
+											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
 											AND_THEN("New inserts repeatedly") {
 												display1_h.rec_select();
 												display1_h.rec_left_right(1);
-												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#900p18");
+												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#100p19");
 												display1_h.rec_up_down(-1);
 												display1_h.rec_select();
 												display1_h.rec_select();
 												display1_h.rec_left_right(1);
-												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#000p18");
+												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p19");
 												display1_h.rec_up_down(-1);
 												display1_h.rec_select();
 												display1_h.stream(tb);
-												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p18     1000p18 1100p1_8");
+												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p19 0100p1_9");
 												display1_h.rec_select();
 												display1_h.rec_left_right(1);
 												display1_h.rec_up_down(-1);
-												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p18");
+												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#200p19");
 												display1_h.rec_select();
 												THEN("Multiple TTs can be scrolled through") {
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p18 1000p18    1100p18 1200p1_8");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p1_9");
 													display1_h.rec_left_right(1);
-													CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   At Home US  MTWTFSS             <0900p18 1000p18    1100p18 1200p18");
+													CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p18 1000p18    1100p18 1200p1_8");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p1_9");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p18 1000p18    1100p1_8 1200p18");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p1_9 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p18 1000p1_8    1100p18 1200p18");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p1_9    0100p19 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p1_8 1000p18    1100p18 1200p18");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p1_9 1200p19    0100p19 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_6 0900p18     1000p18 1100p18>    ");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_6 1100p19     1200p19 0100p19>    ");
 													display1_h.rec_left_right(1);
 													display1_h.rec_left_right(1);
 													display1_h.rec_left_right(1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 0900p18     1000p18 1100p1_8>    ");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p19 0100p1_9>    ");
 													display1_h.rec_left_right(1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <0900p18 1000p18    1100p18 1200p1_8");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p1_9");
 													THEN("More TTs inserted and any selected TT edited") {
 														display1_h.rec_select();
 														display1_h.rec_left_right(1);
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p18");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#200p19");
 														display1_h.rec_up_down(-1);
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#100p18");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#300p19");
 														display1_h.rec_select();
 														display1_h.stream(tb);
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1000p18 1100p18    1200p18 0100p1_8");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1200p19 0100p19    0200p19 0300p1_9");
 														display1_h.rec_select();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0100p18");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0300p19");
 														display1_h.rec_select();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Edit                0#100p18");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Edit                0#300p19");
 														display1_h.rec_prevUI();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1000p18 1100p18    1200p18 0100p1_8");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1200p19 0100p19    0200p19 0300p1_9");
 														display1_h.rec_select();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0100p18");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0300p19");
 														display1_h.rec_select();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Edit                0#100p18");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Edit                0#300p19");
 														display1_h.rec_prevUI();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1000p18 1100p18    1200p18 0100p1_8");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1200p19 0100p19    0200p19 0300p1_9");
 													}
 												}
 											}
@@ -2518,9 +2907,11 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_up_down(-1);
 	display1_h.rec_prevUI();
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
-
+	display1_h.rec_up_down(1);
+	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$10 is:16 DnStrs Req$10 is:16 DHW    Req$10 is:45 Flat   Req$10 is:16 ");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
+	display1_h.rec_up_down(-1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
 	//											 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 	//											 Line[0]			 Line[1]			 Line[2]			 Line[3]
 	cout << test_stream(display1_h.stream(tb)) << endl;
@@ -2559,21 +2950,21 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 		logger() << tt.id() << ": " << tt.rec() << L_endl;
 	}	
 	
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Ds: MTWTFSS0700a20 1100p18");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Ds: MTWTFSS0630a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Ds: MTWTFSS0630a15 1100p19");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(-1);
  	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Ds_: MTWTF--0630a45 0900a30     0330p45 1030p30");
@@ -2585,7 +2976,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Ds: MTWTFSS0700a20 1100p18");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Ds: MTWTFSS0700a20 1100p18");
 	display1_h.rec_left_right(1);
@@ -2598,17 +2989,17 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_left_right(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: DHW Ds: MTWTFSS0700a45 1000a30     0400p45 1100p30");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 0900p1_8");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p1_9");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a1_5 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a1_5 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFS_S0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFS_S0730a15 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds_: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds_: MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 0900p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(1);
 	display1_h.rec_left_right(1);
 	display1_h.rec_left_right(1);

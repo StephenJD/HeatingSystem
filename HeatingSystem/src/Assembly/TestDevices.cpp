@@ -24,19 +24,19 @@ namespace HardwareInterfaces {
 
 	HeatingSystem & TestDevices::hs() { return _ini.hs(); }
 
-	int8_t TestDevices::showSpeedTestFailed(I_I2Cdevice_Recovery & device, const char * deviceName) {
+	int8_t TestDevices::showSpeedTestFailed(int line, I_I2Cdevice_Recovery & device, const char * deviceName) {
 		reset_watchdog();
-		hs().mainDisplay.setCursor(5, 2);
+		hs().mainDisplay.setCursor(5, line);
 		hs().mainDisplay.print("       0x");
-		hs().mainDisplay.setCursor(5, 2);
+		hs().mainDisplay.setCursor(5, line);
 		hs().mainDisplay.print(deviceName);
-		hs().mainDisplay.setCursor(14, 2);
+		hs().mainDisplay.setCursor(14, line);
 		hs().mainDisplay.print(device.getAddress(), HEX);
 		hs().mainDisplay.print("    ");
 		hs().mainDisplay.sendToDisplay();
 		auto speedTest = I2C_SpeedTest{ device };
 		speedTest.fastest();
-		hs().mainDisplay.setCursor(17, 2);
+		hs().mainDisplay.setCursor(17, line);
 		if (speedTest.error() != _OK) {
 			hs().mainDisplay.print("Bad");
 			hs().mainDisplay.sendToDisplay();
@@ -68,20 +68,20 @@ namespace HardwareInterfaces {
 		hs().mainDisplay.print("Test ");
 		logger() << L_endl << L_time << F("TestDevices::speedTestDevices has been called\n");
 		logger() << F("\n\tTry Relay Port\n");
-		if (showSpeedTestFailed(_ini.relayPort(), "Relay")) {
+		if (showSpeedTestFailed(0,_ini.relayPort(), "Relay")) {
 			returnVal = ERR_PORTS_FAILED;
 		}
 
 		logger() << F("\tTry Remotes") << L_endl;
-		if (showSpeedTestFailed(hs().remDispl[D_Hall], "DS Rem")) {
+		if (showSpeedTestFailed(0,hs().remDispl[D_Hall], "DS Rem")) {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
-		if (showSpeedTestFailed(hs().remDispl[D_Bedroom], "US Rem")) {
+		if (showSpeedTestFailed(0,hs().remDispl[D_Bedroom], "US Rem")) {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
-		if (showSpeedTestFailed(hs().remDispl[D_Flat], "FL Rem")) {
+		if (showSpeedTestFailed(0,hs().remDispl[D_Flat], "FL Rem")) {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
@@ -91,12 +91,12 @@ namespace HardwareInterfaces {
 			//auto & ts = hs()._tempController.tempSensorArr[i];
 			//logger() << F("\tTry TS pos: ") << i << L_endl;
 			//logger() << F("\tTry TS 0x") << L_hex << ts.getAddress() << L_endl;
-			auto status = showSpeedTestFailed(ts, "TS");
+			auto status = showSpeedTestFailed(1,ts, "TS");
 			//logger() << L_time << "TS Error: " << status << L_endl;
 		}
 
 		logger() << F("\tTry Mix Valve") << L_endl;
-		if (showSpeedTestFailed(hs()._tempController.mixValveControllerArr[0], "Mix V")) {
+		if (showSpeedTestFailed(2,hs()._tempController.mixValveControllerArr[0], "Mix V")) {
 			returnVal = ERR_MIX_ARD_FAILED;
 		}
 

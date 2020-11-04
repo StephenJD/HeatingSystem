@@ -39,11 +39,11 @@ namespace HeatingSystemSupport {
 			logger() << F("Illegal RDB write address: ") << int(address) << L_endl;
 			return address;
 		}
-		//logger() << F("RDB write address: ") << int(address) << L_endl;
 		const unsigned char * byteData = static_cast<const unsigned char *>(data);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
 #if defined(__SAM3X8E__)			
 			virtualProm[address] = *byteData;
+			//logger() << F("RDB write address: ") << int(address) << " Data: " << (noOfBytes - address > 10 ? (char)*byteData : (int)virtualProm[address]) << L_endl;
 #endif
 			eeprom().update(address, *byteData);
 		}
@@ -58,6 +58,12 @@ namespace HeatingSystemSupport {
 		uint8_t * byteData = static_cast<uint8_t *>(result);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
 #if defined(__SAM3X8E__)
+			//auto eepData = eeprom().read(address);
+			//if (virtualProm[address] != eepData) {
+			//	logger() << "Corrupted Virtual Data at addr: " << address << L_endl;
+			//	*byteData = eepData;
+			//	return address;
+			//}
 			*byteData = virtualProm[address];
 #else
 			* byteData = eeprom().read(address);

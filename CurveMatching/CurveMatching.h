@@ -11,24 +11,27 @@ namespace GP_LIB {
 	/// </summary>
 	class GetExpCurveConsts {
 	public:
+		GetExpCurveConsts(int min_rise) : _min_rise(int16_t(min_rise)) {} //stop();
+		
 		// Nested Type
 		struct CurveConsts {
-			uint16_t limit;
-			uint16_t timeConst;
+			int16_t limit;
+			int16_t timeConst;
+			int16_t range;
+			int16_t period;
 			bool resultOK;
 		};
-		struct XY_Values; // only required public for testing purposes
 		
 		double uncompressTC(uint8_t compressed_tc) const {
 			return exp(compressed_tc / 50.) * 10;
 		}
 
 		uint8_t compressTC(double timeConst) const {
+			if (timeConst > 1640) timeConst = 1640;
+			if (timeConst < 10) timeConst = 10;
 			return static_cast<uint8_t>(log(timeConst/10) * 50. + 0.5);
 		}
 		
-		GetExpCurveConsts(int min_rise) : _min_rise(int16_t(min_rise)) {} //stop();
-
 		// ************** Queries **************
 		/// <summary>
 		/// Call to obtain curve constants.
@@ -37,8 +40,10 @@ namespace GP_LIB {
 		/// </summary>
 		/// <returns></returns>
 		CurveConsts matchCurve();
-		XY_Values & getXY() { return _xy; } // only required for testing purposes
 
+		struct XY_Values; // only required public for testing purposes
+		XY_Values & getXY() { return _xy; } // only required for testing purposes
+		
 		// ************** Modifiers **************
 		/// <summary>
 		/// Call to initiate a new curve match
@@ -55,11 +60,11 @@ namespace GP_LIB {
 		void nextValue(double currValue) { nextValue(static_cast<int>(currValue)); }
 
 		struct XY_Values { // only required public for testing purposes
-			int16_t firstRiseValue;
-			int16_t midRiseValue;
-			int16_t midRiseTime;
-			int16_t lastRiseValue;
-			int16_t lastRiseTime;
+			int16_t firstRiseValue = 0;
+			int16_t midRiseValue = 0;
+			int16_t midRiseTime = 0;
+			int16_t lastRiseValue = 0;
+			int16_t lastRiseTime = 0;
 		};
 	private:
 		friend class LimitTemp;

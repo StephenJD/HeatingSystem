@@ -36,6 +36,7 @@ SD.h/.cpp modified to provide sd_exists();
 		virtual bool isWorking() { return true; }
 		virtual void readAll() {}
 		virtual void flush() {}
+		virtual void close() {}
 		virtual void begin(uint32_t baudRate = 0) {}
 		Logger & operator <<(Flags);
 		
@@ -163,18 +164,18 @@ SD.h/.cpp modified to provide sd_exists();
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
 		File openSD();
-		void flush() override {
-			Serial_Logger::flush(); _dataFile.close(); _dataFile = File{}; }
+		void close() override { _dataFile.close(); _dataFile = File{}; }
+		void flush() override { Serial_Logger::flush(); close(); }
 	private:
 		Logger & logTime() override;
 		bool is_tabs() override { return _SD_mustTabTime ? (_SD_mustTabTime = false, true) : _flags & L_tabs; }
 		void setBaseTimeTab(bool timeTab) override { _mustTabTime = timeTab; }
 		Logger & prePrint() override {
-			_serial = *this;
-			return _serial;
+			_serial() = *this;
+			return _serial();
 		}
+		Serial_Logger & _serial();
 
-		static Serial_Logger _serial;
 		File _dataFile;
 		char _fileNameStem[5];
 		bool _SD_mustTabTime = false;

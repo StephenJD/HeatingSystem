@@ -52,7 +52,7 @@ namespace client_data_structures {
 			break; }
 		case e_id: { // edit parent spell.program
 			Answer_R<R_Spell> spell = query().iterationQ().incrementTableQ()[query().matchArg()];
-			spell.rec().programID = newVal->val;
+			spell.rec().programID = static_cast<uint8_t>(newVal->val);
 			spell.update();
 			}
 		}

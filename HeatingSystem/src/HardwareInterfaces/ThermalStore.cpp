@@ -195,7 +195,7 @@ namespace HardwareInterfaces {
 				<< F(" NextCallTemp: ") << nextRequest
 				<< F(" Calculated DHW: ") << _theoreticalDeliveryTemp
 				<< F(" DHW-flowTemp: ") << _tempSensorArr[_thermStoreData.DHWFlowTS].get_temp()
-				<< F(" DHW-preMixTemp: ") << L_fixed << _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() / 256 << L_endl;
+				<< F(" DHW-preMixTemp: ") << L_fixed << _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() << L_endl;
 			//setVal(Conductivity, uint8_t(getVal(Conductivity)) - 1);
 		}
 		if (dhwTempOK) hasRequestedCondReduction = false;
