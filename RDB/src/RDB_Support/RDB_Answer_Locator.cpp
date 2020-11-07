@@ -73,17 +73,12 @@ namespace RelationalDatabase {
 	}
 
 	void Answer_Locator::rec(void * rec) {
-		//logger() << "AL_Read Addr: " << _recordAddress << " lastRead: " << _lastRead << " TableMod: " << _tb->lastModifiedTime() <<  L_endl;
 		if (_tb && _tb->outOfDate(_lastRead)) {
 			statusOnly();
 			if (_status == TB_OK) {
 				_tb->db()._readByte(_recordAddress, rec, _tb->recordSize());
 				_lastRead = micros();
-		logger() << "AL_Refresh: " << long(this) << " RecAddr: " << _recordAddress << " at: " << _lastRead << " Table: " << _tb->lastModifiedTime() <<  L_endl;
-				//if (_tb->tableID() == 344) {
-				//	auto & zone = *static_cast<const client_data_structures::R_Zone*>(rec);
-				//	logger() << "\tRefresh" << zone << " ID: " << (_recordAddress -_tb->tableID() - 4) / _tb->recordSize() << " ReadTime: " << _lastRead << L_endl;
-				//}
+		//logger() << "AL_Refresh: " << long(this) << " RecAddr: " << _recordAddress << " at: " << _lastRead << " Table: " << _tb->lastModifiedTime() <<  L_endl;
 			}
 		}
 	}
@@ -122,11 +117,6 @@ namespace RelationalDatabase {
 
 	void Answer_Locator::update(const void * rec) {
 		if (statusOnly() == TB_OK) {
-			//logger() << "AL_Update Addr: " << _recordAddress << L_endl;
-			//if (_tb->tableID() == 344) {
-			//	auto & zone = *static_cast<const client_data_structures::R_Zone*>(rec);
-			//	logger() << "AL_Update: " << zone << " ID: " << (_recordAddress -_tb->tableID() - 4) / _tb->recordSize() << " RecSize: " << _tb->recordSize() << L_endl;
-			//}
 			_tb->db()._writeByte(_recordAddress, rec, _tb->recordSize());
 			_lastRead = micros();
 			_tb->tableIsChanged(false);

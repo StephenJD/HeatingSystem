@@ -32,7 +32,7 @@
 #include <iostream>
 #include <iomanip>
 
-//#define DATABASE
+#define DATABASE
 //#define UI_DB_DISPLAY_VIEW_ONE
 //#define UI_DB_DISPLAY_VIEW_ALL
 //#define UI_DB_SHORT_LISTS
@@ -44,14 +44,14 @@
 ////
 //#define EDIT_DATES
 //#define EDIT_CURRENT_DATETIME
-//#define ITERATION_VARIANTS
+#define ITERATION_VARIANTS
 //#define EDIT_RUN
 //
 //#define VIEW_ONE_NESTED_CALENDAR_PAGE
 //#define VIEW_ONE_NESTED_PROFILE_PAGE
 //#define CONTRAST
 //#define TIME_TEMP_EDIT
-#define MAIN_CONSOLE_PAGES
+//#define MAIN_CONSOLE_PAGES
 //#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
@@ -1911,6 +1911,73 @@ SCENARIO("Iterated SingleSel Variants UD_A", "[Chapter]") {
 	auto page1_c = makeCollection(_iterated_AllZones_c);
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
+	display1_h.rec_select();
+	GIVEN("Self-iterating UD_0 moves to next iteration on LR") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DH_W    DHW 0 060 012Flat   Flt 0 025 012");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+		THEN("LR Recycles focus") {
+			display1_h.rec_left_right(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			display1_h.rec_left_right(-1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+			AND_THEN("UD does nothing") {
+				display1_h.rec_up_down(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+			}
+		}
+	}
+}
+
+SCENARIO("Iterated UD_0 with Alternative UP Action", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated SingleSel Variants UD_A ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace HardwareInterfaces;
+
+	LCD_Display_Buffer<20,4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
+	HardwareInterfaces::UI_Bitwise_Relay relays[4];
+	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+
+	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
+	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
+
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_0 + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V + S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S}};
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S} };
+	
+	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
+
+	// UI Collections
+	auto page1_c = makeCollection(_iterated_AllZones_c);
+	auto display1_c = makeChapter(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
+	//_allZoneRatio_UI_c.getStreamingTool().onSelect().
 
 	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
 	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";

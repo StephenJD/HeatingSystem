@@ -72,6 +72,7 @@ namespace LCD_UI {
 		}
 		const Behaviour behaviour() const override;
 
+
 		// Polymorphic Modifiers
 		bool move_focus_by(int nth) override;
 		Collection_Hndl * on_back() override;
@@ -84,6 +85,7 @@ namespace LCD_UI {
 		const UI_FieldData * getData() const { return _parentColln; }
 		Behaviour activeEditBehaviour() const { return _activeEditBehaviour; }
 		const I_Streaming_Tool & f_interface() const { return static_cast<const I_Streaming_Tool&>(*get()); }
+
 		// New modifiers
 		UI_FieldData * getData() { return _parentColln; }
 		OnSelectFnctr & onSelect() { return _onSelect; }

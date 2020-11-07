@@ -105,8 +105,8 @@ namespace client_data_structures {
 		setMatchArgs();
 		switch (fieldID) {
 		case e_days:
-			logger() << "Curr Profile UpdateTime:" << record().lastReadTime() << " TableUpdate: " << record().table()->lastModifiedTime() << L_endl;
-			logger() << "Curr Profile: " << record().rec() << L_endl;
+			//logger() << "Curr Profile UpdateTime:" << record().lastReadTime() << " TableUpdate: " << record().table()->lastModifiedTime() << L_endl;
+			//logger() << "Curr Profile: " << record().rec() << L_endl;
 			_days = record().rec().days;
 			return &_days;
 		default: return 0;
@@ -151,7 +151,7 @@ namespace client_data_structures {
 			Answer_R<R_Profile> profile = *(++_recSel);
 			if (profile.status() == TB_OK) {
 				addDays(profile, daysToAdd );
-				logger() << "Next Profile UpdateTime:" << profile.lastReadTime() << " TableUpdate: " << profile.table()->lastModifiedTime() << L_endl;
+				//logger() << "Next Profile UpdateTime:" << profile.lastReadTime() << " TableUpdate: " << profile.table()->lastModifiedTime() << L_endl;
 			}
 			else {
 				createProfile(daysToAdd);
