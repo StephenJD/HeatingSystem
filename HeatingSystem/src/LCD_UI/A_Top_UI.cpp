@@ -185,7 +185,7 @@ namespace LCD_UI {
 #ifdef ZPSIM
 	logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 #endif
-				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_IterateOne()));
+				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne()));
 
 				hasMoved = _leftRightBackUI->move_focus_by(move);
 			} while (!hasMoved && _leftRightBackUI != this);
