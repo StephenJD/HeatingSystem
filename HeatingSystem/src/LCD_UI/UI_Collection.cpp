@@ -159,7 +159,7 @@ namespace LCD_UI {
 
 	void Custom_Select::set_UpDn_Target(Collection_Hndl * obj) {
 		_upDownTarget = obj;
-		behaviour().make_UD();
+		behaviour().make_UD_NextActive();
 	}
 
 	Collection_Hndl * Custom_Select::select(Collection_Hndl *) {

@@ -1662,8 +1662,8 @@ SCENARIO("Iterated View-all Variants UD_A", "[Chapter]") {
 	}
 }
 
-SCENARIO("Iterated View-all Variants UD_0", "[Chapter]") {
-	cout << "\n*********************************\n**** Iterated View-all Variants UD_0 ****\n********************************\n\n";
+SCENARIO("Iterated View-all Variants UD_C", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated View-all Variants UD_C ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
 	using namespace HardwareInterfaces;
@@ -1682,7 +1682,7 @@ SCENARIO("Iterated View-all Variants UD_0", "[Chapter]") {
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_0 +R0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_C +R0} };
 	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V+S} };
 	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
 	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S} };
@@ -1705,7 +1705,7 @@ SCENARIO("Iterated View-all Variants UD_0", "[Chapter]") {
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	display1_h.rec_select();
-	GIVEN("Self-iterating UD_0 moves to next iteration at end of collection on LR ") {
+	GIVEN("Self-iterating UD_C moves to next iteration at end of collection on LR ") {
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 		display1_h.rec_left_right(1); // moves focus
@@ -1899,7 +1899,7 @@ SCENARIO("Iterated SingleSel Variants UD_A", "[Chapter]") {
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_0 + R0 + ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_C + R0 + ER0} };
 	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V} };
 	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
 	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V} };
@@ -1922,7 +1922,7 @@ SCENARIO("Iterated SingleSel Variants UD_A", "[Chapter]") {
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	display1_h.rec_select();
-	GIVEN("Self-iterating UD_0 moves to next iteration on LR") {
+	GIVEN("Self-iterating UD_C moves to next iteration on LR") {
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 		display1_h.rec_left_right(1); // moves focus
@@ -1944,7 +1944,7 @@ SCENARIO("Iterated SingleSel Variants UD_A", "[Chapter]") {
 	}
 }
 
-SCENARIO("Iterated UD_0 with Alternative UP Action", "[Chapter]") {
+SCENARIO("Iterated UD_C with Alternative UP Action", "[Chapter]") {
 	cout << "\n*********************************\n**** Iterated SingleSel Variants UD_A ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -1964,7 +1964,7 @@ SCENARIO("Iterated UD_0 with Alternative UP Action", "[Chapter]") {
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_0 + R0 + ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_C + R0 + ER0} };
 	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V + S} };
 	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
 	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S}};
@@ -1989,7 +1989,7 @@ SCENARIO("Iterated UD_0 with Alternative UP Action", "[Chapter]") {
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	display1_h.rec_select();
-	GIVEN("Self-iterating UD_0 moves to next iteration at end of collection on LR ") {
+	GIVEN("Self-iterating UD_C moves to next iteration at end of collection on LR ") {
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 		display1_h.rec_left_right(1); // moves focus
@@ -2205,8 +2205,8 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto rec_spellProg = Dataset_Program(q_spellProg, noVolData, &rec_dwSpells);
 
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,{V+S+L+VnLR+UD_0+R0});
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V + S + L + VnLR + UD_0 + R0});
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,{V+S+L+VnLR+UD_C+R0});
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V + S + L + VnLR + UD_C + R0});
 	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, { V + S + V1 + UD_E });
 	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, { V + S +L+ V1+UD_A+ER+EA });
 

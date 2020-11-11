@@ -106,7 +106,8 @@ namespace LCD_UI {
 		_upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto tryUD = this_UI_h->activeUI();
-			auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble() || (tryUD->get()->isCollection() ? tryUD->get()->collection()->iterableObjectIndex() >= 0 : false);
+			auto tryIsUpDnAble = tryUD->behaviour().is_next_on_UpDn() || (tryUD->get()->isCollection() ? tryUD->get()->collection()->iterableObjectIndex() >= 0 : false);
+			//auto tryIsUpDnAble = tryUD->behaviour().is_UpDnAble() || (tryUD->get()->isCollection() ? tryUD->get()->collection()->iterableObjectIndex() >= 0 : false);
 #ifdef ZPSIM
 			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
 #endif

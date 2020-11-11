@@ -17,9 +17,9 @@ namespace Assembly {
 		, _dstUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_dst, {V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._rec_currTime, Dataset_WithoutQuery::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
-		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + VnLR + UD_0 + R0} }
+		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + VnLR + UD_C + R0} }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev}
-		, _allZoneReqTemp_UI_c{ &db._rec_zones, Dataset_Zone::e_reqTemp ,{V + S + VnLR + UD_0 + R0 + ER0} }
+		, _allZoneReqTemp_UI_c{ &db._rec_zones, Dataset_Zone::e_reqTemp ,{V + S + VnLR + UD_C + R0 + ER0} }
 		, _allZoneNames_UI_c{ &db._rec_zone_child, Dataset_Zone::e_name, {V + V1} }
 		,_allZoneIsTemp_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isTemp, {V + V1} }
 		,_allZoneIsHeating_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isHeating, {V + V1} }
