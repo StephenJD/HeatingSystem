@@ -82,8 +82,11 @@ int main(int argc, char* argv[])
 	if (!failed) {
 		SetConsolePos(consoleLeft,consoleTop,consoleWidth, consoleHeight);
 	}
-	   
-	int result = Catch::Session().run(argc, argv);
+	
+	char* myArgs[] = { "TestZProgrammer", "-a" }; // Stop after first failed test.
+	int numberFailed =  Catch::Session().run(2, myArgs);
+
+	//int result = Catch::Session().run(argc, argv);
 
 	// global clean-up...
  	GetConsolePos(&consoleLeft, &consoleTop, &consoleWidth, &consoleHeight);

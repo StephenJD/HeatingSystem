@@ -23,7 +23,7 @@ namespace client_data_structures {
 	public:
 		enum e_function {e_contrast, e_backlight };
 		Contrast_Brightness_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour);
-		bool move_focus_by(int moveBy) override;
+		bool move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;
 		LCD_UI::Collection_Hndl * function(e_function fn) { _function = fn; return _self; }
 
 		void setDisplay(HardwareInterfaces::LocalDisplay & lcd);
@@ -39,6 +39,7 @@ namespace client_data_structures {
 		enum TT_Cmds{ e_DelCmd, e_EditCmd, e_NewCmd, e_TTs , e_allCmds = 7, e_none};
 		InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour);
 		Collection_Hndl * enableCmds(int cmd_to_show);
+		bool move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;
 		bool focusHasChanged(bool hasFocus) override ;
 		Collection_Hndl * select(Collection_Hndl * from) override;
 		bool back() override;

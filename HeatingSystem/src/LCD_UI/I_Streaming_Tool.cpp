@@ -130,7 +130,7 @@ namespace LCD_UI {
 	}
 
 	bool Field_StreamingTool_h::move_focus_by(int nth) {
-		bool hasMoved = Collection_Hndl::move_focus_by(nth);
+		bool hasMoved = get()->move_focus_by(nth, this);
 		f_interface().haveMovedTo(focusIndex()); // required even if not moved for editInts
 		if (hasMoved) {
 			set_focus(f_interface().editItem().cursorFromFocus(focusIndex()));

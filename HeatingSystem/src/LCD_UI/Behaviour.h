@@ -11,6 +11,8 @@ namespace LCD_UI {
 	/// 228: view, sel, ViewOne, LR0  UD-NextActive, Recycle
 	/// 224: view, sel, ViewOne, LR0, No-UD, Recycle
 	/// 212: view, sel, ViewAll, LR,  UD-NextActive, IT-NoRecycle
+	/// 208: view, sel, ViewAll, LR,  No-UD, IT-NoRecycle
+	/// 204: view, sel, ViewAll, LR,  UD_Save, Recycle
 	/// 202: view, sel, ViewAll, LR,  UD_Edit, No-Recycle
 	/// 200: view, sel, ViewAll, LR,  UD_Edit, Recycle
 	/// 198: view, sel, ViewAll, LR,  UD-NextActive, No-Recycle
@@ -48,26 +50,26 @@ namespace LCD_UI {
 		bool is_CaptureLR() const{ return is_viewAll_LR(); }
 		bool is_EditNoRecycle() const{ return _behaviour & b_EditNoRecycle;	}
 		bool is_IterateOne() const{ return is_viewAll_LR() && is_next_on_UpDn();	}
-		bool is_IteratedNoRecycle() const{ return _behaviour & b_IteratedNoRecycle;	}
+		bool is_IteratedRecycle() const{ return !(_behaviour & b_IteratedNoRecycle);	}
 
 		// Modifiers
 		Behaviour & operator = (int b) { _behaviour = b; return *this; }
-		Behaviour make_visible() { _behaviour |= b_Visible; return *this; }
-		Behaviour make_hidden() { _behaviour &= ~b_Visible; return *this; }
-		Behaviour make_visible(bool show) {return show ? make_visible() : make_hidden(); }
-		Behaviour make_newLine() { _behaviour |= b_NewLine; return *this; }
-		Behaviour make_newLine(bool newLine) { return newLine ? make_newLine() : make_sameLine(); }
-		Behaviour make_viewOne() { _behaviour |= b_ViewOne; return *this; }
-		Behaviour make_viewAll() { _behaviour &= ~b_ViewOne; return *this; }
-		Behaviour make_UD() { _behaviour |= b_UD_NextActive; return *this; }
-		Behaviour make_EditUD() { _behaviour |= b_UD_Edit; return *this; }
-		Behaviour make_IterateOne() { (_behaviour |= b_UD_NextActive) &= ~b_UD_Edit; return *this; } // when there is only one Selectable member to be interated
-		Behaviour make_noUD() { _behaviour &= ~(b_UD_NextActive | b_UD_Edit); return *this; }
-		Behaviour make_noRecycle() { _behaviour |= b_NonRecycle; return *this; }
-		Behaviour copyUD(Behaviour ud) { make_noUD(); _behaviour |= (uint8_t(ud) | b_UD_NextActive); _behaviour |= (uint8_t(ud) & b_UD_Edit) ; return *this; }
+		Behaviour & make_visible() { _behaviour |= b_Visible; return *this; }
+		Behaviour & make_hidden() { _behaviour &= ~b_Visible; return *this; }
+		Behaviour & make_visible(bool show) {return show ? make_visible() : make_hidden(); }
+		Behaviour& make_newLine() { _behaviour |= b_NewLine; return *this; }
+		Behaviour& make_newLine(bool newLine) { return newLine ? make_newLine() : make_sameLine(); }
+		Behaviour& make_viewOne() { _behaviour |= b_ViewOne; return *this; }
+		Behaviour& make_viewAll() { _behaviour &= ~b_ViewOne; return *this; }
+		Behaviour& make_UD() { _behaviour |= b_UD_NextActive; return *this; }
+		Behaviour& make_EditUD() { _behaviour |= b_UD_Edit; return *this; }
+		Behaviour& make_IterateOne() { (_behaviour |= b_UD_NextActive) &= ~b_UD_Edit; return *this; } // when there is only one Selectable member to be interated
+		Behaviour& make_noUD() { _behaviour &= ~(b_UD_NextActive | b_UD_Edit); return *this; }
+		Behaviour& make_noRecycle() { _behaviour |= b_NonRecycle; return *this; }
+		Behaviour& copyUD(Behaviour ud) { make_noUD(); _behaviour |= (uint8_t(ud) | b_UD_NextActive); _behaviour |= (uint8_t(ud) & b_UD_Edit) ; return *this; }
 
 	private:
-		Behaviour make_sameLine() { _behaviour &= ~b_NewLine; return *this; }
+		Behaviour& make_sameLine() { _behaviour &= ~b_NewLine; return *this; }
 		uint8_t _behaviour = 0;
 	};
 

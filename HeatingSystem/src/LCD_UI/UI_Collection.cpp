@@ -63,7 +63,7 @@ namespace LCD_UI {
 			collection->filter(filter_selectable()); // collection() returns the _objectHndl, cast as a collection.
 			auto validFocus = collection->nextActionableIndex(default_focus);
 			set_focus(validFocus); // must call on mixed collection of Objects and collections
-			move_focus_by(0); // recycle if allowed. 
+			get()->move_focus_by(0, this); // recycle if allowed. 
 		}
 	}
 
@@ -120,91 +120,6 @@ namespace LCD_UI {
 		return newObject;
 	}
 
-	bool Collection_Hndl::move_focus_by(int nth) { // move to next nth selectable item
-		auto collection = get()->collection();
-	#ifdef ZPSIM
-		logger() << F("\tmove_focus_by on ") << ui_Objects()[(long)get()].c_str() << L_endl;
-	#endif
-		if (collection) {
-			move_focus_to(focusIndex());
-			const int startFocus = focusIndex(); // might be endIndex()
-			auto move_behaviour = behaviour();
-			////////////////////////////////////////////////////////////////////
-			//************* Lambdas evaluating algorithm *********************//
-			////////////////////////////////////////////////////////////////////
-			const bool wantToCheckCurrentPosIsOK = { nth == 0 };
-			auto wantToMoveForward = [](int nth) {return nth > 0; };
-			auto wantToMoveBackwards = [](int nth) {return nth < 0; };
-			auto firstValidIndexLookingForwards = [this](int index) {return get()->collection()->nextActionableIndex(index); };
-			auto firstValidIndexLookingBackwards = [this](int index) {return get()->collection()->prevActionableIndex(index); };
-			const auto weCouldNotMove = startFocus;
-			
-			auto isIteratedKeepFocus = [collection]() {
-				return collection->iterableObjectIndex() >= 0 && (*collection)[collection->iterableObjectIndex()]->behaviour().is_next_on_UpDn();
-			};
-
-			auto isInIteratedCollection = [this]() {
-				bool back_isIterated = false;
-				if (backUI() && backUI()->get()->isCollection()) {
-					back_isIterated = backUI()->get()->collection()->iterableObjectIndex() >= 0;
-				}
-				return back_isIterated;
-			};
-
-			auto iterationCanRecycle = [isInIteratedCollection, this]() {
-				return isInIteratedCollection() ? !backUI()->behaviour().is_IteratedNoRecycle() : false;
-			};
-			////////////////////////////////////////////////////////////////////
-			//************************  Algorithm ****************************//
-			////////////////////////////////////////////////////////////////////
-			bool canRecycle = iterationCanRecycle() || !isInIteratedCollection() && move_behaviour.is_recycle();
-			bool mustKeepFocus = isIteratedKeepFocus() || (move_behaviour.is_viewOne() && (backUI() ? !backUI()->behaviour().is_IterateOne() : true));
-
-			get()->collection()->filter(filter_selectable());
-			if (wantToCheckCurrentPosIsOK) {
-				setFocusIndex(firstValidIndexLookingForwards(startFocus));
-				if (atEnd(focusIndex()) && canRecycle) setFocusIndex(firstValidIndexLookingForwards(0));
-				else if (atEnd(focusIndex()))
-					Collection_Hndl::move_focus_by(-1);
-			}
-			else {
-				while (wantToMoveForward(nth)) {
-					auto newFocus = focusIndex() + 1;
-					newFocus = firstValidIndexLookingForwards(newFocus);
-					setFocusIndex(newFocus);
-					if (newFocus <= startFocus) break;
-					else if (!atEnd(newFocus)) --nth; // We have a valid element
-					else if (canRecycle) setFocusIndex(-1);
-					else { // at end, can't recycle
-						if (mustKeepFocus) setFocusIndex(weCouldNotMove);
-						break;
-					}
-				}
-				while (wantToMoveBackwards(nth)) {  // Assume move-back from a valid start-point or focusIndex() of -1 (no actionable elements)
-					auto newFocus = focusIndex() - 1;
-					newFocus = firstValidIndexLookingBackwards(newFocus);
-					setFocusIndex(newFocus); // if no prev, is now -1.
-					if (newFocus >= startFocus) break;
-					else if (newFocus >= 0) ++nth; // We found one!
-					else if (canRecycle) {
-						setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
-						move_focus_to(endIndex());
-						if (newFocus == 0) break;
-					}
-					else {
-						if (mustKeepFocus || cursorMode(this) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
-						break;
-					}
-				}
-			}
-			return isIteratedKeepFocus() || (startFocus != focusIndex() && !atEnd(focusIndex()) && focusIndex() > -1);
-		}
-		else {
-			if (nth) return get()->focusHasChanged(nth > 0);
-			else return false;
-		}
-	}
-
 	///////////////////////////////////////////
 	// ************   Coll_Iterator ***********
 	///////////////////////////////////////////
@@ -254,9 +169,9 @@ namespace LCD_UI {
 		return 0;
 	}
 
-	bool Custom_Select::move_focus_by(int moveBy) {
+	bool Custom_Select::move_focus_by(int moveBy, Collection_Hndl * colln_hndl) {
 		if (_upDownTarget) {
-			return _upDownTarget->move_focus_by(moveBy);
+			return _upDownTarget->get()->move_focus_by(moveBy, colln_hndl);
 		}
 		else return false;
 	}
@@ -268,6 +183,102 @@ namespace LCD_UI {
 
 	I_SafeCollection::I_SafeCollection(int count, Behaviour behaviour) :_count(count), _behaviour(behaviour) {}
 
+	bool I_SafeCollection::move_focus_by(int nth, Collection_Hndl* colln_hndl) {
+#ifdef ZPSIM
+		logger() << F("\tmove_focus_by on ") << ui_Objects()[(long)this].c_str() << L_endl;
+#endif
+		move_focus_to(focusIndex());
+		const int startFocus = focusIndex(); // might be endIndex()
+		auto move_behaviour = behaviour();
+		////////////////////////////////////////////////////////////////////
+		//************* Lambdas evaluating algorithm *********************//
+		////////////////////////////////////////////////////////////////////
+		const bool wantToCheckCurrentPosIsOK = { nth == 0 };
+		auto wantToMoveForward = [](int nth) {return nth > 0; };
+		auto wantToMoveBackwards = [](int nth) {return nth < 0; };
+		auto firstValidIndexLookingForwards = [this](int index) {return nextActionableIndex(index); };
+		auto firstValidIndexLookingBackwards = [this](int index) {return prevActionableIndex(index); };
+		const auto weCouldNotMove = startFocus;
+		bool isIterableCollection = iterableObjectIndex() != -1;
+
+		auto isInIteratedCollection = [colln_hndl]() {
+			bool back_isIterated = false;
+			if (colln_hndl->backUI() && colln_hndl->backUI()->get()->isCollection()) {
+				back_isIterated = colln_hndl->backUI()->get()->collection()->iterableObjectIndex() >= 0;
+			}
+			return back_isIterated;
+		};
+
+		bool isInIterableCollection = isInIteratedCollection();
+
+		auto isIteratedKeepFocus = [this, isIterableCollection]() {
+			return isIterableCollection && item(iterableObjectIndex())->get()->behaviour().is_next_on_UpDn();
+		};
+
+		auto iteratedCollnCanRecycle = [isInIterableCollection, colln_hndl]() {
+			return isInIterableCollection && colln_hndl->backUI()->behaviour().is_IteratedRecycle();
+		};
+
+		auto iterationCanRecycle = [this, isIterableCollection]() {
+			return isIterableCollection && behaviour().is_recycle();
+		};
+
+		auto non_iterationCanRecycle = [this, move_behaviour, isIterableCollection, isInIterableCollection]() {
+			return !isIterableCollection && !isInIterableCollection && move_behaviour.is_recycle();
+		};
+
+		auto non_iterationKeepFocus = [this, move_behaviour, isIterableCollection, isInIterableCollection]() {
+			return !isIterableCollection && !isInIterableCollection && move_behaviour.is_viewOne();
+		};
+
+		////////////////////////////////////////////////////////////////////
+		//************************  Algorithm ****************************//
+		////////////////////////////////////////////////////////////////////
+		bool canRecycle = iterationCanRecycle() || iteratedCollnCanRecycle() || non_iterationCanRecycle();
+		bool mustKeepFocus = isIteratedKeepFocus() || non_iterationKeepFocus();
+
+		if (isInIteratedCollection() && colln_hndl->backUI()->get()->collection()->iterableObjectIndex() != colln_hndl->backUI()->get()->collection()->objectIndex()) {
+			return static_cast<UI_IteratedCollection_Hoist&>(*colln_hndl).h_move_iteration_focus_by(nth, colln_hndl);
+		}
+
+		filter(filter_selectable());
+		if (wantToCheckCurrentPosIsOK) {
+			setFocusIndex(firstValidIndexLookingForwards(startFocus));
+			if (atEnd(focusIndex()) && canRecycle) setFocusIndex(firstValidIndexLookingForwards(0));
+			else if (atEnd(focusIndex()))
+				move_focus_by(-1,colln_hndl);
+		} else {
+			while (wantToMoveForward(nth)) {
+				auto newFocus = focusIndex() + 1;
+				newFocus = firstValidIndexLookingForwards(newFocus);
+				setFocusIndex(newFocus);
+				if (newFocus <= startFocus) break;
+				else if (!atEnd(newFocus)) --nth; // We have a valid element
+				else if (canRecycle) setFocusIndex(-1);
+				else { // at end, can't recycle
+					if (mustKeepFocus) setFocusIndex(weCouldNotMove);
+					break;
+				}
+			}
+			while (wantToMoveBackwards(nth)) {  // Assume move-back from a valid start-point or focusIndex() of -1 (no actionable elements)
+				auto newFocus = focusIndex() - 1;
+				newFocus = firstValidIndexLookingBackwards(newFocus);
+				setFocusIndex(newFocus); // if no prev, is now -1.
+				if (newFocus >= startFocus) break;
+				else if (newFocus >= 0) ++nth; // We found one!
+				else if (canRecycle) {
+					setFocusIndex(endIndex()); // No more previous valid elements, so look from the end.
+					move_focus_to(endIndex());
+					if (newFocus == 0) break;
+				} else {
+					if (mustKeepFocus || cursorMode(colln_hndl) == HI_BD::e_inEdit) setFocusIndex(weCouldNotMove); // if can't move out to left-right == view-one or in edit.
+					break;
+				}
+			}
+		}
+		return isIteratedKeepFocus() || (startFocus != focusIndex() && !atEnd(focusIndex()) && focusIndex() > -1);
+	}
+
 	bool I_SafeCollection::isActionableObjectAt(int index) const {
 		auto object = item(index);
 		if (object) return object->get()->behaviour().is(_filter);
@@ -276,6 +287,7 @@ namespace LCD_UI {
 
 	int I_SafeCollection::nextActionableIndex(int index) const { // index must be in valid range including endIndex()
 		// returns endIndex() if none found
+		if (index == -1) index = 0;
 		if (objectIndex() > index) {// Current position must be <= requested index to get correct answer
 			item(0);
 		}
@@ -376,12 +388,12 @@ namespace LCD_UI {
 		if (get()->isCollection()) {
 			if (direction < 0) {
 				set_focus(endIndex());
-				move_focus_by(-1);
+				get()->move_focus_by(-1, this);
 			} else if (direction > 0) {
 				auto focus = focusIndex();
 				if (atEnd(focus) || focus == -1) { // if we previously left from the right and have cycled round to re-enter from the left, start at 0.
 					set_focus(0);
-					move_focus_by(0);
+					get()->move_focus_by(0, this);
 				}
 			}
 		}
@@ -479,6 +491,24 @@ namespace LCD_UI {
 		//cout << " NewIndex : " << newIndex << " SubCollection obj: " << iterated_collection()->objectIndex() << " SubCollection Focus: " << iterated_collection()->focusIndex() << endl;
 #endif
 		return active;
+	}
+
+	bool UI_IteratedCollection_Hoist::h_move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl) {
+		bool haveMoved = false;
+		auto & upColln = *colln_hndl->backUI()->get()->collection();
+		auto iteratedIndex = upColln.iterableObjectIndex();
+		auto & iteratedActiveObject_h = *upColln.move_to_object(iteratedIndex);
+		auto itBehaviour = iteratedActiveObject_h.behaviour();
+		if (itBehaviour.is_next_on_UpDn()) {
+			haveMoved = iteratedActiveObject_h.get()->collection()->move_focus_by(moveBy,colln_hndl/*->backUI()*/);
+			auto nextIdx = iteratedActiveObject_h.focusIndex();
+			upColln.filter(filter_selectable());
+			for (auto& thisObj : upColln) {
+				if (&thisObj == iteratedActiveObject_h.get()) continue;
+				thisObj.setFocusIndex(nextIdx);
+			}
+		}
+		return haveMoved;
 	}
 
 	bool UI_IteratedCollection_Hoist::h_focusHasChanged() {

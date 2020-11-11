@@ -72,7 +72,7 @@ namespace client_data_structures {
 #endif
 	}
 
-	bool Contrast_Brightness_Cmd::move_focus_by(int moveBy) {
+	bool Contrast_Brightness_Cmd::move_focus_by(int moveBy, Collection_Hndl* colln_hndl) {
 		if (_function == e_backlight) _lcd->changeBacklight(moveBy);
 		else _lcd->changeContrast(moveBy);
 		return true;
@@ -92,6 +92,16 @@ namespace client_data_structures {
 #endif
 	}	
 	
+	bool InsertTimeTemp_Cmd::move_focus_by(int moveBy, Collection_Hndl* colln_hndl) {
+		if (moveBy > 0) {
+			enableCmds(e_NewCmd);
+		}
+		else {
+			enableCmds(e_DelCmd);
+		}
+		return true;
+	}
+
 	bool InsertTimeTemp_Cmd::focusHasChanged(bool moveRight) {
 		if (moveRight) {
 			enableCmds(e_NewCmd);

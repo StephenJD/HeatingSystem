@@ -53,7 +53,7 @@ namespace Assembly {
 		, _dwellingProgCmd{ "Programs",0 }
 		, _insert{ "Insert-Prog", {H + L0} }
 		, _profileDaysCmd{ "Ds:",0}
-		, _fromCmd{ "From", 0, {V+S+L+UD_A} }
+		, _fromCmd{ "From", 0, {V+S+L+V1+UD_A} }
 		, _deleteTTCmd{ "Delete", 0, {H+S+L+ VnLR} }
 		, _editTTCmd{ "Edit", 0, {H+S+ VnLR}}
 		, _newTTCmd{ "New", 0, {H + S } }

@@ -23,7 +23,7 @@ namespace LCD_UI {
 	class A_Top_UI : public Collection_Hndl {
 	public:
 		A_Top_UI(const I_SafeCollection & safeCollection, int default_active_index = 0);
-		void	rec_left_right(int move); // Moves focus to next selectable item in the receptive object, such as next field
+		bool	rec_left_right(int move); // Moves focus to next selectable item in the receptive object, such as next field
 		void	rec_up_down(int move);
 		void	rec_prevUI();
 		void	rec_select();

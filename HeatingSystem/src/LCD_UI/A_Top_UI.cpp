@@ -75,15 +75,17 @@ namespace LCD_UI {
 				<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
 				<< " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
-			if (try_behaviour.is_IterateOne()) {
-				tryLeftRight = tryActive_h;
-				gotLeftRight = tryLeftRight;
-			} else if (try_behaviour.is_viewAll_LR()) {
+				if (try_behaviour.is_viewAll_LR()) {
 				gotLeftRight = tryLeftRight;
 				if (_leftRightBackUI != gotLeftRight) {
 					auto & colln = *gotLeftRight->get()->collection();
 					if (!colln.indexIsInRange(colln.focusIndex())) {
 						gotLeftRight->enter_collection(direction);
+					}
+					if (colln.iterableObjectIndex() != -1) {
+						auto & itActiveColln_h = *colln.activeUI();
+						auto & itActiveColln = *itActiveColln_h.get()->collection();
+						itActiveColln_h.enter_collection(direction);
 					}
 				}
 			}
@@ -135,9 +137,9 @@ namespace LCD_UI {
 		_cursorUI->setCursorPos();
 	}
 
-	void A_Top_UI::rec_left_right(int move) { // left-right movement
+	bool A_Top_UI::rec_left_right(int move) { // left-right movement
 		using HI_BD = HardwareInterfaces::LCD_Display;
-		
+		// Lambda
 		auto isIteratedUD0 = [this]() -> bool {
 			if (_leftRightBackUI->get()->isCollection()) {
 				auto & itColl = *_leftRightBackUI->get()->collection();
@@ -145,10 +147,11 @@ namespace LCD_UI {
 			} else return false;
 		};
 
+		// Algorithm
 		if (selectedPage_h() == this) {
 			setBackUI(activeUI());
 			selectPage();
-			return;
+			return true;
 		}
 
 		auto hasMoved = _leftRightBackUI->move_focus_by(move);
@@ -159,29 +162,33 @@ namespace LCD_UI {
 			if (wasInEdit) {
 				if (_leftRightBackUI->backUI()->behaviour().is_edit_on_UD()) {
 					rec_edit();
-					hasMoved = _leftRightBackUI->move_focus_by(move);
+					hasMoved = rec_left_right(move);
 				}
 				else {
 					_leftRightBackUI->move_focus_by(0);
 					wasInEdit = false;
 					hasMoved = true;
 				}
+			} else if (isIteratedUD0()) { // No more elements in the collection, so move to next iteration and start again. 
+				auto& itColl = *_leftRightBackUI->get()->collection();
+				auto& iteratedObject = static_cast<Collection_Hndl&>(itColl[itColl.iterableObjectIndex()]);
+				hasMoved = iteratedObject.get()->move_focus_by(move, &iteratedObject);
+				if (hasMoved) {
+					if (move > 0) itColl.setFocusIndex(itColl.nextActionableIndex(0)); else itColl.setFocusIndex(itColl.prevActionableIndex(itColl.endIndex()));
+				}
 			}
 		}
 		if (!hasMoved) {
-			if (isIteratedUD0()) {
-				auto & itColl = *_leftRightBackUI->get()->collection();
-				hasMoved = static_cast<Collection_Hndl&>(itColl[itColl.iterableObjectIndex()]).move_focus_by(move);
-				if (move > 0) itColl.setFocusIndex(itColl.nextActionableIndex(0)); else itColl.setFocusIndex(itColl.prevActionableIndex(itColl.endIndex()));
-			} else {
+			do {
 				do {
-					do {
-						_leftRightBackUI = _leftRightBackUI->backUI();
-					} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_IterateOne()));
+					_leftRightBackUI = _leftRightBackUI->backUI();
+#ifdef ZPSIM
+	logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+#endif
+				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne() || _leftRightBackUI->behaviour().is_IterateOne()));
 
-					hasMoved = _leftRightBackUI->move_focus_by(move);
-				} while (!hasMoved && _leftRightBackUI != this);
-			}
+				hasMoved = _leftRightBackUI->move_focus_by(move);
+			} while (!hasMoved && _leftRightBackUI != this);
 		}
 
 		auto outerColl = _leftRightBackUI->backUI();
@@ -200,6 +207,7 @@ namespace LCD_UI {
 		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 		logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
 #endif
+		return hasMoved;
 	}
 
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
@@ -209,26 +217,12 @@ namespace LCD_UI {
 			if (_upDownUI->backUI()->cursorMode(_upDownUI->backUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 				move = -move; // reverse up/down when in edit.
 			}
-			haveMoved = _upDownUI->move_focus_by(move);
-		} else if (_upDownUI->get()->isCollection()) {
-			auto & upColln = *_upDownUI->get()->collection();
-			auto iteratedIndex = upColln.iterableObjectIndex();
-			if (iteratedIndex >= 0) {
-				auto & iteratedActiveObject_h = *upColln.move_to_object(iteratedIndex);
-				if (!iteratedActiveObject_h.behaviour().is_no_UpDn()) {
-					haveMoved = iteratedActiveObject_h.move_focus_by(move);
-					auto nextIdx = iteratedActiveObject_h.focusIndex();
-					upColln.filter(filter_selectable());
-					for (auto& thisObj : upColln) {
-						if (&thisObj == iteratedActiveObject_h.get()) continue;
-						thisObj.setFocusIndex(nextIdx);
-					}
-				}
-			}
 		}
+		if (_upDownUI->behaviour().is_next_on_UpDn()) haveMoved = _upDownUI->move_focus_by(move);
+
 		if (!haveMoved) {
 			if (_upDownUI->get()->upDn_IsSet()) {
-				haveMoved = static_cast<Custom_Select*>(_upDownUI->get())->move_focus_by(move);
+				haveMoved = static_cast<Custom_Select*>(_upDownUI->get())->move_focus_by(move,this);
 				set_UpDownUI_from(selectedPage_h());
 				set_CursorUI_from(selectedPage_h());
 			} else if (_upDownUI->behaviour().is_edit_on_UD()) {
@@ -238,7 +232,9 @@ namespace LCD_UI {
 				if (isSave) {
 					rec_select();
 				}
-			} 
+			} else {
+				_upDownUI->move_focus_by(0);
+			}
 		}
 		
 		if (haveMoved) {

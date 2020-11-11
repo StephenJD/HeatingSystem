@@ -33,26 +33,26 @@
 #include <iomanip>
 
 #define DATABASE
-//#define UI_DB_DISPLAY_VIEW_ONE
-//#define UI_DB_DISPLAY_VIEW_ALL
-//#define UI_DB_SHORT_LISTS
-//#define EDIT_NAMES_NUMS
-//#define BACK_TRACKING
-////////#define EDIT_INTS
-////
-////////#define EDIT_FORMATTED_INTS
-////
-//#define EDIT_DATES
-//#define EDIT_CURRENT_DATETIME
-#define ITERATION_VARIANTS
-//#define EDIT_RUN
+#define UI_DB_DISPLAY_VIEW_ONE
+#define UI_DB_DISPLAY_VIEW_ALL
+#define UI_DB_SHORT_LISTS
+#define EDIT_NAMES_NUMS
+#define BACK_TRACKING
+//////#define EDIT_INTS
 //
-//#define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define CONTRAST
-//#define TIME_TEMP_EDIT
-//#define MAIN_CONSOLE_PAGES
-//#define INFO_CONSOLE_PAGES
+//////#define EDIT_FORMATTED_INTS
+//
+#define EDIT_DATES
+#define EDIT_CURRENT_DATETIME
+#define ITERATION_VARIANTS
+#define EDIT_RUN
+
+#define VIEW_ONE_NESTED_CALENDAR_PAGE
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define CONTRAST
+#define TIME_TEMP_EDIT
+#define MAIN_CONSOLE_PAGES
+#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
 //////#define CMD_MENU
@@ -1510,10 +1510,10 @@ SCENARIO("Iterated View-all Variants UD_A", "[Chapter]") {
 	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
 
 	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_A} };
-	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V+S} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V+S+ UD_A} };
 	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
-	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S} };
-	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S+ER0} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S+ UD_A} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S+ UD_A+ER0} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
@@ -1797,7 +1797,7 @@ SCENARIO("Iterated View-all Variants UD_E", "[Chapter]") {
 			AND_THEN("UD starts edit") {
 				display1_h.rec_up_down(1);
 				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012#flat|| Flt 0 025 012");
-				AND_THEN("RIGHT moves edit to next field") {
+				AND_THEN("LEFT moves edit to next field") {
 					display1_h.rec_left_right(-1);
 					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 01#2flat   Flt 0 025 012");
 					display1_h.rec_select();
@@ -1989,23 +1989,25 @@ SCENARIO("Iterated UD_0 with Alternative UP Action", "[Chapter]") {
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
 	display1_h.rec_select();
-	GIVEN("Self-iterating UD_0 moves to next iteration on LR") {
+	GIVEN("Self-iterating UD_0 moves to next iteration at end of collection on LR ") {
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 		display1_h.rec_left_right(1); // moves focus
-		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs U_S  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 		display1_h.rec_left_right(1); // moves focus
-		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DH_W    DHW 0 060 012Flat   Flt 0 025 012");
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 02_5 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 		display1_h.rec_left_right(1); // moves focus
-		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
-		THEN("LR Recycles focus") {
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+		THEN("LR Moves to next iteration") {
 			display1_h.rec_left_right(1); // moves focus
-			CHECK(test_stream(display1_h.stream(tb)) == "UpStr_s US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 			display1_h.rec_left_right(-1); // moves focus
-			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
-			AND_THEN("UD does nothing") {
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
+			AND_THEN("UD Does Nothing") {
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 				display1_h.rec_up_down(-1);
-				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStrs DS  0 025 012DHW    DHW 0 060 012Fla_t   Flt 0 025 012");
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 			}
 		}
 	}
