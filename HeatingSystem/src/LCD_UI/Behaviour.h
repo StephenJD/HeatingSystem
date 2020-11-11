@@ -5,20 +5,21 @@ namespace LCD_UI {
 	extern const char NEW_LINE_CHR;
 
 	/// <summary>
-	/// 244: view, sel, ViewOne, LR0, UD-NextActive, Recycle, IR0
-	/// 234: view, sel, ViewOne, LR0, UD-Edit, No-Recycle
-	/// 232: view, sel, ViewOne, LR0, UD-Edit, Recycle
-	/// 228: view, sel, ViewOne, LR0  UD-NextActive, Recycle
-	/// 224: view, sel, ViewOne, LR0, No-UD, Recycle
-	/// 212: view, sel, ViewAll, LR,  UD-NextActive, IT-NoRecycle
-	/// 208: view, sel, ViewAll, LR,  No-UD, IT-NoRecycle
-	/// 204: view, sel, ViewAll, LR,  UD_Save, Recycle
-	/// 202: view, sel, ViewAll, LR,  UD_Edit, No-Recycle
-	/// 200: view, sel, ViewAll, LR,  UD_Edit, Recycle
-	/// 198: view, sel, ViewAll, LR,  UD-NextActive, No-Recycle
-	/// 196: view, sel, ViewAll, LR,  UD-NextActive, Recycle
-	/// 194: view, sel, ViewAll, LR,  No-UD, No-Recycle
-	/// 192: view, sel, ViewAll, LR,  No-UD, Recycle
+	/// 240: view, sel, ViewOneLR0, UD-NextActive, Recycle, IT-NoRecycle
+	/// 238: view, sel, ViewOneLR0, UD-Save, No-Recycle
+	/// 234: view, sel, ViewOneLR0, UD-Edit, No-Recycle
+	/// 232: view, sel, ViewOneLR0, UD-Edit, Recycle
+	/// 228: view, sel, ViewOneLR0, UD_Cmd, Recycle
+	/// 224: view, sel, ViewOneLR0, UD-NextActive, Recycle
+	/// 212: view, sel, ViewAll_LR, UD-NextActive, IT-NoRecycle
+	/// 208: view, sel, ViewAll_LR, UD_Cmd, IT-NoRecycle
+	/// 204: view, sel, ViewAll_LR, UD_Save, Recycle
+	/// 202: view, sel, ViewAll_LR, UD_Edit, No-Recycle
+	/// 200: view, sel, ViewAll_LR, UD_Edit, Recycle
+	/// 198: view, sel, ViewAll_LR, UD_Cmd, No-Recycle
+	/// 196: view, sel, ViewAll_LR, UD_Cmd, Recycle
+	/// 194: view, sel, ViewAll_LR, UD-NextActive, No-Recycle
+	/// 192: view, sel, ViewAll_LR, UD-NextActive, Recycle
 	/// </summary>
 	class Behaviour {
 	public:
