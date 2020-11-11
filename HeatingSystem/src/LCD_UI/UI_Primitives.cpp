@@ -185,7 +185,8 @@ namespace LCD_UI {
 
 	bool Edit_Char_h::move_focus_by(int move) { // Change character at the cursor. Modify the copy held by Edit_Char_h
 		if (move == 0) return false;
-		if (backUI()->behaviour().is_edit_on_UD()) {
+		//if (backUI()->behaviour().is_edit_on_UD()) {
+		if (backUI()->behaviour().is_next_on_UpDn()) {
 			char * editSr = _currValue.str();
 			char * streamStr = stream_edited_copy;
 			int cursorPos = focusIndex();
