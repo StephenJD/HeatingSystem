@@ -40,7 +40,7 @@ namespace LCD_UI {
 		bool is_selectable() const { return is(b_Selectable + b_Visible); } /*has cursor*/
 		bool is_viewOne() const { return is(b_Visible + b_ViewOne); }
 		bool is_viewAll_LR() const { return is_viewable() && !is_viewOne(); }
-		bool is_next_on_UpDn() const { return (_behaviour & b_UD_Active) && !(_behaviour & b_UD_Edit); }
+		bool is_next_on_UpDn() const { return (_behaviour & b_UD_Active)  || (_behaviour & b_UD_Edit); }
 		bool is_edit_on_UD() const { return _behaviour & b_UD_Edit; }
 		bool is_save_on_UD() const { return is(b_UD_Active + b_UD_Edit); }
 		bool is_viewOneUpDn_Next() const { return is_viewOne() && is_next_on_UpDn(); }

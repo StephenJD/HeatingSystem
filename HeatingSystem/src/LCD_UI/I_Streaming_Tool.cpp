@@ -120,6 +120,7 @@ namespace LCD_UI {
 	const Behaviour Field_StreamingTool_h::behaviour() const {
 		bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
 		auto non_UD_capturing_activeBehaviour = Behaviour(_activeEditBehaviour).make_UD_Cmd().make_viewOne();
+		//auto non_UD_capturing_activeBehaviour = Behaviour(_activeEditBehaviour).make_UD_NextActive().make_viewOne();
 		if (inEdit) {
 			return _activeEditBehaviour; // .is_next_on_UpDn() ? Behaviour(_activeEditBehaviour).make_UD_Cmd() : Behaviour(_activeEditBehaviour).make_UD_NextActive();
 		} else return non_UD_capturing_activeBehaviour;
