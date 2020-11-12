@@ -3,6 +3,12 @@
 
 namespace LCD_UI {
 
+	/// <summary>
+	/// Vn to capture LR.
+	/// UD_C to capture UD.
+	/// UD_A to not capture UD.
+	/// Default only captures select.
+	/// </summary>
 	class UI_Cmd : public Collection_Hndl, public Custom_Select
 	{
 	public:

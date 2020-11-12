@@ -2003,7 +2003,7 @@ SCENARIO("Iterated UD_C with Alternative UP Action", "[Chapter]") {
 			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 012DnStr_s DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 			display1_h.rec_left_right(-1); // moves focus
 			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
-			AND_THEN("UD Does Nothing") {
+			AND_THEN("UD Prints messages") {
 				display1_h.rec_up_down(1);
 				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs US  0 025 01_2DnStrs DS  0 025 012DHW    DHW 0 060 012Flat   Flt 0 025 012");
 				display1_h.rec_up_down(-1);
@@ -2763,8 +2763,8 @@ SCENARIO("TimeTemps", "[Display]") {
 	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, { V + L + S + VnLR + UD_E + R0 +ER0 }, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
 	auto _iterated_timeTempUI = UI_IteratedCollection<1>{ 80, _timeTempUI_c};
 
-	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, {H + L + S + VnLR} };
-	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, {H + S + VnLR} };
+	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, {H + L + S + VnLR+UD_A} };
+	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, {H + S + VnLR+UD_A} };
 	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, {H + S} };
 
 	// Pages & sub-pages - Collections of UI handles
