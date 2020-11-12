@@ -109,20 +109,19 @@ namespace LCD_UI {
 	/// <summary>
 	/// Points to the shared Streaming_Tool which performs streaming and editing.
 	/// Has edit-behaviour member to determin the Streaming_Tool behaviour when in edit:
-	/// activeEditBehaviour may be (default first) One(not in edit)/All(during edit), non-Recycle/Recycle, UD-Edit(edit member)/UD-Nothing(no edit)/UD-NextActive(change member).
+	/// activeEditBehaviour may be (default first) V1(not in edit)/Vn(during edit), non-Recycle/Recycle, UD-Edit(edit member)/UD-Cmd(no edit)/UD-Active(change member).
 	/// Can have an alternative Select function set.
 	/// It may have a parent field set, from which it obtains its object index.
 	/// </summary>
 	Field_StreamingTool_h::Field_StreamingTool_h(I_Streaming_Tool & streamingTool, uint16_t activeEditBehaviour, int fieldID, UI_FieldData * parent, OnSelectFnctr onSelect)
-		: Collection_Hndl(streamingTool), _activeEditBehaviour(V+S+V1+(activeEditBehaviour & EA ? UD_C : UD_E)+(activeEditBehaviour & ER0 ? R0 : R)), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
+		: Collection_Hndl(streamingTool), _activeEditBehaviour(V+S+V1+(activeEditBehaviour & EA ? UD_A : UD_E)+(activeEditBehaviour & ER0 ? R0 : R)), _fieldID(fieldID), _parentColln(parent), _onSelect(onSelect)
 	{}
 
 	const Behaviour Field_StreamingTool_h::behaviour() const {
 		bool inEdit = (_cursorMode == HardwareInterfaces::LCD_Display::e_inEdit);
 		auto non_UD_capturing_activeBehaviour = Behaviour(_activeEditBehaviour).make_UD_Cmd().make_viewOne();
-		//auto non_UD_capturing_activeBehaviour = Behaviour(_activeEditBehaviour).make_UD_NextActive().make_viewOne();
 		if (inEdit) {
-			return _activeEditBehaviour; // .is_next_on_UpDn() ? Behaviour(_activeEditBehaviour).make_UD_Cmd() : Behaviour(_activeEditBehaviour).make_UD_NextActive();
+			return _activeEditBehaviour;
 		} else return non_UD_capturing_activeBehaviour;
 	}
 
