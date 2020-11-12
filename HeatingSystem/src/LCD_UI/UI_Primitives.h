@@ -78,7 +78,7 @@ namespace LCD_UI {
 		Behaviour & behaviour() override { return _behaviour; }
 	private:
 		I_SafeCollection * _parent;
-		Behaviour _behaviour = {V+S+V1+R+UD_C};
+		Behaviour _behaviour = {V+V1+R+UD_C};
 	};
 
 	/// <summary>

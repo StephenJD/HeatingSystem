@@ -218,7 +218,8 @@ namespace LCD_UI {
 				move = -move; // reverse up/down when in edit.
 			}
 		}
-		if (_upDownUI->behaviour().is_next_on_UpDn()) haveMoved = _upDownUI->move_focus_by(move);
+		//if (_upDownUI->behaviour().is_next_on_UpDn()) haveMoved = _upDownUI->move_focus_by(move);
+		if (!_upDownUI->behaviour().is_edit_on_UD()) haveMoved = _upDownUI->move_focus_by(move);
 
 		if (!haveMoved) {
 			if (_upDownUI->get()->upDn_IsSet()) {

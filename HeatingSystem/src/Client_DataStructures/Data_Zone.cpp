@@ -134,6 +134,10 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_reqTemp: {
 			logger() << "Select Next Sequence Event " << record().rec().name << " ID: " << record().id() << L_endl;
+			return false;
+		}
+		case e_timeConst: {
+			logger() << "Select Next e_timeConst " << record().rec().name << " ID: " << record().id() << L_endl;
 			return true;
 		}
 		default: return false;
