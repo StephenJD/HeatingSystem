@@ -139,5 +139,4 @@ namespace LCD_UI {
 	void I_Record_Interface::setFieldValue(int fieldID, int value) {
 		getField(fieldID);
 	}
-
 }

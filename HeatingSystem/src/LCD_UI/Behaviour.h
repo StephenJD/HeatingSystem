@@ -40,7 +40,8 @@ namespace LCD_UI {
 		bool is_selectable() const		{ return is(b_Selectable + b_Visible); } /*has cursor*/
 		bool is_viewOne() const			{ return is(b_Visible + b_ViewOne); }
 		bool is_viewAll_LR() const		{ return is_viewable() && !is_viewOne(); }
-		bool is_UpDnAble() const		{ return (_behaviour & b_UD_Active) || (_behaviour & b_UD_Edit); }
+		//bool captureUD() const		{ return (_behaviour & b_UD_Active) || (_behaviour & b_UD_Edit); }
+		bool captureUD() const			{ return is_selectable() /*&& (is_viewOne() || (is_viewAll_LR() && is_edit_on_UD()))*/; }
 		bool is_next_on_UpDn() const	{ return (_behaviour & b_UD_Active) && !(_behaviour & b_UD_Edit); }
 		bool is_edit_on_UD() const		{ return _behaviour & b_UD_Edit; }
 		bool is_save_on_UD() const		{ return is(b_UD_Active + b_UD_Edit); }
@@ -56,6 +57,7 @@ namespace LCD_UI {
 		Behaviour& operator = (int b)	{ _behaviour = b; return *this; }
 		Behaviour& make_visible()		{ _behaviour |= b_Visible; return *this; }
 		Behaviour& make_hidden()		{ _behaviour &= ~b_Visible; return *this; }
+		Behaviour& make_unselectable()	{ _behaviour &= ~b_Selectable; return *this; }
 		Behaviour& make_visible(bool show) { return show ? make_visible() : make_hidden(); }
 		Behaviour& make_newLine()		{ _behaviour |= b_NewLine; return *this; }
 		Behaviour& make_newLine(bool newLine) { return newLine ? make_newLine() : make_sameLine(); }

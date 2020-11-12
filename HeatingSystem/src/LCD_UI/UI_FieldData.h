@@ -28,23 +28,25 @@ namespace LCD_UI {
 			, uint16_t collectionBehaviour = { V + S + V1 + R + UD_A + ER0}
 			, int selectFldID = 0, OnSelectFnctr onSelect = 0);
 
-		// Queries
+		// Polymorphic Queries
 		bool streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override;
 		HI_BD::CursorMode cursorMode(const Object_Hndl * activeElement) const override;
 		int cursorOffset(const char * data) const override;
-		I_Record_Interface * data() const { return _data; }
 		int nextIndex(int index) const override;
+		
+		I_Record_Interface * data() const { return _data; }
 		const Coll_Iterator end() const { return Coll_Iterator( this, endIndex() ); }
 
-		// Modifiers
+		// Polymorphic Modifiers
 		Collection_Hndl * item(int elementIndex) override;
 		bool focusHasChanged(bool hasFocus) override;
 		void setFocusIndex(int focus) override;
 		void setObjectIndex(int index) const override {;} // done by item()
+		bool move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;
+
 		void insertNewData();
 		void deleteData();
 		void set_OnSelFn_TargetUI(Collection_Hndl * obj);
-		 
 		Collection_Hndl * saveEdit(const I_Data_Formatter * data);
 		Field_StreamingTool_h & getStreamingTool() { return _field_StreamingTool_h; }
 	private:

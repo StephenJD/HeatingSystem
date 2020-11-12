@@ -45,6 +45,7 @@ namespace LCD_UI {
 		virtual I_Data_Formatter * getField(int fieldID) = 0;
 		virtual bool setNewValue(int fieldID, const I_Data_Formatter * val) = 0;
 		virtual void insertNewData() {};
+		virtual bool actionOn_UD(int _fieldID) { return false; }
 
 		TB_Status move_by(int move);
 		int move_to(int id);

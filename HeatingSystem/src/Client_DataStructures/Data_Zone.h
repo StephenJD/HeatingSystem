@@ -65,6 +65,8 @@ namespace client_data_structures {
 		Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
+		bool actionOn_UD(int _fieldID) override;
+
 		HardwareInterfaces::Zone& zone(int index);
 	private:
 		StrWrapper _name;

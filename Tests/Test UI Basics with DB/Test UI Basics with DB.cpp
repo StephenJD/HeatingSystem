@@ -33,26 +33,26 @@
 #include <iomanip>
 
 #define DATABASE
-#define UI_DB_DISPLAY_VIEW_ONE
-#define UI_DB_DISPLAY_VIEW_ALL
-#define UI_DB_SHORT_LISTS
-#define EDIT_NAMES_NUMS
-#define BACK_TRACKING
-//////#define EDIT_INTS
-//
-//////#define EDIT_FORMATTED_INTS
-//
-#define EDIT_DATES
-#define EDIT_CURRENT_DATETIME
+//#define UI_DB_DISPLAY_VIEW_ONE
+//#define UI_DB_DISPLAY_VIEW_ALL
+//#define UI_DB_SHORT_LISTS
+//#define EDIT_NAMES_NUMS
+//#define BACK_TRACKING
+////////#define EDIT_INTS
+////
+////////#define EDIT_FORMATTED_INTS
+////
+//#define EDIT_DATES
+//#define EDIT_CURRENT_DATETIME
 #define ITERATION_VARIANTS
-#define EDIT_RUN
-
-#define VIEW_ONE_NESTED_CALENDAR_PAGE
-#define VIEW_ONE_NESTED_PROFILE_PAGE
-#define CONTRAST
-#define TIME_TEMP_EDIT
-#define MAIN_CONSOLE_PAGES
-#define INFO_CONSOLE_PAGES
+//#define EDIT_RUN
+//
+//#define VIEW_ONE_NESTED_CALENDAR_PAGE
+//#define VIEW_ONE_NESTED_PROFILE_PAGE
+//#define CONTRAST
+//#define TIME_TEMP_EDIT
+//#define MAIN_CONSOLE_PAGES
+//#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
 //////#define CMD_MENU
@@ -1964,11 +1964,11 @@ SCENARIO("Iterated UD_C with Alternative UP Action", "[Chapter]") {
 	auto rec_zones = Dataset_Zone(q_zones, zoneArr, 0);
 	auto _rec_zone_child = Dataset_Zone(_q_zoneChild, zoneArr, &rec_zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + UD_C + R0 + ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &rec_zones, Dataset_Zone::e_name, {V + S + VnLR + R0 + ER0} };
 	auto _allZoneAbbrev_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_abbrev, {V + S} };
 	auto _allZoneOffset_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_offset, {V} };
 	auto _allZoneRatio_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_ratio, {V+S}};
-	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &_rec_zone_child, Dataset_Zone::e_timeConst, {V+S + UD_C} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
