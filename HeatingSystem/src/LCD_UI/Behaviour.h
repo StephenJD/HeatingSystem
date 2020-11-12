@@ -5,21 +5,21 @@ namespace LCD_UI {
 	extern const char NEW_LINE_CHR;
 
 	/// <summary>
-	/// 240: view, sel, ViewOneLR0, UD-NextActive, Recycle, IT-NoRecycle
-	/// 238: view, sel, ViewOneLR0, UD-Save, No-Recycle
-	/// 234: view, sel, ViewOneLR0, UD-Edit, No-Recycle
-	/// 232: view, sel, ViewOneLR0, UD-Edit, Recycle
-	/// 228: view, sel, ViewOneLR0, UD_Cmd, Recycle
-	/// 224: view, sel, ViewOneLR0, UD-NextActive, Recycle
-	/// 212: view, sel, ViewAll_LR, UD-NextActive, IT-NoRecycle
-	/// 208: view, sel, ViewAll_LR, UD_Cmd, IT-NoRecycle
-	/// 204: view, sel, ViewAll_LR, UD_Save, Recycle
-	/// 202: view, sel, ViewAll_LR, UD_Edit, No-Recycle
-	/// 200: view, sel, ViewAll_LR, UD_Edit, Recycle
-	/// 198: view, sel, ViewAll_LR, UD_Cmd, No-Recycle
-	/// 196: view, sel, ViewAll_LR, UD_Cmd, Recycle
-	/// 194: view, sel, ViewAll_LR, UD-NextActive, No-Recycle
-	/// 192: view, sel, ViewAll_LR, UD-NextActive, Recycle
+	/// 244: view, sel, ViewOneLR0, UD-Active, 	Recycle, 	IT-NoRecycle
+	/// 238: view, sel, ViewOneLR0, UD-Save, 	No-Recycle
+	/// 234: view, sel, ViewOneLR0, UD-Edit, 	No-Recycle
+	/// 232: view, sel, ViewOneLR0, UD-Edit, 	Recycle
+	/// 228: view, sel, ViewOneLR0, UD-Active, 	Recycle
+	/// 224: view, sel, ViewOneLR0, UD_Cmd, 	Recycle
+	/// 212: view, sel, ViewAll_LR, UD-Active, 	Recycle,	IT-NoRecycle
+	/// 208: view, sel, ViewAll_LR, UD_Cmd, 	Recycle,	IT-NoRecycle
+	/// 204: view, sel, ViewAll_LR, UD_Save, 	Recycle
+	/// 202: view, sel, ViewAll_LR, UD_Edit, 	No-Recycle
+	/// 200: view, sel, ViewAll_LR, UD_Edit, 	Recycle
+	/// 198: view, sel, ViewAll_LR, UD-Active, 	No-Recycle
+	/// 196: view, sel, ViewAll_LR, UD-Active, 	Recycle
+	/// 194: view, sel, ViewAll_LR, UD_Cmd, 	No-Recycle
+	/// 192: view, sel, ViewAll_LR, UD_Cmd, 	Recycle
 	/// </summary>
 	class Behaviour {
 	public:
@@ -33,41 +33,42 @@ namespace LCD_UI {
 		// Queries
 		explicit operator uint16_t() const { return _behaviour; }
 		explicit operator uint8_t() const { return _behaviour; }
-		bool is(uint16_t b) const { return (_behaviour & b) == b; }
-		bool is(Behaviour b) const { return (_behaviour & uint8_t(b)) == uint8_t(b); }
+		bool is(uint16_t b) const		{ return (_behaviour & b) == b; }
+		bool is(Behaviour b) const		{ return (_behaviour & uint8_t(b)) == uint8_t(b); }
 
-		bool is_viewable() const { return _behaviour & b_Visible; }
-		bool is_selectable() const { return is(b_Selectable + b_Visible); } /*has cursor*/
-		bool is_viewOne() const { return is(b_Visible + b_ViewOne); }
-		bool is_viewAll_LR() const { return is_viewable() && !is_viewOne(); }
-		bool is_next_on_UpDn() const { return (_behaviour & b_UD_Active)  || (_behaviour & b_UD_Edit); }
-		bool is_edit_on_UD() const { return _behaviour & b_UD_Edit; }
-		bool is_save_on_UD() const { return is(b_UD_Active + b_UD_Edit); }
+		bool is_viewable() const		{ return _behaviour & b_Visible; }
+		bool is_selectable() const		{ return is(b_Selectable + b_Visible); } /*has cursor*/
+		bool is_viewOne() const			{ return is(b_Visible + b_ViewOne); }
+		bool is_viewAll_LR() const		{ return is_viewable() && !is_viewOne(); }
+		bool is_UpDnAble() const		{ return (_behaviour & b_UD_Active) || (_behaviour & b_UD_Edit); }
+		bool is_next_on_UpDn() const	{ return (_behaviour & b_UD_Active) && !(_behaviour & b_UD_Edit); }
+		bool is_edit_on_UD() const		{ return _behaviour & b_UD_Edit; }
+		bool is_save_on_UD() const		{ return is(b_UD_Active + b_UD_Edit); }
 		bool is_viewOneUpDn_Next() const { return is_viewOne() && is_next_on_UpDn(); }
-		bool is_recycle() const { return !(_behaviour & b_NonRecycle); }
-		bool is_OnNewLine() const { return _behaviour & b_NewLine; }
-		bool is_CaptureLR() const { return is_viewAll_LR(); }
-		bool is_EditNoRecycle() const { return _behaviour & b_EditNoRecycle; }
-		bool is_IterateOne() const { return is_viewAll_LR() && is_next_on_UpDn(); }
-		bool is_IteratedRecycle() const { return !(_behaviour & b_IteratedNoRecycle); }
+		bool is_recycle() const			{ return !(_behaviour & b_NonRecycle); }
+		bool is_OnNewLine() const		{ return _behaviour & b_NewLine; }
+		bool is_CaptureLR() const		{ return is_viewAll_LR(); }
+		bool is_EditNoRecycle() const	{ return _behaviour & b_EditNoRecycle; }
+		bool is_IterateOne() const		{ return is_viewAll_LR() && is_next_on_UpDn(); }
+		bool is_IteratedRecycle() const	{ return !(_behaviour & b_IteratedNoRecycle); }
 
 		// Modifiers
-		Behaviour& operator = (int b) { _behaviour = b; return *this; }
-		Behaviour& make_visible() { _behaviour |= b_Visible; return *this; }
-		Behaviour& make_hidden() { _behaviour &= ~b_Visible; return *this; }
+		Behaviour& operator = (int b)	{ _behaviour = b; return *this; }
+		Behaviour& make_visible()		{ _behaviour |= b_Visible; return *this; }
+		Behaviour& make_hidden()		{ _behaviour &= ~b_Visible; return *this; }
 		Behaviour& make_visible(bool show) { return show ? make_visible() : make_hidden(); }
-		Behaviour& make_newLine() { _behaviour |= b_NewLine; return *this; }
+		Behaviour& make_newLine()		{ _behaviour |= b_NewLine; return *this; }
 		Behaviour& make_newLine(bool newLine) { return newLine ? make_newLine() : make_sameLine(); }
-		Behaviour& make_viewOne() { _behaviour |= b_ViewOne; return *this; }
-		Behaviour& make_viewAll() { _behaviour &= ~b_ViewOne; return *this; }
-		Behaviour& make_UD_NextActive() { _behaviour |= b_UD_Active; _behaviour &= ~(b_UD_Edit); return *this; }
-		Behaviour& make_EditUD() { _behaviour |= b_UD_Edit; return *this; }
-		Behaviour& make_UD_Cmd() { _behaviour &= ~(b_UD_Active | b_UD_Edit); return *this; }
-		Behaviour& make_noRecycle() { _behaviour |= b_NonRecycle; return *this; }
-		Behaviour& copyUD(Behaviour ud) { make_UD_Cmd(); _behaviour |= (uint8_t(ud) & (b_UD_Active| b_UD_Edit)); return *this; }
+		Behaviour& make_viewOne()		{ _behaviour |= b_ViewOne; return *this; }
+		Behaviour& make_viewAll()		{ _behaviour &= ~b_ViewOne; return *this; }
+		Behaviour& make_UD_NextActive()	{ _behaviour |= b_UD_Active; _behaviour &= ~(b_UD_Edit); return *this; }
+		Behaviour& make_EditUD()		{ _behaviour |= b_UD_Edit; return *this; }
+		Behaviour& make_UD_Cmd()		{ _behaviour &= ~(b_UD_Active | b_UD_Edit); return *this; }
+		Behaviour& make_noRecycle()		{ _behaviour |= b_NonRecycle; return *this; }
+		Behaviour& copyUD(Behaviour ud)	{ make_UD_Cmd(); _behaviour |= (uint8_t(ud) & (b_UD_Active | b_UD_Edit)); return *this; }
 
 	private:
-		Behaviour& make_sameLine() { _behaviour &= ~b_NewLine; return *this; }
+		Behaviour& make_sameLine()		{ _behaviour &= ~b_NewLine; return *this; }
 		uint8_t _behaviour = 0;
 	};
 
