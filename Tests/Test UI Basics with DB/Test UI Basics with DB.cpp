@@ -1459,9 +1459,9 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 
 	clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
 	GIVEN("Custom UI_Wrapper with Edit-on-up-down") {
-		display1_h.rec_select();
+		display1_h.rec_select();clock_().setSeconds(0);
 		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00a_m          Mon 31/Jul/2017     DST Hours: 1");
-		display1_h.rec_left_right(1); clock_().setSeconds(0); // moves focus
+		display1_h.rec_left_right(1);  // moves focus
 		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Mon 31/Jul/201_7     DST Hours: 1");
 		THEN("On up-down we start edit") {
 			clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
@@ -2221,7 +2221,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto iteratedZoneName = UI_IteratedCollection{ 60,makeCollection(zoneNameUI_c) };
 	auto iteratedProgName = UI_IteratedCollection{ 60,makeCollection(progNameUI_c) };
 	UI_Cmd _dwellingZoneCmd = { "Zones",0 }, _dwellingCalendarCmd = { "Calendar",0 }, _dwellingProgCmd = { "Programs",0 };
-	InsertSpell_Cmd _fromCmd = { "From", 0, Behaviour{V + S + L+ V1} };
+	InsertSpell_Cmd _fromCmd = { "From", 0, Behaviour{V + S + L+ V1 + UD_C} };
 	UI_Label _insert = { "Insert-Prog", Behaviour{H+L0} };
 
 	ui_Objects()[(long)&iteratedZoneName] = "iteratedZoneName";

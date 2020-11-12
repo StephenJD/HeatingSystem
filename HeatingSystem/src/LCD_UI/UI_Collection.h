@@ -25,26 +25,24 @@ namespace LCD_UI {
 	class UI_Object {
 	public:
 		UI_Object() = default;
-		//using ObjectFnPtr = bool(UI_Object::*)(int);
-		virtual bool isCollection() const { return false; }
+		virtual bool				isCollection() const { return false; }
 		virtual const I_SafeCollection* collection() const { return 0; }
 		// Queries supporting streaming
 		using HI_BD = HardwareInterfaces::LCD_Display;
 		virtual bool				streamElement(UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const { return false; }
 		virtual HI_BD::CursorMode	cursorMode(const Object_Hndl* activeElement) const;
 		virtual int					cursorOffset(const char* data) const;
-		//virtual ObjectFnPtr			upDn_Fn() { return 0; }
 		virtual bool				upDn_IsSet() const { return false; }
 		virtual bool				hasFocus() const { return false; }
 		bool						streamToBuffer(const char* data, UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
 		const Behaviour				behaviour() const { return const_cast<UI_Object*>(this)->behaviour(); }
 		// Modifiers
-		virtual I_SafeCollection* collection() { return 0; }
+		virtual I_SafeCollection*	collection() { return 0; }
 		virtual bool				move_focus_by(int moveBy, Collection_Hndl* colln_hndl) { return false; }
-		virtual Collection_Hndl* select(Collection_Hndl* from);
-		virtual Collection_Hndl* edit(Collection_Hndl* from) { return select(from); }
+		virtual Collection_Hndl*	select(Collection_Hndl* from);
+		virtual Collection_Hndl*	edit(Collection_Hndl* from) { return select(from); }
 		virtual bool				back() { return true; }
-		virtual Behaviour& behaviour() = 0;
+		virtual Behaviour&			behaviour() = 0;
 		virtual bool				focusHasChanged(bool hasFocus) { return false; }
 
 		virtual ~UI_Object() = default;

@@ -106,15 +106,32 @@ namespace LCD_UI {
 		_upDownUI = this_UI_h;
 		while (this_UI_h && this_UI_h->get()->isCollection()) {
 			auto tryUD = this_UI_h->activeUI();
-			auto tryIsUpDnAble = tryUD->behaviour().captureUD() || (tryUD->get()->isCollection() ? tryUD->get()->collection()->iterableObjectIndex() >= 0 : false);
+			auto isUpDnAble = false;
+			if (tryUD->get()->isCollection()) {
+				if (tryUD->behaviour().is_viewOne() || tryUD->get()->collection()->iterableObjectIndex() >= 0) {
+					isUpDnAble = true;
+				}
+			}
+			else if (tryUD->behaviour().is_cmd_on_UD()) isUpDnAble = true;
 #ifdef ZPSIM
-			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
+			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (isUpDnAble ? " HasUD" : " NoUD") << L_endl;
 #endif
-			if (tryIsUpDnAble) {
+			if (isUpDnAble) {
 				_upDownUI = tryUD;
 			}
 			this_UI_h = tryUD;
 		}
+//		while (this_UI_h && this_UI_h->get()->isCollection()) {
+//			auto tryUD = this_UI_h->activeUI();
+//			auto tryIsUpDnAble = tryUD->behaviour().captureUD() || (tryUD->get()->isCollection() ? tryUD->get()->collection()->iterableObjectIndex() >= 0 : false);
+//#ifdef ZPSIM
+//			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
+//#endif
+//			if (tryIsUpDnAble) {
+//				_upDownUI = tryUD;
+//			}
+//			this_UI_h = tryUD;
+//		}
 #ifdef ZPSIM
 		logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 #endif

@@ -45,6 +45,7 @@ namespace LCD_UI {
 		bool is_next_on_UpDn() const	{ return (_behaviour & b_UD_Active) && !(_behaviour & b_UD_Edit); }
 		bool is_edit_on_UD() const		{ return _behaviour & b_UD_Edit; }
 		bool is_save_on_UD() const		{ return is(b_UD_Active + b_UD_Edit); }
+		bool is_cmd_on_UD() const		{ return !(_behaviour & (b_UD_Active | b_UD_Edit)); }
 		//bool is_viewOneUpDn_Next() const { return is_viewOne() && is_next_on_UpDn(); }
 		bool is_viewOneUpDn_Next() const { return is_viewOne() && !is_edit_on_UD(); }
 		bool is_recycle() const			{ return !(_behaviour & b_NonRecycle); }
