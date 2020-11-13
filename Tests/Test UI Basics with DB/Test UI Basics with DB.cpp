@@ -45,14 +45,15 @@
 #define EDIT_DATES
 #define EDIT_CURRENT_DATETIME
 #define ITERATION_VARIANTS
-#define EDIT_RUN
+#define ITERATED_ZONE_TEMPS
 
+#define CONTRAST
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
 #define VIEW_ONE_NESTED_PROFILE_PAGE
-#define CONTRAST
+#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
 #define TIME_TEMP_EDIT
-#define MAIN_CONSOLE_PAGES
-#define INFO_CONSOLE_PAGES
+//#define MAIN_CONSOLE_PAGES
+//#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
 //////#define CMD_MENU
@@ -2014,8 +2015,8 @@ SCENARIO("Iterated UD_C with Alternative UP Action", "[Chapter]") {
 }
 #endif
 
-#ifdef EDIT_RUN
-SCENARIO("Iterated Request Temps", "[Chapter]") {
+#ifdef ITERATED_ZONE_TEMPS
+SCENARIO("Iterated Request Temps - Change Temp", "[Chapter]") {
 	cout << "\n*********************************\n**** Iterated Request Temps ****\n********************************\n\n";
 	using namespace client_data_structures;
 	using namespace Assembly;
@@ -2671,6 +2672,83 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       Awa_y                Zone: US  MT--FSS");
 				display1_h.rec_up_down(1);
 				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Hom_e             Zone: US  MT--F--");
+			}
+		}
+	}
+}
+#endif
+
+#ifdef VIEW_ONE_AND_ALL_PROGRAM_PAGE
+SCENARIO("View-one Program and Iterated Programs", "[Display]") {
+	cout << "\n*********************************\n**** View-one Program and Iterated Programs ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace LCD_UI;
+
+	LCD_Display_Buffer<20, 4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	cout << "\tand some Queries are created" << endl;
+	auto q_dwellings = db.tableQuery(TB_Dwelling);
+	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+
+	cout << " **** Next create DB Record Interface ****\n";
+	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
+	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &rec_dwelling);
+
+	cout << "\n **** Next create DB UI LazyCollections ****\n";
+	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A+R});
+
+	// UI Element Arays / Collections
+	cout << "\nprofile_page Elements Collection\n";
+	auto iteratedProgName = UI_IteratedCollection<1>{ 80, progNameUI_c, {V+S+VnLR+UD_C+R0+IR0}};
+
+	auto prog_page_c = makeCollection(dwellNameUI_c, progNameUI_c, iteratedProgName);
+
+	cout << "\nDisplay     Collection\n";
+	auto display1_c = makeChapter(prog_page_c);
+	auto display1_h = A_Top_UI(display1_c);
+	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[(long)&iteratedProgName] = "iteratedProgName";
+	ui_Objects()[(long)&prog_page_c] = "prog_page_c";
+
+	cout << "\n **** All Constructed ****\n\n";
+	display1_h.stream(tb);
+	cout << test_stream(display1_h.stream(tb)) << endl;
+	CHECK(test_stream(display1_h.stream(tb)) == "House   At Home     At Home At Work     Away   ");
+	//											 0123456789012345678901234567890123456789
+	GIVEN("we can scroll into Program") {
+		display1_h.rec_left_right(1);
+		display1_h.rec_left_right(1);
+		CHECK(test_stream(display1_h.stream(tb)) ==     "House   At Hom_e     At Home At Work     Away   ");
+		THEN("we can cycle down the programs") {
+			display1_h.rec_up_down(1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   At Wor_k     At Home At Work     Away   ");
+			display1_h.rec_up_down(1);
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Awa_y        At Home At Work     Away   ");
+			AND_THEN("we can recycle down") {
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "House   At Hom_e     At Home At Work     Away   ");
+				AND_THEN("we can cycle across the iteration") {
+					display1_h.rec_left_right(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   At Home     At Hom_e At Work     Away   ");
+					display1_h.rec_left_right(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   At Work     At Home At Wor_k     Away   ");
+					display1_h.rec_left_right(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Away        At Home At Work     Awa_y   ");
+					AND_THEN("UP does nothing") {
+						display1_h.rec_up_down(1);
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Away        At Home At Work     Awa_y   ");
+						AND_THEN("we can move R out of the iteration") {
+							display1_h.rec_left_right(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Away        At Home At Work     Away   ");
+						}
+					}
+				}
 			}
 		}
 	}

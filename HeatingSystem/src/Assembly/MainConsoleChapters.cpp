@@ -65,7 +65,7 @@ namespace Assembly {
 		, _iterated_zoneReqTemp_c{ 80, makeCollection(_allZoneNames_UI_c,_reqestTemp,_allZoneReqTemp_UI_c,_is,_allZoneIsTemp_UI_c,_allZoneIsHeating_UI_c)}
 
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) ,{ V + S + VnLR + R0 } }
-		, _iterated_prog_name_c{80, _progNameUI_c}
+		, _iterated_prog_name_c{ 80, _progNameUI_c, {V + S + VnLR + UD_C + IR0} }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c),{ V + S + VnLR + R0 } }
 
 		, _iterated_zone_name_c{ 80, _zoneNameUI_c}

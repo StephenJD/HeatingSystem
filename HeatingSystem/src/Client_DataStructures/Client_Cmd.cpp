@@ -121,8 +121,6 @@ namespace client_data_structures {
 		if (cmd_to_show == e_DelCmd) {
 			newFocus = e_DelCmd;
 			_hasInsertedNew = true;
-			//ttListHndl->behaviour().removeBehaviour(Behaviour::b_Selectable);
-			//ttDeleteHndl->behaviour().make_viewAll();
 		} else if (cmd_to_show != e_none) _hasInsertedNew = false;
 		behaviour().make_visible(cmd_to_show & e_EditCmd);
 		behaviour().make_newLine(cmd_to_show == e_EditCmd);
