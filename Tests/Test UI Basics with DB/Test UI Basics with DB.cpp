@@ -50,10 +50,10 @@
 #define CONTRAST
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
 #define VIEW_ONE_NESTED_PROFILE_PAGE
-#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
 #define TIME_TEMP_EDIT
-//#define MAIN_CONSOLE_PAGES
-//#define INFO_CONSOLE_PAGES
+#define MAIN_CONSOLE_PAGES
+#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
 //////#define CMD_MENU
@@ -2704,7 +2704,7 @@ SCENARIO("View-one Program and Iterated Programs", "[Display]") {
 
 	// UI Element Arays / Collections
 	cout << "\nprofile_page Elements Collection\n";
-	auto iteratedProgName = UI_IteratedCollection<1>{ 80, progNameUI_c, {V+S+VnLR+UD_C+R0+IR0}};
+	auto iteratedProgName = UI_IteratedCollection<1>{ 80, progNameUI_c};
 
 	auto prog_page_c = makeCollection(dwellNameUI_c, progNameUI_c, iteratedProgName);
 
