@@ -213,7 +213,8 @@ namespace LCD_UI {
 		bool isInIterableCollection = isInIteratedCollection();
 
 		auto isIteratedKeepFocus = [this, isIterableCollection]() {
-			return isIterableCollection && item(iterableObjectIndex())->get()->behaviour().is_next_on_UpDn();
+			//return isIterableCollection && item(iterableObjectIndex())->get()->behaviour().is_next_on_UpDn();
+			return isIterableCollection && behaviour().is_next_on_UpDn();
 		};
 
 		auto iteratedCollnCanRecycle = [isInIterableCollection, colln_hndl]() {

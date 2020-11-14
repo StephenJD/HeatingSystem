@@ -86,6 +86,7 @@ namespace LCD_UI {
 						auto & itActiveColln_h = *colln.activeUI();
 						auto & itActiveColln = *itActiveColln_h.get()->collection();
 						itActiveColln_h.enter_collection(direction);
+						gotLeftRight = &itActiveColln_h;
 					}
 				}
 			}
@@ -121,17 +122,6 @@ namespace LCD_UI {
 			}
 			this_UI_h = tryUD;
 		}
-//		while (this_UI_h && this_UI_h->get()->isCollection()) {
-//			auto tryUD = this_UI_h->activeUI();
-//			auto tryIsUpDnAble = tryUD->behaviour().captureUD() || (tryUD->get()->isCollection() ? tryUD->get()->collection()->iterableObjectIndex() >= 0 : false);
-//#ifdef ZPSIM
-//			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (tryIsUpDnAble ? " HasUD" : " NoUD") << L_endl;
-//#endif
-//			if (tryIsUpDnAble) {
-//				_upDownUI = tryUD;
-//			}
-//			this_UI_h = tryUD;
-//		}
 #ifdef ZPSIM
 		logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 #endif
@@ -160,7 +150,8 @@ namespace LCD_UI {
 		auto isIteratedUD0 = [this]() -> bool {
 			if (_leftRightBackUI->get()->isCollection()) {
 				auto & itColl = *_leftRightBackUI->get()->collection();
-				return itColl.iterableObjectIndex() >= 0 && !itColl[itColl.iterableObjectIndex()]->behaviour().is_next_on_UpDn();
+				//return itColl.iterableObjectIndex() >= 0 && !itColl[itColl.iterableObjectIndex()]->behaviour().is_next_on_UpDn();
+				return itColl.iterableObjectIndex() >= 0 && !behaviour().is_next_on_UpDn();
 			} else return false;
 		};
 
@@ -235,7 +226,6 @@ namespace LCD_UI {
 				move = -move; // reverse up/down when in edit.
 			}
 		}
-		//if (_upDownUI->behaviour().is_next_on_UpDn()) haveMoved = _upDownUI->move_focus_by(move);
 		if (!_upDownUI->behaviour().is_edit_on_UD()) haveMoved = _upDownUI->move_focus_by(move);
 
 		if (!haveMoved) {
