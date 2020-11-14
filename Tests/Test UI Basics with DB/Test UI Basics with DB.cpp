@@ -814,6 +814,8 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 							CHECK(test_stream(display1_h.stream(tb)) == "L1 House   <DH_W    At Home>");
 							CHECK(test_stream(display1_h.stream(tb)) == "L1 House   <DH_W    At Home>");
 							THEN("RIGHT shows first member of next iterated name") {
+								// _leftRightBackUI: iterated_zoneName
+								// _upDownUI: zoneNameUI_c
 								display1_h.rec_left_right(1); // moves focus
 								CHECK(test_stream(display1_h.stream(tb)) == "L1 House   <DHW    At Hom_e>");
 								CHECK(test_stream(display1_h.stream(tb)) == "L1 House   <DHW    At Hom_e>");
