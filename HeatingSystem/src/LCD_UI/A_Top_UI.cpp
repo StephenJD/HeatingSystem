@@ -86,7 +86,7 @@ namespace LCD_UI {
 						auto & itActiveColln_h = *colln.activeUI();
 						auto & itActiveColln = *itActiveColln_h.get()->collection();
 						itActiveColln_h.enter_collection(direction);
-						gotLeftRight = &itActiveColln_h;
+						//gotLeftRight = &itActiveColln_h;
 					}
 				}
 			}
@@ -151,7 +151,7 @@ namespace LCD_UI {
 			if (_leftRightBackUI->get()->isCollection()) {
 				auto & itColl = *_leftRightBackUI->get()->collection();
 				//return itColl.iterableObjectIndex() >= 0 && !itColl[itColl.iterableObjectIndex()]->behaviour().is_next_on_UpDn();
-				return itColl.iterableObjectIndex() >= 0 && !behaviour().is_next_on_UpDn();
+				return itColl.iterableObjectIndex() >= 0 && !itColl.behaviour().is_next_on_UpDn();
 			} else return false;
 		};
 
@@ -221,6 +221,7 @@ namespace LCD_UI {
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
 		auto haveMoved = false;
 
+		logger() << F("\tUD on _upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 		if (_upDownUI->behaviour().is_viewOneUpDn_Next()) {
 			if (_upDownUI->backUI()->cursorMode(_upDownUI->backUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 				move = -move; // reverse up/down when in edit.

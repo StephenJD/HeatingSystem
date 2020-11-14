@@ -483,10 +483,11 @@ namespace LCD_UI {
 			_iteratedMemberIndex = Collection<noOfObjects>::focusIndex();
 			Collection<noOfObjects>::_filter = filter_viewable();
 			auto activeBehaviour = collection[_iteratedMemberIndex]->behaviour();
-			Collection<noOfObjects>::behaviour() = activeBehaviour;
+			Collection<noOfObjects>::behaviour() = activeBehaviour/*.make_UD_Cmd()*/;
 			for (auto& object : collection) {
 				object.behaviour().make_viewOne();
 			}
+
 		}
 
 		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection, Behaviour itBehaviour)
@@ -521,7 +522,7 @@ namespace LCD_UI {
 	public:
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
 		UI_IteratedCollection(int endPos, Collection<1> collection)
-			: Collection<1>(collection, Behaviour((collection[0].get()->behaviour() + IR0 + R0)).make_viewAll()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
+			: Collection<1>(collection, Behaviour((collection[0].get()->behaviour() + IR0 + R0)).make_viewAll().make_UD_Cmd()) // behaviour is for the iteration. The collection is always view-all. ActiveUI is always set to view-one.
 			, UI_IteratedCollection_Hoist(endPos) {
 			item(0)->get()->behaviour().make_viewOne();
 		}

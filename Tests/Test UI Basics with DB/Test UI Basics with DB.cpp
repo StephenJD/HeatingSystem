@@ -50,7 +50,7 @@
 #define CONTRAST
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
 #define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
 #define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
 #define INFO_CONSOLE_PAGES
@@ -803,6 +803,8 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 				CHECK(test_stream(display1_h.stream(tb)) == "L1 Hous_e   UpStrs> At Home>");
 				THEN("RIGHT moves into iterated name") {
 					display1_h.rec_left_right(1); // moves focus
+					// _leftRightBackUI: iterated_zoneName
+					// _upDownUI: zoneNameUI_c
 					CHECK(test_stream(display1_h.stream(tb)) == "L1 House   UpStr_s> At Home>");
 					THEN("RIGHT shows next member of iterated name") {
 						display1_h.rec_left_right(1); // moves focus
@@ -2706,7 +2708,7 @@ SCENARIO("View-one Program and Iterated Programs", "[Display]") {
 
 	// UI Element Arays / Collections
 	cout << "\nprofile_page Elements Collection\n";
-	auto iteratedProgName = UI_IteratedCollection<1>{ 80, progNameUI_c};
+	auto iteratedProgName = UI_IteratedCollection<1>{ 80, progNameUI_c, {V+S+VnLR+UD_C+R0+IR0}};
 
 	auto prog_page_c = makeCollection(dwellNameUI_c, progNameUI_c, iteratedProgName);
 
