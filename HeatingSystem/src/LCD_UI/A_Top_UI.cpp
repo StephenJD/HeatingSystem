@@ -86,7 +86,6 @@ namespace LCD_UI {
 						auto & itActiveColln_h = *colln.activeUI();
 						auto & itActiveColln = *itActiveColln_h.get()->collection();
 						itActiveColln_h.enter_collection(direction);
-						//gotLeftRight = &itActiveColln_h;
 					}
 				}
 			}
@@ -150,7 +149,6 @@ namespace LCD_UI {
 		auto isIteratedUD0 = [this]() -> bool {
 			if (_leftRightBackUI->get()->isCollection()) {
 				auto & itColl = *_leftRightBackUI->get()->collection();
-				//return itColl.iterableObjectIndex() >= 0 && !itColl[itColl.iterableObjectIndex()]->behaviour().is_next_on_UpDn();
 				return itColl.iterableObjectIndex() >= 0 && !itColl.behaviour().is_next_on_UpDn();
 			} else return false;
 		};
@@ -220,29 +218,35 @@ namespace LCD_UI {
 
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
 		auto haveMoved = false;
+#ifdef ZPSIM
+		logger() << F("UD on _upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+#endif
+		// Lambda
+		auto iteratedBehaviour = [this]() {
+			auto& itColl = *_upDownUI->backUI()->get()->collection();
+			if (itColl.iterableObjectIndex() >= 0) return itColl.behaviour();
+			return _upDownUI->behaviour();
+		};
 
-		logger() << F("\tUD on _upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
-		if (_upDownUI->behaviour().is_viewOneUpDn_Next()) {
+		auto ud_behaviour = iteratedBehaviour();
+
+		if (ud_behaviour.is_viewOneUpDn_Next()) {
 			if (_upDownUI->backUI()->cursorMode(_upDownUI->backUI()) == HardwareInterfaces::LCD_Display::e_inEdit) {
 				move = -move; // reverse up/down when in edit.
 			}
 		}
-		if (!_upDownUI->behaviour().is_edit_on_UD()) haveMoved = _upDownUI->move_focus_by(move);
+		if (!ud_behaviour.is_edit_on_UD()) haveMoved = _upDownUI->upDown(move, ud_behaviour);
 
 		if (!haveMoved) {
-			if (_upDownUI->get()->upDn_IsSet()) {
-				haveMoved = static_cast<Custom_Select*>(_upDownUI->get())->move_focus_by(move,this);
-				set_UpDownUI_from(selectedPage_h());
-				set_CursorUI_from(selectedPage_h());
-			} else if (_upDownUI->behaviour().is_edit_on_UD()) {
-				auto isSave = _upDownUI->behaviour().is_save_on_UD();
+			if (ud_behaviour.is_edit_on_UD()) {
+				auto isSave = ud_behaviour.is_save_on_UD();
 				rec_edit();
-				haveMoved = _upDownUI->move_focus_by(-move); // reverse up/down when in edit.
+				haveMoved = _upDownUI->upDown(-move, ud_behaviour); // reverse up/down when in edit.
 				if (isSave) {
 					rec_select();
 				}
 			} else {
-				_upDownUI->move_focus_by(0);
+				_upDownUI->upDown(0, ud_behaviour);
 			}
 		}
 		

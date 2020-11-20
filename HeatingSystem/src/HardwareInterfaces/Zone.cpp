@@ -210,35 +210,40 @@ namespace HardwareInterfaces {
 				if (clock_().now() >= preheatTime) {
 					setProfileTempRequest(nextTempReq - offset());
 					_getExpCurve.firstValue(currTemp_fractional);
-					logger() << "\tFirst Temp Registered. AutoLimit: " << (long)limitTemp << " TConst: " << (long)timeConst << L_endl;
+					logger() << "\tFirst Temp Registered for " << zoneRec.name;
+					if (zoneRec.autoRatio == 0) { logger() << " Mins-per-deg: " << timeConst / 4 << L_endl; }
+					else { logger() << " AutoLimit: " << (long)limitTemp << " TConst: " << (long)timeConst << L_endl; }
 				}
 			}
 		} else { // We are in pre-heat or nextReq lower than CurrReq
-			logger() << L_time << zoneRec.name << " Preheat. Record Temp:\t" << L_fixed << currTemp_fractional << L_endl;
-			_getExpCurve.nextValue(currTemp_fractional); // Only registers if _getExpCurve.firstValue was non-zero
+			if (_getExpCurve.nextValue(currTemp_fractional)) { // Only registers if _getExpCurve.firstValue was non-zero
+				logger() << L_time << zoneRec.name << " Preheat. Record Temp:\t" << L_fixed << currTemp_fractional << L_endl;				
+			}
 
 			if (currTemp_fractional + 128 >= currTempReq * 256) {
 				GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
 				auto resultQuality = curveMatch.range / 25;
-				logger() << L_time << zoneRec.name << " Preheat OK. Req " << currTempReq << " Range: " << resultQuality << L_endl;
-				if (zoneRec.autoQuality != 0 && resultQuality > zoneRec.autoQuality) {
-					logger() << " New Limit: " << L_fixed << long(curveMatch.limit)
-						<< " New TC: " << L_int << long(curveMatch.timeConst) 
-						<< " New Quality: " << L_int << resultQuality << " Old Quality: " << zoneRec.autoQuality << L_endl;		
-					
-					double limit = (curveMatch.limit + 128.) / 256.;
-					if (limit > _maxFlowTemp) { // treat as linear curve. 			
-						limit = outsideTemp; // Make ratio = 0 and TC = 4 x minutes-per-degree
-						curveMatch.timeConst = static_cast<uint16_t>(curveMatch.period * 4L * 256L / curveMatch.range);
-					}
-					auto timeConst = _getExpCurve.compressTC(curveMatch.timeConst);
-					double newRatio = (limit - outsideTemp) / (_maxFlowTemp - outsideTemp);
-					zoneRec.autoRatio = static_cast<uint8_t>(newRatio * 256);
-					zoneRec.autoTimeC = timeConst;
-					zoneRec.autoQuality = resultQuality;
-					zoneAnswer.update();
-					logger() << "\tSaved New Compressed TC: " << timeConst << " New Ratio: " << newRatio << L_endl;
-				} else logger() << " No Better Result\n";
+				if (zoneRec.autoQuality > 0 && resultQuality > 0) {
+					logger() << L_time << zoneRec.name << " Preheat OK. Req " << currTempReq << " Range: " << resultQuality << L_endl;
+					if (resultQuality > zoneRec.autoQuality) {
+						logger() << " New Limit: " << L_fixed << long(curveMatch.limit)
+							<< " New TC: " << L_int << long(curveMatch.timeConst)
+							<< " New Quality: " << L_int << resultQuality << " Old Quality: " << zoneRec.autoQuality << L_endl;
+
+						double limit = (curveMatch.limit + 128.) / 256.;
+						if (limit > _maxFlowTemp) { // treat as linear curve. 			
+							limit = outsideTemp; // Make ratio = 0 and TC = 4 x minutes-per-degree
+							curveMatch.timeConst = static_cast<uint16_t>(curveMatch.period * 4L * 256L / curveMatch.range);
+						}
+						auto timeConst = _getExpCurve.compressTC(curveMatch.timeConst);
+						double newRatio = (limit - outsideTemp) / (_maxFlowTemp - outsideTemp);
+						zoneRec.autoRatio = static_cast<uint8_t>(newRatio * 256);
+						zoneRec.autoTimeC = timeConst;
+						zoneRec.autoQuality = resultQuality;
+						zoneAnswer.update();
+						logger() << "\tSaved New Compressed TC: " << timeConst << " New Ratio: " << newRatio << L_endl;
+					} else logger() << " No Better Result\n";
+				}
 				_getExpCurve.firstValue(0); // prevent further updates
 			}
 		}

@@ -19,12 +19,16 @@ namespace Assembly {
 		, _dwellNameUI_c { &db._rec_dwelling, Dataset_Dwelling::e_name }
 		, _zoneNameUI_c{ &db._rec_dwZones, Dataset_Zone::e_name, {V + S + L + VnLR + UD_C + R0} }
 		, _zoneAbbrevUI_c{ &db._rec_dwZones, Dataset_Zone::e_abbrev}
+		, _allZoneAbbrevUI_c{ &db._rec_zones, Dataset_Zone::e_abbrev}
 		, _allZoneReqTemp_UI_c{ &db._rec_zones, Dataset_Zone::e_reqTemp ,{V + S + VnLR + UD_C + R0 + ER0} }
 		, _allZoneNames_UI_c{ &db._rec_zone_child, Dataset_Zone::e_name, {V + V1} }
-		,_allZoneIsTemp_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isTemp, {V + V1} }
-		,_allZoneIsHeating_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isHeating, {V + V1} }
+		, _allZoneIsTemp_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isTemp, {V + V1} }
+		, _allZoneIsHeating_UI_c{ &db._rec_zone_child, Dataset_Zone::e_isHeating, {V + V1} }
+		, _zoneManAuto_c{ &db._rec_zone_child, Dataset_Zone::e_quality }
+		, _zoneRatio_c{ &db._rec_zone_child, Dataset_Zone::e_ratio }
+		, _zoneTimeConst_c{ &db._rec_zone_child, Dataset_Zone::e_timeConst }
 
-		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A+R+IR0} }
+		, _progNameUI_c{ &db._rec_dwProgs, Dataset_Program::e_name, {V+S+V1+UD_A+R} }
 		, _dwellSpellUI_c{ &db._rec_dwSpells, Dataset_Spell::e_date, {V + S + V1 + UD_E} }
 		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, {V+S+L+V1+UD_A+ER+EA}}
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R+ER}, Dataset_Program::e_id }
@@ -46,13 +50,13 @@ namespace Assembly {
 		, _is{"is:`"}
 		, _prog{"Prg:", {V + L0} }
 		, _zone{"Zne:"}
-		, _backlightCmd{"Backlight",0, {V + S +L + UD_S} }
-		, _contrastCmd{"Contrast",0, {V+S+UD_S} }
+		, _backlightCmd{"Backlight",0, {V + S +L + UD_C} }
+		, _contrastCmd{"Contrast",0, {V+S+UD_C} }
 		, _dwellingZoneCmd{"Zones",0 }
 		, _dwellingCalendarCmd{ "Calendar",0 }
 		, _dwellingProgCmd{ "Programs",0 }
 		, _insert{ "Insert-Prog", {H + L0} }
-		, _profileDaysCmd{ "Ds:",0}
+		, _profileDaysCmd{ "Day:`",0}
 		, _fromCmd{ "From", 0, {V+S+L+V1+UD_A} }
 		, _deleteTTCmd{ "Delete", 0, {H+S+L+ VnLR} }
 		, _editTTCmd{ "Edit", 0, {H+S+ VnLR}}
@@ -65,7 +69,7 @@ namespace Assembly {
 		, _iterated_zoneReqTemp_c{ 80, makeCollection(_allZoneNames_UI_c,_reqestTemp,_allZoneReqTemp_UI_c,_is,_allZoneIsTemp_UI_c,_allZoneIsHeating_UI_c)}
 
 		, _calendar_subpage_c{ makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, _dwellSpellUI_c, _spellProgUI_c) ,{ V + S + VnLR + R0 } }
-		, _iterated_prog_name_c{ 80, _progNameUI_c}
+		, _iterated_prog_name_c{ 80, _progNameUI_c, {V + S + VnLR + UD_C + R0 + IR0} }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c),{ V + S + VnLR + R0 } }
 
 		, _iterated_zone_name_c{ 80, _zoneNameUI_c}
@@ -86,17 +90,16 @@ namespace Assembly {
 		
 		, _iterated_relays_info_c{80, makeCollection(_relayNameUI_c, _relayStateUI_c)}
 
+		, _iterated_zoneSettings_info_c{ 80, makeCollection(_allZoneAbbrevUI_c, _zoneManAuto_c, _zoneRatio_c, _zoneTimeConst_c),{V+S+L+VnLR+UD_A} }
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeChapter(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{_user_chapter_c}
-		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c) }
+		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _iterated_zoneSettings_info_c) }
 		, _info_chapter_h{_info_chapter_c}
 	{
-		_backlightCmd.set_UpDn_Target(_backlightCmd.function(Contrast_Brightness_Cmd::e_backlight));
-		_contrastCmd.set_UpDn_Target(_contrastCmd.function(Contrast_Brightness_Cmd::e_contrast));
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));
-		_fromCmd.set_UpDn_Target(_calendar_subpage_c.item(3));
 		_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(0));
+		_fromCmd.set_UpDn_Target(_calendar_subpage_c.item(3));
 		_deleteTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
 		_editTTCmd.set_OnSelFn_TargetUI(_page_profile_c.item(7));
 		_newTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
@@ -117,6 +120,11 @@ namespace Assembly {
 		ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
 		ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
 		ui_Objects()[(long)&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
+		ui_Objects()[(long)&_allZoneAbbrevUI_c] = "_allZoneAbbrevUI_c";
+		ui_Objects()[(long)&_zoneManAuto_c] = "_zoneManAuto_c";
+		ui_Objects()[(long)&_zoneRatio_c] = "_zoneRatio_c";
+		ui_Objects()[(long)&_zoneTimeConst_c] = "_zoneTimeConst_c";
+
 		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
 		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 		ui_Objects()[(long)&_calendar_subpage_c] = "_calendar_subpage_c";
@@ -144,6 +152,7 @@ namespace Assembly {
 		ui_Objects()[(long)&_tt_SubPage_c] = "_tt_SubPage_c";
 
 		ui_Objects()[(long)&_iterated_towelRails_info_c] = "_iterated_towelRails_info_c";
+		ui_Objects()[(long)&_iterated_zoneSettings_info_c] = "_iterated_zoneSettings_info_c";
 		ui_Objects()[(long)&_page_towelRails_c] = "_page_towelRails_c";
 
 		ui_Objects()[(long)&_user_chapter_c] = "_user_chapter_c";

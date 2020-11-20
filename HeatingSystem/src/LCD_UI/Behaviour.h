@@ -13,6 +13,7 @@ namespace LCD_UI {
 	/// 224: view, sel, ViewOneLR0, UD_Cmd, 	Recycle
 	/// 214: view, sel, ViewAll_LR, UD-Active, 	No-Recycle,	IT-NoRecycle
 	/// 212: view, sel, ViewAll_LR, UD-Active, 	Recycle,	IT-NoRecycle
+	/// 210: view, sel, ViewAll_LR, UD_Cmd, 	No-Recycle,	IT-NoRecycle
 	/// 208: view, sel, ViewAll_LR, UD_Cmd, 	Recycle,	IT-NoRecycle
 	/// 204: view, sel, ViewAll_LR, UD_Save, 	Recycle
 	/// 202: view, sel, ViewAll_LR, UD_Edit, 	No-Recycle

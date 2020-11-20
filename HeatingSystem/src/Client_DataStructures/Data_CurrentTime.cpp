@@ -23,7 +23,7 @@ namespace client_data_structures {
 
 	I_Streaming_Tool & CurrentTimeWrapper::ui() { return currentTime_UI; }
 
-	bool Edit_CurrentTime_h::move_focus_by(int moveBy) { // Change character at the cursor. Modify copy held by currValue
+	bool Edit_CurrentTime_h::upDown(int moveBy, Behaviour ud_behaviour) { // Change character at the cursor. Modify copy held by currValue
 		if (moveBy == 0) return false;
 		DateTime newDate(TimeOnly(currValue().val));
 		switch (focusIndex()) {
@@ -88,7 +88,7 @@ namespace client_data_structures {
 
 	I_Streaming_Tool & CurrentDateWrapper::ui() { return currentDate_UI; }
 
-	bool Edit_CurrentDate_h::move_focus_by(int moveBy) { // Change character at the cursor. Modify copy held by currValue
+	bool Edit_CurrentDate_h::upDown(int moveBy, Behaviour ud_behaviour) { // Change character at the cursor. Modify copy held by currValue
 		if (moveBy == 0) return false;
 		DateTime newDate(DateOnly( currValue().val ));
 		switch (focusIndex()) {

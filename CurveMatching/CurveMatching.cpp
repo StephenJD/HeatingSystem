@@ -39,22 +39,24 @@ namespace GP_LIB {
 #endif
 	}
 
-	void GetExpCurveConsts::nextValue(int currValue) {
+	bool GetExpCurveConsts::nextValue(int currValue) {
 		_currValue = currValue;
 		_timeSinceStart += 10;
+		bool hasRecorded = false;
 		if (needsStarting()) {
-			startTiming();
+			hasRecorded = startTiming();
 		} else {
 			if (periodIsDoublePreviousPeriod()) {
 				shuffleRecordsAlong();
 			}
 			if (hasRisenEnough()) {
 				recordCurrent();
+				hasRecorded = true;
 			} else {
 				averageTimeAtThisValue();
 			}
 		}
-		logger() << "\tMC_Time: " << _timeSinceStart << " [0]: " << L_fixed << _xy.firstRiseValue << "[1]: " << _xy.midRiseValue << " [2]: " << _xy.lastRiseValue << L_endl;
+		logger() << "\tMC_Time: " << _timeSinceStart << " [0]:" << L_fixed << _xy.firstRiseValue << " [1]:" << _xy.midRiseValue << " [2]:" << _xy.lastRiseValue << L_endl;
 #ifdef debug
 		cout << "\n\t_timeSinceStart : " << _timeSinceStart << " TryValue : " << currValue << '\n'; // Start temp. Zero indicates not started timing.
 		cout << "\tfirstRiseValue : " << _xy.firstRiseValue << '\n'; // Start temp. Zero indicates not started timing.
@@ -66,6 +68,7 @@ namespace GP_LIB {
 		cout << "\tlastRiseTime : " << _xy.lastRiseTime << '\n';
 		cout << "\tlastRiseValue : " << _xy.lastRiseValue << '\n'; // Current Temp. not_recording indicates not recording
 #endif
+		return hasRecorded;
 	}
 
 	GetExpCurveConsts::CurveConsts GetExpCurveConsts::matchCurve() {
@@ -115,7 +118,7 @@ namespace GP_LIB {
 		return _timeSinceStart >= 2 * _twiceMidRiseTime;
 	}
 
-	void GetExpCurveConsts::startTiming() {
+	bool GetExpCurveConsts::startTiming() {
 		if (_xy.lastRiseValue && hasRisenEnough()) {
 			_xy.firstRiseValue = _xy.lastRiseValue;
 			_xy.midRiseValue = _currValue;
@@ -128,7 +131,9 @@ namespace GP_LIB {
 #ifdef LOG_SD
 			logToSD("GetExpCurveConsts::startTiming");
 #endif
+			return true;
 		}
+		return false;
 	}
 
 	void GetExpCurveConsts::averageTimeAtThisValue() {

@@ -134,10 +134,12 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_reqTemp: {
 			logger() << "Select Next Sequence Event " << record().rec().name << " ID: " << record().id() << L_endl;
-			return false;
-		}
-		case e_timeConst: {
-			logger() << "Select Next e_timeConst " << record().rec().name << " ID: " << record().id() << L_endl;
+			HardwareInterfaces::Zone& z = zone(record().id());
+			if (z.currTempRequest() != z.nextTempRequest()) {
+				z.setProfileTempRequest(z.nextTempRequest());
+			} else {
+
+			}
 			return true;
 		}
 		default: return false;

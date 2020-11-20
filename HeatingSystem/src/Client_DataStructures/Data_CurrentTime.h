@@ -39,7 +39,8 @@ namespace client_data_structures {
 		Edit_CurrentTime_h() : I_Edit_Hndl(&editVal) {
 		}
 		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
-		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
+		bool upDown(int moveBy, Behaviour ud_behaviour) override;
+		//bool move_focus_by(int moveBy) override; // move focus to next charater during edit
 		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:
@@ -99,7 +100,8 @@ namespace client_data_structures {
 		Edit_CurrentDate_h() : I_Edit_Hndl(&editVal) {
 		}
 		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
-		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
+		
+		bool upDown(int moveBy, Behaviour ud_behaviour) override; // move focus to next charater during edit
 		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:

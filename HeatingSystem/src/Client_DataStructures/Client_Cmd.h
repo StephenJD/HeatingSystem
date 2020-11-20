@@ -23,7 +23,8 @@ namespace client_data_structures {
 	public:
 		enum e_function {e_contrast, e_backlight };
 		Contrast_Brightness_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour);
-		bool move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;
+		bool upDown(int moveBy, Collection_Hndl* colln_hndl, LCD_UI::Behaviour ud_behaviour) override;
+
 		LCD_UI::Collection_Hndl * function(e_function fn) { _function = fn; return _self; }
 
 		void setDisplay(HardwareInterfaces::LocalDisplay & lcd);

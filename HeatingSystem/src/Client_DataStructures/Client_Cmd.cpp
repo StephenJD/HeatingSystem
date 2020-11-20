@@ -21,7 +21,7 @@ namespace client_data_structures {
 
 	Collection_Hndl &  InsertSpell_Cmd::enableInsert(bool enable) {
 		enum { _dwellingCalendarCmd, _insert, _fromCmd, dwellSpellUI_c, spellProgUI_c};
-		auto & subPage = *target()->get()->collection();
+		auto & subPage = *selTarget()->get()->collection();
 		auto & spellUIcoll = *subPage.item(dwellSpellUI_c);
 		if (enable) {
 			subPage.item(_dwellingCalendarCmd)->get()->behaviour().make_hidden();
@@ -72,7 +72,7 @@ namespace client_data_structures {
 #endif
 	}
 
-	bool Contrast_Brightness_Cmd::move_focus_by(int moveBy, Collection_Hndl* colln_hndl) {
+	bool Contrast_Brightness_Cmd::upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) {
 		if (_function == e_backlight) _lcd->changeBacklight(moveBy);
 		else _lcd->changeContrast(moveBy);
 		return true;
@@ -113,7 +113,7 @@ namespace client_data_structures {
 	}
 
 	Collection_Hndl * InsertTimeTemp_Cmd::enableCmds(int cmd_to_show) {
-		auto ttSubPageHndl = target();
+		auto ttSubPageHndl = selTarget();
 		auto & ttListHndl = *static_cast<Collection_Hndl *>(ttSubPageHndl->get()->collection()->item(e_TTs));
 		auto & ttDeleteHndl = *ttSubPageHndl->get()->collection()->item(e_DelCmd);
 		auto & ttNewHndl = *ttSubPageHndl->get()->collection()->item(e_NewCmd);
@@ -144,7 +144,7 @@ namespace client_data_structures {
 	}
 
 	Collection_Hndl * InsertTimeTemp_Cmd::select(Collection_Hndl * from) { // start insert new
-		auto ttSubPageHndl = target();
+		auto ttSubPageHndl = selTarget();
 		if (get()->collection()) {
 			ttSubPageHndl->move_focus_to(e_TTs);
 			auto tt_UI_FieldData_h = ttSubPageHndl->activeUI()->activeUI();
@@ -162,7 +162,7 @@ namespace client_data_structures {
 			static_cast<Field_StreamingTool_h*>(tt_field_interface_h)->setEditFocus(0);
 		}
 		else {// is delete command
-			target()->on_back();
+			selTarget()->on_back();
 		}
 		return 0;
 	}
@@ -175,7 +175,7 @@ namespace client_data_structures {
 	bool InsertTimeTemp_Cmd::back() {
 		if (get()->isCollection()) {
 			enableCmds(e_none);
-		} else static_cast<InsertTimeTemp_Cmd*>(target())->enableCmds(e_none);
+		} else static_cast<InsertTimeTemp_Cmd*>(selTarget())->enableCmds(e_none);
 		return false;
 	}
 

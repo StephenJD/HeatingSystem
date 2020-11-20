@@ -32,12 +32,12 @@ namespace LCD_UI {
 		virtual bool				streamElement(UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const { return false; }
 		virtual HI_BD::CursorMode	cursorMode(const Object_Hndl* activeElement) const;
 		virtual int					cursorOffset(const char* data) const;
-		virtual bool				upDn_IsSet() const { return false; }
 		virtual bool				hasFocus() const { return false; }
 		bool						streamToBuffer(const char* data, UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
 		const Behaviour				behaviour() const { return const_cast<UI_Object*>(this)->behaviour(); }
 		// Modifiers
 		virtual I_SafeCollection*	collection() { return 0; }
+		virtual bool				upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour);
 		virtual bool				move_focus_by(int moveBy, Collection_Hndl* colln_hndl) { return false; }
 		virtual Collection_Hndl*	select(Collection_Hndl* from);
 		virtual Collection_Hndl*	edit(Collection_Hndl* from) { return select(from); }
@@ -77,17 +77,15 @@ namespace LCD_UI {
 	public:
 		Custom_Select(OnSelectFnctr onSelect, Behaviour behaviour);
 		using UI_Object::behaviour;
-		// Query
-		bool				upDn_IsSet() const override { return _upDownTarget != 0; }
-		//ObjectFnPtr			upDn_Fn() override;
 
 		// Modifiers
-		Behaviour& behaviour() override { return _behaviour; }
-		void				set_OnSelFn_TargetUI(Collection_Hndl* obj);
-		void				set_UpDn_Target(Collection_Hndl* obj);
+		Behaviour&		behaviour() override { return _behaviour; }
+		void			set_OnSelFn_TargetUI(Collection_Hndl* obj);
+		void			set_UpDn_Target(Collection_Hndl* obj);
 		Collection_Hndl* select(Collection_Hndl* from) override;
-		bool				move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;
-		Collection_Hndl* target() { return _onSelectFn.getTarget(); }
+		bool			upDown(int moveBy, Collection_Hndl* colln_hndl, LCD_UI::Behaviour ud_behaviour) override;
+
+		Collection_Hndl* selTarget() { return _onSelectFn.getTarget(); }
 		virtual ~Custom_Select() = default;
 	private:
 		OnSelectFnctr _onSelectFn;
@@ -179,6 +177,7 @@ namespace LCD_UI {
 		virtual int	set_focus(int index); // Range-checked. Returns new focus.
 		virtual void setCursorPos() {}
 		virtual bool move_focus_by(int moveBy) { return get()->move_focus_by(moveBy, this); }
+		virtual bool upDown(int moveBy, Behaviour ud_behaviour) { return get()->upDown(moveBy, this, ud_behaviour); }
 
 		// New Modifiers
 		Collection_Hndl* activeUI(); //  returns validated focus element - index is made in-range
@@ -483,7 +482,7 @@ namespace LCD_UI {
 			_iteratedMemberIndex = Collection<noOfObjects>::focusIndex();
 			Collection<noOfObjects>::_filter = filter_viewable();
 			auto activeBehaviour = collection[_iteratedMemberIndex]->behaviour();
-			Collection<noOfObjects>::behaviour() = activeBehaviour/*.make_UD_Cmd()*/;
+			Collection<noOfObjects>::behaviour() = activeBehaviour;
 			for (auto& object : collection) {
 				object.behaviour().make_viewOne();
 			}

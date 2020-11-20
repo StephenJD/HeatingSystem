@@ -155,6 +155,7 @@ namespace LCD_UI {
 		if(strWrapper) _currValue = *strWrapper;
 		auto strEnd = static_cast<uint8_t>(strlen(_currValue.str())) - 1;
 		while (_currValue.str()[strEnd] == ' ') --strEnd;
+		//while (_currValue.str()[strEnd] == '`') --strEnd;
 		_currValue.valRange.noOfDecPlaces = strEnd + 1; // Current Str length
 		_currValue.valRange._cursorPos = strEnd; // initial cursorPos when selected (not in edit)
 		return 0;
@@ -166,6 +167,7 @@ namespace LCD_UI {
 		_currValue.val = recordID;
 		auto strEnd = static_cast<uint8_t>(strlen(_currValue.str())) - 1;
 		while (_currValue.str()[strEnd] == ' ') --strEnd;
+		//while (_currValue.str()[strEnd] == '`') --strEnd;
 		_currValue.valRange.noOfDecPlaces = strEnd + 1; // Current Str length
 		_currValue.valRange._cursorPos = strEnd; // initial cursorPos when selected (not in edit)
 		return 0;

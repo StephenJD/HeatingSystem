@@ -36,10 +36,14 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _dwellNameUI_c;
 		LCD_UI::UI_FieldData _zoneNameUI_c;
 		LCD_UI::UI_FieldData _zoneAbbrevUI_c;
+		LCD_UI::UI_FieldData _allZoneAbbrevUI_c;
 		LCD_UI::UI_FieldData _allZoneReqTemp_UI_c;
 		LCD_UI::UI_FieldData _allZoneNames_UI_c;
 		LCD_UI::UI_FieldData _allZoneIsTemp_UI_c;
 		LCD_UI::UI_FieldData _allZoneIsHeating_UI_c;
+		LCD_UI::UI_FieldData _zoneManAuto_c;
+		LCD_UI::UI_FieldData _zoneRatio_c;
+		LCD_UI::UI_FieldData _zoneTimeConst_c;
 
 		LCD_UI::UI_FieldData _progNameUI_c;
 		LCD_UI::UI_FieldData _dwellSpellUI_c;
@@ -92,11 +96,12 @@ namespace Assembly {
 		LCD_UI::Collection<2> _page_towelRails_c;
 		
 		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;
+		LCD_UI::UI_IteratedCollection<4> _iterated_zoneSettings_info_c;
 
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;
-		LCD_UI::Collection<3> _info_chapter_c;
+		LCD_UI::Collection<4> _info_chapter_c;
 		LCD_UI::A_Top_UI _info_chapter_h;
 	};
 }

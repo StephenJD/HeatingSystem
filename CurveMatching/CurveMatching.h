@@ -56,8 +56,8 @@ namespace GP_LIB {
 		/// Must be called at regular time intervals.
 		/// </summary>
 		/// <param name="currValue">The curr value.</param>
-		void nextValue(int currValue);
-		void nextValue(double currValue) { nextValue(static_cast<int>(currValue)); }
+		bool nextValue(int currValue);
+		bool nextValue(double currValue) { return nextValue(static_cast<int>(currValue)); }
 
 		struct XY_Values { // only required public for testing purposes
 			int16_t firstRiseValue = 0;
@@ -75,7 +75,7 @@ namespace GP_LIB {
 		bool periodIsDoublePreviousPeriod();
 
 		// ************** Modifiers **************
-		void startTiming();
+		bool startTiming();
 		void averageTimeAtThisValue();
 		void shuffleRecordsAlong();
 		void recordCurrent();

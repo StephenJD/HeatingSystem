@@ -35,7 +35,9 @@ namespace LCD_UI {
 	}
 
 	int UI_Object::cursorOffset(const char * data) const {
-		return data ? strlen(data) - 1 : 0;
+		auto cursorPos = strlen(data) - 1;
+		if (data[cursorPos] == '`') --cursorPos;
+		return data ? cursorPos : 0;
 	}
 
 	bool UI_Object::streamToBuffer(const char * data, UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, ListStatus listStatus) const {
@@ -47,6 +49,8 @@ namespace LCD_UI {
 			, listStatus
 		);
 	}
+	bool UI_Object::upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) { return colln_hndl->move_focus_by(moveBy); }
+
 
 	///////////////////////////////////////////
 	// ************   Collection_Hndl *********
@@ -159,7 +163,6 @@ namespace LCD_UI {
 
 	void Custom_Select::set_UpDn_Target(Collection_Hndl * obj) {
 		_upDownTarget = obj;
-		//behaviour().make_UD_NextActive();
 		behaviour().make_UD_Cmd();
 	}
 
@@ -170,12 +173,13 @@ namespace LCD_UI {
 		return 0;
 	}
 
-	bool Custom_Select::move_focus_by(int moveBy, Collection_Hndl * colln_hndl) {
+	bool Custom_Select::upDown(int moveBy, Collection_Hndl* colln_hndl, LCD_UI::Behaviour ud_behaviour) {
 		if (_upDownTarget) {
-			return _upDownTarget->get()->move_focus_by(moveBy, colln_hndl);
+			return _upDownTarget->upDown(moveBy, _upDownTarget->behaviour());
 		}
 		else return false;
 	}
+
 
 	///////////////////////////////////////////
 	// **********   I_SafeCollection **********
@@ -213,7 +217,6 @@ namespace LCD_UI {
 		bool isInIterableCollection = isInIteratedCollection();
 
 		auto isIteratedKeepFocus = [this, isIterableCollection]() {
-			//return isIterableCollection && item(iterableObjectIndex())->get()->behaviour().is_next_on_UpDn();
 			return isIterableCollection && behaviour().is_next_on_UpDn();
 		};
 
@@ -406,13 +409,18 @@ namespace LCD_UI {
 	///////////////////////////////////////////
 
 	bool UI_IteratedCollection_Hoist::h_streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, ListStatus listStatus) const {
-		// Set the activeUI to object-index 0 and Stream all the elements
-		// Then move the activeUI to the next object-index and re-stream all the elements
-		// Keep going till all members of the activeUI have been streamed
+		/// An Iterated collection views all its members and and provides limited-width. It iterates over its active member.
+		/// The Iteration may be view-all(default) or view-one (only one iteration shown).
+		/// The nested elements are always internally modified to view-one, as the iteration selects which member is shown.
+		/// LR always moves to the next field in the current iteration (if there is one). 
+		/// R0 allows LR to move into the next iteration.
+		/// R recycles within the current iteration so requires UD_A to escape. 
+		/// UD_A/C/E/S apply to all members and override the same settings on the selected member.
+		/// UD_A makes UD move to the next iteration. IR0 prevents recycling.
 		///		Coll-Focus (moved by LR)
 		///			v
-		///	{L1, Active[0], Slave[0]}
-		///	{L1, Active[1], Slave[1]} <- Active-focus (moved by LR if UD_E)
+		///	{L1, Active[0], Slave[0]} -> LR (next iteration if R0)
+		///	{L1, Active[1], Slave[1]} -- Active-focus (moved by UD if set to UD_A)
 		///	{L1, Active[2], Slave[2]}
 
 		auto coll_focus = activeElement ? iterated_collection()->I_SafeCollection::focusIndex() : -1;
@@ -450,7 +458,9 @@ namespace LCD_UI {
 			auto streamActive = activeElement;
 			if (itIndex != activeFocus){
 				streamActive = 0;
-			}			
+			}
+			if (iterated_collection()->behaviour().is_OnNewLine()) buffer.newLine();
+
 			for (auto & object : *iterated_collection()) {
 #ifdef ZPSIM
 //				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << endl;
@@ -502,12 +512,12 @@ namespace LCD_UI {
 		auto & iteratedActiveObject_h = *upColln.move_to_object(iteratedIndex);
 		auto itBehaviour = iteratedActiveObject_h.behaviour();
 		if (itBehaviour.is_next_on_UpDn()) {
-			haveMoved = iteratedActiveObject_h.get()->collection()->move_focus_by(moveBy,colln_hndl/*->backUI()*/);
+			haveMoved = iteratedActiveObject_h.get()->collection()->move_focus_by(moveBy,colln_hndl); // get data loaded into parent dataset
 			auto nextIdx = iteratedActiveObject_h.focusIndex();
 			upColln.filter(filter_selectable());
 			for (auto& thisObj : upColln) {
 				if (&thisObj == iteratedActiveObject_h.get()) continue;
-				thisObj.setFocusIndex(nextIdx);
+				thisObj./*I_SafeCollection::*/setFocusIndex(nextIdx); // get data loaded into child Dataset
 			}
 		}
 		return haveMoved;

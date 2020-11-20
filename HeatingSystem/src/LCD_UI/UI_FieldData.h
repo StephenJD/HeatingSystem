@@ -42,7 +42,7 @@ namespace LCD_UI {
 		bool focusHasChanged(bool hasFocus) override;
 		void setFocusIndex(int focus) override;
 		void setObjectIndex(int index) const override {;} // done by item()
-		bool move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;
+		bool upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) override;
 
 		void insertNewData();
 		void deleteData();

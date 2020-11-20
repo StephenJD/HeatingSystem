@@ -54,7 +54,7 @@ namespace client_data_structures {
 	public:
 		using I_Edit_Hndl::currValue;
 		int gotFocus(const I_Data_Formatter * data) override; // returns select focus
-		bool move_focus_by(int moveBy) override; // move focus to next charater during edit
+		bool move_focus_by(int moveBy) override; // move focus to next character during edit
 		I_Data_Formatter & currValue() override { return _currValue; }
 		int cursorFromFocus(int focusIndex) override;
 	private:

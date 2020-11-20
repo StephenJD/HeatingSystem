@@ -341,14 +341,15 @@ SCENARIO("Create a Database", "[Database]") {
 	tq_spell.insert(allSpells, sizeof(allSpells) / sizeof(R_Spell)); // Cause small table to grow.
 	
 	R_Profile allProfiles[] = {
+		//ProgID, ZnID, Days
 		{ 0,0,100 }, // At Home
 		{ 0,1,101 },
 		{ 0,2,102 },
 		{ 2,0,103 }, // Away
 		{ 2,1,104 },
 		{ 2,2,105 },
-		{ 1,0,106 },  // At Work - W,SS 
-		{ 1,0,107 }, // MT,TF
+		{ 1,0,107 }, // US At Work - MT_T_SS 
+		{ 1,0,20 },  // US At Work - __W_F__
 
 		{ 1,1,108 },
 		{ 1,2,109 },
@@ -1471,15 +1472,18 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 		THEN("On up-down we start edit") {
 			clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
 			clock_().refresh();
-			display1_h.rec_up_down(-1); clock_().setSeconds(0);
+			display1_h.rec_up_down(-1); 
+			clock_().setSeconds(0);
 			CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201#8     DST Hours: 1");
 			AND_THEN("On Select we save") {
 				display1_h.rec_select(); clock_().setSeconds(0);
 				CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/201_8     DST Hours: 1");
 				THEN("Also edits on SELECT") {
+					clock_().setSeconds(0);
 					display1_h.rec_left_right(1); clock_().setSeconds(0);// moves focus
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: _1");
-					display1_h.rec_select(); clock_().setSeconds(0);
+					display1_h.rec_select(); 
+					clock_().setSeconds(0);
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #1");
 					display1_h.rec_up_down(1); clock_().setSeconds(0);
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #0");
@@ -2249,16 +2253,12 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	ui_Objects()[(long)&calendar_subpage_c] = "calendar_subpage_c";
 	ui_Objects()[(long)&prog_subpage_c] = "prog_subpage_c";
 
-	_fromCmd.set_UpDn_Target(calendar_subpage_c.item(3));
-
 	auto _page_dwellingMembers_subpage_c = makeCollection(zone_subpage_c, calendar_subpage_c, prog_subpage_c);
 	_page_dwellingMembers_subpage_c.set(Behaviour{V+S+V1+UD_A+R});
 	_fromCmd.set_OnSelFn_TargetUI(_page_dwellingMembers_subpage_c.item(1));
+	_fromCmd.set_UpDn_Target(calendar_subpage_c.item(3));
 
 	auto _page_dwellingMembers_c = makeCollection(dwellNameUI_c, _page_dwellingMembers_subpage_c);
-	//_dwellingZoneCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-	//_dwellingCalendarCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
-	//_dwellingProgCmd.set_UpDn_Target(_page_dwellingMembers_c.item(1));
 
 	auto display1_c = makeChapter(_page_dwellingMembers_c);
 	auto display1_h = A_Top_UI(display1_c);
@@ -2637,12 +2637,14 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	auto profileDaysUI_c = UI_FieldData(&rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R+ER}, Dataset_Program::e_id);
 
 	// UI Elements
-	UI_Label _prog = { "Prog:", {V + L0} };
-	UI_Label _zone = { "Zone:" };
+	UI_Label _prog{ "Prg:", {V + L0} };
+	UI_Label _zone{ "Zne:" };
+	UI_Cmd profileDaysCmd{ "Day:`",0 };
 
 	// UI Element Arays / Collections
 	cout << "\nprofile_page Elements Collection\n";
-	auto profile_page_c = makeCollection(dwellNameUI_c, _prog, progNameUI_c, _zone, zoneAbbrevUI_c, profileDaysUI_c);
+	auto profile_page_c = makeCollection(dwellNameUI_c, _prog, progNameUI_c, _zone, zoneAbbrevUI_c,profileDaysCmd, profileDaysUI_c);
+	profileDaysCmd.set_UpDn_Target(profile_page_c.item(6));
 
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(profile_page_c);
@@ -2656,26 +2658,52 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	cout << "\n **** All Constructed ****\n\n";
 	display1_h.stream(tb);
 	cout << test_stream(display1_h.stream(tb)) << endl;
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Home             Zone: US  MT--F--");
-	//											 0123456789012345678901234567890123456789
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MT--F--");
+	//											 01234567890123456789|1234567890123456789
 	GIVEN("we can scroll into Program") {
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Hom_e             Zone: US  MT--F--");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Day:MT--F--");
 		THEN("we can cycle down the programs") {
 			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       Awa_y                Zone: US  MT--FSS");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: Awa_y   Zne: US  Day:MT--FSS");
 			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Wor_k             Zone: US  MT-T-S-");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Day:MT-T-SS");
 			display1_h.rec_up_down(-1);
- 			CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Hom_e             Zone: US  MT--F--");
+ 			CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Day:MT--F--");
 			AND_THEN("we can cycle up the programs") {
 				display1_h.rec_up_down(1);
-				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Wor_k             Zone: US  MT-T-S-");
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Day:MT-T-SS");
 				display1_h.rec_up_down(1);
-				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       Awa_y                Zone: US  MT--FSS");
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: Awa_y   Zne: US  Day:MT--FSS");
 				display1_h.rec_up_down(1);
-				CHECK(test_stream(display1_h.stream(tb)) == "House   Prog:       At Hom_e             Zone: US  MT--F--");
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Day:MT--F--");
+				display1_h.rec_up_down(1);
+				CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Day:MT-T-SS");
+				AND_THEN("we can cycle the profiles on Days Cmd") {
+					display1_h.rec_left_right(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: U_S  Day:MT-T-SS");
+					display1_h.rec_left_right(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: US  Day_:MT-T-SS");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: US  Day_:--W-F--");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: US  Day_:MT-T-SS");
+					display1_h.rec_up_down(1);
+					CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: US  Day_:--W-F--");
+					AND_THEN("we can cycle the profiles on Days") {
+						display1_h.rec_left_right(1);
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: US  Day:--W-F-_-");
+						display1_h.rec_up_down(1);
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: US  Day:MT-T-S_S");
+						display1_h.rec_up_down(1);
+						CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At WorkZne: US  Day:--W-F-_-");
+						AND_THEN("we can move out of days") {
+							display1_h.rec_left_right(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At WorkZne: US  Day:--W-F--");
+						}
+					}
+				}
 			}
 		}
 	}
@@ -2737,19 +2765,21 @@ SCENARIO("View-one Program and Iterated Programs", "[Display]") {
 			AND_THEN("we can recycle down") {
 				display1_h.rec_up_down(1);
 				CHECK(test_stream(display1_h.stream(tb)) == "House   At Hom_e     At Home At Work     Away   ");
-				AND_THEN("we can cycle across the iteration") {
+				AND_THEN("we can cycle into the iteration") {
 					display1_h.rec_left_right(1);
 					CHECK(test_stream(display1_h.stream(tb)) == "House   At Home     At Hom_e At Work     Away   ");
-					display1_h.rec_left_right(1);
-					CHECK(test_stream(display1_h.stream(tb)) == "House   At Work     At Home At Wor_k     Away   ");
-					display1_h.rec_left_right(1);
-					CHECK(test_stream(display1_h.stream(tb)) == "House   Away        At Home At Work     Awa_y   ");
-					AND_THEN("UP does nothing") {
-						display1_h.rec_up_down(1);
-						CHECK(test_stream(display1_h.stream(tb)) == "House   Away        At Home At Work     Awa_y   ");
-						AND_THEN("we can move R out of the iteration") {
+					AND_THEN("we can cycle across the iteration") {
+						display1_h.rec_left_right(1);
+						CHECK(test_stream(display1_h.stream(tb)) == "House   At Work     At Home At Wor_k     Away   ");
+						AND_THEN("DOWN does nothing") {
+							display1_h.rec_up_down(1);
+							CHECK(test_stream(display1_h.stream(tb)) == "House   At Work     At Home At Wor_k     Away   ");
 							display1_h.rec_left_right(1);
-							CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Away        At Home At Work     Away   ");
+							CHECK(test_stream(display1_h.stream(tb)) == "House   Away        At Home At Work     Awa_y   ");
+							AND_THEN("we can move R out of the iteration") {
+								display1_h.rec_left_right(1);
+								CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Away        At Home At Work     Away   ");
+							}
 						}
 					}
 				}
@@ -2777,7 +2807,7 @@ TEST_CASE("Contrast", "[Display]") {
 	HardwareInterfaces::LocalDisplay mainDisplay(&_q_displays);
 
 	// Basic UI Elements
-	client_data_structures::Contrast_Brightness_Cmd _contrastCmd{ "Contrast",0, Behaviour{V + S + L+V1 + UD_A} };
+	client_data_structures::Contrast_Brightness_Cmd _contrastCmd{ "Contrast",0, Behaviour{V + S + L+V1 + UD_C} };
 	_contrastCmd.setDisplay(mainDisplay);
 	// Pages - Collections of UI handles
 	cout << "\ntt_page Elements Collection\n";
@@ -2785,7 +2815,7 @@ TEST_CASE("Contrast", "[Display]") {
 
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(_page_contrast_c);
-	_contrastCmd.set_UpDn_Target(_contrastCmd.function(Contrast_Brightness_Cmd::e_contrast));
+	//_contrastCmd.set_UpDn_Target(_contrastCmd.function(Contrast_Brightness_Cmd::e_contrast));
 
 	auto display1_h = A_Top_UI(display1_c);
 
@@ -3056,13 +3086,14 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_left_right(-1); clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contras_t");
 	display1_h.rec_up_down(-1);
-	display1_h.rec_prevUI(); clock_().setSeconds(0);
+	display1_h.rec_prevUI(); 
+	clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$10 is:16 DnStrs Req$10 is:16 DHW    Req$10 is:45 Flat   Req$10 is:16 ");
 	display1_h.rec_up_down(-1);
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	//											 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 	//											 Line[0]			 Line[1]			 Line[2]			 Line[3]
 	cout << test_stream(display1_h.stream(tb)) << endl;
@@ -3101,125 +3132,125 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 		logger() << tt.id() << ": " << tt.rec() << L_endl;
 	}	
 	
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Ds: MTWTFSS0700a20 1100p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Day:MTWTFSS0700a20 1100p18");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Ds: MTWTFSS0630a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Wor_kZne: US  Day:MTWTFSS0630a15 1100p19");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At Hom_eZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(-1);
  	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Ds_: MTWTF--0630a45 0900a30     0330p45 1030p30");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Day_:MTWTF--0630a45 0900a30     0330p45 1030p30");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Ds_: -----SS0730a45 0930a30     0300p45 1030p30");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Day_:-----SS0730a45 0930a30     0300p45 1030p30");
 	display1_h.rec_left_right(-1);
 	display1_h.rec_left_right(-1);
 	display1_h.rec_left_right(-1);
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Ds: MTWTFSS0700a20 1100p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Day:MTWTFSS0700a20 1100p18");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Ds: MTWTFSS0700a20 1100p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Day:MTWTFSS0700a20 1100p18");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Prg: Occup'_dZne: Flt Ds: MTWTFSS0700a20 1100p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Prg: Occup'_dZne: Flt Day:MTWTFSS0700a20 1100p18");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Prg: Occup'dZne: Fl_t Ds: MTWTFSS0700a20 1100p18");
+	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Prg: Occup'dZne: Fl_t Day:MTWTFSS0700a20 1100p18");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Prg: Occup'dZne: DH_W Ds: MTWTFSS0700a45 1000a30     0400p45 1100p30");
+	CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Prg: Occup'dZne: DH_W Day:MTWTFSS0700a45 1000a30     0400p45 1100p30");
 	display1_h.rec_left_right(-1);
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: DHW Ds: MTWTFSS0700a45 1000a30     0400p45 1100p30");
+	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: DHW Day:MTWTFSS0700a45 1000a30     0400p45 1100p30");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a15 1100p1_9");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p1_9");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFSS0730a1_5 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a1_5 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds: MTWTFS_S0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFS_S0730a15 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Ds_: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day_:MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Ds: MTWTFSS0730a15 1100p19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: U_S  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(1);
 	display1_h.rec_left_right(1);
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: MTWTF-_-0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:MTWTF-_-0740a19 1100p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M#TWTF--0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M#TWTF--0740a19 1100p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M#-WTF--0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M#-WTF--0740a19 1100p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-_-0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-_-0740a19 1100p16");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---S_S0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T---S_S0800a19 1050p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T#---SS0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T#---SS0800a19 1050p16");
 	display1_h.rec_left_right(1);
 	display1_h.rec_left_right(1);
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---#SS0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T---#SS0800a19 1050p16");
 	display1_h.rec_up_down(1);
 	
 	display1_h.rec_select(); // remove Saturday, create a new profile.
 
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T----_S0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T----_S0800a19 1050p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -----S_-0700a18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-----S_-0700a18");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-_-0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-_-0740a19 1100p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M#-WTF--0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M#-WTF--0740a19 1100p16");
 	display1_h.rec_left_right(-1); // Steal Sunday from later profile
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-#-0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-#-0740a19 1100p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-#S0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-#S0740a19 1100p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-_S0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-_S0740a19 1100p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T----_-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T----_-0800a19 1050p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -----S_-0700a18");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-----S_-0700a18");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T----_-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T----_-0800a19 1050p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T#-----0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T#-----0800a19 1050p16");
 	display1_h.rec_left_right(-1); 	// Steal Saturday from later profile - deletes that profile
 	display1_h.rec_left_right(-1); 
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---#S-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T---#S-0800a19 1050p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---S_-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T---S_-0800a19 1050p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-_S0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-_S0740a19 1100p16");
 	display1_h.rec_up_down(1); 
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---S_-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T---S_-0800a19 1050p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M-WTF-_S0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-_S0740a19 1100p16");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T---S_-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T---S_-0800a19 1050p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T#---S-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T#---S-0800a19 1050p16");
 	display1_h.rec_up_down(1); // Steal Wednesday from earlier profile
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -T#W--S-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T#W--S-0800a19 1050p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: -TW--S_-0800a19 1050p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-TW--S_-0800a19 1050p16");
 	display1_h.rec_up_down(-1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M--TF-_S0740a19 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M--TF-_S0740a19 1100p16");
 	display1_h.rec_left_right(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M--TF-S0740a1_9 1100p16");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M--TF-S0740a1_9 1100p16");
 	display1_h.rec_select();
-	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Ds: M--TF-SDelete Edi_t New     0740a19");
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M--TF-SDelete Edi_t New     0740a19");
   }
 #endif
 

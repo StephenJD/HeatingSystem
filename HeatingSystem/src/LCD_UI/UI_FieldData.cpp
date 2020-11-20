@@ -143,11 +143,12 @@ namespace LCD_UI {
 		setCount(_data->resetCount());
 	}
 
-	bool UI_FieldData::move_focus_by(int moveBy, Collection_Hndl* colln_hndl) {
-		if (!data()->actionOn_UD(fieldID())) {
-			return LazyCollection::move_focus_by(moveBy, colln_hndl);
+	bool UI_FieldData::upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) {
+		if (ud_behaviour.is_cmd_on_UD()) {
+			return !data()->actionOn_UD(fieldID());
 		}
-		return true;
+		return colln_hndl->move_focus_by(moveBy);
 	}
+
 
 }
