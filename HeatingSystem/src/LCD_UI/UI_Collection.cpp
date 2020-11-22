@@ -336,7 +336,7 @@ namespace LCD_UI {
 		filter(filter_viewable());
 		auto hasStreamed = false;
 #ifdef ZPSIM
-//		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;
+		cout << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << endl;
 #endif
 		if (behaviour().is_viewOne()) {
 			hasStreamed = activeUI()->get()->streamElement(buffer, activeElement,endPos , listStatus);
@@ -344,7 +344,7 @@ namespace LCD_UI {
 			for (auto & element : *this) {
 				auto i = objectIndex();
 #ifdef ZPSIM
-//				cout << "\t[" << i << "]: " << ui_Objects()[(long)&element] << endl;
+				cout << "\t[" << i << "]: " << ui_Objects()[(long)&element] << endl;
 #endif
 				if (element.behaviour().is_OnNewLine()) buffer.newLine();
 				if (element.collection() && element.behaviour().is_viewOne()) {
@@ -352,7 +352,7 @@ namespace LCD_UI {
 					if (thisActiveObj) {
 						auto & object = *thisActiveObj->get();
 #ifdef ZPSIM
-//						cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
+						cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
 #endif
 						hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
 					} 
@@ -367,7 +367,7 @@ namespace LCD_UI {
 						thisActiveObj = 0;
 					}
 #ifdef ZPSIM
-//					cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
+					cout << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << endl;
 #endif
 					hasStreamed = element.streamElement(buffer, thisActiveObj,endPos , listStatus);
 				}
