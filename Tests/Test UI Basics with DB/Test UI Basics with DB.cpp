@@ -33,25 +33,25 @@
 #include <iomanip>
 
 #define DATABASE
-#define UI_DB_DISPLAY_VIEW_ONE
-#define UI_DB_DISPLAY_VIEW_ALL
-#define UI_DB_SHORT_LISTS
-#define EDIT_NAMES_NUMS
-#define BACK_TRACKING
-//////#define EDIT_INTS
+//#define UI_DB_DISPLAY_VIEW_ONE
+//#define UI_DB_DISPLAY_VIEW_ALL
+//#define UI_DB_SHORT_LISTS
+//#define EDIT_NAMES_NUMS
+//#define BACK_TRACKING
+////////#define EDIT_INTS
+////
+////////#define EDIT_FORMATTED_INTS
+////
+//#define EDIT_DATES
+//#define EDIT_CURRENT_DATETIME
+//#define ITERATION_VARIANTS
+//#define ITERATED_ZONE_TEMPS
 //
-//////#define EDIT_FORMATTED_INTS
-//
-#define EDIT_DATES
-#define EDIT_CURRENT_DATETIME
-#define ITERATION_VARIANTS
-#define ITERATED_ZONE_TEMPS
-
-#define CONTRAST
-#define VIEW_ONE_NESTED_CALENDAR_PAGE
-#define VIEW_ONE_NESTED_PROFILE_PAGE
-#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
-#define TIME_TEMP_EDIT
+//#define CONTRAST
+//#define VIEW_ONE_NESTED_CALENDAR_PAGE
+//#define VIEW_ONE_NESTED_PROFILE_PAGE
+//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+//#define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
 #define INFO_CONSOLE_PAGES
 
@@ -2214,8 +2214,8 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto rec_spellProg = Dataset_Program(q_spellProg, noVolData, &rec_dwSpells);
 
 	auto dwellNameUI_c = UI_FieldData(&rec_dwelling, Dataset_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,{V+S+L+VnLR+UD_C+R0});
-	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V + S + L + VnLR + UD_C + R0});
+	auto zoneNameUI_c = UI_FieldData(&rec_dwZone, Dataset_Zone::e_name,{V+S+VnLR+UD_C+R0});
+	auto progNameUI_c = UI_FieldData(&rec_dwProgs, Dataset_Program::e_name, {V + S + VnLR + UD_C + R0});
 	auto dwellSpellUI_c = UI_FieldData(&rec_dwSpells, Dataset_Spell::e_date, { V + S + V1 + UD_E });
 	auto spellProgUI_c = UI_FieldData(&rec_spellProg, Dataset_Program::e_name, { V + S +L+ V1+UD_A+ER+EA });
 
@@ -2232,6 +2232,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	UI_Cmd _dwellingZoneCmd = { "Zones",0 }, _dwellingCalendarCmd = { "Calendar",0 }, _dwellingProgCmd = { "Programs",0 };
 	InsertSpell_Cmd _fromCmd = { "From", 0, Behaviour{V + S + L+ V1 + UD_C} };
 	UI_Label _insert = { "Insert-Prog", Behaviour{H+L0} };
+	UI_Label _newline = { "`"};
 
 	ui_Objects()[(long)&iteratedZoneName] = "iteratedZoneName";
 	ui_Objects()[(long)&iteratedProgName] = "iteratedProgName";
@@ -2242,7 +2243,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	ui_Objects()[(long)&_insert] = "_insert";
 
 	// UI Element Arays / Collections
-	auto zone_subpage_c = makeCollection(_dwellingZoneCmd, iteratedZoneName);
+	auto zone_subpage_c = makeCollection(_dwellingZoneCmd, _newline, iteratedZoneName);
 	auto calendar_subpage_c = makeCollection(_dwellingCalendarCmd, _insert, _fromCmd, dwellSpellUI_c, spellProgUI_c);
 	auto prog_subpage_c = makeCollection(_dwellingProgCmd, iteratedProgName);
 	zone_subpage_c.behaviour().make_noRecycle();
@@ -2872,16 +2873,17 @@ SCENARIO("TimeTemps", "[Display]") {
 	cout << "\tprofile\n";
 	auto _profileDaysUI_c = UI_FieldData{ &_rec_profile, Dataset_ProfileDays::e_days, {V + S + V1 + UD_A + R + ER}, Dataset_Program::e_id };
 	cout << "\ttimeTemp\n";
-	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, { V + L + S + VnLR + UD_E + R0 +ER0 }, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
+	auto _timeTempUI_c = UI_FieldData(&_rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, { V + S + VnLR + UD_E + R0 +ER0 }, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
 	auto _iterated_timeTempUI = UI_IteratedCollection<1>{ 80, _timeTempUI_c};
 
 	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, {H + L + S + VnLR+UD_A} };
 	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, {H + S + VnLR+UD_A} };
 	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, {H + S} };
+	//UI_Label _newline{ "`" };
 
 	// Pages & sub-pages - Collections of UI handles
 	cout << "\ntt_page Elements Collection\n";
-	auto _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _iterated_timeTempUI) };
+	auto _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd/*, _newline*/, _iterated_timeTempUI) };
 	auto _page_profile_c{ makeCollection(_dwellNameUI_c, _progNameUI_c, _zoneAbbrevUI_c, _profileDaysUI_c, _tt_SubPage_c) };
 
 	cout << "\nDisplay     Collection\n";
@@ -2914,69 +2916,69 @@ SCENARIO("TimeTemps", "[Display]") {
 	GIVEN("we can scroll into a TT") {
 		display1_h.stream(tb);
 		cout << test_stream(display1_h.stream(tb)) << endl;
-		REQUIRE(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a15 1100p19");
+		REQUIRE(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a15     1100p19");
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFS_S             0730a15 1100p19");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFS_S 0730a15     1100p19");
 		display1_h.rec_left_right(1);
-		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_5 1100p19");
+		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a1_5     1100p19");
 		THEN("up-dn edits the temp") {
 			display1_h.rec_up_down(-1);
-			CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1#6 1100p19");
+			CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a1#6     1100p19");
 			AND_THEN("LR saves and edits the next temp") {
 				display1_h.rec_left_right(1);
-				CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1#9");
+				CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p1#9");
 				AND_THEN("SELECT when in EDIT saves the temp") {
 					display1_h.rec_select();
-					CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
+					CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p1_9");
 					AND_THEN("SELECT offers Delete/Edit/New") {
 						display1_h.rec_select();
 						CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1100p19");
 						THEN("RIGHT immediatly inserts new") {
 							display1_h.rec_left_right(1);
-							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#100p19");
+							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New 1#100p19");
 							cout << test_stream(display1_h.stream(tb)) << endl;
 							display1_h.rec_up_down(-1);
-							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p19");
+							CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New 1#200p19");
 							THEN("SAVE returns to TT list") {
 								display1_h.rec_select();
 								display1_h.stream(tb);
 								cout << test_stream(display1_h.stream(tb)) << endl;
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1_9");
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p19 1200p1_9");
 								display1_h.rec_up_down(1);
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1#8");
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1#8");
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p19 1200p1#8");
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p19 1200p1#8");
 								display1_h.rec_select();
-								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1_8");
+								CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p19 1200p1_8");
 								THEN("Cancelled NEW deletes the inserted TT") {
 									display1_h.rec_select();
 									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1200p18");
 									display1_h.rec_left_right(1);
-									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#200p18");
+									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New 1#200p18");
 									display1_h.rec_up_down(1);
-									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 1#100p18");
+									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New 1#100p18");
 									display1_h.rec_prevUI();
-									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p1_8");
+									CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p19 1200p1_8");
 									AND_THEN("DELETE removes seected TT") {
 										display1_h.rec_select();
 										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1200p18");
 										display1_h.rec_left_right(-1);
 										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delet_e              1200p18");
 										display1_h.rec_select();
-										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
+										CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p1_9");
 										THEN("EDIT and DELETE can be cancelled") {
 											display1_h.rec_select();
 											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1100p19");
 											display1_h.rec_prevUI();
-											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
+											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p1_9");
 											display1_h.rec_select();
 											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     1100p19");
 											display1_h.rec_left_right(-1);
 											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delet_e              1100p19");
 											display1_h.rec_prevUI();
-											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
+											CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p1_9");
 											AND_THEN("New inserts repeatedly") {
 												display1_h.rec_select();
 												display1_h.rec_left_right(1);
@@ -2989,32 +2991,32 @@ SCENARIO("TimeTemps", "[Display]") {
 												display1_h.rec_up_down(-1);
 												display1_h.rec_select();
 												display1_h.stream(tb);
-												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p19 0100p1_9");
+												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p19 1200p19 0100p1_9");
 												display1_h.rec_select();
 												display1_h.rec_left_right(1);
 												display1_h.rec_up_down(-1);
 												CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#200p19");
 												display1_h.rec_select();
 												THEN("Multiple TTs can be scrolled through") {
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p1_9");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1100p19 1200p19    0100p19 0200p1_9");
 													display1_h.rec_left_right(1);
-													CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p19");
+													CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   At Home US  MTWTFSS <1100p19 1200p19    0100p19 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p1_9");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1100p19 1200p19    0100p19 0200p1_9");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p1_9 0200p19");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1100p19 1200p19    0100p1_9 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p1_9    0100p19 0200p19");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1100p19 1200p1_9    0100p19 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p1_9 1200p19    0100p19 0200p19");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1100p1_9 1200p19    0100p19 0200p19");
 													display1_h.rec_left_right(-1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_6 1100p19     1200p19 0100p19>    ");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a1_6     1100p19 1200p19 0100p19>    ");
 													display1_h.rec_left_right(1);
 													display1_h.rec_left_right(1);
 													display1_h.rec_left_right(1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p19     1200p19 0100p1_9>    ");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS 0730a16     1100p19 1200p19 0100p1_9>    ");
 													display1_h.rec_left_right(1);
-													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1100p19 1200p19    0100p19 0200p1_9");
+													CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1100p19 1200p19    0100p19 0200p1_9");
 													THEN("More TTs inserted and any selected TT edited") {
 														display1_h.rec_select();
 														display1_h.rec_left_right(1);
@@ -3023,19 +3025,19 @@ SCENARIO("TimeTemps", "[Display]") {
 														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             New                 0#300p19");
 														display1_h.rec_select();
 														display1_h.stream(tb);
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1200p19 0100p19    0200p19 0300p1_9");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1200p19 0100p19    0200p19 0300p1_9");
 														display1_h.rec_select();
 														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0300p19");
 														display1_h.rec_select();
 														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Edit                0#300p19");
 														display1_h.rec_prevUI();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1200p19 0100p19    0200p19 0300p1_9");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1200p19 0100p19    0200p19 0300p1_9");
 														display1_h.rec_select();
 														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Delete Edi_t New     0300p19");
 														display1_h.rec_select();
 														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             Edit                0#300p19");
 														display1_h.rec_prevUI();
-														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             <1200p19 0100p19    0200p19 0300p1_9");
+														CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS <1200p19 0100p19    0200p19 0300p1_9");
 													}
 												}
 											}

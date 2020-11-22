@@ -33,7 +33,7 @@ namespace Assembly {
 		, _spellProgUI_c{ &db._rec_spellProg, Dataset_Program::e_name, {V+S+L+V1+UD_A+ER+EA}}
 		, _profileDaysUI_c{ &db._rec_profile, Dataset_ProfileDays::e_days, {V+S+V1+UD_A+R+ER}, Dataset_Program::e_id }
 		
-		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, {V + S + VnLR + UD_E + R0 +ER0}, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _timeTempUI_c{ &db._rec_timeTemps, Dataset_TimeTemp::e_TimeTemp, {V + S + L+ VnLR + UD_E + R0 +ER0}, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _tempSensorUI_c{ &db._rec_tempSensors, Dataset_TempSensor::e_name_temp, {V + S + VnLR + R}}
 		
 		, _towelRailNameUI_c{ &db._rec_towelRailParent, Dataset_TowelRail::e_name }
