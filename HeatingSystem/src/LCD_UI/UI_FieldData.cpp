@@ -32,10 +32,10 @@ namespace LCD_UI {
 		// parent field might have been changed
 		auto objectAtFocus = _data->query()[focusIndex()];
 #ifdef ZPSIM
-		logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)_field_StreamingTool_h.get()].c_str() <<  L_tabs 
-			<< F("\n\t\tFocusIndex was: ") << focusIndex()
-			<< F("\n\t\tObjectIndex was: ") << objectIndex()
-			<< F(" Parent ID was: ") << _data->parentIndex()
+		logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)_field_StreamingTool_h.get()].c_str()
+			<< F("\n\t\tWas Parent ID: ") << _data->parentIndex()
+			<< F(" FocusIndex: ") << focusIndex()
+			<< F(" ObjectIndex: ") << objectIndex()
 			<< L_endl;
 #endif		
 		bool focusWasInRange = objectAtFocus.status() == TB_OK;
@@ -51,10 +51,12 @@ namespace LCD_UI {
 		}
 		_data->setRecordID(focusIndex());
 
-//#ifdef ZPSIM
-//		logger() <<  L_tabs << F("\tNew FocusIndex: ") << focusIndex()
-//		<< F("New Obj ID: ") << objectAtFocus.id() << L_endl;
-//#endif
+#ifdef ZPSIM
+		logger() << F("\t\tNow Parent ID: ") << _data->parentIndex()
+			<< F(" FocusIndex: ") << focusIndex()
+			<< F(" ObjectIndex: ") << objectIndex()
+			<< L_endl;
+#endif
 		return true;
 	}
 
