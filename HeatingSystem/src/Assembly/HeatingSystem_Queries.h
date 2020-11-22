@@ -23,6 +23,18 @@ namespace Assembly {
 
 	//private:
 		RelationalDatabase::RDB<TB_NoOfTables> * _rdb;
+		// DB Record Interfaces
+		client_data_structures::RecInt_CurrDateTime	_recCurrTime;
+		client_data_structures::RecInt_Dwelling		_recDwelling;
+		client_data_structures::RecInt_Zone			_recZone;
+		client_data_structures::RecInt_Program		_recProg;
+		client_data_structures::RecInt_Spell			_recSpell;
+		client_data_structures::RecInt_Profile		_recProfile;
+		client_data_structures::RecInt_TimeTemp		_recTimeTemp;
+		client_data_structures::RecInt_TempSensor		_recTempSensor;
+		client_data_structures::RecInt_TowelRail		_recTowelRail;
+		client_data_structures::RecInt_Relay			_recRelay;
+
 		// RDB Queries
 		RelationalDatabase::TableQuery _q_displays;
 		RelationalDatabase::TableQuery _q_dwellings;
@@ -44,22 +56,22 @@ namespace Assembly {
 		RelationalDatabase::TableQuery _q_relayParent;
 		RelationalDatabase::QueryM_T _q_relayChild;
 
-		// DB Record Interfaces
-		client_data_structures::Dataset_WithoutQuery _rec_currTime;
-		client_data_structures::Dataset_Dwelling _rec_dwelling;
-		client_data_structures::Dataset_Zone _rec_zones;
-		client_data_structures::Dataset_Zone _rec_zone_child;
-		client_data_structures::Dataset_Zone _rec_dwZones;
-		client_data_structures::Dataset_Program _rec_dwProgs;
-		client_data_structures::Dataset_Spell _rec_dwSpells;
-		client_data_structures::Dataset_Program _rec_spellProg;
-		client_data_structures::Dataset_ProfileDays _rec_profile;
-		client_data_structures::Dataset_TimeTemp _rec_timeTemps;
-		client_data_structures::Dataset_TempSensor _rec_tempSensors;
-		client_data_structures::Dataset_TowelRail _rec_towelRailParent;
-		client_data_structures::Dataset_TowelRail _rec_towelRailChild;
-		client_data_structures::Dataset_Relay _rec_relayParent;
-		client_data_structures::Dataset_Relay _rec_relayChild;
+		// DB Datasets
+		client_data_structures::Dataset _ds_currTime;
+		client_data_structures::Dataset _ds_dwellings;
+		client_data_structures::Dataset _ds_zones;
+		client_data_structures::Dataset _ds_zone_child;
+		client_data_structures::Dataset _ds_dwZones;
+		client_data_structures::Dataset_Program _ds_dwProgs;
+		client_data_structures::Dataset_Spell _ds_dwSpells;
+		client_data_structures::Dataset_Program _ds_spellProg;
+		client_data_structures::Dataset_Profile _ds_profile;
+		client_data_structures::Dataset _ds_timeTemps;
+		client_data_structures::Dataset _ds_tempSensors;
+		client_data_structures::Dataset _ds_towelRailParent;
+		client_data_structures::Dataset _ds_towelRailChild;
+		client_data_structures::Dataset _ds_relayParent;
+		client_data_structures::Dataset _ds_relayChild;
 	};
 
 }

@@ -50,25 +50,26 @@ namespace client_data_structures {
 	}
 
 	//***************************************************
-	//              Zone DB Interface
+	//              RecInt_Zone
 	//***************************************************
 
 	/// <summary>
 	/// DB Interface to all Zone Data
 	/// Provides streamable fields which may be populated by a database or the runtime-data.
-	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getFieldAt
 	/// </summary>
-	class Dataset_Zone : public Record_Interface<R_Zone> {
+	class RecInt_Zone : public Record_Interface<R_Zone> {
 	public:
 		enum streamable { e_name, e_abbrev, e_reqTemp, e_offset, e_isTemp, e_isHeating, e_ratio, e_timeConst, e_quality, e_minsPerHalfDegree	};
-		Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
+		RecInt_Zone(VolatileData* runtimeData);
+		VolatileData* runTimeData() override { return _runTimeData; }
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
 		bool actionOn_UD(int _fieldID) override;
 
 		HardwareInterfaces::Zone& zone(int index);
 	private:
+		VolatileData* _runTimeData;
 		StrWrapper _name;
 		StrWrapper _abbrev;
 		IntWrapper _requestTemp;

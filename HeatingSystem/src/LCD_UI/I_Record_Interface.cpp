@@ -7,22 +7,25 @@
 
 namespace LCD_UI {
 	using namespace RelationalDatabase;
+	//****************************************************
+	//                Dataset
+	//****************************************************
 
-	I_Record_Interface::I_Record_Interface(Query & query, VolatileData * runtimeData, I_Record_Interface * parent) :
+	Dataset::Dataset(I_Record_Interface & recordInterface, Query & query, Dataset * parent) :
 		_recSel(query.begin())
-		,_runtimeData(runtimeData)
 		,_parent(parent)
+		, _recInterface(&recordInterface)
 		,_count(query.end().id())
 	{}
 
-	I_Data_Formatter * I_Record_Interface::initialiseRecord(int fieldID) {
+	I_Data_Formatter * Dataset::initialiseRecord(int fieldID) {
 		query().setMatchArg(parentIndex());
 		record() = *_recSel.begin();
 		setRecordID(_recSel.id());
-		return getField(fieldID);
+		return i_record().getField(fieldID);
 	}
 
-	int I_Record_Interface::resetCount() {
+	int Dataset::resetCount() {
 		query().setMatchArg(parentIndex());
 		auto originalID = _recSel.id();
 		query().moveTo(_recSel, _recSel.id());
@@ -35,18 +38,17 @@ namespace LCD_UI {
 		return _count; 
 	}
 
-	int I_Record_Interface::parentIndex() const { 
+	int Dataset::parentIndex() const {
 		if (_parent == 0) return 0;
 		return _parent->recordID();
 	}
 
-	
-	I_Data_Formatter * I_Record_Interface::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
+	I_Data_Formatter * Dataset::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
 		move_to(id);
-		return getField(fieldID);
+		return i_record().getField(fieldID);
 	}
 
-	TB_Status I_Record_Interface::move_by(int move) {
+	TB_Status Dataset::move_by(int move) {
 		query().setMatchArg(parentIndex());
 		RecordSelector editRS;
 		RecordSelector & recSel = (_inEdit ? editRS = query().resultsQ().begin() : _recSel);
@@ -56,7 +58,7 @@ namespace LCD_UI {
 		return record().status();
 	}
 
-	int I_Record_Interface::last() {
+	int Dataset::last() {
 		query().setMatchArg(parentIndex());
 		RecordSelector editRS;
 		RecordSelector & recSel = (_inEdit ? editRS = query().resultsQ().begin() : _recSel);
@@ -66,7 +68,7 @@ namespace LCD_UI {
 		return recSel.signed_id();
 	}
 
-	int I_Record_Interface::move_to(int pos) {
+	int Dataset::move_to(int pos) {
 		// lambdas
 		auto okAtOrAfterPos = [](int difference, int directionSign, int differenceSign, TB_Status copyAnswerStatus) {return copyAnswerStatus == TB_OK && (difference == 0 || directionSign != differenceSign); };
 		auto isSingleMatchQ = [this](TB_Status copyAnswerStatus, RecordSelector & recSel) {
@@ -129,14 +131,21 @@ namespace LCD_UI {
 		return recordID();
 	}
 
-	void I_Record_Interface::deleteData() {
+	bool Dataset::setNewValue(int fieldID, const I_Data_Formatter* val) {
+		i_record().setNewValue(fieldID, val);
+		setRecordID(i_record().record().id());
+		return false;
+	}
+
+	void Dataset::insertNewData() {
+		record() = i_record().duplicateRecord(_recSel);
+		setRecordID(record().id());
+	}
+
+	void Dataset::deleteData() {
 		_recSel->deleteRecord();
 		_recSel += 0;
 		if (_recSel.status() == TB_END_STOP) --_recSel;
 		setRecordID(_recSel.signed_id());
-	}
-
-	void I_Record_Interface::setFieldValue(int fieldID, int value) {
-		getField(fieldID);
 	}
 }

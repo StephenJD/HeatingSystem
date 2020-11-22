@@ -12,8 +12,8 @@ namespace client_data_structures {
 	//             Dataset_Zone
 	//***************************************************
 
-	Dataset_Zone::Dataset_Zone(Query & query, VolatileData * runtimeData, I_Record_Interface * parent)
-		: Record_Interface(query, runtimeData, parent),
+	RecInt_Zone::RecInt_Zone(VolatileData * runtimeData)
+		: _runTimeData(runtimeData),
 		_name("", 6)
 		, _abbrev("", 3)
 		, _requestTemp(90, ValRange(e_fixedWidth | e_editAll, 10, 90))
@@ -25,14 +25,10 @@ namespace client_data_structures {
 	{
 	}
 
-	HardwareInterfaces::Zone& Dataset_Zone::zone(int index) { return static_cast<HardwareInterfaces::Zone*>(runTimeData())[index]; }
+	HardwareInterfaces::Zone& RecInt_Zone::zone(int index) { return static_cast<HardwareInterfaces::Zone*>(runTimeData())[index]; }
 
-	I_Data_Formatter * Dataset_Zone::getField(int fieldID) {
+	I_Data_Formatter * RecInt_Zone::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
-		if (_recSel.id() != recordID()) {
-			logger() << " *** ERROR RecordID out of sync ****\n";
-			move_by(0);
-		}
 		switch (fieldID) {
 		case e_name:
 			_name = record().rec().name;
@@ -79,7 +75,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Zone::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
+	bool RecInt_Zone::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 
 		switch (fieldID) {
 		case e_name: {
@@ -88,13 +84,11 @@ namespace client_data_structures {
 			auto debug = record();
 			debug.rec();
 			strcpy(record().rec().name, _name.str());
-			setRecordID(record().update());
 			break; }
 		case e_abbrev: {
 			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(newValue));
 			_abbrev = *strWrapper;
 			strcpy(record().rec().abbrev, _abbrev.str());
-			setRecordID(record().update());
 			break; }
 		case e_reqTemp:
 		{
@@ -103,34 +97,30 @@ namespace client_data_structures {
 			auto reqTemp = uint8_t(newValue->val);
 			z.offsetCurrTempRequest(reqTemp);
 			record().rec().offsetT = z.offset();
-			setRecordID(record().update());
 			break;
 		}
 		case e_ratio:
 			_autoRatio = *newValue;
 			record().rec().autoRatio = decltype(record().rec().autoRatio)(_autoRatio.val);
-			setRecordID(record().update());
 			break; 
 		case e_timeConst: 
 			_autoTimeC = *newValue;
 			record().rec().autoTimeC = decltype(record().rec().autoTimeC)(_autoTimeC.val);
-			setRecordID(record().update());
 			break; 
 		case e_quality:
 			_autoQuality = *newValue;
 			record().rec().autoQuality = decltype(record().rec().autoQuality)(_autoQuality.val);
-			setRecordID(record().update());
 			break;
 		case e_minsPerHalfDegree:
 			_manHeatTime = *newValue;
 			record().rec().manHeatTime = decltype(record().rec().manHeatTime)(_manHeatTime.val);
-			setRecordID(record().update());
 			break;
 		}
+		record().update();
 		return false;
 	}
 
-	bool Dataset_Zone::actionOn_UD(int fieldID) {
+	bool RecInt_Zone::actionOn_UD(int fieldID) {
 		switch (fieldID) {
 		case e_reqTemp: {
 			logger() << "Select Next Sequence Event " << record().rec().name << " ID: " << record().id() << L_endl;

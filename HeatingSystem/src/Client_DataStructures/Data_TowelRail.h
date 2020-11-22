@@ -29,23 +29,24 @@ namespace client_data_structures {
 	}
 
 	//***************************************************
-	//              TowelRail DB Interface
+	//              RecInt_TowelRail 
 	//***************************************************
 
 	/// <summary>
 	/// DB Interface to all TowelRail Data
 	/// Provides streamable fields which may be populated by a database or the runtime-data.
-	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getFieldAt
 	/// </summary>
-	class Dataset_TowelRail : public Record_Interface<R_TowelRail> {
+	class RecInt_TowelRail : public Record_Interface<R_TowelRail> {
 	public:
 		enum streamable { e_name, e_onTemp, e_minutesOn, e_secondsToGo, e_TowelRailID };
-		Dataset_TowelRail(Query & query, VolatileData * runtimeData, I_Record_Interface * parent);
+		RecInt_TowelRail(VolatileData * runtimeData);
+		VolatileData* runTimeData() override { return _runTimeData; }
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
 		HardwareInterfaces::TowelRail & towelRail(int index) { return static_cast<HardwareInterfaces::TowelRail*>(runTimeData())[index]; }
 	private:
+		VolatileData * _runTimeData;
 		StrWrapper _name;
 		IntWrapper _onTemp;
 		IntWrapper _minutesOn;

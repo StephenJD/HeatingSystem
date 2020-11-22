@@ -40,7 +40,7 @@ namespace client_data_structures {
 	int Edit_ProfileDays_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(6); // initial cursorPos when selected (not in edit)
-		return Dataset_ProfileDays::firstIncludedDayPosition(currValue().val)+1;
+		return Dataset_Profile::firstIncludedDayPosition(currValue().val)+1;
 	}
 
 	//*************ProfileDays_Interface****************
@@ -59,23 +59,23 @@ namespace client_data_structures {
 	}
 
 	bool ProfileDays_Interface::isActionableObjectAt(int index) const {
-		auto firstDay = Dataset_ProfileDays::firstIncludedDayPosition(_editItem.currValue().val);
+		auto firstDay = Dataset_Profile::firstIncludedDayPosition(_editItem.currValue().val);
 		if (index <= firstDay) return false;
 		return true;
 	}
 
-	//*************Dataset_ProfileDays****************
-	Dataset_ProfileDays::Dataset_ProfileDays(Query & query, VolatileData * runtimeData, I_Record_Interface * dwellProgs, I_Record_Interface * dwellZone)
-		: Record_Interface(query, runtimeData, dwellProgs)
-		, _days(0, ValRange(e_editAll, 0, 127, 0, 7))
-		, _dwellZone(dwellZone)
-	{
-#ifdef ZPSIM
-		ui_Objects()[(long)this] = "Dataset_ProfileDays";
-#endif
+	//*************Dataset_Profile****************
+	Dataset_Profile::Dataset_Profile(I_Record_Interface& recordInterface, Query& query, Dataset* programUI, Dataset* zoneUI) :
+		Dataset(recordInterface, query, programUI)
+		, _dwellZone(zoneUI) {}
+
+	I_Data_Formatter* Dataset_Profile::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
+		setMatchArgs();
+		move_to(id);
+		return i_record().getField(fieldID);
 	}
 
-	void Dataset_ProfileDays::setMatchArgs() {
+	void Dataset_Profile::setMatchArgs() {
 		// ProfileDays depends on dwellProgs RecordInterface and dwellingZone RecordInterface.
 		// Each is selected on the user-interface.
 		// The ProfileDays query is a FilterQ, filtering on ProgramID obtained from the parent dwellProgs RecordInterface.
@@ -84,7 +84,6 @@ namespace client_data_structures {
 		// The dwellingZone RecordInterface has a Link Query to DwellingZones as its source. Its Record() is a Zone.
 
 		query().setMatchArg(parentIndex()); // parent is ProgramID. Required here
-		//auto zone = static_cast<Answer_R<R_Zone> &>(_dwellZone->record());
 		Answer_R<R_Zone> zone = _dwellZone->record();
 		auto zoneID = zone.id();
 		auto prevMatchArg = query().iterationQ().matchArg();
@@ -95,25 +94,12 @@ namespace client_data_structures {
 		}
 	}
 
-	int Dataset_ProfileDays::resetCount() {
+	int Dataset_Profile::resetCount() {
 		setMatchArgs();
-		return Record_Interface::resetCount();
+		return Dataset::resetCount();
 	}
 
-	I_Data_Formatter * Dataset_ProfileDays::getField(int fieldID) {
-		if (recordID() == -1) return 0;
-		setMatchArgs();
-		switch (fieldID) {
-		case e_days:
-			//logger() << "Curr Profile UpdateTime:" << record().lastReadTime() << " TableUpdate: " << record().table()->lastModifiedTime() << L_endl;
-			//logger() << "Curr Profile: " << record().rec() << L_endl;
-			_days = record().rec().days;
-			return &_days;
-		default: return 0;
-		}
-	}
-
-	bool Dataset_ProfileDays::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
+	bool Dataset_Profile::setNewValue(int fieldID, const I_Data_Formatter* newValue) {
 		// Every Profile needs at least one TT
 		// The collection of profiles for this Program/Zone must include all days just once
 		// The first missing day up to that profile must be the first included day in the next profile.
@@ -122,30 +108,24 @@ namespace client_data_structures {
 		//  b) If a day is stolen from a later profile the next missing day must be found and moved to the next profile.
 		// Empty profiles must delete their TT's
 		// New profiles must be given a copy of it's parent TTs.
-		switch (fieldID) {
-		case e_days: {
-			uint8_t oldDays = _days.val & 0x7F;
-			uint8_t newDays = uint8_t(newValue->val);
-			uint8_t removedDays = oldDays & ~newDays;
-			uint8_t addedDays = newDays & ~oldDays;
-			record().rec().days = newDays;
-			setRecordID(record().update());
-			addDaysToNextProfile(removedDays);
-			stealFromOtherProfile(record().id(), addedDays);
-			promoteOutOfOrderDays();
-			break;
-			}
-		default: ;
-		}
+		auto & profile = static_cast<Answer_R<R_Profile>>(record()).rec();
+		uint8_t oldDays = profile.days & 0x7F;
+		uint8_t newDays = uint8_t(newValue->val);
+		uint8_t removedDays = oldDays & ~newDays;
+		uint8_t addedDays = newDays & ~oldDays;
+		profile.days = newDays;
+		addDaysToNextProfile(removedDays);
+		stealFromOtherProfile(record().id(), addedDays);
+		promoteOutOfOrderDays();
 		return false;
 	}
 
-	void Dataset_ProfileDays::addDays(Answer_R<R_Profile> & profile, uint8_t days) {
+	void Dataset_Profile::addDays(Answer_R<R_Profile> & profile, uint8_t days) {
 		profile.rec().days |= days;
 		profile.update();
 	};
 
-	void Dataset_ProfileDays::addDaysToNextProfile(int daysToAdd) {
+	void Dataset_Profile::addDaysToNextProfile(int daysToAdd) {
 		// Algorithm
 		if (daysToAdd) {
 			Answer_R<R_Profile> profile = *(++_recSel);
@@ -159,7 +139,7 @@ namespace client_data_structures {
 		}
 	}
 
-	void Dataset_ProfileDays::stealFromOtherProfile(int thisProfile, int daysToRemove) {
+	void Dataset_Profile::stealFromOtherProfile(int thisProfile, int daysToRemove) {
 		// Lambdas
 		auto removeDays = [](uint8_t days, Answer_R<R_Profile> & profile) {
 			if (days) {
@@ -178,13 +158,13 @@ namespace client_data_structures {
 		}
 	}
 
-	int Dataset_ProfileDays::firstIncludedDayPosition(int days) {
+	int Dataset_Profile::firstIncludedDayPosition(int days) {
 		int pos = 0;
 		firstIncludedDay(days, &pos);
 		return pos;
 	}
 
-	int Dataset_ProfileDays::firstIncludedDay(int days, int * pos) {
+	int Dataset_Profile::firstIncludedDay(int days, int * pos) {
 		auto _firstIncludedDay = 64;
 		if (days == 0) return 0;
 		while (!(days & _firstIncludedDay)) {
@@ -194,7 +174,7 @@ namespace client_data_structures {
 		return _firstIncludedDay;
 	}
 
-	int Dataset_ProfileDays::firstMissingDay(int days) {
+	int Dataset_Profile::firstMissingDay(int days) {
 		auto _firstMissingDay = 64;
 		if (days == 127) return 0;
 		while (!(~days & _firstMissingDay)) {
@@ -203,7 +183,7 @@ namespace client_data_structures {
 		return _firstMissingDay;
 	}
 
-	void Dataset_ProfileDays::promoteOutOfOrderDays() {
+	void Dataset_Profile::promoteOutOfOrderDays() {
 		auto _firstMissingDay = 64;
 		auto _foundDays = 0;
 		// Algorithm
@@ -220,16 +200,16 @@ namespace client_data_structures {
 		}
 	}
 
-	void Dataset_ProfileDays::createProfile(uint8_t days) {
+	void Dataset_Profile::createProfile(uint8_t days) {
 		if (days) {
-			auto profile = record().rec();
+			auto profile = static_cast<Answer_R<R_Profile>>(record()).rec();
 			profile.days = days;
 			auto newProfile = query().insert(profile);
 			createProfileTT(newProfile.id());
 		}
 	}
 
-	void Dataset_ProfileDays::createProfileTT(int profileID) {
+	void Dataset_Profile::createProfileTT(int profileID) {
 		auto rdb_b = query().getDB();
 		auto _db = static_cast<RDB<Assembly::TB_NoOfTables>*>(rdb_b);
 		auto tt_tableQ = _db->tableQuery(Assembly::TB_TimeTemp);
@@ -241,5 +221,28 @@ namespace client_data_structures {
 			tt_tableQ.insert(R_TimeTemp { RecordID(profileID), newTime });
 		}
 	}
+
+	//*************RecInt_Profile****************
+
+	RecInt_Profile::RecInt_Profile()
+		: _days(0, ValRange(e_editAll, 0, 127, 0, 7))
+	{
+#ifdef ZPSIM
+		ui_Objects()[(long)this] = "Dataset_Profile";
+#endif
+	}
+
+	I_Data_Formatter * RecInt_Profile::getField(int fieldID) {
+		if (recordID() == -1) return 0;
+		switch (fieldID) {
+		case e_days:
+			//logger() << "Curr Profile UpdateTime:" << record().lastReadTime() << " TableUpdate: " << record().table()->lastModifiedTime() << L_endl;
+			//logger() << "Curr Profile: " << record().rec() << L_endl;
+			_days = record().rec().days;
+			return &_days;
+		default: return 0;
+		}
+	}
+
 
 }

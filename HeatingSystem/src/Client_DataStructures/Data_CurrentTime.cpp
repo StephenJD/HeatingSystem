@@ -148,19 +148,18 @@ namespace client_data_structures {
 	//              Dataset_WithoutQuery Interface
 	//***************************************************
 
-	Dataset_WithoutQuery::Dataset_WithoutQuery()
-		: Record_Interface{ nullQuery }
-		, _currTime{ clock_().time(), ValRange(e_fixedWidth | e_editAll,0,uint16_t(-1),0,e_time) }
+	RecInt_CurrDateTime::RecInt_CurrDateTime()
+		: _currTime{ clock_().time(), ValRange(e_fixedWidth | e_editAll,0,uint16_t(-1),0,e_time) }
 		, _currDate{ clock_().date(), ValRange(e_fixedWidth | e_editAll, 0, uint16_t(-1),0,e_date)}
 		, _dst{ clock_().autoDSThours(),ValRange(e_edOneShort,0,2)}
 		, _SDCard{"",5}
 	{}
 
-	I_Data_Formatter * Dataset_WithoutQuery::getFieldAt(int fieldID, int elementIndex) {
-		return getField(fieldID);
-	}
+	//I_Data_Formatter * Dataset_WithoutQuery::getFieldAt(int fieldID, int elementIndex) {
+	//	return getField(fieldID);
+	//}
 
-	I_Data_Formatter * Dataset_WithoutQuery::getField(int fieldID) {
+	I_Data_Formatter * RecInt_CurrDateTime::getField(int fieldID) {
 		_currTime.val = clock_().time().asInt();
 		_currDate.val = clock_().date().asInt();
 		_dst.val = clock_().autoDSThours();
@@ -174,7 +173,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_WithoutQuery::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
+	bool RecInt_CurrDateTime::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		switch (fieldID) {
 		case e_currTime:
 			// Note: minute units are written to clock_() as they are edited.

@@ -12,7 +12,7 @@
 namespace LCD_UI {
 	using namespace RelationalDatabase;
 	class ValRange;
-	class I_Record_Interface;
+	class Dataset;
 	void notifyDataIsEdited(); // global function prototype for notifying anyone who needs to know
 
 	// **********************  Interface to Editable data ******************
@@ -24,7 +24,7 @@ namespace LCD_UI {
 	/// </summary>
 	class UI_FieldData : public LazyCollection {
 	public:
-		UI_FieldData(I_Record_Interface * dataset, int fieldID
+		UI_FieldData(Dataset * dataset, int fieldID = 0
 			, uint16_t collectionBehaviour = { V + S + V1 + R + UD_A + ER0}
 			, int selectFldID = 0, OnSelectFnctr onSelect = 0);
 
@@ -34,7 +34,7 @@ namespace LCD_UI {
 		int cursorOffset(const char * data) const override;
 		int nextIndex(int index) const override;
 		
-		I_Record_Interface * data() const { return _data; }
+		Dataset * data() const { return _data; }
 		const Coll_Iterator end() const { return Coll_Iterator( this, endIndex() ); }
 
 		// Polymorphic Modifiers
@@ -52,7 +52,7 @@ namespace LCD_UI {
 	private:
 		int fieldID() { return _field_StreamingTool_h.fieldID(); }
 		void moveToSavedRecord();
-		I_Record_Interface * _data;
+		Dataset * _data;
 		Field_StreamingTool_h _field_StreamingTool_h;
 		uint8_t _selectFieldID;
 	};

@@ -82,7 +82,39 @@ namespace client_data_structures {
 	};
 
 	//***************************************************
-	//              Profile DB Interface
+	//              Dataset_Profile
+	//***************************************************
+
+	/// <summary>
+	/// Obtains a complete record from the DB, based on a query.
+	/// Constructed with a RecordInterface, Query and two parent object pointers.
+	/// The object may be used for any of the fields returned by the query, via getField(fieldID)
+	/// </summary>
+	class Dataset_Profile : public Dataset {
+	public:
+		Dataset_Profile(I_Record_Interface& recordInterface, Query& query, Dataset* programUI, Dataset* zoneUI);
+		I_Data_Formatter* getFieldAt(int fieldID, int elementIndex) override; // moves to first valid record at id or past id from current position
+
+		int resetCount() override;
+		bool setNewValue(int fieldID, const I_Data_Formatter* val) override;
+
+		void setMatchArgs();
+		static int firstIncludedDay(int days, int * pos = 0);
+		static int firstIncludedDayPosition(int days);
+		static int firstMissingDay(int days);
+		void addDays(Answer_R<R_Profile> & profile, uint8_t days);
+		void addDaysToNextProfile(int daysToAdd);
+		void stealFromOtherProfile(int thisProfile, int daysToRemove);
+		void promoteOutOfOrderDays();
+		void createProfile(uint8_t days);
+		void createProfileTT(int profileID);
+	private:
+		Dataset * _dwellZone;
+
+	};
+
+	//***************************************************
+	//              RecInt_Profile
 	//***************************************************
 
 	/// <summary>
@@ -91,29 +123,15 @@ namespace client_data_structures {
 	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>
-	class Dataset_ProfileDays : public Record_Interface<R_Profile>
+	class RecInt_Profile : public Record_Interface<R_Profile>
 	{
 	public:
 		enum streamable { e_days };
-		Dataset_ProfileDays(Query & query, VolatileData * volData, I_Record_Interface * dwellProgs, I_Record_Interface * dwellZone);
-		int resetCount() override;
-		void setMatchArgs();
+		RecInt_Profile();
 		I_Data_Formatter * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
-		static int firstIncludedDay(int days, int * pos = 0);
-		static int firstIncludedDayPosition(int days);
-		static int firstMissingDay(int days);
 
 	private:
-		void addDays(Answer_R<R_Profile> & profile, uint8_t days);
-		void addDaysToNextProfile(int daysToAdd);
-		void stealFromOtherProfile(int thisProfile, int daysToRemove);
-		void promoteOutOfOrderDays();
-		void createProfile(uint8_t days);
-		void createProfileTT(int profileID);
-
 		ProfileDaysWrapper _days; // size is 32 bits.
-		I_Record_Interface * _dwellZone;
 	};
 
 

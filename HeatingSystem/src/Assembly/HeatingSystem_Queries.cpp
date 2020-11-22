@@ -5,8 +5,20 @@ using namespace client_data_structures;
 
 namespace Assembly {
 
-	HeatingSystem_Queries::HeatingSystem_Queries(RelationalDatabase::RDB<TB_NoOfTables> & rdb, TemperatureController & tc) :
+	HeatingSystem_Queries::HeatingSystem_Queries(RelationalDatabase::RDB<TB_NoOfTables>& rdb, TemperatureController& tc) :
 		_rdb(&rdb)
+		// DB Record Interfaces
+		, _recCurrTime()
+		, _recDwelling()
+		, _recZone(tc.zoneArr)
+		, _recProg()
+		, _recSpell()
+		, _recProfile()
+		, _recTimeTemp()
+		, _recTempSensor(tc.tempSensorArr)
+		, _recTowelRail(tc.towelRailArr)
+		, _recRelay(tc.relayArr)
+
 		// RDB Queries
 		, _q_displays{ rdb.tableQuery(TB_Display) }
 		, _q_dwellings{ rdb.tableQuery(TB_Dwelling) }
@@ -29,21 +41,21 @@ namespace Assembly {
 		, _q_relayChild{ rdb.tableQuery(TB_Relay) }
 
 		// DB Record Interfaces
-		, _rec_currTime{ Dataset_WithoutQuery() }
-		, _rec_dwelling{ Dataset_Dwelling(_q_dwellings, noVolData, 0) }
-		, _rec_zones{ _q_zones, tc.zoneArr, 0 }
-		, _rec_zone_child{ _q_zoneChild, tc.zoneArr, &_rec_zones }
-		, _rec_dwZones{ _q_dwellingZones, tc.zoneArr, &_rec_dwelling }
-		, _rec_dwProgs{ _q_dwellingProgs, noVolData, &_rec_dwelling }
-		, _rec_dwSpells{ _q_dwellingSpells, noVolData, &_rec_dwelling }
-		, _rec_spellProg{ _q_spellProg, noVolData, &_rec_dwSpells }
-		, _rec_profile{ _q_profile, noVolData, &_rec_dwProgs, &_rec_dwZones }
-		, _rec_timeTemps{ _q_timeTemps, noVolData, &_rec_profile }
-		, _rec_tempSensors{ _q_tempSensors, tc.tempSensorArr, 0 }
-		, _rec_towelRailParent{ _q_towelRailParent, tc.towelRailArr, 0 }
-		, _rec_towelRailChild{ _q_towelRailChild, tc.towelRailArr, &_rec_towelRailParent }
-		, _rec_relayParent{ _q_relayParent, tc.relayArr }
-		, _rec_relayChild{ _q_relayChild, tc.relayArr, &_rec_relayParent }
+		, _ds_currTime{ _recCurrTime , Null_Query{} }
+		, _ds_dwellings{ _recDwelling, _q_dwellings }
+		, _ds_zones{ _recZone, _q_zones }
+		, _ds_zone_child{ _recZone, _q_zoneChild, &_ds_zones }
+		, _ds_dwZones{ _recZone, _q_dwellingZones, &_ds_dwellings }
+		, _ds_dwProgs{ _recProg, _q_dwellingProgs, &_ds_dwellings }
+		, _ds_dwSpells{ _recSpell, _q_dwellingSpells, &_ds_dwellings }
+		, _ds_spellProg{ _recProg, _q_spellProg, &_ds_dwSpells }
+		, _ds_profile{ _recProfile, _q_profile, &_ds_dwProgs, &_ds_dwZones }
+		, _ds_timeTemps{ _recTimeTemp, _q_timeTemps, &_ds_profile }
+		, _ds_tempSensors{ _recTempSensor, _q_tempSensors }
+		, _ds_towelRailParent{ _recTowelRail, _q_towelRailParent}
+		, _ds_towelRailChild{ _recTowelRail, _q_towelRailChild, &_ds_towelRailParent }
+		, _ds_relayParent{ _recRelay, _q_relayParent }
+		, _ds_relayChild{ _recRelay, _q_relayChild, &_ds_relayParent }
 	{
 		logger() << F("Database queries constructed") << L_endl;
 	}

@@ -52,7 +52,8 @@ namespace Assembly {
 		
 		LCD_UI::UI_FieldData _timeTempUI_c;
 		
-		LCD_UI::UI_FieldData _tempSensorUI_c;
+		LCD_UI::UI_FieldData _tempSensorNameUI_c;
+		LCD_UI::UI_FieldData _tempSensorTempUI_c;
 		
 		LCD_UI::UI_FieldData _towelRailNameUI_c;
 		LCD_UI::UI_FieldData _towelRailTempUI_c;
@@ -90,7 +91,7 @@ namespace Assembly {
 		LCD_UI::Collection<4>_tt_SubPage_c;
 		LCD_UI::Collection<8> _page_profile_c;
 		// Info pages
-		LCD_UI::UI_IteratedCollection<1> _iterated_tempSensorUI;
+		LCD_UI::UI_IteratedCollection<2> _iterated_tempSensorUI;
 	
 		LCD_UI::UI_IteratedCollection<4> _iterated_towelRails_info_c;
 		LCD_UI::Collection<2> _page_towelRails_c;

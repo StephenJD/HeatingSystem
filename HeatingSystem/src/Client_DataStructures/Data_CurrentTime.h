@@ -133,22 +133,19 @@ namespace client_data_structures {
 
 
 	//***************************************************
-	//              Dataset_WithoutQuery UI
+	//              RecInt_CurrDateTime
 	//***************************************************
-	
-	struct R_NoQuery {};
 
 	/// <summary>
 	/// DB Interface to Data outside the RDB.
 	/// Provides streamable fields to special date.
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>
-	class Dataset_WithoutQuery : public Record_Interface<R_NoQuery>
+	class RecInt_CurrDateTime : public I_Record_Interface
 	{
 	public:
 		enum {e_currTime, e_currDate, e_dst, e_sdcard};
-		Dataset_WithoutQuery();
-		I_Data_Formatter * getFieldAt(int fieldID, int elementIndex) override;
+		RecInt_CurrDateTime();
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 	private:

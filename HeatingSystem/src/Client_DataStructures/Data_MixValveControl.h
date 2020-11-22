@@ -5,9 +5,6 @@
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace HardwareInterfaces;
-	//***************************************************
-	//              MixValveController UI Edit
-	//***************************************************
 
 	//***************************************************
 	//              MixValveController RDB Tables
@@ -25,14 +22,11 @@ inline Logger & operator << (Logger & stream, const R_MixValveControl & mixValve
 	return stream << F("R_MixValveControl ") << mixValve.name;
 }
 
-	//***************************************************
-	//              MixValveController LCD_UI
-	//***************************************************
+//***************************************************
+//              RecInt_MixValveController
+//***************************************************
 
-	//class UI_MixValveController : public I_Record_Interface
-	//{
-	//public:
+//class RecInt_MixValveController : public Record_Interface<R_MixValveControl> {
 
-	//};
 }
 

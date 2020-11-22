@@ -6,35 +6,30 @@
 
 namespace client_data_structures {
 	using namespace LCD_UI;
-	//***************************************************
-	//              Program UI Edit
-	//***************************************************
 
 	//***************************************************
-	//              Program Dynamic Class
+	//              Dataset_Program
 	//***************************************************
 
-	//***************************************************
-	//              Program RDB Tables
-	//***************************************************
-
-	//***************************************************
-	//              Program LCD_UI
-	//***************************************************
-
-	Dataset_Program::Dataset_Program(Query & query, VolatileData * volData, I_Record_Interface * parent)
-		: Record_Interface(query, volData,parent), _name("", 7) {
+	bool Dataset_Program::setNewValue(int fieldID, const I_Data_Formatter* newVal) {
+		if (fieldID == 0) { //e_id: edit parent spell.program
+			Answer_R<R_Spell> spell = query().iterationQ().incrementTableQ()[query().matchArg()];
+			spell.rec().programID = static_cast<uint8_t>(newVal->val);
+			spell.update();
+			return false;
+		} else return i_record().setNewValue(fieldID, newVal);
 	}
 
-	//int Dataset_Program::resetCount() {
-	//	return Record_Interface::resetCount();
-	//}
+	//***************************************************
+	//              RecInt_Program
+	//***************************************************
 
-	I_Data_Formatter * Dataset_Program::getField(int fieldID) {
-		if (recordID() == -1) return getFieldAt(fieldID, 0);
+	RecInt_Program::RecInt_Program()
+		: _name("", 7) {}
+
+	I_Data_Formatter * RecInt_Program::getField(int fieldID) {
+		//if (recordID() == -1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
-		//case e_id:
-
 		case e_name:
 			_name = record().rec().name;
 			return &_name;
@@ -42,19 +37,16 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Program::setNewValue(int fieldID, const I_Data_Formatter * newVal) {
+	bool RecInt_Program::setNewValue(int fieldID, const I_Data_Formatter * newVal) {
 		switch (fieldID) {
-		case e_name: {
-			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(newVal));
+		case e_name:
+		{
+			const StrWrapper* strWrapper(static_cast<const StrWrapper*>(newVal));
 			_name = *strWrapper;
 			strcpy(record().rec().name, _name.str());
-			setRecordID(record().update());
-			break; }
-		case e_id: { // edit parent spell.program
-			Answer_R<R_Spell> spell = query().iterationQ().incrementTableQ()[query().matchArg()];
-			spell.rec().programID = static_cast<uint8_t>(newVal->val);
-			spell.update();
-			}
+			record().update();
+			break;
+		}
 		}
 		return false;
 	}

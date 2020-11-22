@@ -6,14 +6,6 @@
 namespace client_data_structures {
 	using namespace LCD_UI;
 	//***************************************************
-	//              Dwelling UI Edit
-	//***************************************************
-
-	//***************************************************
-	//              Dwelling Dynamic Class
-	//***************************************************
-
-	//***************************************************
 	//              Dwelling RDB Tables
 	//***************************************************
 
@@ -28,21 +20,19 @@ namespace client_data_structures {
 	}
 
 	//***************************************************
-	//              Dwelling LCD_UI
+	//              RecInt_Dwelling
 	//***************************************************
 
 	/// <summary>
 	/// DB Interface to all Dwelling Data
 	/// Provides streamable fields which may be populated by a database or the runtime-data.
-	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>	
-	class Dataset_Dwelling : public Record_Interface<R_Dwelling> {
+	class RecInt_Dwelling : public Record_Interface<R_Dwelling> {
 	public:
 		enum streamable { e_name };
 		enum subAssembly { s_zone, s_program };
-		Dataset_Dwelling(Query & query, VolatileData * volData, I_Record_Interface * parent);
-		//I_Data_Formatter * getFieldAt(int fieldID, int elementIndex ) override;
+		RecInt_Dwelling();
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 

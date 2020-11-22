@@ -42,23 +42,25 @@ namespace client_data_structures {
 	}
 
 	//***************************************************
-	//              Relay LCD_UI
+	//              RecInt_Relay
 	//***************************************************
 
 	/// <summary>
 	/// DB Interface to all Relay Data
 	/// Provides streamable fields which may be populated by a database or the runtime-data.
-	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getFieldAt
 	/// </summary>
-	class Dataset_Relay : public Record_Interface<R_Relay> {
+	class RecInt_Relay : public Record_Interface<R_Relay> {
 	public:
 		enum streamable { e_name, e_state };
-		Dataset_Relay(Query & query, VolatileData * runtimeData, I_Record_Interface * parent = 0);
+		RecInt_Relay(VolatileData * runtimeData);
+		VolatileData* runTimeData() override { return _runtimeData; }
+
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
 		HardwareInterfaces::UI_Bitwise_Relay & relay(int index) { return static_cast<HardwareInterfaces::UI_Bitwise_Relay*>(runTimeData())[index]; }
 	private:
+		VolatileData* _runtimeData;
 		StrWrapper _name;
 		IntWrapper _status;
 	};

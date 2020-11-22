@@ -13,14 +13,14 @@ namespace client_data_structures {
 	//             Dataset_TowelRail
 	//***************************************************
 
-	Dataset_TowelRail::Dataset_TowelRail(Query & query, VolatileData * runtimeData, I_Record_Interface * parent)
-		: Record_Interface(query, runtimeData, parent),
+	RecInt_TowelRail::RecInt_TowelRail(VolatileData * runtimeData)
+		: _runTimeData(runtimeData),
 		_name("", 8)
 		, _onTemp(90, ValRange(e_editAll, 10, 60))
 		, _minutesOn(0, ValRange(e_fixedWidth | e_editAll, 0, 240))
 	{}
 
-	I_Data_Formatter * Dataset_TowelRail::getField(int fieldID) {
+	I_Data_Formatter * RecInt_TowelRail::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_name:
@@ -43,7 +43,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_TowelRail::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
+	bool RecInt_TowelRail::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		switch (fieldID) {
 		case e_name: {
 			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(newValue));
@@ -51,17 +51,17 @@ namespace client_data_structures {
 			//auto debug = record();
 			//debug.rec();
 			strcpy(record().rec().name, _name.str());
-			setRecordID(record().update());
+			record().update();
 			break; }
 		case e_onTemp:
 			_onTemp = *newValue;
 			record().rec().onTemp = decltype(record().rec().onTemp)(_onTemp.val);
-			setRecordID(record().update());
+			record().update();
 			break;
 		case e_minutesOn: 
 			_minutesOn = *newValue;
 			record().rec().minutes_on = decltype(record().rec().minutes_on)(_minutesOn.val);
-			setRecordID(record().update());
+			record().update();
 			break;
 		}
 		return false;

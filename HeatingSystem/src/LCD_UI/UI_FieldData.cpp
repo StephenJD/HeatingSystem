@@ -12,7 +12,7 @@ using namespace std;
 namespace LCD_UI {
 	using namespace RelationalDatabase;
 
-	UI_FieldData::UI_FieldData(I_Record_Interface * dataset, int fieldID
+	UI_FieldData::UI_FieldData(Dataset * dataset, int fieldID
 		, uint16_t collectionBehaviour
 		, int selectFldID, OnSelectFnctr onSelect)
 		: LazyCollection(dataset->count(), Behaviour(collectionBehaviour))

@@ -6,13 +6,6 @@
 
 namespace client_data_structures {
 	using namespace LCD_UI;
-	//***************************************************
-	//              Program UI Edit
-	//***************************************************
-
-	//***************************************************
-	//              Program Dynamic Class
-	//***************************************************
 
 	//***************************************************
 	//              Program RDB Tables
@@ -32,20 +25,33 @@ namespace client_data_structures {
 	}
 
 	//***************************************************
-	//              Program LCD_UI
+	//              Dataset_Program
+	//***************************************************
+
+	/// <summary>
+	/// Obtains a complete record from the DB, based on a query.
+	/// Constructed with a RecordInterface, Query and parent object pointer.
+	/// The object may be used for any of the fields returned by the query, via getField(fieldID)
+	/// </summary>
+	class Dataset_Program : public Dataset {
+	public:
+		Dataset_Program(I_Record_Interface& recordInterface, Query& query, Dataset* dwelling) : Dataset(recordInterface,query,dwelling  ) {};
+		bool setNewValue(int fieldID, const I_Data_Formatter* val) override;
+	};
+	
+	//***************************************************
+	//              RecInt_Program
 	//***************************************************
 
 	/// <summary>
 	/// DB Interface to all Program Data
 	/// Provides streamable fields which may be populated by a database or the runtime-data.
-	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>
-	class Dataset_Program : public Record_Interface<R_Program> {
+	class RecInt_Program : public Record_Interface<R_Program> {
 	public:
 		enum streamable { e_id, e_name, e_dwellingID };
-		Dataset_Program(Query & query, VolatileData * volData, I_Record_Interface * parent);
-		//int resetCount() override;
+		RecInt_Program();
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 

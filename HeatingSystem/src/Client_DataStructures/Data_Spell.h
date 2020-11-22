@@ -33,7 +33,25 @@ namespace client_data_structures {
 	}
 
 	//***************************************************
-	//              Spell DB Interface
+	//              Dataset_Spell
+	//***************************************************
+
+	/// <summary>
+	/// Obtains a complete record from the DB, based on a query.
+	/// Constructed with a RecordInterface, Query and parent object pointer.
+	/// The object may be used for any of the fields returned by the query, via getField(fieldID)
+	/// </summary>
+	class Dataset_Spell : public Dataset {
+	public:
+		enum streamable { e_date, e_progID };
+		Dataset_Spell(I_Record_Interface& recordInterface, Query& query, Dataset* dwelling);
+		bool setNewValue(int fieldID, const I_Data_Formatter* val) override;
+		void insertNewData() override;
+	};
+
+
+	//***************************************************
+	//              RecInt_Spell
 	//***************************************************
 
 	/// <summary>
@@ -42,15 +60,13 @@ namespace client_data_structures {
 	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>
-	class Dataset_Spell : public Record_Interface<R_Spell>
+	class RecInt_Spell : public Record_Interface<R_Spell>
 	{
 	public:
 		enum streamable { e_date, e_progID };
-		Dataset_Spell(Query & query, VolatileData * volData, I_Record_Interface * parent);
+		RecInt_Spell();
 		I_Data_Formatter * getField(int fieldID) override;
-		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
-		void insertNewData() override;
-		int recordField(int selectFieldID) const override { 
+		int recordFieldVal(int selectFieldID) const override { 
 			return record().rec().field(selectFieldID);
 		}
 	private:

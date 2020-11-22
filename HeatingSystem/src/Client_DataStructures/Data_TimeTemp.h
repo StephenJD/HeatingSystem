@@ -110,24 +110,22 @@ namespace client_data_structures {
 	};
 
 	//***************************************************
-	//              TimeTemp DB Interface
+	//              RecInt_TimeTemp
 	//***************************************************
 
 	/// <summary>
 	/// DB Interface to all TimeTemp Data
 	/// Provides streamable fields which may be populated by a database or the runtime-data.
-	/// Initialised with the Query, and a pointer to any run-time data, held by the base-class
 	/// A single object may be used to stream and edit any of the fields via getField
 	/// </summary>
-	class Dataset_TimeTemp : public Record_Interface<R_TimeTemp>
+	class RecInt_TimeTemp : public Record_Interface<R_TimeTemp>
 	{
 	public:
 		enum streamable { e_TimeTemp, e_profileID };
-		Dataset_TimeTemp(Query & query, VolatileData * volData, I_Record_Interface * parent);
+		RecInt_TimeTemp();
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
-		void insertNewData() override;
-		int recordField(int selectFieldID) const override {
+		int recordFieldVal(int selectFieldID) const override {
 			return record().rec().field(selectFieldID);
 		}
 	private:

@@ -11,12 +11,12 @@ namespace client_data_structures {
 	//              Dataset_Relay
 	//***************************************************
 
-	Dataset_Relay::Dataset_Relay(Query & query, VolatileData * runtimeData, I_Record_Interface * parent)
-		: Record_Interface(query, runtimeData, parent)
+	RecInt_Relay::RecInt_Relay(VolatileData * runtimeData)
+		: _runtimeData(runtimeData)
 		, _name("", 6)
 		, _status{ 0, ValRange(e_edOneShort, 0, 1) } {}
 
-	I_Data_Formatter * Dataset_Relay::getField(int fieldID) {
+	I_Data_Formatter * RecInt_Relay::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		//logger() << "Relay recordID(): " << int(recordID()) << " " << record().rec() << L_endl;
 		switch (fieldID) {
@@ -35,7 +35,7 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_Relay::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
+	bool RecInt_Relay::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		switch (fieldID) {
 		case e_name:
 		{
@@ -44,7 +44,7 @@ namespace client_data_structures {
 			//auto debug = record();
 			//debug.rec();
 			strcpy(record().rec().name, _name.str());
-			setRecordID(record().update());
+			record().update();
 			break;
 		}
 		case e_state:

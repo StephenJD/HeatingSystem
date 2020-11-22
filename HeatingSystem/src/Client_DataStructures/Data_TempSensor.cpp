@@ -5,88 +5,45 @@ namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;
 
-	namespace { // restrict to local linkage
-		TempSensor_UIinterface tempSensor_UI;
-	}
-
-	//************* TempSensor_Wrapper ****************
-
-	TempSensor_Wrapper::TempSensor_Wrapper(ValRange valRangeArg) : I_Data_Formatter(0, valRangeArg) {}
-
-	I_Streaming_Tool & TempSensor_Wrapper::ui() { return tempSensor_UI; }
-
-	////************ Edit_TempSensor_h ***********************
-	//
-	//int Edit_TempSensor_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
-	//	if (data) currValue() = *data;
-	//	//setDecade(1);
-	//	//currValue().valRange._cursorPos = 12;
-	//	return currValue().valRange.editablePlaces; // -1;
-	//}
-
-	//int Edit_TempSensor_h::cursorFromFocus(int focusIndex) { // Sets CursorPos
-	//	//currValue().valRange._cursorPos = 11 + focusIndex;
-	//	//setDecade(focusIndex);
-	//	return focusIndex;
-	//}
-
-	//void Edit_TempSensor_h::setInRangeValue() {
-	//	I_Edit_Hndl::setInRangeValue();
-	//	Field_StreamingTool_h & f_int_h = static_cast<Field_StreamingTool_h&>(*backUI());
-	//	f_int_h.backUI()->getItem(f_int_h.backUI()->focusIndex());
-	//	//auto wrapper = f_int_h.f_interface().getDataFormatter();
-	//}
-
-	//***************************************************
-	//              TempSensor_UIinterface
-	//***************************************************
-
-	const char * TempSensor_UIinterface::streamData(bool isActiveElement) const {
-		const TempSensor_Wrapper * tempSensor = static_cast<const TempSensor_Wrapper *>(_data_formatter);
-		strcpy(scratch, tempSensor->name);
-		int nameLen = strlen(scratch);
-		while (nameLen < sizeof(tempSensor->name)) {
-			scratch[nameLen] = ' ';
-			++nameLen;
-		}
-		scratch[nameLen] = 0;
-		strcat(scratch, ":");
-		if (tempSensor->temperature == -127) strcat(scratch, "Err");
-		else strcat(scratch, intToString(tempSensor->temperature));
-		return scratch;
-	}
-
-	//***************************************************
-	//              TempSensor Dynamic Class
-	//***************************************************
-
 	//***************************************************
 	//              Dataset_TempSensor
 	//***************************************************
 
-	Dataset_TempSensor::Dataset_TempSensor(Query & query, VolatileData * runtimeData, I_Record_Interface * parent)
-		: Record_Interface(query, runtimeData, parent)
-		, _tempSensor(ValRange(e_fixedWidth, 0, 90))
+	RecInt_TempSensor::RecInt_TempSensor(VolatileData * runtimeData)
+		: _runTimeData(runtimeData)
+		, _name("",5)
+		, _address(0,ValRange(e_fixedWidth | e_editAll, 1, 127))
+		, _temperature(0,ValRange())
+		, _tempStr("",4)
 	{
 	}
 
-	I_Data_Formatter * Dataset_TempSensor::getField(int fieldID) {
+	I_Data_Formatter * RecInt_TempSensor::getField(int fieldID) {
 		if (recordID() == -1 || record().status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_temp:
 		{
 			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());
-			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _tempSensor.temperature = -127;
-			else _tempSensor.temperature = ts.get_temp();
-			return &_tempSensor;
-		}		
-		case e_name_temp:
+			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _temperature.val = -127;
+			else _temperature.val = ts.get_temp();
+			return &_temperature;
+		}
+		case e_temp_str:
 		{
 			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());
-			strcpy(_tempSensor.name, record().rec().name);
-			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _tempSensor.temperature = -127;
-			else _tempSensor.temperature = ts.get_temp();
-			return &_tempSensor;
+			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK) {
+				strcpy(_tempStr.str(), "Err");
+			}
+			else {
+				strcpy(_tempStr.str(), intToString(ts.get_temp()).str());
+			}
+			return &_tempStr;
+		}
+
+		case e_name:
+		{
+			strcpy(_name.str(), record().rec().name);
+			return &_name;
 		}
 		default: return 0;
 		}

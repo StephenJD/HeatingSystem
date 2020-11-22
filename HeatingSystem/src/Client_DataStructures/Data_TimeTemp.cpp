@@ -90,13 +90,15 @@ namespace client_data_structures {
 		return scratch;
 	}
 
-	//*************Dataset_ProfileDays****************
-	Dataset_TimeTemp::Dataset_TimeTemp(Query & query, VolatileData * runtimeData, I_Record_Interface * profile)
-		: Record_Interface(query, runtimeData, profile)
-		, _timeTemp(0, ValRange(e_editAll, 0, uint16_t(-1), 0, Edit_TimeTemp_h::e_NO_OF_EDIT_POS))
+	//***************************************************
+	//              RecInt_TimeTemp
+	//***************************************************
+
+	RecInt_TimeTemp::RecInt_TimeTemp()
+		: _timeTemp(0, ValRange(e_editAll, 0, uint16_t(-1), 0, Edit_TimeTemp_h::e_NO_OF_EDIT_POS))
 	{}
 
-	I_Data_Formatter * Dataset_TimeTemp::getField(int fieldID) {
+	I_Data_Formatter * RecInt_TimeTemp::getField(int fieldID) {
 		if (recordID() == -1) return 0;
 		switch (fieldID) {
 		case e_TimeTemp:
@@ -106,14 +108,13 @@ namespace client_data_structures {
 		}
 	}
 
-	bool Dataset_TimeTemp::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
+	bool RecInt_TimeTemp::setNewValue(int fieldID, const I_Data_Formatter * newValue) {
 		// Every Profile needs at least one TT
 		switch (fieldID) {
 		case e_TimeTemp: {
 			record().rec().time_temp = (uint16_t)newValue->val;
 			auto newRecordID = record().update();			
 			if (newRecordID != recordID()) {
-				setRecordID(newRecordID);
 				return true;
 			}
 			break;
@@ -121,11 +122,6 @@ namespace client_data_structures {
 		default:;
 		}
 		return false;
-	}
-
-	void Dataset_TimeTemp::insertNewData() {
-		record() = query().insert(record().rec());
-		setRecordID(record().id());
 	}
 
 }
