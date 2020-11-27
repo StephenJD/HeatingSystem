@@ -33,25 +33,25 @@
 #include <iomanip>
 
 #define DATABASE
-//#define UI_DB_DISPLAY_VIEW_ONE
-//#define UI_DB_DISPLAY_VIEW_ALL
-//#define UI_DB_SHORT_LISTS
-//#define EDIT_NAMES_NUMS
-//#define BACK_TRACKING
-////////#define EDIT_INTS
-////
-////////#define EDIT_FORMATTED_INTS
-////
-//#define EDIT_DATES
-//#define EDIT_CURRENT_DATETIME
-//#define ITERATION_VARIANTS
-//#define ITERATED_ZONE_TEMPS
+#define UI_DB_DISPLAY_VIEW_ONE
+#define UI_DB_DISPLAY_VIEW_ALL
+#define UI_DB_SHORT_LISTS
+#define EDIT_NAMES_NUMS
+#define BACK_TRACKING
+//////#define EDIT_INTS
 //
-//#define CONTRAST
-//#define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
-//#define TIME_TEMP_EDIT
+//////#define EDIT_FORMATTED_INTS
+//
+#define EDIT_DATES
+#define EDIT_CURRENT_DATETIME
+#define ITERATION_VARIANTS
+#define ITERATED_ZONE_TEMPS
+
+#define CONTRAST
+#define VIEW_ONE_NESTED_CALENDAR_PAGE
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+#define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
 #define INFO_CONSOLE_PAGES
 
@@ -3087,7 +3087,9 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00p_m SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_left_right(-1); clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contras_t");
+	clock_().setSeconds(0);
 	display1_h.rec_up_down(-1);
+	clock_().setSeconds(0);
 	display1_h.rec_prevUI(); 
 	clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");

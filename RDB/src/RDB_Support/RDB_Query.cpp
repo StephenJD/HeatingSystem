@@ -5,8 +5,6 @@
 namespace RelationalDatabase {
 	Null_Query nullQuery{};
 
-	//void Query::refresh() { incrementTableQ().refresh(); }
-
 	RecordSelector Query::begin() {
 		auto rs = RecordSelector{};
 		if (&resultsQ() == this) 
@@ -18,22 +16,18 @@ namespace RelationalDatabase {
 	}
 
 	RecordSelector Query::end() {
-		//if (&resultsQ() == this) 
-		//	return {*this, incrementTableQ().end() };
-		//else 
-			return {*this, iterationQ().incrementTableQ().end() };
+		return {*this, iterationQ().incrementTableQ().end() };
 	}
 
 	RecordSelector Query::last() {
 		if (&resultsQ() != this) resultsQ().last();
-		//auto match = RecordSelector{ *this, iterationQ().last() };
 		auto match = RecordSelector{ *this, incrementTableQ().last() };
 		if (match.status() == TB_OK) getMatch(match, -1, matchArg());
 		return { match };
 	}
 
 	void Query::next(RecordSelector & recSel, int moveBy) {
-		/*if (&iterationQ() != this) */iterationQ().next(recSel, moveBy);
+		iterationQ().next(recSel, moveBy);
 		moveBy = moveBy ? moveBy : 1;
 		getMatch(recSel, moveBy, matchArg());
 	}
@@ -64,27 +58,15 @@ namespace RelationalDatabase {
 
 	RDB_B * Query::getDB() { return incrementTableQ().getDB(); }
 
-	//Answer_Locator  Query::getMatch(RecordSelector & recSel, int direction, int id) { return recSel; }
-
 	/////////////////////////////////////////////////////////
 	//                      TableQuery                     //
 	/////////////////////////////////////////////////////////
 
-	//void TableQuery::refresh() {
-	//	if (_table != 0) {
-	//		_table->refresh();
-	//	}
-	//}
-
-
 	RecordSelector TableQuery::begin() {
 		RecordSelector beginRS{ *this, _table };
-//logger() << 6 << L_endl;
 
 		if (beginRS.tableNavigator().moveToFirstRecord()) {
-		//	logger() << 7 << L_endl;
 			beginRS.tableNavigator().moveToNextUsedRecord(1);
-		//	logger() << 8 << L_endl;
 		}
 		return beginRS;
 	}

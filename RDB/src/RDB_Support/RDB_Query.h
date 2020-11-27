@@ -278,6 +278,7 @@ namespace RelationalDatabase {
 			while (recSel.status() == TB_OK && match.status() == TB_OK && match.field(_match_f) != matchArg) {
 				iterationQ().next(recSel, direction);
 				match = recSel.incrementRecord();
+				//logger() << "next:" << match.id() << " Fld:" << match.field(_match_f) << " Match:" << matchArg << L_endl;
 			}
 			return match;
 		}

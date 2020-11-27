@@ -64,7 +64,7 @@ namespace RelationalDatabase {
 		NoOf_Recs_t chunkSize() const { return _rec_size * _recordsPerChunk; }
 		Record_Size_t recordSize() const { return _rec_size; } // return type must be same as sizeof()
 		NoOf_Recs_t maxRecordsInChunk() const { return _recordsPerChunk; }
-		bool dbInvalid() const { return _db == 0; }
+		bool dbValid() const { return _db != 0; }
 		// Modifiers
 		bool calcRecordSizeOK(TableNavigator rec_sel);
 		void loadHeader(TableID _chunkAddr, ChunkHeader & _chunk_header) const;

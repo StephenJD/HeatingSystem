@@ -61,7 +61,7 @@ namespace RelationalDatabase {
 	}
 
 	Table RDB_B::createTable(size_t recsize, int initialNoOfRecords, InsertionStrategy strategy) {
-		int extraValidRecordBytes = TableNavigator::validRecordByteNo(initialNoOfRecords - 1);
+		int extraValidRecordBytes = TableNavigator::validRecordByteNo(initialNoOfRecords- 1);
 		DB_Size_t table_size = Table::HeaderSize + extraValidRecordBytes + (initialNoOfRecords * static_cast<DB_Size_t>(recsize));
 		// address of table start and Table_Header to return
 		TableID tableID = 0;

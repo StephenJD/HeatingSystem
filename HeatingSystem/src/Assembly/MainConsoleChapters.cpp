@@ -45,6 +45,7 @@ namespace Assembly {
 		, _relayNameUI_c{ &db._rec_relayChild, Dataset_Relay::e_name, {V+V1} }
 
 		// Basic UI Elements
+		, _newLine{"`"}
 		, _dst{"DST Hours:"}
 		, _reqestTemp{"Req$`"}
 		, _is{"is:`"}
@@ -73,7 +74,7 @@ namespace Assembly {
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c),{ V + S + VnLR + R0 } }
 
 		, _iterated_zone_name_c{ 80, _zoneNameUI_c}
-		, _zone_subpage_c{makeCollection(_dwellingZoneCmd, _iterated_zone_name_c),{ V + S + VnLR + R0 } }
+		, _zone_subpage_c{makeCollection(_dwellingZoneCmd, _newLine, _iterated_zone_name_c),{ V + S + VnLR + R0 } }
 
 		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _zone_subpage_c),{ V + S + V1 + UD_A + R } }
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }

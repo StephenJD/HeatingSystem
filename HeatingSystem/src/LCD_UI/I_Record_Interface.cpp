@@ -16,6 +16,7 @@ namespace LCD_UI {
 	{}
 
 	I_Data_Formatter * I_Record_Interface::initialiseRecord(int fieldID) {
+		//if (_recSel.tableNavigator().tableValid()) _recSel.tableNavigator().loadHeader();
 		query().setMatchArg(parentIndex());
 		record() = *_recSel.begin();
 		setRecordID(_recSel.id());

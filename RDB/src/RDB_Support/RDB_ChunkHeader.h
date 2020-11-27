@@ -27,9 +27,9 @@ namespace RelationalDatabase {
 	/// 0,1,1 = sort smallest first, insertions mostly largest first
 	/// 1,1,1 = sort largest first, insertions mostly smallest first
 	/// </summary>
-	struct ChunkHeader {
+	struct ChunkHeader { // 4-Bytes
 
-		ChunkHeader() : _next_chunk(0), _chunk_Size(0), _validRecords(0) {
+		ChunkHeader() : _asInt_0(0), _asInt_1(0), _validRecords(0) {
 			firstChunk(true);
 			finalChunk(true);
 		}
@@ -42,7 +42,6 @@ namespace RelationalDatabase {
 		//bool insertionOrderNeedsModifying() const { return _insertionOrderNeedsModifying == 1; }	// 0: Insertion order matches table Order (or doesn't matter) 1: Insertion order is reverse of Table Order (or random)
 		//bool insertionsAreMostlyOrdered() const { return _insertionsAreMostlyOrdered == 1; }	// 1: Insertions take place from either end, with shuffles for unordered inserts. 0 : Insertions are in random order.
 		//bool orderedByLargestFirst() const { return _orderedByLargestFirst == 1; }			// 0 : orderedBySmallestFirst
-
 		NoOf_Recs_t chunkSize() const { return _chunkSize; }
 		bool isFirstChunk() const { return _isExtendingChunk == 0; }
 		ValidRecord_t validRecords() const { return _validRecords; }
@@ -61,13 +60,14 @@ namespace RelationalDatabase {
 		void chunkSize(uint8_t size) { _chunkSize = size; }
 	private:
 		friend class Table;
+		friend class TableNavigator;
 		// Only or Final Chunk:
 		//  { _recSize(bytes) : bottom 12-bits
 		//    _insertionStrategy : 3-bits
 		//    _isFinalChunk : top-bit = 1;
 		//    _chunkSize(NoOfRecords) : 7-bits
 		//	  _isExtendingChunk : top bit = 0/1;
-		//    _validRecords : 1 or more bytes
+		//    _validRecords : 1 bytes (more may follow)
 		//  }
 		//
 		// Extended Chunk:
@@ -75,13 +75,13 @@ namespace RelationalDatabase {
 		//    _isFinalChunk : top-bit = 0;
 		//    _chunkSize : 7-bits
 		//	  _isExtendingChunk : top bit = 0/1; (0 == first chunk)
-		//    _validRecords : 1 or more bytes
+		//    _validRecords : 1 bytes (more may follow)
 		//  } 
 
 		static constexpr int TableID_Size = sizeof(TableID) * 8;
 		static constexpr int NoOfRecs_Size = sizeof(NoOf_Recs_t) * 8;
-		union { // If top-bit is set, this is final chunk and this data is interpreted as Record-Size(LS-12) and Ordering flags, otherwise the lower 15-bits are next-chunck address.
-			TableID _next_chunk; // Address in EEPROM
+		union { // 2 Bytes: If top-bit is set, this is final chunk and this data is interpreted as Record-Size(LS-12) and Ordering flags, otherwise the lower 15-bits are next-chunck address.
+			TableID _asInt_0;
 			UBitField<TableID, 0, TableID_Size - 1> _nextChunk; // 0, 15 == 15-bits address
 			UBitField<TableID, TableID_Size - 1, 1> _isFinalChunk; // 15, 1 == top-bit 
 			UBitField<TableID, 0, TableID_Size - 4> _recSize; // or 12-bits = bytes per record
@@ -89,8 +89,8 @@ namespace RelationalDatabase {
 			//UBitField<TableID, TableID_Size - 3, 1> _insertionsAreMostlyOrdered;
 			//UBitField<TableID, TableID_Size - 2, 1> _orderedByLargestFirst;
 		};
-		union {
-			NoOf_Recs_t _chunk_Size;	// If top-bit is clear, this is the first chunk. The rest is the chunkSize in noOfRecords (0-127). Required in every chunk for calcRecordSizeOK().
+		union { // 1 Byte
+			NoOf_Recs_t _asInt_1;	// If top-bit is clear, this is the first chunk. The rest is the chunkSize in noOfRecords (0-127). Required in every chunk for calcRecordSizeOK().
 			UBitField<NoOf_Recs_t, 0, NoOfRecs_Size - 1> _chunkSize; // noOfRecords per chunck
 			UBitField<NoOf_Recs_t, NoOfRecs_Size - 1, 1> _isExtendingChunk;
 		};

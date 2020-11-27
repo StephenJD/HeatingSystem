@@ -59,7 +59,7 @@ namespace LCD_UI {
 	}
 
 	int UI_FieldData::nextIndex(int id) const {
-		_data->move_to(id);
+		id = _data->move_to(id);
 		++id;
 		return _data->move_to(id);
 	}
