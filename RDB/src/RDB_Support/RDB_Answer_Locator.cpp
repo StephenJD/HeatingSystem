@@ -18,8 +18,8 @@ namespace RelationalDatabase {
 		if (_tb) {
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = tableNav.recordAddress();
-			_validRecordByteAddress = tableNav.getVRByteAddress();
-			_validRecordIndex = tableNav.getValidRecordIndex();
+			_validRecordByteAddress = tableNav.getVRByteAddress(tableNav.curr_vrByteNo());
+			_validRecordIndex = tableNav.currVRindex();
 		}
 	}
 
@@ -28,10 +28,11 @@ namespace RelationalDatabase {
 		, _tb(rs.status() == TB_INVALID_TABLE ? 0 : &rs.tableNavigator().table())
 	{
 		if (_tb) {
+			auto & tableNav = rs.tableNavigator();
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
-			_recordAddress = rs.tableNavigator().recordAddress();
-			_validRecordByteAddress = rs.tableNavigator().getVRByteAddress();
-			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
+			_recordAddress = tableNav.recordAddress();
+			_validRecordByteAddress = tableNav.getVRByteAddress(tableNav.curr_vrByteNo());
+			_validRecordIndex = tableNav.currVRindex();
 			statusOnly();
 		}
 	}
@@ -52,8 +53,8 @@ namespace RelationalDatabase {
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = tableNav.recordAddress();
 			_tb = &const_cast<TableNavigator &>(tableNav).table();
-			_validRecordByteAddress = tableNav.getVRByteAddress();
-			_validRecordIndex = tableNav.getValidRecordIndex();
+			_validRecordByteAddress = tableNav.getVRByteAddress(tableNav.curr_vrByteNo());
+			_validRecordIndex = tableNav.currVRindex();
 		}
 		return *this;
 	}
@@ -63,10 +64,11 @@ namespace RelationalDatabase {
 		AnswerID::setStatus(rs.status());
 		if (rs.status() != TB_INVALID_TABLE) {
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
-			_recordAddress = rs.tableNavigator().recordAddress();
-			_tb = &const_cast<TableNavigator &>(rs.tableNavigator()).table();
-			_validRecordByteAddress = rs.tableNavigator().getVRByteAddress();
-			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
+			auto & tableNav = rs.tableNavigator();
+			_recordAddress = tableNav.recordAddress();
+			_tb = &const_cast<TableNavigator &>(tableNav).table();
+			_validRecordByteAddress = tableNav.getVRByteAddress(tableNav.curr_vrByteNo());
+			_validRecordIndex = tableNav.currVRindex();
 		}
 		return *this;
 

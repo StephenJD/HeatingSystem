@@ -57,6 +57,7 @@ namespace RelationalDatabase {
 	// *************** Insert, Update & Delete ***************
 
 	RecordID TableNavigator::insertRecord(const void * newRecord) {
+		if (_currRecord.status() == TB_BEFORE_BEGIN) _currRecord.setID(0);
 		auto targetRecordID = _currRecord.id();
 		auto unusedRecordID = reserveUnusedRecordID();
 		//logger() << "Insert: " << *reinterpret_cast<const uint32_t*>(newRecord) << L_endl;
@@ -84,25 +85,19 @@ namespace RelationalDatabase {
 	}
 
 	void TableNavigator::shuffleRecordsBack(RecordID start, RecordID end) {
-		// lambda
-		auto inThisVRbyte = [this](TB_Size_t currVRbyte_addr) -> bool {
-			return getVRByteAddress() == currVRbyte_addr;
-		};
 		--end;
-		// algorithm
 		moveToThisRecord(start);
 		while (start < end) {
-			auto currVRbyte_addr = getVRByteAddress();
-			while (start < end && inThisVRbyte(currVRbyte_addr)) {
+			auto currVRbyteNo = _VR_ByteNo;
+			while (start < end && currVRbyteNo == _VR_ByteNo) {
 				auto writeAddress = recordAddress();
 				++start;
 				moveToThisRecord(start); // move to possibly unused record
 				auto readAddress = recordAddress();
 				db().moveRecords(readAddress, writeAddress, recordSize());
 			}
-			shuffleValidRecordsByte(currVRbyte_addr, start==end || status() == TB_RECORD_UNUSED);
+			shuffleValidRecordsByte(currVRbyteNo, start==end || status() == TB_RECORD_UNUSED);
 		}
-
 	}
 
 	NoOf_Recs_t TableNavigator::thisVRcapacity() const { // 1-8
@@ -113,18 +108,16 @@ namespace RelationalDatabase {
 		else return RDB_B::ValidRecord_t_Capacity;
 	}
 
-	void TableNavigator::shuffleValidRecordsByte(TB_Size_t availabilityByteAddr, bool shiftIn_VacantRecord) {
-		ValidRecord_t usedRecords;
-		db()._readByte(availabilityByteAddr, &usedRecords, sizeof(ValidRecord_t));
-		usedRecords >>= 1;
+	void TableNavigator::shuffleValidRecordsByte(int vrBytoNo, bool shiftIn_VacantRecord) {
+		loadVRByte(vrBytoNo);
+		currVR_Byte() >>= 1;
 		constexpr ValidRecord_t topBit = 1 << (RDB_B::ValidRecord_t_Capacity - 1);
-		usedRecords |= topBit;
+		currVR_Byte() |= topBit;
 		if (shiftIn_VacantRecord) {
 			ValidRecord_t maxBit = 1 << (thisVRcapacity()-1);
-			usedRecords &= ~maxBit;
+			currVR_Byte() &= ~maxBit;
 		}
-		db()._writeByte(availabilityByteAddr, &usedRecords, sizeof(ValidRecord_t));
-		_t->tableIsChanged(_chunk_header.isFirstChunk());
+		saveVRByte(vrBytoNo);
 	}
 
 	// *************** Iterator Functions ***************
@@ -185,14 +178,13 @@ namespace RelationalDatabase {
 		};
 
 		uint8_t vrIndex;
-		ValidRecord_t usedRecords;
 		bool withinChunk = true;
-		do getVRByteForThisRecord(usedRecords, vrIndex);
-		while (!haveMovedToUsedRecord(usedRecords, vrIndex, direction) && (withinChunk = isWithinChunk()));
+		do vrIndex = loadAndGetVRindex();
+		while (!haveMovedToUsedRecord(vrIndex, direction) && (withinChunk = isWithinChunk()));
 		return withinChunk;
 	}
 
-	bool TableNavigator::haveMovedToUsedRecord(ValidRecord_t usedRecords, uint8_t initialVRindex, int direction) {
+	bool TableNavigator::haveMovedToUsedRecord(uint8_t initialVRindex, int direction) {
 		auto VRcapacity = thisVRcapacity();
 
 		// Lambdas
@@ -201,13 +193,13 @@ namespace RelationalDatabase {
 		};
 
 		// Algorithm
-		if (usedRecords == 0) {
+		if (currVR_Byte() == 0) {
 			moveIDtoEndOfVRbyte();
 			return false;
 		}
 		ValidRecord_t recordMask = 1 << initialVRindex;
-		if (usedRecords != ValidRecord_t(-1)) {
-			while (recordMask && (usedRecords & recordMask) == 0) {
+		if (currVR_Byte() != ValidRecord_t(-1)) {
+			while (recordMask && (currVR_Byte() & recordMask) == 0) {
 				(direction > 0) ? recordMask <<= 1 : recordMask >>= 1;
 				_currRecord.setID(_currRecord.id() + direction);
 			}
@@ -240,57 +232,52 @@ namespace RelationalDatabase {
 	bool TableNavigator::reserveFirstUnusedRecordInThisChunk() {
 		// Look in current ValidRecordByte, move _currRecord.id to unused record, or one-past this chunk
 		bool gotUnusedRecord;
-		RecordID unusedRecID = _currRecord.id();
-		ValidRecord_t usedRecords;
-		uint8_t vrIndex;
-		getVRByteForThisRecord(usedRecords, vrIndex);
+		RecordID unusedRecID = _currRecord.id() ;
+		uint8_t vrIndex = loadAndGetVRindex();
 		if (_currRecord.status() == TB_RECORD_UNUSED) {
-			usedRecords |= (1 << vrIndex);
+			currVR_Byte() |= (1 << vrIndex);
 			gotUnusedRecord = true;
 		} else {
 			_currRecord.setID(_chunk_start_recordID);
 			unusedRecID = _chunk_start_recordID + _VR_ByteNo * RDB_B::ValidRecord_t_Capacity;
-			gotUnusedRecord = haveReservedUnusedRecord(usedRecords, unusedRecID);
+			gotUnusedRecord = haveReservedUnusedRecord(unusedRecID);
 			if (!gotUnusedRecord) {
 				if (_VR_ByteNo != 0) {
 					// Then search this chunk from the beginning
 					_currRecord.setID(_chunk_start_recordID);
-					getVRByteForThisRecord(usedRecords, vrIndex);
+					loadAndGetVRindex();
 					unusedRecID = _chunk_start_recordID;
-					gotUnusedRecord = haveReservedUnusedRecord(usedRecords, unusedRecID);
+					gotUnusedRecord = haveReservedUnusedRecord(unusedRecID);
 				}
 			}
 			while (!gotUnusedRecord && _VR_ByteNo < noOfvalidRecordBytes()) {
 				_currRecord.setID(_currRecord.id() + thisVRcapacity()); // to move VR-byte on
-				getVRByteForThisRecord(usedRecords, vrIndex);
+				loadAndGetVRindex();
 				unusedRecID = _currRecord.id();
-				gotUnusedRecord = haveReservedUnusedRecord(usedRecords, unusedRecID);
+				gotUnusedRecord = haveReservedUnusedRecord(unusedRecID);
 			}
 		}
-		TB_Size_t vr_Byte_Addr = getVRByteAddress();
 		if (gotUnusedRecord) {
-			db()._writeByte(vr_Byte_Addr, &usedRecords, sizeof(ValidRecord_t));
-			if (_t->_tableID == _chunkAddr) _t->_table_header.validRecords(usedRecords);
-			if (_VR_ByteNo == 0) _chunk_header.validRecords(usedRecords);
+			saveVRByte(_VR_ByteNo);
 		}
 		_currRecord.setID(unusedRecID);
 		return gotUnusedRecord;
 	}
 
-	bool TableNavigator::haveReservedUnusedRecord(ValidRecord_t & usedRecords, RecordID & unusedRecID) const {
+	bool TableNavigator::haveReservedUnusedRecord(RecordID & unusedRecID) const {
 		// assumes unusedRecID is ValidRecord_start_ID
-		if (usedRecords == ValidRecord_t(-1)) {
+		if (currVR_Byte() == ValidRecord_t(-1)) {
 			unusedRecID += thisVRcapacity();
 			return false;
 		}
 		else {
 			ValidRecord_t recordMask = 1;
-			while ((usedRecords & recordMask) > 0) {
+			while ((currVR_Byte() & recordMask) > 0) {
 				recordMask <<= 1;
 				++unusedRecID;
 			}
 			// Set bit to 1
-			usedRecords |= recordMask;
+			currVR_Byte() |= recordMask;
 			return true;
 		}
 	}
@@ -300,13 +287,13 @@ namespace RelationalDatabase {
 	bool TableNavigator::getLastUsedRecordInThisChunk(RecordID & usedRecID) {
 		int noOfVRbytes = noOfvalidRecordBytes();
 		int vrByteNo = 0;
-		loadValidRecordByte(vrByteNo);
+		loadVRByte(vrByteNo);
 		RecordID vr_startID = 0;
 		bool found = false;
 		do {
 			found |= lastUsedRecord(currVR_Byte(), usedRecID, vr_startID);
 			if (++vrByteNo >= noOfVRbytes) break;
-			loadValidRecordByte(vrByteNo);
+			loadVRByte(vrByteNo);
 		} while (true);
 		return found;
 	}
@@ -344,10 +331,8 @@ namespace RelationalDatabase {
 	// ********  Navigation Support ***************
 
 	void TableNavigator::checkStatus() {
-		RecordID vrIndex;
-		ValidRecord_t usedRecords;
-		getVRByteForThisRecord(usedRecords, vrIndex);
-		if (!recordIsUsed(usedRecords, vrIndex)) _currRecord.setStatus(TB_RECORD_UNUSED);
+		RecordID vrIndex = loadAndGetVRindex();
+		if (!recordIsUsed(vrIndex)) _currRecord.setStatus(TB_RECORD_UNUSED);
 		else _currRecord.setStatus(TB_OK);
 	}
 
@@ -357,6 +342,7 @@ namespace RelationalDatabase {
 		_chunk_header = _t->table_header();
 		_chunk_start_recordID = 0;
 		_currRecord.setID(0);
+		_VR_ByteNo = 0;
 		checkStatus();
 		return true;
 	}
@@ -374,7 +360,7 @@ namespace RelationalDatabase {
 	}
 
 	void TableNavigator::moveToThisRecord(int recordID) {
-		//loadValidRecordByte();
+		//loadVRByte();
 		if (recordID == -1 || recordID == RecordID(-1)) {
 			moveToFirstRecord();
 			recordID = -1;
@@ -395,37 +381,27 @@ namespace RelationalDatabase {
 		_currRecord.setID(recordID);
 	}
 
-	TB_Size_t  TableNavigator::getVRByteAddress() const {
-		if (_VR_ByteNo == 0) {
-			return _chunkAddr + Table::ValidRecordStart;
-		}
-		else {
-			return _chunkAddr + Table::HeaderSize + (_VR_ByteNo - 1) * sizeof(ValidRecord_t);
-		}
+	TB_Size_t  TableNavigator::getVRByteAddress(int vr_byteNo) const {
+		return _chunkAddr + Table::ValidRecordStart + (vr_byteNo * sizeof(ValidRecord_t));
 	}
 
-	uint8_t TableNavigator::getValidRecordIndex() const {
-		uint8_t vrIndex = _currRecord.id() - _chunk_start_recordID;
-		auto vr_byteNo = validRecordByteNo(vrIndex);
-		if (noOfvalidRecordBytes() >= vr_byteNo) {
-			_VR_ByteNo = vr_byteNo;
-		}
-		if (_VR_ByteNo > 0) vrIndex = vrIndex % RDB_B::ValidRecord_t_Capacity;
-		return vrIndex;
+	TB_Size_t TableNavigator::currOffsetInChunk() const {
+		return _currRecord.id() - _chunk_start_recordID;
 	}
 
-	void TableNavigator::getVRByteForThisRecord(ValidRecord_t & usedRecords, uint8_t & vrIndex) const {
-		// Assumes we are in the correct chunk. Returns the availabilityByteAddr or 0 for byte(0)
-		loadValidRecordByte(getValidRecordIndex());
-		usedRecords = currVR_Byte();
-		vrIndex = _VR_ByteNo;
+	uint8_t TableNavigator::currVRindex() const {
+		return currOffsetInChunk() % RDB_B::ValidRecord_t_Capacity;
+	}
+
+	uint8_t TableNavigator::loadAndGetVRindex() const {
+		// Assumes we are in the correct chunk. Loads VRByte and returns the index within the correct VRByte
+		loadVRByte(validRecordByteNo(currOffsetInChunk()));
+		return currVRindex();
 	}
 
 	bool TableNavigator::isDeletedRecord() {
-		RecordID vrIndex;
-		ValidRecord_t usedRecord;
-		getVRByteForThisRecord(usedRecord, vrIndex);
-		if (recordIsUsed(usedRecord, vrIndex)) {
+		RecordID vrIndex = loadAndGetVRindex();	
+		if (recordIsUsed(vrIndex)) {
 			_currRecord.setStatus(TB_OK);
 			return false;
 		}
@@ -435,10 +411,9 @@ namespace RelationalDatabase {
 		}
 	}
 
-	bool TableNavigator::recordIsUsed(ValidRecord_t usedRecords, int vrIndex) const {
+	bool TableNavigator::recordIsUsed(int vrIndex) const {
 		// Bitshifting more than the width is undefined
-		if (vrIndex >= RDB_B::ValidRecord_t_Capacity) return false;
-		return ((usedRecords & (1 << vrIndex)) > 0);
+		return ((currVR_Byte() & (1 << vrIndex)) > 0);
 	};
 
 	DB_Size_t TableNavigator::recordAddress() const {
@@ -450,10 +425,18 @@ namespace RelationalDatabase {
 		_timeValidRecordLastRead = micros();
 	}
 
-	void TableNavigator::loadValidRecordByte(int vrByteNo) const {
-		int vrAddr = (_chunkAddr + sizeof(ChunkHeader) - sizeof(ValidRecord_t)) + (sizeof(ValidRecord_t) * vrByteNo);
+	void TableNavigator::saveVRByte(int vrByteNo) const {
+		int vrAddr = getVRByteAddress(vrByteNo);
+		db()._writeByte(vrAddr, &currVR_Byte(), sizeof(ValidRecord_t));
+		_timeValidRecordLastRead = micros();
+		if (_t->_tableID == _chunkAddr) _t->_table_header.validRecords(currVR_Byte());
+		_t->tableIsChanged(false);
+	}
+
+	void TableNavigator::loadVRByte(int vrByteNo) const {
+		int vrAddr = getVRByteAddress(vrByteNo);
 		if (_t->outOfDate(_timeValidRecordLastRead) || vrByteNo != _VR_ByteNo) {
-			db()._readByte(vrAddr, &_chunk_header._validRecords, 1);
+			db()._readByte(vrAddr, &_chunk_header._validRecords, sizeof(ValidRecord_t));
 			_timeValidRecordLastRead = micros();
 			_VR_ByteNo = vrByteNo;
 		}
@@ -510,10 +493,8 @@ namespace RelationalDatabase {
 		// Find Space
 		moveToThisRecord(insertionPos);
 		//logger() << "sortedInsert moveTo insertionPos " << insertionPos << L_endl;
-		ValidRecord_t validRecords;
-		uint8_t vrIndex;
-		getVRByteForThisRecord(validRecords, vrIndex);
-		auto insertPosTaken = recordIsUsed(validRecords, vrIndex);
+		uint8_t vrIndex = loadAndGetVRindex();	
+		auto insertPosTaken = recordIsUsed(vrIndex);
 
 		// Shuffle Records
 		if (insertPosTaken) {
@@ -524,8 +505,8 @@ namespace RelationalDatabase {
 				//logger() << "Swapped: " << *reinterpret_cast<const uint32_t*>(recToInsert) << L_endl;
 				++swapPos;
 				moveToThisRecord(swapPos);
-				getVRByteForThisRecord(validRecords, vrIndex);
-				insertPosTaken = recordIsUsed(validRecords, vrIndex);
+				vrIndex = loadAndGetVRindex();
+				insertPosTaken = recordIsUsed(vrIndex);
 			}
 		}
 		//logger() << "sortedInsert moveTo final insertionPos " << insertionPos << L_endl;

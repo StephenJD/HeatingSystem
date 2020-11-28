@@ -113,30 +113,37 @@ namespace RelationalDatabase {
 			, bool(*compareRecords)(TableNavigator * left, const void * right, bool lhs_IsGreater)
 			, void(*swapRecords)(TableNavigator *original, void * recToInsert));
 
-		// Queries
-		DB_Size_t firstRecordInChunk() const /*{ return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }*/;
-		static int validRecordByteNo(int recordIDOffsetFromChunkStart) { return recordIDOffsetFromChunkStart / RDB_B::ValidRecord_t_Capacity; }
-		int noOfvalidRecordBytes() const { return validRecordByteNo(chunkCapacity() - 1); }
-		bool tableValid();
-		RDB_B & db() const /*{return _t->db();}*/;
-		Record_Size_t recordSize() const /*{ return _t->_rec_size; }*/;
-		NoOf_Recs_t chunkCapacity() const /*{ return _t->maxRecordsInChunk(); }*/;
-		NoOf_Recs_t endStopID() const /*{ return _t->maxRecordsInTable(); }*/;
+		// ValidRecord Queries
+		static int	validRecordByteNo(int recordIDOffsetFromChunkStart) { return recordIDOffsetFromChunkStart / RDB_B::ValidRecord_t_Capacity; }
+		uint8_t		curr_vrByteNo() const { return _VR_ByteNo; }
+		ValidRecord_t & currVR_Byte() const {	return _chunk_header._validRecords;	}
+		int			noOfvalidRecordBytes() const { return validRecordByteNo(chunkCapacity() - 1); }
 		NoOf_Recs_t thisVRcapacity() const;
-		bool isStartOfATable() const { return _chunk_header.isFirstChunk(); }
-		bool chunkIsExtended() const { return !_chunk_header.isFinalChunk(); }
-		bool recordIsUsed(ValidRecord_t usedRecords, int vrIndex) const;
-		DB_Size_t recordAddress() const;
-		bool haveMovedToUsedRecord(ValidRecord_t usedRecords, uint8_t vrIndex, int direction);
-		bool lastUsedRecord(ValidRecord_t usedRecords, RecordID & usedRecID, RecordID & vr_start) const;
-		bool haveReservedUnusedRecord(ValidRecord_t & usedRecords, RecordID & unusedRecID) const;
-		TB_Size_t getVRByteAddress() const;
-		void getVRByteForThisRecord(ValidRecord_t & usedRecords, uint8_t & vrIndex) const;
-		void loadValidRecordByte(int vrByteNo) const;
-		ValidRecord_t currVR_Byte() const {	return _chunk_header._validRecords;	}
-		uint8_t getValidRecordIndex() const;
+		TB_Size_t	getVRByteAddress(int vrByteNo) const;
+		uint8_t		loadAndGetVRindex() const;
+		void		loadVRByte(int vrByteNo) const;
+		void		saveVRByte(int vrByteNo) const;
+		uint8_t		currVRindex() const;
 
+		// Chunk Queries
+		TB_Size_t	currOffsetInChunk() const;
+		DB_Size_t	firstRecordInChunk() const /*{ return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }*/;
+		NoOf_Recs_t chunkCapacity() const /*{ return _t->maxRecordsInChunk(); }*/;
+		bool		chunkIsExtended() const { return !_chunk_header.isFinalChunk(); }
+		
+		// DB/Table Queries
+		RDB_B &		db() const /*{return _t->db();}*/;
+		bool		tableValid();
+		Record_Size_t recordSize() const /*{ return _t->_rec_size; }*/;
+		NoOf_Recs_t	endStopID() const /*{ return _t->maxRecordsInTable(); }*/;
+		bool		isStartOfATable() const { return _chunk_header.isFirstChunk(); }
+		bool		recordIsUsed(int vrIndex) const;
+		DB_Size_t	recordAddress() const;
+		bool		lastUsedRecord(ValidRecord_t usedRecords, RecordID & usedRecID, RecordID & vr_start) const;
+		bool		haveReservedUnusedRecord(RecordID & unusedRecID) const;
+		
 		//Modifiers
+		bool haveMovedToUsedRecord(uint8_t vrIndex, int direction);
 		bool haveMovedToNextChunck();
 		bool isDeletedRecord();
 		bool getLastUsedRecordInThisChunk(RecordID & usedRecID);
@@ -145,10 +152,9 @@ namespace RelationalDatabase {
 		bool reserveFirstUnusedRecordInThisChunk();
 		RecordID reserveUnusedRecordID();
 		void saveHeader();
-		//void loadHeader();
 		void extendChunkTo(TableID nextChunk);
 		void shuffleRecordsBack(RecordID start, RecordID end);
-		void shuffleValidRecordsByte(TB_Size_t availabilityByteAddr, bool shiftIn_UsedRecord);
+		void shuffleValidRecordsByte(int vrByteNo, bool shiftIn_UsedRecord);
 
 	private:
 		friend class RDB_B;

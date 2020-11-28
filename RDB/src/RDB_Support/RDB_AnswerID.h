@@ -13,8 +13,8 @@ namespace RelationalDatabase {
 		AnswerID(const RecordSelector & rs);
 		AnswerID(RecordID id, TB_Status status) : _id(id), _status(status) {}
 		// Queries
-		RecordID id() const { return _id; } // faster when it is known to be >=0
-		int signed_id() const { return _id == RecordID(-1) ? -1 : _id; }
+		RecordID id() const { return _id; } 
+		int signed_id() const { return int8_t(_id); }
 		TB_Status status() const { return _status; }
 		// Modifiers
 		void setID(RecordID id) { _id = id; }
