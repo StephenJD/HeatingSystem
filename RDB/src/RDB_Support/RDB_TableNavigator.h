@@ -115,9 +115,9 @@ namespace RelationalDatabase {
 
 		// Queries
 		DB_Size_t firstRecordInChunk() const /*{ return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }*/;
-		static int validRecordByteNo(int chunkCapacity) { return chunkCapacity / RDB_B::ValidRecord_t_Capacity; }
-		int noOfvalidRecordBytes() const { return validRecordByteNo(_chunk_header.chunkSize() - 1); }
-		bool tableInvalid() /*{ return _t ? _t->dbInvalid() : true; }*/;
+		static int validRecordByteNo(int recordIDOffsetFromChunkStart) { return recordIDOffsetFromChunkStart / RDB_B::ValidRecord_t_Capacity; }
+		int noOfvalidRecordBytes() const { return validRecordByteNo(chunkCapacity() - 1); }
+		bool tableValid();
 		RDB_B & db() const /*{return _t->db();}*/;
 		Record_Size_t recordSize() const /*{ return _t->_rec_size; }*/;
 		NoOf_Recs_t chunkCapacity() const /*{ return _t->maxRecordsInChunk(); }*/;
@@ -130,9 +130,10 @@ namespace RelationalDatabase {
 		bool haveMovedToUsedRecord(ValidRecord_t usedRecords, uint8_t vrIndex, int direction);
 		bool lastUsedRecord(ValidRecord_t usedRecords, RecordID & usedRecID, RecordID & vr_start) const;
 		bool haveReservedUnusedRecord(ValidRecord_t & usedRecords, RecordID & unusedRecID) const;
-		TB_Size_t getAvailabilityByteAddress() const;
-		TB_Size_t getAvailabilityBytesForThisRecord(ValidRecord_t & usedRecords, uint8_t & vrIndex) const;
-		ValidRecord_t getFirstValidRecordByte() const;
+		TB_Size_t getVRByteAddress() const;
+		void getVRByteForThisRecord(ValidRecord_t & usedRecords, uint8_t & vrIndex) const;
+		void loadValidRecordByte(int vrByteNo) const;
+		ValidRecord_t currVR_Byte() const {	return _chunk_header._validRecords;	}
 		uint8_t getValidRecordIndex() const;
 
 		//Modifiers
@@ -144,7 +145,7 @@ namespace RelationalDatabase {
 		bool reserveFirstUnusedRecordInThisChunk();
 		RecordID reserveUnusedRecordID();
 		void saveHeader();
-		void loadHeader();
+		//void loadHeader();
 		void extendChunkTo(TableID nextChunk);
 		void shuffleRecordsBack(RecordID start, RecordID end);
 		void shuffleValidRecordsByte(TB_Size_t availabilityByteAddr, bool shiftIn_UsedRecord);
@@ -156,11 +157,11 @@ namespace RelationalDatabase {
 
 		mutable unsigned long _timeValidRecordLastRead = 0;
 		Table * _t = 0;
-		ChunkHeader _chunk_header;
+		mutable ChunkHeader _chunk_header; // The vr-byte is a copy of the _VR_ByteNo'th vr-byte, not necessarily the first.
 		AnswerID _currRecord;
 		TableID _chunkAddr = 0;
 		RecordID _chunk_start_recordID = 0;
-		mutable uint8_t _VR_Byte_No = 0;
+		mutable uint8_t _VR_ByteNo = 0;
 	};
 
 	template <typename Record_T>

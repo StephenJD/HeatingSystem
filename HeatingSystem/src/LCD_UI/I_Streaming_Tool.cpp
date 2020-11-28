@@ -178,7 +178,7 @@ namespace LCD_UI {
 			f_interface().editItem().setBackUI(0);
 			f_interface().setCount(0);
 			retVal = 0;
-			backUI()->on_back();
+			backUI()->on_back(); // cancels edit
 			f_interface().item(focusIndex());
 		}
 		setBackUI(0);

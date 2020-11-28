@@ -18,7 +18,7 @@ namespace RelationalDatabase {
 		if (_tb) {
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = tableNav.recordAddress();
-			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
+			_validRecordByteAddress = tableNav.getVRByteAddress();
 			_validRecordIndex = tableNav.getValidRecordIndex();
 		}
 	}
@@ -30,7 +30,7 @@ namespace RelationalDatabase {
 		if (_tb) {
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = rs.tableNavigator().recordAddress();
-			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
+			_validRecordByteAddress = rs.tableNavigator().getVRByteAddress();
 			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
 			statusOnly();
 		}
@@ -52,7 +52,7 @@ namespace RelationalDatabase {
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = tableNav.recordAddress();
 			_tb = &const_cast<TableNavigator &>(tableNav).table();
-			_validRecordByteAddress = tableNav.getAvailabilityByteAddress();
+			_validRecordByteAddress = tableNav.getVRByteAddress();
 			_validRecordIndex = tableNav.getValidRecordIndex();
 		}
 		return *this;
@@ -65,7 +65,7 @@ namespace RelationalDatabase {
 			_lastRead = _tb->lastModifiedTime() - TIMER_INCREMENT;
 			_recordAddress = rs.tableNavigator().recordAddress();
 			_tb = &const_cast<TableNavigator &>(rs.tableNavigator()).table();
-			_validRecordByteAddress = rs.tableNavigator().getAvailabilityByteAddress();
+			_validRecordByteAddress = rs.tableNavigator().getVRByteAddress();
 			_validRecordIndex = rs.tableNavigator().getValidRecordIndex();
 		}
 		return *this;
