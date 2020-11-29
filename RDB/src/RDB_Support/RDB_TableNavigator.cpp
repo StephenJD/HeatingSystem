@@ -20,7 +20,7 @@ namespace RelationalDatabase {
 		if (t) {
 			_chunk_header = t->table_header();
 			_chunkAddr = t->tableID();
-			_timeValidRecordLastRead = t->lastModifiedTime();
+			_lastReadTableVersion = t->tableVersion();
 		}
 		else {
 			logger() << "Invalid Table\n";
@@ -47,10 +47,10 @@ namespace RelationalDatabase {
 	int TableNavigator::id() const { return status() == TB_BEFORE_BEGIN ? -1 : _currRecord.id(); }
 	void TableNavigator::setStatus(TB_Status status) { _currRecord.setStatus(status); }
 	void TableNavigator::setID(int id) { _currRecord.setID(id); }
-	DB_Size_t TableNavigator::firstRecordInChunk() const { return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }
+	DB_Size_t TableNavigator::firstRecordInChunk() const { return _chunkAddr + Table::HeaderSize + (lastVRbyteNo() * sizeof(ValidRecord_t)); }
 	bool TableNavigator::tableValid() { return _t ? _t->dbValid() : false; }
 	RDB_B & TableNavigator::db() const { return _t->db(); }
-	Record_Size_t TableNavigator::recordSize() const { return _t->_rec_size; }
+	Record_Size_t TableNavigator::recordSize() const { return _t->recordSize(); }
 	NoOf_Recs_t TableNavigator::chunkCapacity() const { return _t->maxRecordsInChunk(); }
 	NoOf_Recs_t TableNavigator::endStopID() const { return _t->maxRecordsInTable(); }
 
@@ -61,7 +61,8 @@ namespace RelationalDatabase {
 		auto targetRecordID = _currRecord.id();
 		auto unusedRecordID = reserveUnusedRecordID();
 		//logger() << "Insert: " << *reinterpret_cast<const uint32_t*>(newRecord) << L_endl;
-		if (isSorted(_t->insertionStrategy()) && unusedRecordID < targetRecordID) {
+		if (isSorted(_t->insertionStrategy()) && unusedRecordID < targetRecordID) {			
+			logger() << F(" shuffle back into: ") << (int)unusedRecordID << L_endl;
 			shuffleRecordsBack(unusedRecordID, targetRecordID);
 			targetRecordID = unusedRecordID;
 			unusedRecordID = reserveUnusedRecordID();
@@ -69,8 +70,8 @@ namespace RelationalDatabase {
 
 		} else targetRecordID = unusedRecordID;
 		_currRecord.setID(unusedRecordID);
-		if (_currRecord.id() >= _t->_max_NoOfRecords_in_table) {
-			if (_t->_db->extendTable(*this)) {
+		if (_currRecord.id() >= _t->maxRecordsInTable()) {
+			if (_t->db().extendTable(*this)) {
 				haveMovedToNextChunck();
 			}
 			else {
@@ -78,9 +79,10 @@ namespace RelationalDatabase {
 				return _currRecord.id();
 			}
 		}
-		_t->_db->_writeByte(recordAddress(), newRecord, _t->recordSize());
+		logger() << "Save Record[" << _currRecord.id() << "] at " << recordAddress() << L_endl;
+		_t->db()._writeByte(recordAddress(), newRecord, _t->recordSize());
 		_currRecord.setStatus(TB_OK);
-		_t->tableIsChanged(_chunk_header.isFirstChunk());
+		_t->dataIsChanged();
 		return targetRecordID;
 	}
 
@@ -250,7 +252,7 @@ namespace RelationalDatabase {
 					gotUnusedRecord = haveReservedUnusedRecord(unusedRecID);
 				}
 			}
-			while (!gotUnusedRecord && _VR_ByteNo < noOfvalidRecordBytes()) {
+			while (!gotUnusedRecord && _VR_ByteNo <= lastVRbyteNo()) {
 				_currRecord.setID(_currRecord.id() + thisVRcapacity()); // to move VR-byte on
 				loadAndGetVRindex();
 				unusedRecID = _currRecord.id();
@@ -285,14 +287,14 @@ namespace RelationalDatabase {
 	// ********  Last Used Record for end() ***************
 
 	bool TableNavigator::getLastUsedRecordInThisChunk(RecordID & usedRecID) {
-		int noOfVRbytes = noOfvalidRecordBytes();
+		int lastVRbyte = lastVRbyteNo();
 		int vrByteNo = 0;
 		loadVRByte(vrByteNo);
 		RecordID vr_startID = 0;
 		bool found = false;
 		do {
 			found |= lastUsedRecord(currVR_Byte(), usedRecID, vr_startID);
-			if (++vrByteNo >= noOfVRbytes) break;
+			if (++vrByteNo > lastVRbyte) break;
 			loadVRByte(vrByteNo);
 		} while (true);
 		return found;
@@ -324,7 +326,7 @@ namespace RelationalDatabase {
 	void TableNavigator::extendChunkTo(TableID nextChunk) {
 		_chunk_header.finalChunk(0);
 		_chunk_header.nextChunk(nextChunk);
-		if (_t->tableID() == _chunkAddr) _t->_table_header = _chunk_header;
+		if (_t->tableID() == _chunkAddr) _t->table_header() = _chunk_header;
 		saveHeader();
 	}
 
@@ -353,6 +355,8 @@ namespace RelationalDatabase {
 			_chunkAddr = _chunk_header.nextChunk();
 			_t->loadHeader(_chunkAddr, _chunk_header);
 			_VR_ByteNo = 0;
+			_lastReadTableVersion = _t->tableVersion() - 1;
+			setID(_chunk_start_recordID);
 			checkStatus();
 			return true;
 		}
@@ -374,7 +378,6 @@ namespace RelationalDatabase {
 		else {
 			if (recordID < _chunk_start_recordID) moveToFirstRecord();
 			while (recordID - _chunk_start_recordID >= chunkCapacity() && haveMovedToNextChunck()) {;}
-			_timeValidRecordLastRead = _t->_timeOfLastChange-1;
 			_currRecord.setID(recordID);
 			checkStatus();
 		}
@@ -422,22 +425,25 @@ namespace RelationalDatabase {
 
 	void TableNavigator::saveHeader() {
 		db()._writeByte(_chunkAddr, &_chunk_header, Table::HeaderSize);
-		_timeValidRecordLastRead = micros();
+		_lastReadTableVersion = _t->tableIsChanged(false);
 	}
 
 	void TableNavigator::saveVRByte(int vrByteNo) const {
 		int vrAddr = getVRByteAddress(vrByteNo);
 		db()._writeByte(vrAddr, &currVR_Byte(), sizeof(ValidRecord_t));
-		_timeValidRecordLastRead = micros();
-		if (_t->_tableID == _chunkAddr) _t->_table_header.validRecords(currVR_Byte());
-		_t->tableIsChanged(false);
+		_lastReadTableVersion = _t->vrByteIsChanged();
+		if (_t->tableID() == _chunkAddr && vrByteNo == 0) _t->table_header().validRecords(currVR_Byte());
 	}
 
 	void TableNavigator::loadVRByte(int vrByteNo) const {
 		int vrAddr = getVRByteAddress(vrByteNo);
-		if (_t->outOfDate(_timeValidRecordLastRead) || vrByteNo != _VR_ByteNo) {
-			db()._readByte(vrAddr, &_chunk_header._validRecords, sizeof(ValidRecord_t));
-			_timeValidRecordLastRead = micros();
+		if (_t->outOfDate(_lastReadTableVersion) || vrByteNo != _VR_ByteNo) {
+			if (vrByteNo > lastVRbyteNo()) {
+				_lastReadTableVersion = _t->tableVersion() - 1;
+			} else {
+				db()._readByte(vrAddr, &_chunk_header._validRecords, sizeof(ValidRecord_t));
+				_lastReadTableVersion = _t->tableVersion();
+			}
 			_VR_ByteNo = vrByteNo;
 		}
 	}
@@ -502,8 +508,8 @@ namespace RelationalDatabase {
 			if (status() == TB_BEFORE_BEGIN) setStatus(TB_OK); // only if -1
 			while (insertPosTaken && status() == TB_OK) {
 				swapRecords(this, recToInsert);
-				//logger() << "Swapped: " << *reinterpret_cast<const uint32_t*>(recToInsert) << L_endl;
 				++swapPos;
+				logger() << "Swapped. Now inserting old rec: " << id() << " at " << swapPos << L_endl;
 				moveToThisRecord(swapPos);
 				vrIndex = loadAndGetVRindex();
 				insertPosTaken = recordIsUsed(vrIndex);

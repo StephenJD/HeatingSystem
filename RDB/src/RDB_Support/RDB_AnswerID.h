@@ -4,7 +4,7 @@
 namespace RelationalDatabase {
 	class RecordSelector;
 	/// <summary>
-	/// Non-Polymorphic Concrete Class used to hold Record ID and Status of a found record
+	/// 2Byte Non-Polymorphic Concrete Class used to hold Record ID and Status of a found record
 	/// RDB_Answer_Locator.h provides derived classes for retrieving actual records.
 	/// </summary>
 	class AnswerID {

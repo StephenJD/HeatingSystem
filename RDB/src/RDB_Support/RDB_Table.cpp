@@ -1,6 +1,5 @@
 #include "RDB_Table.h"
 #include "RDB_TableNavigator.h"
-#include "Arduino.h" // for micros()
 #include "..\..\..\Logging\Logging.h"
 
 //extern bool debugStop;
@@ -12,8 +11,7 @@ namespace RelationalDatabase {
 
 	Table::Table(RDB_B & db, TableID tableID, ChunkHeader & tableHdr)
 		// used when creating a new table
-		:_timeOfLastChange(micros())
-		, _db(&db)
+		: _db(&db)
 		, _table_header(tableHdr)
 		, _tableID(tableID)
 		, _recordsPerChunk(tableHdr.chunkSize())
@@ -25,20 +23,11 @@ namespace RelationalDatabase {
 
 	Table::Table(RDB_B & db, TableID tableID) :
 		// used when loading an existing table
-		_timeOfLastChange(micros()),
 		_db(&db),
 		_tableID(tableID)
 	{
 		openTable();
 	}
-
-	//Table::Table(const Table & rhs) :_timeOfLastChange(micros())
-	//{
-	//}
-
-	//void Table::refresh() {
-	//	openTable();
-	//}
 
 	void  Table::openNextTable() {
 		TableNavigator rec_sel(this);
@@ -130,11 +119,11 @@ namespace RelationalDatabase {
 		return rec_sel._currRecord.status();
 	}
 
-	void Table::tableIsChanged(bool reloadHeader) {
-		_timeOfLastChange = micros() + TIMER_INCREMENT;
+	uint16_t Table::tableIsChanged(bool reloadHeader) {
 		if (reloadHeader) {
 			loadHeader(_tableID, _table_header);
 		}
+		return ++_tableVersionNo;
 	}
 
 	//TableNavigator Table::begin() const { return *this; }

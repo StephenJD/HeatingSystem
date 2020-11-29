@@ -70,7 +70,7 @@ namespace RelationalDatabase {
 	};
 
 	/// <summary>
-	/// Knows how to locate a record and how to move to the next/prev record.
+	/// 16Byte Knows how to locate a record and how to move to the next/prev record.
 	/// Manages Chunk-Chaining and Record insertion and Retrieval
 	/// </summary>
 	class TableNavigator {
@@ -93,7 +93,6 @@ namespace RelationalDatabase {
 		RecordID insert(const Record_T & newRecord);
 		
 		RecordID insertRecord(const void * record);
-		//Table & table() { return *_t; }
 		bool moveToFirstRecord();
 		void moveToLastRecord();
 		void moveToThisRecord(int recordID);
@@ -117,7 +116,7 @@ namespace RelationalDatabase {
 		static int	validRecordByteNo(int recordIDOffsetFromChunkStart) { return recordIDOffsetFromChunkStart / RDB_B::ValidRecord_t_Capacity; }
 		uint8_t		curr_vrByteNo() const { return _VR_ByteNo; }
 		ValidRecord_t & currVR_Byte() const {	return _chunk_header._validRecords;	}
-		int			noOfvalidRecordBytes() const { return validRecordByteNo(chunkCapacity() - 1); }
+		int			lastVRbyteNo() const { return validRecordByteNo(chunkCapacity() - 1); }
 		NoOf_Recs_t thisVRcapacity() const;
 		TB_Size_t	getVRByteAddress(int vrByteNo) const;
 		uint8_t		loadAndGetVRindex() const;
@@ -127,7 +126,7 @@ namespace RelationalDatabase {
 
 		// Chunk Queries
 		TB_Size_t	currOffsetInChunk() const;
-		DB_Size_t	firstRecordInChunk() const /*{ return _chunkAddr + Table::HeaderSize + noOfvalidRecordBytes(); }*/;
+		DB_Size_t	firstRecordInChunk() const /*{ return _chunkAddr + Table::HeaderSize + lastVRbyteNo(); }*/;
 		NoOf_Recs_t chunkCapacity() const /*{ return _t->maxRecordsInChunk(); }*/;
 		bool		chunkIsExtended() const { return !_chunk_header.isFinalChunk(); }
 		
@@ -161,13 +160,13 @@ namespace RelationalDatabase {
 		friend class Answer_Locator;
 		friend class Table;
 
-		mutable unsigned long _timeValidRecordLastRead = 0;
-		Table * _t = 0;
-		mutable ChunkHeader _chunk_header; // The vr-byte is a copy of the _VR_ByteNo'th vr-byte, not necessarily the first.
-		AnswerID _currRecord;
-		TableID _chunkAddr = 0;
-		RecordID _chunk_start_recordID = 0;
-		mutable uint8_t _VR_ByteNo = 0;
+		Table * _t = 0;	// 4B
+		mutable ChunkHeader _chunk_header; // 4B The vr-byte is a copy of the _VR_ByteNo'th vr-byte, not necessarily the first.
+		AnswerID _currRecord;	// 2B
+		TableID _chunkAddr = 0; // 2B
+		RecordID _chunk_start_recordID = 0; // 1B
+		mutable uint8_t _VR_ByteNo = 0;		// 1B
+		mutable uint16_t _lastReadTableVersion = 0; // 2B
 	};
 
 	template <typename Record_T>
@@ -185,7 +184,6 @@ namespace RelationalDatabase {
 				Answer_R<Record_T> currRec = *original;
 				auto temp = currRec.rec();
 				currRec.Answer_Locator::update(recToInsert);
-				//*reinterpret_cast<Record_T*>(recToInsert) = currRec.get();
 				*reinterpret_cast<Record_T*>(recToInsert) = temp;
 			};
 
@@ -204,15 +202,15 @@ namespace RelationalDatabase {
 
 	template <typename Record_T>
 	RecordID Answer_R<Record_T>::update() {
-		if (isSorted(_tb->insertionStrategy())) {
+		if (isSorted(table()->insertionStrategy())) {
 			deleteRecord();
-			auto tableNav = TableNavigator(_tb);
+			auto tableNav = TableNavigator(table());
 			auto insertPos = tableNav.insert(get());
 			*this = tableNav;
 		}
 		else {
 			Answer_Locator::update(&get());
-			logger() << "AR_Updated: " << rec() << L_endl;
+			//logger() << "AR_Updated: " << rec() << L_endl;
 		}
 		return id();
 	}

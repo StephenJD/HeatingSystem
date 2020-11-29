@@ -9,7 +9,7 @@ namespace RelationalDatabase {
 	class Query;
 
 	/// <summary>
-	/// Abstract class holding Table-pointer and Record address
+	/// 13 Bytes Abstract class holding Table-pointer and Record address
 	/// Provides interface for updating and deleting records
 	/// </summary>
 	class Answer_Locator : public AnswerID {
@@ -28,7 +28,7 @@ namespace RelationalDatabase {
 		Table * table() const {return _tb;}
 		Table * table() {return _tb;}
 		TableID addr() {return _recordAddress;}
-		uint32_t lastReadTime() const { return _lastRead; } // only for debugging
+		uint16_t lastReadTabVer() const { return _lastReadTabVer; } // only for debugging
 	protected:
 		// Modifiers
 		/// <summary>
@@ -36,12 +36,12 @@ namespace RelationalDatabase {
 		/// </summary>
 		void rec(void * rec);
 		TB_Status status(void * rec);
-		Table * _tb = 0;
-	private:
 		TB_Status statusOnly();
-		mutable uint32_t _lastRead = 0; // initialized to _tb->lastModifiedTime() - TIMER_INCREMENT
-		TableID _recordAddress = 0;
-		TableID _validRecordByteAddress = 0;
-		uint8_t _validRecordIndex = 0;
+	private:
+		Table * _tb = 0;	// 4B
+		TableID _recordAddress = 0; // 2B
+		TableID _validRecordByteAddress = 0; // 2B
+		mutable uint16_t _lastReadTabVer = 0; // 2B initialized to _tb->tableVersion()
+		uint8_t _validRecordIndex = 0; // 1B
 	};
 }
