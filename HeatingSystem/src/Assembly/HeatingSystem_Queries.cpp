@@ -41,7 +41,7 @@ namespace Assembly {
 		, _q_relayChild{ rdb.tableQuery(TB_Relay) }
 
 		// DB Record Interfaces
-		, _ds_currTime{ _recCurrTime , Null_Query{} }
+		, _ds_currTime{ _recCurrTime , _recCurrTime.nullQuery }
 		, _ds_dwellings{ _recDwelling, _q_dwellings }
 		, _ds_zones{ _recZone, _q_zones }
 		, _ds_zone_child{ _recZone, _q_zoneChild, &_ds_zones }

@@ -54,4 +54,12 @@ namespace RelationalDatabase {
 	}
 
 	Answer_Locator RecordSelector::operator[](int index) { query().moveTo(*this, index); return *this; }
+
+	void RecordSelector::deleteRecord() {
+		operator*().deleteRecord();
+		operator++();
+		if (status() == TB_END_STOP) 
+			operator--();
+	}
+
 }

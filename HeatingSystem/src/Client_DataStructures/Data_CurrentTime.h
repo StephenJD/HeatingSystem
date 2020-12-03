@@ -148,6 +148,7 @@ namespace client_data_structures {
 		RecInt_CurrDateTime();
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
+		Null_Query nullQuery;
 	private:
 		CurrentTimeWrapper _currTime; // size is 32 bits.
 		CurrentDateWrapper _currDate; // size is 32 bits.

@@ -143,9 +143,6 @@ namespace LCD_UI {
 	}
 
 	void Dataset::deleteData() {
-		_recSel->deleteRecord();
-		_recSel += 0;
-		if (_recSel.status() == TB_END_STOP) --_recSel;
-		setRecordID(_recSel.signed_id());
+		_recSel.deleteRecord();
 	}
 }

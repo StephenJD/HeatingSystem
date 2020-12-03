@@ -66,6 +66,7 @@ namespace RelationalDatabase {
 		void setRecord(AnswerID rec) { _tableNav.setCurrent(rec); }
 		TableNavigator & tableNavigator() { return _tableNav; }
 		const TableNavigator & tableNavigator() const { return _tableNav; }
+		void deleteRecord();
 		// Query Access
 		const Query & query() const { return *_query; }
 		Query & query() { return *_query; }
