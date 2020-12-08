@@ -108,12 +108,14 @@ namespace client_data_structures {
 		//  b) If a day is stolen from a later profile the next missing day must be found and moved to the next profile.
 		// Empty profiles must delete their TT's
 		// New profiles must be given a copy of it's parent TTs.
-		auto & profile = static_cast<Answer_R<R_Profile>>(record()).rec();
+		auto & profileAns = static_cast<Answer_R<R_Profile>>(record());
+		auto & profile = profileAns.rec();
 		uint8_t oldDays = profile.days & 0x7F;
 		uint8_t newDays = uint8_t(newValue->val);
 		uint8_t removedDays = oldDays & ~newDays;
 		uint8_t addedDays = newDays & ~oldDays;
 		profile.days = newDays;
+		setRecordID(profileAns.update());
 		addDaysToNextProfile(removedDays);
 		stealFromOtherProfile(record().id(), addedDays);
 		promoteOutOfOrderDays();
