@@ -121,6 +121,7 @@ namespace RelationalDatabase {
 		TB_Size_t	getVRByteAddress(int vrByteNo) const;
 		uint8_t		loadAndGetVRindex() const;
 		void		loadVRByte(int vrByteNo) const;
+		void		loadChunkHeader() const;
 		void		saveVRByte(int vrByteNo) const;
 		uint8_t		currVRindex() const;
 
@@ -143,6 +144,7 @@ namespace RelationalDatabase {
 		
 		//Modifiers
 		bool haveMovedToUsedRecord(uint8_t vrIndex, int direction);
+		bool haveMovedToNextVR(int recordID);
 		bool haveMovedToNextChunck();
 		bool isDeletedRecord();
 		bool getLastUsedRecordInThisChunk(RecordID & usedRecID);
@@ -166,7 +168,8 @@ namespace RelationalDatabase {
 		TableID _chunkAddr = 0; // 2B
 		RecordID _chunk_start_recordID = 0; // 1B
 		mutable uint8_t _VR_ByteNo = 0;		// 1B
-		mutable uint16_t _lastReadTableVersion = 0; // 2B
+		mutable uint8_t _lastReadHdrVersionNo = 0; // 2B
+		mutable uint8_t _lastReadVRversionNo = 0; // 2B
 	};
 
 	template <typename Record_T>

@@ -115,7 +115,7 @@ namespace HardwareInterfaces {
 		f_array[1] = (_thermStoreData.TopSensHeight - _thermStoreData.LowerSensHeight) / 2.0F; // Mid Column
 		f_array[2] = _thermStoreData.CylHeight - (_thermStoreData.TopSensHeight + _thermStoreData.MidSensHeight) / 2.F; // Top Column
 		f_array[3] = f_array[0] + f_array[1] + f_array[2]; // Total Length of useful water column
-		auto volPerM = pow((float)_thermStoreData.CylDia, 2) * 0.00071F;
+		auto volPerM = (float)pow((float)_thermStoreData.CylDia, 2) * 0.00071F;
 		_bottomV = f_array[0] * volPerM; // vol in litres, allowing 10% for coil volume
 		_midV = f_array[1] * volPerM; // vol in litres
 		_upperV = f_array[2] * volPerM; // vol in litres

@@ -29,7 +29,7 @@ namespace RelationalDatabase {
 		openTable();
 	}
 
-	void  Table::openNextTable() {
+	void Table::openNextTable() {
 		TableNavigator rec_sel(this);
 
 		do { // Move to next chunk in the DB - might be the extention to an earlier table.			
@@ -119,11 +119,12 @@ namespace RelationalDatabase {
 		return rec_sel._currRecord.status();
 	}
 
-	uint16_t Table::tableIsChanged(bool reloadHeader) {
+	uint8_t Table::tableIsChanged(bool reloadHeader) {
 		if (reloadHeader) {
 			loadHeader(_tableID, _table_header);
 		}
-		return ++_tableVersionNo;
+		++_hdrVersionNo;
+		return ++_vrVersionNo;
 	}
 
 	//TableNavigator Table::begin() const { return *this; }

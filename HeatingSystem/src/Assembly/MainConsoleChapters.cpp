@@ -17,7 +17,7 @@ namespace Assembly {
 		, _dstUI_c{ &db._ds_currTime, RecInt_CurrDateTime::e_dst, {V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._ds_currTime, RecInt_CurrDateTime::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._ds_dwellings, RecInt_Dwelling::e_name }
-		, _zoneNameUI_c{ &db._ds_dwZones, RecInt_Zone::e_name, {V + S + L + VnLR + UD_C + R0} }
+		, _zoneNameUI_c{ &db._ds_dwZones, RecInt_Zone::e_name, {V + S + VnLR + UD_C + R0} }
 		, _zoneAbbrevUI_c{ &db._ds_dwZones, RecInt_Zone::e_abbrev}
 		, _allZoneAbbrevUI_c{ &db._ds_zones, RecInt_Zone::e_abbrev}
 		, _allZoneReqTemp_UI_c{ &db._ds_zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_C + R0 + ER0} }
@@ -33,7 +33,7 @@ namespace Assembly {
 		, _spellProgUI_c{ &db._ds_spellProg, RecInt_Program::e_name, {V+S+L+V1+UD_A+ER+EA}}
 		, _profileDaysUI_c{ &db._ds_profile, RecInt_Profile::e_days, {V+S+V1+UD_A+R+ER}, RecInt_Program::e_id }
 		
-		, _timeTempUI_c{ &db._ds_timeTemps, RecInt_TimeTemp::e_TimeTemp, {V + S + L + VnLR + UD_E + R0 +ER0}, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
+		, _timeTempUI_c{ &db._ds_timeTemps, RecInt_TimeTemp::e_TimeTemp, {V + S + VnLR + UD_E + R0 +ER0}, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
 		, _tempSensorNameUI_c{ &db._ds_tempSensors, RecInt_TempSensor::e_name, {V + S + VnLR + R}}
 		, _tempSensorTempUI_c{ &db._ds_tempSensors, RecInt_TempSensor::e_temp_str, {V + S + VnLR + R}}
 		
@@ -81,7 +81,7 @@ namespace Assembly {
 		, _page_dwellingMembers_c{ makeCollection(_dwellNameUI_c, _page_dwellingMembers_subpage_c) }
 		
 		, _iterated_timeTempUI{80, _timeTempUI_c}
-		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _iterated_timeTempUI) }
+		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _newLine, _iterated_timeTempUI) }
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 		
 		// Info Pages

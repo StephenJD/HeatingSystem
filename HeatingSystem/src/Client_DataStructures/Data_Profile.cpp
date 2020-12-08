@@ -117,7 +117,10 @@ namespace client_data_structures {
 		addDaysToNextProfile(removedDays);
 		stealFromOtherProfile(record().id(), addedDays);
 		promoteOutOfOrderDays();
-		return false;
+		bool hasMoved = true;
+		//bool hasMoved = record(). != recordID();
+		//setRecordID(newID);
+		return hasMoved;
 	}
 
 	void Dataset_Profile::addDays(Answer_R<R_Profile> & profile, uint8_t days) {
@@ -131,7 +134,7 @@ namespace client_data_structures {
 			Answer_R<R_Profile> profile = *(++_recSel);
 			if (profile.status() == TB_OK) {
 				addDays(profile, daysToAdd );
-				//logger() << "Next Profile ReadVer:" << profile.lastReadTabVer() << " TableVer: " << profile.table()->tableVersion() << L_endl;
+				//logger() << "Next Profile ReadVer:" << profile.lastReadTabVer() << " TableVer: " << profile.table()->vrVersion() << L_endl;
 			}
 			else {
 				createProfile(daysToAdd);
@@ -236,7 +239,7 @@ namespace client_data_structures {
 		if (recordID() == -1) return 0;
 		switch (fieldID) {
 		case e_days:
-			//logger() << "Curr Profile ReadVer:" << record().lastReadTabVer() << " TableVer: " << record().table()->tableVersion() << L_endl;
+			//logger() << "Curr Profile ReadVer:" << record().lastReadTabVer() << " TableVer: " << record().table()->vrVersion() << L_endl;
 			//logger() << "Curr Profile: " << record().rec() << L_endl;
 			_days = record().rec().days;
 			return &_days;

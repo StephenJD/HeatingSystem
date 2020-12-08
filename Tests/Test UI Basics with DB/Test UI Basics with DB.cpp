@@ -42,17 +42,17 @@
 ////////#define EDIT_FORMATTED_INTS
 ////
 #define EDIT_DATES
-#define EDIT_CURRENT_DATETIME
+//#define EDIT_CURRENT_DATETIME
 #define ITERATION_VARIANTS
 #define ITERATED_ZONE_TEMPS
 //
 #define CONTRAST
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
-//#define TIME_TEMP_EDIT
-//#define MAIN_CONSOLE_PAGES
-//#define INFO_CONSOLE_PAGES
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+#define TIME_TEMP_EDIT
+#define MAIN_CONSOLE_PAGES
+#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
 //////#define CMD_MENU
@@ -2242,17 +2242,22 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto q_dwellingSpells = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
 	auto q_spellProgs = QueryLinkF_T<R_Spell, R_Program> { q_dwellingSpells, db.tableQuery(TB_Program), 1 ,1 };
 	auto q_spellProg = QueryML_T<R_Spell>{ db.tableQuery(TB_Spell), q_spellProgs, 0 };
+	auto q_progProfiles = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 0 };
+	auto q_zoneProfiles = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
+	auto q_profile = QueryF_T<R_Profile>{ q_zoneProfiles, 0 };
 
 	auto _recDwelling = RecInt_Dwelling{};
 	auto _recZone = RecInt_Zone{ 0 };
 	auto _recProg = RecInt_Program{};
 	auto _recSpell = RecInt_Spell{};
+	auto _recProfile = RecInt_Profile{};
 
 	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
 	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
 	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
 	auto ds_dwSpells = Dataset_Spell(_recSpell, q_dwellingSpells, &ds_dwellings);
 	auto ds_spellProg = Dataset_Program(_recProg, q_spellProg, &ds_dwSpells);
+	auto ds_profile = Dataset_Profile{ _recProfile, q_profile, &ds_dwProgs, &ds_dwZones };
 
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
 	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name,{V+S+VnLR+UD_C+R0});
@@ -2405,6 +2410,8 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 				CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#2Aug  At Home");
 				AND_THEN("BACK cancels the insert") {
 					display1_h.rec_prevUI();
+					display1_h.stream(tb);
+					display1_h.stream(tb);
 					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
 					cout << "\n **** Cancelled insert spell ****\n\n";
 					for (Answer_R<R_Spell> spell : q_dwellingSpells) {
@@ -2425,6 +2432,10 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 							display1_h.rec_up_down(-1);
 							CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  #At Work");
 							display1_h.rec_select();
+							cout << "\n **** inserted spell before first ****\n\n";
+							for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+								logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+							}
 							CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  At Wor_k");
 							THEN("We can insert new spell after first") {
 								display1_h.rec_left_right(-1);
@@ -2664,12 +2675,19 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 	auto q_zoneProfiles = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
 	auto q_progProfiles = QueryF_T<R_Profile>(q_zoneProfiles, 0);
+	auto q_profile = QueryF_T<R_Profile>{ q_zoneProfiles, 0 };
+
+	auto _recDwelling = RecInt_Dwelling{};
+	auto _recZone = RecInt_Zone{ 0 };
+	auto _recProg = RecInt_Program{};
+	auto _recSpell = RecInt_Spell{};
+	auto _recProfile = RecInt_Profile{};
 
 	cout << " **** Next create DB Record Interface ****\n";
-	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
-	auto rec_dwZone = Dataset_Zone(q_dwellingZones, noVolData, &ds_dwellings);
-	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &ds_dwellings);
-	auto rec_profile = Dataset_Profile(q_progProfiles, noVolData, &ds_dwProgs, &ds_dwZones);
+	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
+	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+	auto ds_profile = Dataset_Profile(_recProfile, q_profile, &ds_dwProgs, &ds_dwZones);
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
@@ -2768,8 +2786,12 @@ SCENARIO("View-one Program and Iterated Programs", "[Display]") {
 	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	cout << " **** Next create DB Record Interface ****\n";
-	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
-	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &ds_dwellings);
+	auto _recDwelling = RecInt_Dwelling{};
+	auto _recProg = RecInt_Program{};
+
+	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
@@ -2874,7 +2896,7 @@ TEST_CASE("Contrast", "[Display]") {
 #endif
 
 #ifdef TIME_TEMP_EDIT
-SCENARIO("TimeTemps", "[Display]") {
+TEST_CASE("TimeTemps", "[Display]") {
 	cout << "\n*********************************\n**** MainConsoleChapters ****\n********************************\n\n";
 
 	using namespace client_data_structures;
@@ -2889,23 +2911,29 @@ SCENARIO("TimeTemps", "[Display]") {
 	setFactoryDefaults(_db, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto _q_dwellings = _db.tableQuery(TB_Dwelling);
-	auto _q_dwellingProgs = QueryF_T<client_data_structures::R_Program>{ _db.tableQuery(TB_Program), 1 };
-	auto _q_dwellingZones = QueryFL_T<client_data_structures::R_DwellingZone>{ _db.tableQuery(TB_DwellingZone), _db.tableQuery(TB_Zone), 0, 1 };
-	auto _q_zoneProfiles = QueryF_T<client_data_structures::R_Profile>{ _db.tableQuery(TB_Profile), 1 };
-	auto _q_profile = QueryF_T<client_data_structures::R_Profile>{ _q_zoneProfiles, 0 };
-	auto _q_timeTemps = QueryF_T<R_TimeTemp>{ _db.tableQuery(TB_TimeTemp) , 0 };
+	auto q_dwellings = _db.tableQuery(TB_Dwelling);
+	auto q_dwellingProgs = QueryF_T<client_data_structures::R_Program>{ _db.tableQuery(TB_Program), 1 };
+	auto q_dwellingZones = QueryFL_T<client_data_structures::R_DwellingZone>{ _db.tableQuery(TB_DwellingZone), _db.tableQuery(TB_Zone), 0, 1 };
+	auto q_zoneProfiles = QueryF_T<client_data_structures::R_Profile>{ _db.tableQuery(TB_Profile), 1 };
+	auto q_profile = QueryF_T<client_data_structures::R_Profile>{ q_zoneProfiles, 0 };
+	auto q_timeTemps = QueryF_T<R_TimeTemp>{ _db.tableQuery(TB_TimeTemp) , 0 };
 
 	cout << " **** Next create DB Record Interface ****\n";
-	auto _rec_dwelling = Dataset_Dwelling(_q_dwellings, noVolData, 0);
-	auto _rec_dwProgs = Dataset_Program{ _q_dwellingProgs, noVolData, &ds_dwelling };
-	auto _rec_dwZones = Dataset_Zone{ _q_dwellingZones, 0, &ds_dwelling };
-	auto _rec_profile = Dataset_Profile{ _q_profile, noVolData, &ds_dwProgs, &ds_dwZones };
-	auto _rec_timeTemps = Dataset_TimeTemp(_q_timeTemps, noVolData, &ds_profile);
+	auto _recDwelling = RecInt_Dwelling{};
+	auto _recProg = RecInt_Program{};
+	auto _recZone = RecInt_Zone{ 0 };
+	auto _recProfile = RecInt_Profile{};
+	auto _recTimeTemp = RecInt_TimeTemp();
+
+	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
+	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+	auto ds_profile = Dataset_Profile(_recProfile, q_profile, &ds_dwProgs, &ds_dwZones);
+	auto ds_timeTemps = Dataset{ _recTimeTemp, q_timeTemps, &ds_profile };
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	cout << "\n\tdwelling\n";
-	auto _dwellNameUI_c = UI_FieldData{ &ds_dwelling, RecInt_Dwelling::e_name };
+	auto _dwellNameUI_c = UI_FieldData{ &ds_dwellings, RecInt_Dwelling::e_name };
 	cout << "\tprogram\n";
 	auto _progNameUI_c = UI_FieldData{ &ds_dwProgs, RecInt_Program::e_name, {V + S + V1 + UD_A + R} };
 	cout << "\tzone\n";
@@ -2913,16 +2941,17 @@ SCENARIO("TimeTemps", "[Display]") {
 	cout << "\tprofile\n";
 	auto _profileDaysUI_c = UI_FieldData{ &ds_profile, RecInt_Profile::e_days, {V + S + V1 + UD_A + R + ER}, RecInt_Program::e_id };
 	cout << "\ttimeTemp\n";
-	auto _timeTempUI_c = UI_FieldData(&ds_timeTemps, RecInt_TimeTemp::e_TimeTemp, { V + L + S + VnLR + UD_E + R0 +ER0 }, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
+	auto _timeTempUI_c = UI_FieldData(&ds_timeTemps, RecInt_TimeTemp::e_TimeTemp, { V + S + VnLR + UD_E + R0 +ER0 }, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds });
 	auto _iterated_timeTempUI = UI_IteratedCollection<1>{ 80, _timeTempUI_c};
 
 	InsertTimeTemp_Cmd _deleteTTCmd = { "Delete", 0, {H + L + S + VnLR+UD_A} };
 	InsertTimeTemp_Cmd _editTTCmd = { "Edit", 0, {H + S + VnLR+UD_A} };
 	InsertTimeTemp_Cmd _newTTCmd = { "New", 0, {H + S} };
+	UI_Label _newLine{ "`" };
 
 	// Pages & sub-pages - Collections of UI handles
 	cout << "\ntt_page Elements Collection\n";
-	auto _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _iterated_timeTempUI) };
+	auto _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _newLine, _iterated_timeTempUI) };
 	auto _page_profile_c{ makeCollection(_dwellNameUI_c, _progNameUI_c, _zoneAbbrevUI_c, _profileDaysUI_c, _tt_SubPage_c) };
 
 	cout << "\nDisplay     Collection\n";
@@ -2939,6 +2968,7 @@ SCENARIO("TimeTemps", "[Display]") {
 	ui_Objects()[(long)&_progNameUI_c] = "progNameUI_c";
 	ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 	ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
+	ui_Objects()[(long)&_newLine] = "_newLine";
 	ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
 	ui_Objects()[(long)&_deleteTTCmd] = "_deleteTTCmd";
 	ui_Objects()[(long)&_editTTCmd] = "_editTTCmd";
@@ -2947,9 +2977,6 @@ SCENARIO("TimeTemps", "[Display]") {
 	ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
-	for (Answer_R<R_TimeTemp> tt : _q_timeTemps) {
-		logger() << (int)tt.id() << " : " << tt.rec() << L_endl;
-	}
 
 	cout << "\n **** All Constructed ****\n\n";
 	GIVEN("we can scroll into a TT") {
@@ -2964,6 +2991,9 @@ SCENARIO("TimeTemps", "[Display]") {
 		display1_h.rec_left_right(1);
 		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_5 1100p19");
 		THEN("up-dn edits the temp") {
+			for (Answer_R<R_TimeTemp> tt : q_timeTemps) {
+				logger() << (int)tt.id() << " : " << tt.rec() << L_endl;
+			}
 			display1_h.rec_up_down(-1);
 			CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1#6 1100p19");
 			AND_THEN("LR saves and edits the next temp") {
@@ -2971,6 +3001,10 @@ SCENARIO("TimeTemps", "[Display]") {
 				CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1#9");
 				AND_THEN("SELECT when in EDIT saves the temp") {
 					display1_h.rec_select();
+					for (Answer_R<R_TimeTemp> tt : q_timeTemps) {
+						logger() << (int)tt.id() << " : " << tt.rec() << L_endl;
+					}
+					cout << test_stream(display1_h.stream(tb)) << endl;
 					CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1_9");
 					AND_THEN("SELECT offers Delete/Edit/New") {
 						display1_h.rec_select();

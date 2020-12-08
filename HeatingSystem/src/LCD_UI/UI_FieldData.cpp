@@ -114,7 +114,7 @@ namespace LCD_UI {
 			_data->move_to(focusIndex());
 			if (_data->setNewValue(fieldID(), newData)) {
 				moveToSavedRecord();
-				item(focusIndex());
+				//item(focusIndex());
 			}
 			setCount(_data->resetCount());
 		}
@@ -123,8 +123,7 @@ namespace LCD_UI {
 	}
 
 	void UI_FieldData::moveToSavedRecord() {
-		auto newFocus = _data->recordID();
-		setFocusIndex(newFocus);
+		setFocusIndex(_data->recordID());
 		_field_StreamingTool_h.setCursorPos();
 	}
 
@@ -142,6 +141,7 @@ namespace LCD_UI {
 
 	void UI_FieldData::deleteData() {
 		_data->deleteData();
+		setFocusIndex(_data->recordID());
 		setCount(_data->resetCount());
 	}
 

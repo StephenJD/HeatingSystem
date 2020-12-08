@@ -33,7 +33,7 @@ namespace LCD_UI {
 			_recSel.begin();
 		}
 		record() = *_recSel;
-		setRecordID(_recSel.id());
+		//setRecordID(_recSel.id());
 		_count = query().end().id();
 		return _count; 
 	}
@@ -92,6 +92,7 @@ namespace LCD_UI {
 			setRecordID(recSel.signed_id());
 		}
 		else {
+			int direction = pos >= recSel.signed_id() ? 1 : -1;
 			auto wasNotAtEndStop = record().status() != TB_END_STOP;
 			// Refresh current Record in case parent has changed 
 			bool noMoveRequested = recSel.signed_id() == pos;
@@ -100,7 +101,6 @@ namespace LCD_UI {
 			}
 			record() = *recSel;
 
-
 			if (wasNotAtEndStop && record().status() == TB_END_STOP) {
 				record() = *(--recSel);
 				//matchID = recSel.signed_id();
@@ -108,7 +108,6 @@ namespace LCD_UI {
 			int matchID = recSel.signed_id();
 			setRecordID(matchID);
 
-			int direction = pos > recSel.signed_id() ? 1 : -1;
 			auto copyAnswer = record();
 			auto copyAnswerStatus = copyAnswer.status();
 			bool directionSign = direction < 0;
@@ -133,8 +132,10 @@ namespace LCD_UI {
 
 	bool Dataset::setNewValue(int fieldID, const I_Data_Formatter* val) {
 		i_record().setNewValue(fieldID, val);
-		setRecordID(i_record().record().id());
-		return false;
+		auto newID = i_record().record().id();
+		bool hasMoved = newID != recordID();
+		setRecordID(newID);
+		return hasMoved;
 	}
 
 	void Dataset::insertNewData() {
@@ -144,5 +145,6 @@ namespace LCD_UI {
 
 	void Dataset::deleteData() {
 		_recSel.deleteRecord();
+		setRecordID(_recSel.id());
 	}
 }

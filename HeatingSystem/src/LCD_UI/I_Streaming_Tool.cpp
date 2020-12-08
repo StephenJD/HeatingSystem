@@ -165,6 +165,7 @@ namespace LCD_UI {
 		backUI()->getItem(backUI()->focusIndex());
 		auto fieldData = backUI()->get()->collection();		
 		static_cast<UI_FieldData*>(fieldData)->saveEdit(&f_interface().editItem().currValue());
+
 		backUI()->on_select();
 		return on_back();
 	}
@@ -181,6 +182,10 @@ namespace LCD_UI {
 			backUI()->on_back(); // cancels edit
 			f_interface().item(focusIndex());
 		}
+		auto outerIt = backUI()->backUI()->get();
+		//if (outerIt->isCollection()) {
+			outerIt->collection()->focusHasChanged(true); // might be in an iterated collection needing re-initialising.
+		//}		
 		setBackUI(0);
 		return retVal;
 	}

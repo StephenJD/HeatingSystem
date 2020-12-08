@@ -37,7 +37,7 @@ namespace client_data_structures {
 	class InsertTimeTemp_Cmd : public LCD_UI::UI_Cmd
 	{
 	public:
-		enum TT_Cmds{ e_DelCmd, e_EditCmd, e_NewCmd, e_TTs , e_allCmds = 7, e_none};
+		enum TT_Cmds{ e_DelCmd, e_EditCmd, e_NewCmd, e_newLine, e_TTs , e_allCmds = 7, e_none};
 		InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour);
 		Collection_Hndl * enableCmds(int cmd_to_show);
 		bool move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;

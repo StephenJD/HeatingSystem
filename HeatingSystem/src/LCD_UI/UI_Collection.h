@@ -286,14 +286,7 @@ namespace LCD_UI {
 		virtual Collection_Hndl* move_focus_to(int index);
 
 		// Non-Polymorphic Modifiers
-		Collection_Hndl* activeUI() {
-			auto obj_hdl = item(validIndex(focusIndex()));
-			if (obj_hdl == 0) {
-				setFocusIndex(prevActionableIndex(focusIndex()));
-				obj_hdl = item(focusIndex());
-			}
-			return static_cast<Collection_Hndl*>(obj_hdl);
-		}
+		Collection_Hndl* activeUI();
 		Coll_Iterator	begin();
 		Coll_Iterator	end() { return { this, endIndex() }; }
 		void			setCount(int count) { _count = count; }

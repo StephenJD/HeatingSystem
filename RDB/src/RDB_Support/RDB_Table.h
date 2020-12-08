@@ -28,23 +28,29 @@ namespace RelationalDatabase {
 		TableID tableID() const { return _tableID; }
 		RDB_B & db() const { return *_db; }
 		InsertionStrategy insertionStrategy() const {return _insertionStrategy;}
-		bool outOfDate(uint16_t lastRead) const {
-			//if (debugStop) logger() << F("outOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << tableVersion() << F(" Returned: ") << (tableVersion() >= lastRead) << L_endl;
-			//auto result = int32_t(tableVersion() - lastRead);
+		bool vrOutOfDate(uint8_t lastRead) const {
+			//if (debugStop) logger() << F("vrOutOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << vrVersion() << F(" Returned: ") << (vrVersion() >= lastRead) << L_endl;
+			//auto result = int32_t(vrVersion() - lastRead);
 			//if (result > 0) {
-			//	logger() << F("outOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << tableVersion() << F(" Returned: ") << int32_t(_tabtableVersion()leVersionNo - lastRead) << L_endl;
+			//	logger() << F("vrOutOfDate offered: ") << L_dec << lastRead << F(" timeOfLastChange was: ") << vrVersion() << F(" Returned: ") << int32_t(_tabtableVersion()leVersionNo - lastRead) << L_endl;
 			//}
-			return int16_t(tableVersion() - lastRead) > 0;
+			return int8_t(vrVersion() - lastRead) > 0;
 		}
-		uint16_t tableVersion() const { return _tableVersionNo; }
+
+		bool hdrOutOfDate(uint8_t lastRead) const {
+			return int8_t(hdrVersion() - lastRead) > 0;
+		}
+
+		uint8_t vrVersion() const { return _vrVersionNo; }
+		uint8_t hdrVersion() const { return _hdrVersionNo; }
 		NoOf_Recs_t maxRecordsInTable() const { return _max_NoOfRecords_in_table; }
 		// Modifiers
 		void openTable();
 		void openNextTable();
 		//void refresh();
-		uint16_t tableIsChanged(bool reloadHeader);
-		uint16_t vrByteIsChanged() { return ++_tableVersionNo;	}
-		uint16_t dataIsChanged() { return ++_tableVersionNo;	}
+		uint8_t tableIsChanged(bool reloadHeader);
+		uint8_t vrByteIsChanged() { return ++_vrVersionNo;	}
+		uint8_t dataIsChanged() { return ++_vrVersionNo;	}
 		Record_Size_t recordSize() const { return _rec_size; } // return type must be same as sizeof()
 		const ChunkHeader & table_header() const { return _table_header; }
 		ChunkHeader & table_header() { return _table_header; }
@@ -79,7 +85,8 @@ namespace RelationalDatabase {
 		NoOf_Recs_t _recordsPerChunk = 0; // 1B Copy of maxRecords from last Chunk
 		InsertionStrategy _insertionStrategy = i_retainOrder; // 1B Copy from last Chunk
 		NoOf_Recs_t _max_NoOfRecords_in_table = 0; // 1B
-		mutable uint16_t _tableVersionNo = 0; // 2B
+		mutable uint8_t _vrVersionNo = 0; // 1B
+		mutable uint8_t _hdrVersionNo = 0; // 1B
 	};
 
 	template <typename Record_T>

@@ -332,6 +332,16 @@ namespace LCD_UI {
 		return { this, this->objectIndex() };
 	}
 
+	Collection_Hndl* I_SafeCollection::activeUI() {
+		auto obj_hdl = item(validIndex(focusIndex()));
+		setFocusIndex(objectIndex());
+		if (obj_hdl == 0) {
+			setFocusIndex(prevActionableIndex(focusIndex()));
+			obj_hdl = item(focusIndex());
+		}
+		return static_cast<Collection_Hndl*>(obj_hdl);
+	}
+
 	bool I_SafeCollection::streamElement(UI_DisplayBuffer & buffer, const Object_Hndl * activeElement, int endPos, ListStatus listStatus) const {
 		filter(filter_viewable());
 		auto hasStreamed = false;
@@ -352,7 +362,7 @@ namespace LCD_UI {
 					if (thisActiveObj) {
 						auto & object = *thisActiveObj->get();
 #ifdef ZPSIM
-						cout << F("\t\tView Object: ") << ui_Objects()[(long)&thisActiveObj] << endl << endl;
+						cout << F("\t\tView Object: ") << ui_Objects()[(long)&object] << endl << endl;
 #endif
 						hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
 					} 

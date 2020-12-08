@@ -50,7 +50,7 @@ namespace LCD_UI {
 			auto parent = _cursorUI;
 			auto newActive = _cursorUI->activeUI(); // the focus lies in a nested collection
 #ifdef ZPSIM
-			logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << " Active: " << (newActive? ui_Objects()[(long)(newActive->get())].c_str():"") << L_endl;
+			//logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << " Active: " << (newActive? ui_Objects()[(long)(newActive->get())].c_str():"") << L_endl;
 #endif
 			if (newActive == 0) break;
 			_cursorUI = newActive;
@@ -71,9 +71,9 @@ namespace LCD_UI {
 			auto try_behaviour = tryLeftRight->behaviour();
 			auto tryActive_h = tryLeftRight->activeUI();
 #ifdef ZPSIM
-			logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
-				<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
-				<< " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
+			//logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
+			//	<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
+			//	<< " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
 				if (try_behaviour.is_viewAll_LR()) {
 				gotLeftRight = tryLeftRight;
@@ -96,7 +96,7 @@ namespace LCD_UI {
 			_leftRightBackUI->enter_collection(direction);
 		}
 #ifdef ZPSIM
-		logger() << F("\tLeftRightUI is: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		//logger() << F("\tLeftRightUI is: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 #endif
 		return topUI;
 	}
@@ -114,7 +114,7 @@ namespace LCD_UI {
 			}
 			else if (tryUD->behaviour().is_cmd_on_UD()) isUpDnAble = true;
 #ifdef ZPSIM
-			logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (isUpDnAble ? " HasUD" : " NoUD") << L_endl;
+			//logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (isUpDnAble ? " HasUD" : " NoUD") << L_endl;
 #endif
 			if (isUpDnAble) {
 				_upDownUI = tryUD;
@@ -122,7 +122,7 @@ namespace LCD_UI {
 			this_UI_h = tryUD;
 		}
 #ifdef ZPSIM
-		logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		//logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 #endif
 	}
 
@@ -291,6 +291,8 @@ namespace LCD_UI {
 			auto jumpTo = _cursorUI->get()->select(_cursorUI);
 			if (jumpTo) {// change page
 				setBackUI(jumpTo);
+			} else {
+				//notifyAllOfFocusChange(_leftRightBackUI);
 			}
 		}
 		selectPage();
