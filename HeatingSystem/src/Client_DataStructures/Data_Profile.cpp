@@ -117,10 +117,7 @@ namespace client_data_structures {
 		addDaysToNextProfile(removedDays);
 		stealFromOtherProfile(record().id(), addedDays);
 		promoteOutOfOrderDays();
-		bool hasMoved = true;
-		//bool hasMoved = record(). != recordID();
-		//setRecordID(newID);
-		return hasMoved;
+		return false;
 	}
 
 	void Dataset_Profile::addDays(Answer_R<R_Profile> & profile, uint8_t days) {
