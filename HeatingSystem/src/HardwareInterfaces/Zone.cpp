@@ -223,13 +223,13 @@ namespace HardwareInterfaces {
 		auto reachedAcceptableTemp = [currTemp_fractional, currTempReq]() -> bool { return currTemp_fractional + 128 >= currTempReq * 256; };
 		auto canUpdatePreheatParameters = [&zoneRec](int quality)->bool {return zoneRec.autoQuality > 0 && quality > 0; };
 		
-		auto saveNewPreheatParameters = [this, &zoneRec, &zoneAnswer, outsideTemp](GetExpCurveConsts::CurveConsts curveMatch, int quality) {
+		auto saveNewPreheatParameters = [this, &zoneRec, &zoneAnswer, outsideTemp, currTempReq](GetExpCurveConsts::CurveConsts curveMatch, int quality) {
 			logger() << " New Limit: " << L_fixed << long(curveMatch.limit)
 			<< " New TC: " << L_int << long(curveMatch.timeConst)
 			<< " New Quality: " << L_int << quality << " Old Quality: " << zoneRec.autoQuality << " OS Temp: " << outsideTemp << L_endl;
 
 			double limit = (curveMatch.limit + 128.) / 256.;
-			if (limit > _maxFlowTemp) { // treat as linear curve. 			
+			if (limit > _maxFlowTemp || limit < currTempReq) { // treat as linear curve. 			
 				limit = outsideTemp; // Make ratio = 0 to indicate linear curve, and TC = minutes-per-4-degrees
 				curveMatch.timeConst = static_cast<uint16_t>(curveMatch.period * 4L * 256L / curveMatch.range);
 			}
@@ -255,16 +255,16 @@ namespace HardwareInterfaces {
 			if (timeToStartHeating(minsToAdd)) {
 				setProfileTempRequest(nextTempReq - offset());
 				_getExpCurve.firstValue(currTemp_fractional);
-				logger() << "\tFirst Temp Registered for " << zoneRec.name << L_endl;
+				logger() << "\tFirst Temp Registered for " << zoneRec.name << " temp is: " << L_fixed << currTemp_fractional << L_endl;
 				logger() << "\t\tPreheatTime: " << minsToAdd << " Compressed TC: " << zoneRec.autoTimeC << " Ratio: " << zoneRec.autoRatio << " OS Temp: " << outsideTemp << L_endl;
 			}
 		} else { // We are in pre-heat or nextReq lower than CurrReq
 			offerCurrTempToCurveMatch();
 			if (reachedAcceptableTemp()) {
 				GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
-				auto resultQuality = curveMatch.range / 25;
+				auto resultQuality = (curveMatch.range + 12) / 25; // round up
 				if (canUpdatePreheatParameters(resultQuality)) {
-					logger() << L_time << zoneRec.name << " Preheat OK. Req " << currTempReq << " Range: " << resultQuality << L_endl;
+					logger() << L_time << zoneRec.name << " Preheat OK. Req " << currTempReq << " is: " << L_fixed  << currTemp_fractional << L_dec << " Range: " << resultQuality << L_endl;
 					if (resultQuality >= zoneRec.autoQuality) {
 						saveNewPreheatParameters(curveMatch, resultQuality);
 					}

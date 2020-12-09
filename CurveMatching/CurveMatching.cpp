@@ -56,7 +56,6 @@ namespace GP_LIB {
 				averageTimeAtThisValue();
 			}
 		}
-		logger() << "\tMC_Time: " << _timeSinceStart << " [0]:" << L_fixed << _xy.firstRiseValue << " [1]:" << _xy.midRiseValue << " [2]:" << _xy.lastRiseValue << L_endl;
 #ifdef debug
 		cout << "\n\t_timeSinceStart : " << _timeSinceStart << " TryValue : " << currValue << '\n'; // Start temp. Zero indicates not started timing.
 		cout << "\tfirstRiseValue : " << _xy.firstRiseValue << '\n'; // Start temp. Zero indicates not started timing.
@@ -68,6 +67,7 @@ namespace GP_LIB {
 		cout << "\tlastRiseTime : " << _xy.lastRiseTime << '\n';
 		cout << "\tlastRiseValue : " << _xy.lastRiseValue << '\n'; // Current Temp. not_recording indicates not recording
 #endif
+		if (hasRecorded) logger() << "\tMC_Time: " << _timeSinceStart << " [0]:" << L_fixed << _xy.firstRiseValue << " [1]:" << _xy.midRiseValue << " [2]:" << _xy.lastRiseValue << L_endl;
 		return hasRecorded;
 	}
 
