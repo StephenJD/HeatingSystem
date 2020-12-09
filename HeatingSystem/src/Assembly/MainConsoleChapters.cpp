@@ -21,12 +21,12 @@ namespace Assembly {
 		, _zoneAbbrevUI_c{ &db._ds_dwZones, RecInt_Zone::e_abbrev}
 		, _allZoneAbbrevUI_c{ &db._ds_zones, RecInt_Zone::e_abbrev}
 		, _allZoneReqTemp_UI_c{ &db._ds_zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_C + R0 + ER0} }
-		, _allZoneNames_UI_c{ &db._ds_zone_child, RecInt_Zone::e_name, {V + V1} }
-		, _allZoneIsTemp_UI_c{ &db._ds_zone_child, RecInt_Zone::e_isTemp, {V + V1} }
-		, _allZoneIsHeating_UI_c{ &db._ds_zone_child, RecInt_Zone::e_isHeating, {V + V1} }
-		, _zoneManAuto_c{ &db._ds_zone_child, RecInt_Zone::e_quality }
-		, _zoneRatio_c{ &db._ds_zone_child, RecInt_Zone::e_ratio }
-		, _zoneTimeConst_c{ &db._ds_zone_child, RecInt_Zone::e_timeConst }
+		, _allZoneNames_UI_c{ &db._ds_zones, RecInt_Zone::e_name, {V + V1} }
+		, _allZoneIsTemp_UI_c{ &db._ds_zones, RecInt_Zone::e_isTemp, {V + V1} }
+		, _allZoneIsHeating_UI_c{ &db._ds_zones, RecInt_Zone::e_isHeating, {V + V1} }
+		, _zoneManAuto_c{ &db._ds_zones, RecInt_Zone::e_quality }
+		, _zoneRatio_c{ &db._ds_zones, RecInt_Zone::e_ratio }
+		, _zoneTimeConst_c{ &db._ds_zones, RecInt_Zone::e_timeConst }
 
 		, _progNameUI_c{ &db._ds_dwProgs, RecInt_Program::e_name, {V+S+V1+UD_A+R} }
 		, _dwellSpellUI_c{ &db._ds_dwSpells, RecInt_Spell::e_date, {V + S + V1 + UD_E} }
@@ -34,16 +34,16 @@ namespace Assembly {
 		, _profileDaysUI_c{ &db._ds_profile, RecInt_Profile::e_days, {V+S+V1+UD_A+R+ER}, RecInt_Program::e_id }
 		
 		, _timeTempUI_c{ &db._ds_timeTemps, RecInt_TimeTemp::e_TimeTemp, {V + S + VnLR + UD_E + R0 +ER0}, 0, { static_cast<Collection_Hndl * (Collection_Hndl::*)(int)>(&InsertTimeTemp_Cmd::enableCmds), InsertTimeTemp_Cmd::e_allCmds } }
-		, _tempSensorNameUI_c{ &db._ds_tempSensors, RecInt_TempSensor::e_name, {V + S + VnLR + R}}
-		, _tempSensorTempUI_c{ &db._ds_tempSensors, RecInt_TempSensor::e_temp_str, {V + S + VnLR + R}}
+		, _tempSensorNameUI_c{ &db._ds_tempSensors, RecInt_TempSensor::e_name, {V + VnLR}}
+		, _tempSensorTempUI_c{ &db._ds_tempSensors, RecInt_TempSensor::e_temp_str, {V + S + VnLR + R0}}
 		
-		, _towelRailNameUI_c{ &db._ds_towelRailParent, RecInt_TowelRail::e_name }
-		, _towelRailTempUI_c{ &db._ds_towelRailChild, RecInt_TowelRail::e_onTemp }
-		, _towelRailOnTimeUI_c{ &db._ds_towelRailChild, RecInt_TowelRail::e_minutesOn }
-		, _towelRailStatus_c{ &db._ds_towelRailChild, RecInt_TowelRail::e_secondsToGo, {V + V1} }
+		, _towelRailNameUI_c{ &db._ds_towelRail, RecInt_TowelRail::e_name }
+		, _towelRailTempUI_c{ &db._ds_towelRail, RecInt_TowelRail::e_onTemp }
+		, _towelRailOnTimeUI_c{ &db._ds_towelRail, RecInt_TowelRail::e_minutesOn }
+		, _towelRailStatus_c{ &db._ds_towelRail, RecInt_TowelRail::e_secondsToGo, {V + V1} }
 		
-		, _relayStateUI_c{ &db._ds_relayParent, RecInt_Relay::e_state,{V + S + VnLR + UD_E} }
-		, _relayNameUI_c{ &db._ds_relayChild, RecInt_Relay::e_name, {V+V1} }
+		, _relayStateUI_c{ &db._ds_relay, RecInt_Relay::e_state,{V + S + VnLR + UD_E} }
+		, _relayNameUI_c{ &db._ds_relay, RecInt_Relay::e_name, {V+V1} }
 
 		// Basic UI Elements
 		, _newLine{ "`" }

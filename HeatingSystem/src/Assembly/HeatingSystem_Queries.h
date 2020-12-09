@@ -39,7 +39,6 @@ namespace Assembly {
 		RelationalDatabase::TableQuery _q_displays;
 		RelationalDatabase::TableQuery _q_dwellings;
 		RelationalDatabase::TableQuery _q_zones;
-		RelationalDatabase::QueryM_T _q_zoneChild;
 		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_dwellingZones;
 		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_zoneDwellings;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_dwellingProgs;
@@ -51,16 +50,13 @@ namespace Assembly {
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_profile;
 		RelationalDatabase::QueryF_T<client_data_structures::R_TimeTemp> _q_timeTemps;
 		RelationalDatabase::TableQuery _q_tempSensors;
-		RelationalDatabase::TableQuery _q_towelRailParent;
-		RelationalDatabase::QueryM_T _q_towelRailChild;
-		RelationalDatabase::TableQuery _q_relayParent;
-		RelationalDatabase::QueryM_T _q_relayChild;
+		RelationalDatabase::TableQuery _q_towelRail;
+		RelationalDatabase::TableQuery _q_relay;
 
 		// DB Datasets
 		client_data_structures::Dataset _ds_currTime;
 		client_data_structures::Dataset _ds_dwellings;
 		client_data_structures::Dataset _ds_zones;
-		client_data_structures::Dataset _ds_zone_child;
 		client_data_structures::Dataset _ds_dwZones;
 		client_data_structures::Dataset_Program _ds_dwProgs;
 		client_data_structures::Dataset_Spell _ds_dwSpells;
@@ -68,10 +64,8 @@ namespace Assembly {
 		client_data_structures::Dataset_Profile _ds_profile;
 		client_data_structures::Dataset _ds_timeTemps;
 		client_data_structures::Dataset _ds_tempSensors;
-		client_data_structures::Dataset _ds_towelRailParent;
-		client_data_structures::Dataset _ds_towelRailChild;
-		client_data_structures::Dataset _ds_relayParent;
-		client_data_structures::Dataset _ds_relayChild;
+		client_data_structures::Dataset _ds_towelRail;
+		client_data_structures::Dataset _ds_relay;
 	};
 
 }

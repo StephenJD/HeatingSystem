@@ -28,11 +28,11 @@ namespace LCD_UI {
 		//I_Data_Formatter* getFieldAt(int fieldID, int elementIndex) const { return const_cast<I_Record_Interface*>(this)->getFieldAt(fieldID, elementIndex); }
 		I_Data_Formatter* getField(int fieldID) const { return const_cast<I_Record_Interface*>(this)->getField(fieldID); }
 		virtual int recordFieldVal(int selectFieldID) const { return record().id(); }
-		virtual const Answer_Locator& record() const { return{}; }
+		virtual const Answer_Locator& record() const = 0;
 		int recordID() const { return record().id(); }
 
 		// Polymorphic Modifiers
-		virtual Answer_Locator& record() { return Answer_Locator{}; }
+		virtual Answer_Locator& record() = 0;
 		virtual I_Data_Formatter* getField(int fieldID) { return 0; }
 		virtual bool setNewValue(int fieldID, const I_Data_Formatter* val) { return false; }
 		virtual bool actionOn_UD(int _fieldID) { return false; }

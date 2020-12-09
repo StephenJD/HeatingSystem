@@ -32,26 +32,26 @@
 #include <iostream>
 #include <iomanip>
 
-//#define DATABASE
-//#define UI_DB_DISPLAY_VIEW_ONE
-//#define UI_DB_DISPLAY_VIEW_ALL
-//#define UI_DB_SHORT_LISTS
-//#define EDIT_NAMES_NUMS
-//////////#define EDIT_INTS
-//////
-//////////#define EDIT_FORMATTED_INTS
-//////
-//#define EDIT_DATES
-////#define EDIT_CURRENT_DATETIME
-//#define ITERATION_VARIANTS
-//#define ITERATED_ZONE_TEMPS
+#define DATABASE
+#define UI_DB_DISPLAY_VIEW_ONE
+#define UI_DB_DISPLAY_VIEW_ALL
+#define UI_DB_SHORT_LISTS
+#define EDIT_NAMES_NUMS
+////////#define EDIT_INTS
 ////
-//#define CONTRAST
-//#define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
-//#define TIME_TEMP_EDIT
-//#define MAIN_CONSOLE_PAGES
+////////#define EDIT_FORMATTED_INTS
+////
+#define EDIT_DATES
+//#define EDIT_CURRENT_DATETIME
+#define ITERATION_VARIANTS
+#define ITERATED_ZONE_TEMPS
+//
+#define CONTRAST
+#define VIEW_ONE_NESTED_CALENDAR_PAGE
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+#define TIME_TEMP_EDIT
+#define MAIN_CONSOLE_PAGES
 #define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS
@@ -3360,7 +3360,7 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 		CHECK(test_stream(display1_h.stream(tb)) == "Room Temp OnFor ToGoEnSuite  50 060 0   Family   51 061 0   Flat     52 062 0");
 		display1_h.rec_up_down(1);
 		cout << test_stream(display1_h.stream(tb)) << endl;
-		CHECK(test_stream(display1_h.stream(tb)) == "UpSt 16 DnSt 16 Flat16 HsTR 16 EnST 16  FlTR 16 GasF 16 OutS16 Pdhw 16 DHot 16> ");
+		CHECK(test_stream(display1_h.stream(tb)) == "UpSt :16 DnSt :16   Flat :16 HsTR :16   EnST :16 FlTR :16   GasF :16 OutS :16>  ");
 		display1_h.rec_up_down(1);
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		CHECK(test_stream(display1_h.stream(tb)) == "Flat   0 FlTR   0   HsTR   0 UpSt   0   MFSt   0 Gas    0   DnSt   0");

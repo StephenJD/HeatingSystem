@@ -9,7 +9,7 @@ namespace Assembly {
 
 	RemoteConsoleChapters::RemoteConsoleChapters(HeatingSystem_Queries & db) :
 		_rem_tempReqUI_c{ &db._ds_zones, RecInt_Zone::e_reqTemp, {V + S + V1 + UD_S} }
-		, _rem_tempIsUI_c{ &db._ds_zone_child, RecInt_Zone::e_isTemp, {V + L0} }
+		, _rem_tempIsUI_c{ &db._ds_zones, RecInt_Zone::e_isTemp, {V + L0} }
 		, _rem_prompt{ "^v adjusts temp" }
 		, _rem_req_lbl{ "Req" }
 		, _rem_is_lbl{ "Is", {V+L0} }

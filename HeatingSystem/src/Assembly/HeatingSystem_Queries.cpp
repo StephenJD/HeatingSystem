@@ -23,7 +23,6 @@ namespace Assembly {
 		, _q_displays{ rdb.tableQuery(TB_Display) }
 		, _q_dwellings{ rdb.tableQuery(TB_Dwelling) }
 		, _q_zones{ rdb.tableQuery(TB_Zone) }
-		, _q_zoneChild{ rdb.tableQuery(TB_Zone) }
 		, _q_dwellingZones{ rdb.tableQuery(TB_DwellingZone), rdb.tableQuery(TB_Zone), 0, 1 }
 		, _q_zoneDwellings{ rdb.tableQuery(TB_DwellingZone), rdb.tableQuery(TB_Dwelling), 1, 0 }
 		, _q_dwellingProgs{ rdb.tableQuery(TB_Program), 1 }
@@ -35,16 +34,13 @@ namespace Assembly {
 		, _q_profile{ _q_zoneProfiles, 0 }
 		, _q_timeTemps{ rdb.tableQuery(TB_TimeTemp), 0 }
 		, _q_tempSensors{ rdb.tableQuery(TB_TempSensor) }
-		, _q_towelRailParent{ rdb.tableQuery(TB_TowelRail) }
-		, _q_towelRailChild{ rdb.tableQuery(TB_TowelRail) }
-		, _q_relayParent{ rdb.tableQuery(TB_Relay) }
-		, _q_relayChild{ rdb.tableQuery(TB_Relay) }
+		, _q_towelRail{ rdb.tableQuery(TB_TowelRail) }
+		, _q_relay{ rdb.tableQuery(TB_Relay) }
 
 		// DB Record Interfaces
 		, _ds_currTime{ _recCurrTime , _recCurrTime.nullQuery }
 		, _ds_dwellings{ _recDwelling, _q_dwellings }
 		, _ds_zones{ _recZone, _q_zones }
-		, _ds_zone_child{ _recZone, _q_zoneChild, &_ds_zones }
 		, _ds_dwZones{ _recZone, _q_dwellingZones, &_ds_dwellings }
 		, _ds_dwProgs{ _recProg, _q_dwellingProgs, &_ds_dwellings }
 		, _ds_dwSpells{ _recSpell, _q_dwellingSpells, &_ds_dwellings }
@@ -52,10 +48,8 @@ namespace Assembly {
 		, _ds_profile{ _recProfile, _q_profile, &_ds_dwProgs, &_ds_dwZones }
 		, _ds_timeTemps{ _recTimeTemp, _q_timeTemps, &_ds_profile }
 		, _ds_tempSensors{ _recTempSensor, _q_tempSensors }
-		, _ds_towelRailParent{ _recTowelRail, _q_towelRailParent}
-		, _ds_towelRailChild{ _recTowelRail, _q_towelRailChild, &_ds_towelRailParent }
-		, _ds_relayParent{ _recRelay, _q_relayParent }
-		, _ds_relayChild{ _recRelay, _q_relayChild, &_ds_relayParent }
+		, _ds_towelRail{ _recTowelRail, _q_towelRail}
+		, _ds_relay{ _recRelay, _q_relay }
 	{
 		logger() << F("Database queries constructed") << L_endl;
 	}

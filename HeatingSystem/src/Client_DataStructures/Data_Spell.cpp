@@ -18,7 +18,7 @@ namespace client_data_structures {
 	{}
 
 	bool Dataset_Spell::setNewValue(int fieldID, const I_Data_Formatter* newValue) {
-		auto & spell = static_cast<Answer_R<R_Spell>>(record());
+		auto & spell = static_cast<Answer_R<R_Spell>&>(record());
 		switch (fieldID) {
 		case e_date:
 		{

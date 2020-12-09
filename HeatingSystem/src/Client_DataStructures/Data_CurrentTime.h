@@ -149,7 +149,11 @@ namespace client_data_structures {
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 		Null_Query nullQuery;
+		const Answer_Locator & record() const override { return _nullAnswer; }
+		Answer_Locator & record() override { return _nullAnswer; }
+
 	private:
+		Answer_Locator _nullAnswer;
 		CurrentTimeWrapper _currTime; // size is 32 bits.
 		CurrentDateWrapper _currDate; // size is 32 bits.
 		IntWrapper _dst;

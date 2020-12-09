@@ -69,13 +69,13 @@ namespace LCD_UI {
 				break;
 			}
 			auto try_behaviour = tryLeftRight->behaviour();
-			auto tryActive_h = tryLeftRight->activeUI();
+			//auto tryActive_h = tryLeftRight->activeUI();
 #ifdef ZPSIM
 			//logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
 			//	<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
 			//	<< " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
-				if (try_behaviour.is_viewAll_LR()) {
+			if (try_behaviour.is_viewAll_LR()) {
 				gotLeftRight = tryLeftRight;
 				if (_leftRightBackUI != gotLeftRight) {
 					auto & colln = *gotLeftRight->get()->collection();
@@ -89,7 +89,10 @@ namespace LCD_UI {
 					}
 				}
 			}
-			tryLeftRight = tryLeftRight->activeUI();
+			auto tryActive_h = tryLeftRight->activeUI();
+			if (tryActive_h != 0) {
+				tryLeftRight = tryActive_h;
+			}
 		}
 		if (_leftRightBackUI != gotLeftRight) {
 			_leftRightBackUI = gotLeftRight;
