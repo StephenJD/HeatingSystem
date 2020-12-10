@@ -95,6 +95,7 @@ namespace LCD_UI {
 		void setEditFocus(int focus);
 		I_Streaming_Tool & f_interface() { return static_cast<I_Streaming_Tool&>(*get()); }
 	private:
+		Collection_Hndl* takeOutOfEdit();
 		CursorMode _cursorMode = HardwareInterfaces::LCD_Display::e_unselected;
 		Behaviour _activeEditBehaviour;
 		const uint8_t _fieldID; // placed here to reduce padding

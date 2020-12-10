@@ -159,4 +159,8 @@ namespace LCD_UI {
 		}
 		return colln_hndl->move_focus_by(moveBy);
 	}
+	bool UI_FieldData::back() {
+		return data()->back(fieldID());
+	}
+
 }

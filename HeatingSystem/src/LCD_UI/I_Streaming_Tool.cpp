@@ -167,10 +167,15 @@ namespace LCD_UI {
 		static_cast<UI_FieldData*>(fieldData)->saveEdit(&f_interface().editItem().currValue());
 
 		backUI()->on_select();
-		return on_back();
+		return takeOutOfEdit();
 	}
 
 	Collection_Hndl * Field_StreamingTool_h::on_back() {// function is called on the focus() object to notify it has been cancelled.
+		getData()->back(); // cancels edit
+		return takeOutOfEdit();
+	}
+
+	Collection_Hndl* Field_StreamingTool_h::takeOutOfEdit() {
 		Collection_Hndl * retVal = this;
 		if (_cursorMode == HI_BD::e_inEdit) {
 			setCursorMode(HI_BD::e_unselected);
@@ -179,7 +184,7 @@ namespace LCD_UI {
 			f_interface().editItem().setBackUI(0);
 			f_interface().setCount(0);
 			retVal = 0;
-			backUI()->on_back(); // cancels edit
+			backUI()->on_back(); 
 			f_interface().item(focusIndex());
 		}
 		auto outerIt = backUI()->backUI()->get();

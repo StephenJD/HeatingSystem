@@ -55,6 +55,7 @@ namespace HardwareInterfaces {
 
 		// Modifier
 		void refreshProfile();
+		void resetOffsetToZero() { _offsetT = 0; }
 		void offsetCurrTempRequest(int8_t val);
 		bool setFlowTemp();
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }

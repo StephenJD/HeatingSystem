@@ -37,6 +37,7 @@ namespace LCD_UI {
 		virtual bool setNewValue(int fieldID, const I_Data_Formatter* val) { return false; }
 		virtual bool actionOn_UD(int _fieldID, int moveBy) { return false; }
 		virtual bool actionOn_LR(int _fieldID, int moveBy) { return false; }
+		virtual bool back(int fieldID) { return true; }
 		virtual RecordSelector duplicateRecord(RecordSelector& recSel) {return {};}
 
 		virtual VolatileData * runTimeData() { return 0; }
@@ -73,8 +74,9 @@ namespace LCD_UI {
 		I_Data_Formatter* initialiseRecord(int fieldID);
 		bool indexIsInDataRange(int index) { return index >= query().begin().id() && index <= query().last().id(); }
 
-		bool actionOn_UD(int _fieldID, int moveBy) { return i_record().actionOn_UD(_fieldID, moveBy); }
-		bool actionOn_LR(int _fieldID, int moveBy) { return i_record().actionOn_LR(_fieldID, moveBy); }
+		bool actionOn_UD(int fieldID, int moveBy) { return i_record().actionOn_UD(fieldID, moveBy); }
+		bool actionOn_LR(int fieldID, int moveBy) { return i_record().actionOn_LR(fieldID, moveBy); }
+		bool back(int fieldID) {return i_record().back(fieldID);}
 		I_Data_Formatter* getFieldAt(int fieldID, int elementIndex); // moves to first valid record at id or past id from current position
 		I_Data_Formatter* getField(int fieldID) { return i_record().getField(fieldID); }
 		/*virtual*/ void insertNewData();

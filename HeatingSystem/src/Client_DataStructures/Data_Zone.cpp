@@ -138,4 +138,18 @@ namespace client_data_structures {
 		}
 	}
 
+	bool RecInt_Zone::back(int fieldID) {
+		switch (fieldID) {
+		case e_reqTemp:
+		{
+			logger() << "Zero Offset " << record().rec().name << " ID: " << record().id() << L_endl;
+			HardwareInterfaces::Zone& z = zone(record().id());
+			record().rec().offsetT = 0;
+			record().update();
+			z.resetOffsetToZero();
+		}
+		default:;
+		}
+		return true;
+	}
 }

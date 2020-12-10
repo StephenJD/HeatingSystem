@@ -434,7 +434,7 @@ namespace LCD_UI {
 
 		virtual const I_SafeCollection* iterated_collection() const = 0;
 		int h_firstVisibleItem() const;
-		UI_DisplayBuffer::ListStatus h_listStatus(int streamIndex) const;
+		UI_DisplayBuffer::ListStatus h_listStatus(int streamIndex, bool isFirst) const;
 		void h_endVisibleItem(bool thisWasShown, int streamIndex) const;
 		bool h_streamElement(UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
 		int16_t h_iterableObjectIndex() const { return _iteratedMemberIndex; }

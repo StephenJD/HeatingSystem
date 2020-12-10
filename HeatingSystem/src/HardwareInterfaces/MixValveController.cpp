@@ -158,14 +158,13 @@ namespace HardwareInterfaces {
 	bool MixValveController::needHeat(bool isHeating) {
 		if (!controlZoneRelayIsOn()) return false;
 
-		auto flowTemp = _tempSensorArr[_storeTempSens].get_temp(); 
-		if (_tempSensorArr[_storeTempSens].hasError()) return false;
+		auto storeTempAtMixer = _tempSensorArr[_storeTempSens].get_temp(); 
 
 		if (isHeating) {
-			return (flowTemp < _mixCallTemp + THERM_STORE_HYSTERESIS);
+			return (storeTempAtMixer < _mixCallTemp + THERM_STORE_HYSTERESIS);
 		}
 		else {
-			return (readFromValve(Mix_Valve::status) == Mix_Valve::e_Water_too_cool && flowTemp < _mixCallTemp);
+			return (storeTempAtMixer < _mixCallTemp || readFromValve(Mix_Valve::status) == Mix_Valve::e_Water_too_cool);
 		}
 	}
 

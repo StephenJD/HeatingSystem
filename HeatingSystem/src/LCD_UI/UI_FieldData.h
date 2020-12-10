@@ -44,6 +44,7 @@ namespace LCD_UI {
 		void setObjectIndex(int index) const override {;} // done by item()
 		bool upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) override;
 		bool leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) override;
+		bool back() override;
 
 		void insertNewData();
 		void deleteData();
