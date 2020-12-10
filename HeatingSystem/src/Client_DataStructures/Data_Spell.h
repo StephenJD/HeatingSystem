@@ -46,7 +46,7 @@ namespace client_data_structures {
 		enum streamable { e_date, e_progID };
 		Dataset_Spell(I_Record_Interface& recordInterface, Query& query, Dataset* dwelling);
 		bool setNewValue(int fieldID, const I_Data_Formatter* val) override;
-		void insertNewData() override;
+		//void insertNewData() override;
 	};
 
 

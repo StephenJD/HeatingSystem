@@ -50,7 +50,7 @@ namespace LCD_UI {
 		);
 	}
 	bool UI_Object::upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) { return colln_hndl->move_focus_by(moveBy); }
-
+	bool UI_Object::leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) { return colln_hndl->move_focus_by(moveBy); }
 
 	///////////////////////////////////////////
 	// ************   Collection_Hndl *********
@@ -581,4 +581,14 @@ namespace LCD_UI {
 		if (thisWasShown && streamIndex >= _endShow) _endShow = streamIndex + 1;
 		if (!thisWasShown && streamIndex < _endShow) _endShow = streamIndex;
 	}
+
+	bool UI_IteratedCollection_Hoist::h_leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) {
+		//if (lr_behaviour.is_next_on_UpDn()) {
+		auto & activeObject = (*iterated_collection())[_iteratedMemberIndex];
+		logger() << F("LR on iteratedActive: ") << ui_Objects()[(long)(activeObject.get())].c_str() << L_endl;
+
+		return activeObject->leftRight(moveBy, colln_hndl, lr_behaviour);
+		//}
+	}
+
 }

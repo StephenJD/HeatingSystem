@@ -38,6 +38,7 @@ namespace LCD_UI {
 		// Modifiers
 		virtual I_SafeCollection*	collection() { return 0; }
 		virtual bool				upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour);
+		virtual bool				leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour);
 		virtual bool				move_focus_by(int moveBy, Collection_Hndl* colln_hndl) { return false; }
 		virtual Collection_Hndl*	select(Collection_Hndl* from);
 		virtual Collection_Hndl*	edit(Collection_Hndl* from) { return select(from); }
@@ -178,6 +179,7 @@ namespace LCD_UI {
 		virtual void setCursorPos() {}
 		virtual bool move_focus_by(int moveBy) { return get()->move_focus_by(moveBy, this); }
 		virtual bool upDown(int moveBy, Behaviour ud_behaviour) { return get()->upDown(moveBy, this, ud_behaviour); }
+		virtual bool leftRight(int moveBy, Behaviour lr_behaviour) { return get()->leftRight(moveBy, this, lr_behaviour); }
 
 		// New Modifiers
 		Collection_Hndl* activeUI(); //  returns validated focus element - index is made in-range
@@ -436,6 +438,7 @@ namespace LCD_UI {
 		void h_endVisibleItem(bool thisWasShown, int streamIndex) const;
 		bool h_streamElement(UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
 		int16_t h_iterableObjectIndex() const { return _iteratedMemberIndex; }
+		bool h_leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour);
 
 		virtual I_SafeCollection* iterated_collection() = 0;
 
@@ -504,6 +507,7 @@ namespace LCD_UI {
 		// Polymorphic Modifiers
 		I_SafeCollection* iterated_collection() override { return this; }
 		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
+		bool leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) override { return h_leftRight(moveBy, colln_hndl, lr_behaviour); }
 
 		// New non-polymorphic modifier
 		bool move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl) { return h_move_iteration_focus_by(moveBy, colln_hndl); }
@@ -555,6 +559,7 @@ namespace LCD_UI {
 
 		// Polymorphic Modifiers
 		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
+		bool leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) override { return h_leftRight(moveBy, colln_hndl, lr_behaviour); }
 
 		// New non-polymorphic modifier
 		bool move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl) { return h_move_iteration_focus_by(moveBy, colln_hndl); }

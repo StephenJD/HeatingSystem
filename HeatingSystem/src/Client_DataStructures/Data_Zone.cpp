@@ -120,15 +120,15 @@ namespace client_data_structures {
 		return false;
 	}
 
-	bool RecInt_Zone::actionOn_UD(int fieldID) {
+	bool RecInt_Zone::actionOn_LR(int fieldID, int moveBy) {
 		switch (fieldID) {
 		case e_reqTemp: {
 			logger() << "Select Next Sequence Event " << record().rec().name << " ID: " << record().id() << L_endl;
 			HardwareInterfaces::Zone& z = zone(record().id());
-			if (z.currTempRequest() != z.nextTempRequest()) {
+			if (moveBy > 0 && z.currTempRequest() != z.nextTempRequest()) {
 				z.setProfileTempRequest(z.nextTempRequest());
 			} else {
-
+				z.
 			}
 			return true;
 		}

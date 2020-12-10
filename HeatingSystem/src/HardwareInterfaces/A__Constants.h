@@ -1,10 +1,13 @@
 #if !defined (CONSTANTS__INCLUDED_)
 #define CONSTANTS__INCLUDED_
 
-#include <Clock.h>
 #include <I2C_RecoverStrategy.h>
 
 #include <Arduino.h>
+#include <Date_Time.h>
+
+#define EEPROM_CLOCK_ADDR 0
+static constexpr int EEPROM_CLOCK_SIZE = sizeof(Date_Time::DateTime) * 2 + 4;
 
 namespace HardwareInterfaces {
 
@@ -45,8 +48,7 @@ namespace HardwareInterfaces {
 	constexpr uint16_t EEPROM_SIZE = 4096;
 	constexpr uint16_t EEPROM_LOG_SIZE = 2000;
 #endif
-	constexpr uint16_t EEPROM_CLOCK_ADDR = 0;
-	constexpr uint16_t STRATEGY_EPPROM_ADDR = EEPROM_CLOCK_ADDR + Clock_EEPROM::SIZE;
+	constexpr uint16_t STRATEGY_EPPROM_ADDR = EEPROM_CLOCK_ADDR + EEPROM_CLOCK_SIZE;
 	constexpr uint16_t RDB_START_ADDR = STRATEGY_EPPROM_ADDR + I2C_Recovery::S_NoOfStrategies + 1;
 	constexpr uint16_t RDB_MAX_SIZE = 2000;
 	constexpr uint16_t EEPROM_LOG_END = EEPROM_SIZE;

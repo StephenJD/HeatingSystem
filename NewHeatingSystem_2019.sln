@@ -84,6 +84,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinuxTests", "LinuxTests\Li
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test CurveMatch", "..\..\VS_Projects\Test Libraries\Test CurveMatch\Test CurveMatch.vcxproj", "{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Clock and DateTime", "..\..\VS_Projects\Test Libraries\Test Clock and DateTime\Test Clock and DateTime.vcxproj", "{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -392,6 +394,18 @@ Global
 		{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}.Release|x64.Build.0 = Release|x64
 		{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}.Release|x86.ActiveCfg = Release|Win32
 		{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}.Release|x86.Build.0 = Release|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Debug|ARM.ActiveCfg = Debug|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Debug|x64.ActiveCfg = Debug|x64
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Debug|x64.Build.0 = Debug|x64
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Debug|x86.ActiveCfg = Debug|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Debug|x86.Build.0 = Debug|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Release|ARM.ActiveCfg = Release|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Release|ARM64.ActiveCfg = Release|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Release|x64.ActiveCfg = Release|x64
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Release|x64.Build.0 = Release|x64
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Release|x86.ActiveCfg = Release|Win32
+		{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

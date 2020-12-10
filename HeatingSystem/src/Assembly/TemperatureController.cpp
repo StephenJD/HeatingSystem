@@ -7,6 +7,7 @@
 #include "..\Client_DataStructures\Data_TowelRail.h"
 #include "..\HardwareInterfaces\A__Constants.h"
 #include "..\HardwareInterfaces\I2C_Comms.h"
+#include <clock.h>
 #include <Timer_mS_uS.h>
 
 void ui_yield();

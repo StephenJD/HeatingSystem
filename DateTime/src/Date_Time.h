@@ -6,7 +6,7 @@
 #pragma once
 #include "Date_Only.h"
 #include "Time_Only.h"
-#include "..\..\Sum_Operators\Sum_Operators.h"
+#include <Sum_Operators.h>
 #include <Arduino.h>
 #include <Logging.h>
 
@@ -45,6 +45,7 @@ namespace Date_Time {
 		/*constexpr*/ bool operator==(const DateTime & rhs) const { return asInt() == rhs.asInt(); }
 		/*constexpr*/ bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
 		/*constexpr*/ bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
+		int32_t minsTo(const DateTime& minsTill) const;
 		bool inRange() const;
 		//DateTime operator~ () const {return ~this->asInt();}
 		// obtain other boolean operators via Rel_Ops

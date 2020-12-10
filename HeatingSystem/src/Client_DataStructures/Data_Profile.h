@@ -93,12 +93,10 @@ namespace client_data_structures {
 	class Dataset_Profile : public Dataset {
 	public:
 		Dataset_Profile(I_Record_Interface& recordInterface, Query& query, Dataset* programUI, Dataset* zoneUI);
-		I_Data_Formatter* getFieldAt(int fieldID, int elementIndex) override; // moves to first valid record at id or past id from current position
 
-		int resetCount() override;
 		bool setNewValue(int fieldID, const I_Data_Formatter* val) override;
 
-		void setMatchArgs();
+		void setMatchArgs() override;
 		static int firstIncludedDay(int days, int * pos = 0);
 		static int firstIncludedDayPosition(int days);
 		static int firstMissingDay(int days);

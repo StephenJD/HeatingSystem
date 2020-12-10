@@ -15,8 +15,8 @@
 #include "DateTimeWrapper.h"
 #include "Data_CurrentTime.h"
 #include "UI_FieldData.h"
-#include <EEPROM\EEPROM.h>
-#include <Clock\Clock.h>
+#include <EEPROM.h>
+#include <Clock_.h>
 #include <Conversions.h>
 #include <RDB.h>
 #include "LocalDisplay.h"
@@ -45,7 +45,7 @@
 //#define EDIT_CURRENT_DATETIME
 #define ITERATION_VARIANTS
 #define ITERATED_ZONE_TEMPS
-//
+
 #define CONTRAST
 #define VIEW_ONE_NESTED_CALENDAR_PAGE
 #define VIEW_ONE_NESTED_PROFILE_PAGE
@@ -54,7 +54,7 @@
 #define MAIN_CONSOLE_PAGES
 #define INFO_CONSOLE_PAGES
 
-//////#define TEST_RELAYS
+//////#define TEST_RELAYS 
 //////#define CMD_MENU
 
 using namespace LCD_UI;
@@ -170,11 +170,6 @@ Logger & zTempLogger() {
 Logger & mTempLogger() {
 	static Serial_Logger _log(9600, clock_());
 	return _log;
-}
-
-Clock & clock_() {
-	static Clock_EEPROM _clock(EEPROM_CLOCK_ADDR);
-	return _clock;
 }
 
 I2C_Talk i2C;
@@ -2146,6 +2141,86 @@ SCENARIO("Iterated Request Temps - Change Temp", "[Chapter]") {
 				}
 			}
 		}
+	}
+}
+
+SCENARIO("Iterated Request Temps - Change Profile", "[Chapter]") {
+	cout << "\n*********************************\n**** Iterated Request Temps ****\n********************************\n\n";
+	using namespace client_data_structures;
+	using namespace Assembly;
+	using namespace HardwareInterfaces;
+
+	LCD_Display_Buffer<20,4> lcd;
+	UI_DisplayBuffer tb(lcd);
+
+	HardwareInterfaces::UI_TempSensor callTS[] = { {recover,10,18},{recover,11,19},{recover,12,55},{recover,13,21} };
+	HardwareInterfaces::UI_Bitwise_Relay relays[4];
+	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
+
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+
+	auto q_zones = db.tableQuery(TB_Zone);
+	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+
+	auto _recZone = RecInt_Zone{ zoneArr };
+
+	auto ds_zones = Dataset(_recZone, q_zones);
+	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+
+	auto _allZoneReqTemp_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_A +ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_name, {V + V1} };
+	auto _allZoneIsTemp_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_isTemp, {V + V1} };
+	auto _allZoneIsHeating_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_isHeating, {V + V1} };
+	
+	auto _reqestTemp = UI_Label{ "Req$`" };
+	auto _is = UI_Label{ "is:`" };
+
+	auto _iterated_zoneReqTemp_c = UI_IteratedCollection<6>{ 80, makeCollection(_allZoneNames_UI_c,_reqestTemp,_allZoneReqTemp_UI_c,_is,_allZoneIsTemp_UI_c,_allZoneIsHeating_UI_c) };
+
+	// UI Collections
+	auto page1_c = makeCollection(_iterated_zoneReqTemp_c);
+	auto display1_c = makeChapter(page1_c);
+	auto display1_h = A_Top_UI(display1_c);
+
+	ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
+	ui_Objects()[(long)&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
+	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[(long)&display1_c] = "display1_c";
+
+	//for (auto & z : zoneArr) z.setFlowTemp(); // Can't setflowtemp and get heating requirement unless constructed a thermstore and backboiler...
+	display1_h.rec_select();
+	GIVEN("Self-iterating View-all can be scrolled through") {
+		cout << test_stream(display1_h.stream(tb)) << endl;
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+		display1_h.rec_up_down(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$2_0 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+		display1_h.rec_up_down(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$20 is:19 DHW    Req$4_5 is:55 Flat   Req$21 is:21 ");
+		display1_h.rec_up_down(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$17 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$2_1 is:21 ");
+		THEN("Recycles focus") {
+			display1_h.rec_up_down(1); // moves focus
+			CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+			AND_THEN("Edits on SELECT") {
+				display1_h.rec_select(); 
+				display1_h.rec_up_down(-1);
+				CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1#8 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+				THEN("Allows Edit of 10's") {
+					display1_h.rec_left_right(-1); // moves focus
+					CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$#18 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+					AND_THEN("Select saves") {
+						display1_h.rec_select(); 
+						CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_8 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+					}
+				}
+			}
+		}
+	}
+	GIVEN("Self-iterating LR passes to ReqTemp") {
+		REQUIRE(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_7 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+		display1_h.rec_left_right(1); // moves focus
+		CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$1_0 is:18 DnStrs Req$20 is:19 DHW    Req$45 is:55 Flat   Req$21 is:21 ");
+
 	}
 }
 #endif

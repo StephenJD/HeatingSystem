@@ -35,7 +35,8 @@ namespace LCD_UI {
 		virtual Answer_Locator& record() = 0;
 		virtual I_Data_Formatter* getField(int fieldID) { return 0; }
 		virtual bool setNewValue(int fieldID, const I_Data_Formatter* val) { return false; }
-		virtual bool actionOn_UD(int _fieldID) { return false; }
+		virtual bool actionOn_UD(int _fieldID, int moveBy) { return false; }
+		virtual bool actionOn_LR(int _fieldID, int moveBy) { return false; }
 		virtual RecordSelector duplicateRecord(RecordSelector& recSel) {return {};}
 
 		virtual VolatileData * runTimeData() { return 0; }
@@ -72,18 +73,22 @@ namespace LCD_UI {
 		I_Data_Formatter* initialiseRecord(int fieldID);
 		bool indexIsInDataRange(int index) { return index >= query().begin().id() && index <= query().last().id(); }
 
-		// Polymorphic Modifiers
-		virtual bool actionOn_UD(int _fieldID) { return false; }
-		virtual I_Data_Formatter* getFieldAt(int fieldID, int elementIndex); // moves to first valid record at id or past id from current position
+		bool actionOn_UD(int _fieldID, int moveBy) { return i_record().actionOn_UD(_fieldID, moveBy); }
+		bool actionOn_LR(int _fieldID, int moveBy) { return i_record().actionOn_LR(_fieldID, moveBy); }
+		I_Data_Formatter* getFieldAt(int fieldID, int elementIndex); // moves to first valid record at id or past id from current position
 		I_Data_Formatter* getField(int fieldID) { return i_record().getField(fieldID); }
-		virtual bool setNewValue(int fieldID, const I_Data_Formatter* val);
-		virtual void insertNewData();
+		/*virtual*/ void insertNewData();
 
+		// Polymorphic Modifiers
+		virtual bool setNewValue(int fieldID, const I_Data_Formatter* val);
+		virtual void setMatchArgs() {}
+
+		// Non polymorphic modifiers
 		TB_Status move_by(int move);
 		int move_to(int id);
 		int last();
 		void deleteData();
-		virtual int resetCount();
+		/*virtual*/ int resetCount();
 		Query& query() { return _recSel.query(); }
 		Dataset * parent() { return _parent; }
 		I_Record_Interface & i_record() { return *_recInterface; }

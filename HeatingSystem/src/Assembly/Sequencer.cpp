@@ -1,6 +1,6 @@
 #include "Sequencer.h"
 #include "TemperatureController.h"
-#include "Clock.h"
+#include <Clock.h>
 #include "HeatingSystem_Queries.h"
 #include "..\Client_DataStructures\Data_Spell.h"
 
@@ -65,6 +65,7 @@ namespace Assembly {
 		logger() << L_endl << L_time << F("Sequencer::getNextEvent()\n");
 
 		for (Answer_R<R_Zone> zone : _db->_q_zones) {
+
 			auto nextZoneEvent = _tc->zoneArr[zone.id()].nextEventTime(); // zero on start-up
 			logger() << "\t" << zone.rec() << L_endl;
 			if (clock_().now() >= nextZoneEvent) {

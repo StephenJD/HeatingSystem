@@ -148,12 +148,21 @@ namespace LCD_UI {
 
 	bool A_Top_UI::rec_left_right(int move) { // left-right movement
 		using HI_BD = HardwareInterfaces::LCD_Display;
+#ifdef ZPSIM
+		logger() << F("LR on _leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+#endif
 		// Lambda
 		auto isIteratedUD0 = [this]() -> bool {
 			if (_leftRightBackUI->get()->isCollection()) {
 				auto & itColl = *_leftRightBackUI->get()->collection();
 				return itColl.iterableObjectIndex() >= 0 && !itColl.behaviour().is_next_on_UpDn();
 			} else return false;
+		};
+
+		auto iteratedBehaviour = [this]() {
+			auto& itColl = *_upDownUI->backUI()->get()->collection();
+			if (itColl.iterableObjectIndex() >= 0) return itColl.behaviour();
+			return _upDownUI->behaviour();
 		};
 
 		// Algorithm
@@ -163,7 +172,8 @@ namespace LCD_UI {
 			return true;
 		}
 
-		auto hasMoved = _leftRightBackUI->move_focus_by(move);
+		auto lr_behaviour = iteratedBehaviour();
+		auto hasMoved = _leftRightBackUI->leftRight(move, lr_behaviour);
 		bool wasInEdit = false;
 		
 		if (!hasMoved) {
@@ -174,14 +184,14 @@ namespace LCD_UI {
 					hasMoved = rec_left_right(move);
 				}
 				else {
-					_leftRightBackUI->move_focus_by(0);
+					_leftRightBackUI->leftRight(0, lr_behaviour);
 					wasInEdit = false;
 					hasMoved = true;
 				}
 			} else if (isIteratedUD0()) { // No more elements in the collection, so move to next iteration and start again. 
 				auto& itColl = *_leftRightBackUI->get()->collection();
 				auto& iteratedObject = static_cast<Collection_Hndl&>(itColl[itColl.iterableObjectIndex()]);
-				hasMoved = iteratedObject.get()->move_focus_by(move, &iteratedObject);
+				hasMoved = iteratedObject.get()->leftRight(move, &iteratedObject,lr_behaviour);
 				if (hasMoved) {
 					if (move > 0) itColl.setFocusIndex(itColl.nextActionableIndex(0)); else itColl.setFocusIndex(itColl.prevActionableIndex(itColl.endIndex()));
 				}
@@ -196,7 +206,7 @@ namespace LCD_UI {
 #endif
 				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne()));
 
-				hasMoved = _leftRightBackUI->move_focus_by(move);
+				hasMoved = _leftRightBackUI->leftRight(move, lr_behaviour);
 			} while (!hasMoved && _leftRightBackUI != this);
 		}
 
@@ -231,6 +241,7 @@ namespace LCD_UI {
 			return _upDownUI->behaviour();
 		};
 
+		// Algorithm
 		auto ud_behaviour = iteratedBehaviour();
 
 		if (ud_behaviour.is_viewOneUpDn_Next()) {

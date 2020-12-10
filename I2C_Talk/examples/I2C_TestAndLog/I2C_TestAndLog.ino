@@ -12,7 +12,7 @@
 #include <PinObject.h>
 
 #include <EEPROM.h>
-#include <Clock.h>
+#include <Clock_I2C.h>
 #include <Logging.h>
 #include <Wire.h>
 
@@ -41,7 +41,7 @@ const uint8_t RESET_LEDN_PIN = 19;  // low for on.
 const uint8_t RTC_ADDR = 0x68;
 const uint8_t EEPROM_ADDRESS = 0x50;
 const int EEPROM_CLOCK_ADDR = 0;
-const int STRATEGY_EPPROM_ADDR = EEPROM_CLOCK_ADDR + Clock_EEPROM::SIZE;
+const int STRATEGY_EPPROM_ADDR = EEPROM_CLOCK_ADDR + EEPROM_CLOCK_SIZE;
 const int EEPROM_LOG_START = STRATEGY_EPPROM_ADDR + S_NoOfStrategies + 1;
 const int EEPROM_LOG_END = 4096;
 const uint8_t RELAY_PORT_ADDRESS = 0x20;

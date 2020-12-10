@@ -5,6 +5,7 @@
 #include "ThermalStore.h"
 #include "MixValveController.h"
 #include "RDB.h"
+#include <Clock.h>
 
 Logger& zTempLogger();
 
@@ -212,7 +213,7 @@ namespace HardwareInterfaces {
 			return minsToAdd;
 		};
 		
-		auto timeToStartHeating = [this](int minsToAdd) -> bool {return static_cast<int32_t>(_ttEndDateTime.asInt() - clock_().now().asInt()) <= minsToAdd; };
+		auto timeToStartHeating = [this](int minsToAdd) -> bool {return clock_().now().minsTo(_ttEndDateTime) <= minsToAdd; };
 		
 		auto offerCurrTempToCurveMatch = [this, currTemp_fractional, &zoneRec]() {
 			if (_getExpCurve.nextValue(currTemp_fractional)) { // Only registers if _getExpCurve.firstValue was non-zero

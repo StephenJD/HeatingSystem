@@ -65,7 +65,7 @@ namespace client_data_structures {
 		VolatileData* runTimeData() override { return _runTimeData; }
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
-		bool actionOn_UD(int _fieldID) override;
+		bool actionOn_LR(int _fieldID, int moveBy) override;
 
 		HardwareInterfaces::Zone& zone(int index);
 	private:

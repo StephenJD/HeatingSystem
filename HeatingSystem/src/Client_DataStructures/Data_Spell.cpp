@@ -47,9 +47,9 @@ namespace client_data_structures {
 		return false;
 	}
 
-	void Dataset_Spell::insertNewData() {
-		query().insert(static_cast<Answer_R<R_Spell>>(record()).rec());
-	}
+	//void Dataset_Spell::insertNewData() {
+	//	query().insert(static_cast<Answer_R<R_Spell>>(record()).rec());
+	//}
 
 	//***************************************************
 	//              RecInt_Spell

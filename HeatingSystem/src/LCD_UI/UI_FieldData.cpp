@@ -152,5 +152,11 @@ namespace LCD_UI {
 		return colln_hndl->move_focus_by(moveBy);
 	}
 
-
+	bool UI_FieldData::leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) {
+		if (lr_behaviour.is_next_on_UpDn()) {
+			auto hadAction = data()->actionOn_LR(fieldID(),moveBy);
+			if (hadAction) return true;
+		}
+		return colln_hndl->move_focus_by(moveBy);
+	}
 }

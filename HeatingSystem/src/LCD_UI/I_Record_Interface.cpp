@@ -26,6 +26,7 @@ namespace LCD_UI {
 	}
 
 	int Dataset::resetCount() {
+		setMatchArgs();
 		query().setMatchArg(parentIndex());
 		auto originalID = _recSel.id();
 		query().moveTo(_recSel, _recSel.id());
@@ -44,6 +45,7 @@ namespace LCD_UI {
 	}
 
 	I_Data_Formatter * Dataset::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
+		setMatchArgs();
 		move_to(id);
 		return i_record().getField(fieldID);
 	}

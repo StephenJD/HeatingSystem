@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Clock.h>
 #include <Logging.h>
 #include <I2C_Talk.h>
 #include <EEPROM.h>
@@ -26,7 +25,7 @@ EP  to SD/KB :	660mS		230mS
 */
 
 #if defined(__SAM3X8E__)
-
+	#include <Clock_I2C.h>
 	I2C_Talk rtc(Wire1);
 
 	EEPROMClass & eeprom() {
@@ -41,6 +40,8 @@ EP  to SD/KB :	660mS		230mS
 	}
 #else
 	#include <avr/wdt.h>
+	#define EEPROM_CLOCK EEPROM_CLOCK_ADDR
+	#include <Clock_EP.h>
 
 	uint8_t mcusr_mirror __attribute__((section(".noinit")));
 
@@ -57,11 +58,6 @@ EP  to SD/KB :	660mS		230mS
 
 	EEPROMClass & eeprom() {
 		return EEPROM;
-	}
-
-	Clock & clock_() {
-		static Clock_EEPROM _clock(EEPROM_CLOCK_ADDR);
-		return _clock;
 	}
 
 #endif

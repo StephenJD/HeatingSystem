@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Clock.h>
 #include <I2C_Talk.h>
 #include <I2C_Scan.h>
 #include <Logging.h>
@@ -15,6 +14,8 @@ using namespace Date_Time;
 
 #if defined(__SAM3X8E__)
 	#include <Wire.h>
+	#include <Clock_I2C.h>
+
 	I2C_Talk rtc(Wire1);
 	I_I2C_Scan scanner{ rtc };
 
@@ -29,14 +30,11 @@ using namespace Date_Time;
 	}
 #else
 	#define NO_RTC
+	#define EEPROM_CLOCK EEPROM_CLOCK_ADDR
+	#include <Clock_EP.h>
 
 	EEPROMClass & eeprom() {
 		return EEPROM;
-	}
-
-	Clock & clock_() {
-		static Clock_EEPROM _clock(EEPROM_CLOCK_ADDR);
-		return _clock;
 	}
 #endif
 

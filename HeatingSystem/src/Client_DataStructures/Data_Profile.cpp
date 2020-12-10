@@ -69,12 +69,6 @@ namespace client_data_structures {
 		Dataset(recordInterface, query, programUI)
 		, _dwellZone(zoneUI) {}
 
-	I_Data_Formatter* Dataset_Profile::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
-		setMatchArgs();
-		move_to(id);
-		return i_record().getField(fieldID);
-	}
-
 	void Dataset_Profile::setMatchArgs() {
 		// ProfileDays depends on dwellProgs RecordInterface and dwellingZone RecordInterface.
 		// Each is selected on the user-interface.
@@ -92,11 +86,6 @@ namespace client_data_structures {
 			record() = *(_recSel.begin());
 			setRecordID(_recSel.id());
 		}
-	}
-
-	int Dataset_Profile::resetCount() {
-		setMatchArgs();
-		return Dataset::resetCount();
 	}
 
 	bool Dataset_Profile::setNewValue(int fieldID, const I_Data_Formatter* newValue) {

@@ -66,6 +66,14 @@ namespace Date_Time {
 		return true;
 	};
 
+	int32_t DateTime::minsTo(const DateTime & minsTill) const {
+		auto dayMins = 0;
+		if (date() != minsTill.date()) {
+			dayMins = (minsTill.dayOfYear() - dayOfYear()) * 24 * 6;
+		}
+		return (dayMins - time().asInt() + minsTill.time().asInt() ) * 10;
+	}
+
 	DateTime::operator CStr_20 () const {
 		CStr_20 timedateStr;
 		strcpy(timedateStr, intToString(day(), 2));

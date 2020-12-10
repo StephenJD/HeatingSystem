@@ -5,7 +5,7 @@
 #include <I2C_RecoverRetest.h>
 
 #include <EEPROM.h>
-#include <Clock.h>
+#include <Clock_I2C.h>
 #include <Logging.h>
 #include <Wire.h>
 #include <TempSensor.h>
