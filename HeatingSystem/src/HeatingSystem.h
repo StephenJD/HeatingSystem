@@ -45,8 +45,9 @@ private: // data-member ordering matters!
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
 	Assembly::Initialiser _initialiser; // Checks db
-	Assembly::TemperatureController _tempController;
 	Assembly::HeatingSystem_Queries _hs_queries;
+	Assembly::Sequencer _sequencer;
+	Assembly::TemperatureController _tempController;
 public:	
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
@@ -59,7 +60,6 @@ private:
 	// Run-time data arrays
 	Assembly::MainConsoleChapters _mainConsoleChapters;
 	Assembly::RemoteConsoleChapters _remoteConsoleChapters;
-	Assembly::Sequencer _sequencer;
 	HardwareInterfaces::Console _mainConsole;
 	HardwareInterfaces::Console _remoteConsole[Assembly::NO_OF_REMOTE_DISPLAYS];
 };

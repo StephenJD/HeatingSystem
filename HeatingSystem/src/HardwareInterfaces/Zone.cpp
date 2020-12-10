@@ -1,7 +1,11 @@
 #include "Zone.h"
 #include "..\Assembly\HeatingSystemEnums.h"
+#include "..\Assembly\Sequencer.h"
+#include "..\Assembly\HeatingSystem_Queries.h"
 #include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\Client_DataStructures\Data_Relay.h"
+#include "..\Client_DataStructures\Data_Spell.h"
+#include "..\Client_DataStructures\Data_TimeTemp.h"
 #include "ThermalStore.h"
 #include "MixValveController.h"
 #include "RDB.h"
@@ -13,6 +17,9 @@ namespace HardwareInterfaces {
 
 	using namespace Assembly;
 	using namespace GP_LIB;
+	using namespace Date_Time;
+	using namespace client_data_structures;
+
 	//***************************************************
 	//              Zone Dynamic Class
 	//***************************************************
@@ -25,17 +32,17 @@ namespace HardwareInterfaces {
 		, _maxFlowTemp(65)
 	{}
 #endif
-	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp, RelationalDatabase::RDB<TB_NoOfTables> & db) {
+	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp, Sequencer& sequencer) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
 		_thermalStore = &thermalStore;
 		_recordID = zoneID;
 		_maxFlowTemp = maxFlowTemp;
-		_db = &db;
+		_sequencer = &sequencer;
 		using namespace RelationalDatabase;
 		using namespace client_data_structures;
-		auto zones = _db->tableQuery(TB_Zone);
+		auto zones = _sequencer->queries()._q_zones;
 		_zoneRecord = zones[_recordID];
 	}
 
@@ -150,6 +157,11 @@ namespace HardwareInterfaces {
 
 	auto Zone::zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> & {
 		return _zoneRecord;
+	}
+
+	void Zone::refreshProfile() {
+		setNextEventTime(clock_().now());
+		_sequencer->refreshProfile(*this);
 	}
 
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
@@ -274,4 +286,5 @@ namespace HardwareInterfaces {
 			}
 		}
 	}
+
 }

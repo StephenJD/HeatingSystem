@@ -15,6 +15,7 @@
 
 namespace Assembly {	
 	class TemperatureController;
+	class Sequencer;
 }
 
 namespace HardwareInterfaces {
@@ -33,13 +34,13 @@ namespace HardwareInterfaces {
 			, ThermalStore & thermalStore
 			, MixValveController & mixValveController
 			, int8_t maxFlowTemp
-			, RelationalDatabase::RDB<Assembly::TB_NoOfTables> & db
+			, Assembly::Sequencer& sequencer
 		);
 #ifdef ZPSIM
 		Zone(UI_TempSensor & ts, int reqTemp, UI_Bitwise_Relay & callRelay);
 #endif
 		// Queries
-		RelationalDatabase::RecordID record() const { return _recordID; }
+		RelationalDatabase::RecordID id() const { return _recordID; }
 		int8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
 		int8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
 		int8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
@@ -53,17 +54,18 @@ namespace HardwareInterfaces {
 		int16_t getFractionalCallSensTemp() const;
 
 		// Modifier
+		void refreshProfile();
 		void offsetCurrTempRequest(int8_t val);
 		bool setFlowTemp();
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
 		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
 		void preHeatForNextTT();
+		auto zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> &;
 
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
-		auto zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> &;
-		RelationalDatabase::RDB<Assembly::TB_NoOfTables> * _db = 0;
+		Assembly::Sequencer * _sequencer = 0;
 		UI_TempSensor * _callTS = 0;
 		UI_Bitwise_Relay * _relay = 0;
 		ThermalStore * _thermalStore = 0;

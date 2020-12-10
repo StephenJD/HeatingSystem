@@ -147,14 +147,14 @@ namespace LCD_UI {
 
 	bool UI_FieldData::upDown(int moveBy, Collection_Hndl* colln_hndl, Behaviour ud_behaviour) {
 		if (ud_behaviour.is_cmd_on_UD()) {
-			return !data()->actionOn_UD(fieldID());
+			return !data()->actionOn_UD(fieldID(), moveBy);
 		}
 		return colln_hndl->move_focus_by(moveBy);
 	}
 
 	bool UI_FieldData::leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) {
 		if (lr_behaviour.is_next_on_UpDn()) {
-			auto hadAction = data()->actionOn_LR(fieldID(),moveBy);
+			auto hadAction = data()->actionOn_LR(fieldID(), moveBy);
 			if (hadAction) return true;
 		}
 		return colln_hndl->move_focus_by(moveBy);

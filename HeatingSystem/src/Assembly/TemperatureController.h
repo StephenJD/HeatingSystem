@@ -10,11 +10,12 @@
 #include <RDB.h>
 
 namespace Assembly {
+	class Sequencer;
 
 	class TemperatureController
 	{
 	public:
-		TemperatureController(I2C_Recovery::I2C_Recover & recovery, RelationalDatabase::RDB<TB_NoOfTables> & db, unsigned long * timeOfReset_mS);
+		TemperatureController(I2C_Recovery::I2C_Recover & recovery, Sequencer & sequencer, unsigned long * timeOfReset_mS);
 		// Queries
 		int outsideTemp() const { return thermalStore.getOutsideTemp(); }
 
