@@ -97,7 +97,9 @@ namespace Assembly {
 			++index;
 		}
 		logger() << F("loadTowelRails Completed") << L_endl;
+#ifndef ZPSIM
 		sequencer.recheckNextEvent();
+#endif
 	}
 
 	void TemperatureController::checkAndAdjust() { // Called every Arduino loop

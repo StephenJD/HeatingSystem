@@ -3213,11 +3213,14 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 
 	LCD_Display_Buffer<20, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
-	clock_().setTime({ 31,7,19 }, { 16,10 }, 0);
 	unsigned long timeOfReset_mS = 0;
 
+	heating_system = 0;
 	HeatingSystem hs{};
 	setFactoryDefaults(hs.getDB(), 1);
+	clock_().setTime({ 31,7,19 }, { 16,10 }, 0);
+	serviceConsoles.setHS(hs);
+
 
 	auto q_Profiles = hs.getDB().tableQuery(TB_Profile);
 	for (Answer_R<R_Profile> profile : q_Profiles) {
@@ -3241,7 +3244,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$16 is:16 DnStrs Req$19 is:16 DHW    Req$30 is:45 Flat   Req$10 is:16 ");
+	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$15 is:16 DnStrs Req$19 is:16 DHW    Req$45 is:25 Flat   Req$20 is:16 ");
 	display1_h.rec_up_down(-1);
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
@@ -3425,8 +3428,10 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 	clock_().setTime({ 31,7,17 }, { 8,10 }, 0);
 	unsigned long timeOfReset_mS = 0;
 
+	heating_system = 0;
 	HeatingSystem hs{};
 	setFactoryDefaults(hs.getDB(), 1);
+	serviceConsoles.setHS(hs);
 
 	auto showActive = [](auto & ui) {
 		for (auto & obj : *ui->get()->collection()) {
