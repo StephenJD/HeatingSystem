@@ -85,16 +85,20 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * Collection_Hndl::activeUI() { //  returns validated focus element - index is made in-range
+		Object_Hndl * newObject = 0;
 		if (auto collection = get()->collection()) {
 			auto validFocus = collection->validIndex(focusIndex());
-			auto newObject = collection->item(validFocus);
+			newObject = collection->item(validFocus);
 			if (newObject == 0) {
 				newObject = collection->item(0);
-				setFocusIndex(collection->objectIndex());
+				if (newObject) setFocusIndex(collection->objectIndex());
 			}
-			return static_cast<Collection_Hndl*>(newObject);
 		}
-		else return this;
+		if (newObject)
+			return static_cast<Collection_Hndl*>(newObject);
+		else
+			return 0;
+			//return this;
 	} // must return polymorphicly
 
 	int	Collection_Hndl::set_focus(int index) {
@@ -586,7 +590,7 @@ namespace LCD_UI {
 	bool UI_IteratedCollection_Hoist::h_leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) {
 		//if (lr_behaviour.is_next_on_UpDn()) {
 		auto & activeObject = (*iterated_collection())[_iteratedMemberIndex];
-		logger() << F("LR on iteratedActive: ") << ui_Objects()[(long)(activeObject.get())].c_str() << L_endl;
+		//logger() << F("LR on iteratedActive: ") << ui_Objects()[(long)(activeObject.get())].c_str() << L_endl;
 
 		return activeObject->leftRight(moveBy, colln_hndl, lr_behaviour);
 		//}

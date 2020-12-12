@@ -92,7 +92,8 @@ namespace LCD_UI {
 			auto tryActive_h = tryLeftRight->activeUI();
 			if (tryActive_h != 0) {
 				tryLeftRight = tryActive_h;
-			}
+			} 
+			else break;
 		}
 		if (_leftRightBackUI != gotLeftRight) {
 			_leftRightBackUI = gotLeftRight;
