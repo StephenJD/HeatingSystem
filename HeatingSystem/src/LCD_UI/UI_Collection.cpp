@@ -85,20 +85,16 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * Collection_Hndl::activeUI() { //  returns validated focus element - index is made in-range
-		Object_Hndl * newObject = 0;
 		if (auto collection = get()->collection()) {
 			auto validFocus = collection->validIndex(focusIndex());
-			newObject = collection->item(validFocus);
+			auto newObject = collection->item(validFocus);
 			if (newObject == 0) {
 				newObject = collection->item(0);
-				if (newObject) setFocusIndex(collection->objectIndex());
+				setFocusIndex(collection->objectIndex());
 			}
-		}
-		if (newObject)
 			return static_cast<Collection_Hndl*>(newObject);
-		else
-			return 0;
-			//return this;
+		}
+		else return this;
 	} // must return polymorphicly
 
 	int	Collection_Hndl::set_focus(int index) {
@@ -474,7 +470,7 @@ namespace LCD_UI {
 				streamActive = 0;
 			}
 			if (iterated_collection()->behaviour().is_OnNewLine()) buffer.newLine();
-			bool isFirst = true;
+
 			for (auto & object : *iterated_collection()) {
 #ifdef ZPSIM
 //				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << endl;
@@ -486,8 +482,7 @@ namespace LCD_UI {
 				if(object.isCollection()) object.item(itIndex);
 				auto originalBehaviour = object.behaviour();
 				object.behaviour().make_viewOne();
-				hasStreamed = object.streamElement(buffer, streamActive, _endPos, h_listStatus(itIndex,isFirst));
-				if (hasStreamed) isFirst = false;
+				hasStreamed = object.streamElement(buffer, streamActive, _endPos, h_listStatus(itIndex));
 				object.behaviour() = originalBehaviour;
 				h_endVisibleItem(hasStreamed, itIndex);
 
@@ -570,9 +565,9 @@ namespace LCD_UI {
 		return _beginShow;
 	}
 
-	ListStatus UI_IteratedCollection_Hoist::h_listStatus(int streamIndex, bool isFirst) const {
+	ListStatus UI_IteratedCollection_Hoist::h_listStatus(int streamIndex) const {
 		auto thisListStatus = ListStatus::e_showingAll;
-		if (isFirst && streamIndex == _beginShow && _beginShow > _beginIndex) thisListStatus = ListStatus::e_notShowingStart;
+		if (streamIndex == _beginShow && _beginShow > _beginIndex) thisListStatus = ListStatus::e_notShowingStart;
 		auto activeObj = iterated_collection()->activeUI();
 		if (activeObj->get()->isCollection() && _endShow < activeObj->endIndex()) {
 			thisListStatus = ListStatus(thisListStatus | ListStatus::e_not_showingEnd);
@@ -590,7 +585,7 @@ namespace LCD_UI {
 	bool UI_IteratedCollection_Hoist::h_leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) {
 		//if (lr_behaviour.is_next_on_UpDn()) {
 		auto & activeObject = (*iterated_collection())[_iteratedMemberIndex];
-		//logger() << F("LR on iteratedActive: ") << ui_Objects()[(long)(activeObject.get())].c_str() << L_endl;
+		logger() << F("LR on iteratedActive: ") << ui_Objects()[(long)(activeObject.get())].c_str() << L_endl;
 
 		return activeObject->leftRight(moveBy, colln_hndl, lr_behaviour);
 		//}

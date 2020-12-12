@@ -3249,12 +3249,11 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	//											 Line[0]			 Line[1]			 Line[2]			 Line[3]
 	cout << test_stream(display1_h.stream(tb)) << endl;
 
-	display1_h.rec_up_down(-1);
-
 	auto q_dwellingSpells = hs.getDB().tableQuery(TB_Spell);
 	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 	}
+	display1_h.rec_up_down(-1);
 
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            At Home");
 	display1_h.rec_left_right(1);
