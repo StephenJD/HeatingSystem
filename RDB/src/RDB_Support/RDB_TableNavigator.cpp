@@ -127,7 +127,7 @@ namespace RelationalDatabase {
 
 	void TableNavigator::moveToLastRecord() {
 		moveToThisRecord(endStopID());
-		moveToNextUsedRecord(-1);
+		moveToFirstUsedRecord(-1);
 	}	
 	
 	void TableNavigator::next(RecordSelector & recSel, int moveBy) {
@@ -137,12 +137,12 @@ namespace RelationalDatabase {
 	TableNavigator & TableNavigator::operator+=(int offset) {
 		int direction = (offset < 0 ? -1 : 1);
 		_currRecord.setID(_currRecord.signed_id() + offset);
-		moveToNextUsedRecord(direction);
+		moveToFirstUsedRecord(direction);
 		return *this;
 	}
 
 	// ********  First Used Record ***************
-	void TableNavigator::moveToNextUsedRecord(int direction) {
+	void TableNavigator::moveToFirstUsedRecord(int direction) {
 		auto currID = _currRecord.signed_id();
 		moveToThisRecord(_currRecord.signed_id());
 
@@ -153,7 +153,10 @@ namespace RelationalDatabase {
 			}
 		}
 		else {
-			if (_currRecord.status() == TB_END_STOP && direction < 0 && _currRecord.id() > 0) moveToThisRecord(_currRecord.id()-1);
+			if (_currRecord.status() == TB_END_STOP) {
+				if (direction < 0 && _currRecord.id() > 0) moveToThisRecord(_currRecord.id() -1);
+			} 
+			
 			bool found = moveToUsedRecordInThisChunk(direction);
 			while (!found && _currRecord.status() != TB_END_STOP && _currRecord.signed_id() > 0) {
 				moveToThisRecord(_currRecord.id());

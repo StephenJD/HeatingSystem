@@ -97,7 +97,7 @@ namespace Assembly {
 			++index;
 		}
 		logger() << F("loadTowelRails Completed") << L_endl;
-
+		sequencer.recheckNextEvent();
 	}
 
 	void TemperatureController::checkAndAdjust() { // Called every Arduino loop

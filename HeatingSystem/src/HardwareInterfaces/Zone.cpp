@@ -96,11 +96,11 @@ namespace HardwareInterfaces {
 		};
 
 		auto logTemps = [this, zoneNames](const __FlashStringHelper * msg, long currTempReq, short fractionalZoneTemp, long myFlowTemp, long tempError, bool logger_RelayStatus) {
-			zTempLogger() << L_time << L_tabs << F("Zone::setZFlowTemp") << zoneNames(_recordID) << msg 
-			<< F("Req Temp:") << currTempReq
-			<< F("ZoneTemp:") << fractionalZoneTemp / 256.
-			<< F("ReqFlowTemp:") << myFlowTemp
-			<< F("TempError:") << tempError / 16. << (logger_RelayStatus ? F(" On") : F(" Off")) << L_endl;
+			zTempLogger() << L_time << L_tabs << F("Z") << zoneNames(_recordID) << msg
+			<< F("Req:") << currTempReq
+			<< F("Is:") << fractionalZoneTemp / 256.
+			<< F("ReqFlow:") << myFlowTemp
+			<< F("Err:") << tempError / 16. << (logger_RelayStatus ? F(" On") : F(" Off")) << L_endl;
 		};
 		
 		if (isDHWzone()) {
@@ -268,8 +268,8 @@ namespace HardwareInterfaces {
 			if (timeToStartHeating(minsToAdd)) {
 				setProfileTempRequest(nextTempReq - offset());
 				_getExpCurve.firstValue(currTemp_fractional);
-				logger() << "\tFirst Temp Registered for " << zoneRec.name << " temp is: " << L_fixed << currTemp_fractional << L_endl;
-				logger() << "\t\tPreheatTime: " << minsToAdd << " Compressed TC: " << zoneRec.autoTimeC << " Ratio: " << zoneRec.autoRatio << " OS Temp: " << outsideTemp << L_endl;
+				logger() << L_time << "\tFirst Temp Registered for " << zoneRec.name << " temp is: " << L_fixed << currTemp_fractional << L_endl;
+				logger() << "\t\tEndTime: " << _ttEndDateTime << " PreheatTime: " << minsToAdd << " Compressed TC: " << zoneRec.autoTimeC << " Ratio: " << zoneRec.autoRatio << " OS Temp: " << outsideTemp << L_endl;
 			}
 		} else { // We are in pre-heat or nextReq lower than CurrReq
 			offerCurrTempToCurveMatch();

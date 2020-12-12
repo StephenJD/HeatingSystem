@@ -98,6 +98,7 @@ namespace HardwareInterfaces {
 		checkForNewControllingZone();
 
 		if (requestIsFromControllingZone()) {
+			auto mv_FlowTemp = _tempSensorArr[_flowTempSens].get_temp();
 #if defined (ZPSIM)
 			bool debug;
 			if (zoneRelayID == 3)
@@ -105,7 +106,7 @@ namespace HardwareInterfaces {
 			switch (_index) {
 			case M_UpStrs: {// upstairs
 				debug = true;
-				if (readFromValve(Mix_Valve::flow_temp) >= _mixCallTemp)
+				if (mv_FlowTemp >= _mixCallTemp)
 					bool debug = true;
 				break; }
 			case M_DownStrs: // downstairs
@@ -123,14 +124,8 @@ namespace HardwareInterfaces {
 				_relayArr[_controlZoneRelay].set(); // turn call relay ON
 				if (newCallTemp > _limitTemp) newCallTemp = _limitTemp;
 			}
-			uint8_t mv_CallTemp = readFromValve(Mix_Valve::request_temp);
-			auto mv_FlowTemp = readFromValve(Mix_Valve::flow_temp);
 			if (_mixCallTemp != newCallTemp) {
 				_mixCallTemp = newCallTemp;
-				mTempLogger() << L_time << L_tabs << F("MixValve Temp new Temp: ");
-				mTempLogger() << relayName(zoneRelayID);
-				mTempLogger() << F("Request_temp:") << _mixCallTemp;
-				mTempLogger() << F("MV flow_temp:") << mv_FlowTemp << L_endl;
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
 				auto mv_ReqTemp = readFromValve(Mix_Valve::request_temp);
@@ -138,10 +133,9 @@ namespace HardwareInterfaces {
 					logger() << L_time << F("MixValve Confirm 0x") << L_hex << getAddress() << F(" failed for Reg: ") << Mix_Valve::request_temp << F(" Wrote: ") << _mixCallTemp << F(" Read: ") << mv_ReqTemp << L_endl;
 				}
 			} else if (mv_FlowTemp != _mixCallTemp) {
-				mTempLogger() << L_time << L_tabs << F("MixValve Temp off target.");
-				mTempLogger() << relayName(zoneRelayID);
-				mTempLogger() << F("Request_temp: ") << _mixCallTemp;
-				mTempLogger() << F("MV flow_temp: ") << mv_FlowTemp << L_endl;
+				mTempLogger() << L_time << L_tabs << relayName(zoneRelayID);
+				mTempLogger() << F("MV_Request: ") << _mixCallTemp;
+				mTempLogger() << F("Is: ") << mv_FlowTemp << L_endl;
 			}
 			return true;
 		}

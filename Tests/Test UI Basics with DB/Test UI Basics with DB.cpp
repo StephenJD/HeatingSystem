@@ -3223,6 +3223,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	for (Answer_R<R_Profile> profile : q_Profiles) {
 		logger() << profile.rec() << L_endl;
 	}
+
 	logger() << "Table Capacity: " << q_Profiles.last().tableNavigator().table().maxRecordsInTable() << L_endl;
 	logger() << "Chunk Capacity: " << q_Profiles.last().tableNavigator().chunkCapacity() << L_endl;
 	logger() << "chunkIsExtended(): " << q_Profiles.last().tableNavigator().chunkIsExtended() << L_endl;
@@ -3240,14 +3241,21 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$10 is:16 DnStrs Req$10 is:16 DHW    Req$10 is:45 Flat   Req$10 is:16 ");
+	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$16 is:16 DnStrs Req$19 is:16 DHW    Req$30 is:45 Flat   Req$10 is:16 ");
 	display1_h.rec_up_down(-1);
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	//											 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 	//											 Line[0]			 Line[1]			 Line[2]			 Line[3]
 	cout << test_stream(display1_h.stream(tb)) << endl;
+
 	display1_h.rec_up_down(-1);
+
+	auto q_dwellingSpells = hs.getDB().tableQuery(TB_Spell);
+	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
+	}
+
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From Now            At Home");
 	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Calendar    From Now            At Home");

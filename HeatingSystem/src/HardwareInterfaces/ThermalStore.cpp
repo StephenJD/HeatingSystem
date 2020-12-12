@@ -85,7 +85,9 @@ namespace HardwareInterfaces {
 		}
 		//if (/*!_isHeating && */mixNeedsHeat) logger() << L_time << F("MixValve Needs Heat\n");
 		needHeat |= mixNeedsHeat;
-		zTempLogger() << L_time << L_tabs << F("ThSt::setZFlowTemp") << (mixNeedsHeat ? "MixV" : "DHW") << (needHeat ? F("Too Cool.") : F("Too Warm."))  << "Req Temp:" << currRequest << F("DHW temp:") << _theoreticalDeliveryTemp << "TempError:" << _theoreticalDeliveryTemp-currRequest << (_isHeating ? F("On") : F("Off"))  << L_endl;
+		zTempLogger() << L_time << L_tabs << F("T") << (mixNeedsHeat ? "MixV" : "DHW") << (needHeat ? F("Too Cool.") : F("Too Warm."))  
+			<< "Req:" << currRequest << F("Is:") << _theoreticalDeliveryTemp 
+			<< "\t\tErr:" << _theoreticalDeliveryTemp-currRequest << (_isHeating ? F("On") : F("Off"))  << L_endl;
 		//if (_isHeating && !needHeat) {
 		//	//f->eventS().newEvent(EVT_GAS_TEMP, f->tempSensorR(getVal(GasTS)).getSensTemp());
 		//	logger() << F("\tGas Turned OFF   Gas Flow Temp: ") << _tempSensorArr[_thermStoreData.GasTS].get_temp();

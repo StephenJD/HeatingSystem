@@ -3,7 +3,7 @@
 #include <Clock.h>
 #include "HeatingSystem_Queries.h"
 #include "..\Client_DataStructures\Data_Spell.h"
-#include "Zone.h"
+#include "..\HardwareInterfaces\Zone.h"
 
 #ifdef ZPSIM
 #include <iostream>
@@ -25,10 +25,11 @@ namespace Assembly {
 		{}
 
 	void Sequencer::recheckNextEvent() { // called when data has been edited by the user
+		setNextEventTime(JUDGEMEMT_DAY);
 		for (auto& zone : _tc->zoneArr) {
 			zone.setNextEventTime(clock_().now()); // triggers re-evaluation of next event time
+			refreshProfile(zone);
 		}
-		setNextEventTime(clock_().now());
 	}
 
 	void Sequencer::getNextEvent() { // called in every run of the arduino endless loop
@@ -110,7 +111,7 @@ namespace Assembly {
 
 	void Sequencer::nextEvent() {  // called when event has expired
 		setNextEventTime(JUDGEMEMT_DAY);
-		logger() << L_endl << L_time << F("Sequencer::getNextEvent()\n");
+		logger() << L_endl << L_time << F("Sequencer::nextEvent()\n");
 
 		for (auto & zone : _tc->zoneArr) {
 			refreshProfile(zone);

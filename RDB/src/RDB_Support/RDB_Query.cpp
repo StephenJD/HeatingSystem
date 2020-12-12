@@ -66,7 +66,7 @@ namespace RelationalDatabase {
 		RecordSelector beginRS{ *this, _table };
 
 		if (beginRS.tableNavigator().moveToFirstRecord()) {
-			beginRS.tableNavigator().moveToNextUsedRecord(1);
+			beginRS.tableNavigator().moveToFirstUsedRecord(1);
 		}
 		return beginRS;
 	}
@@ -90,7 +90,7 @@ namespace RelationalDatabase {
 	void TableQuery::next(RecordSelector & recSel, int moveBy) {
 		recSel.nextID(moveBy);
 		if (!moveBy) moveBy = 1;
-		recSel.tableNavigator().moveToNextUsedRecord(moveBy);
+		recSel.tableNavigator().moveToFirstUsedRecord(moveBy);
 	}
 
 	void TableQuery::moveTo(RecordSelector & recSel, int index) {

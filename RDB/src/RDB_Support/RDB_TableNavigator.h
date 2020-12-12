@@ -96,7 +96,7 @@ namespace RelationalDatabase {
 		bool moveToFirstRecord();
 		void moveToLastRecord();
 		void moveToThisRecord(int recordID);
-		void moveToNextUsedRecord(int direction);
+		void moveToFirstUsedRecord(int direction);
 		TableNavigator & operator++() { return (*this) += 1; }
 		TableNavigator & operator--() { return (*this) += -1; }
 		TableNavigator & operator+=(int offset);
