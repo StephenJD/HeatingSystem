@@ -192,6 +192,7 @@ namespace LCD_UI {
 			outerIt->collection()->focusHasChanged(true); // might be in an iterated collection needing re-initialising.
 		//}		
 		setBackUI(0);
+		notifyDataIsEdited();
 		return retVal;
 	}
 }

@@ -109,9 +109,11 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 void HeatingSystem::serviceConsoles() {
 	_mainConsole.processKeys();
 	auto zoneIndex = 0;
-	
+	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
+	//cout << "\nRemote activeField: " << ui_Objects()[(long)activeField->get()] << endl;
+	//cout << "\nRemote active-activeField: " << ui_Objects()[(long)activeField->get()->collection()->activeUI()->get() ] << endl;
+	//auto focusWas = activeField->get()->collection()->focusIndex();
 	for (auto & remote : _remoteConsole) {
-		auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
 		//cout << "\nRemote activeField: " << ui_Objects()[(long)activeField->get()] << endl;
 		activeField->setFocusIndex(zoneIndex);
 		//logger() << "Remote PageGroup focus: " << _remoteConsoleChapters._remote_page_group_c.focusIndex() << L_endl;
@@ -119,6 +121,7 @@ void HeatingSystem::serviceConsoles() {
 		++zoneIndex;
 		if (zoneIndex == 2) ++zoneIndex;
 	}
+	//activeField->move_focus_to(focusWas);
 }
 
 void HeatingSystem::serviceProfiles() { _sequencer.getNextEvent(); }

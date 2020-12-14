@@ -17,8 +17,8 @@ namespace Assembly {
 		, _dstUI_c{ &db._ds_currTime, RecInt_CurrDateTime::e_dst, {V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._ds_currTime, RecInt_CurrDateTime::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._ds_dwellings, RecInt_Dwelling::e_name }
-		, _zoneNameUI_c{ &db._ds_dwZones, RecInt_Zone::e_name, {V + S + VnLR + UD_C + R0} }
-		, _zoneAbbrevUI_c{ &db._ds_dwZones, RecInt_Zone::e_abbrev}
+		, _dwZoneNameUI_c{ &db._ds_dwZones, RecInt_Zone::e_name, {V + S + VnLR + UD_C + R0} }
+		, _dwZoneAbbrevUI_c{ &db._ds_dwZones, RecInt_Zone::e_abbrev}
 		, _allZoneAbbrevUI_c{ &db._ds_zones, RecInt_Zone::e_abbrev}
 		, _allZoneReqTemp_UI_c{ &db._ds_zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_A + R0 + ER0} }
 		, _allZoneNames_UI_c{ &db._ds_zones, RecInt_Zone::e_name, {V + V1} }
@@ -74,7 +74,7 @@ namespace Assembly {
 		, _iterated_prog_name_c{ 80, _progNameUI_c, {V + S + VnLR + UD_C + R0 + IR0} }
 		, _prog_subpage_c{ makeCollection(_dwellingProgCmd, _iterated_prog_name_c),{ V + S + VnLR + R0 } }
 
-		, _iterated_zone_name_c{ 80, _zoneNameUI_c}
+		, _iterated_zone_name_c{ 80, _dwZoneNameUI_c}
 		, _zone_subpage_c{makeCollection(_dwellingZoneCmd, _newLine, _iterated_zone_name_c),{ V + S + VnLR + R0 } }
 
 		, _page_dwellingMembers_subpage_c{ makeCollection(_calendar_subpage_c, _prog_subpage_c, _zone_subpage_c),{ V + S + V1 + UD_A + R } }
@@ -82,7 +82,7 @@ namespace Assembly {
 		
 		, _iterated_timeTempUI{80, _timeTempUI_c}
 		, _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _newLine, _iterated_timeTempUI) }
-		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _zoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
+		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _dwZoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 		
 		// Info Pages
 		, _iterated_tempSensorUI{ 80, makeCollection(_tempSensorNameUI_c,_tempSensorTempUI_c)}
@@ -113,13 +113,14 @@ namespace Assembly {
 		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";
 		auto & tt_Field_Interface = _timeTempUI_c.getStreamingTool().f_interface();
 		ui_Objects()[(long)&tt_Field_Interface] = "tt_Field_Interface";
-		auto & zone_Field_Interface = _zoneAbbrevUI_c.getStreamingTool().f_interface();
+		auto & zone_Field_Interface = _dwZoneAbbrevUI_c.getStreamingTool().f_interface();
 		ui_Objects()[(long)&zone_Field_Interface] = "string_Interface";
 		auto & profileDays_Field_Interface = _profileDaysUI_c.getStreamingTool().f_interface();
 		ui_Objects()[(long)&profileDays_Field_Interface] = "profileDays_Field_Interface";
 		
+		ui_Objects()[(long)&_dstUI_c] = "_dstUI_c";
 		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
-		ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
+		ui_Objects()[(long)&_dwZoneAbbrevUI_c] = "_dwZoneAbbrevUI_c";
 		ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
 		ui_Objects()[(long)&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
 		ui_Objects()[(long)&_allZoneAbbrevUI_c] = "_allZoneAbbrevUI_c";
@@ -130,8 +131,13 @@ namespace Assembly {
 		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
 		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 		ui_Objects()[(long)&_calendar_subpage_c] = "_calendar_subpage_c";
+		ui_Objects()[(long)&_prog_subpage_c] = "_prog_subpage_c";
 		ui_Objects()[(long)&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
 		ui_Objects()[(long)&_page_dwellingMembers_subpage_c] = "_page_dwellingMembers_subpage_c";
+		ui_Objects()[(long)&_zone_subpage_c] = "_zone_subpage_c";
+		ui_Objects()[(long)&_iterated_prog_name_c] = "_iterated_prog_name_c";
+		ui_Objects()[(long)&_iterated_zone_name_c] = "_iterated_zone_name_c";
+		ui_Objects()[(long)&_dwZoneNameUI_c] = "_dwZoneNameUI_c";
 		ui_Objects()[(long)&_insert] = "_insert";
 		ui_Objects()[(long)&_fromCmd] = "_fromCmd";
 		ui_Objects()[(long)&_dwellSpellUI_c] = "_dwellSpellUI_c";

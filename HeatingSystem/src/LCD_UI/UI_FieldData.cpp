@@ -118,7 +118,7 @@ namespace LCD_UI {
 			}
 			setCount(_data->resetCount());
 		}
-		notifyDataIsEdited();
+		//notifyDataIsEdited();
 		return 0;
 	}
 

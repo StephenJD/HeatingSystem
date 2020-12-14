@@ -63,7 +63,7 @@ namespace RelationalDatabase {
 		auto unusedRecordID = reserveUnusedRecordID();
 		//logger() << "Insert: " << *reinterpret_cast<const uint32_t*>(newRecord) << L_endl;
 		if (isSorted(_t->insertionStrategy()) && unusedRecordID < targetRecordID) {			
-			logger() << F(" shuffle back into: ") << (int)unusedRecordID << L_endl;
+			//logger() << F(" shuffle back into: ") << (int)unusedRecordID << L_endl;
 			shuffleRecordsBack(unusedRecordID, targetRecordID);
 			targetRecordID = unusedRecordID;
 			unusedRecordID = reserveUnusedRecordID();
@@ -80,7 +80,7 @@ namespace RelationalDatabase {
 				return _currRecord.id();
 			}
 		}
-		logger() << "Save Record[" << _currRecord.id() << "] at " << recordAddress() << L_endl;
+		//logger() << "Save Record[" << _currRecord.id() << "] at " << recordAddress() << L_endl;
 		_t->db()._writeByte(recordAddress(), newRecord, _t->recordSize());
 		_currRecord.setStatus(TB_OK);
 		_lastReadVRversionNo = _t->dataIsChanged();
@@ -535,7 +535,7 @@ namespace RelationalDatabase {
 			while (insertPosTaken && status() == TB_OK) {
 				swapRecords(this, recToInsert);
 				++swapPos;
-				logger() << "Swapped. Now inserting old rec: " << id() << " at " << swapPos << L_endl;
+				//logger() << "Swapped. Now inserting old rec: " << id() << " at " << swapPos << L_endl;
 				moveToThisRecord(swapPos);
 				vrIndex = loadAndGetVRindex();
 				insertPosTaken = recordIsUsed(vrIndex);

@@ -45,8 +45,10 @@ namespace LCD_UI {
 	}
 
 	I_Data_Formatter * Dataset::getFieldAt(int fieldID, int id) { // moves to first valid record at id or past id from current position
-		setMatchArgs();
-		move_to(id);
+		//if (recordID() != id) {
+			setMatchArgs();
+			move_to(id);
+		//}
 		return i_record().getField(fieldID);
 	}
 
@@ -83,6 +85,9 @@ namespace LCD_UI {
 		query().setMatchArg(parentIndex());
 		RecordSelector editRS;
 		RecordSelector & recSel = (_inEdit ? editRS = query().resultsQ().begin() : _recSel);
+		//if (recordID() == pos && recSel.id() == pos)
+		//	return pos;
+
 		recSel.setID(recordID());
 		if (pos < 0) {
 			record() = *(recSel.begin());

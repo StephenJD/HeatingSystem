@@ -73,6 +73,10 @@ namespace LCD_UI {
 
 	/// <summary>
 	/// The Base-class for UI_Objects that perform a special action on select, up/dn or LR.
+	/// VnLR to capture LR.
+	/// UD_C to capture UD.
+	/// UD_A to not capture UD.
+	/// Default only captures select.
 	/// </summary>
 	class Custom_Select : public UI_Object {
 	public:

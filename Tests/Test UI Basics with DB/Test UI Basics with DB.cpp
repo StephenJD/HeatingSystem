@@ -3012,7 +3012,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	cout << "\tprogram\n";
 	auto _progNameUI_c = UI_FieldData{ &ds_dwProgs, RecInt_Program::e_name, {V + S + V1 + UD_A + R} };
 	cout << "\tzone\n";
-	auto _zoneAbbrevUI_c = UI_FieldData{ &ds_dwZones, RecInt_Zone::e_abbrev, {V + S + V1 + UD_A + R} };
+	auto _dwZoneAbbrevUI_c = UI_FieldData{ &ds_dwZones, RecInt_Zone::e_abbrev, {V + S + V1 + UD_A + R} };
 	cout << "\tprofile\n";
 	auto _profileDaysUI_c = UI_FieldData{ &ds_profile, RecInt_Profile::e_days, {V + S + V1 + UD_A + R + ER}, RecInt_Program::e_id };
 	cout << "\ttimeTemp\n";
@@ -3027,7 +3027,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	// Pages & sub-pages - Collections of UI handles
 	cout << "\ntt_page Elements Collection\n";
 	auto _tt_SubPage_c{ makeCollection(_deleteTTCmd, _editTTCmd, _newTTCmd, _newLine, _iterated_timeTempUI) };
-	auto _page_profile_c{ makeCollection(_dwellNameUI_c, _progNameUI_c, _zoneAbbrevUI_c, _profileDaysUI_c, _tt_SubPage_c) };
+	auto _page_profile_c{ makeCollection(_dwellNameUI_c, _progNameUI_c, _dwZoneAbbrevUI_c, _profileDaysUI_c, _tt_SubPage_c) };
 
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(_page_profile_c);
@@ -3039,7 +3039,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	auto display1_h = A_Top_UI(display1_c);
 
 	ui_Objects()[(long)&_dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&_zoneAbbrevUI_c] = "_zoneAbbrevUI_c";
+	ui_Objects()[(long)&_dwZoneAbbrevUI_c] = "_dwZoneAbbrevUI_c";
 	ui_Objects()[(long)&_progNameUI_c] = "progNameUI_c";
 	ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
 	ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
@@ -3235,7 +3235,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	auto & display1_h = hs.mainConsoleChapters()(0);
 	cout << test_stream(display1_h.stream(tb)) << endl;
 	clock_().setTime({ 31,7,19 }, {16,10 }, 0);
-	display1_h.rec_select();
+	display1_h.rec_select(); clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00p_m SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_left_right(-1); clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contras_t");
@@ -3294,6 +3294,18 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_left_right(1);
+	display1_h.rec_left_right(-1);
+	display1_h.rec_left_right(-1);
+	cout << "Yield: ... " << test_stream(display1_h.stream(tb));
+	delay(1000);
+	ui_yield();
+	display1_h.rec_left_right(-1);
+	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFS_S0730a15 1100p19");
+	display1_h.rec_left_right(-1);
+	display1_h.rec_left_right(-1);
+	display1_h.rec_left_right(-1);
+	display1_h.rec_left_right(-1);
+
 	CHECK(test_stream(display1_h.stream(tb)) == "Hous_e   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "HolApp_t Prg: Occup'dZne: Flt Day:MTWTFSS0700a20 1100p18");
@@ -3310,6 +3322,8 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_up_down(-1);
  	display1_h.rec_left_right(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Day_:MTWTF--0630a45 0900a30     0330p45 1030p30");
+	delay(1000);
+	ui_yield();
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DHW Day_:-----SS0730a45 0930a30     0300p45 1030p30");
 	display1_h.rec_left_right(-1);
@@ -3350,7 +3364,10 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M#TWTF--0740a19 1100p16");
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M#-WTF--0740a19 1100p16");
-	display1_h.rec_select();
+	cout << "Yield: ... \n";
+	delay(1000);
+	ui_yield();
+  	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-_-0740a19 1100p16");
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:-T---S_S0800a19 1050p16");
@@ -3375,6 +3392,9 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-#-0740a19 1100p16");
 	display1_h.rec_up_down(1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-#S0740a19 1100p16");
+	cout << "Yield: ... \n";
+	delay(1000);
+	ui_yield();
 	display1_h.rec_select();
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: DS  Day:M-WTF-_S0740a19 1100p16");
 	display1_h.rec_up_down(1);

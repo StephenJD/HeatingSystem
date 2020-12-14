@@ -4,7 +4,7 @@
 namespace LCD_UI {
 
 	/// <summary>
-	/// Vn to capture LR.
+	/// VnLR to capture LR.
 	/// UD_C to capture UD.
 	/// UD_A to not capture UD.
 	/// Default only captures select.
