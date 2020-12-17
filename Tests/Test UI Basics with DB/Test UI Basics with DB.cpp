@@ -383,7 +383,7 @@ SCENARIO("Simple Page Scrolling", "[Chapter]") {
 	if (!db.checkPW(VERSION)) { cout << "Password missmatch\n"; return; }
 	//cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	//cout << " **** Next create DB Record Interface ****\n";
@@ -541,7 +541,7 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 
 	cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	//cout << " **** Next create DB Record Interface ****\n";
@@ -745,7 +745,7 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 	auto q_SpellsForDwelling = QueryF_T<R_Spell>{ db.tableQuery(TB_Spell), 1 };
 	auto q_ProfilesForProg = QueryF_T<R_Profile>(db.tableQuery(TB_Profile), 0);
@@ -913,7 +913,7 @@ TEST_CASE("Edit Strings", "[Chapter]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	//cout << " **** Next create DB Record Interface ****\n";
@@ -1076,7 +1076,7 @@ TEST_CASE("Edit Integer Data", "[Display]") {
 
 	cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	cout << " **** Next create DB Record Interfaces ****\n";
@@ -1203,7 +1203,7 @@ TEST_CASE("Edit Formatted Integer Data", "[Display]") {
 
 	cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_DwellingZone), &db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_Zone), &db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ &db.tableQuery(TB_Program) , 1 };
 
 	cout << " **** Next create DB Record Interfaces ****\n";
@@ -1285,7 +1285,7 @@ TEST_CASE("Edit Date Data", "[Chapter]") {
 
 	cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 	auto q_SpellsForDwelling = QueryF_T<R_Spell>{ db.tableQuery(TB_Spell), 1 };
 
@@ -1499,6 +1499,7 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 					clock_().setSeconds(0);
 					display1_h.rec_left_right(1); clock_().setSeconds(0);// moves focus
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: _1");
+					clock_().setSeconds(0);
 					display1_h.rec_select(); 
 					clock_().setSeconds(0);
 					CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Tue 31/Jul/2018     DST Hours: #1");
@@ -2223,7 +2224,7 @@ TEST_CASE("Cmd-Menu", "[Display]") {
 
 	cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_DwellingZone), &db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_Zone), &db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryFL_T<R_Program>{ &db.tableQuery(TB_Program) , 1 };
 	auto q_SpellsForDwelling = QueryFL_T<R_Spell>{ &db.tableQuery(TB_Spell), 1 };
 
@@ -2296,11 +2297,11 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 	auto q_SpellsForDwelling = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
-	auto q_ProgsForSpellDwelling = QueryLinkF_T<R_Spell, R_Program> { q_SpellsForDwelling, db.tableQuery(TB_Program), 1 ,1 };
-	auto q_ProgForSpell = QueryML_T<R_Spell>{ db.tableQuery(TB_Spell), q_ProgsForSpellDwelling, 0 };
+	auto q_ProgsForSpellDwelling = QueryLinkF_T<R_Program, R_Spell > { db.tableQuery(TB_Program), q_SpellsForDwelling, 1 ,1 };
+	auto q_ProgForSpell = QueryML_T<R_Spell>{ q_ProgsForSpellDwelling, db.tableQuery(TB_Spell), 0 };
 	auto q_ProfilesForProg = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 0 };
 	auto q_ProfilesForZone = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
 	auto q_ProfilesForZoneProg = QueryF_T<R_Profile>{ q_ProfilesForZone, 0 };
@@ -2730,7 +2731,7 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 
 	cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
-	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 	auto q_ProfilesForZone = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
 	auto q_ProfilesForProg = QueryF_T<R_Profile>(q_ProfilesForZone, 0);
@@ -2972,7 +2973,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = _db.tableQuery(TB_Dwelling);
 	auto q_ProgsForDwelling = QueryF_T<client_data_structures::R_Program>{ _db.tableQuery(TB_Program), 1 };
-	auto q_ZonesForDwelling = QueryFL_T<client_data_structures::R_DwellingZone>{ _db.tableQuery(TB_DwellingZone), _db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ZonesForDwelling = QueryFL_T<client_data_structures::R_DwellingZone>{ _db.tableQuery(TB_Zone), _db.tableQuery(TB_DwellingZone), 0, 1 };
 	auto q_ProfilesForZone = QueryF_T<client_data_structures::R_Profile>{ _db.tableQuery(TB_Profile), 1 };
 	auto q_ProfilesForZoneProg = QueryF_T<client_data_structures::R_Profile>{ q_ProfilesForZone, 0 };
 	auto q_TimeTempsForProfile = QueryF_T<R_TimeTemp>{ _db.tableQuery(TB_TimeTemp) , 0 };

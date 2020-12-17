@@ -301,9 +301,9 @@ namespace RelationalDatabase {
 	/// <summary>
 	/// Lookup query.
 	/// A Select Query on the Results table, using Iterated-Table select-field,
-	/// Provide a Iterated-Table Query, 
-	/// a Result-Table Query,
-	/// and the field_index in the Iterated table for selecting the record in the Result-Table.
+	/// Provide a Results Query, 
+	/// and an Iterated-Table Query,
+	/// and the field_index in the Iterated table for selecting the record in the Results Query.
 	/// </summary>	
 	template <typename IteratedRecordType>
 	class QueryL_T : public CustomQuery {
@@ -377,39 +377,39 @@ namespace RelationalDatabase {
 	/// Filtered-Lookup query.
 	/// A Select Query on the Results table, using Iterated-Table select-field,
 	/// where the Iterated-Table is Filtered on the Match argument.
-	/// Provide an Iterated-Table Query, 
-	/// a Result-Table Query,
+	/// Provide a Result Query, 
+	/// an Iterated-Table Query,
 	/// the field_index in the Iterated table to filter on the Match argument,
-	/// and the field_index in the Iterated table for selecting the record in the Result-Table.
+	/// and the field_index in the Iterated table for selecting the record in the Result Query.
 	/// </summary>	
 	template <typename IteratedRecordType>
 	class QueryFL_T : public QueryF_T<IteratedRecordType> {
 		// base-class holds the match argument for the Filter.
 	public:
 		QueryFL_T(
-			Query& iterationQuery,
 			Query& result_Query,
-			int filter_f,
-			int select_f
-		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
-
-		QueryFL_T(
-			const TableQuery& iterationQuery,
-			const TableQuery& result_Query,
-			int filter_f,
-			int select_f
-		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
-
-		QueryFL_T(
 			Query& iterationQuery,
-			const TableQuery& result_Query,
 			int filter_f,
 			int select_f
 		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
 
 		QueryFL_T(
+			const TableQuery& result_Query,
 			const TableQuery& iterationQuery,
+			int filter_f,
+			int select_f
+		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
+
+		QueryFL_T(
+			const TableQuery& result_Query,
+			Query& iterationQuery,
+			int filter_f,
+			int select_f
+		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
+
+		QueryFL_T(
 			Query& result_Query,
+			const TableQuery& iterationQuery,
 			int filter_f,
 			int select_f
 		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
@@ -434,7 +434,7 @@ namespace RelationalDatabase {
 	////////////////////////////////////////////////////////////
 	//          Lookup Filter Query                           //
 	//________________________________________________________//
-	// IteratedTable field{1,1}  FilterTable, match field {1}  //
+	// ResultsTable field{1,1}  FilterTable, match field {1}  //
 	//             {0}  {1}         {0}  v----match(1)        //
 	// fred <- [0] fred, 0----->[0] SW1, 1                    //
 	// john <- [1] john, 2--\   [1] SW2, 0                    //
@@ -444,48 +444,48 @@ namespace RelationalDatabase {
 	/// <summary>
 	/// Lookup filter query.
 	/// Returns records where the associated Filter-record match-field matches the Match argument.
-	/// Provide an IteratedTable Query to be filtered,
+	/// Provide an Results Query to be filtered,
 	/// a FilterTable Query, 
-	/// the field_index in the IteratedTable for selecting the record in the FilterTable.
+	/// the field_index in the ResultsTable for selecting the record in the FilterTable.
 	/// and the field_index in the FilterTable to match with the Match argument.
 	/// </summary>	
-	template <typename IteratedRecordType, typename FilterRecordType>
-	class QueryLF_T : public QueryL_T<IteratedRecordType> {
+	template <typename ResultRecordType, typename FilterRecordType>
+	class QueryLF_T : public QueryL_T<ResultRecordType> {
 	public:
 		QueryLF_T(
-			Query& iterationQuery
+			Query& resultsQuery
 			, Query& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<ResultRecordType>(filter_query, resultsQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
 		QueryLF_T(
-			const TableQuery& iterationQuery
+			const TableQuery& resultsQuery
 			, const TableQuery& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<ResultRecordType>(filter_query, resultsQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
 		QueryLF_T(
-			Query& iterationQuery
+			Query& resultsQuery
 			, const TableQuery& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<ResultRecordType>(filter_query, resultsQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
 		QueryLF_T(
-			const TableQuery& iterationQuery
+			const TableQuery& resultsQuery
 			, Query& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<ResultRecordType>(filter_query, resultsQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
-		Query& resultsQ() override { return QueryL_T<IteratedRecordType>::iterationQ(); }
+		Query& resultsQ() override { return QueryL_T<ResultRecordType>::iterationQ(); }
 
 		void setMatchArg(int matchArg) override { _filterQuery.setMatchArg(matchArg); }
 
 		Answer_Locator acceptMatch(int recordID) override {
-			Answer_R<FilterRecordType> selectedRec = QueryL_T<IteratedRecordType>::acceptMatch(recordID);
+			Answer_R<FilterRecordType> selectedRec = QueryL_T<ResultRecordType>::acceptMatch(recordID);
 			_filterQuery.acceptMatch(selectedRec.id());
 			return (*this)[recordID];
 		}
@@ -493,12 +493,12 @@ namespace RelationalDatabase {
 		int matchArg() const override { return _filterQuery.matchArg(); }
 
 		Answer_Locator getMatch(RecordSelector& recSel, int direction, int) override {
-			Answer_R<IteratedRecordType> tryMatch = recSel.incrementRecord();
+			Answer_R<ResultRecordType> tryMatch = recSel.incrementRecord();
 			while (tryMatch.status() == TB_OK) {
-				auto select = tryMatch.field(QueryL_T<IteratedRecordType>::_select_f);
+				auto select = tryMatch.field(QueryL_T<ResultRecordType>::_select_f);
 				auto filter = _filterQuery[select];
 				if (filter.status() == TB_OK) break;
-				QueryL_T<IteratedRecordType>::iterationQ().next(recSel, direction);
+				QueryL_T<ResultRecordType>::iterationQ().next(recSel, direction);
 				tryMatch = recSel.incrementRecord();
 			}
 			recSel.setStatus(tryMatch.status() == TB_RECORD_UNUSED ? (direction >= 0 ? TB_END_STOP : TB_BEFORE_BEGIN) : tryMatch.status());
@@ -512,7 +512,7 @@ namespace RelationalDatabase {
 	////////////////////////////////////////////////////////////
 	//          Linked Filter Query                           //
 	//________________________________________________________//
-	//    LinkTable{1}       IteratedTable, Filter field {1}  //
+	//    LinkTable{1}       ResultTable, Filter field {1}  //
 	//                {0}  {1}        {0} {1}                 //
 	// match(0)-->[0] fred, 0---->[0] SW1, 1 --> SW1          //
 	// LF_T[2]--->[1] john, 2-\   [1] SW2, 0                  //
@@ -521,65 +521,65 @@ namespace RelationalDatabase {
 
 	/// <summary>
 	/// Linked filter query.
-	/// Returns IteratedTable records where the Filter-field value matches the Filter-field value of the Linked record.
-	/// Provide a LinkTable Query, 
-	/// an IteratedTable-Table Query to be filtered,
-	/// the field_index in the LinkTable to select the first IteratedTable record.
-	/// the field_index in the IteratedTable for filtering.
-	/// Link-records are selected using setMatch or indexing[]. This automatically set the matchArg for the filter on the IteratedTable.
-	/// Begin/end and next all operate on the IteratedTable for the current filter.
+	/// Returns ResultTable records where the Filter-field value matches the Filter-field value of the Linked record.
+	/// Provide a ResultTable Query to be filtered,
+	/// a LinkTable Query, 
+	/// the field_index in the LinkTable to select the first ResultTable record.
+	/// the field_index in the ResultTable for filtering.
+	/// Link-records are selected using setMatch or indexing[]. This automatically sets the matchArg for the filter on the ResultTable.
+	/// Begin/end and next all operate on the ResultTable for the current filter.
 	/// </summary>	
-	template <typename LinkRecordType, typename IteratedRecordType>
-	class QueryLinkF_T : public QueryF_T<IteratedRecordType> {
+	template <typename ResultRecordType, typename LinkRecordType>
+	class QueryLinkF_T : public QueryF_T<ResultRecordType> {
 	public:
 		QueryLinkF_T(
-			Query& link_query
-			, Query& result_query
+			Query& result_query
+			, Query& link_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
+		) : QueryF_T<ResultRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		QueryLinkF_T(
-			const TableQuery& link_query
-			, const TableQuery& result_query
+			const TableQuery& result_query
+			, const TableQuery& link_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
+		) : QueryF_T<ResultRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		QueryLinkF_T(
-			Query& link_query
-			, const TableQuery& result_query
+			const TableQuery& result_query
+			, Query& link_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
+		) : QueryF_T<ResultRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		QueryLinkF_T(
-			const TableQuery& link_query
-			, Query& result_query
+			Query& result_query
+			, const TableQuery& link_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
+		) : QueryF_T<ResultRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		// Non-polymorphic specialisations
-		RecordSelector begin() { return QueryF_T<IteratedRecordType>::begin(); }
-		RecordSelector end() { return QueryF_T<IteratedRecordType>::end(); }
-		RecordSelector last() { return QueryF_T<IteratedRecordType>::last(); }
+		RecordSelector begin() { return QueryF_T<ResultRecordType>::begin(); }
+		RecordSelector end() { return QueryF_T<ResultRecordType>::end(); }
+		RecordSelector last() { return QueryF_T<ResultRecordType>::last(); }
 
 		// Polymorphic specialisations
-		void next(RecordSelector& recSel, int moveBy) override { QueryF_T<IteratedRecordType>::next(recSel, moveBy); }
+		void next(RecordSelector& recSel, int moveBy) override { QueryF_T<ResultRecordType>::next(recSel, moveBy); }
 
 		Answer_Locator operator[](int index) override {
 			return acceptMatch(index);
 		}
 
 		void setMatchArg(int recordID) override {
-			Answer_R<IteratedRecordType> currRec = _linkQuery.acceptMatch(recordID);
-			QueryF_T<IteratedRecordType>::acceptMatch(currRec.id());
+			Answer_R<ResultRecordType> currRec = _linkQuery.acceptMatch(recordID);
+			QueryF_T<ResultRecordType>::acceptMatch(currRec.id());
 		}
 
 		Answer_Locator acceptMatch(int recordID) override {
 			// When accepting match, assume interatedQ has already been aaccepted. 
-			return QueryF_T<IteratedRecordType>::acceptMatch(recordID);
+			return QueryF_T<ResultRecordType>::acceptMatch(recordID);
 		}
 
 	protected:
@@ -608,26 +608,26 @@ namespace RelationalDatabase {
 	class QueryML_T : public QueryL_T<IteratedRecordType> {
 	public:
 		QueryML_T(
-			Query& iterationQuery,
 			Query& result_query,
-			int select_f
-		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
-
-		QueryML_T(
-			const TableQuery& iterationQuery,
-			const TableQuery& result_query,
-			int select_f
-		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
-
-		QueryML_T(
 			Query& iterationQuery,
-			const TableQuery& result_query,
 			int select_f
 		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
 
 		QueryML_T(
+			const TableQuery& result_query,
 			const TableQuery& iterationQuery,
+			int select_f
+		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
+
+		QueryML_T(
+			const TableQuery& result_query,
+			Query& iterationQuery,
+			int select_f
+		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
+
+		QueryML_T(
 			Query& result_query,
+			const TableQuery& iterationQuery,
 			int select_f
 		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
 

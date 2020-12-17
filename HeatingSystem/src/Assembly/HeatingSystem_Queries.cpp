@@ -23,12 +23,12 @@ namespace Assembly {
 		, _q_Displays{ rdb.tableQuery(TB_Display) }
 		, _q_Dwellings{ rdb.tableQuery(TB_Dwelling) }
 		, _q_Zones{ rdb.tableQuery(TB_Zone) }
-		, _q_ZonesForDwelling{ rdb.tableQuery(TB_DwellingZone), rdb.tableQuery(TB_Zone), 0, 1 }
-		, _q_DwellingsForZone{ rdb.tableQuery(TB_DwellingZone), rdb.tableQuery(TB_Dwelling), 1, 0 }
+		, _q_ZonesForDwelling{ rdb.tableQuery(TB_Zone), rdb.tableQuery(TB_DwellingZone), 0, 1 }
+		, _q_DwellingsForZone{ rdb.tableQuery(TB_Dwelling), rdb.tableQuery(TB_DwellingZone), 1, 0 }
 		, _q_ProgsForDwelling{ rdb.tableQuery(TB_Program), 1 }
 		, _q_SpellsForDwelling{ rdb.tableQuery(TB_Spell), rdb.tableQuery(TB_Program), 1, 1 }
-		, _q_ProgsForSpellDwelling{ _q_SpellsForDwelling, rdb.tableQuery(TB_Program), 1 ,1 }
-		, _q_ProgForSpell{ rdb.tableQuery(TB_Spell), _q_ProgsForSpellDwelling, 0 }
+		, _q_ProgsForSpellDwelling{ rdb.tableQuery(TB_Program), _q_SpellsForDwelling, 1 ,1 }
+		, _q_ProgForSpell{ _q_ProgsForSpellDwelling, rdb.tableQuery(TB_Spell), 0 }
 		, _q_ProfilesForProg{ rdb.tableQuery(TB_Profile), 0 }
 		, _q_ProfilesForZone{ rdb.tableQuery(TB_Profile), 1 }
 		, _q_ProfilesForZoneProg{ _q_ProfilesForZone, 0 }

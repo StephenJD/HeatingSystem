@@ -43,7 +43,7 @@ namespace Assembly {
 		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_DwellingsForZone;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_ProgsForDwelling;
 		RelationalDatabase::QueryLF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_SpellsForDwelling;
-		RelationalDatabase::QueryLinkF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_ProgsForSpellDwelling;
+		RelationalDatabase::QueryLinkF_T<client_data_structures::R_Program, client_data_structures::R_Spell> _q_ProgsForSpellDwelling;
 		RelationalDatabase::QueryML_T<client_data_structures::R_Spell> _q_ProgForSpell;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_ProfilesForProg;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_ProfilesForZone;
