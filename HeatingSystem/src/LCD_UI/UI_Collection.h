@@ -30,7 +30,7 @@ namespace LCD_UI {
 		// Queries supporting streaming
 		using HI_BD = HardwareInterfaces::LCD_Display;
 		virtual bool				streamElement(UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const { return false; }
-		virtual HI_BD::CursorMode	cursorMode(const Object_Hndl* activeElement) const;
+		virtual HI_BD::CursorMode	cursorMode(const Object_Hndl* activeElement) const { return HI_BD::e_unselectable;}
 		virtual int					cursorOffset(const char* data) const;
 		virtual bool				hasFocus() const { return false; }
 		bool						streamToBuffer(const char* data, UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos, UI_DisplayBuffer::ListStatus listStatus) const;
@@ -82,6 +82,7 @@ namespace LCD_UI {
 	public:
 		Custom_Select(OnSelectFnctr onSelect, Behaviour behaviour);
 		using UI_Object::behaviour;
+		HI_BD::CursorMode	cursorMode(const Object_Hndl* activeElement) const override;
 
 		// Modifiers
 		Behaviour&		behaviour() override { return _behaviour; }
@@ -431,7 +432,7 @@ namespace LCD_UI {
 	/////////////////////////////////////////////////////////////////////////
 	class UI_IteratedCollection_Hoist {
 	public:
-		bool h_move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl);
+		void h_move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl);
 	protected:
 		UI_IteratedCollection_Hoist(int endPos)
 			: _endPos(endPos) {}
@@ -446,7 +447,7 @@ namespace LCD_UI {
 
 		virtual I_SafeCollection* iterated_collection() = 0;
 
-		bool h_focusHasChanged();
+		bool h_focusHasChanged(bool hasFocus);
 		Collection_Hndl* h_item(int newIndex);
 
 		int16_t _iteratedMemberIndex = 0;
@@ -500,7 +501,7 @@ namespace LCD_UI {
 		}
 
 		// Polymorphic Queries
-
+		HI_BD::CursorMode cursorMode(const Object_Hndl* activeElement) const override {return HI_BD::e_unselected; }
 		bool hasFocus() const override { return (Collection<noOfObjects>::focusIndex() == Collection<noOfObjects>::objectIndex()) && Collection<noOfObjects>::activeUI()->get()->hasFocus(); }
 		const I_SafeCollection* iterated_collection() const override { return this; }
 		bool streamElement(UI_DisplayBuffer& buffer, const Object_Hndl* activeElement, int endPos = 0, UI_DisplayBuffer::ListStatus listStatus = UI_DisplayBuffer::e_showingAll) const override {
@@ -510,11 +511,8 @@ namespace LCD_UI {
 
 		// Polymorphic Modifiers
 		I_SafeCollection* iterated_collection() override { return this; }
-		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
+		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
 		bool leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) override { return h_leftRight(moveBy, colln_hndl, lr_behaviour); }
-
-		// New non-polymorphic modifier
-		bool move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl) { return h_move_iteration_focus_by(moveBy, colln_hndl); }
 	};
 
 	template<>
@@ -559,14 +557,12 @@ namespace LCD_UI {
 			return h_streamElement(buffer, activeElement, endPos, listStatus);
 		}
 
+		HI_BD::CursorMode cursorMode(const Object_Hndl* activeElement) const override { return HI_BD::e_unselected; }
 		bool hasFocus() const override { return (focusIndex() == objectIndex()) && activeUI()->get()->hasFocus(); }
 
 		// Polymorphic Modifiers
-		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(); }
+		bool focusHasChanged(bool hasFocus) override { return h_focusHasChanged(hasFocus); }
 		bool leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) override { return h_leftRight(moveBy, colln_hndl, lr_behaviour); }
-
-		// New non-polymorphic modifier
-		bool move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl) { return h_move_iteration_focus_by(moveBy, colln_hndl); }
 	};
 
 	/// <summary>

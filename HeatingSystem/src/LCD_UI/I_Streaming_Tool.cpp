@@ -54,7 +54,7 @@ namespace LCD_UI {
 		field_streamingTool_h->activeEditBehaviour().make_viewAll(); // Allows UP/DOWN to go to edit collection
 		behaviour() = field_streamingTool_h->activeEditBehaviour();
 		if (behaviour().is_next_on_UpDn()) {
-			editItem().currValue().val = field_streamingTool_h->getData()->data()->record().id();
+			editItem().currValue().val = field_streamingTool_h->getData()->data()->i_record().recordID();
 			field_streamingTool_h->getData()->data()->setEditMode(true);
 		}
 		return 0;
@@ -142,9 +142,9 @@ namespace LCD_UI {
 	CursorMode Field_StreamingTool_h::cursorMode(const Object_Hndl * activeElement) const {
 		if (!activeElement) return HI_BD::e_unselected;
 		if (this == activeElement) {
-			if (_cursorMode == HI_BD::e_inEdit) return HI_BD::e_inEdit;
-			else return HI_BD::e_selected;
-		} else return _cursorMode;
+			if (_cursorMode != HI_BD::e_inEdit) return HI_BD::e_selected;
+		}
+		return _cursorMode;
 	}
 
 	void Field_StreamingTool_h::setCursorPos() { 

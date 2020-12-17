@@ -42,7 +42,7 @@ namespace HardwareInterfaces {
 		_sequencer = &sequencer;
 		using namespace RelationalDatabase;
 		using namespace client_data_structures;
-		auto zones = _sequencer->queries()._q_zones;
+		auto zones = _sequencer->queries()._q_Zones;
 		_zoneRecord = zones[_recordID];
 	}
 

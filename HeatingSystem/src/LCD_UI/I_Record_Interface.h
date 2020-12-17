@@ -27,12 +27,13 @@ namespace LCD_UI {
 		// Queries
 		//I_Data_Formatter* getFieldAt(int fieldID, int elementIndex) const { return const_cast<I_Record_Interface*>(this)->getFieldAt(fieldID, elementIndex); }
 		I_Data_Formatter* getField(int fieldID) const { return const_cast<I_Record_Interface*>(this)->getField(fieldID); }
-		virtual int recordFieldVal(int selectFieldID) const { return record().id(); }
-		virtual const Answer_Locator& record() const = 0;
-		int recordID() const { return record().id(); }
+		virtual int recordFieldVal(int selectFieldID) const { return answer().id(); }
+		virtual const Answer_Locator& answer() const = 0;
+		int recordID() const { return answer().id(); }
+		TB_Status status() const { return answer().status(); }
 
 		// Polymorphic Modifiers
-		virtual Answer_Locator& record() = 0;
+		virtual Answer_Locator& answer() = 0;
 		virtual I_Data_Formatter* getField(int fieldID) { return 0; }
 		virtual bool setNewValue(int fieldID, const I_Data_Formatter* val) { return false; }
 		virtual bool actionOn_UD(int _fieldID, int moveBy) { return false; }
@@ -47,10 +48,10 @@ namespace LCD_UI {
 	class Record_Interface : public I_Record_Interface {
 	public:
 		typedef Record RecordType;
-		const Answer_R<Record>& record() const override { return _record; }
-		Answer_R<Record>& record() override { return _record; }
+		const Answer_R<Record>& answer() const override { return _record; }
+		Answer_R<Record>& answer() override { return _record; }
 		RecordSelector duplicateRecord(RecordSelector & recSel) override {
-			return recSel.query().insert(record().rec());
+			return recSel.query().insert(answer().rec());
 		}
 	private:
 		Answer_R<Record> _record;
@@ -65,11 +66,10 @@ namespace LCD_UI {
 	public:
 		Dataset(I_Record_Interface & recordInterface, Query& query, Dataset * parent = 0);
 		// Queries
-		int recordID() const { return _recordID; }
+		int ds_recordID() const { return _ds_recordID; }
 		const Query& query() const { return _recSel.query(); }
 		int count() const { return _count; }
 		int parentIndex() const;
-		//int recordID() const { return i_record().record().id(); }
 		const I_Record_Interface & i_record() const { return *_recInterface; }
 		I_Data_Formatter* initialiseRecord(int fieldID);
 		bool indexIsInDataRange(int index) { return index >= query().begin().id() && index <= query().last().id(); }
@@ -94,8 +94,7 @@ namespace LCD_UI {
 		Query& query() { return _recSel.query(); }
 		Dataset * parent() { return _parent; }
 		I_Record_Interface & i_record() { return *_recInterface; }
-		Answer_Locator & record() { return i_record().record(); }
-		void setRecordID(int id) { _recordID = id; }
+		void setDS_RecordID(int id) { _ds_recordID = id; }
 		void setEditMode(bool inEdit) { _inEdit = inEdit; }
 		bool inParentEditMode() { return _inEdit; }
 	protected:
@@ -103,7 +102,7 @@ namespace LCD_UI {
 		Dataset * _parent = 0;
 		I_Record_Interface* _recInterface = 0;
 		int _count = 1;
-		int _recordID = -1;
+		int _ds_recordID = -1;
 		bool _inEdit = false;
 	};
 }

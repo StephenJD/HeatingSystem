@@ -42,7 +42,7 @@
 ////////#define EDIT_FORMATTED_INTS
 ////
 #define EDIT_DATES
-//#define EDIT_CURRENT_DATETIME
+#define EDIT_CURRENT_DATETIME
 #define ITERATION_VARIANTS
 #define ITERATED_ZONE_TEMPS
 
@@ -355,13 +355,13 @@ SCENARIO("Create a Database", "[Database]") {
 	CHECK(string(Answer_R<R_Program>(tq_program[4]).rec().name) == "Empty");
 	CHECK(Answer_R<R_Profile>(tq_profile[13]).rec().days == 113);
 
-	auto q_dwellingSpells = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
+	auto q_SpellsForDwelling = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
 
 	for (Answer_R<R_Dwelling> dwellng : db.tableQuery(TB_Dwelling)) {
 		cout << dwellng.rec().name << endl;
 	}
 
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+	for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 		cout << dec << spell.rec().date.day() << "/" << spell.rec().date.getMonthStr() << endl;
 	}
 
@@ -382,22 +382,22 @@ SCENARIO("Simple Page Scrolling", "[Chapter]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 	if (!db.checkPW(VERSION)) { cout << "Password missmatch\n"; return; }
 	//cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	//cout << " **** Next create DB Record Interface ****\n";
 	auto _recDwelling = RecInt_Dwelling{};
 	auto _recZone = RecInt_Zone{0};
 	auto _recProg = RecInt_Program{};
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset (_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset (_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
 
 	//cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name, {V+S+V1+UD_A+R});
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name, {V+S+V1+UD_A+R});
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name, {V+S+V1+UD_A+R});
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name); // non-recyclable
 
 	// UI Elements
@@ -540,22 +540,22 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	//cout << " **** Next create DB Record Interface ****\n";
 	auto _recDwelling = RecInt_Dwelling{};
 	auto _recZone = RecInt_Zone{ 0 };
 	auto _recProg = RecInt_Program{};
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset(_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
 
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name, {V+S+VnLR+R0+ER0 });
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name, {V+S+VnLR+R0+ER0 });
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name, { V + S + VnLR + R0 + ER0 });
 
 	// UI Elements
@@ -744,11 +744,11 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
-	auto q_dwellingSpells = QueryF_T<R_Spell>{ db.tableQuery(TB_Spell), 1 };
-	auto q_ProgProfiles = QueryF_T<R_Profile>(db.tableQuery(TB_Profile), 0);
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_SpellsForDwelling = QueryF_T<R_Spell>{ db.tableQuery(TB_Spell), 1 };
+	auto q_ProfilesForProg = QueryF_T<R_Profile>(db.tableQuery(TB_Profile), 0);
 	auto q_ProfileTimeTemps = QueryF_T<R_TimeTemp>(db.tableQuery(TB_TimeTemp), 0);
 
 	//cout << " **** Next create DB Record Interface ****\n";
@@ -756,16 +756,16 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 	auto _recZone = RecInt_Zone{ 0 };
 	auto _recProg = RecInt_Program{};
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset(_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
 
 	// UI Elements
 	UI_Label L1("L1");
 	UI_Cmd C1("C1", 0), C2("C2", 0), C3("C3", 0), C4("C4", 0);
 	cout << "\n **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name);
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name);
 	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
@@ -912,21 +912,21 @@ TEST_CASE("Edit Strings", "[Chapter]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	//cout << " **** Next create DB Record Interface ****\n";
 	auto _recDwelling = RecInt_Dwelling{};
 	auto _recZone = RecInt_Zone{ 0 };
 	auto _recProg = RecInt_Program{};
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset(_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
 
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name, {V+S+V1+R0+UD_A+ER});
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name, {V+S+V1+R0+UD_A+ER});
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name);
 
 	UI_Label L1("L1");
@@ -1075,20 +1075,20 @@ TEST_CASE("Edit Integer Data", "[Display]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	cout << " **** Next create DB Record Interfaces ****\n";
-	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
-	auto rec_dwZone = Dataset_Zone(q_dwellingZones, noVolData, &ds_dwellings);
-	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &ds_dwellings);
+	auto rec_dwelling = Dataset_Dwelling(q_Dwellings, noVolData, 0);
+	auto rec_dwZone = Dataset_Zone(q_ZonesForDwelling, noVolData, &ds_dwellings);
+	auto rec_dwProgs = Dataset_Program(q_ProgsForDwelling, noVolData, &ds_dwellings);
 
 	cout << " **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name);
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name);
-	auto zoneReqTempUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_reqTemp, Behaviour{V+S+V1+UD_A+R}, editNonRecycle());
+	auto zoneReqTempUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_reqTemp, Behaviour{V+S+V1+UD_A+R}, editNonRecycle());
 	
 	// UI Elements
 	UI_Label L1("L1");
@@ -1202,20 +1202,20 @@ TEST_CASE("Edit Formatted Integer Data", "[Display]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_DwellingZone), &db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ &db.tableQuery(TB_Program) , 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_DwellingZone), &db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ &db.tableQuery(TB_Program) , 1 };
 
 	cout << " **** Next create DB Record Interfaces ****\n";
-	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
-	auto rec_dwZone = Dataset_Zone(q_dwellingZones, noVolData, &ds_dwellings);
-	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &ds_dwellings);
+	auto rec_dwelling = Dataset_Dwelling(q_Dwellings, noVolData, 0);
+	auto rec_dwZone = Dataset_Zone(q_ZonesForDwelling, noVolData, &ds_dwellings);
+	auto rec_dwProgs = Dataset_Program(q_ProgsForDwelling, noVolData, &ds_dwellings);
 
 	cout << " **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name);
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name);
-	auto zoneReqTempUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_reqTemp);
+	auto zoneReqTempUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_reqTemp);
 
 	// UI Elements
 	UI_Label L1("L1");
@@ -1284,10 +1284,10 @@ TEST_CASE("Edit Date Data", "[Chapter]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
-	auto q_dwellingSpells = QueryF_T<R_Spell>{ db.tableQuery(TB_Spell), 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_SpellsForDwelling = QueryF_T<R_Spell>{ db.tableQuery(TB_Spell), 1 };
 
 	cout << " **** Next create DB Record Interfaces ****\n";
 	auto _recDwelling = RecInt_Dwelling{};
@@ -1295,16 +1295,16 @@ TEST_CASE("Edit Date Data", "[Chapter]") {
 	auto _recProg = RecInt_Program{};
 	auto _recSpell = RecInt_Spell{};
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
-	auto ds_dwSpells = Dataset_Spell(_recSpell, q_dwellingSpells, &ds_dwellings);
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset(_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
+	auto ds_dwSpells = Dataset_Spell(_recSpell, q_SpellsForDwelling, &ds_dwellings);
 
 	cout << " **** Next create DB UIs ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name);
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name);
-	auto zoneFactorUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_timeConst);
+	auto zoneFactorUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_timeConst);
 	auto dwellSpellUI_c = UI_FieldData(&ds_dwSpells, RecInt_Spell::e_date);
 
 	// UI Elements
@@ -1529,19 +1529,17 @@ SCENARIO("Iterated View-all Variants UD_A", "[Chapter]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ 0 };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_name, {V + S + VnLR + UD_A} };
-	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_abbrev, {V+S+ UD_A} };
-	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_offset, {V} };
-	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_ratio, {V+S+ UD_A} };
-	auto _allZoneTC_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_timeConst, {V+S+ UD_A+ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + S + VnLR + UD_A} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_abbrev, {V+S+ UD_A} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_ratio, {V+S+ UD_A} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_timeConst, {V+S+ UD_A+ER0} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
@@ -1704,19 +1702,17 @@ SCENARIO("Iterated View-all Variants UD_C", "[Chapter]") {
 	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ 0 };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_name, {V + S + VnLR + UD_C +R0} };
-	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_abbrev, {V+S} };
-	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_offset, {V} };
-	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_ratio, {V+S} };
-	auto _allZoneTC_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_timeConst, {V+S+ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + S + VnLR + UD_C +R0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_abbrev, {V+S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_ratio, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_timeConst, {V+S+ER0} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
@@ -1773,19 +1769,17 @@ SCENARIO("Iterated View-all Variants UD_E", "[Chapter]") {
 	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ 0 };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_name, {V + S + VnLR + UD_E + R0 + ER0} };
-	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_abbrev, {V+S} };
-	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_offset, {V} };
-	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_ratio, {V+S} };
-	auto _allZoneTC_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_timeConst, {V+S+ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + S + VnLR + UD_E + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_abbrev, {V+S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_ratio, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_timeConst, {V+S+ER0} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
@@ -1854,19 +1848,17 @@ SCENARIO("Iterated View-all Variants UD_S", "[Chapter]") {
 	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ 0 };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_name, {V + S + VnLR + UD_S + R0 + ER0} };
-	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_abbrev, {V+S} };
-	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_offset, {V} };
-	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_ratio, {V+S} };
-	auto _allZoneTC_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_timeConst, {V+S+ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + S + VnLR + UD_S + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_abbrev, {V+S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_ratio, {V+S} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_timeConst, {V+S+ER0} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
@@ -1927,19 +1919,17 @@ SCENARIO("Iterated SingleSel Variants UD_A", "[Chapter]") {
 	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ 0 };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_name, {V + S + VnLR + UD_C + R0 + ER0} };
-	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_abbrev, {V} };
-	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_offset, {V} };
-	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_ratio, {V} };
-	auto _allZoneTC_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_timeConst, {V} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + S + VnLR + UD_C + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_abbrev, {V} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_ratio, {V} };
+	auto _allZoneTC_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_timeConst, {V} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
@@ -1994,19 +1984,17 @@ SCENARIO("Iterated UD_C with Alternative UP Action", "[Chapter]") {
 	Zone zoneArr[] = { {callTS[0],17, relays[0]},{callTS[1],20,relays[1]},{callTS[2],45,relays[2]},{callTS[3],21,relays[3]} };
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ 0 };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_name, {V + S + VnLR + R0 + ER0} };
-	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_abbrev, {V + S} };
-	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_offset, {V} };
-	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_ratio, {V+S}};
-	auto _allZoneTC_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_timeConst, {V+S + UD_C} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + S + VnLR + R0 + ER0} };
+	auto _allZoneAbbrev_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_abbrev, {V + S} };
+	auto _allZoneOffset_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_offset, {V} };
+	auto _allZoneRatio_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_ratio, {V+S}};
+	auto _allZoneTC_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_timeConst, {V+S + UD_C} };
 	
 	auto _iterated_AllZones_c = UI_IteratedCollection<5>{ 80, makeCollection(_allZoneNames_UI_c,_allZoneAbbrev_UI_c,_allZoneOffset_UI_c,_allZoneRatio_UI_c,_allZoneTC_UI_c) };
 
@@ -2068,18 +2056,16 @@ SCENARIO("Iterated Request Temps - Change Temp", "[Chapter]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ zoneArr };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneReqTemp_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_E +ER0} };
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_name, {V + V1} };
-	auto _allZoneIsTemp_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_isTemp, {V + V1} };
-	auto _allZoneIsHeating_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_isHeating, {V + V1} };
+	auto _allZoneReqTemp_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_E +ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + V1} };
+	auto _allZoneIsTemp_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_isTemp, {V + V1} };
+	auto _allZoneIsHeating_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_isHeating, {V + V1} };
 	
 	auto _reqestTemp = UI_Label{ "Req$`" };
 	auto _is = UI_Label{ "is:`" };
@@ -2159,18 +2145,16 @@ SCENARIO("Iterated Request Temps - Change Profile", "[Chapter]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_zones = db.tableQuery(TB_Zone);
-	auto _q_zoneChild = QueryM_T(db.tableQuery(TB_Zone));
+	auto q_Zones = db.tableQuery(TB_Zone);
 
 	auto _recZone = RecInt_Zone{ zoneArr };
 
-	auto ds_zones = Dataset(_recZone, q_zones);
-	auto ds_zone_child = Dataset(_recZone, _q_zoneChild, &ds_zones);
+	auto ds_Zones = Dataset(_recZone, q_Zones);
 
-	auto _allZoneReqTemp_UI_c = UI_FieldData{ &ds_zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_A +ER0} };
-	auto _allZoneNames_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_name, {V + V1} };
-	auto _allZoneIsTemp_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_isTemp, {V + V1} };
-	auto _allZoneIsHeating_UI_c = UI_FieldData{ &ds_zone_child, RecInt_Zone::e_isHeating, {V + V1} };
+	auto _allZoneReqTemp_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_A +ER0} };
+	auto _allZoneNames_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_name, {V + V1} };
+	auto _allZoneIsTemp_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_isTemp, {V + V1} };
+	auto _allZoneIsHeating_UI_c = UI_FieldData{ &ds_Zones, RecInt_Zone::e_isHeating, {V + V1} };
 	
 	auto _reqestTemp = UI_Label{ "Req$`" };
 	auto _is = UI_Label{ "is:`" };
@@ -2238,20 +2222,20 @@ TEST_CASE("Cmd-Menu", "[Display]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_DwellingZone), &db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryFL_T<R_Program>{ &db.tableQuery(TB_Program) , 1 };
-	auto q_dwellingSpells = QueryFL_T<R_Spell>{ &db.tableQuery(TB_Spell), 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ &db.tableQuery(TB_DwellingZone), &db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryFL_T<R_Program>{ &db.tableQuery(TB_Program) , 1 };
+	auto q_SpellsForDwelling = QueryFL_T<R_Spell>{ &db.tableQuery(TB_Spell), 1 };
 
 	cout << " **** Next create DB Record Interface ****\n";
-	auto rec_dwelling = Dataset_Dwelling(q_dwellings, noVolData, 0);
-	auto rec_dwZone = Dataset_Zone(q_dwellingZones, noVolData, &ds_dwellings);
-	auto rec_dwProgs = Dataset_Program(q_dwellingProgs, noVolData, &ds_dwellings);
-	auto rec_dwSpells = Dataset_Spell(q_dwellingSpells, noVolData, &ds_dwellings);
+	auto rec_dwelling = Dataset_Dwelling(q_Dwellings, noVolData, 0);
+	auto rec_dwZone = Dataset_Zone(q_ZonesForDwelling, noVolData, &ds_dwellings);
+	auto rec_dwProgs = Dataset_Program(q_ProgsForDwelling, noVolData, &ds_dwellings);
+	auto rec_dwSpells = Dataset_Spell(q_SpellsForDwelling, noVolData, &ds_dwellings);
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name);
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name);
 	auto dwellSpellUI_c = UI_FieldData(&ds_dwSpells, RecInt_Spell::e_date);
 
@@ -2311,15 +2295,15 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
-	auto q_dwellingSpells = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
-	auto q_spellProgs = QueryLinkF_T<R_Spell, R_Program> { q_dwellingSpells, db.tableQuery(TB_Program), 1 ,1 };
-	auto q_spellProg = QueryML_T<R_Spell>{ db.tableQuery(TB_Spell), q_spellProgs, 0 };
-	auto q_progProfiles = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 0 };
-	auto q_zoneProfiles = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
-	auto q_profile = QueryF_T<R_Profile>{ q_zoneProfiles, 0 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_SpellsForDwelling = QueryLF_T<R_Spell, R_Program>{ db.tableQuery(TB_Spell), db.tableQuery(TB_Program), 1, 1 };
+	auto q_ProgsForSpellDwelling = QueryLinkF_T<R_Spell, R_Program> { q_SpellsForDwelling, db.tableQuery(TB_Program), 1 ,1 };
+	auto q_ProgForSpell = QueryML_T<R_Spell>{ db.tableQuery(TB_Spell), q_ProgsForSpellDwelling, 0 };
+	auto q_ProfilesForProg = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 0 };
+	auto q_ProfilesForZone = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
+	auto q_ProfilesForZoneProg = QueryF_T<R_Profile>{ q_ProfilesForZone, 0 };
 
 	auto _recDwelling = RecInt_Dwelling{};
 	auto _recZone = RecInt_Zone{ 0 };
@@ -2327,15 +2311,15 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto _recSpell = RecInt_Spell{};
 	auto _recProfile = RecInt_Profile{};
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
-	auto ds_dwSpells = Dataset_Spell(_recSpell, q_dwellingSpells, &ds_dwellings);
-	auto ds_spellProg = Dataset_Program(_recProg, q_spellProg, &ds_dwSpells);
-	auto ds_profile = Dataset_Profile{ _recProfile, q_profile, &ds_dwProgs, &ds_dwZones };
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset(_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
+	auto ds_dwSpells = Dataset_Spell(_recSpell, q_SpellsForDwelling, &ds_dwellings);
+	auto ds_spellProg = Dataset_Program(_recProg, q_ProgForSpell, &ds_dwSpells);
+	auto ds_profile = Dataset_Profile{ _recProfile, q_ProfilesForZoneProg, &ds_dwProgs, &ds_ZonesForDwelling };
 
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneNameUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_name,{V+S+VnLR+UD_C+R0});
+	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name,{V+S+VnLR+UD_C+R0});
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name, {V + S + VnLR + UD_C + R0});
 	auto dwellSpellUI_c = UI_FieldData(&ds_dwSpells, RecInt_Spell::e_date, { V + S + V1 + UD_E });
 	auto spellProgUI_c = UI_FieldData(&ds_spellProg, RecInt_Program::e_name, { V + S +L+ V1+UD_A+ER+EA });
@@ -2388,11 +2372,11 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
-	for (Answer_R<R_Program>program : q_dwellingProgs) {
+	for (Answer_R<R_Program>program : q_ProgsForDwelling) {
 		cout << (int)program.id() << " " << program.rec().name << endl;
 	}
 
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+	for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 	}
 	cout << endl;
@@ -2458,11 +2442,11 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 		display1_h.rec_select();
 
 		cout << "\n **** Saved Modified first spell ****\n\n";
-		for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+		for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 			logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 		}
 		cout << "\n **** Spell-Progs ****\n\n";
-		for (Answer_R<R_Program> prog : q_spellProg) {
+		for (Answer_R<R_Program> prog : q_ProgForSpell) {
 			logger() << (int)prog.id() << ": " << prog.rec() << L_endl;
 		}
 
@@ -2489,7 +2473,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 					display1_h.stream(tb);
 					CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 10:20pm 03Aug  At Home");
 					cout << "\n **** Cancelled insert spell ****\n\n";
-					for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+					for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 						logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 					}
 					THEN("Selecting 'From' allows insertion of a new spell before the current displayed spell") {
@@ -2508,7 +2492,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 							CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  #At Work");
 							display1_h.rec_select();
 							cout << "\n **** inserted spell before first ****\n\n";
-							for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+							for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 								logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 							}
 							CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    From 10:20pm 02Aug  At Wor_k");
@@ -2521,13 +2505,13 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 								CHECK(test_stream(display1_h.stream(tb)) == "House   Insert-Prog From 10:20pm 0#4Aug  At Work");
 
 								cout << "\n Before save Insert new spell after first...\n";
-								for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+								for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 								}
 
 								display1_h.rec_select();
 								cout << "\n After save Insert new spell after first...\n";
-								for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+								for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 									logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 								}
 
@@ -2549,11 +2533,11 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 									display1_h.rec_select();
 
 									cout << "\n Edit last spell...\n";
-									for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+									for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 										logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 									}
 									cout << "\n SpellProgs...\n";
-									for (Answer_R<R_Program> prog : q_spellProg) {
+									for (Answer_R<R_Program> prog : q_ProgForSpell) {
 										logger() << (int)prog.id() << ": " << prog.rec() << L_endl;
 									}
 
@@ -2570,7 +2554,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 										CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 20Oct  Away   ");
 
 										cout << "\n Insert new spell before last...\n";
-										for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+										for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 											logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 										}
 
@@ -2585,7 +2569,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 											CHECK(test_stream(display1_h.stream(tb)) == "House   Calendar    Fro_m 03:00pm 24Oct  Away   ");
 
 											cout << "\n All spells after last...\n";
-											for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+											for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 												logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 											}
 											cout << test_stream(display1_h.stream(tb)) << endl;
@@ -2674,7 +2658,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 		CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Occup'_d");
 
 		cout << "\n Appt spells  Before Change program...\n";
-		for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+		for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 			logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 		}
 
@@ -2689,7 +2673,7 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 			CHECK(test_stream(display1_h.stream(tb)) == "HolAppt Calendar    From Now            Empt_y  ");
 
 			cout << "\n Appt spells After Change program...\n";
-			for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+			for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 				logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 			}
 			cout << "\n All spells After Change program...\n";
@@ -2745,12 +2729,12 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingZones = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
-	auto q_zoneProfiles = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
-	auto q_progProfiles = QueryF_T<R_Profile>(q_zoneProfiles, 0);
-	auto q_profile = QueryF_T<R_Profile>{ q_zoneProfiles, 0 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_DwellingZone), db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_ProfilesForZone = QueryF_T<R_Profile>{ db.tableQuery(TB_Profile), 1 };
+	auto q_ProfilesForProg = QueryF_T<R_Profile>(q_ProfilesForZone, 0);
+	auto q_ProfilesForZoneProg = QueryF_T<R_Profile>{ q_ProfilesForZone, 0 };
 
 	auto _recDwelling = RecInt_Dwelling{};
 	auto _recZone = RecInt_Zone{ 0 };
@@ -2759,14 +2743,14 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	auto _recProfile = RecInt_Profile{};
 
 	cout << " **** Next create DB Record Interface ****\n";
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
-	auto ds_profile = Dataset_Profile(_recProfile, q_profile, &ds_dwProgs, &ds_dwZones);
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset(_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
+	auto ds_profile = Dataset_Profile(_recProfile, q_ProfilesForZoneProg, &ds_dwProgs, &ds_ZonesForDwelling);
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
-	auto zoneAbbrevUI_c = UI_FieldData(&ds_dwZones, RecInt_Zone::e_abbrev, {V+S+V1+UD_A+R});
+	auto zoneAbbrevUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_abbrev, {V+S+V1+UD_A+R});
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name, {V+S+V1+UD_A+R+IR0});
 	auto profileDaysUI_c = UI_FieldData(&ds_profile, RecInt_Profile::e_days, {V+S+V1+UD_A+R+ER}, RecInt_Program::e_id);
 
@@ -2857,15 +2841,15 @@ SCENARIO("View-one Program and Iterated Programs", "[Display]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = db.tableQuery(TB_Dwelling);
-	auto q_dwellingProgs = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
+	auto q_Dwellings = db.tableQuery(TB_Dwelling);
+	auto q_ProgsForDwelling = QueryF_T<R_Program>{ db.tableQuery(TB_Program) , 1 };
 
 	cout << " **** Next create DB Record Interface ****\n";
 	auto _recDwelling = RecInt_Dwelling{};
 	auto _recProg = RecInt_Program{};
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
 
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
@@ -2941,8 +2925,8 @@ TEST_CASE("Contrast", "[Display]") {
 
 	RDB<TB_NoOfTables>_db(RDB_START_ADDR, EEPROM_SIZE, writer, reader, VERSION);
 	setFactoryDefaults(_db, VERSION);
-	RelationalDatabase::TableQuery _q_displays(_db.tableQuery(TB_Display));
-	HardwareInterfaces::LocalDisplay mainDisplay(&_q_displays);
+	RelationalDatabase::TableQuery _q_Displays(_db.tableQuery(TB_Display));
+	HardwareInterfaces::LocalDisplay mainDisplay(&_q_Displays);
 
 	// Basic UI Elements
 	client_data_structures::Contrast_Brightness_Cmd _contrastCmd{ "Contrast",0, Behaviour{V + S + L+V1 + UD_C} };
@@ -2986,12 +2970,12 @@ TEST_CASE("TimeTemps", "[Display]") {
 	setFactoryDefaults(_db, VERSION);
 
 	cout << "\tand some Queries are created" << endl;
-	auto q_dwellings = _db.tableQuery(TB_Dwelling);
-	auto q_dwellingProgs = QueryF_T<client_data_structures::R_Program>{ _db.tableQuery(TB_Program), 1 };
-	auto q_dwellingZones = QueryFL_T<client_data_structures::R_DwellingZone>{ _db.tableQuery(TB_DwellingZone), _db.tableQuery(TB_Zone), 0, 1 };
-	auto q_zoneProfiles = QueryF_T<client_data_structures::R_Profile>{ _db.tableQuery(TB_Profile), 1 };
-	auto q_profile = QueryF_T<client_data_structures::R_Profile>{ q_zoneProfiles, 0 };
-	auto q_timeTemps = QueryF_T<R_TimeTemp>{ _db.tableQuery(TB_TimeTemp) , 0 };
+	auto q_Dwellings = _db.tableQuery(TB_Dwelling);
+	auto q_ProgsForDwelling = QueryF_T<client_data_structures::R_Program>{ _db.tableQuery(TB_Program), 1 };
+	auto q_ZonesForDwelling = QueryFL_T<client_data_structures::R_DwellingZone>{ _db.tableQuery(TB_DwellingZone), _db.tableQuery(TB_Zone), 0, 1 };
+	auto q_ProfilesForZone = QueryF_T<client_data_structures::R_Profile>{ _db.tableQuery(TB_Profile), 1 };
+	auto q_ProfilesForZoneProg = QueryF_T<client_data_structures::R_Profile>{ q_ProfilesForZone, 0 };
+	auto q_TimeTempsForProfile = QueryF_T<R_TimeTemp>{ _db.tableQuery(TB_TimeTemp) , 0 };
 
 	cout << " **** Next create DB Record Interface ****\n";
 	auto _recDwelling = RecInt_Dwelling{};
@@ -3000,11 +2984,11 @@ TEST_CASE("TimeTemps", "[Display]") {
 	auto _recProfile = RecInt_Profile{};
 	auto _recTimeTemp = RecInt_TimeTemp();
 
-	auto ds_dwellings = Dataset(_recDwelling, q_dwellings);
-	auto ds_dwZones = Dataset(_recZone, q_dwellingZones, &ds_dwellings);
-	auto ds_dwProgs = Dataset_Program(_recProg, q_dwellingProgs, &ds_dwellings);
-	auto ds_profile = Dataset_Profile(_recProfile, q_profile, &ds_dwProgs, &ds_dwZones);
-	auto ds_timeTemps = Dataset{ _recTimeTemp, q_timeTemps, &ds_profile };
+	auto ds_dwellings = Dataset(_recDwelling, q_Dwellings);
+	auto ds_ZonesForDwelling = Dataset(_recZone, q_ZonesForDwelling, &ds_dwellings);
+	auto ds_dwProgs = Dataset_Program(_recProg, q_ProgsForDwelling, &ds_dwellings);
+	auto ds_profile = Dataset_Profile(_recProfile, q_ProfilesForZoneProg, &ds_dwProgs, &ds_ZonesForDwelling);
+	auto ds_timeTemps = Dataset{ _recTimeTemp, q_TimeTempsForProfile, &ds_profile };
 
 	cout << "\n **** Next create DB UI LazyCollections ****\n";
 	cout << "\n\tdwelling\n";
@@ -3012,7 +2996,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	cout << "\tprogram\n";
 	auto _progNameUI_c = UI_FieldData{ &ds_dwProgs, RecInt_Program::e_name, {V + S + V1 + UD_A + R} };
 	cout << "\tzone\n";
-	auto _dwZoneAbbrevUI_c = UI_FieldData{ &ds_dwZones, RecInt_Zone::e_abbrev, {V + S + V1 + UD_A + R} };
+	auto _dwZoneAbbrevUI_c = UI_FieldData{ &ds_ZonesForDwelling, RecInt_Zone::e_abbrev, {V + S + V1 + UD_A + R} };
 	cout << "\tprofile\n";
 	auto _profileDaysUI_c = UI_FieldData{ &ds_profile, RecInt_Profile::e_days, {V + S + V1 + UD_A + R + ER}, RecInt_Program::e_id };
 	cout << "\ttimeTemp\n";
@@ -3036,8 +3020,6 @@ TEST_CASE("TimeTemps", "[Display]") {
 	_newTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
 	_timeTempUI_c.set_OnSelFn_TargetUI(&_editTTCmd);
 
-	auto display1_h = A_Top_UI(display1_c);
-
 	ui_Objects()[(long)&_dwellNameUI_c] = "dwellNameUI_c";
 	ui_Objects()[(long)&_dwZoneAbbrevUI_c] = "_dwZoneAbbrevUI_c";
 	ui_Objects()[(long)&_progNameUI_c] = "progNameUI_c";
@@ -3052,6 +3034,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 	ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
 	ui_Objects()[(long)&display1_c] = "display1_c";
 
+	auto display1_h = A_Top_UI(display1_c);
 
 	cout << "\n **** All Constructed ****\n\n";
 	GIVEN("we can scroll into a TT") {
@@ -3066,7 +3049,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 		display1_h.rec_left_right(1);
 		CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a1_5 1100p19");
 		THEN("up-dn edits the temp") {
-			for (Answer_R<R_TimeTemp> tt : q_timeTemps) {
+			for (Answer_R<R_TimeTemp> tt : q_TimeTempsForProfile) {
 				logger() << (int)tt.id() << " : " << tt.rec() << L_endl;
 			}
 			display1_h.rec_up_down(-1);
@@ -3076,7 +3059,7 @@ TEST_CASE("TimeTemps", "[Display]") {
 				CHECK(test_stream(display1_h.stream(tb)) == "House   At Home US  MTWTFSS             0730a16 1100p1#9");
 				AND_THEN("SELECT when in EDIT saves the temp") {
 					display1_h.rec_select();
-					for (Answer_R<R_TimeTemp> tt : q_timeTemps) {
+					for (Answer_R<R_TimeTemp> tt : q_TimeTempsForProfile) {
 						logger() << (int)tt.id() << " : " << tt.rec() << L_endl;
 					}
 					cout << test_stream(display1_h.stream(tb)) << endl;
@@ -3252,8 +3235,8 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	//											 Line[0]			 Line[1]			 Line[2]			 Line[3]
 	cout << test_stream(display1_h.stream(tb)) << endl;
 
-	auto q_dwellingSpells = hs.getDB().tableQuery(TB_Spell);
-	for (Answer_R<R_Spell> spell : q_dwellingSpells) {
+	auto q_SpellsForDwelling = hs.getDB().tableQuery(TB_Spell);
+	for (Answer_R<R_Spell> spell : q_SpellsForDwelling) {
 		logger() << (int)spell.id() << ": " << spell.rec() << L_endl;
 	}
 	display1_h.rec_up_down(-1);
@@ -3285,7 +3268,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_prevUI();
 	display1_h.rec_up_down(1);
 
-	auto q_TimeTemps = hs.getQueries()._q_timeTemps;
+	auto q_TimeTemps = hs.getQueries()._q_TimeTempsForProfile;
 	q_TimeTemps.setMatchArg(0);
 	cout << "House, At Home, US, TT's\n";
 	for (Answer_R<R_TimeTemp> tt : q_TimeTemps) {
@@ -3456,7 +3439,7 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 	auto showActive = [](auto & ui) {
 		for (auto & obj : *ui->get()->collection()) {
 			UI_FieldData & fieldData = static_cast<UI_FieldData &>(obj);
-			cout << ui_Objects()[(long)&fieldData] << "\tFocus: " << fieldData.focusIndex() << " RecID: " << fieldData.data()->recordID() << endl;
+			cout << ui_Objects()[(long)&fieldData] << "\tFocus: " << fieldData.focusIndex() << " RecID: " << fieldData.data()->ds_recordID() << endl;
 		}
 	};
 

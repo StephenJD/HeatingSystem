@@ -28,27 +28,27 @@ namespace Assembly {
 		client_data_structures::RecInt_Dwelling		_recDwelling;
 		client_data_structures::RecInt_Zone			_recZone;
 		client_data_structures::RecInt_Program		_recProg;
-		client_data_structures::RecInt_Spell			_recSpell;
+		client_data_structures::RecInt_Spell		_recSpell;
 		client_data_structures::RecInt_Profile		_recProfile;
 		client_data_structures::RecInt_TimeTemp		_recTimeTemp;
-		client_data_structures::RecInt_TempSensor		_recTempSensor;
-		client_data_structures::RecInt_TowelRail		_recTowelRail;
-		client_data_structures::RecInt_Relay			_recRelay;
+		client_data_structures::RecInt_TempSensor	_recTempSensor;
+		client_data_structures::RecInt_TowelRail	_recTowelRail;
+		client_data_structures::RecInt_Relay		_recRelay;
 
 		// RDB Queries
-		RelationalDatabase::TableQuery _q_displays;
-		RelationalDatabase::TableQuery _q_dwellings;
-		RelationalDatabase::TableQuery _q_zones;
-		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_dwellingZones;
-		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_zoneDwellings;
-		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_dwellingProgs;
-		RelationalDatabase::QueryLF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_dwellingSpells;
-		RelationalDatabase::QueryLinkF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_spellProgs;
-		RelationalDatabase::QueryML_T<client_data_structures::R_Spell> _q_spellProg;
-		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_progProfiles;
-		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_zoneProfiles;
-		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_profile;
-		RelationalDatabase::QueryF_T<client_data_structures::R_TimeTemp> _q_timeTemps;
+		RelationalDatabase::TableQuery _q_Displays;
+		RelationalDatabase::TableQuery _q_Dwellings;
+		RelationalDatabase::TableQuery _q_Zones;
+		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_ZonesForDwelling;
+		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> _q_DwellingsForZone;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Program> _q_ProgsForDwelling;
+		RelationalDatabase::QueryLF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_SpellsForDwelling;
+		RelationalDatabase::QueryLinkF_T<client_data_structures::R_Spell, client_data_structures::R_Program> _q_ProgsForSpellDwelling;
+		RelationalDatabase::QueryML_T<client_data_structures::R_Spell> _q_ProgForSpell;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_ProfilesForProg;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_ProfilesForZone;
+		RelationalDatabase::QueryF_T<client_data_structures::R_Profile> _q_ProfilesForZoneProg;
+		RelationalDatabase::QueryF_T<client_data_structures::R_TimeTemp> _q_TimeTempsForProfile;
 		RelationalDatabase::TableQuery _q_tempSensors;
 		RelationalDatabase::TableQuery _q_towelRail;
 		RelationalDatabase::TableQuery _q_relay;
@@ -56,8 +56,8 @@ namespace Assembly {
 		// DB Datasets
 		client_data_structures::Dataset _ds_currTime;
 		client_data_structures::Dataset _ds_dwellings;
-		client_data_structures::Dataset _ds_zones;
-		client_data_structures::Dataset _ds_dwZones;
+		client_data_structures::Dataset _ds_Zones;
+		client_data_structures::Dataset _ds_ZonesForDwelling;
 		client_data_structures::Dataset_Program _ds_dwProgs;
 		client_data_structures::Dataset_Spell _ds_dwSpells;
 		client_data_structures::Dataset_Program _ds_spellProg;

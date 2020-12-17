@@ -183,14 +183,14 @@ namespace client_data_structures {
 		auto ttUI_h = enableCmds(e_none);
 		auto ttData = static_cast<UI_FieldData *>(ttUI_h->activeUI()->get()->collection());
 		if (_hasInsertedNew) {
-			auto thisTT = ttData->data()->recordID();
+			auto thisTT = ttData->data()->ds_recordID();
 			bool isOnlyTT = ttData->data()->last() == ttData->data()->query().begin().id();
 			if (!isOnlyTT) {
 				ttData->data()->move_to(thisTT);
 				ttData->deleteData();
 			}
 		}
-		ttData->setFocusIndex(ttData->data()->recordID());
+		ttData->setFocusIndex(ttData->data()->ds_recordID());
 		return backUI()->on_back();
 	}
 }

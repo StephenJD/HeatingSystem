@@ -96,7 +96,7 @@ namespace LCD_UI {
 			appendPos = inserted_a_list_start_char(appendPos);
 		}
 		if (nextFieldFits(appendPos)) {
-			if (cursorMode != CursorMode::e_unselected) {
+			if (cursorMode > CursorMode::e_unselected) {
 				setCursor(appendPos);
 			}
 			appendPos = appendField(appendPos);

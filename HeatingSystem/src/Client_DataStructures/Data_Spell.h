@@ -67,7 +67,7 @@ namespace client_data_structures {
 		RecInt_Spell();
 		I_Data_Formatter * getField(int fieldID) override;
 		int recordFieldVal(int selectFieldID) const override { 
-			return record().rec().field(selectFieldID);
+			return answer().rec().field(selectFieldID);
 		}
 	private:
 		DateTimeWrapper _startDate; // size is 32 bits.

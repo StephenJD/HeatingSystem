@@ -54,6 +54,7 @@ namespace LCD_UI {
 		void setEachPageElementToItsFocus(I_SafeCollection & colln);
 		void set_CursorUI_from(Collection_Hndl * topUI);
 		Collection_Hndl * innerMost(Collection_Hndl* collHdlPtr, bool (*predicate)(Collection_Hndl* tryColl));
+		Collection_Hndl * uiField(Collection_Hndl* collHdlPtr);
 		Collection_Hndl * set_leftRightUI_from(Collection_Hndl * topUI, int direction);
 		void set_UpDownUI_from(Collection_Hndl * topUI);
 		void notifyAllOfFocusChange(Collection_Hndl * topUI);

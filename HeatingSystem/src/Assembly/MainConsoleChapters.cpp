@@ -17,16 +17,16 @@ namespace Assembly {
 		, _dstUI_c{ &db._ds_currTime, RecInt_CurrDateTime::e_dst, {V+S+V1+UD_E+R0} }
 		, _SDCardUI_c{ &db._ds_currTime, RecInt_CurrDateTime::e_sdcard, {V + L0} }
 		, _dwellNameUI_c { &db._ds_dwellings, RecInt_Dwelling::e_name }
-		, _dwZoneNameUI_c{ &db._ds_dwZones, RecInt_Zone::e_name, {V + S + VnLR + UD_C + R0} }
-		, _dwZoneAbbrevUI_c{ &db._ds_dwZones, RecInt_Zone::e_abbrev}
-		, _allZoneAbbrevUI_c{ &db._ds_zones, RecInt_Zone::e_abbrev}
-		, _allZoneReqTemp_UI_c{ &db._ds_zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_A + R0 + ER0} }
-		, _allZoneNames_UI_c{ &db._ds_zones, RecInt_Zone::e_name, {V + V1} }
-		, _allZoneIsTemp_UI_c{ &db._ds_zones, RecInt_Zone::e_isTemp, {V + V1} }
-		, _allZoneIsHeating_UI_c{ &db._ds_zones, RecInt_Zone::e_isHeating, {V + V1} }
-		, _zoneManAuto_c{ &db._ds_zones, RecInt_Zone::e_quality }
-		, _zoneRatio_c{ &db._ds_zones, RecInt_Zone::e_ratio }
-		, _zoneTimeConst_c{ &db._ds_zones, RecInt_Zone::e_timeConst }
+		, _dwZoneNameUI_c{ &db._ds_ZonesForDwelling, RecInt_Zone::e_name, {V + S + VnLR + UD_C + R0} }
+		, _dwZoneAbbrevUI_c{ &db._ds_ZonesForDwelling, RecInt_Zone::e_abbrev}
+		, _allZoneAbbrevUI_c{ &db._ds_Zones, RecInt_Zone::e_abbrev}
+		, _allZoneReqTemp_UI_c{ &db._ds_Zones, RecInt_Zone::e_reqTemp ,{V + S + VnLR + UD_A + R0 + ER0} }
+		, _allZoneNames_UI_c{ &db._ds_Zones, RecInt_Zone::e_name, {V + V1} }
+		, _allZoneIsTemp_UI_c{ &db._ds_Zones, RecInt_Zone::e_isTemp, {V + V1} }
+		, _allZoneIsHeating_UI_c{ &db._ds_Zones, RecInt_Zone::e_isHeating, {V + V1} }
+		, _zoneManAuto_c{ &db._ds_Zones, RecInt_Zone::e_quality }
+		, _zoneRatio_c{ &db._ds_Zones, RecInt_Zone::e_ratio }
+		, _zoneTimeConst_c{ &db._ds_Zones, RecInt_Zone::e_timeConst }
 
 		, _progNameUI_c{ &db._ds_dwProgs, RecInt_Program::e_name, {V+S+V1+UD_A+R} }
 		, _dwellSpellUI_c{ &db._ds_dwSpells, RecInt_Spell::e_date, {V + S + V1 + UD_E} }

@@ -47,8 +47,8 @@ namespace Assembly {
 		};
 
 		auto getFirstTT_for_profile = [this](RecordID& profileID)->R_TimeTemp {
-			queries()._q_timeTemps.setMatchArg(profileID);
-			Answer_R<R_TimeTemp> timeTemp = *queries()._q_timeTemps.begin();
+			queries()._q_TimeTempsForProfile.setMatchArg(profileID);
+			Answer_R<R_TimeTemp> timeTemp = *queries()._q_TimeTempsForProfile.begin();
 			//cout << timeTemp.rec() << endl;
 			return timeTemp.rec();
 		};
@@ -72,8 +72,8 @@ namespace Assembly {
 			auto nextDayProfileID = RecordID{};
 			auto next_tt = R_TimeTemp{};
 			auto currentTempRequest = TimeTemp{}.temp();
-			queries()._q_zoneDwellings.setMatchArg(zone.id());
-			for (Answer_R<R_Dwelling> dwelling : queries()._q_zoneDwellings) {
+			queries()._q_DwellingsForZone.setMatchArg(zone.id());
+			for (Answer_R<R_Dwelling> dwelling : queries()._q_DwellingsForZone) {
 				logger() << "\t\t" << dwelling.rec();
 				auto currTT = currentTT_forThisProfile(zone.zoneRecord(), dwelling.id(), nextSpell, currentProgID, currentProfileID, nextDayProfileID, next_tt);
 				logger() << F("\n\t\t\tThis ") << currTT
@@ -122,9 +122,9 @@ namespace Assembly {
 	// Private functions called by nextEvent()
 
 	auto Sequencer::getCurrentSpell(RecordID dwellingID, R_Spell& nextSpell) -> R_Spell {
-		queries()._q_dwellingSpells.setMatchArg(dwellingID);
+		queries()._q_SpellsForDwelling.setMatchArg(dwellingID);
 		Answer_R<R_Spell> prevSpell{};
-		for (Answer_R<R_Spell> spell : queries()._q_dwellingSpells) {
+		for (Answer_R<R_Spell> spell : queries()._q_SpellsForDwelling) {
 			if (spell.rec() > clock_().now()) {
 				nextSpell = spell.rec();
 				break;
@@ -133,17 +133,17 @@ namespace Assembly {
 			prevSpell = spell;
 			nextSpell = spell.rec();
 		}
-		if (prevSpell.status() != TB_OK) prevSpell = *queries()._q_dwellingSpells.begin();
+		if (prevSpell.status() != TB_OK) prevSpell = *queries()._q_SpellsForDwelling.begin();
 		return prevSpell.rec();
 	}
 
 	auto Sequencer::getCurrentProfileID(RecordID zoneID, RecordID progID, RecordID& nextDayProfileID)->RecordID {
-		queries()._q_zoneProfiles.setMatchArg(zoneID);
-		queries()._q_profile.setMatchArg(progID);
+		queries()._q_ProfilesForZone.setMatchArg(zoneID);
+		queries()._q_ProfilesForZoneProg.setMatchArg(progID);
 		auto dayFlag = clock_().now().weekDayFlag();
 		auto nextDayFlag = clock_().now().addDays(1).weekDayFlag();
 		RecordID currProfileID = -1;
-		for (Answer_R<R_Profile> profile : queries()._q_profile) {
+		for (Answer_R<R_Profile> profile : queries()._q_ProfilesForZoneProg) {
 			if (profile.rec().days & dayFlag) {
 				currProfileID = profile.id();
 			}
@@ -155,12 +155,12 @@ namespace Assembly {
 	}
 
 	auto Sequencer::getStartProfileID_for_Spell(R_Spell spell, RecordID zoneID, RecordID& prevDayProfileID)->RelationalDatabase::RecordID {
-		queries()._q_zoneProfiles.setMatchArg(zoneID);
-		queries()._q_profile.setMatchArg(spell.programID);
+		queries()._q_ProfilesForZone.setMatchArg(zoneID);
+		queries()._q_ProfilesForZoneProg.setMatchArg(spell.programID);
 		auto startDayFlag = spell.date.weekDayFlag();
 		auto prevDayFlag = clock_().now().addDays(-1).weekDayFlag();
 		RecordID currProfileID = -1;
-		for (Answer_R<R_Profile> profile : queries()._q_profile) {
+		for (Answer_R<R_Profile> profile : queries()._q_ProfilesForZoneProg) {
 			if (profile.rec().days & startDayFlag) {
 				currProfileID = profile.id();
 			}
@@ -172,10 +172,10 @@ namespace Assembly {
 	}
 
 	auto Sequencer::getCurrentTT(RecordID profileID, R_TimeTemp& next_tt)->R_TimeTemp {
-		queries()._q_timeTemps.setMatchArg(profileID);
+		queries()._q_TimeTempsForProfile.setMatchArg(profileID);
 		auto curr_tt = R_TimeTemp{};
 		auto currTime = clock_().now().time();
-		for (Answer_R<R_TimeTemp> timeTemp : queries()._q_timeTemps) {
+		for (Answer_R<R_TimeTemp> timeTemp : queries()._q_TimeTempsForProfile) {
 			//cout << timeTemp.rec() << endl;
 			if (timeTemp.rec().time() > currTime) {
 				next_tt = timeTemp.rec();
@@ -189,9 +189,9 @@ namespace Assembly {
 	}
 
 	auto Sequencer::getTT_for_Time(TimeOnly time, RecordID profileID, RecordID prevDayProfileID)->R_TimeTemp {
-		queries()._q_timeTemps.setMatchArg(profileID);
+		queries()._q_TimeTempsForProfile.setMatchArg(profileID);
 		auto curr_tt = R_TimeTemp{};
-		for (Answer_R<R_TimeTemp> timeTemp : queries()._q_timeTemps) {
+		for (Answer_R<R_TimeTemp> timeTemp : queries()._q_TimeTempsForProfile) {
 			//cout << timeTemp.rec() << endl;
 			if (timeTemp.rec().time_temp.time() > time) {
 				break;
@@ -199,8 +199,8 @@ namespace Assembly {
 			curr_tt = timeTemp.rec();
 		}
 		if (curr_tt == R_TimeTemp{}) {
-			queries()._q_timeTemps.setMatchArg(prevDayProfileID);
-			Answer_R<R_TimeTemp> timeTemp = *queries()._q_timeTemps.last();
+			queries()._q_TimeTempsForProfile.setMatchArg(prevDayProfileID);
+			Answer_R<R_TimeTemp> timeTemp = *queries()._q_TimeTempsForProfile.last();
 			//cout << timeTemp.rec() << endl;
 			curr_tt = timeTemp.rec();
 		}

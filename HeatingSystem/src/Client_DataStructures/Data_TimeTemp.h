@@ -126,7 +126,7 @@ namespace client_data_structures {
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override;
 		int recordFieldVal(int selectFieldID) const override {
-			return record().rec().field(selectFieldID);
+			return answer().rec().field(selectFieldID);
 		}
 	private:
 		TimeTempWrapper _timeTemp; // size is 32 bits.

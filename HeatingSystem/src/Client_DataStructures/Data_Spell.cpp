@@ -18,7 +18,7 @@ namespace client_data_structures {
 	{}
 
 	bool Dataset_Spell::setNewValue(int fieldID, const I_Data_Formatter* newValue) {
-		auto & spell = static_cast<Answer_R<R_Spell>&>(record());
+		auto & spell = static_cast<Answer_R<R_Spell>&>(i_record().answer());
 		switch (fieldID) {
 		case e_date:
 		{
@@ -26,9 +26,9 @@ namespace client_data_structures {
 			auto newDate = DateTime(startDate);
 			spell.rec().date = DateTime(startDate);
 			auto newRecordID = spell.update();
-			if (newRecordID != recordID()) {
+			if (newRecordID != ds_recordID()) {
 				query().moveTo(_recSel, newRecordID);
-				setRecordID(newRecordID);
+				setDS_RecordID(newRecordID);
 				return true;
 			}
 			break;
@@ -37,8 +37,8 @@ namespace client_data_structures {
 		{
 			spell.rec().programID = (RecordID)newValue->val;
 			auto newRecordID = spell.update();
-			if (newRecordID != recordID()) {
-				setRecordID(newRecordID);
+			if (newRecordID != ds_recordID()) {
+				setDS_RecordID(newRecordID);
 				return true;
 			}
 			break;
@@ -62,7 +62,7 @@ namespace client_data_structures {
 		//if (recordID() == -1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
 		case e_date: {
-			_startDate.val = record().rec().date.asInt();
+			_startDate.val = answer().rec().date.asInt();
 			return &_startDate;
 		}
 		default: return 0;                                                           

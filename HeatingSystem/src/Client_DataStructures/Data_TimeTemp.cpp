@@ -102,7 +102,7 @@ namespace client_data_structures {
 		if (recordID() == -1) return 0;
 		switch (fieldID) {
 		case e_TimeTemp:
-			_timeTemp = uint16_t(record().rec().time_temp);
+			_timeTemp = uint16_t(answer().rec().time_temp);
 			return &_timeTemp;
 		default: return 0;
 		}
@@ -112,8 +112,8 @@ namespace client_data_structures {
 		// Every Profile needs at least one TT
 		switch (fieldID) {
 		case e_TimeTemp: {
-			record().rec().time_temp = (uint16_t)newValue->val;
-			auto newRecordID = record().update();			
+			answer().rec().time_temp = (uint16_t)newValue->val;
+			auto newRecordID = answer().update();
 			if (newRecordID != recordID()) {
 				return true;
 			}

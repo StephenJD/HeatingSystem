@@ -92,7 +92,7 @@ namespace client_data_structures {
 	/// </summary>
 	class Dataset_Profile : public Dataset {
 	public:
-		Dataset_Profile(I_Record_Interface& recordInterface, Query& query, Dataset* programUI, Dataset* zoneUI);
+		Dataset_Profile(I_Record_Interface& profileInterface, Query& q_profilesForZoneProg, Dataset* programDataset, Dataset* zoneDataset);
 
 		bool setNewValue(int fieldID, const I_Data_Formatter* val) override;
 
@@ -107,7 +107,7 @@ namespace client_data_structures {
 		void createProfile(uint8_t days);
 		void createProfileTT(int profileID);
 	private:
-		Dataset * _dwellZone;
+		Dataset * _zoneForDwelling;
 
 	};
 

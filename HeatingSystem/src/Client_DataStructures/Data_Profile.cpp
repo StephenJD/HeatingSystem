@@ -65,26 +65,29 @@ namespace client_data_structures {
 	}
 
 	//*************Dataset_Profile****************
-	Dataset_Profile::Dataset_Profile(I_Record_Interface& recordInterface, Query& query, Dataset* programUI, Dataset* zoneUI) :
-		Dataset(recordInterface, query, programUI)
-		, _dwellZone(zoneUI) {}
+	Dataset_Profile::Dataset_Profile(I_Record_Interface& profileInterface, Query& q_profilesForZoneProg, Dataset* programDataset, Dataset* zoneDataset) :
+		Dataset(profileInterface, q_profilesForZoneProg, programDataset)
+		, _zoneForDwelling(zoneDataset) {}
 
 	void Dataset_Profile::setMatchArgs() {
-		// ProfileDays depends on dwellProgs RecordInterface and dwellingZone RecordInterface.
+		// ProfileDays depends on ProgsForDwelling dataset and ZoneForDwelling dataset.
 		// Each is selected on the user-interface.
-		// The ProfileDays query is a FilterQ, filtering on ProgramID obtained from the parent dwellProgs RecordInterface.
-		// But the ProfileDays FilterQ-IncrementQ is itself a FilterQ, 
-		// whose MatchArgument is the ZoneID obtained from the dwellingZone RecordInterface
-		// The dwellingZone RecordInterface has a Link Query to DwellingZones as its source. Its Record() is a Zone.
+		// The profilesForZoneProg query is a FilterQ, filtering on ProgramID obtained from the parent ProgsForDwelling dataset.
+		// But the profilesForZoneProg FilterQ-IncrementQ is itself a FilterQ, 
+		// whose MatchArgument is the ZoneID obtained from the ZoneForDwelling dataset
+		// The ZoneForDwelling dataset has a Link Query to _q_ZonesForDwelling as its source. Its Record() is a Zone.
 
 		query().setMatchArg(parentIndex()); // parent is ProgramID. Required here
-		Answer_R<R_Zone> zone = _dwellZone->record();
-		auto zoneID = zone.id();
+		logger() << F("\tProfile._zoneForDwelling ") << ui_Objects()[(long)_zoneForDwelling].c_str() << L_endl;
+		auto & zone_a = static_cast<Answer_R<R_Zone> &>(_zoneForDwelling->i_record().answer());
+		auto & zone = zone_a.rec();
+		auto zoneID = zone_a.id();
+		//auto zoneID = _zoneForDwelling->ds_recordID();
 		auto prevMatchArg = query().iterationQ().matchArg();
 		if (zoneID != prevMatchArg) {
 			query().iterationQ().setMatchArg(zoneID);
-			record() = *(_recSel.begin());
-			setRecordID(_recSel.id());
+			i_record().answer() = *(_recSel.begin());
+			setDS_RecordID(_recSel.id());
 		}
 	}
 
@@ -97,16 +100,16 @@ namespace client_data_structures {
 		//  b) If a day is stolen from a later profile the next missing day must be found and moved to the next profile.
 		// Empty profiles must delete their TT's
 		// New profiles must be given a copy of it's parent TTs.
-		auto & profileAns = static_cast<Answer_R<R_Profile>&>(record());
+		auto & profileAns = static_cast<Answer_R<R_Profile>&>(i_record().answer());
 		auto & profile = profileAns.rec();
 		uint8_t oldDays = profile.days & 0x7F;
 		uint8_t newDays = uint8_t(newValue->val);
 		uint8_t removedDays = oldDays & ~newDays;
 		uint8_t addedDays = newDays & ~oldDays;
 		profile.days = newDays;
-		setRecordID(profileAns.update());
+		setDS_RecordID(profileAns.update());
 		addDaysToNextProfile(removedDays);
-		stealFromOtherProfile(record().id(), addedDays);
+		stealFromOtherProfile(ds_recordID(), addedDays);
 		promoteOutOfOrderDays();
 		return false;
 	}
@@ -193,7 +196,7 @@ namespace client_data_structures {
 
 	void Dataset_Profile::createProfile(uint8_t days) {
 		if (days) {
-			auto profile = static_cast<Answer_R<R_Profile>>(record()).rec();
+			auto profile = static_cast<Answer_R<R_Profile>>(i_record().answer()).rec();
 			profile.days = days;
 			auto newProfile = query().insert(profile);
 			createProfileTT(newProfile.id());
@@ -228,8 +231,8 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_days:
 			//logger() << "Curr Profile ReadVer:" << record().lastReadTabVer() << " TableVer: " << record().table()->vrVersion() << L_endl;
-			//logger() << "Curr Profile: " << record().rec() << L_endl;
-			_days = record().rec().days;
+			//logger() << "Curr Profile: " << answer().rec() << L_endl;
+			_days = answer().rec().days;
 			return &_days;
 		default: return 0;
 		}

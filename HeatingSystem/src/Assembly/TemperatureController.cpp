@@ -70,7 +70,7 @@ namespace Assembly {
 		
 		logger() << F("load mixValveControllerArr Completed") << L_endl;
 		index = 0;
-		auto zones = sequencer.queries()._q_zones;
+		auto zones = sequencer.queries()._q_Zones;
 		for (Answer_R<R_Zone> zone : zones) {
 			zoneArr[index].initialise(zone.id()
 				, tempSensorArr[zone.rec().callTempSens]

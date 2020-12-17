@@ -21,16 +21,16 @@ namespace client_data_structures {
 	{}
 
 	I_Data_Formatter * RecInt_TowelRail::getField(int fieldID) {
-		if (recordID() == -1 || record().status() != TB_OK) return 0;
+		if (recordID() == -1 || status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_name:
-			_name = record().rec().name;
+			_name = answer().rec().name;
 			return &_name;
 		case e_onTemp:
-			_onTemp.val = record().rec().onTemp;
+			_onTemp.val = answer().rec().onTemp;
 			return &_onTemp;
 		case e_minutesOn:
-			_minutesOn.val = record().rec().minutes_on;
+			_minutesOn.val = answer().rec().minutes_on;
 			return &_minutesOn;
 		case e_secondsToGo:
 		{
@@ -50,18 +50,18 @@ namespace client_data_structures {
 			_name = *strWrapper;
 			//auto debug = record();
 			//debug.rec();
-			strcpy(record().rec().name, _name.str());
-			record().update();
+			strcpy(answer().rec().name, _name.str());
+			answer().update();
 			break; }
 		case e_onTemp:
 			_onTemp = *newValue;
-			record().rec().onTemp = decltype(record().rec().onTemp)(_onTemp.val);
-			record().update();
+			answer().rec().onTemp = decltype(answer().rec().onTemp)(_onTemp.val);
+			answer().update();
 			break;
 		case e_minutesOn: 
 			_minutesOn = *newValue;
-			record().rec().minutes_on = decltype(record().rec().minutes_on)(_minutesOn.val);
-			record().update();
+			answer().rec().minutes_on = decltype(answer().rec().minutes_on)(_minutesOn.val);
+			answer().update();
 			break;
 		}
 		return false;

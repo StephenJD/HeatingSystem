@@ -17,15 +17,15 @@ namespace client_data_structures {
 		, _status{ 0, ValRange(e_edOneShort, 0, 1) } {}
 
 	I_Data_Formatter * RecInt_Relay::getField(int fieldID) {
-		if (recordID() == -1 || record().status() != TB_OK) return 0;
-		//logger() << "Relay recordID(): " << int(recordID()) << " " << record().rec() << L_endl;
+		if (recordID() == -1 || status() != TB_OK) return 0;
+		//logger() << "Relay recordID(): " << int(recordID()) << " " << answer().rec() << L_endl;
 		switch (fieldID) {
 		case e_name:
-			_name = record().rec().name;
+			_name = answer().rec().name;
 			return &_name;
 		case e_state:
 		{
-			HardwareInterfaces::UI_Bitwise_Relay & rl = relay(record().id());
+			HardwareInterfaces::UI_Bitwise_Relay & rl = relay(recordID());
 			relayController().readPorts();
 			rl.getStateFromContoller();
 			_status.val = rl.logicalState();
@@ -43,12 +43,12 @@ namespace client_data_structures {
 			_name = *strWrapper;
 			//auto debug = record();
 			//debug.rec();
-			strcpy(record().rec().name, _name.str());
-			record().update();
+			strcpy(answer().rec().name, _name.str());
+			answer().update();
 			break;
 		}
 		case e_state:
-			HardwareInterfaces::UI_Bitwise_Relay & rl = relay(record().id());
+			HardwareInterfaces::UI_Bitwise_Relay & rl = relay(recordID());
 			_status = *newValue;
 			rl.set(_status.val);
 			relayController().updateRelays();

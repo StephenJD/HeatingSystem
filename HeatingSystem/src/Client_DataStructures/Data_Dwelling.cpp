@@ -15,7 +15,7 @@ namespace client_data_structures {
 		//if (recordID()==-1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
 		case e_name:
-			_name = record().rec().name;
+			_name = answer().rec().name;
 			return &_name;
 		default: return 0;
 		}
@@ -26,7 +26,7 @@ namespace client_data_structures {
 		case e_name: {
 			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(val));
 			_name = *strWrapper;
-			strcpy(record().rec().name, _name.str());
+			strcpy(answer().rec().name, _name.str());
 			break;	
 		}
 		}

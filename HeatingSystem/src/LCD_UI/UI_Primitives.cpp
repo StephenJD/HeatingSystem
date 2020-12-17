@@ -277,10 +277,10 @@ namespace LCD_UI {
 				if (status == TB_BEFORE_BEGIN) 
 					fldInt_h->getData()->data()->last();
 				else fldInt_h->getData()->data()->move_to(0);
-				//fldInt_h->getData()->data()->setRecordID(fldInt_h->getData()->data()->recordID());
+				//fldInt_h->getData()->data()->setDS_RecordID(fldInt_h->getData()->data()->ds_recordID());
 			}
-			_currValue.val = fldInt_h->getData()->data()->record().id();
-			return fldInt_h->getData()->data()->record().status() == TB_OK;
+			_currValue.val = fldInt_h->getData()->data()->i_record().recordID();
+			return fldInt_h->getData()->data()->i_record().status() == TB_OK;
 		}
 		return true;
 	}

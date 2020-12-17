@@ -66,7 +66,7 @@ namespace client_data_structures {
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override {return true;}
 		int recordFieldVal(int) const override {
-			return record().rec().address;
+			return answer().rec().address;
 		}
 		HardwareInterfaces::UI_TempSensor & tempSensor(int index) { return static_cast<HardwareInterfaces::UI_TempSensor*>(runTimeData())[index]; }
 	private:

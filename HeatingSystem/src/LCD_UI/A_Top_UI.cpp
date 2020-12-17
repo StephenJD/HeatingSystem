@@ -43,23 +43,100 @@ namespace LCD_UI {
 		return this;
 	}
 
-	void A_Top_UI::set_CursorUI_from(Collection_Hndl * topUI) { // required to get cursor into nested collection.
-		if (selectedPage_h() == this) return;
-		_cursorUI = topUI;
-		while (_cursorUI->get()->isCollection()) {
-			auto parent = _cursorUI;
-			auto newActive = _cursorUI->activeUI(); // the focus lies in a nested collection
+	Collection_Hndl* A_Top_UI::innerMost(Collection_Hndl * tryInner, bool (*predicate)(Collection_Hndl * tryColl)) {
+		/*
+		* Must start with a collection.
+		* Finds the innermost active element with the required behaviour.
+		* It may be inside elements without that behaviour.
+		* It may be either a collection or an object.
+		*/
+		//Collection_Hndl* tryInner = collHdlPtr;
+		Collection_Hndl* hasBehaviour = tryInner;
+		do {
+			tryInner = tryInner->activeUI();
+			if (!tryInner) break;
+			//logger() << F("\tinnerMost: ") << ui_Objects()[(long)tryInner->get()].c_str() << L_endl;
+			if (predicate(tryInner)) hasBehaviour = tryInner;
+		} while (tryInner->get()->isCollection());
+		
+		return hasBehaviour;
+	}
+
+	Collection_Hndl* A_Top_UI::uiField(Collection_Hndl* uiElement) {
+		/*
+		* Must start with a collection.
+		* Finds the active UI-element.
+		*/
+		while (uiElement->get()->cursorMode(0) == HardwareInterfaces::LCD_Display::e_unselectable && uiElement->get()->isCollection()) {
+			Collection_Hndl* tryInner = uiElement->activeUI();
+			if (!tryInner) break;
+			uiElement = tryInner;
+			//logger() << F("\tinnerUI: ") << ui_Objects()[(long)uiElement->get()].c_str() << L_endl;
+		}
+		
+		return uiElement;
+
+	}
+
+	void A_Top_UI::setEachPageElementToItsFocus(I_SafeCollection& colln) {
+		// Visit each most deeply nested ActiveUI field on the page and set its focusPos.
+		//#ifdef ZPSIM
+		//		logger() << F("\tSetElToFocus?: ") << ui_Objects()[(long)&colln].c_str() << L_endl;
+		//#endif
+
+		for (int i = 0; !colln.atEnd(i); ++i) {
+			auto elHdl = static_cast<Collection_Hndl*>(&colln[i]);
+			//logger() << F("\tpageItem: ") << ui_Objects()[(long)elHdl->get()].c_str() << L_endl;
+			if (elHdl->get()->isCollection()) {
+				auto inner = uiField(elHdl);
 #ifdef ZPSIM
-			//logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << " Active: " << (newActive? ui_Objects()[(long)(newActive->get())].c_str():"") << L_endl;
+				logger() << F("\tSetElToFocus: ") << inner->focusIndex() << " for " << ui_Objects()[(long)inner->get()].c_str() << L_endl;
 #endif
-			if (newActive == 0) break;
-			_cursorUI = newActive;
-			if (_cursorUI->backUI() == 0) _cursorUI->setBackUI(parent);
+				inner->move_focus_to(inner->focusIndex());
+			}
 		}
 	}
 
+	void A_Top_UI::notifyAllOfFocusChange(Collection_Hndl* top) {
+		/* Visit each UI field on the page and call focusHasChanged() if it's not _upDownUI.
+		*  Visit active collection of each V1 and all collections of each VnLR whilst the collection is not a UI. 
+		*/
+		if (top->get()->cursorMode(top) != HardwareInterfaces::LCD_Display::e_unselectable) {
+			if (top != _upDownUI) {
+				logger() << F("Notify: ") << ui_Objects()[(long)top->get()].c_str() << L_endl;
+				top->focusHasChanged();
+			}
+		}
+		else if (top->behaviour().is_viewOne()) {
+			Collection_Hndl * inner = top->activeUI();
+			if (inner && inner->get()->isCollection()) notifyAllOfFocusChange(inner);
+		} else {
+			for (int i = 0; !top->atEnd(i); ++i) {
+				Collection_Hndl* inner = static_cast<Collection_Hndl*>(top->get()->collection()->item(i));
+				if (inner->get()->isCollection()) {
+					notifyAllOfFocusChange(inner);
+				}
+			}
+		}
+	}
+
+	void A_Top_UI::set_CursorUI_from(Collection_Hndl * tryInner) { // required to get cursor into nested collection.
+		// Find the most deeply nested ActiveUI;
+		if (selectedPage_h() == this) return;
+
+		 _cursorUI = tryInner;
+		while (_cursorUI->get()->isCollection()) {
+			tryInner = _cursorUI->activeUI();
+			if (!tryInner) break;
+			//logger() << F("\tinnerMost: ") << ui_Objects()[(long)tryInner->get()].c_str() << L_endl;
+			if (tryInner->backUI() == 0) tryInner->setBackUI(_cursorUI);
+			_cursorUI = tryInner;
+		} 
+	}
+
+
 	Collection_Hndl * A_Top_UI::set_leftRightUI_from(Collection_Hndl * topUI, int direction) {
-		// LR passes to the innermost ViewAll-collection	
+		// LR passes to the innermost ViewAll-collection
 		auto tryLeftRight = topUI;
 		auto gotLeftRight = _leftRightBackUI;
 		bool tryIsCollection;
@@ -69,11 +146,13 @@ namespace LCD_UI {
 				break;
 			}
 			auto try_behaviour = tryLeftRight->behaviour();
-			//auto tryActive_h = tryLeftRight->activeUI();
 #ifdef ZPSIM
+			//auto thisFocus = tryLeftRight->focusIndex();
+			//tryLeftRight->move_focus_to(thisFocus);
+			//auto thisActive_h = tryLeftRight->activeUI();
 			//logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
 			//	<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
-			//	<< " TryActive: " << (tryActive_h ? ui_Objects()[(long)(tryActive_h->get())].c_str() : "Not a collection" ) << L_endl;
+			//	<< " TryActive: " << (thisActive_h ? ui_Objects()[(long)(thisActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
 			if (try_behaviour.is_viewAll_LR()) {
 				gotLeftRight = tryLeftRight;
@@ -107,24 +186,17 @@ namespace LCD_UI {
 
 	void A_Top_UI::set_UpDownUI_from(Collection_Hndl * this_UI_h) {
 		// The innermost handle with UpDown behaviour gets the call.
-		_upDownUI = this_UI_h;
-		while (this_UI_h && this_UI_h->get()->isCollection()) {
-			auto tryUD = this_UI_h->activeUI();
-			auto isUpDnAble = false;
-			if (tryUD->get()->isCollection()) {
-				if (tryUD->behaviour().is_viewOne() || tryUD->get()->collection()->iterableObjectIndex() >= 0) {
-					isUpDnAble = true;
+		auto isUpDnAble = [](Collection_Hndl * tryColl) {
+			if (tryColl->get()->isCollection()) {
+				if (tryColl->behaviour().is_viewOne() || tryColl->get()->collection()->iterableObjectIndex() >= 0) {
+					return true;
 				}
-			}
-			else if (tryUD->behaviour().is_cmd_on_UD()) isUpDnAble = true;
-#ifdef ZPSIM
-			//logger() << F("\ttryUD: ") << ui_Objects()[(long)(tryUD->get())].c_str() << (isUpDnAble ? " HasUD" : " NoUD") << L_endl;
-#endif
-			if (isUpDnAble) {
-				_upDownUI = tryUD;
-			}
-			this_UI_h = tryUD;
-		}
+			} else if (tryColl->behaviour().is_cmd_on_UD()) return true;
+			return false;
+		};
+
+		_upDownUI = innerMost(this_UI_h, isUpDnAble);
+
 #ifdef ZPSIM
 		//logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 #endif
@@ -152,6 +224,8 @@ namespace LCD_UI {
 #ifdef ZPSIM
 		logger() << F("LR on _leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 #endif
+		setEachPageElementToItsFocus(*activeUI()->get()->collection());
+
 		// Lambda
 		auto isIteratedUD0 = [this]() -> bool {
 			if (_leftRightBackUI->get()->isCollection()) {
@@ -235,6 +309,8 @@ namespace LCD_UI {
 #ifdef ZPSIM
 		logger() << F("UD on _upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 #endif
+		setEachPageElementToItsFocus(*activeUI()->get()->collection());
+
 		// Lambda
 		auto iteratedBehaviour = [this]() {
 			auto& itColl = *_upDownUI->backUI()->get()->collection();
@@ -260,7 +336,7 @@ namespace LCD_UI {
 				if (isSave) {
 					rec_select();
 				}
-			} else {
+			} else if (!ud_behaviour.is_IteratedRecycle()) {
 				_upDownUI->upDown(0, ud_behaviour);
 			}
 		}
@@ -274,42 +350,17 @@ namespace LCD_UI {
 		}
 	}
 
-	void A_Top_UI::notifyAllOfFocusChange(Collection_Hndl * top) {
-		top->get()->focusHasChanged(top == _upDownUI);
-		auto topCollection = top->get()->collection();
-		if (topCollection == 0) return;
-		for (int i = topCollection->nextActionableIndex(0); !top->atEnd(i); /*i = topCollection->nextActionableIndex(++i)*/) { // need to check all elements on the page
-			auto element_h = static_cast<Collection_Hndl *>(topCollection->item(i));
-			if (element_h && element_h->get()->isCollection()) {
-				if (element_h != _upDownUI) {
-#ifdef ZPSIM
-					logger() << F("Notify: ") << ui_Objects()[(long)(element_h->get())].c_str() << L_endl;
-#endif
-					element_h->focusHasChanged();
-				}
-
-				auto inner = element_h->activeUI();
-				if (inner && inner->get()->isCollection()) notifyAllOfFocusChange(inner);
-			}
-			auto next_i = topCollection->nextActionableIndex(++i);
-			if (next_i >= i)
-				i = next_i; 
-			else 
-				break;
-		}
-	}
-
 	void A_Top_UI::rec_select() { 
+		setEachPageElementToItsFocus(*activeUI()->get()->collection());
 		if (selectedPage_h() == this) {
 			setBackUI(activeUI());
 		} else {
 			auto jumpTo = _cursorUI->get()->select(_cursorUI);
 			if (jumpTo) {// change page
 				setBackUI(jumpTo);
-			} else {
-				//notifyAllOfFocusChange(_leftRightBackUI);
 			}
 		}
+		setEachPageElementToItsFocus(*activeUI()->get()->collection());
 		selectPage();
 	}
 

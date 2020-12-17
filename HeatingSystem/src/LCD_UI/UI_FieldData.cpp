@@ -31,26 +31,28 @@ namespace LCD_UI {
 	bool UI_FieldData::focusHasChanged(bool) {
 		// parent field might have been changed
 		auto objectAtFocus = _data->query()[focusIndex()];
+		_data->setDS_RecordID(focusIndex());
 #ifdef ZPSIM
-		logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)_field_StreamingTool_h.get()].c_str()
+		logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)this].c_str()
 			<< F("\n\t\tWas Parent ID: ") << _data->parentIndex()
 			<< F(" FocusIndex: ") << focusIndex()
 			<< F(" ObjectIndex: ") << objectIndex()
 			<< L_endl;
 #endif		
 		bool focusWasInRange = objectAtFocus.status() == TB_OK;
-	    
 		setCount(_data->resetCount());
 		auto newRS = _data->query().begin();
+		auto newAnswer = *newRS;
 		auto newStart = newRS.id();
 		_data->query().moveTo(newRS, focusIndex());
 		_data->query().next(newRS, 0);
 		bool focusStillInRange = newRS.status() == TB_OK;
 		if (focusWasInRange) {
 			if (newRS.id() != focusIndex()) setFocusIndex(newStart);
+			else newAnswer = *newRS;
 		}
-		_data->setRecordID(focusIndex());
-
+		_data->i_record().answer() = newAnswer;
+		_data->setDS_RecordID(focusIndex());
 #ifdef ZPSIM
 		logger() << F("\t\tNow Parent ID: ") << _data->parentIndex()
 			<< F(" FocusIndex: ") << focusIndex()
@@ -80,7 +82,7 @@ namespace LCD_UI {
 		} 
 		
 		auto wrapper = _data->getFieldAt(fieldID(), elementIndex);
-		LazyCollection::setObjectIndex(_data->recordID());
+		LazyCollection::setObjectIndex(_data->ds_recordID());
 		if (atEnd(objectIndex()) || objectIndex() == -1) return 0;
 		_field_StreamingTool_h.f_interface().setDataSource(&_field_StreamingTool_h);
 		_field_StreamingTool_h.f_interface().setWrapper(wrapper);
@@ -123,7 +125,7 @@ namespace LCD_UI {
 	}
 
 	void UI_FieldData::moveToSavedRecord() {
-		setFocusIndex(_data->recordID());
+		setFocusIndex(_data->ds_recordID());
 		_field_StreamingTool_h.setCursorPos();
 	}
 
@@ -141,7 +143,7 @@ namespace LCD_UI {
 
 	void UI_FieldData::deleteData() {
 		_data->deleteData();
-		setFocusIndex(_data->recordID());
+		setFocusIndex(_data->ds_recordID());
 		setCount(_data->resetCount());
 	}
 

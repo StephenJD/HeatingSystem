@@ -19,18 +19,18 @@ namespace client_data_structures {
 	}
 
 	I_Data_Formatter * RecInt_TempSensor::getField(int fieldID) {
-		if (recordID() == -1 || record().status() != TB_OK) return 0;
+		if (recordID() == -1 || status() != TB_OK) return 0;
 		switch (fieldID) {
 		case e_temp:
 		{
-			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());
+			HardwareInterfaces::UI_TempSensor & ts = tempSensor(recordID());
 			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _temperature.val = -127;
 			else _temperature.val = ts.get_temp();
 			return &_temperature;
 		}
 		case e_temp_str:
 		{
-			HardwareInterfaces::UI_TempSensor & ts = tempSensor(record().id());
+			HardwareInterfaces::UI_TempSensor & ts = tempSensor(recordID());
 			strcpy(_tempStr.str(), ":");
 			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK) {
 				strcat(_tempStr.str(), "Err");
@@ -43,7 +43,7 @@ namespace client_data_structures {
 
 		case e_name:
 		{
-			strcpy(_name.str(), record().rec().name);
+			strcpy(_name.str(), answer().rec().name);
 			return &_name;
 		}
 		default: return 0;

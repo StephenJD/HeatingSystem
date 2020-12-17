@@ -7,7 +7,7 @@ namespace HardwareInterfaces {
 	class LCD_Display : public Print
 	{
 	public:
-		enum CursorMode : uint8_t { e_unselected, e_selected, e_inEdit};
+		enum CursorMode : uint8_t { e_unselectable, e_unselected, e_selected, e_inEdit};
 		LCD_Display(RelationalDatabase::Query * query = 0) : _query(query) {}
 		// Queries
 		uint8_t cursorPos() const { return *(buff() - 2); }

@@ -26,14 +26,6 @@ namespace LCD_UI {
 		return 0;
 	}
 
-	HI_BD::CursorMode UI_Object::cursorMode(const Object_Hndl * activeElement) const {
-		if (activeElement) {
-			if (this == activeElement->get()) 
-				return HI_BD::e_selected;
-		}
-		return HI_BD::e_unselected;
-	}
-
 	int UI_Object::cursorOffset(const char * data) const {
 		auto cursorPos = strlen(data) - 1;
 		if (data[cursorPos] == '`') --cursorPos;
@@ -161,6 +153,11 @@ namespace LCD_UI {
 		, _onSelectFn(onSelect)
 	{}
 
+	HI_BD::CursorMode Custom_Select::cursorMode(const Object_Hndl * activeElement) const {
+		if (activeElement && this == activeElement->get()) return HI_BD::e_selected;
+		else return HI_BD::e_unselected;
+	}
+
 	void Custom_Select::set_OnSelFn_TargetUI(Collection_Hndl * obj) {
 		_onSelectFn.setTarget(obj);
 	}
@@ -246,10 +243,6 @@ namespace LCD_UI {
 		bool canRecycle = iterationCanRecycle() || iteratedCollnCanRecycle() || non_iterationCanRecycle();
 		bool mustKeepFocus = isIteratedKeepFocus() || non_iterationKeepFocus();
 
-		if (isInIteratedCollection() && colln_hndl->backUI()->get()->collection()->iterableObjectIndex() != colln_hndl->backUI()->get()->collection()->objectIndex()) {
-			return static_cast<UI_IteratedCollection_Hoist&>(*colln_hndl).h_move_iteration_focus_by(nth, colln_hndl);
-		}
-
 		filter(filter_selectable());
 		if (wantToCheckCurrentPosIsOK) {
 			setFocusIndex(firstValidIndexLookingForwards(startFocus));
@@ -284,6 +277,9 @@ namespace LCD_UI {
 					break;
 				}
 			}
+		}
+		if (isInIteratedCollection()) {
+			static_cast<UI_IteratedCollection_Hoist&>(*colln_hndl).h_move_iteration_focus_by(nth, colln_hndl);
 		}
 		return isIteratedKeepFocus() || (startFocus != focusIndex() && !atEnd(focusIndex()) && focusIndex() > -1);
 	}
@@ -519,29 +515,23 @@ namespace LCD_UI {
 		return active;
 	}
 
-	bool UI_IteratedCollection_Hoist::h_move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl) {
-		bool haveMoved = false;
+	void UI_IteratedCollection_Hoist::h_move_iteration_focus_by(int moveBy, Collection_Hndl* colln_hndl) {
 		auto & upColln = *colln_hndl->backUI()->get()->collection();
-		auto iteratedIndex = upColln.iterableObjectIndex();
-		auto & iteratedActiveObject_h = *upColln.move_to_object(iteratedIndex);
-		auto itBehaviour = iteratedActiveObject_h.behaviour();
-		if (itBehaviour.is_next_on_UpDn()) {
-			haveMoved = iteratedActiveObject_h.get()->collection()->move_focus_by(moveBy,colln_hndl); // get data loaded into parent dataset
-			auto nextIdx = iteratedActiveObject_h.focusIndex();
-			upColln.filter(filter_selectable());
-			for (auto& thisObj : upColln) {
-				if (&thisObj == iteratedActiveObject_h.get()) continue;
-				thisObj./*I_SafeCollection::*/setFocusIndex(nextIdx); // get data loaded into child Dataset
-			}
+		auto & iteratedActiveObject_h = *colln_hndl;
+		auto nextIdx = iteratedActiveObject_h.focusIndex();
+		upColln.filter(filter_selectable());
+		for (auto& thisObj : upColln) {
+			if (&thisObj == iteratedActiveObject_h.get()) continue;
+			thisObj.I_SafeCollection::setFocusIndex(nextIdx);
 		}
-		return haveMoved;
 	}
 
-	bool UI_IteratedCollection_Hoist::h_focusHasChanged() {
+	bool UI_IteratedCollection_Hoist::h_focusHasChanged(bool hasFocus) {
 		auto & coll = *iterated_collection();
 		auto & iteratedActiveUI_h = *coll.move_to_object(_iteratedMemberIndex); // This must be the parent field.
 		_endShow = 1; _beginIndex = 0; _beginShow = 0;
 		if (iteratedActiveUI_h.get()->isCollection()) {
+			iteratedActiveUI_h.get()->focusHasChanged(hasFocus);
 			auto & iteratedActiveColl = *iteratedActiveUI_h.get()->collection();
 			_beginIndex = iteratedActiveColl.nextActionableIndex(0);
 			_endShow = iteratedActiveColl.endIndex();
