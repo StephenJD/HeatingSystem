@@ -5,7 +5,7 @@
 #include <Logging.h>
 
 #ifdef ZPSIM
-	#include <ostream>
+#include <ostream>
 #endif
 
 namespace RelationalDatabase {
@@ -40,29 +40,29 @@ namespace RelationalDatabase {
 		RecordSelector last();
 
 		// Polymorphic Increment Functions
-		virtual void next(RecordSelector & recSel, int moveBy);
-		virtual Answer_Locator getMatch(RecordSelector & recSel, int direction, int matchArg) { return recSel; }
+		virtual void next(RecordSelector& recSel, int moveBy);
+		virtual Answer_Locator getMatch(RecordSelector& recSel, int direction, int matchArg) { return recSel; }
 
-		virtual void moveTo(RecordSelector & rs, int index);
+		virtual void moveTo(RecordSelector& rs, int index);
 		virtual Answer_Locator operator[](int index);
 
 		// Modify Query
 		//virtual void refresh();
 		virtual void setMatchArg(int matchArg) {}
 		virtual Answer_Locator acceptMatch(int recordID) { return { 0 }; }
-		virtual RecordSelector findMatch(RecordSelector & recSel);
-		
+		virtual RecordSelector findMatch(RecordSelector& recSel);
+
 		template <typename Record_T>
-		RecordSelector insert(const Record_T & record);
+		RecordSelector insert(const Record_T& record);
 
 		// Access
-		const Query & iterationQ() const { return const_cast<Query*>(this)->resultsQ(); }
-		virtual Query & iterationQ() { return *this; }
-		virtual TableQuery & incrementTableQ() { return iterationQ().incrementTableQ(); }
-		const Query & resultsQ() const { return const_cast<Query *>(this)->resultsQ(); }
-		virtual Query & resultsQ() {return *this;}
+		const Query& iterationQ() const { return const_cast<Query*>(this)->resultsQ(); }
+		virtual Query& iterationQ() { return *this; }
+		virtual TableQuery& incrementTableQ() { return iterationQ().incrementTableQ(); }
+		const Query& resultsQ() const { return const_cast<Query*>(this)->resultsQ(); }
+		virtual Query& resultsQ() { return *this; }
 		virtual int matchArg() const { return 0; }
-		RDB_B * getDB();
+		RDB_B* getDB();
 
 		virtual ~Query() = default;
 	protected:
@@ -84,9 +84,9 @@ namespace RelationalDatabase {
 	class TableQuery : public Query {
 	public:
 		TableQuery() = default;
-		TableQuery(Table & table) : _table(&table) { }
+		TableQuery(Table& table) : _table(&table) {}
 
-		TableQuery(const TableQuery & tableQ) : _table(tableQ._table) {	}
+		TableQuery(const TableQuery& tableQ) : _table(tableQ._table) {}
 
 		// Non-Polymorphic specialisations
 		RecordSelector begin();
@@ -94,17 +94,17 @@ namespace RelationalDatabase {
 		RecordSelector last();
 
 		// Polymorphic specialisations
-		void next(RecordSelector & recSel, int moveBy) override;
-		TableQuery & iterationQ() override { return *this; }
+		void next(RecordSelector& recSel, int moveBy) override;
+		TableQuery& iterationQ() override { return *this; }
 
 		Answer_Locator operator[](int index) override;
-		void moveTo(RecordSelector & rs, int index) override;
-		TableQuery & incrementTableQ() override { return *this; }
+		void moveTo(RecordSelector& rs, int index) override;
+		TableQuery& incrementTableQ() override { return *this; }
 		Answer_Locator acceptMatch(int recordID) override { return (*this)[recordID]; }
 
 		// New Non-Polymorphic modifiers	
 		template <typename Record_T>
-		RecordSelector insert(const Record_T & record) {
+		RecordSelector insert(const Record_T& record) {
 			static_assert(!typetraits::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 			auto rs = RecordSelector{ *this, _table };
 			//rs.end();
@@ -113,7 +113,7 @@ namespace RelationalDatabase {
 		}
 
 		template <typename Record_T>
-		RecordSelector insert(const Record_T * record, int noOfRecords) {
+		RecordSelector insert(const Record_T* record, int noOfRecords) {
 			auto rs = RecordSelector{ *this, _table };
 			for (int i = 0; i < noOfRecords; ++i) {
 				rs.tableNavigator().insert(*record);
@@ -121,10 +121,10 @@ namespace RelationalDatabase {
 			}
 			return rs;
 		}
-		RDB_B * getDB();
+		RDB_B* getDB();
 		//void refresh() override;
 	private:
-		Table * _table = 0;
+		Table* _table = 0;
 	};
 
 	///////////////////////////////////////////
@@ -141,8 +141,8 @@ namespace RelationalDatabase {
 	class QueryM_T : public TableQuery {
 	public:
 		using TableQuery::TableQuery;
-		QueryM_T(const TableQuery & tableQ) :TableQuery(tableQ) {}
-		
+		QueryM_T(const TableQuery& tableQ) :TableQuery(tableQ) {}
+
 		// Non-Polymorphic specialisations
 		RecordSelector begin() { return TableQuery::begin(); }
 		RecordSelector end() { return TableQuery::end(); }
@@ -152,12 +152,12 @@ namespace RelationalDatabase {
 		int matchArg() const override { return _matchArg; }
 		void setMatchArg(int matchArg) override { _matchArg = matchArg; }
 		Answer_Locator acceptMatch(int recordID) override { _matchArg = recordID; return TableQuery::operator[](recordID); }
-		
+
 		Answer_Locator operator[](int index) override {
 			return acceptMatch(index);
 		}
 
-		void next(RecordSelector & recSel, int moveBy) override {
+		void next(RecordSelector& recSel, int moveBy) override {
 			if (moveBy == 0) {
 				getMatch(recSel, 1, 0);
 			} else if (moveBy > 0) {
@@ -168,7 +168,7 @@ namespace RelationalDatabase {
 			}
 		}
 
-		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
+		Answer_Locator getMatch(RecordSelector& recSel, int direction, int) override {
 			recSel.tableNavigator().moveToThisRecord(_matchArg);
 			return TableQuery::getMatch(recSel, direction, 0);
 		}
@@ -178,17 +178,17 @@ namespace RelationalDatabase {
 	};
 
 	template <typename Record_T>
-	RecordSelector Query::insert(const Record_T & record) {
+	RecordSelector Query::insert(const Record_T& record) {
 		static_assert(!typetraits::is_pointer<Record_T>::value, "The argument to insert must not be a pointer.");
 		return incrementTableQ().insert(record);
 	}
 
 	class Null_Query : public Query {
 	public:
-		TableQuery & incrementTableQ() override { return _nulltableQ; }
-		void next(RecordSelector & recSel, int moveBy) override { recSel.setID(0); recSel.setStatus(TB_INVALID_TABLE); }
+		TableQuery& incrementTableQ() override { return _nulltableQ; }
+		void next(RecordSelector& recSel, int moveBy) override { recSel.setID(0); recSel.setStatus(TB_INVALID_TABLE); }
 
-		void moveTo(RecordSelector & rs, int index) override { next(rs,0); }
+		void moveTo(RecordSelector& rs, int index) override { next(rs, 0); }
 	private:
 		TableQuery _nulltableQ = {};
 	};
@@ -201,17 +201,17 @@ namespace RelationalDatabase {
 	/// </summary>	
 	class CustomQuery : public Query {
 	public:
-		CustomQuery(Query & source) : _query(&source) {}
-		CustomQuery(const TableQuery & tableQ) : _query(&_tableQ), _tableQ(tableQ) { }
+		CustomQuery(Query& source) : _query(&source) {}
+		CustomQuery(const TableQuery& tableQ) : _query(&_tableQ), _tableQ(tableQ) {}
 
 		// Access
-		Query & iterationQ() override { return *_query; }
-		Query & resultsQ() override { return *_query; }
+		Query& iterationQ() override { return *_query; }
+		Query& resultsQ() override { return *_query; }
 
 		Answer_Locator acceptMatch(int recordID) override { return iterationQ().acceptMatch(recordID); }
 
 	private:
-		Query * _query;
+		Query* _query;
 		TableQuery _tableQ;
 	};
 
@@ -234,8 +234,8 @@ namespace RelationalDatabase {
 	template <typename IteratedRecordType>
 	class QueryF_T : public CustomQuery {
 	public:
-		QueryF_T(Query & iterationQuery, int matchField) : CustomQuery(iterationQuery), _match_f(matchField) {}
-		QueryF_T(const TableQuery & iterationQuery, int matchField) : CustomQuery(iterationQuery), _match_f(matchField) {}
+		QueryF_T(Query& iterationQuery, int matchField) : CustomQuery(iterationQuery), _match_f(matchField) {}
+		QueryF_T(const TableQuery& iterationQuery, int matchField) : CustomQuery(iterationQuery), _match_f(matchField) {}
 
 		// Non-Polymorphic specialisations
 		RecordSelector begin() {
@@ -262,16 +262,16 @@ namespace RelationalDatabase {
 			Answer_R<IteratedRecordType> currRec = iterationQ().acceptMatch(recordID);
 			QueryF_T::setMatchArg(currRec.field(_match_f));
 			return currRec;
-		}		
-		
-		void next(RecordSelector & recSel, int moveBy) override {
+		}
+
+		void next(RecordSelector& recSel, int moveBy) override {
 			CustomQuery::iterationQ().next(recSel, moveBy);
 			moveBy = moveBy ? moveBy : 1;
 			QueryF_T::getMatch(recSel, moveBy, matchArg());
 		}
 
 
-		Answer_Locator getMatch(RecordSelector & recSel, int direction, int matchArg) /*override*/ {
+		Answer_Locator getMatch(RecordSelector& recSel, int direction, int matchArg) /*override*/ {
 			auto matchLocator = recSel.incrementRecord();
 			Answer_R<IteratedRecordType> match = matchLocator;
 			match.status();
@@ -287,7 +287,7 @@ namespace RelationalDatabase {
 		RecordID _matchArg = 0;
 		int _match_f;
 	};
-	
+
 	/////////////////////////////////////////////////////////
 	//            Lookup Query                         //
 	//_____________________________________________________//
@@ -309,49 +309,49 @@ namespace RelationalDatabase {
 	class QueryL_T : public CustomQuery {
 	public:
 		QueryL_T(
-			Query & iterationQuery,
-			Query & result_Query,
+			Query& iterationQuery,
+			Query& result_Query,
 			int select_f
 		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
 
 		QueryL_T(
-			const TableQuery & iterationQuery,
-			const TableQuery & result_Query,
+			const TableQuery& iterationQuery,
+			const TableQuery& result_Query,
 			int select_f
 		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
-		
+
 		QueryL_T(
-			Query & iterationQuery,
-			const TableQuery & result_Query,
+			Query& iterationQuery,
+			const TableQuery& result_Query,
 			int select_f
 		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
-		
+
 		QueryL_T(
-			const TableQuery & iterationQuery,
-			Query & result_Query,
+			const TableQuery& iterationQuery,
+			Query& result_Query,
 			int select_f
 		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
-		
-		Query & resultsQ() override { return _resultQ.resultsQ(); }
+
+		Query& resultsQ() override { return _resultQ.resultsQ(); }
 
 		Answer_Locator acceptMatch(int recordID) override {
 			// the resultsQ might be a lookup-filter. It must have its match-arg set.
 			Answer_R<IteratedRecordType> currRec = iterationQ().acceptMatch(recordID);
-			return _resultQ.acceptMatch(currRec.field(_select_f));  
+			return _resultQ.acceptMatch(currRec.field(_select_f));
 		}
 
 		Answer_Locator operator[](int index) override {
 			// the resultsQ might be a lookup-filter. It must have its match-arg set.
 			auto linkRec = RecordSelector{ *this, CustomQuery::operator[](index) };
-			return getMatch(linkRec,1,0);
+			return getMatch(linkRec, 1, 0);
 		}
 
-		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
+		Answer_Locator getMatch(RecordSelector& recSel, int direction, int) override {
 			Answer_R<IteratedRecordType> match = recSel.incrementRecord();
 			if (match.status() == TB_OK) {
 				auto selectID = match.field(_select_f);
 				return resultsQ().Query::operator[](selectID);
-			} else if (match.status() == TB_BEFORE_BEGIN)  {
+			} else if (match.status() == TB_BEFORE_BEGIN) {
 				return resultsQ().Query::operator[](-1);
 			} else return resultsQ().end();
 		}
@@ -362,7 +362,7 @@ namespace RelationalDatabase {
 		CustomQuery _resultQ;
 		int _select_f; // Field in IteratedTable used to select Results
 	};
-	
+
 	/////////////////////////////////////////////////////////
 	//            Filtered-Lookup Query                  //
 	//_____________________________________________________//
@@ -387,34 +387,34 @@ namespace RelationalDatabase {
 		// base-class holds the match argument for the Filter.
 	public:
 		QueryFL_T(
-			Query & iterationQuery,
-			Query & result_Query,
+			Query& iterationQuery,
+			Query& result_Query,
 			int filter_f,
 			int select_f
 		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
 
 		QueryFL_T(
-			const TableQuery & iterationQuery,
-			const TableQuery & result_Query,
+			const TableQuery& iterationQuery,
+			const TableQuery& result_Query,
 			int filter_f,
 			int select_f
 		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
 
 		QueryFL_T(
-			Query & iterationQuery,
-			const TableQuery & result_Query,
+			Query& iterationQuery,
+			const TableQuery& result_Query,
 			int filter_f,
 			int select_f
 		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
 
 		QueryFL_T(
-			const TableQuery & iterationQuery,
-			Query & result_Query,
+			const TableQuery& iterationQuery,
+			Query& result_Query,
 			int filter_f,
 			int select_f
 		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
 
-		Query & resultsQ() override { return _resultQ.resultsQ(); }
+		Query& resultsQ() override { return _resultQ.resultsQ(); }
 
 		Answer_Locator acceptMatch(int recordID) override {
 			// the resultsQ might be a lookup-filter. It must have its match-arg set.
@@ -422,7 +422,7 @@ namespace RelationalDatabase {
 			return _resultQ.acceptMatch(recordID);
 		}
 
-		Answer_Locator getMatch(RecordSelector & recSel, int direction, int matchArg) override {
+		Answer_Locator getMatch(RecordSelector& recSel, int direction, int matchArg) override {
 			QueryF_T<IteratedRecordType>::getMatch(recSel, direction, matchArg);
 			return _resultQ.getMatch(recSel, direction, matchArg);
 		}
@@ -430,7 +430,7 @@ namespace RelationalDatabase {
 	protected:
 		QueryL_T<IteratedRecordType> _resultQ;
 	};
-	
+
 	////////////////////////////////////////////////////////////
 	//          Lookup Filter Query                           //
 	//________________________________________________________//
@@ -453,37 +453,37 @@ namespace RelationalDatabase {
 	class QueryLF_T : public QueryL_T<IteratedRecordType> {
 	public:
 		QueryLF_T(
-			Query & iterationQuery
-			, Query & filter_query
+			Query& iterationQuery
+			, Query& filter_query
 			, int select_f
 			, int filter_f
 		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
 
 		QueryLF_T(
-			const TableQuery & iterationQuery
-			, const TableQuery & filter_query
+			const TableQuery& iterationQuery
+			, const TableQuery& filter_query
 			, int select_f
 			, int filter_f
 		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
-		
+
 		QueryLF_T(
-			Query & iterationQuery
-			, const TableQuery & filter_query
+			Query& iterationQuery
+			, const TableQuery& filter_query
 			, int select_f
 			, int filter_f
 		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
-		
+
 		QueryLF_T(
-			const TableQuery & iterationQuery
-			, Query & filter_query
+			const TableQuery& iterationQuery
+			, Query& filter_query
 			, int select_f
 			, int filter_f
 		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
-		
-		Query & resultsQ() override { return QueryL_T<IteratedRecordType>::iterationQ(); }
+
+		Query& resultsQ() override { return QueryL_T<IteratedRecordType>::iterationQ(); }
 
 		void setMatchArg(int matchArg) override { _filterQuery.setMatchArg(matchArg); }
-		
+
 		Answer_Locator acceptMatch(int recordID) override {
 			Answer_R<FilterRecordType> selectedRec = QueryL_T<IteratedRecordType>::acceptMatch(recordID);
 			_filterQuery.acceptMatch(selectedRec.id());
@@ -492,7 +492,7 @@ namespace RelationalDatabase {
 
 		int matchArg() const override { return _filterQuery.matchArg(); }
 
-		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
+		Answer_Locator getMatch(RecordSelector& recSel, int direction, int) override {
 			Answer_R<IteratedRecordType> tryMatch = recSel.incrementRecord();
 			while (tryMatch.status() == TB_OK) {
 				auto select = tryMatch.field(QueryL_T<IteratedRecordType>::_select_f);
@@ -533,29 +533,29 @@ namespace RelationalDatabase {
 	class QueryLinkF_T : public QueryF_T<IteratedRecordType> {
 	public:
 		QueryLinkF_T(
-			Query & link_query
-			, Query & result_query
+			Query& link_query
+			, Query& result_query
 			, int select_f
 			, int filter_f
 		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
 
 		QueryLinkF_T(
-			const TableQuery & link_query
-			, const TableQuery & result_query
+			const TableQuery& link_query
+			, const TableQuery& result_query
 			, int select_f
 			, int filter_f
 		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
 
 		QueryLinkF_T(
-			Query & link_query
-			, const TableQuery & result_query
+			Query& link_query
+			, const TableQuery& result_query
 			, int select_f
 			, int filter_f
 		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
 
 		QueryLinkF_T(
-			const TableQuery & link_query
-			, Query & result_query
+			const TableQuery& link_query
+			, Query& result_query
 			, int select_f
 			, int filter_f
 		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
@@ -566,7 +566,7 @@ namespace RelationalDatabase {
 		RecordSelector last() { return QueryF_T<IteratedRecordType>::last(); }
 
 		// Polymorphic specialisations
-		void next(RecordSelector & recSel, int moveBy) override { QueryF_T<IteratedRecordType>::next(recSel, moveBy); }
+		void next(RecordSelector& recSel, int moveBy) override { QueryF_T<IteratedRecordType>::next(recSel, moveBy); }
 
 		Answer_Locator operator[](int index) override {
 			return acceptMatch(index);
@@ -608,34 +608,34 @@ namespace RelationalDatabase {
 	class QueryML_T : public QueryL_T<IteratedRecordType> {
 	public:
 		QueryML_T(
-			Query & iterationQuery,
-			Query & result_query,
+			Query& iterationQuery,
+			Query& result_query,
 			int select_f
 		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
 
 		QueryML_T(
-			const TableQuery & iterationQuery,
-			const TableQuery & result_query,
+			const TableQuery& iterationQuery,
+			const TableQuery& result_query,
 			int select_f
 		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
-		
+
 		QueryML_T(
-			Query & iterationQuery,
-			const TableQuery & result_query,
+			Query& iterationQuery,
+			const TableQuery& result_query,
 			int select_f
 		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
-		
+
 		QueryML_T(
-			const TableQuery & iterationQuery,
-			Query & result_query,
+			const TableQuery& iterationQuery,
+			Query& result_query,
 			int select_f
 		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
-		
+
 		// Non-Polymorphic specialisations
 		RecordSelector begin() { return QueryL_T<IteratedRecordType>::begin(); }
 		RecordSelector end() { return QueryL_T<IteratedRecordType>::end(); }
 		RecordSelector last() { return QueryL_T<IteratedRecordType>::last(); }
-		
+
 		// Polymorphic specialisations
 		Answer_Locator operator[](int index) override {
 			return acceptMatch(index);
@@ -652,7 +652,7 @@ namespace RelationalDatabase {
 			return QueryL_T<IteratedRecordType>::acceptMatch(recordID);
 		}
 
-		void next(RecordSelector & recSel, int moveBy) override {
+		void next(RecordSelector& recSel, int moveBy) override {
 			if (moveBy == 0) {
 				getMatch(recSel, 1, 0);
 			} else if (moveBy > 0) {
@@ -662,15 +662,15 @@ namespace RelationalDatabase {
 				recSel.setStatus(TB_BEFORE_BEGIN);
 			}
 		}
-		
-		Answer_Locator getMatch(RecordSelector & recSel, int direction, int) override {
+
+		Answer_Locator getMatch(RecordSelector& recSel, int direction, int) override {
 			recSel.tableNavigator().moveToThisRecord(_matchArg);
-			return QueryL_T<IteratedRecordType>::getMatch(recSel,direction,0);
+			return QueryL_T<IteratedRecordType>::getMatch(recSel, direction, 0);
 		}
 
 	protected:
 		RecordID _matchArg = 0;
 
 	};
-	
+
 }
