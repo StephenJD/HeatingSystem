@@ -84,7 +84,7 @@ namespace RelationalDatabase {
 	class TableQuery : public Query {
 	public:
 		TableQuery() = default;
-		TableQuery(Table& table) : _table(&table) {}
+		TableQuery(Table& resultTable) : _table(&resultTable) {}
 
 		TableQuery(const TableQuery& tableQ) : _table(tableQ._table) {}
 
@@ -231,11 +231,11 @@ namespace RelationalDatabase {
 	/// Provide a Query,
 	/// and the field index for the filter field.
 	/// </summary>	
-	template <typename IteratedRecordType>
+	template <typename ResultRecordType>
 	class QueryF_T : public CustomQuery {
 	public:
-		QueryF_T(Query& iterationQuery, int matchField) : CustomQuery(iterationQuery), _match_f(matchField) {}
-		QueryF_T(const TableQuery& iterationQuery, int matchField) : CustomQuery(iterationQuery), _match_f(matchField) {}
+		QueryF_T(Query& resultQuery, int matchField) : CustomQuery(resultQuery), _match_f(matchField) {}
+		QueryF_T(const TableQuery& resultQuery, int matchField) : CustomQuery(resultQuery), _match_f(matchField) {}
 
 		// Non-Polymorphic specialisations
 		RecordSelector begin() {
@@ -259,7 +259,7 @@ namespace RelationalDatabase {
 		int matchArg() const override { return _matchArg; }
 
 		Answer_Locator acceptMatch(int recordID) override {
-			Answer_R<IteratedRecordType> currRec = iterationQ().acceptMatch(recordID);
+			Answer_R<ResultRecordType> currRec = iterationQ().acceptMatch(recordID);
 			QueryF_T::setMatchArg(currRec.field(_match_f));
 			return currRec;
 		}
@@ -273,7 +273,7 @@ namespace RelationalDatabase {
 
 		Answer_Locator getMatch(RecordSelector& recSel, int direction, int matchArg) /*override*/ {
 			auto matchLocator = recSel.incrementRecord();
-			Answer_R<IteratedRecordType> match = matchLocator;
+			Answer_R<ResultRecordType> match = matchLocator;
 			match.status();
 			while (recSel.status() == TB_OK && match.status() == TB_OK && match.field(_match_f) != matchArg) {
 				iterationQ().next(recSel, direction);
@@ -309,26 +309,26 @@ namespace RelationalDatabase {
 	class QueryL_T : public CustomQuery {
 	public:
 		QueryL_T(
-			Query& iterationQuery,
 			Query& result_Query,
-			int select_f
-		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
-
-		QueryL_T(
-			const TableQuery& iterationQuery,
-			const TableQuery& result_Query,
-			int select_f
-		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
-
-		QueryL_T(
 			Query& iterationQuery,
-			const TableQuery& result_Query,
 			int select_f
 		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
 
 		QueryL_T(
+			const TableQuery& result_Query,
 			const TableQuery& iterationQuery,
+			int select_f
+		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
+
+		QueryL_T(
+			const TableQuery& result_Query,
+			Query& iterationQuery,
+			int select_f
+		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
+
+		QueryL_T(
 			Query& result_Query,
+			const TableQuery& iterationQuery,
 			int select_f
 		) : CustomQuery(iterationQuery), _resultQ(result_Query), _select_f{ select_f } {}
 
@@ -391,28 +391,28 @@ namespace RelationalDatabase {
 			Query& result_Query,
 			int filter_f,
 			int select_f
-		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
 
 		QueryFL_T(
 			const TableQuery& iterationQuery,
 			const TableQuery& result_Query,
 			int filter_f,
 			int select_f
-		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
 
 		QueryFL_T(
 			Query& iterationQuery,
 			const TableQuery& result_Query,
 			int filter_f,
 			int select_f
-		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
 
 		QueryFL_T(
 			const TableQuery& iterationQuery,
 			Query& result_Query,
 			int filter_f,
 			int select_f
-		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(iterationQuery, result_Query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(iterationQuery, filter_f), _resultQ(result_Query, iterationQuery, select_f) {}
 
 		Query& resultsQ() override { return _resultQ.resultsQ(); }
 
@@ -457,28 +457,28 @@ namespace RelationalDatabase {
 			, Query& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
 		QueryLF_T(
 			const TableQuery& iterationQuery
 			, const TableQuery& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
 		QueryLF_T(
 			Query& iterationQuery
 			, const TableQuery& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
 		QueryLF_T(
 			const TableQuery& iterationQuery
 			, Query& filter_query
 			, int select_f
 			, int filter_f
-		) : QueryL_T<IteratedRecordType>(iterationQuery, filter_query, select_f), _filterQuery(filter_query, filter_f) {}
+		) : QueryL_T<IteratedRecordType>(filter_query, iterationQuery, select_f), _filterQuery(filter_query, filter_f) {}
 
 		Query& resultsQ() override { return QueryL_T<IteratedRecordType>::iterationQ(); }
 
@@ -537,28 +537,28 @@ namespace RelationalDatabase {
 			, Query& result_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		QueryLinkF_T(
 			const TableQuery& link_query
 			, const TableQuery& result_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		QueryLinkF_T(
 			Query& link_query
 			, const TableQuery& result_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		QueryLinkF_T(
 			const TableQuery& link_query
 			, Query& result_query
 			, int select_f
 			, int filter_f
-		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(link_query, result_query, select_f) {}
+		) : QueryF_T<IteratedRecordType>(result_query, filter_f), _linkQuery(result_query, link_query, select_f) {}
 
 		// Non-polymorphic specialisations
 		RecordSelector begin() { return QueryF_T<IteratedRecordType>::begin(); }
@@ -611,25 +611,25 @@ namespace RelationalDatabase {
 			Query& iterationQuery,
 			Query& result_query,
 			int select_f
-		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
+		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
 
 		QueryML_T(
 			const TableQuery& iterationQuery,
 			const TableQuery& result_query,
 			int select_f
-		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
+		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
 
 		QueryML_T(
 			Query& iterationQuery,
 			const TableQuery& result_query,
 			int select_f
-		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
+		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
 
 		QueryML_T(
 			const TableQuery& iterationQuery,
 			Query& result_query,
 			int select_f
-		) : QueryL_T<IteratedRecordType>{ iterationQuery, result_query, select_f } {}
+		) : QueryL_T<IteratedRecordType>{ result_query, iterationQuery, select_f } {}
 
 		// Non-Polymorphic specialisations
 		RecordSelector begin() { return QueryL_T<IteratedRecordType>::begin(); }
