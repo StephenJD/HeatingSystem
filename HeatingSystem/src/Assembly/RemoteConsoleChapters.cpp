@@ -1,13 +1,13 @@
 #include "RemoteConsoleChapters.h"
 #include "..\Client_DataStructures\Client_Cmd.h"
-#include "HeatingSystem_Queries.h"
+#include "Datasets.h"
 
 namespace Assembly {
 	using namespace RelationalDatabase;
 	using namespace client_data_structures;
 	using namespace LCD_UI;
 
-	RemoteConsoleChapters::RemoteConsoleChapters(HeatingSystem_Queries & db) :
+	RemoteConsoleChapters::RemoteConsoleChapters(HeatingSystem_Datasets& db) :
 		_rem_tempReqUI_c{ &db._ds_Zones, RecInt_Zone::e_reqTemp, {V + S + V1 + UD_S} }
 		, _rem_tempIsUI_c{ &db._ds_Zones, RecInt_Zone::e_isTemp, {V + L0} }
 		, _rem_prompt{ "^v adjusts temp" }

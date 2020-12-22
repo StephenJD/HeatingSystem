@@ -32,17 +32,16 @@ namespace HardwareInterfaces {
 		, _maxFlowTemp(65)
 	{}
 #endif
-	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp, Sequencer& sequencer) {
+	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
 		_thermalStore = &thermalStore;
 		_recordID = zoneID;
 		_maxFlowTemp = maxFlowTemp;
-		_sequencer = &sequencer;
 		using namespace RelationalDatabase;
 		using namespace client_data_structures;
-		auto zones = _sequencer->queries()._q_Zones;
+		auto zones = queries.q_Zones;
 		_zoneRecord = zones[_recordID];
 	}
 
@@ -159,9 +158,12 @@ namespace HardwareInterfaces {
 		return _zoneRecord;
 	}
 
-	void Zone::refreshProfile() {
+	void Zone::refreshProfile() { // resets to original profile for UI.
 		setNextEventTime(clock_().now());
-		_sequencer->refreshProfile(*this);
+		auto profileInfo = _sequencer->getProfileInfo(id(), clock_().now());
+		setNextEventTime(profileInfo.nextEvent);
+		setNextProfileTempRequest(profileInfo.nextTT.time_temp.temp());
+		setProfileTempRequest(profileInfo.currTT.temp());
 	}
 
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
@@ -204,8 +206,8 @@ namespace HardwareInterfaces {
 
 		auto usingLinearCurve = [&zoneRec]() {return zoneRec.autoQuality == 0 || zoneRec.autoRatio == 0; };
 
-		auto calculatePreheatTime = [this, nextTempReq, currTemp_fractional, outsideTemp, &zoneRec
-			, maxPredictedAchievableTemp, ratioIsTooLow, getTimeConst, usingLinearCurve]() -> int {
+		auto calculatePreheatTime = [this, currTemp_fractional, outsideTemp, &zoneRec
+			, maxPredictedAchievableTemp, ratioIsTooLow, getTimeConst, usingLinearCurve](int nextTempReq) -> int {
 			int minsToAdd = 0;
 			double finalDiff_fractional = (nextTempReq * 256.) - currTemp_fractional;
 			double limitTemp = maxPredictedAchievableTemp();
@@ -224,9 +226,7 @@ namespace HardwareInterfaces {
 			}
 			return minsToAdd;
 		};
-		
-		auto timeToStartHeating = [this](int minsToAdd) -> bool {return clock_().now().minsTo(_ttEndDateTime) <= minsToAdd; };
-		
+			
 		auto offerCurrTempToCurveMatch = [this, currTemp_fractional, &zoneRec]() {
 			if (_getExpCurve.nextValue(currTemp_fractional)) { // Only registers if _getExpCurve.firstValue was non-zero
 				logger() << L_time << zoneRec.name << " Preheat. Record Temp:\t" << L_fixed << currTemp_fractional << L_endl;
@@ -255,6 +255,20 @@ namespace HardwareInterfaces {
 			logger() << "\tSaved New TC " << curveMatch.timeConst << " Compressed TC: " << timeConst << " New Ratio: " << newRatio << L_endl;
 		};
 
+		auto futureProfileNeedsPreHeating = [this, calculatePreheatTime](ProfileInfo& info) -> bool {
+			int minsToAdd;
+			bool needToStart;
+			do {
+				minsToAdd = calculatePreheatTime(info.nextTT.temp() + offset());
+				if (minsToAdd < 10) minsToAdd = 10; // guaruntee we always start recording a pre-heat
+				logger() << "\n\tNextHeatTime: " << info.nextEvent << " PreheatTime: " << minsToAdd << L_endl;
+				needToStart = clock_().now().minsTo(info.nextEvent) <= minsToAdd;
+				if (needToStart) break;
+				info = _sequencer->getProfileInfo(id(), info.nextEvent);
+			} while (clock_().now().minsTo(info.nextEvent) < 60*24);
+			return needToStart;
+		};
+
 		// Algorithm
 		/*
 		 If the next profile temp is higher than the current, then calculate the pre-heat time.
@@ -262,15 +276,13 @@ namespace HardwareInterfaces {
 		 When the actual temp reaches the required temp, stop recording and do a curve-match.
 		 If the temp-range of the curve-match is >= to the preious best, then save the new curve parameters.
 		*/
-		if (nextTempReq > currTempReq) {
-			int minsToAdd = calculatePreheatTime();
-			if (minsToAdd < 10) minsToAdd = 10; // guaruntee we always start recording a pre-heat
-			if (timeToStartHeating(minsToAdd)) {
-				setProfileTempRequest(nextTempReq - offset());
-				_getExpCurve.firstValue(currTemp_fractional);
-				logger() << L_time << "\tFirst Temp Registered for " << zoneRec.name << " temp is: " << L_fixed << currTemp_fractional << L_endl;
-				logger() << "\t\tEndTime: " << _ttEndDateTime << " PreheatTime: " << minsToAdd << " Compressed TC: " << zoneRec.autoTimeC << " Ratio: " << zoneRec.autoRatio << " OS Temp: " << outsideTemp << L_endl;
-			}
+		logger() << "Get ProfileInfo for " << zoneRec.name << L_endl;
+		auto profileInfo = _sequencer->getProfileInfo(id(), clock_().now());
+		if (futureProfileNeedsPreHeating(profileInfo)) {
+			logger() << " Needs pre-heat. Compressed TC: " << zoneRec.autoTimeC << " Ratio: " << zoneRec.autoRatio << " OS Temp: " << outsideTemp << L_endl;
+			_offset_preheatCallTemp = profileInfo.nextTT.temp() + offset();
+			_getExpCurve.firstValue(currTemp_fractional);
+			logger() << L_time << "\tFirst Temp Registered for " << zoneRec.name << " temp is: " << L_fixed << currTemp_fractional << L_endl;
 		} else { // We are in pre-heat or nextReq lower than CurrReq
 			offerCurrTempToCurveMatch();
 			if (reachedAcceptableTemp()) {

@@ -476,6 +476,7 @@ namespace LCD_UI {
 	template<int noOfObjects>
 	class UI_IteratedCollection : public Collection<noOfObjects>, public UI_IteratedCollection_Hoist {
 	public:
+		using HI_BD = HardwareInterfaces::LCD_Display;
 		// Zero-based endPos, endPos=0 means no characters are displayed. 
 		UI_IteratedCollection(int endPos, Collection<noOfObjects> collection) // Inherit behaviour from the active member
 			: Collection<noOfObjects>(collection, {}) // behaviour is for the iteration. The collection is always view-all. All members modified to view-one.

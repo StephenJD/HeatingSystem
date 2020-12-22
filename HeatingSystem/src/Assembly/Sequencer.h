@@ -1,40 +1,34 @@
 #pragma once
 #include "RDB.h"
-#include "HeatingSystemEnums.h"
 #include "Date_Time.h"
-
-namespace client_data_structures {
-	struct R_Spell;
-	struct R_TimeTemp;
-}
-
-namespace HardwareInterfaces {
-	class Zone;
-}
+#include "..\Client_DataStructures\Data_Spell.h"
+#include "..\Client_DataStructures\Data_TimeTemp.h"
 
 namespace Assembly {
-	class TemperatureController;
-	class HeatingSystem_Queries;
+	struct HeatingSystem_Queries;
+
+	struct ProfileInfo {
+		Date_Time::DateTime currEvent;
+		Date_Time::DateTime nextEvent = Date_Time::JUDGEMEMT_DAY;
+		client_data_structures::R_Spell currSpell;
+		client_data_structures::R_Spell nextSpell;
+		RelationalDatabase::RecordID prevProfileID = -1;
+		RelationalDatabase::RecordID currentProfileID = -1;
+		RelationalDatabase::RecordID nextProfileID = -1;
+		client_data_structures::R_TimeTemp currTT;
+		client_data_structures::R_TimeTemp nextTT;
+	};
 
 	class Sequencer {
 	public:
-		Sequencer(HeatingSystem_Queries & queries, TemperatureController & tc);
-		void recheckNextEvent(); // called when data has been edited by the user
-		void getNextEvent(); // called in every run of the arduino endless loop
-		void refreshProfile(HardwareInterfaces::Zone & zone);
-		HeatingSystem_Queries & queries() {return *_queries;}
+		Sequencer(HeatingSystem_Queries& queries);
+		ProfileInfo getProfileInfo(RelationalDatabase::RecordID zoneID, Date_Time::DateTime timeOfInterest);
+		//HeatingSystem_Queries& queries() { return *_queries; }
 	private:
-		void nextEvent(); // called when event has expired
-		void setNextEventTime(Date_Time::DateTime nextEventTime) { _nextSystemEvent = nextEventTime; }
-		auto getCurrentSpell(RelationalDatabase::RecordID dwellingID, client_data_structures::R_Spell & nextSpell)->client_data_structures::R_Spell;
-		auto getCurrentProfileID(RelationalDatabase::RecordID zoneID, RelationalDatabase::RecordID progID, RelationalDatabase::RecordID & nextDayProfileID)->RelationalDatabase::RecordID;
-		auto getStartProfileID_for_Spell(client_data_structures::R_Spell spell, RelationalDatabase::RecordID zoneID, RelationalDatabase::RecordID & prevDayProfileID)->RelationalDatabase::RecordID;
-		auto getCurrentTT(RelationalDatabase::RecordID profileID, client_data_structures::R_TimeTemp & next_tt)->client_data_structures::R_TimeTemp;
-		auto getTT_for_Time(Date_Time::TimeOnly time, RelationalDatabase::RecordID profileID, RelationalDatabase::RecordID prevDayProfileID)->client_data_structures::R_TimeTemp;
-
-		HeatingSystem_Queries * _queries = 0;
-		TemperatureController * _tc = 0;
-		Date_Time::DateTime _nextSystemEvent{};
+		void getCurrentSpell(RelationalDatabase::RecordID dwellingID, ProfileInfo& info);
+		void getCurrentProfileID(RelationalDatabase::RecordID zoneID, ProfileInfo& info);
+		auto getNextTT(RelationalDatabase::RecordID currProfileID, Date_Time::TimeOnly time) ->client_data_structures::R_TimeTemp;
+		HeatingSystem_Queries* _queries = 0;
 	};
 
 }

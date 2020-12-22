@@ -23,7 +23,7 @@ namespace Assembly {
 	using namespace client_data_structures;
 	using namespace I2C_Recovery;
 
-	TemperatureController::TemperatureController(I2C_Recover & recovery, Sequencer& sequencer, unsigned long * timeOfReset_mS) :
+	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, unsigned long * timeOfReset_mS) :
 		tempSensorArr{ recovery }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
@@ -31,7 +31,7 @@ namespace Assembly {
 	{
 		int index = 0;
 		logger() << F("loadtempSensors...") << L_endl;
-		auto tempSensors = sequencer.queries()._q_tempSensors;
+		auto tempSensors = queries.q_tempSensors;
 
 		for (Answer_R<R_TempSensor> tempSensor : tempSensors) {
 			tempSensorArr[index].initialise(tempSensor.id(), tempSensor.rec().address); // Reads temp
@@ -42,7 +42,7 @@ namespace Assembly {
 		logger() << F("loadtempSensors Completed") << L_endl;
 
 		index = 0;
-		auto relays = sequencer.queries()._q_relay;
+		auto relays = queries.q_relays;
 		for (Answer_R<R_Relay> relay : relays) {
 			relayArr[index].initialise(relay.id(), relay.rec().relay_B);
 			++index;
@@ -50,12 +50,12 @@ namespace Assembly {
 
 		logger() << F("loadRelays Completed") << L_endl;
 
-		Answer_R<R_ThermalStore> thStRec = *sequencer.queries()._rdb->tableQuery(TB_ThermalStore).begin();
+		Answer_R<R_ThermalStore> thStRec = *queries.q_ThermStore.begin();
 		thermalStore.initialise(thStRec.rec());
 
 		logger() << F("load thermalStore Completed") << L_endl;
 		index = 0;
-		auto mixValveControls = sequencer.queries()._rdb->tableQuery(TB_MixValveContr);
+		auto mixValveControls = queries.q_MixValve;
 		for (Answer_R<R_MixValveControl> mixValveControl : mixValveControls) {
 			mixValveControllerArr[index].initialise(index
 				, MIX_VALVE_I2C_ADDR
@@ -70,7 +70,7 @@ namespace Assembly {
 		
 		logger() << F("load mixValveControllerArr Completed") << L_endl;
 		index = 0;
-		auto zones = sequencer.queries()._q_Zones;
+		auto zones = queries.q_Zones;
 		for (Answer_R<R_Zone> zone : zones) {
 			zoneArr[index].initialise(zone.id()
 				, tempSensorArr[zone.rec().callTempSens]
@@ -78,14 +78,13 @@ namespace Assembly {
 				, thermalStore
 				, mixValveControllerArr[zone.rec().mixValve]
 				, zone.rec().maxFlowTemp
-				, sequencer
 			);
 			++index;
 		}
 		logger() << F("loadZones Completed") << L_endl;
 
 		index = 0;
-		auto towelrails = sequencer.queries()._q_towelRail;
+		auto towelrails = queries.q_towelRails;
 		for (Answer_R<R_TowelRail> towelRail : towelrails) {
 			towelRailArr[index].initialise(towelRail.id()
 				, tempSensorArr[towelRail.rec().callTempSens]

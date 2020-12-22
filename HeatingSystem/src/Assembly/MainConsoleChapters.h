@@ -15,13 +15,13 @@ namespace HardwareInterfaces {
 
 namespace Assembly {
 	class TemperatureController;
-	class HeatingSystem_Queries;
+	struct HeatingSystem_Datasets;
 
 	class MainConsoleChapters : public LCD_UI::Chapter_Generator
 	{
 	public:
 		enum { e_zones, e_calendars, e_programs, e_towelRails, e_NO_OF_CMDS };
-		MainConsoleChapters(HeatingSystem_Queries & db, TemperatureController & tc, HeatingSystem & hs);
+		MainConsoleChapters(HeatingSystem_Datasets& ds, TemperatureController & tc, HeatingSystem & hs);
 		LCD_UI::A_Top_UI & operator()(int chapterNo) override;
 
 	private:

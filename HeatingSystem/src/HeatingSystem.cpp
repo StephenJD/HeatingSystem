@@ -81,10 +81,11 @@ HeatingSystem::HeatingSystem()
 	_recover(i2C, STRATEGY_EPPROM_ADDR)
 	, db(RDB_START_ADDR, writer, reader, VERSION)
 	, _initialiser(*this)
-	, _hs_queries(db, _tempController)
-	, _sequencer(_hs_queries, _tempController)
+	, _hs_queries(db)
+	, _hs_datasets(_hs_queries, _tempController)
+	, _sequencer(_hs_queries)
 	, _tempController(_recover, _sequencer, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
-	, mainDisplay(&_hs_queries._q_Displays)
+	, mainDisplay(&_hs_queries.q_Displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
 	, remoteKeypad{ {remDispl[0].displ()},{remDispl[0].displ()},{remDispl[0].displ()} }
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, DS_REMOTE_ADDRESS, FL_REMOTE_ADDRESS } // must be same order as zones
@@ -124,14 +125,12 @@ void HeatingSystem::serviceConsoles() {
 	//activeField->move_focus_to(focusWas);
 }
 
-void HeatingSystem::serviceProfiles() { _sequencer.getNextEvent(); }
+void HeatingSystem::serviceProfiles() { _tempController.checkZones(); }
 
 void HeatingSystem::notifyDataIsEdited() {
 	if (_mainConsoleChapters.chapter() == 0) {
 		logger() << L_time << F("notifyDataIsEdited\n");
 		_tempController.checkZones();
-		logger() << L_time << F("recheckNextEvent...\n");
-		_sequencer.recheckNextEvent();
 	}
 }
 

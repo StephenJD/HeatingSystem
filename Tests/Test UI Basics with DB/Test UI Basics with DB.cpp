@@ -32,27 +32,27 @@
 #include <iostream>
 #include <iomanip>
 
-#define DATABASE
-#define UI_DB_DISPLAY_VIEW_ONE
-#define UI_DB_DISPLAY_VIEW_ALL
-#define UI_DB_SHORT_LISTS
-#define EDIT_NAMES_NUMS
-////////#define EDIT_INTS
-////
-////////#define EDIT_FORMATTED_INTS
-////
-#define EDIT_DATES
-#define EDIT_CURRENT_DATETIME
-#define ITERATION_VARIANTS
-#define ITERATED_ZONE_TEMPS
-
-#define CONTRAST
-#define VIEW_ONE_NESTED_CALENDAR_PAGE
-#define VIEW_ONE_NESTED_PROFILE_PAGE
-#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
-#define TIME_TEMP_EDIT
+//#define DATABASE
+//#define UI_DB_DISPLAY_VIEW_ONE
+//#define UI_DB_DISPLAY_VIEW_ALL
+//#define UI_DB_SHORT_LISTS
+//#define EDIT_NAMES_NUMS
+//////////#define EDIT_INTS
+//////
+//////////#define EDIT_FORMATTED_INTS
+//////
+//#define EDIT_DATES
+//#define EDIT_CURRENT_DATETIME
+//#define ITERATION_VARIANTS
+//#define ITERATED_ZONE_TEMPS
+//
+//#define CONTRAST
+//#define VIEW_ONE_NESTED_CALENDAR_PAGE
+//#define VIEW_ONE_NESTED_PROFILE_PAGE
+//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+//#define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
-#define INFO_CONSOLE_PAGES
+//#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS 
 //////#define CMD_MENU
@@ -2926,8 +2926,8 @@ TEST_CASE("Contrast", "[Display]") {
 
 	RDB<TB_NoOfTables>_db(RDB_START_ADDR, EEPROM_SIZE, writer, reader, VERSION);
 	setFactoryDefaults(_db, VERSION);
-	RelationalDatabase::TableQuery _q_Displays(_db.tableQuery(TB_Display));
-	HardwareInterfaces::LocalDisplay mainDisplay(&_q_Displays);
+	RelationalDatabase::TableQuery q_Displays(_db.tableQuery(TB_Display));
+	HardwareInterfaces::LocalDisplay mainDisplay(&q_Displays);
 
 	// Basic UI Elements
 	client_data_structures::Contrast_Brightness_Cmd _contrastCmd{ "Contrast",0, Behaviour{V + S + L+V1 + UD_C} };
@@ -3269,7 +3269,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	display1_h.rec_prevUI();
 	display1_h.rec_up_down(1);
 
-	auto q_TimeTemps = hs.getQueries()._q_TimeTempsForProfile;
+	auto q_TimeTemps = hs.getQueries().q_TimeTempsForProfile;
 	q_TimeTemps.setMatchArg(0);
 	cout << "House, At Home, US, TT's\n";
 	for (Answer_R<R_TimeTemp> tt : q_TimeTemps) {

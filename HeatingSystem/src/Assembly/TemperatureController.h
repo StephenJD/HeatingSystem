@@ -10,12 +10,12 @@
 #include <RDB.h>
 
 namespace Assembly {
-	class Sequencer;
+	struct HeatingSystem_Queries;
 
 	class TemperatureController
 	{
 	public:
-		TemperatureController(I2C_Recovery::I2C_Recover & recovery, Sequencer & sequencer, unsigned long * timeOfReset_mS);
+		TemperatureController(I2C_Recovery::I2C_Recover & recovery, HeatingSystem_Queries& queries, unsigned long * timeOfReset_mS);
 		// Queries
 		int outsideTemp() const { return thermalStore.getOutsideTemp(); }
 

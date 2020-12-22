@@ -38,6 +38,7 @@ namespace Date_Time {
 		constexpr DateOnly(const DateOnly & rhs) : _dateInt(rhs._dateInt) {} // required in VS! Default is not constexpr
 		constexpr DateOnly(int day, int month, int year) : _dateInt(getIni(day, month, year)) {}
 		explicit constexpr DateOnly(uint32_t intRepr) : _dateInt(static_cast<uint16_t>(intRepr)) {}
+		static uint8_t weekDayFlag(int dayNo);
 
 		// Queries
 		// Note: Only the data members expressly initialised during a constexpr construction 
@@ -101,6 +102,10 @@ namespace Date_Time {
 	inline /*constexpr*/ uint8_t DateOnly::weekDayFlag() const {
 		// 0MTWTFSS
 		return 64 >> weekDayNo();
+	}
+
+	inline /*constexpr*/ uint8_t DateOnly::weekDayFlag(int dayNo) {
+		return 64 >> dayNo;
 	}
 
 	inline /*constexpr*/ int DateOnly::dayOfYear() const {

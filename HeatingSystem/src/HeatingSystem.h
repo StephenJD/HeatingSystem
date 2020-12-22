@@ -12,6 +12,7 @@
 #include "Assembly\Initialiser.h"
 #include "Assembly\TemperatureController.h"
 #include "Assembly\HeatingSystem_Queries.h"
+#include "Assembly\Datasets.h"
 #include "Assembly\HeatingSystemEnums.h"
 #include "Assembly\MainConsoleChapters.h"
 #include "Assembly\RemoteConsoleChapters.h"
@@ -46,6 +47,7 @@ private: // data-member ordering matters!
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
 	Assembly::Initialiser _initialiser; // Checks db
 	Assembly::HeatingSystem_Queries _hs_queries;
+	Assembly::HeatingSystem_Datasets _hs_datasets;
 	Assembly::Sequencer _sequencer;
 	Assembly::TemperatureController _tempController;
 public:	

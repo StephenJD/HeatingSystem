@@ -34,7 +34,6 @@ namespace HardwareInterfaces {
 			, ThermalStore & thermalStore
 			, MixValveController & mixValveController
 			, int8_t maxFlowTemp
-			, Assembly::Sequencer& sequencer
 		);
 #ifdef ZPSIM
 		Zone(UI_TempSensor & ts, int reqTemp, UI_Bitwise_Relay & callRelay);
@@ -48,8 +47,8 @@ namespace HardwareInterfaces {
 		int8_t offset() const { return _offsetT; }
 		int8_t getCurrTemp() const;
 		bool isCallingHeat() const;
-		Date_Time::DateTime nextEventTime() { return _ttEndDateTime; }
-		bool operator== (const Zone & rhs) { return _recordID == rhs._recordID; }
+		Date_Time::DateTime nextEventTime() const { return _ttEndDateTime; }
+		bool operator== (const Zone & rhs) const { return _recordID == rhs._recordID; }
 		bool isDHWzone() const;
 		int16_t getFractionalCallSensTemp() const;
 
@@ -66,7 +65,6 @@ namespace HardwareInterfaces {
 
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
-		Assembly::Sequencer * _sequencer = 0;
 		UI_TempSensor * _callTS = 0;
 		UI_Bitwise_Relay * _relay = 0;
 		ThermalStore * _thermalStore = 0;
@@ -76,8 +74,9 @@ namespace HardwareInterfaces {
 		int8_t _offsetT = 0;
 		uint8_t _maxFlowTemp = 0;
 
-		int8_t _currProfileTempRequest = 0;
-		int8_t _nextProfileTempRequest = 0;
+		int8_t _currProfileTempRequest = 0; // current profile temp. Shown with offset on display - user can advance to next.
+		int8_t _nextProfileTempRequest = 0; // next selectable profile temp. Shown with offset on display
+		int8_t _offset_preheatCallTemp = 0; // current called-for temp, adjusted for pre-heat and offset.
 		Date_Time::DateTime _ttEndDateTime;
 		int8_t _callFlowTemp = 0;		// Programmed flow temp, modified by zoffset
 		bool _isHeating = false; // just for logging

@@ -4,12 +4,12 @@
 #include "..\LCD_UI\UI_Cmd.h"
 
 namespace Assembly {
-	class HeatingSystem_Queries;
+	struct HeatingSystem_Datasets;
 
 	class RemoteConsoleChapters : public LCD_UI::Chapter_Generator
 	{
 	public:
-		RemoteConsoleChapters(HeatingSystem_Queries & db);
+		RemoteConsoleChapters(HeatingSystem_Datasets & ds);
 		LCD_UI::A_Top_UI & operator()(int chapterNo) override;
 	private:
 		LCD_UI::UI_FieldData _rem_tempReqUI_c;

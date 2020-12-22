@@ -1,14 +1,14 @@
 #include "MainConsoleChapters.h"
 #include "..\HeatingSystem.h"
 #include "TemperatureController.h"
-#include "HeatingSystem_Queries.h"
+#include "Datasets.h"
 
 namespace Assembly {
 	using namespace RelationalDatabase;
 	using namespace client_data_structures;
 	using namespace LCD_UI;
 
-	MainConsoleChapters::MainConsoleChapters(HeatingSystem_Queries & db, TemperatureController & tc, HeatingSystem & hs) :
+	MainConsoleChapters::MainConsoleChapters(HeatingSystem_Datasets & db, TemperatureController & tc, HeatingSystem & hs) :
 		_tc(&tc)
 
 		// DB UIs (Lazy-Collections)

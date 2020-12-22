@@ -75,7 +75,7 @@ namespace client_data_structures {
 		// The profilesForZoneProg query is a FilterQ, filtering on ProgramID obtained from the parent ProgsForDwelling dataset.
 		// But the profilesForZoneProg FilterQ-IncrementQ is itself a FilterQ, 
 		// whose MatchArgument is the ZoneID obtained from the ZoneForDwelling dataset
-		// The ZoneForDwelling dataset has a Link Query to _q_ZonesForDwelling as its source. Its Record() is a Zone.
+		// The ZoneForDwelling dataset has a Link Query to q_ZonesForDwelling as its source. Its Record() is a Zone.
 
 		query().setMatchArg(parentIndex()); // parent is ProgramID. Required here
 		logger() << F("\tProfile._zoneForDwelling ") << ui_Objects()[(long)_zoneForDwelling].c_str() << L_endl;
