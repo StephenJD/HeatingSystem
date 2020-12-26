@@ -74,29 +74,6 @@ namespace Assembly {
 		{ "MFBF",0x2F }
 	};	
 	
-	//constexpr R_TempSensor tempSensors_f[] = {
-	//	{ "Flat",0x29 },
-	//	{ "FlTR",0x29 },
-	//	{ "HsTR",0x29 },
-	//	{ "EnST",0x29 },
-	//	{ "UpSt",0x29 },
-	//	{ "DnSt",0x29 },
-	//	{ "OutS",0x29 },
-	//	{ "Grnd",0x29 },
-
-	//	{ "Pdhw",0x29 },
-	//	{ "DHot",0x29 },
-	//	{ "US-F",0x29 },
-	//	{ "DS-F",0x29 },
-	//	{ "TkMf",0x29 },
-	//	{ "TkDs",0x29 },
-	//	{ "TkUs",0x29 },
-	//	{ "TkTp",0x29 },
-
-	//	{ "GasF",0x29 },
-	//	{ "MFBF",0x29 }
-	//};
-
 	constexpr R_TowelRail towelRails_f[] = {
 		  { "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 50, 60 }
 		, { "Family", T_HTrS, R_HsTR, M_UpStrs, 51, 61 }
@@ -108,12 +85,11 @@ namespace Assembly {
 		,{ "HolAppt" }
 	};
 
-	constexpr R_Program programs_f[] = {
-		{ "At Home",0 }		// 0
-		,{ "Occup'd",1 }	// 1
-		,{ "At Work",0 }	// 2
-		,{ "Empty",1 }		// 3
-		,{ "Away",0 }		// 4
+	constexpr R_Zone zones_f[] = { // offsetT, autoRatio, autoTimeC, autoQuality, manHeatTime;
+		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,102,216,1,194 }
+		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,125,192,1,173 }
+		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,0,35,1,35 }
+		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,107,217,1,194 }
 	};
 
 	constexpr R_DwellingZone dwellingZones_f[] = {
@@ -122,6 +98,47 @@ namespace Assembly {
 		,{ 0,1 }
 		,{ 1,2 } 
 		,{ 0,2 }
+	};
+
+	constexpr R_Program programs_f[] = { // Name , Dwelling
+		{ "At Home",0 }		// 0
+		,{ "Occup'd",1 }	// 1
+		,{ "At Work",0 }	// 2
+		,{ "Empty",1 }		// 3
+		,{ "Away",0 }		// 4
+	};
+
+	constexpr R_Spell spells_f[] = { // date, ProgramID : Ordered by date
+	{ DateTime({ 31,7,19, },{ 15,20 }),0 } // at home
+	,{ DateTime({ 31,7,19, },{ 15,30 }),1 }// occupied
+	,{ DateTime({ 3,9,19, },{ 17,30 }),2 } // at work
+	,{ DateTime({ 12,9,19, },{ 7,30 }),3 } // empty
+	,{ DateTime({ 22,9,19, },{ 15,0 }),4 } // away
+	,{ DateTime({ 30,9,19, },{ 10,0 }),0 } // at home
+	};
+
+	constexpr R_Profile profiles_f[] = {
+		//ProgID, ZnID, Days
+		{ 0,0,255 } // [0] At Home US MTWTFSS
+		,{ 0,1,124 }// [1] At Home DS MTWTF--
+		,{ 0,1,3 }  // [2] At Home DS -----SS
+		,{ 0,2,124 }// [3] At Home DHW MTWTF--
+		,{ 0,2,3 }  // [4] At Home DHW -----SS
+
+		,{ 2,0,255 }// [5] At Work US MTWTFSS
+		,{ 2,1,124 }// [6] At Work DS MTWTF--
+		,{ 2,1,3 }  // [7] At Work DS -----SS
+		,{ 2,2,124 }// [8] At Work DHW MTWTF--
+		,{ 2,2,3 }  // [9] At Work DHW -----SS		
+
+		,{ 4,0,255 } // [10] Away US MTWTFSS
+		,{ 4,1,255 } // [11] Away DS MTWTFSS
+		,{ 4,2,255 } // [12] Away DHW MTWTFSS
+
+		,{ 1,2,255 } // [13] Occupied DHW MTWTFSS
+		,{ 1,3,255}  // [14] Occupied Flat MTWTFSS
+		,{ 3,2,255 } // [15] Empty DHW 
+		,{ 3,3,255}  // [16] Empty Flat 
 	};
 
 	constexpr TimeTemp makeTT(int hrs, int mins, int temp) {
@@ -172,46 +189,6 @@ namespace Assembly {
 		,{14, makeTT(23,00,18)} // Occupied Flat MTWTFSS 
 		,{15, makeTT(07,00,10)} // Empty DHW 
 		,{16, makeTT(07,00,10)} // Empty Flat  
-	};
-
-	constexpr R_Spell spells_f[] = { // date, ProgramID : Ordered by date
-		{ DateTime({ 31,7,19, },{ 15,20 }),0 }
-		,{ DateTime({ 3,9,19, },{ 17,30 }),2 }
-		,{ DateTime({ 5,9,19, },{ 10,0 }),1 }
-		,{ DateTime({ 12,9,19, },{ 7,30 }),3 }
-		,{ DateTime({ 22,9,19, },{ 15,0 }),4 }
-		,{ DateTime({ 30,9,19, },{ 10,0 }),0 } 
-	};
-
-	constexpr R_Profile profiles_f[] = {
-		//ProgID, ZnID, Days
-		{ 0,0,255 } // [0] At Home US MTWTFSS
-		,{ 0,1,124 }// [1] At Home DS MTWTF--
-		,{ 0,1,3 }  // [2] At Home DS -----SS
-		,{ 0,2,124 }// [3] At Home DHW MTWTF--
-		,{ 0,2,3 }  // [4] At Home DHW -----SS
-		
-		,{ 2,0,255 }// [5] At Work US MTWTFSS
-		,{ 2,1,124 }// [6] At Work DS MTWTF--
-		,{ 2,1,3 }  // [7] At Work DS -----SS
-		,{ 2,2,124 }// [8] At Work DHW MTWTF--
-		,{ 2,2,3 }  // [9] At Work DHW -----SS		
-		
-		,{ 4,0,255 } // [10] Away US MTWTFSS
-		,{ 4,1,255 } // [11] Away DS MTWTFSS
-		,{ 4,2,255 } // [12] Away DHW MTWTFSS
-		
-		,{ 1,2,255 } // [13] Occupied DHW MTWTFSS
-		,{ 1,3,255}  // [14] Occupied Flat MTWTFSS
-		,{ 3,2,255 } // [15] Empty DHW 
-		,{ 3,3,255}  // [16] Empty Flat 
-	};	
-		
-	constexpr R_Zone zones_f[] = { 
-		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,102,216,1,194 }
-		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,125,192,1,173 }
-		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,0,35,1,35 }
-		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,107,217,1,194 }
 	};
 
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {

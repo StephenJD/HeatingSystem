@@ -2,7 +2,6 @@
 // *********************** Tests *********************
 #include <catch.hpp>
 
-#include "HeatingSystemEnums.h"
 #include "HeatingSystem_Queries.h"
 #include "Sequencer.h"
 #include "DateTimeWrapper.h"
@@ -33,6 +32,8 @@ using namespace RelationalDatabase;
 using namespace HardwareInterfaces;
 using namespace GP_LIB;
 using namespace Date_Time;
+using namespace client_data_structures;
+using namespace Assembly;
 using namespace std;
 
 
@@ -41,8 +42,7 @@ uint8_t CONTRAST_PWM = 6;
 unsigned char PHOTO_ANALOGUE = A1;
 uint8_t LOCAL_INT_PIN = 18;
 
-using namespace client_data_structures;
-using namespace Assembly;
+//enum tableIndex { /*TB_ThermalStore, TB_MixValveContr, TB_Display, TB_Relay, TB_TempSensor, TB_TowelRail,*/ TB_Dwelling, TB_Zone, TB_DwellingZone, TB_Program, TB_Profile, TB_TimeTemp, TB_Spell, TB_NoOfTables };
 
 int writer(int address, const void* data, int noOfBytes) {
 	if (address < RDB_START_ADDR || address + noOfBytes > RDB_START_ADDR + RDB_MAX_SIZE) {
@@ -121,70 +121,6 @@ constexpr TimeTemp makeTT(int hrs, int mins, int temp) {
 	return { TimeOnly{ hrs, mins }, int8_t(temp) };
 }
 
-constexpr R_ThermalStore thermalStore_f[] = {
-	{R_Gas
-	,T_GasF
-	,T_TkTop
-	,T_TkUs
-	,T_TkDs
-	,T_CWin
-	,T_Pdhw
-	,T_DHW
-	,T_OS
-	,85,21,75,25,60,180,169,138,97,25}
-};
-
-constexpr R_MixValveControl mixValveControl_f[] = {
-	{"DnS", T_DUfh, T_TkDs}
-	,{"UpS", T_UUfh, T_TkUs}
-};
-
-constexpr R_Display displays_f[] = {
-	{"Main", 0, 16, 20, 16, 250, 70, 30}
-	,{"US", US_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 0}
-	,{"DS", DS_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 0}
-	,{"Flat", FL_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 0}
-};
-
-constexpr R_Relay relays_f[] = {
-	{ "Flat",6 << 2 }
-	,{ "FlTR",1 << 2 }
-	,{ "HsTR",0 << 2 }
-	,{ "UpSt",5 << 2 }
-	,{ "MFSt",2 << 2 }
-	,{ "Gas",3 << 2 }
-	,{ "DnSt",4 << 2 }
-};
-
-constexpr R_TempSensor tempSensors_f[] = {
-	{ "UpSt",0x36 },
-	{ "DnSt",0x74 },
-	{ "Flat",0x70 },
-	{ "HsTR",0x71 },
-	{ "EnST",0x76 },
-	{ "FlTR",0x48 },
-	{ "GasF",0x4B },
-	{ "OutS",0x2B },
-
-	{ "Pdhw",0x37 },
-	{ "DHot",0x28 },
-	{ "US-F",0x2C },
-	{ "DS-F",0x4F },
-	{ "TkTp",0x2D },
-	{ "TkUs",0x2E },
-	{ "TkDs",0x77 },
-	{ "Grnd",0x35 },
-
-	{ "TMfl",0x75 },
-	{ "MFBF",0x2F }
-};
-
-constexpr R_TowelRail towelRails_f[] = {
-		{ "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 50, 60 }
-	, { "Family", T_HTrS, R_HsTR, M_UpStrs, 51, 61 }
-	, { "Flat", T_FTrS, R_FlTR, M_UpStrs, 52, 62 }
-};
-
 constexpr R_Dwelling dwellings_f[] = {
 	{ "House" }
 	,{ "HolAppt" }
@@ -230,18 +166,6 @@ constexpr R_Profile profiles_f[] = {
 	,{ 0,1,3 }  // [4] At Home  DS  -----SS
 	,{ 1,2,255 }// [5] Occupied DHW MTWTFSS
 	,{ 2,2,255 }// [6] At Work  DHW MTWTFSS
-	,{ 2,1,255 }// [7] At Work  DS  MTWTFSS
-
-	,{ 4,0,124 }// [8] At Work DHW MTWTF--
-	,{ 4,0,3 }  // [9] At Work DHW -----SS		
-	,{ 4,0,255 } // [10] Away US MTWTFSS
-	,{ 4,0,255 } // [11] Away DS MTWTFSS
-
-	,{ 4,0,255 } // [12] Away DHW MTWTFSS
-	,{ 4,0,255 } // [13] Occupied DHW MTWTFSS
-	,{ 4,0,255}  // [14] Occupied Flat MTWTFSS
-	,{ 4,0,255 } // [15] Empty DHW 
-	,{ 4,0,255}  // [16] Empty Flat 
 };
 
 
@@ -263,46 +187,20 @@ R_TimeTemp timeTemps_f[] = { // profileID,TT
 	,{6, makeTT(8,00,40)}  // [13] At Work  DHW MTWTFSS
 	,{6, makeTT(14,00,35)} // [14] At Work  DHW MTWTFSS
 	,{6, makeTT(23,00,30)} // [15] At Work  DHW MTWTFSS
-
-	,{7, makeTT(7,30,16)}  // At Work DS MTWTFSS
-	,{7, makeTT(18,00,19)} // At Work DS MTWTFSS
-	,{8, makeTT(8,00,19)}  // At Work DS -----SS
-	,{8, makeTT(23,00,16)} // At Work DS -----SS
-	,{8, makeTT(06,30,45)} // At Work DHW MTWTF--
-	,{8, makeTT(07,00,30)} // At Work DHW MTWTF--
-	,{8, makeTT(18,00,45)} // At Work DHW MTWTF--
-	,{8, makeTT(22,30,30)} // At Work DHW MTWTF--
-
-	,{9, makeTT(7,40,45)}  // At Work DHW -----SS
-	,{9, makeTT(10,00,30)}  // At Work DHW -----SS 
-	,{9, makeTT(15,30,45)} // At Work DHW -----SS 
-	,{9, makeTT(23,00,30)} // At Work DHW -----SS 
-	,{10, makeTT(07,00,10)} // Away US MTWTFSS 
-	,{11, makeTT(07,00,10)} // Away DS MTWTFSS 
-	,{12, makeTT(07,00,10)} // Away DHW MTWTFSS 
-	,{13, makeTT(07,00,45)} // Occupied DHW MTWTFSS 
-
-	,{13, makeTT(10,00,30)} // Occupied DHW MTWTFSS 
-	,{13, makeTT(16,00,45)} // Occupied DHW MTWTFSS 
-	,{13, makeTT(23,00,30)} // Occupied DHW MTWTFSS 
-	,{14, makeTT(07,00,20)} // Occupied Flat MTWTFSS 
-	,{14, makeTT(23,00,18)} // Occupied Flat MTWTFSS 
-	,{15, makeTT(07,00,10)} // Empty DHW 
-	,{16, makeTT(07,00,10)} // Empty Flat  
 };
 
 
 #ifdef DATABASE
 	SCENARIO("Create a Database", "[Database]") {
 
-	RDB<TB_NoOfTables> db(RDB_START_ADDR, EEPROM_SIZE, writer, reader, VERSION);
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, EEPROM_SIZE, writer, reader, 255);
 
-	db.createTable<>(thermalStore_f);
-	db.createTable(mixValveControl_f);
-	db.createTable(displays_f);
-	db.createTable(relays_f);
-	db.createTable(tempSensors_f);
-	db.createTable(towelRails_f);
+	db.createTable<R_ThermalStore>(1);
+	db.createTable<R_MixValveControl>(1);
+	db.createTable<R_Display>(1);
+	db.createTable<R_Relay>(1);
+	db.createTable<R_TempSensor>(1);
+	db.createTable<R_TowelRail>(1);
 	db.createTable(dwellings_f);
 	db.createTable(zones_f);
 	db.createTable(dwellingZones_f);
@@ -317,7 +215,7 @@ R_TimeTemp timeTemps_f[] = { // profileID,TT
 
 TEST_CASE("Profile repeated over 2 Days", "[Sequencer]") {
 	auto zoneID = 1;
-	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, 255);
 	HeatingSystem_Queries queries{db};
 	Sequencer sequencer{queries};
 	auto nextEvent = spells_f[0].date;
@@ -339,7 +237,7 @@ TEST_CASE("Profile repeated over 2 Days", "[Sequencer]") {
 
 TEST_CASE("Profiles get earlier over 2 Days", "[Sequencer]") {
 	auto zoneID = 1;
-	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, 255);
 	HeatingSystem_Queries queries{ db };
 	Sequencer sequencer{ queries };
 	auto nextEvent = spells_f[1].date;
@@ -361,7 +259,7 @@ TEST_CASE("Profiles get earlier over 2 Days", "[Sequencer]") {
 
 TEST_CASE("Two-dwellings Higher takes priority", "[Sequencer]") {
 	auto zoneID = 2;
-	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, 255);
 	HeatingSystem_Queries queries{ db };
 	Sequencer sequencer{ queries };
 	auto nextEvent = spells_f[2].date;

@@ -22,11 +22,11 @@ namespace GP_LIB {
 			bool resultOK;
 		};
 		
-		double uncompressTC(uint8_t compressed_tc) const {
+		static double uncompressTC(uint8_t compressed_tc) {
 			return exp(compressed_tc / 50.) * 10;
 		}
 
-		uint8_t compressTC(double timeConst) const {
+		static uint8_t compressTC(double timeConst) {
 			if (timeConst > 1640) timeConst = 1640;
 			if (timeConst < 10) timeConst = 10;
 			return static_cast<uint8_t>(log(timeConst/10) * 50. + 0.5);

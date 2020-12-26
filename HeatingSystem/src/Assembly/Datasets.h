@@ -7,6 +7,19 @@ namespace Assembly {
 	struct HeatingSystem_Datasets
 	{
 		HeatingSystem_Datasets(HeatingSystem_Queries& queries, TemperatureController& tc);
+	private:
+		// DB Record Interfaces - Must be constructed first
+		client_data_structures::RecInt_CurrDateTime	_recCurrTime;
+		client_data_structures::RecInt_Dwelling		_recDwelling;
+		client_data_structures::RecInt_Zone			_recZone;
+		client_data_structures::RecInt_Program		_recProg;
+		client_data_structures::RecInt_Spell		_recSpell;
+		client_data_structures::RecInt_Profile		_recProfile;
+		client_data_structures::RecInt_TimeTemp		_recTimeTemp;
+		client_data_structures::RecInt_TempSensor	_recTempSensor;
+		client_data_structures::RecInt_TowelRail	_recTowelRail;
+		client_data_structures::RecInt_Relay		_recRelay;
+	public:
 		// Datasets
 		client_data_structures::Dataset _ds_currTime;
 		client_data_structures::Dataset _ds_dwellings;
@@ -20,18 +33,6 @@ namespace Assembly {
 		client_data_structures::Dataset _ds_tempSensors;
 		client_data_structures::Dataset _ds_towelRail;
 		client_data_structures::Dataset _ds_relay;
-	private:
-		// DB Record Interfaces
-		client_data_structures::RecInt_CurrDateTime	_recCurrTime;
-		client_data_structures::RecInt_Dwelling		_recDwelling;
-		client_data_structures::RecInt_Zone			_recZone;
-		client_data_structures::RecInt_Program		_recProg;
-		client_data_structures::RecInt_Spell		_recSpell;
-		client_data_structures::RecInt_Profile		_recProfile;
-		client_data_structures::RecInt_TimeTemp		_recTimeTemp;
-		client_data_structures::RecInt_TempSensor	_recTempSensor;
-		client_data_structures::RecInt_TowelRail	_recTowelRail;
-		client_data_structures::RecInt_Relay		_recRelay;
 
 	};
 

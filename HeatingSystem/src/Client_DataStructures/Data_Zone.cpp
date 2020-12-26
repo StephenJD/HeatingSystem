@@ -2,6 +2,7 @@
 #include "Conversions.h"
 #include "..\LCD_UI\UI_FieldData.h"
 #include "..\HardwareInterfaces\Zone.h"
+#include "..\Assembly\Sequencer.h"
 
 namespace client_data_structures {
 	using namespace LCD_UI;

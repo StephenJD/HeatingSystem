@@ -16,6 +16,7 @@
 namespace Assembly {	
 	class TemperatureController;
 	class Sequencer;
+	struct ProfileInfo;
 }
 
 namespace HardwareInterfaces {
@@ -28,20 +29,21 @@ namespace HardwareInterfaces {
 	public:
 		Zone() = default;
 		void initialise(
-			int zoneID
+			RelationalDatabase::Answer_R<client_data_structures::R_Zone> zoneRecord
 			, UI_TempSensor & callTS
 			, UI_Bitwise_Relay & callRelay
 			, ThermalStore & thermalStore
 			, MixValveController & mixValveController
-			, int8_t maxFlowTemp
 		);
 #ifdef ZPSIM
 		Zone(UI_TempSensor & ts, int reqTemp, UI_Bitwise_Relay & callRelay);
 #endif
+		static void setSequencer(Assembly::Sequencer& sequencer) { _sequencer = &sequencer; }
 		// Queries
 		RelationalDatabase::RecordID id() const { return _recordID; }
 		int8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
 		int8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
+		int8_t preheatTempRequest() const { return _offset_preheatCallTemp; }
 		int8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
 		int8_t maxUserRequestTemp() const;
 		int8_t offset() const { return _offsetT; }
@@ -53,7 +55,7 @@ namespace HardwareInterfaces {
 		int16_t getFractionalCallSensTemp() const;
 
 		// Modifier
-		void refreshProfile();
+		Assembly::ProfileInfo refreshProfile(bool reset = true);
 		void resetOffsetToZero() { _offsetT = 0; }
 		void offsetCurrTempRequest(int8_t val);
 		bool setFlowTemp();
@@ -61,8 +63,7 @@ namespace HardwareInterfaces {
 		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
 		void preHeatForNextTT();
-		auto zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> &;
-
+		RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() { return _zoneRecord; } // for testing
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
 		UI_TempSensor * _callTS = 0;
@@ -81,5 +82,6 @@ namespace HardwareInterfaces {
 		int8_t _callFlowTemp = 0;		// Programmed flow temp, modified by zoffset
 		bool _isHeating = false; // just for logging
 		GP_LIB::GetExpCurveConsts _getExpCurve{ 128 };
+		static Assembly::Sequencer* _sequencer;
 	};
 }

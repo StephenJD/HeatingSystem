@@ -4,6 +4,7 @@
 #include "HardwareInterfaces\A__Constants.h"
 #include "LCD_UI\A_Top_UI.h"
 #include <EEPROM.h>
+#include <Clock.h>
 #include <MemoryFree.h>
 
 #ifdef ZPSIM
@@ -84,13 +85,13 @@ HeatingSystem::HeatingSystem()
 	, _hs_queries(db)
 	, _hs_datasets(_hs_queries, _tempController)
 	, _sequencer(_hs_queries)
-	, _tempController(_recover, _sequencer, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
+	, _tempController(_recover, _hs_queries, _sequencer, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
 	, mainDisplay(&_hs_queries.q_Displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
 	, remoteKeypad{ {remDispl[0].displ()},{remDispl[0].displ()},{remDispl[0].displ()} }
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, DS_REMOTE_ADDRESS, FL_REMOTE_ADDRESS } // must be same order as zones
-	, _mainConsoleChapters{ _hs_queries, _tempController, *this}
-	, _remoteConsoleChapters{_hs_queries}
+	, _mainConsoleChapters{ _hs_datasets, _tempController, *this}
+	, _remoteConsoleChapters{ _hs_datasets }
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
 	, _remoteConsole{ {remoteKeypad[0], remDispl[0], _remoteConsoleChapters},{remoteKeypad[1], remDispl[1], _remoteConsoleChapters},{remoteKeypad[2], remDispl[2], _remoteConsoleChapters} }
 	{

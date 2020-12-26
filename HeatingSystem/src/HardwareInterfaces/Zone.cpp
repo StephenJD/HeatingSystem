@@ -20,6 +20,8 @@ namespace HardwareInterfaces {
 	using namespace Date_Time;
 	using namespace client_data_structures;
 
+	Sequencer* Zone::_sequencer;
+
 	//***************************************************
 	//              Zone Dynamic Class
 	//***************************************************
@@ -31,18 +33,17 @@ namespace HardwareInterfaces {
 		, _isHeating(reqTemp > _callTS->get_temp() ? true : false)
 		, _maxFlowTemp(65)
 	{}
+
 #endif
-	void Zone::initialise(int zoneID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController, int8_t maxFlowTemp) {
+	void Zone::initialise(Answer_R<client_data_structures::R_Zone> zoneRecord, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController) {
 		_callTS = &callTS;
 		_mixValveController = &mixValveController;
 		_relay = &callRelay;
 		_thermalStore = &thermalStore;
-		_recordID = zoneID;
-		_maxFlowTemp = maxFlowTemp;
-		using namespace RelationalDatabase;
-		using namespace client_data_structures;
-		auto zones = queries.q_Zones;
-		_zoneRecord = zones[_recordID];
+		_zoneRecord = zoneRecord;
+		_recordID = zoneRecord.id();
+		_maxFlowTemp = zoneRecord.rec().maxFlowTemp;
+		refreshProfile();
 	}
 
 	void Zone::offsetCurrTempRequest(int8_t val) {
@@ -154,16 +155,17 @@ namespace HardwareInterfaces {
 		return (tempError < 0);
 	}
 
-	auto Zone::zoneRecord() -> RelationalDatabase::Answer_R<client_data_structures::R_Zone> & {
-		return _zoneRecord;
-	}
-
-	void Zone::refreshProfile() { // resets to original profile for UI.
-		setNextEventTime(clock_().now());
-		auto profileInfo = _sequencer->getProfileInfo(id(), clock_().now());
+	ProfileInfo Zone::refreshProfile(bool reset) { // resets to original profile for UI.
+		auto profileDate = nextEventTime();
+		if (reset || _currProfileTempRequest != _nextProfileTempRequest) {
+			profileDate = clock_().now();
+			reset = true;
+		}
+		auto profileInfo = _sequencer->getProfileInfo(id(), profileDate);
 		setNextEventTime(profileInfo.nextEvent);
 		setNextProfileTempRequest(profileInfo.nextTT.time_temp.temp());
-		setProfileTempRequest(profileInfo.currTT.temp());
+		if (reset) setProfileTempRequest(profileInfo.currTT.temp());
+		return profileInfo;
 	}
 
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
@@ -171,9 +173,7 @@ namespace HardwareInterfaces {
 		// returns true when actual programmed time has expired.
 
 		using namespace Date_Time;
-		auto & zoneAnswer = zoneRecord();
-		auto & zoneRec = zoneAnswer.rec();
-		auto currTempReq = currTempRequest();
+		auto & zoneRec = _zoneRecord.rec();
 		auto nextTempReq = nextTempRequest();
 		auto currTemp_fractional = getFractionalCallSensTemp();
 		auto outsideTemp = isDHWzone() ? uint8_t(20) : _thermalStore->getOutsideTemp();
@@ -233,10 +233,10 @@ namespace HardwareInterfaces {
 			}
 		};
 
-		auto reachedAcceptableTemp = [currTemp_fractional, currTempReq]() -> bool { return currTemp_fractional + 128 >= currTempReq * 256; };
+		auto reachedAcceptableTemp = [currTemp_fractional](int currTempReq) -> bool { return currTemp_fractional + 128 >= currTempReq * 256; };
 		auto canUpdatePreheatParameters = [&zoneRec](int quality)->bool {return zoneRec.autoQuality > 0 && quality > 0; };
 		
-		auto saveNewPreheatParameters = [this, &zoneRec, &zoneAnswer, outsideTemp, currTempReq](GetExpCurveConsts::CurveConsts curveMatch, int quality) {
+		auto saveNewPreheatParameters = [this, &zoneRec, outsideTemp](int currTempReq, GetExpCurveConsts::CurveConsts curveMatch, int quality) {
 			logger() << " New Limit: " << L_fixed << long(curveMatch.limit)
 			<< " New TC: " << L_int << long(curveMatch.timeConst)
 			<< " New Quality: " << L_int << quality << " Old Quality: " << zoneRec.autoQuality << " OS Temp: " << outsideTemp << L_endl;
@@ -251,21 +251,25 @@ namespace HardwareInterfaces {
 			zoneRec.autoRatio = static_cast<uint8_t>(newRatio * 256);
 			zoneRec.autoTimeC = timeConst;
 			zoneRec.autoQuality = quality;
-			zoneAnswer.update();
+			_zoneRecord.update();
 			logger() << "\tSaved New TC " << curveMatch.timeConst << " Compressed TC: " << timeConst << " New Ratio: " << newRatio << L_endl;
 		};
 
-		auto futureProfileNeedsPreHeating = [this, calculatePreheatTime](ProfileInfo& info) -> bool {
+		auto futureProfileNeedsPreHeating = [this, calculatePreheatTime](int8_t currTemp) -> bool {
+			if (clock_().now() < _ttEndDateTime && currTemp < _offset_preheatCallTemp) return false;// is already heating. Don't need to check for pre-heat
 			int minsToAdd;
 			bool needToStart;
+			auto info = refreshProfile(false);
+			_offset_preheatCallTemp = info.currTT.temp() + offset();
 			do {
 				minsToAdd = calculatePreheatTime(info.nextTT.temp() + offset());
 				if (minsToAdd < 10) minsToAdd = 10; // guaruntee we always start recording a pre-heat
-				logger() << "\n\tNextHeatTime: " << info.nextEvent << " PreheatTime: " << minsToAdd << L_endl;
+				logger() << "\t" << minsToAdd << " mins preheat for: " << info.nextEvent << L_endl << L_endl;
 				needToStart = clock_().now().minsTo(info.nextEvent) <= minsToAdd;
 				if (needToStart) break;
 				info = _sequencer->getProfileInfo(id(), info.nextEvent);
 			} while (clock_().now().minsTo(info.nextEvent) < 60*24);
+			if (needToStart) _offset_preheatCallTemp = info.nextTT.temp() + offset();
 			return needToStart;
 		};
 
@@ -277,21 +281,22 @@ namespace HardwareInterfaces {
 		 If the temp-range of the curve-match is >= to the preious best, then save the new curve parameters.
 		*/
 		logger() << "Get ProfileInfo for " << zoneRec.name << L_endl;
-		auto profileInfo = _sequencer->getProfileInfo(id(), clock_().now());
-		if (futureProfileNeedsPreHeating(profileInfo)) {
+		
+		auto currTempReq = currTempRequest();
+
+		if (futureProfileNeedsPreHeating(currTemp_fractional/256)) {
 			logger() << " Needs pre-heat. Compressed TC: " << zoneRec.autoTimeC << " Ratio: " << zoneRec.autoRatio << " OS Temp: " << outsideTemp << L_endl;
-			_offset_preheatCallTemp = profileInfo.nextTT.temp() + offset();
 			_getExpCurve.firstValue(currTemp_fractional);
 			logger() << L_time << "\tFirst Temp Registered for " << zoneRec.name << " temp is: " << L_fixed << currTemp_fractional << L_endl;
 		} else { // We are in pre-heat or nextReq lower than CurrReq
 			offerCurrTempToCurveMatch();
-			if (reachedAcceptableTemp()) {
+			if (reachedAcceptableTemp(_offset_preheatCallTemp)) {
 				GetExpCurveConsts::CurveConsts curveMatch = _getExpCurve.matchCurve();
 				auto resultQuality = (curveMatch.range + 12) / 25; // round up
 				if (canUpdatePreheatParameters(resultQuality)) {
 					logger() << L_time << zoneRec.name << " Preheat OK. Req " << currTempReq << " is: " << L_fixed  << currTemp_fractional << L_dec << " Range: " << resultQuality << L_endl;
 					if (resultQuality >= zoneRec.autoQuality) {
-						saveNewPreheatParameters(curveMatch, resultQuality);
+						saveNewPreheatParameters(currTempReq, curveMatch, resultQuality);
 					}
 				}
 				_getExpCurve.firstValue(0); // prevent further updates

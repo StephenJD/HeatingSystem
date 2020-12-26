@@ -12,6 +12,10 @@ namespace HardwareInterfaces {
 	class UI_Bitwise_Relay : public  LCD_UI::VolatileData, public Relay_B {
 	public:
 		UI_Bitwise_Relay() : Relay_B(0, 0) {}
+#ifdef ZPSIM
+		UI_Bitwise_Relay(uint8_t recID ) : Relay_B(recID, 0) {}
+#endif
+
 		// Queries
 		RelationalDatabase::RecordID recordID() const { return _recordID; }
 		// Modifiers

@@ -29,10 +29,10 @@
 		/// <summary>
 		/// Returns time in 10's of minutes - no units.
 		/// </summary>
-		Date_Time::DateTime now() const { return  _dateTime(); }
-		Date_Time::DateOnly date() const { return _dateTime(); }
-		Date_Time::TimeOnly time() const { return _dateTime(); }
-		uint32_t asInt() const { return _dateTime().asInt(); }
+		const Date_Time::DateTime now() const { return  _dateTime(); }
+		const Date_Time::DateOnly date() const { return _dateTime(); }
+		const Date_Time::TimeOnly time() const { return _dateTime(); }
+		const uint32_t asInt() const { return _dateTime().asInt(); }
 
 		// Modifiers
 		void refresh() const { _dateTime(); }
@@ -40,6 +40,7 @@
 		void setTime(Date_Time::DateOnly date, Date_Time::TimeOnly time, int min);
 		void setTime(Date_Time::TimeOnly time) { _now.time() = time; saveTime();}
 		void setDate(Date_Time::DateOnly date) { _now.date() = date; saveTime();}
+		void setDateTime(Date_Time::DateTime dateTime) { _now = dateTime; saveTime();}
 		void setHrMin(int hr, int min);
 		void setMinUnits(uint8_t minUnits) { _mins1 = minUnits; }
 		void setSeconds(uint8_t secs) { _secs = secs; }

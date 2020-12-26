@@ -32,27 +32,27 @@
 #include <iostream>
 #include <iomanip>
 
-//#define DATABASE
-//#define UI_DB_DISPLAY_VIEW_ONE
-//#define UI_DB_DISPLAY_VIEW_ALL
-//#define UI_DB_SHORT_LISTS
-//#define EDIT_NAMES_NUMS
-//////////#define EDIT_INTS
-//////
-//////////#define EDIT_FORMATTED_INTS
-//////
-//#define EDIT_DATES
-//#define EDIT_CURRENT_DATETIME
-//#define ITERATION_VARIANTS
-//#define ITERATED_ZONE_TEMPS
-//
-//#define CONTRAST
-//#define VIEW_ONE_NESTED_CALENDAR_PAGE
-//#define VIEW_ONE_NESTED_PROFILE_PAGE
-//#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
-//#define TIME_TEMP_EDIT
+#define DATABASE
+#define UI_DB_DISPLAY_VIEW_ONE
+#define UI_DB_DISPLAY_VIEW_ALL
+#define UI_DB_SHORT_LISTS
+#define EDIT_NAMES_NUMS
+////////#define EDIT_INTS
+////
+////////#define EDIT_FORMATTED_INTS
+////
+#define EDIT_DATES
+#define EDIT_CURRENT_DATETIME
+#define ITERATION_VARIANTS
+#define ITERATED_ZONE_TEMPS
+
+#define CONTRAST
+#define VIEW_ONE_NESTED_CALENDAR_PAGE
+#define VIEW_ONE_NESTED_PROFILE_PAGE
+#define VIEW_ONE_AND_ALL_PROGRAM_PAGE
+#define TIME_TEMP_EDIT
 #define MAIN_CONSOLE_PAGES
-//#define INFO_CONSOLE_PAGES
+#define INFO_CONSOLE_PAGES
 
 //////#define TEST_RELAYS 
 //////#define CMD_MENU
@@ -79,8 +79,7 @@ public:
 		logger() << L_time << "Start setHS for ServiceConsoles...\n";
 		heating_system = &hs;
 		heating_system->serviceConsoles();
-		heating_system->notifyDataIsEdited();
-		heating_system->serviceProfiles();
+		clock_().setSeconds(0);
 		heating_system->serviceTemperatureController();
 		logger() << L_time << "Done setHS for ServiceConsoles...\n";
 	}
@@ -1460,7 +1459,7 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
 	
 	auto _recCurrTime = RecInt_CurrDateTime{};
-	auto ds_currTime = Dataset(_recCurrTime, Null_Query{});
+	auto ds_currTime = Dataset(_recCurrTime, _recCurrTime.nullQuery);
 
 	auto currTimeUI_c = UI_FieldData(&ds_currTime, RecInt_CurrDateTime::e_currTime, { V + S + V1 + UD_E + R0 });
 	auto currDateUI_c = UI_FieldData(&ds_currTime, RecInt_CurrDateTime::e_currDate, { V + S + V1 + UD_E + R0 });
@@ -1484,7 +1483,9 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 	GIVEN("Custom UI_Wrapper with Edit-on-up-down") {
 		display1_h.rec_select();clock_().setSeconds(0);
 		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00a_m          Mon 31/Jul/2017     DST Hours: 1");
+		clock_().setSeconds(0);
 		display1_h.rec_left_right(1);  // moves focus
+		clock_().setSeconds(0);
 		CHECK(test_stream(display1_h.stream(tb)) == "08:15:00am          Mon 31/Jul/201_7     DST Hours: 1");
 		THEN("On up-down we start edit") {
 			clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
@@ -3200,35 +3201,37 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	unsigned long timeOfReset_mS = 0;
 
 	heating_system = 0;
-	HeatingSystem hs{};
-	setFactoryDefaults(hs.getDB(), 1);
 	clock_().setTime({ 31,7,19 }, { 16,10 }, 0);
+	HeatingSystem hs{};
+	setFactoryDefaults(hs.getDB(), 2);
 	serviceConsoles.setHS(hs);
 
 
-	auto q_Profiles = hs.getDB().tableQuery(TB_Profile);
-	for (Answer_R<R_Profile> profile : q_Profiles) {
-		logger() << profile.rec() << L_endl;
-	}
+	//auto q_Profiles = hs.getDB().tableQuery(TB_Profile);
+	//for (Answer_R<R_Profile> profile : q_Profiles) {
+	//	logger() << profile.rec() << L_endl;
+	//}
 
-	logger() << "Table Capacity: " << q_Profiles.last().tableNavigator().table().maxRecordsInTable() << L_endl;
-	logger() << "Chunk Capacity: " << q_Profiles.last().tableNavigator().chunkCapacity() << L_endl;
-	logger() << "chunkIsExtended(): " << q_Profiles.last().tableNavigator().chunkIsExtended() << L_endl;
+	//logger() << "Table Capacity: " << q_Profiles.last().tableNavigator().table().maxRecordsInTable() << L_endl;
+	//logger() << "Chunk Capacity: " << q_Profiles.last().tableNavigator().chunkCapacity() << L_endl;
+	//logger() << "chunkIsExtended(): " << q_Profiles.last().tableNavigator().chunkIsExtended() << L_endl;
 	
 
 	auto & display1_h = hs.mainConsoleChapters()(0);
 	cout << test_stream(display1_h.stream(tb)) << endl;
-	clock_().setTime({ 31,7,19 }, {16,10 }, 0);
-	display1_h.rec_select(); clock_().setSeconds(0);
+	display1_h.rec_select(); 
+	clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00p_m SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
-	display1_h.rec_left_right(-1); clock_().setSeconds(0);
+	display1_h.rec_left_right(-1); 
+	clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contras_t");
 	display1_h.rec_up_down(-1);
 	display1_h.rec_prevUI(); 
 	clock_().setSeconds(0);
 	CHECK(test_stream(display1_h.stream(tb)) == "04:10:00pm SD OK    Wed 31/Jul/2019     DST Hours: 1        Backlight Contrast");
 	display1_h.rec_up_down(1);
-	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$15 is:16 DnStrs Req$19 is:16 DHW    Req$45 is:25 Flat   Req$20 is:16 ");
+	cout << test_stream(display1_h.stream(tb)) << endl;
+	CHECK(test_stream(display1_h.stream(tb)) == "UpStrs Req$15 is:16 DnStrs Req$19 is:16!DHW    Req$45 is:11!Flat   Req$20 is:16!");
 	display1_h.rec_up_down(-1);
 	display1_h.rec_up_down(-1);
 	CHECK(test_stream(display1_h.stream(tb)) == "House   Prg: At HomeZne: US  Day:MTWTFSS0730a15 1100p19");
@@ -3454,7 +3457,7 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 		CHECK(test_stream(display1_h.stream(tb)) == "UpSt :16 DnSt :16   Flat :16 HsTR :16   EnST :16 FlTR :16   GasF :16 OutS :16>  ");
 		display1_h.rec_up_down(1);
 		cout << test_stream(display1_h.stream(tb)) << endl;
-		CHECK(test_stream(display1_h.stream(tb)) == "Flat   0 FlTR   0   HsTR   0 UpSt   0   MFSt   0 Gas    0   DnSt   0");
+		CHECK(test_stream(display1_h.stream(tb)) == "Flat   1 FlTR   0   HsTR   0 UpSt   0   MFSt   0 Gas    1   DnSt   1");
 		display1_h.rec_up_down(1);
 		cout << test_stream(display1_h.stream(tb)) << endl;
 		CHECK(test_stream(display1_h.stream(tb)) == "US  1 102 216       DS  1 125 192       DHW 1 000 035       Flt 1 107 217");

@@ -23,12 +23,13 @@ namespace Assembly {
 	using namespace client_data_structures;
 	using namespace I2C_Recovery;
 
-	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, unsigned long * timeOfReset_mS) :
+	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, unsigned long * timeOfReset_mS) :
 		tempSensorArr{ recovery }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
 		, mixValveControllerArr{ recovery }
 	{
+		Zone::setSequencer(sequencer);
 		int index = 0;
 		logger() << F("loadtempSensors...") << L_endl;
 		auto tempSensors = queries.q_tempSensors;
@@ -72,12 +73,12 @@ namespace Assembly {
 		index = 0;
 		auto zones = queries.q_Zones;
 		for (Answer_R<R_Zone> zone : zones) {
-			zoneArr[index].initialise(zone.id()
+			zoneArr[index].initialise(
+				zone
 				, tempSensorArr[zone.rec().callTempSens]
 				, relayArr[zone.rec().callRelay]
 				, thermalStore
 				, mixValveControllerArr[zone.rec().mixValve]
-				, zone.rec().maxFlowTemp
 			);
 			++index;
 		}
@@ -96,14 +97,11 @@ namespace Assembly {
 			++index;
 		}
 		logger() << F("loadTowelRails Completed") << L_endl;
-#ifndef ZPSIM
-		sequencer.recheckNextEvent();
-#endif
 	}
 
 	void TemperatureController::checkAndAdjust() { // Called every Arduino loop
 		// once per second
-		static auto lastCheck = millis();
+		static uint32_t lastCheck = -1000;
 		if (secondsSinceLastCheck(lastCheck) == 0) { return; } // Wait for next second.
 		logger().close();
 		zTempLogger().close();
@@ -116,8 +114,8 @@ namespace Assembly {
 		}
 
 		if (clock_().seconds() == 0) { // each minute
+			//logger() << L_time << F("checkAndAdjust Zones.") << L_endl;
 			checkZones();
-			//logger() << L_time << F("checkAndAdjust Zones checked.") << L_endl;
 		}
 
 		for (auto & mixValveControl : mixValveControllerArr) {
@@ -149,8 +147,8 @@ namespace Assembly {
 		auto checkForPreHeat = clock_().minUnits() == 0; // each 10 minutes
 
 		for (auto & zone : zoneArr) { 
-			zone.setFlowTemp();
 			if (checkForPreHeat) zone.preHeatForNextTT();
+			zone.setFlowTemp();
 			ui_yield();
 		}
 	}
