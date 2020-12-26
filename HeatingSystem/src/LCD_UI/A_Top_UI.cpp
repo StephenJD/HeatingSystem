@@ -103,7 +103,9 @@ namespace LCD_UI {
 		*/
 		if (top->get()->cursorMode(top) != HardwareInterfaces::LCD_Display::e_unselectable) {
 			if (top != _upDownUI) {
+#ifdef ZPSIM
 				logger() << F("Notify: ") << ui_Objects()[(long)top->get()].c_str() << L_endl;
+#endif
 				top->focusHasChanged();
 			}
 		}
@@ -186,7 +188,7 @@ namespace LCD_UI {
 
 	void A_Top_UI::set_UpDownUI_from(Collection_Hndl * this_UI_h) {
 		// The innermost handle with UpDown behaviour gets the call.
-		auto isUpDnAble = [](Collection_Hndl * tryColl) {
+		auto isUpDnAble = [](Collection_Hndl * tryColl) -> bool {
 			if (tryColl->get()->isCollection()) {
 				if (tryColl->behaviour().is_viewOne() || tryColl->get()->collection()->iterableObjectIndex() >= 0) {
 					return true;

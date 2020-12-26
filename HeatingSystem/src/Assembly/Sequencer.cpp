@@ -31,8 +31,10 @@ namespace Assembly {
 			dwellInfo.currEvent = timeOfInterest;
 			getCurrentSpell(dwelling.id(), dwellInfo);
 			getCurrentProfileID(zoneID, dwellInfo);
+#ifdef ZPSIM
 			logger() << F("\t\tThis ") << dwellInfo.currTT
 				<< F("\n\t\tNext ") << dwellInfo.nextTT << L_endl;
+#endif
 			if (info.nextEvent == Date_Time::JUDGEMEMT_DAY) info = dwellInfo;
 			/*             _________
 			*           ---|-----   |

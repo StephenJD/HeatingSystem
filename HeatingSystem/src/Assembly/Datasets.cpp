@@ -33,7 +33,9 @@ namespace Assembly {
 		, _ds_relay{ _recRelay, queries.q_relays }
 	{
 		logger() << F("Datasets constructed") << L_endl;
+#ifdef ZPSIM
 		ui_Objects()[(long)&_ds_ZonesForDwelling] = "_ds_ZonesForDwelling";
+#endif
 	}
 
 }

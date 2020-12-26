@@ -78,11 +78,7 @@ namespace client_data_structures {
 		// The ZoneForDwelling dataset has a Link Query to q_ZonesForDwelling as its source. Its Record() is a Zone.
 
 		query().setMatchArg(parentIndex()); // parent is ProgramID. Required here
-		logger() << F("\tProfile._zoneForDwelling ") << ui_Objects()[(long)_zoneForDwelling].c_str() << L_endl;
-		auto & zone_a = static_cast<Answer_R<R_Zone> &>(_zoneForDwelling->i_record().answer());
-		auto & zone = zone_a.rec();
-		auto zoneID = zone_a.id();
-		//auto zoneID = _zoneForDwelling->ds_recordID();
+		auto zoneID = _zoneForDwelling->i_record().recordID();
 		auto prevMatchArg = query().iterationQ().matchArg();
 		if (zoneID != prevMatchArg) {
 			query().iterationQ().setMatchArg(zoneID);

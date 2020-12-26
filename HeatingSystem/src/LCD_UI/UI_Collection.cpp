@@ -579,8 +579,9 @@ namespace LCD_UI {
 	bool UI_IteratedCollection_Hoist::h_leftRight(int moveBy, Collection_Hndl* colln_hndl, Behaviour lr_behaviour) {
 		//if (lr_behaviour.is_next_on_UpDn()) {
 		auto & activeObject = (*iterated_collection())[_iteratedMemberIndex];
+#ifdef ZPSIM
 		logger() << F("LR on iteratedActive: ") << ui_Objects()[(long)(activeObject.get())].c_str() << L_endl;
-
+#endif
 		return activeObject->leftRight(moveBy, colln_hndl, lr_behaviour);
 		//}
 	}
