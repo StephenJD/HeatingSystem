@@ -97,7 +97,8 @@ uint8_t I_Clock_I2C::saveTime() {
 	data[7] = 0; // disable SQW
 	data[8] = _autoDST << 1 | _dstHasBeenSet; // in RAM
 	auto status = writeData(0, 9, data);
-	logger() << F(" Save RTC CurrDateTime...") << I2C_Talk::getStatusMsg(status) << L_endl;
+	logger() << F(" Save RTC CurrDateTime..m") << _now.mins10() << minUnits() << ":" << (int)_secs << I2C_Talk::getStatusMsg(status) << L_endl;
+	//Serial.println(F(" Save RTC CurrDateTime..."));
 
 	return status;
 }

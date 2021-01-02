@@ -126,12 +126,10 @@ void HeatingSystem::serviceConsoles() {
 	//activeField->move_focus_to(focusWas);
 }
 
-void HeatingSystem::serviceProfiles() { _tempController.checkZones(); }
-
 void HeatingSystem::notifyDataIsEdited() {
 	if (_mainConsoleChapters.chapter() == 0) {
 		logger() << L_time << F("notifyDataIsEdited\n");
-		_tempController.checkZones();
+		_tempController.checkZones(true);
 	}
 }
 

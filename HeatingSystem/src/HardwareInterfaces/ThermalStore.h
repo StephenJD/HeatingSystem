@@ -19,7 +19,7 @@ namespace HardwareInterfaces {
 		//bool storeIsUpToTemp() const; // just returns status flag
 		bool dumpHeat() const;
 		uint8_t currDeliverTemp() const { return _theoreticalDeliveryTemp; }
-		uint8_t calcCurrDeliverTemp(int callTemp) const;
+		uint8_t calcCurrDeliverTemp(int callTemp, float groundT, float topT, float midT, float botT) const;
 		uint8_t getGroundTemp() const;
 		uint8_t getOutsideTemp() const;
 

@@ -107,7 +107,7 @@ namespace HardwareInterfaces {
 				//}
 			}
 			keyPress = _keyPad.getKey();
-			ui_yield();
+			//ui_yield();
 		} while (keyPress != -1);
 		return doRefresh;
 	}

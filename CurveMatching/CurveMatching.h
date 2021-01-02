@@ -15,11 +15,11 @@ namespace GP_LIB {
 		
 		// Nested Type
 		struct CurveConsts {
-			int16_t limit;
-			int16_t timeConst;
-			int16_t range;
-			int16_t period;
-			bool resultOK;
+			int16_t timeConst = 0;
+			int16_t range = 0;
+			//int16_t start = 0;
+			//int16_t period = 0;
+			bool resultOK = false;
 		};
 		
 		static double uncompressTC(uint8_t compressed_tc) {
@@ -39,7 +39,7 @@ namespace GP_LIB {
 		/// Can be called at any time after the final value is submitted.
 		/// </summary>
 		/// <returns></returns>
-		CurveConsts matchCurve();
+		CurveConsts matchCurve(int limitVal);
 
 		struct XY_Values; // only required public for testing purposes
 		XY_Values & getXY() { return _xy; } // only required for testing purposes
@@ -58,6 +58,7 @@ namespace GP_LIB {
 		/// <param name="currValue">The curr value.</param>
 		bool nextValue(int currValue);
 		bool nextValue(double currValue) { return nextValue(static_cast<int>(currValue)); }
+		uint16_t calcNewTimeConst(double limit, bool& OK) const;
 
 		struct XY_Values { // only required public for testing purposes
 			int16_t firstRiseValue = 0;
@@ -79,8 +80,7 @@ namespace GP_LIB {
 		void averageTimeAtThisValue();
 		void shuffleRecordsAlong();
 		void recordCurrent();
-		uint16_t calcNewLimit(bool& OK) const;
-		uint16_t calcNewTimeConst(double limit, bool& OK) const;
+		//uint16_t calcNewLimit(bool& OK) const;
 
 		// ************** Data **************
 		static int16_t _currValue;
@@ -92,22 +92,22 @@ namespace GP_LIB {
 		int16_t _min_rise;
 	};
 
-	class LimitTemp { // functor for determining Limit of exponential curve
-	public:
-		LimitTemp(const GetExpCurveConsts::XY_Values& xy) // double T0, double T1, double T2, int t1, int t2) 
-			: T0(xy.firstRiseValue),
-			T1(xy.midRiseValue),
-			T2(xy.lastRiseValue),
-			t1(xy.midRiseTime),
-			t2(xy.lastRiseTime) {}
-		double operator()(double TL) const {
-			if (TL < T2) return 1;
-			return t1 * log((TL - T2) / (TL - T0)) - t2 * log((TL - T1) / (TL - T0));
-		}
-	private:
-		double T0, T1, T2; // values at time 0, t1 and t2.
-		double t1, t2; // times
-	};
+	//class LimitTemp { // functor for determining Limit of exponential curve
+	//public:
+	//	LimitTemp(const GetExpCurveConsts::XY_Values& xy) // double T0, double T1, double T2, int t1, int t2) 
+	//		: T0(xy.firstRiseValue),
+	//		T1(xy.midRiseValue),
+	//		T2(xy.lastRiseValue),
+	//		t1(xy.midRiseTime),
+	//		t2(xy.lastRiseTime) {}
+	//	double operator()(double TL) const {
+	//		if (TL < T2) return 1;
+	//		return t1 * log((TL - T2) / (TL - T0)) - t2 * log((TL - T1) / (TL - T0));
+	//	}
+	//private:
+	//	double T0, T1, T2; // values at time 0, t1 and t2.
+	//	double t1, t2; // times
+	//};
 
 	template<typename functor>
 	double SecantMethodForEquation(const functor& Fn, double x0, double x1, double error) {

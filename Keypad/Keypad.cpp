@@ -1,5 +1,7 @@
 #include "Keypad.h"
-#include <Timer_mS_uS.h>
+#include <Clock.h>
+
+using namespace Date_Time;
 
 namespace HardwareInterfaces {
 //#if defined (ZPSIM)
@@ -7,11 +9,11 @@ namespace HardwareInterfaces {
 //#endif
 
 	bool I_Keypad::isTimeToRefresh() {
-		int elapsedTime = secondsSinceLastCheck(_lastTick);
-		if (elapsedTime && _secsToKeepAwake > 0) {
-			_secsToKeepAwake -= elapsedTime; // timeSince set to DISPLAY_WAKE_TIME whenever a key is pressed
+		bool isNewSecond = clock_().isNewSecond(_lastSecond);
+		if (isNewSecond && _secsToKeepAwake > 0) {
+			--_secsToKeepAwake; // timeSince set to DISPLAY_WAKE_TIME whenever a key is pressed
 		}
-		return (elapsedTime > 0); // refresh every second
+		return (isNewSecond); // refresh every second
 	}
 
 	bool I_Keypad::wakeDisplay(bool wake) {

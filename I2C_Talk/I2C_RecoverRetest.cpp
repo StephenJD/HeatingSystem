@@ -47,7 +47,7 @@ namespace I2C_Recovery {
 				logger() << L_time << F("10s rest: Re-enabling disabled device 0x") << L_hex << device.getAddress() << L_endl;
 			}
 			else {
-				logger() << L_time << F("\tDisabled device 0x") << L_hex << device.getAddress() << L_endl;
+				//logger() << L_time << F("\tDisabled device 0x") << L_hex << device.getAddress() << L_endl;
 				return _disabledDevice;
 			}
 		}

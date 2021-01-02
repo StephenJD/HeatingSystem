@@ -19,31 +19,6 @@ using namespace Date_Time;
 	//             Clock Member Functions            //
 	///////////////////////////////////////////////////
 
-	//Date_Time::DateTime Clock::_timeFromCompiler(int & minUnits, int & seconds) { // inlined to ensure latest compile time used.
-	//// sample input: date = "Dec 26 2009", time = "12:34:56"
-	//	auto year = GP_LIB::c2CharsToInt(&__DATE__[9]);
-	//	// Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec 
-	//	int mnth;
-	//	switch (__DATE__[0]) {
-	//	case 'J': mnth = __DATE__[1] == 'a' ? 1 : mnth = __DATE__[2] == 'n' ? 6 : 7; break;
-	//	case 'F': mnth = 2; break;
-	//	case 'A': mnth = __DATE__[2] == 'r' ? 4 : 8; break;
-	//	case 'M': mnth = __DATE__[2] == 'r' ? 3 : 5; break;
-	//	case 'S': mnth = 9; break;
-	//	case 'O': mnth = 10; break;
-	//	case 'N': mnth = 11; break;
-	//	case 'D': mnth = 12; break;
-	//	default: mnth = 0;
-	//	}
-	//	auto day = GP_LIB::c2CharsToInt(&__DATE__[4]);
-	//	auto hrs = GP_LIB::c2CharsToInt(__TIME__);
-	//	auto mins10 = GP_LIB::c2CharsToInt(&__TIME__[3]);
-	//	minUnits = mins10 % 10;
-	//	seconds = GP_LIB::c2CharsToInt(&__TIME__[6]);
-	//	logger() << F("Compiler Time: ") << __DATE__ << " " << __TIME__ << L_endl;
-	//	return { { day,mnth,year },{ hrs,mins10 } };
-	//}
-
 	DateTime Clock::_dateTime() const { 
 		// called on every request for time/date.
 		// Only needs to check anything every 10 minutes
@@ -101,6 +76,13 @@ using namespace Date_Time;
 				}
 			}
 		}
+	}
+
+	bool Clock::isNewSecond(uint8_t& oldSecond) {
+		refresh();
+		bool isNewSec = oldSecond != seconds(); 
+		if (isNewSec) oldSecond = seconds(); 
+		return isNewSec; 
 	}
 
 #ifdef ZPSIM

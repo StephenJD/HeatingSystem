@@ -48,7 +48,7 @@ namespace HardwareInterfaces {
 	}
 
 	bool ThermalStore::dumpHeat() const {
-		return getTopTemp() >= _thermStoreData.OvrHeatTemp;
+		return getTopTemp() > _thermStoreData.OvrHeatTemp;
 	}
 
 	//bool ThermalStore::check() { // checks zones, twl rads & thm store for heat requirement and sets relays accordingly
@@ -85,21 +85,10 @@ namespace HardwareInterfaces {
 		}
 		//if (/*!_isHeating && */mixNeedsHeat) logger() << L_time << F("MixValve Needs Heat\n");
 		needHeat |= mixNeedsHeat;
-		zTempLogger() << L_time << L_tabs << F("T") << (mixNeedsHeat ? "MixV" : "DHW") << (needHeat ? F("Too Cool.") : F("Too Warm."))  
-			<< "Req:" << currRequest << F("Is:") << _theoreticalDeliveryTemp 
-			<< "\t\tErr:" << _theoreticalDeliveryTemp-currRequest << (_isHeating ? F("On") : F("Off"))  << L_endl;
-		//if (_isHeating && !needHeat) {
-		//	//f->eventS().newEvent(EVT_GAS_TEMP, f->tempSensorR(getVal(GasTS)).getSensTemp());
-		//	logger() << F("\tGas Turned OFF   Gas Flow Temp: ") << _tempSensorArr[_thermStoreData.GasTS].get_temp();
-		//	logger() << F("\n\tCurr DHW temp: ") << _theoreticalDeliveryTemp << L_endl;
-		//}
-		//else if (!_isHeating && needHeat) {
-		//	logger() << F("\tGas Turned ON\n");
-		//	logger() << L_tabs << F("GroundT:") << _groundT
-		//		<< F("Top:") << getTopTemp()
-		//		<< F("Mid:") << _tempSensorArr[_thermStoreData.MidDhwTS].get_temp()
-		//		<< F("Lower") << _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp() << L_endl;
-		//}
+		zTempLogger() << L_time << L_tabs << (mixNeedsHeat ? "MixV" : "DHW")  
+			<< "Req/Is:" << currRequest << _theoreticalDeliveryTemp 
+			<< F("Flow Req/Is:") << (needHeat ? 80 : 30) << _tempSensorArr[_thermStoreData.GasTS].get_temp()
+			<< L_endl;
 		_isHeating = needHeat;
 		return needHeat;
 	}
@@ -141,13 +130,9 @@ namespace HardwareInterfaces {
 		logger() << F("\nThermalStore::calcCapacities\t_upperC ") << _upperC << F(" _midC ") << _midC << F(" _bottomC ") << _bottomC << L_endl;
 	}
 
-	uint8_t ThermalStore::calcCurrDeliverTemp(int callTemp) const {
+	uint8_t ThermalStore::calcCurrDeliverTemp(int callTemp, float groundT, float topT, float midT, float botT) const {
 		float boilerPwr = _thermStoreData.BoilerPower;
 		uint8_t duration = _thermStoreData.DHWflowTime;
-		float groundT = _groundT;
-		float topT = getTopTemp();
-		float midT = _tempSensorArr[_thermStoreData.MidDhwTS].get_temp();
-		float botT = _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp();
 		_tempSensorError |= _tempSensorArr[_thermStoreData.MidDhwTS].hasError() || _tempSensorArr[_thermStoreData.LowerDhwTS].hasError();
 		//logger() << F("\nThermalStore::calcCurrDeliverTemp\t_topT ") << topT << F(" mid ") << midT << F(" Bot ") << botT << F(" Grnd ") << _groundT << F(" Cond ") << _thermStoreData.Conductivity << L_endl;
 		//logger() << F("\nThermalStore Capacities\t_upperC ") << _upperC << F(" _midC ") << _midC << F(" _bottomC ") << _bottomC << L_endl;
@@ -182,7 +167,7 @@ namespace HardwareInterfaces {
 	}
 
 	bool ThermalStore::dhwNeedsHeat(int callTemp, int nextRequest) {
-		_theoreticalDeliveryTemp = calcCurrDeliverTemp(nextRequest > callTemp ? nextRequest : callTemp);
+		_theoreticalDeliveryTemp = calcCurrDeliverTemp(nextRequest > callTemp ? nextRequest : callTemp, _groundT, getTopTemp(), _tempSensorArr[_thermStoreData.MidDhwTS].get_temp(), _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp());
 		if (_tempSensorError) return false;
 		//logger() << F("\nThermalStore::dhwNeedsHeat\t_theoreticalDeliveryTemp ") << _theoreticalDeliveryTemp << L_endl;
 		// Note that because callTemp determins the rate of heat-extraction, currDeliverTemp, which is temperature AFTER filling a bath, will change if callTemp changes.

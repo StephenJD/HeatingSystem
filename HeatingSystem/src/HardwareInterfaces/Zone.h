@@ -30,13 +30,13 @@ namespace HardwareInterfaces {
 		Zone() = default;
 		void initialise(
 			RelationalDatabase::Answer_R<client_data_structures::R_Zone> zoneRecord
-			, UI_TempSensor & callTS
-			, UI_Bitwise_Relay & callRelay
-			, ThermalStore & thermalStore
-			, MixValveController & mixValveController
+			, UI_TempSensor& callTS
+			, UI_Bitwise_Relay& callRelay
+			, ThermalStore& thermalStore
+			, MixValveController& mixValveController
 		);
 #ifdef ZPSIM
-		Zone(UI_TempSensor & ts, int reqTemp, UI_Bitwise_Relay & callRelay);
+		Zone(UI_TempSensor& ts, int reqTemp, UI_Bitwise_Relay& callRelay);
 #endif
 		static void setSequencer(Assembly::Sequencer& sequencer) { _sequencer = &sequencer; }
 		// Queries
@@ -50,10 +50,11 @@ namespace HardwareInterfaces {
 		int8_t getCurrTemp() const;
 		bool isCallingHeat() const;
 		Date_Time::DateTime nextEventTime() const { return _ttEndDateTime; }
-		bool operator== (const Zone & rhs) const { return _recordID == rhs._recordID; }
+		bool operator== (const Zone& rhs) const { return _recordID == rhs._recordID; }
 		bool isDHWzone() const;
 		int16_t getFractionalCallSensTemp() const;
-
+		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
+		uint8_t averageThermalRatio();
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
 		void resetOffsetToZero() { _offsetT = 0; }
@@ -63,13 +64,19 @@ namespace HardwareInterfaces {
 		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
 		void preHeatForNextTT();
-		RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() { return _zoneRecord; } // for testing
+		RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() { return _zoneRecord; }
+		static constexpr double RATIO_DIVIDER = 45.;
+		static constexpr int ACCUMULATION_PERIOD_DIVIDER = 4;
+		static constexpr double ERROR_DIVIDER = 2.;
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
-		UI_TempSensor * _callTS = 0;
-		UI_Bitwise_Relay * _relay = 0;
-		ThermalStore * _thermalStore = 0;
-		MixValveController * _mixValveController;
+		int16_t measuredThermalRatio() const;
+		void saveThermalRatio();
+		UI_TempSensor* _callTS = 0;
+		UI_Bitwise_Relay* _relay = 0;
+		ThermalStore* _thermalStore = 0;
+		MixValveController* _mixValveController;
+
 		RelationalDatabase::Answer_R<client_data_structures::R_Zone> _zoneRecord;
 		RelationalDatabase::RecordID _recordID = 0;
 		int8_t _offsetT = 0;
@@ -79,8 +86,12 @@ namespace HardwareInterfaces {
 		int8_t _nextProfileTempRequest = 0; // next selectable profile temp. Shown with offset on display
 		int8_t _offset_preheatCallTemp = 0; // current called-for temp, adjusted for pre-heat and offset.
 		Date_Time::DateTime _ttEndDateTime;
-		int8_t _callFlowTemp = 0;		// Programmed flow temp, modified by zoffset
-		bool _isHeating = false; // just for logging
+		uint16_t _averagePeriod = 0;
+		uint16_t _rollingAccumulatedRatio = 0;
+		uint16_t _timeConst;
+		uint16_t _accumulationPeriod;
+		int8_t _callFlowTemp = 0;
+		bool _finishedFastHeating = false;
 		GP_LIB::GetExpCurveConsts _getExpCurve{ 128 };
 		static Assembly::Sequencer* _sequencer;
 	};

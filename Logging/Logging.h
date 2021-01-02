@@ -50,7 +50,7 @@ SD.h/.cpp modified to provide sd_exists();
 		template<class T> friend Logger & operator <<(Logger & stream, T value);
 		virtual bool is_tabs() { return false; }
 		virtual void setBaseTimeTab(bool timeTab) {}
-		virtual Logger & prePrint() {return *this;}
+		virtual bool prePrint() {return false;}
 		virtual Logger & logTime() { return *this; }
 		bool is_cout() { return _flags & L_cout; }
 		bool is_fixed() { return _flags & L_fixed; }
@@ -59,34 +59,6 @@ SD.h/.cpp modified to provide sd_exists();
 		Clock * _clock = 0;
 		Flags _flags = L_default;
 	};
-
-	// Streaming templates	
-	template<class T>
-	Logger & operator <<(Logger & stream, T value)
-	{
-		auto & baseStream = stream.prePrint();
-		if (&baseStream != &stream) {
-			baseStream << value;
-			stream.setBaseTimeTab(false);
-		}
-		if (stream.is_tabs()) stream.print("\t");
-		return streamToPrint(stream, value,  typename typetraits::_Is_integer<T>::_Integral());
-		//stream.print(value);
-		//return stream;
-	}
-
-	template<class T>
-	Logger & streamToPrint(Logger & stream, T value, typetraits::__true_type)
-	{
-		return stream.streamToPrintInt(value);
-	}
-
-	template<class T>
-	Logger & streamToPrint(Logger & stream, T value, typetraits::__false_type)
-	{
-		stream.print(value);
-		return stream;
-	}
 
 	/// <summary>
 	/// Per msg: 100uS Due/ 700uS Mega
@@ -170,15 +142,62 @@ SD.h/.cpp modified to provide sd_exists();
 		Logger & logTime() override;
 		bool is_tabs() override { return _SD_mustTabTime ? (_SD_mustTabTime = false, true) : _flags & L_tabs; }
 		void setBaseTimeTab(bool timeTab) override { _mustTabTime = timeTab; }
-		Logger & prePrint() override {
-			_serial() = *this;
-			return _serial();
-		}
-		Serial_Logger & _serial();
+		bool prePrint() override { return true; }
 
 		File _dataFile;
 		char _fileNameStem[5];
 		bool _SD_mustTabTime = false;
 	};
+
+#ifdef ZPSIM
+#include <fstream>
+	/// <summary>
+	/// Per un-timed msg: 1.4mS
+	/// Per timed msg: 3mS
+	/// </summary>	
+	class File_Logger : public Serial_Logger {
+	public:
+		File_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock);
+		File_Logger(const char * fileNameStem, uint32_t baudRate);
+		bool isWorking() override;
+		size_t write(uint8_t) override;
+		size_t write(const uint8_t *buffer, size_t size) override;
+		bool openSD();
+		void close() override { _dataFile.close(); }
+		void flush() override { Serial_Logger::flush(); close(); }
+	private:
+		Logger & logTime() override;
+		bool is_tabs() override { return _SD_mustTabTime ? (_SD_mustTabTime = false, true) : _flags & L_tabs; }
+		void setBaseTimeTab(bool timeTab) override { _mustTabTime = timeTab; }
+		bool prePrint() override {return true;}
+
+		std::ofstream _dataFile;
+		char _fileNameStem[5];
+		bool _SD_mustTabTime = false;
+	};
+#endif
+
+	// Streaming templates	
+	template<class T>
+	Logger& operator <<(Logger& stream, T value) {
+		if (stream.prePrint()) {
+			Serial_Logger serial(static_cast<Serial_Logger&>(stream));
+			serial << value;
+			stream.setBaseTimeTab(false);
+		}
+		if (stream.is_tabs()) stream.print("\t");
+		return streamToPrint(stream, value, typename typetraits::_Is_integer<T>::_Integral());
+	}
+
+	template<class T>
+	Logger& streamToPrint(Logger& stream, T value, typetraits::__true_type) {
+		return stream.streamToPrintInt(value);
+	}
+
+	template<class T>
+	Logger& streamToPrint(Logger& stream, T value, typetraits::__false_type) {
+		stream.print(value);
+		return stream;
+	}
 
 	Logger & logger(); // to be defined by the client

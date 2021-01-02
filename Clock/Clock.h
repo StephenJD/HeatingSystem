@@ -22,7 +22,7 @@
 		int month() const { return _now.month(); }
 		int year() const { return _now.year(); }
 		virtual bool ok() const { return true; }
-	
+		bool isNewSecond(uint8_t& oldSecond);
 		// Conceptually, these are queries, although reading the time triggers an update-check which might modify the time
 		explicit operator Date_Time::DateTime() const { return _dateTime(); }
 		
@@ -40,10 +40,10 @@
 		void setTime(Date_Time::DateOnly date, Date_Time::TimeOnly time, int min);
 		void setTime(Date_Time::TimeOnly time) { _now.time() = time; saveTime();}
 		void setDate(Date_Time::DateOnly date) { _now.date() = date; saveTime();}
-		void setDateTime(Date_Time::DateTime dateTime) { _now = dateTime; saveTime();}
+		void setDateTime(Date_Time::DateTime dateTime) { _now = dateTime; _mins1 = 0; _secs = 0; saveTime(); }
 		void setHrMin(int hr, int min);
-		void setMinUnits(uint8_t minUnits) { _mins1 = minUnits; }
-		void setSeconds(uint8_t secs) { _secs = secs; }
+		void setMinUnits(uint8_t minUnits) { _mins1 = minUnits; } // Must NOT saveTime() else recursive on Clock_I2C
+		void setSeconds(uint8_t secs) { _secs = secs; } // Must NOT saveTime() else recursive on Clock_I2C
 		void setAutoDSThours(int set) { _autoDST = set; saveTime(); }
 		virtual auto saveTime()->uint8_t { return 0; }
 		virtual auto loadTime()->uint8_t { return 0; }
@@ -103,7 +103,7 @@
 		auto mins10 = GP_LIB::c2CharsToInt(&__TIME__[3]);
 		minUnits = mins10 % 10;
 		seconds = GP_LIB::c2CharsToInt(&__TIME__[6]);
-		Serial.print(F("Compiler Time: ")); Serial.print(__DATE__); Serial.print(F(" ")); Serial.println(__TIME__);
+		//Serial.print(F("Compiler Time: ")); Serial.print(__DATE__); Serial.print(F(" ")); Serial.println(__TIME__);
 		return { { day,mnth,year },{ hrs,mins10 } };
 	}
 

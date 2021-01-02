@@ -113,8 +113,6 @@ namespace Assembly {
 			auto dayFlag = DateOnly::weekDayFlag(dayNo);
 			auto prevDayFlag = DateOnly::weekDayFlag((dayNo+6)%7);
 			auto nextDayFlag = DateOnly::weekDayFlag((dayNo+1)%7);
-			
-			_queries->q_ProfilesForZoneProg.setMatchArg(program);
 			auto profileRS = _queries->q_ProfilesForZoneProg.begin();
 			auto profileID = RecordID(-1);
 			do {

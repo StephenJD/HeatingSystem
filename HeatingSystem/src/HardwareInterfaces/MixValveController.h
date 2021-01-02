@@ -18,6 +18,8 @@ namespace HardwareInterfaces {
 		using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
 		MixValveController() = default;
 
+		// Queries
+		uint8_t flowTemp() const;
 		// Virtual Functions
 		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 		//uint8_t initialiseDevice() override;

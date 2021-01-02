@@ -21,7 +21,7 @@ namespace Assembly {
 
 		// Modifiers
 		void checkAndAdjust();
-		void checkZones();
+		void checkZones(bool checkPreHeat);
 		
 		HardwareInterfaces::UI_TempSensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS];
 		HardwareInterfaces::TowelRail towelRailArr[Assembly::NO_OF_TOWELRAILS];

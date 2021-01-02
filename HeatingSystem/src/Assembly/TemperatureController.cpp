@@ -99,13 +99,16 @@ namespace Assembly {
 		logger() << F("loadTowelRails Completed") << L_endl;
 	}
 
-	void TemperatureController::checkAndAdjust() { // Called every Arduino loop
-		// once per second
-		static uint32_t lastCheck = -1000;
-		if (secondsSinceLastCheck(lastCheck) == 0) { return; } // Wait for next second.
+	void TemperatureController::checkAndAdjust() { // Called every Arduino loop, enter once per second
+		static uint8_t lastSeconds = clock_().seconds()-1;
+		bool isNewSecond = clock_().isNewSecond(lastSeconds);
+		if (!isNewSecond) { return; } // Wait for next second.
+		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
+
 		logger().close();
 		zTempLogger().close();
 		mTempLogger().close();
+		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 
 		for (auto & ts : tempSensorArr) {
 			ts.readTemperature();
@@ -113,28 +116,25 @@ namespace Assembly {
 			ui_yield();
 		}
 
-		if (clock_().seconds() == 0) { // each minute
+		if (lastSeconds == 0) { // each minute
 			//logger() << L_time << F("checkAndAdjust Zones.") << L_endl;
-			checkZones();
+			checkZones(checkPreHeat);
 		}
 
 		for (auto & mixValveControl : mixValveControllerArr) {
 			mixValveControl.check(); 
 			ui_yield(); 
 		}
-		backBoiler.check();
-		//logger() << L_time << F("BackBoiler::check done") << L_endl;
-		ui_yield();
 
 		for (auto & towelRail : towelRailArr) {
 			towelRail.check();
 			ui_yield(); 
 		}
+		backBoiler.check();
 
 		for ( auto & relay : relayArr) {
 			relay.checkControllerStateCorrect();
 		}
-
 		relayController().updateRelays();
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
 		if (mixValveControllerArr[0].recovery().isUnrecoverable()) {
@@ -143,8 +143,7 @@ namespace Assembly {
 		};
 	}
 
-	void TemperatureController::checkZones() {
-		auto checkForPreHeat = clock_().minUnits() == 0; // each 10 minutes
+	void TemperatureController::checkZones(bool checkForPreHeat) {
 
 		for (auto & zone : zoneArr) { 
 			if (checkForPreHeat) zone.preHeatForNextTT();

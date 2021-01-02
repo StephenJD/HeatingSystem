@@ -21,8 +21,8 @@ namespace HardwareInterfaces {
 		volatile int8_t keyQuePos = -1; // points to last entry in KeyQue
 
 	protected:
-		int8_t		_secsToKeepAwake = 0;
-		uint32_t	_lastTick = 0;
+		int8_t	_secsToKeepAwake = 0;
+		uint8_t	_lastSecond = 0;
 	};
 
 	// Functions supporting local interrupt

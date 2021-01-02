@@ -29,7 +29,6 @@ class HeatingSystem {
 public:
 	HeatingSystem();
 	void serviceConsoles();
-	void serviceProfiles();
 	void serviceTemperatureController();
 	/// <summary>
 	/// Checks Zone Temps, then sets each zone.nextEvent to now.

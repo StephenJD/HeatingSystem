@@ -71,35 +71,34 @@ namespace GP_LIB {
 		return hasRecorded;
 	}
 
-	GetExpCurveConsts::CurveConsts GetExpCurveConsts::matchCurve() {
+	GetExpCurveConsts::CurveConsts GetExpCurveConsts::matchCurve(int limitVal) {
 		CurveConsts result;
-		result.resultOK = false;
-		if (_xy.midRiseValue != 0 && _xy.lastRiseValue != _xy.midRiseValue) {
-			result.resultOK = true;
-			result.limit = calcNewLimit(result.resultOK);
-			result.timeConst = calcNewTimeConst(result.limit, result.resultOK);
-		} else {
+		result.resultOK = true;
+		if (_xy.midRiseValue == 0 || _xy.lastRiseValue == _xy.midRiseValue) {
 			if (_xy.lastRiseValue == 0) _xy.lastRiseValue = _currValue;
 			if (_xy.firstRiseValue == 0) _xy.firstRiseValue = _xy.lastRiseValue;
-			result.limit = 0x7FFF;
 		}
+		result.timeConst = calcNewTimeConst(limitVal, result.resultOK);
+		//result.start = _xy.firstRiseValue;
 		result.range = _currValue - _xy.firstRiseValue;
-		result.period = _timeSinceStart;
+		//result.period = _timeSinceStart;
 		return result;
 	}
 
 	//************************** Private GetExpCurveConsts Functions **************************
 
-	uint16_t GetExpCurveConsts::calcNewLimit(bool& OK) const {
-		double result = SecantMethodForEquation(LimitTemp(_xy), _currValue + 1, _currValue + 2, 0.1);
-		if (result < _currValue) OK = false;
-		if (result > 0xEFFF) result = 0xEFFF;
-		return static_cast<int16_t>(result);
-	}
+	//uint16_t GetExpCurveConsts::calcNewLimit(bool& OK) const {
+	//	double result = SecantMethodForEquation(LimitTemp(_xy), _currValue + 1, _currValue + 2, 0.1);
+	//	if (result < _currValue) OK = false;
+	//	if (result > 0xEFFF) result = 0xEFFF;
+	//	return static_cast<int16_t>(result);
+	//}
 
 	uint16_t GetExpCurveConsts::calcNewTimeConst(double limit, bool& OK) const {
-		double newTC = (-_xy.lastRiseTime / log((limit - _xy.lastRiseValue) / (limit - _xy.firstRiseValue)));
-		if (newTC <= 0 || newTC > 3736) OK = false;
+		double newTC = 0;
+		if (_xy.lastRiseTime == 0) OK = false;
+		else newTC = (-_xy.lastRiseTime / log((limit - _xy.lastRiseValue) / (limit - _xy.firstRiseValue)));
+		if (!(newTC > 0) || !(newTC < 3736)) OK = false;
 #ifdef LOG_SD
 		logToSD("GetExpCurveConsts::calcNewTimeConst: Temps*10/Times", long(_xy.firstRiseValue / 25.6),
 			long(_xy.midRiseValue / 25.6), _xy.midRiseTime,

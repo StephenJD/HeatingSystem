@@ -143,11 +143,6 @@ using namespace std;
 		Serial.println();
 	}
 
-	Serial_Logger & SD_Logger::_serial() {
-		static Serial_Logger serial;
-		return serial;
-	}
-
 	bool SD_Logger::isWorking() { return SD.sd_exists(chipSelect); }
 
 	File SD_Logger::openSD() {
@@ -156,7 +151,7 @@ using namespace std;
 				//auto t0 = micros();
 				_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
 				//auto d = micros() - t0;
-				Serial.print(generateFileName(_fileNameStem, _clock)); Serial.println(" File re - opened"); Serial.flush();
+				//Serial.print(generateFileName(_fileNameStem, _clock)); Serial.println(" File re - opened"); Serial.flush();
 			}
 			else {
 				if (_dataFile.name()[0] != _fileNameStem[0]) _dataFile = File{};
@@ -186,12 +181,73 @@ using namespace std;
 	
 	Logger & SD_Logger::logTime() {
 		if(_clock->time().asInt() == 0 && _clock->minUnits() == 0 && _clock->seconds() == 0) _dataFile = File{};
-		_serial() << _fileNameStem;
+		Serial_Logger serial(static_cast<Serial_Logger&>(*this));
+		serial << _fileNameStem;
 		Serial_Logger::logTime();
 		_SD_mustTabTime = true;
 		return *this;
 	}
 
+#ifdef ZPSIM
+	using namespace std;
+	////////////////////////////////////
+	//            File_Logger           //
+	////////////////////////////////////
+
+	// On Mega, MISO is internally connected to digital pin 50, MOSI is 51, SCK is 52
+	// Due SPI header does not use digital pins.
+	// Chip select is usually connected to pin 53 and is active LOW.
+
+	File_Logger::File_Logger(const char * fileNameStem, uint32_t baudRate) : Serial_Logger(baudRate) {
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
+		// Avoid calling Serial_Logger during construction, in case clock is broken.
+		Serial.print(F("\nFile_Logger Begun without Clock: "));
+		Serial.print(_fileNameStem);
+		Serial.println();
+	}	
+	
+	File_Logger::File_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock) {
+		strncpy(_fileNameStem, fileNameStem, 5);
+		_fileNameStem[4] = 0;
+		// Avoid calling Serial_Logger during construction, in case clock is broken.
+		Serial.print(F("\nFile_Logger Begun with clock: "));
+		Serial.print(_fileNameStem);
+		Serial.println();
+	}
+
+	bool File_Logger::isWorking() { return true; }
+
+	bool File_Logger::openSD() {
+		if (!_dataFile.good()) {
+			_dataFile.open(generateFileName(_fileNameStem, _clock), ios::ate);	// Append
+		}
+		return _dataFile.good();
+	}
+
+	size_t File_Logger::write(uint8_t chr) {
+		if (!is_cout() && openSD()) {
+			_dataFile.write((char*)&chr, 1);
+		}
+		return 1;
+	}
+
+	size_t File_Logger::write(const uint8_t * buffer, size_t size) {
+		if (!is_cout() && openSD()) {
+			_dataFile.write((char*)buffer, size);
+		}
+		return size;
+	}	
+	
+	Logger & File_Logger::logTime() {
+		if(_clock->time().asInt() == 0 && _clock->minUnits() == 0 && _clock->seconds() == 0) _dataFile.close();
+		Serial_Logger serial(static_cast<Serial_Logger&>(*this));
+		serial << _fileNameStem;
+		Serial_Logger::logTime();
+		_SD_mustTabTime = true;
+		return *this;
+	}
+#endif
 ////////////////////////////////////
 //            RAM_Logger       //
 ////////////////////////////////////

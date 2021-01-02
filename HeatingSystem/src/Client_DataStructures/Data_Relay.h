@@ -13,7 +13,7 @@ namespace HardwareInterfaces {
 	public:
 		UI_Bitwise_Relay() : Relay_B(0, 0) {}
 #ifdef ZPSIM
-		UI_Bitwise_Relay(uint8_t recID ) : Relay_B(recID, 0) {}
+		UI_Bitwise_Relay(uint8_t recID ) : Relay_B(recID, 0), _recordID(recID){}
 #endif
 
 		// Queries
