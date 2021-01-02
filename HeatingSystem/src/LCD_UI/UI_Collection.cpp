@@ -470,7 +470,7 @@ namespace LCD_UI {
 				streamActive = 0;
 			}
 			if (iterated_collection()->behaviour().is_OnNewLine()) buffer.newLine();
-
+			bool isFirst = true;
 			for (auto & object : *iterated_collection()) {
 #ifdef ZPSIM
 //				cout << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << endl;
@@ -482,7 +482,8 @@ namespace LCD_UI {
 				if(object.isCollection()) object.item(itIndex);
 				auto originalBehaviour = object.behaviour();
 				object.behaviour().make_viewOne();
-				hasStreamed = object.streamElement(buffer, streamActive, _endPos, h_listStatus(itIndex));
+				hasStreamed = object.streamElement(buffer, streamActive, _endPos, h_listStatus(itIndex, isFirst));
+				if (hasStreamed) isFirst = false;
 				object.behaviour() = originalBehaviour;
 				h_endVisibleItem(hasStreamed, itIndex);
 
@@ -559,9 +560,9 @@ namespace LCD_UI {
 		return _beginShow;
 	}
 
-	ListStatus UI_IteratedCollection_Hoist::h_listStatus(int streamIndex) const {
+	ListStatus UI_IteratedCollection_Hoist::h_listStatus(int streamIndex, bool isFirst) const {
 		auto thisListStatus = ListStatus::e_showingAll;
-		if (streamIndex == _beginShow && _beginShow > _beginIndex) thisListStatus = ListStatus::e_notShowingStart;
+		if (isFirst && streamIndex == _beginShow && _beginShow > _beginIndex) thisListStatus = ListStatus::e_notShowingStart;
 		auto activeObj = iterated_collection()->activeUI();
 		if (activeObj->get()->isCollection() && _endShow < activeObj->endIndex()) {
 			thisListStatus = ListStatus(thisListStatus | ListStatus::e_not_showingEnd);
