@@ -20,6 +20,7 @@ namespace HardwareInterfaces {
 
 		// Queries
 		uint8_t flowTemp() const;
+		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		// Virtual Functions
 		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 		//uint8_t initialiseDevice() override;
@@ -56,6 +57,6 @@ namespace HardwareInterfaces {
 		RelationalDatabase::RecordID _storeTempSens;
 		volatile uint8_t _mixCallTemp = MIN_FLOW_TEMP;
 		volatile uint8_t _controlZoneRelay = 0;
-		uint8_t _limitTemp = 60;
+		uint8_t _limitTemp = 100;
 	};
 }

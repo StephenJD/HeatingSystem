@@ -24,4 +24,7 @@ namespace HardwareInterfaces {
 		_relay->set(pumpOn);
 		return pumpOn;
 	}
+
+	bool BackBoiler::isOn() const { return _relay->logicalState(); }
+
 }

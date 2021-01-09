@@ -44,6 +44,7 @@ namespace client_data_structures {
 
 		bool operator < (R_TimeTemp rhs) const { return time_temp < rhs.time_temp; }
 		bool operator == (R_TimeTemp rhs) const { return time_temp == rhs.time_temp; }
+		operator bool() const { return time_temp.time().asInt() != 0; }
 	};
 
 	inline Logger & operator << (Logger & stream, const R_TimeTemp & timeTemp) {

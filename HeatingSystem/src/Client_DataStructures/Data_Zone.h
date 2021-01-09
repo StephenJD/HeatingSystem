@@ -26,7 +26,7 @@ namespace client_data_structures {
 		uint8_t autoRatio; // heat-in/heat-out : 20 X (flowT-RoomT)/(RoomT-OS_T) 
 		uint8_t autoTimeC; 
 		uint8_t autoQuality; // Longest Averaging Period(mins/8). If == 0, use manual.
-		uint8_t manHeatTime;
+		uint8_t autoDelay;
 		bool operator < (R_Zone rhs) const { return false; }
 		bool operator == (R_Zone rhs) const { return true; }
 	};
@@ -60,7 +60,7 @@ namespace client_data_structures {
 	/// </summary>
 	class RecInt_Zone : public Record_Interface<R_Zone> {
 	public:
-		enum streamable { e_name, e_abbrev, e_reqTemp, e_offset, e_isTemp, e_isHeating, e_ratio, e_timeConst, e_quality, e_minsPerHalfDegree	};
+		enum streamable { e_name, e_abbrev, e_reqTemp, e_offset, e_isTemp, e_isHeating, e_ratio, e_timeConst, e_quality, e_delay	};
 		RecInt_Zone(VolatileData* runtimeData);
 		VolatileData* runTimeData() override { return _runTimeData; }
 		I_Data_Formatter * getField(int _fieldID) override;
@@ -80,6 +80,6 @@ namespace client_data_structures {
 		IntWrapper _autoRatio;
 		IntWrapper _autoTimeC;
 		IntWrapper _autoQuality;
-		IntWrapper _manHeatTime;
+		IntWrapper _autoDelay;
 	};
 }

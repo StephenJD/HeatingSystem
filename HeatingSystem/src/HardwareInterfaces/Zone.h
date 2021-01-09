@@ -52,9 +52,10 @@ namespace HardwareInterfaces {
 		Date_Time::DateTime nextEventTime() const { return _ttEndDateTime; }
 		bool operator== (const Zone& rhs) const { return _recordID == rhs._recordID; }
 		bool isDHWzone() const;
-		int16_t getFractionalCallSensTemp() const;
+		int16_t getReliableFractionalCallSensTemp() const;
 		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
-		uint8_t averageThermalRatio();
+		uint8_t averageThermalRatio() const;
+		Date_Time::DateTime startDateTime() { return _ttStartDateTime; }
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
 		void resetOffsetToZero() { _offsetT = 0; }
@@ -63,14 +64,15 @@ namespace HardwareInterfaces {
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
 		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
+		void setTTStartTime(Date_Time::DateTime time) { _ttStartDateTime = time;}
 		void preHeatForNextTT();
 		RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() { return _zoneRecord; }
-		static constexpr double RATIO_DIVIDER = 45.;
-		static constexpr int ACCUMULATION_PERIOD_DIVIDER = 4;
+		static constexpr double RATIO_DIVIDER = 255.;
+		static constexpr int REQ_ACCUMULATION_PERIOD = 60; // minutes
 		static constexpr double ERROR_DIVIDER = 2.;
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
-		int16_t measuredThermalRatio() const;
+		void nextAveragedRatio(int16_t currFractionalTemp) const;
 		void saveThermalRatio();
 		UI_TempSensor* _callTS = 0;
 		UI_Bitwise_Relay* _relay = 0;
@@ -81,15 +83,18 @@ namespace HardwareInterfaces {
 		RelationalDatabase::RecordID _recordID = 0;
 		int8_t _offsetT = 0;
 		uint8_t _maxFlowTemp = 0;
+		uint16_t _startCallTemp = 0;
+		uint16_t _minsInPreHeat = 0;
+		uint8_t _minsInDelay = 0;
 
 		int8_t _currProfileTempRequest = 0; // current profile temp. Shown with offset on display - user can advance to next.
 		int8_t _nextProfileTempRequest = 0; // next selectable profile temp. Shown with offset on display
 		int8_t _offset_preheatCallTemp = 0; // current called-for temp, adjusted for pre-heat and offset.
+		Date_Time::DateTime _ttStartDateTime;
 		Date_Time::DateTime _ttEndDateTime;
-		uint16_t _averagePeriod = 0;
-		uint16_t _rollingAccumulatedRatio = 0;
+		mutable uint16_t _averagePeriod = 0;
+		mutable uint16_t _rollingAccumulatedRatio = 0;
 		uint16_t _timeConst;
-		uint16_t _accumulationPeriod;
 		int8_t _callFlowTemp = 0;
 		bool _finishedFastHeating = false;
 		GP_LIB::GetExpCurveConsts _getExpCurve{ 128 };

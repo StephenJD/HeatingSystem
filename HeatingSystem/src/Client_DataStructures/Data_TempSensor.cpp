@@ -31,12 +31,12 @@ namespace client_data_structures {
 		case e_temp_str:
 		{
 			HardwareInterfaces::UI_TempSensor & ts = tempSensor(recordID());
-			strcpy(_tempStr.str(), ":");
+			strcpy(_tempStr.str(), "`");
 			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK) {
-				strcat(_tempStr.str(), "Err");
+				strcat(_tempStr.str(), "Err  ");
 			}
 			else {
-				strcat(_tempStr.str(), intToString(ts.get_temp()).str());
+				strcat(_tempStr.str(), decToString(ts.get_fractional_temp()/2.56,2,2).str());
 			}
 			return &_tempStr;
 		}

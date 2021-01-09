@@ -22,6 +22,7 @@ namespace HardwareInterfaces {
 		uint8_t calcCurrDeliverTemp(int callTemp, float groundT, float topT, float midT, float botT) const;
 		uint8_t getGroundTemp() const;
 		uint8_t getOutsideTemp() const;
+		bool backBoilerIsHeating() const;
 
 		// Modifier
 		void initialise(client_data_structures::R_ThermalStore thermStoreData);

@@ -51,4 +51,9 @@ namespace client_data_structures {
 		bool _hasInsertedNew = false;
 	};
 
+	class TestWatchdog_Cmd : public LCD_UI::UI_Cmd {
+	public:
+		using LCD_UI::UI_Cmd::UI_Cmd;
+		Collection_Hndl* select(Collection_Hndl* from) override { while (true); };
+	};
 }

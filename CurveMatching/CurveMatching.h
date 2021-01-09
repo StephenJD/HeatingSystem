@@ -16,6 +16,7 @@ namespace GP_LIB {
 		// Nested Type
 		struct CurveConsts {
 			int16_t timeConst = 0;
+			int16_t limit = 0;
 			int16_t range = 0;
 			//int16_t start = 0;
 			//int16_t period = 0;
@@ -23,13 +24,13 @@ namespace GP_LIB {
 		};
 		
 		static double uncompressTC(uint8_t compressed_tc) {
-			return exp(compressed_tc / 50.) * 10;
+			return exp(compressed_tc / 50.) * 20;
 		}
 
 		static uint8_t compressTC(double timeConst) {
-			if (timeConst > 1640) timeConst = 1640;
-			if (timeConst < 10) timeConst = 10;
-			return static_cast<uint8_t>(log(timeConst/10) * 50. + 0.5);
+			if (timeConst > 3280) timeConst = 3280;
+			if (timeConst < 20) timeConst = 20;
+			return static_cast<uint8_t>(log(timeConst/20.) * 50. + 0.5);
 		}
 		
 		// ************** Queries **************

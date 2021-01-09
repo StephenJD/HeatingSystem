@@ -38,8 +38,10 @@ using namespace std;
 		//enum Flags { L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
 
 		switch (flag) {
-		case L_flush:	(*this) << " |F|"; flush(); // fall through
-		case L_endl:	
+		case L_flush:	flush(); 
+			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
+			break;
+		case L_endl: // fall through	
 			if (_flags & L_allwaysFlush) { (*this) << " |F|"; flush(); }
 			(*this) << F("\n"); // fall through
 		case L_default:

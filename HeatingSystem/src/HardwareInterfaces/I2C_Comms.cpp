@@ -55,8 +55,8 @@ namespace HardwareInterfaces {
 		}
 	};
 
-	void HardReset::arduinoReset() {
-		logger() << F("HardReset::arduinoReset called") << L_flush;
+	void HardReset::arduinoReset(const char * msg) {
+		logger() << L_flush << F("\n *** HardReset::arduinoReset called by ") << msg << L_endl << L_flush;
 		pinMode(A4, OUTPUT);
 		digitalWrite(A4, LOW);
 	}

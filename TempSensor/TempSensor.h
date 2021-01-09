@@ -15,7 +15,7 @@ namespace HardwareInterfaces {
 #ifdef ZPSIM
 		TempSensor(I2C_Recovery::I2C_Recover & recover, uint8_t addr, int16_t temp) : I_I2Cdevice_Recovery(recover, addr) { _lastGood = temp << 8; }
 		void setTestTemp(uint8_t temp) {_lastGood = temp << 8;}
-		void setTestTemp(double temp) {_lastGood = int16_t(temp*256);}
+		void setTestTemp(double temp) {_lastGood = int16_t(temp*256.);}
 #endif
 		// Queries
 		int8_t get_temp() const;

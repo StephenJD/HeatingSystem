@@ -62,7 +62,7 @@ uint8_t Clock_EEPROM::loadTime() {
 	status |= reader(nextAddr, &_dstHasBeenSet, 1);
 	reader(nextAddr, &lastCompilerTime, sizeof(_now));
 	//Serial.print("Read lastCompilerTime: "); Serial.println(CStr_20(lastCompilerTime));
-	if (!eepromTime.inRange() || !lastCompilerTime.inRange()) {
+	if (!eepromTime.isValid() || !lastCompilerTime.isValid()) {
 		eepromTime = DateTime{};
 		lastCompilerTime = DateTime{};
 	}
@@ -79,7 +79,7 @@ uint8_t Clock_EEPROM::loadTime() {
 		nextAddr = _addr + sizeof(_now) + 4;
 		writer(nextAddr, &compilerTime, sizeof(_now));
 		Serial.println(F("EE Clock Set from Compiler"));
-	} else if (_now.inRange()) {
+	} else if (_now.isValid()) {
 		saveTime();
 		Serial.println(F("Clock saved to EEPROM"));
 	} else {

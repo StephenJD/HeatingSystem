@@ -105,9 +105,9 @@ namespace Assembly {
 		if (!isNewSecond) { return; } // Wait for next second.
 		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
 
-		logger().close();
-		zTempLogger().close();
-		mTempLogger().close();
+		logger() << L_flush;
+		zTempLogger() << L_flush;
+		mTempLogger() << L_flush;
 		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 
 		for (auto & ts : tempSensorArr) {
@@ -122,7 +122,8 @@ namespace Assembly {
 		}
 
 		for (auto & mixValveControl : mixValveControllerArr) {
-			mixValveControl.check(); 
+			mixValveControl.check();
+			if (mixValveControl.recovery().isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 
 			ui_yield(); 
 		}
 
@@ -136,11 +137,8 @@ namespace Assembly {
 			relay.checkControllerStateCorrect();
 		}
 		relayController().updateRelays();
+		if (static_cast<RelaysPort&>(relayController()).recovery().isUnrecoverable()) HardReset::arduinoReset("RelayController");
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
-		if (mixValveControllerArr[0].recovery().isUnrecoverable()) {
-			logger() << F("Initiating Arduino Reset") << L_endl;
-			HardReset::arduinoReset(); 
-		};
 	}
 
 	void TemperatureController::checkZones(bool checkForPreHeat) {

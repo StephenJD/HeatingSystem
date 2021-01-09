@@ -41,9 +41,10 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _allZoneNames_UI_c;
 		LCD_UI::UI_FieldData _allZoneIsTemp_UI_c;
 		LCD_UI::UI_FieldData _allZoneIsHeating_UI_c;
-		LCD_UI::UI_FieldData _zoneManAuto_c;
+		//LCD_UI::UI_FieldData _zoneQuality_c;
 		LCD_UI::UI_FieldData _zoneRatio_c;
 		LCD_UI::UI_FieldData _zoneTimeConst_c;
+		LCD_UI::UI_FieldData _zoneDelay_c;
 
 		LCD_UI::UI_FieldData _progNameUI_c;
 		LCD_UI::UI_FieldData _dwellSpellUI_c;
@@ -72,6 +73,7 @@ namespace Assembly {
 		client_data_structures::InsertTimeTemp_Cmd _deleteTTCmd;
 		client_data_structures::InsertTimeTemp_Cmd _editTTCmd;
 		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
+		client_data_structures::TestWatchdog_Cmd _testWatchdog;
 		LCD_UI::UI_Label _towelRailsLbl;
 		
 		// Pages & sub-pages - Collections of UI handles
@@ -98,11 +100,11 @@ namespace Assembly {
 		
 		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;
 		LCD_UI::UI_IteratedCollection<4> _iterated_zoneSettings_info_c;
-
+		LCD_UI::Collection<1> _testWatchdog_c;
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;
-		LCD_UI::Collection<4> _info_chapter_c;
+		LCD_UI::Collection<5> _info_chapter_c;
 		LCD_UI::A_Top_UI _info_chapter_h;
 	};
 }

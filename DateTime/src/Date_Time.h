@@ -46,7 +46,7 @@ namespace Date_Time {
 		/*constexpr*/ bool operator<(const DateTime & rhs) const { return asInt() < rhs.asInt(); }
 		/*constexpr*/ bool operator>(const DateTime & rhs) const { return asInt() > rhs.asInt(); }
 		int32_t minsTo(const DateTime& minsTill) const;
-		bool inRange() const;
+		bool isValid() const;
 		//DateTime operator~ () const {return ~this->asInt();}
 		// obtain other boolean operators via Rel_Ops
 		operator CStr_20 () const;

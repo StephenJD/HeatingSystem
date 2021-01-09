@@ -358,12 +358,12 @@ TEST_CASE("Calculate Ratio", "[Preheat]") {
 	clock_().setTime( spells_f[0].date.date(), spells_f[0].date.time(),0 );
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, 255);
 	HeatingSystem_Queries queries{db};
-	uint8_t OSTemp = 10;
+	uint8_t OSTemp = 5;
 	double actualRatio = 0.55;
 	double roomTimeConst = 240; // mins/63% towards limit
 	double flowTimeConst = 20; // mins/63% towards limit
 	zTempLogger() << L_flush << "Room TC: " << roomTimeConst << " RoomRatio: " << actualRatio << " FlowTC: " << flowTimeConst << L_endl ;
-	zTempLogger() << "RATIO_DIVIDER: " << Zone::RATIO_DIVIDER << " ACCUMULATION_PERIOD_DIVIDER: " << Zone::ACCUMULATION_PERIOD_DIVIDER << " ERROR_DIVIDER: " << Zone::ERROR_DIVIDER << L_endl << L_endl;
+	zTempLogger() << " ERROR_DIVIDER: " << Zone::ERROR_DIVIDER << L_endl << L_endl;
 
 	unsigned long timeOfReset_mS = 0;
 	tempSensorArr[OS_TS].setTestTemp(OSTemp);
@@ -389,25 +389,27 @@ TEST_CASE("Calculate Ratio", "[Preheat]") {
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[DS_ZONE], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
 	zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(roomTimeConst*2); // 60m per degree. TC = minutes - per - 4 - degrees
-	zone.zoneRecord().rec().autoRatio = 30; // 0.66 linear
+	zone.zoneRecord().rec().autoRatio = .66 * Zone::RATIO_DIVIDER; // 0.66
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
+	zone.initialise(queries.q_Zones[DS_ZONE], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
 	cout << "\nCalculate Ratio" << endl;
 	tempSensorArr[CALL_TS].setTestTemp(15.);
 	
-	double currTemp = tempSensorArr[CALL_TS].get_temp();
+	double currTemp = tempSensorArr[CALL_TS].get_fractional_temp()/256.;
 	double currFlowT = currTemp;
 	tempSensorArr[FLOW_TS].setTestTemp(uint8_t(currFlowT));
-	while (clock_().now().time() < TimeOnly{ 22,10 }) {
+	double endRoomT = 0;
+	while (clock_().now() < DateTime{ { 7,1,20, },{ 10,00 } }) {
 		logger() << L_time << ": Curr Temp: " << tempSensorArr[CALL_TS].get_fractional_temp()/256. << L_endl;
 		zone.preHeatForNextTT();
-		logger() << "Preheat TempReq: " << (int)zone.preheatTempRequest() << L_endl << L_endl;
+		logger() << "Preheat TempReq: " << (int)zone.preheatTempRequest() << " getting to RoomT " << endRoomT << L_endl << L_endl;
 		for (int t = 0; t < 10; ++t) {
 			clock_().setMinUnits(t);
 			zone.setFlowTemp();
 			currFlowT = currFlowT + (zone.getCallFlowT() - currFlowT) * (1. - exp(-1 / flowTimeConst));
 			tempSensorArr[FLOW_TS].setTestTemp(currFlowT);
-			double endRoomT = tempSensorArr[OS_TS].get_temp() + actualRatio * (zone.getCallFlowT() - tempSensorArr[OS_TS].get_temp());
+			endRoomT = tempSensorArr[OS_TS].get_temp() + actualRatio * (zone.getCallFlowT() - tempSensorArr[OS_TS].get_temp());
 			currTemp = currTemp + (endRoomT - currTemp) * (1. - exp(-1./ roomTimeConst));
 			tempSensorArr[CALL_TS].setTestTemp(currTemp);
 		}

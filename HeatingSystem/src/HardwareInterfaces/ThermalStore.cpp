@@ -31,6 +31,8 @@ namespace HardwareInterfaces {
 		return temp;
 	}
 
+	bool ThermalStore::backBoilerIsHeating() const { return _backBoiler.isOn(); }
+
 	//uint8_t ThermalStore::getOutsideTemp() const {
 	//	return f->tempSensorR(getVal(OutsideTS)).getSensTemp();
 	//}

@@ -26,7 +26,7 @@ namespace HeatingSystemSupport {
 
 	void initialise_virtualROM() {
 #if defined(__SAM3X8E__)		
-		logger() << F("  virtualROM...\n");
+		logger() << L_time << F("  virtualROM...\n");
 		eeprom().readEP(RDB_START_ADDR, RDB_MAX_SIZE, virtualProm + RDB_START_ADDR);
 		logger() << F("  virtualROM Complete. Size: ") << sizeof(virtualProm) << L_endl;
 #endif

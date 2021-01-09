@@ -3,6 +3,7 @@
 #include "..\LCD_UI\UI_FieldData.h"
 #include "..\HardwareInterfaces\Zone.h"
 #include "..\Assembly\Sequencer.h"
+#include "Clock.h"
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -22,7 +23,7 @@ namespace client_data_structures {
 		, _autoRatio(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 		, _autoTimeC(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 		, _autoQuality(0, ValRange(e_editAll, 0, 255))
-		, _manHeatTime(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
+		, _autoDelay(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 	{
 	}
 
@@ -69,9 +70,9 @@ namespace client_data_structures {
 		case e_quality:
 			_autoQuality.val = answer().rec().autoQuality;
 			return &_autoQuality;
-		case e_minsPerHalfDegree:
-			_manHeatTime.val = answer().rec().manHeatTime;
-			return &_manHeatTime;
+		case e_delay:
+			_autoDelay.val = answer().rec().autoDelay;
+			return &_autoDelay;
 		default: return 0;
 		}
 	}
@@ -112,9 +113,9 @@ namespace client_data_structures {
 			_autoQuality = *newValue;
 			answer().rec().autoQuality = decltype(answer().rec().autoQuality)(_autoQuality.val);
 			break;
-		case e_minsPerHalfDegree:
-			_manHeatTime = *newValue;
-			answer().rec().manHeatTime = decltype(answer().rec().manHeatTime)(_manHeatTime.val);
+		case e_delay:
+			_autoDelay = *newValue;
+			answer().rec().autoDelay = decltype(answer().rec().autoDelay)(_autoDelay.val);
 			break;
 		}
 		answer().update();
@@ -127,9 +128,10 @@ namespace client_data_structures {
 			logger() << "Select Next Sequence Event " << answer().rec().name << " ID: " << recordID() << L_endl;
 			HardwareInterfaces::Zone& z = zone(recordID());
 			if (moveBy > 0) {
-				if (z.currTempRequest() != z.nextTempRequest()) {
+				//if (z.startDateTime() <= clock_().now()) {
 					z.setProfileTempRequest(z.nextTempRequest());
-				}
+					z.setTTStartTime(z.nextEventTime());
+				//}
 			} else {
 				z.refreshProfile();
 			}

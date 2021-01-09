@@ -1,4 +1,5 @@
 #include "Data_Spell.h"
+#include <Clock.h>
 
 #ifdef ZPSIM
 	#include <iostream>
@@ -24,6 +25,17 @@ namespace client_data_structures {
 		{
 			auto startDate = newValue->val;
 			auto newDate = DateTime(startDate);
+			if (spell.rec().date <= clock_().now() && newDate > clock_().now()) {
+				insertNewData();
+			}
+
+			for (Answer_R<R_Spell> spell : query()) {
+				if (spell.rec().date == newDate) {
+					deleteData();
+					return false;
+				}
+			}
+
 			spell.rec().date = DateTime(startDate);
 			auto newRecordID = spell.update();
 			if (newRecordID != ds_recordID()) {

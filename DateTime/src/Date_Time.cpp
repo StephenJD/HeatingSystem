@@ -57,7 +57,7 @@ namespace Date_Time {
 		return *this;
 	}
 
-	bool DateTime::inRange() const {
+	bool DateTime::isValid() const {
 		if (mins10() > 5) return false;
 		if (hrs() > 23) return false;
 		if (day() > 31) return false;

@@ -154,6 +154,9 @@ constexpr R_Spell spells_f[] = { // date, ProgramID : Ordered by date
 	,{ DateTime({ 8,1,20, },{ 7,0 }),0 } // Wed: At Home for TT's in a day
 	,{ DateTime({ 13,1,20, },{ 5,0 }),1 } // Mon: Occupied for TT's in a day
 	,{ DateTime({ 13,1,20, },{ 5,0 }),2 } // Mon: At Work for TT's in a day
+	,{ DateTime({ 20,1,20, },{ 5,0 }),3 } // Mon: Empty for TT's in a day
+	,{ DateTime({ 22,1,20, },{ 7,30 }),1 } // Mon: Occupied for TT's in a day
+	,{ DateTime({ 24,1,20, },{ 7,30 }),3 } // Mon: Occupied for TT's in a day
 };
 
 constexpr R_Profile profiles_f[] = {
@@ -166,6 +169,8 @@ constexpr R_Profile profiles_f[] = {
 	,{ 0,1,3 }  // [4] At Home  DS  -----SS
 	,{ 1,2,255 }// [5] Occupied DHW MTWTFSS
 	,{ 2,2,255 }// [6] At Work  DHW MTWTFSS
+	,{ 3,3,255 }// [7] Empty Flat MTWTFSS
+	,{ 1,3,255 }// [8] Occupied Flat MTWTFSS
 };
 
 
@@ -187,6 +192,10 @@ R_TimeTemp timeTemps_f[] = { // profileID,TT
 	,{6, makeTT(8,00,40)}  // [13] At Work  DHW MTWTFSS
 	,{6, makeTT(14,00,35)} // [14] At Work  DHW MTWTFSS
 	,{6, makeTT(23,00,30)} // [15] At Work  DHW MTWTFSS
+
+	,{7, makeTT(7,30,10)}  // [16]  Empty Flat MTWTFSS
+	,{8, makeTT(7,30,20)}  // [17]  Occupied Flat MTWTFSS
+	,{8, makeTT(23,00,18)} // [18]  Occupied Flat MTWTFSS
 };
 
 
@@ -278,6 +287,23 @@ TEST_CASE("Two-dwellings Higher takes priority", "[Sequencer]") {
 		CHECK(info.currTT.time() == timeTemps_f[times[t]].time());
 		CHECK(info.nextTT.time() == timeTemps_f[times[t + 1]].time());
 		CHECK(info.nextEvent.date() == correctNextDate);
+		nextEvent = info.nextEvent;
+	}
+}
+
+TEST_CASE("New Spell starts at curr Spell TT-time", "[Sequencer]") {
+	auto zoneID = 3;
+	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, 255);
+	HeatingSystem_Queries queries{ db };
+	Sequencer sequencer{ queries };
+	auto nextEvent = spells_f[4].date;
+	int ttIndex[] = { 16,16, 16,17,18, 17, 18, 16, 16,16 };
+	logger() << "Profile for Flat on " << nextEvent.date() << L_endl;
+	for (int i = 21, t = 0; i < 29; ++i, ++t) {
+		logger() << "Check " << i << " " << timeTemps_f[ttIndex[t]] << L_endl;
+		auto info = sequencer.getProfileInfo(zoneID, nextEvent);
+		CHECK(info.currTT.time() == timeTemps_f[ttIndex[t]].time());
+		CHECK(info.nextTT.time() == timeTemps_f[ttIndex[t + 1]].time());
 		nextEvent = info.nextEvent;
 	}
 }

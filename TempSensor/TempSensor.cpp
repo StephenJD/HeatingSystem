@@ -52,7 +52,7 @@ namespace HardwareInterfaces {
 		temp[0] = _lastGood / 256;
 		if (_lastGood < 2560) change = 256;
 		if (_lastGood > 17920) change = -256;
-		temp[1] = 0;
+		temp[1] = _lastGood % 256;
 #endif
 		return checkTemp((temp[0] << 8) + temp[1]);
 	}

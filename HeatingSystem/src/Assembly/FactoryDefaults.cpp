@@ -76,8 +76,8 @@ namespace Assembly {
 	
 	constexpr R_TowelRail towelRails_f[] = {
 		  { "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 50, 60 }
-		, { "Family", T_HTrS, R_HsTR, M_UpStrs, 51, 61 }
-		, { "Flat", T_FTrS, R_FlTR, M_UpStrs, 52, 62 }
+		, { "Family", T_HTrS, R_HsTR, M_UpStrs, 50, 60 }
+		, { "Flat", T_FTrS, R_FlTR, M_UpStrs, 50, 60 }
 	};
 
 	constexpr R_Dwelling dwellings_f[] = {
@@ -85,11 +85,11 @@ namespace Assembly {
 		,{ "HolAppt" }
 	};
 
-	constexpr R_Zone zones_f[] = { // offsetT, autoRatio, autoTimeC, autoQuality, manHeatTime;
-		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,102,216,1,194 }
-		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,125,192,1,173 }
-		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,0,35,1,35 }
-		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,107,217,1,194 }
+	constexpr R_Zone zones_f[] = {				// maxT, offsetT, autoRatio, autoTimeC, autoQuality, autoDelay;
+		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,	0,			135,	220,		1,			95 }
+		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,55,	0,			104,	202,		1,			65 }
+		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,	0,			0,		65,			1,			5 }
+		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,	0,			104,	206,		1,			48 }
 	};
 
 	constexpr R_DwellingZone dwellingZones_f[] = {

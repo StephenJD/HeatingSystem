@@ -81,24 +81,34 @@ namespace HardwareInterfaces {
 			}
 		};
 
-		auto checkMaxMixTempIsPermissible = [maxTemp,this]() { if (maxTemp < _limitTemp) _limitTemp = maxTemp;};
+		auto setNewControlZone = [maxTemp, this, zoneRelayID, relayName]() {
+			writeToValve(Mix_Valve::max_flow_temp, maxTemp);
+			writeToValve(Mix_Valve::control, Mix_Valve::e_stop_and_wait); // trigger stop and wait on valve
+			mTempLogger() << L_time << F("MixValveController: ") << relayName(zoneRelayID) << F(" is new ControlZone.\t New MaxTemp: ") << maxTemp << L_endl;
+			_limitTemp = maxTemp;
+			_controlZoneRelay = zoneRelayID;
+		};
 
-		auto requestIsFromControllingZone = [zoneRelayID, this]()-> bool {return _controlZoneRelay == zoneRelayID; };
+		auto hasLimitPriority = [maxTemp, this, zoneRelayID, setNewControlZone]() -> bool {
+			auto zoneIsHeating = _relayArr[zoneRelayID].logicalState();
+			if (zoneIsHeating && maxTemp < _limitTemp) setNewControlZone();
+			return zoneIsHeating && maxTemp == _limitTemp;
+		};
+		
+		auto amControllingZone = [this,zoneRelayID]() -> bool {return _controlZoneRelay == zoneRelayID; };
 
-		auto checkForNewControllingZone = [newCallTemp, zoneRelayID, maxTemp, this, requestIsFromControllingZone]() {
-			if (!requestIsFromControllingZone() && newCallTemp > _mixCallTemp) { // new control zone
-				writeToValve(Mix_Valve::control, Mix_Valve::e_stop_and_wait); // trigger stop and wait on valve
-				writeToValve(Mix_Valve::max_flow_temp, maxTemp);
-				mTempLogger() << L_time << F("MixValveController::amControlZone\t New CZ - Write new MaxTemp: ") << maxTemp << L_endl;
-				_controlZoneRelay = zoneRelayID; 
+		auto checkForNewControllingZone = [newCallTemp, this, amControllingZone, hasLimitPriority, setNewControlZone]() {
+			// controlZone is one calling for heat with lowest max-temp and highest call-temp.
+			if (!amControllingZone() && hasLimitPriority() && newCallTemp > _mixCallTemp) { // new control zone
+				setNewControlZone();
 			}
 		};
 				
 		// Algorithm
-		checkMaxMixTempIsPermissible();
 		checkForNewControllingZone();
-
-		if (requestIsFromControllingZone()) {
+		if (!amControllingZone()) {
+			return false;
+		} else {
 			auto mv_FlowTemp = flowTemp();
 #if defined (ZPSIM)
 			bool debug;
@@ -119,7 +129,7 @@ namespace HardwareInterfaces {
 			if (newCallTemp <= MIN_FLOW_TEMP) {
 				newCallTemp = MIN_FLOW_TEMP;
 				_relayArr[_controlZoneRelay].clear(); // turn call relay OFF
-				_limitTemp = 100; // reset since it might have been the limiting zone
+				_limitTemp = 100; // release control of limit temp.
 			}
 			else {
 				_relayArr[_controlZoneRelay].set(); // turn call relay ON
@@ -129,10 +139,10 @@ namespace HardwareInterfaces {
 				_mixCallTemp = newCallTemp;
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
 				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
-				auto mv_ReqTemp = readFromValve(Mix_Valve::request_temp);
-				if (mv_ReqTemp != _mixCallTemp) { 
-					mTempLogger() << L_time << F("MixValve Confirm 0x") << L_hex << getAddress() << F(" failed for Reg: ") << Mix_Valve::request_temp << F(" Wrote: ") << _mixCallTemp << F(" Read: ") << mv_ReqTemp << L_endl;
-				}
+				//auto mv_ReqTemp = readFromValve(Mix_Valve::request_temp);
+				//if (mv_ReqTemp != _mixCallTemp) { 
+				//	mTempLogger() << L_time << F("MixValve Confirm 0x") << L_hex << getAddress() << F(" failed for request_temp. Wrote: ") << L_dec << _mixCallTemp << F(" Read: ") << mv_ReqTemp << L_endl;
+				//}
 			} else if (mv_FlowTemp != _mixCallTemp) {
 				//mTempLogger() << L_time << L_tabs << relayName(zoneRelayID);
 				//mTempLogger() << F("MV_Request: ") << _mixCallTemp;
@@ -140,7 +150,6 @@ namespace HardwareInterfaces {
 			}
 			return true;
 		}
-		else return false;
 	}
 
 
@@ -178,17 +187,16 @@ namespace HardwareInterfaces {
 				status = write_verify(mixReg, 1, &value); // attempt recovery-write
 				if (status) {
 					mTempLogger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << L_endl;
-				} else {
-					uint8_t readValue = readFromValve(reg);
-					//uint8_t readValue = 0;
-					//read(mixReg, 1, &readValue);
-					status = (readValue == value? _OK : _I2C_ReadDataWrong);
-					if (status) {
-						mTempLogger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << F(" Verify OK but then Wrote: ") << L_dec << value << F(" Read: ") << readValue << L_endl;
-					} //else {
-						//mTempLogger() << F("\tMixValveController::writeToValve OK after recovery. Write: ") << value << F(" Read: ") << readValue << L_endl;
-					//}
-				}
+				} 
+				//else {
+				//	uint8_t readValue = readFromValve(reg);
+				//	status = (readValue == value? _OK : _I2C_ReadDataWrong);
+				//	if (status) {
+				//		mTempLogger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << F(" Verify OK but then Wrote: ") << L_dec << value << F(" Read: ") << readValue << L_endl;
+				//	} //else {
+				//		//mTempLogger() << F("\tMixValveController::writeToValve OK after recovery. Write: ") << value << F(" Read: ") << readValue << L_endl;
+				//	//}
+				//}
 			} 
 		} else mTempLogger() << L_time << F("MixValve Write disabled");
 		return status;

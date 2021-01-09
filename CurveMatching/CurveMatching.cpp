@@ -74,6 +74,7 @@ namespace GP_LIB {
 	GetExpCurveConsts::CurveConsts GetExpCurveConsts::matchCurve(int limitVal) {
 		CurveConsts result;
 		result.resultOK = true;
+		result.limit = limitVal;
 		if (_xy.midRiseValue == 0 || _xy.lastRiseValue == _xy.midRiseValue) {
 			if (_xy.lastRiseValue == 0) _xy.lastRiseValue = _currValue;
 			if (_xy.firstRiseValue == 0) _xy.firstRiseValue = _xy.lastRiseValue;

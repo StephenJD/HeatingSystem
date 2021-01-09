@@ -26,12 +26,12 @@ namespace Assembly {
 		ProfileInfo info;
 		_queries->q_DwellingsForZone.setMatchArg(zoneID);
 		for (Answer_R<R_Dwelling> dwelling : _queries->q_DwellingsForZone) {
-			logger() << "\t" << dwelling.rec() << " " << timeOfInterest << L_endl;
 			ProfileInfo dwellInfo;
 			dwellInfo.currEvent = timeOfInterest;
 			getCurrentSpell(dwelling.id(), dwellInfo);
 			getCurrentProfileID(zoneID, dwellInfo);
 #ifdef ZPSIM
+			logger() << "\t" << dwelling.rec() << " " << timeOfInterest << L_endl;
 			logger() << F("\t\tThis ") << dwellInfo.currTT
 				<< F("\n\t\tNext ") << dwellInfo.nextTT << L_endl;
 #endif
@@ -109,10 +109,11 @@ namespace Assembly {
 		*/
 
 		// Lambda
-		auto getProfileForDay = [this, &info](RecordID program, int dayNo) -> RecordID {
+		auto getProfileForDay = [this, &info](int dayNo) -> RecordID {
 			auto dayFlag = DateOnly::weekDayFlag(dayNo);
 			auto prevDayFlag = DateOnly::weekDayFlag((dayNo+6)%7);
 			auto nextDayFlag = DateOnly::weekDayFlag((dayNo+1)%7);
+			
 			auto profileRS = _queries->q_ProfilesForZoneProg.begin();
 			auto profileID = RecordID(-1);
 			do {
@@ -148,19 +149,17 @@ namespace Assembly {
 			return timeTemp.rec();
 		};
 
-		auto getCurrentTT = [this, lastTT](ProfileInfo& info) {
-			_queries->q_TimeTempsForProfile.setMatchArg(info.currentProfileID);
+		auto currentTT = [this](RecordID currProfileID, TimeOnly time) -> R_TimeTemp {
+			_queries->q_TimeTempsForProfile.setMatchArg(currProfileID);
+			// Find last TT before/equal to time. Return 0 if none found.
 			auto curr_tt = R_TimeTemp{};
 			for (Answer_R<R_TimeTemp> timeTemp : _queries->q_TimeTempsForProfile) {
-				if (timeTemp.rec().time_temp.time() > info.currEvent.time()) {
+				if (timeTemp.rec().time_temp.time() > time) {
 					break;
 				}
 				curr_tt = timeTemp.rec();
 			}
-			if (curr_tt == R_TimeTemp{}) {
-				curr_tt = lastTT(info.prevProfileID);
-			}
-			info.currTT = curr_tt;
+			return curr_tt;
 		};
 
 		auto resetProfileIDs = [](ProfileInfo& info) {
@@ -172,8 +171,12 @@ namespace Assembly {
 		// Algorithm
 		_queries->q_ProfilesForZone.setMatchArg(zoneID);
 		_queries->q_ProfilesForZoneProg.setMatchArg(info.currSpell.programID);
-		getProfileForDay(info.currSpell.programID, info.currEvent.weekDayNo());
-		getCurrentTT(info);
+		getProfileForDay(info.currEvent.weekDayNo());
+		auto curr_tt = currentTT(info.currentProfileID, info.currEvent);
+		if (!curr_tt) {
+			curr_tt = lastTT(info.prevProfileID);
+		}
+		info.currTT = curr_tt;
 		// currTT is last TT for currentSpell Program <= currEvent
 		info.nextTT = getNextTT(info.currentProfileID, info.currTT.time());
 		if (info.nextTT == info.currTT)
@@ -181,31 +184,26 @@ namespace Assembly {
 		setNextEventFromTT(info);
 		// nextTT & nextEvent is nextTT for currentSpell Program
 		if (info.nextSpell.date != info.currSpell.date && info.nextSpell.date <= info.nextEvent) {
-			resetProfileIDs(info); // next spell starts before nextTT, so need to get prevTT for the new program
-			auto nextSpellProfile = getProfileForDay(info.nextSpell.programID, info.nextSpell.date.weekDayNo());
-			auto nextSpellFirstTT = getNextTT(nextSpellProfile, info.currTT.time());
-			if (nextSpellFirstTT.time() < info.nextTT.time()) { // nextSpellProfile has earlierTT to use as nextTT
-				info.nextProfileID = nextSpellProfile;
-				info.nextTT = nextSpellFirstTT;
-			} else { // need to use last in prevSpellProfile as nextTT
-				info.nextTT = lastTT(info.prevProfileID);
-			}
+			ProfileInfo nextSpellInfo;
+			nextSpellInfo.currEvent = info.nextSpell.date;
+			nextSpellInfo.currSpell = info.nextSpell;
+			nextSpellInfo.nextSpell = info.nextSpell;
+			getCurrentProfileID(zoneID, nextSpellInfo);
+			info.nextProfileID = nextSpellInfo.nextProfileID;
+			info.nextTT = nextSpellInfo.currTT;
 			info.nextEvent = info.nextSpell.date;
 		}
 	}
 
 	auto Sequencer::getNextTT(RecordID currProfileID, TimeOnly time) -> R_TimeTemp {
+		// Returns first TT or nextTT
 		_queries->q_TimeTempsForProfile.setMatchArg(currProfileID);
-		auto tt_RS = _queries->q_TimeTempsForProfile.begin();
-		Answer_R<R_TimeTemp> timeTemp = *tt_RS;
-		auto nextTT = timeTemp.rec();
-		while (tt_RS.status() == TB_OK) {
-			timeTemp = *tt_RS;
-			if (timeTemp.rec().time_temp.time() > time) {
+		auto nextTT = static_cast<Answer_R<R_TimeTemp>>(_queries->q_TimeTempsForProfile.begin())->rec();
+		for (Answer_R<R_TimeTemp> timeTemp : _queries->q_TimeTempsForProfile) {
+			if (timeTemp.rec().time() > time) {
 				nextTT = timeTemp.rec();
 				break;
 			}
-			++tt_RS;
 		}
 		return nextTT;
 	}

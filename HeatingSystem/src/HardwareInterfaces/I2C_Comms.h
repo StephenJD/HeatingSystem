@@ -20,7 +20,7 @@ namespace HardwareInterfaces {
 	public:
 		HardReset(Pin_Wag resetPinWag) : _resetPinWag(resetPinWag) {}
 		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
-		static void arduinoReset();
+		static void arduinoReset(const char* msg);
 		bool initialisationRequired = false;
 		unsigned long timeOfReset_mS = 0;
 	private:
