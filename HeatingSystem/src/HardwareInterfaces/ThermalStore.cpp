@@ -53,44 +53,17 @@ namespace HardwareInterfaces {
 		return getTopTemp() > _thermStoreData.OvrHeatTemp;
 	}
 
-	//bool ThermalStore::check() { // checks zones, twl rads & thm store for heat requirement and sets relays accordingly
-	//	--Zone_Run::z_period;
-	//	uint8_t i;
-	//	for (i = 0; i < f->towelRads.count(); ++i) { // takes 200mS, required every second
-	//		f->towelRads[i].run().check(); // setFlowTemp, mixCall & switches relays
-	//	}
-	//
-	//	for (i = 0; i < f->zones.count(); ++i) { // takes 850mS
-	//		// DHW zone checks Mix Valves are hot enough & DHW is OK.
-	//		f->zoneR(i).check(); // setZFlowTemp, mixCall & switches relays
-	//	}
-	//
-	//	if (Zone_Run::z_period <= 0) Zone_Run::z_period = AVERAGING_PERIOD;
-	//
-	//	if (!temp_sense_hasError) {
-	//		for (i = 0; i < f->mixingValves.count(); ++i) { // takes 104mS
-	//			f->mixValveR(i).check(); // Check Mixing Valve flow temps
-	//		}
-	//	}
-	//	return true;
-	//}
-
 	bool ThermalStore::needHeat(int currRequest, int nextRequest) {
 		// called every Minute.
-		_tempSensorError = false;
 		setLowestCWtemp(false);
 		bool needHeat = dhwNeedsHeat(currRequest, nextRequest);
-		// Check temp for each mix valve		
-		auto mixNeedsHeat = false;
-		for (auto & mixV : _mixValveControllerArr) {
-			mixNeedsHeat = mixNeedsHeat || mixV.needHeat(_isHeating);
+		_mixVRequestingHeat = -1;
+		if (!needHeat) {
+			for (auto& mixV : _mixValveControllerArr) { // Check temp for each mix valve
+				if (mixV.needHeat(_isHeating)) _mixVRequestingHeat = mixV.index();
+			}
+			needHeat |= (_mixVRequestingHeat != -1);
 		}
-		//if (/*!_isHeating && */mixNeedsHeat) logger() << L_time << F("MixValve Needs Heat\n");
-		needHeat |= mixNeedsHeat;
-		zTempLogger() << L_time << L_tabs << (mixNeedsHeat ? "MixV" : "DHW")  
-			<< "Req/Is:" << currRequest << _theoreticalDeliveryTemp 
-			<< F("Flow Req/Is:") << (needHeat ? 80 : 30) << _tempSensorArr[_thermStoreData.GasTS].get_temp()
-			<< L_endl;
 		_isHeating = needHeat;
 		return needHeat;
 	}

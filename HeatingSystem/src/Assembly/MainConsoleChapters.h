@@ -41,7 +41,7 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _allZoneNames_UI_c;
 		LCD_UI::UI_FieldData _allZoneIsTemp_UI_c;
 		LCD_UI::UI_FieldData _allZoneIsHeating_UI_c;
-		//LCD_UI::UI_FieldData _zoneQuality_c;
+		LCD_UI::UI_FieldData _zoneQuality_c;
 		LCD_UI::UI_FieldData _zoneRatio_c;
 		LCD_UI::UI_FieldData _zoneTimeConst_c;
 		LCD_UI::UI_FieldData _zoneDelay_c;
@@ -75,6 +75,7 @@ namespace Assembly {
 		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
 		client_data_structures::TestWatchdog_Cmd _testWatchdog;
 		LCD_UI::UI_Label _towelRailsLbl;
+		LCD_UI::UI_Label _autoSettingLbl;
 		
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<7> _page_currTime_c;
@@ -99,7 +100,8 @@ namespace Assembly {
 		LCD_UI::Collection<2> _page_towelRails_c;
 		
 		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;
-		LCD_UI::UI_IteratedCollection<4> _iterated_zoneSettings_info_c;
+		LCD_UI::UI_IteratedCollection<5> _iterated_zoneSettings_info_c;
+		LCD_UI::Collection<2> _page_autoSettings_c;
 		LCD_UI::Collection<1> _testWatchdog_c;
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4> _user_chapter_c;

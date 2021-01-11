@@ -21,6 +21,7 @@ namespace HardwareInterfaces {
 		// Queries
 		uint8_t flowTemp() const;
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
+		uint8_t index() const { return _index; }
 		// Virtual Functions
 		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 		//uint8_t initialiseDevice() override;

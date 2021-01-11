@@ -2,7 +2,6 @@
 #include <RDB.h>
 #include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
 #include "Date_Time.h"
-#include <CurveMatching.h>
 #include "..\Assembly\HeatingSystemEnums.h"
 #include "..\Client_DataStructures\Data_Zone.h"
 
@@ -52,7 +51,7 @@ namespace HardwareInterfaces {
 		Date_Time::DateTime nextEventTime() const { return _ttEndDateTime; }
 		bool operator== (const Zone& rhs) const { return _recordID == rhs._recordID; }
 		bool isDHWzone() const;
-		int16_t getReliableFractionalCallSensTemp() const;
+		int16_t getFractionalCallSensTemp() const;
 		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
 		uint8_t averageThermalRatio() const;
 		Date_Time::DateTime startDateTime() { return _ttStartDateTime; }
@@ -70,10 +69,22 @@ namespace HardwareInterfaces {
 		static constexpr double RATIO_DIVIDER = 255.;
 		static constexpr int REQ_ACCUMULATION_PERIOD = 60; // minutes
 		static constexpr double ERROR_DIVIDER = 2.;
+		static constexpr uint8_t DELAY_COOLING_TIME = 120;
+		static constexpr uint8_t MEASURING_DELAY = 255;
+		static double uncompressTC(uint8_t compressed_tc) {
+			return exp(compressed_tc / 50.) * 20;
+		}
+
+		static uint8_t compressTC(double timeConst) {
+			if (timeConst > 3280) timeConst = 3280;
+			if (timeConst < 20) timeConst = 20;
+			return static_cast<uint8_t>(log(timeConst / 20.) * 50. + 0.5);
+		}
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
 		void nextAveragedRatio(int16_t currFractionalTemp) const;
 		void saveThermalRatio();
+
 		UI_TempSensor* _callTS = 0;
 		UI_Bitwise_Relay* _relay = 0;
 		ThermalStore* _thermalStore = 0;
@@ -85,19 +96,24 @@ namespace HardwareInterfaces {
 		uint8_t _maxFlowTemp = 0;
 		uint16_t _startCallTemp = 0;
 		uint16_t _minsInPreHeat = 0;
-		uint8_t _minsInDelay = 0;
+		/// <summary>
+		/// Controls saving of new delay period.
+		/// Cooling State: Is incremented up to DELAY_COOLING_TIME whilst zone is cooling.
+		/// Ready State: == DELAY_COOLING_TIME(120) - Can re-measure delay.
+		/// Measuring Delay State: == MEASURING_DELAY(255)
+		/// </summary>
+		uint8_t _minsCooling = 0;
+		mutable uint8_t _averagePeriod = 0;
 
 		int8_t _currProfileTempRequest = 0; // current profile temp. Shown with offset on display - user can advance to next.
 		int8_t _nextProfileTempRequest = 0; // next selectable profile temp. Shown with offset on display
 		int8_t _offset_preheatCallTemp = 0; // current called-for temp, adjusted for pre-heat and offset.
 		Date_Time::DateTime _ttStartDateTime;
 		Date_Time::DateTime _ttEndDateTime;
-		mutable uint16_t _averagePeriod = 0;
 		mutable uint16_t _rollingAccumulatedRatio = 0;
 		uint16_t _timeConst;
 		int8_t _callFlowTemp = 0;
 		bool _finishedFastHeating = false;
-		GP_LIB::GetExpCurveConsts _getExpCurve{ 128 };
 		static Assembly::Sequencer* _sequencer;
 	};
 }

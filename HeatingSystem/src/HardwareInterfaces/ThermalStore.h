@@ -23,6 +23,7 @@ namespace HardwareInterfaces {
 		uint8_t getGroundTemp() const;
 		uint8_t getOutsideTemp() const;
 		bool backBoilerIsHeating() const;
+		int8_t heatingRequestOrigin() const { return _mixVRequestingHeat; }
 
 		// Modifier
 		void initialise(client_data_structures::R_ThermalStore thermStoreData);
@@ -42,6 +43,7 @@ namespace HardwareInterfaces {
 
 		uint8_t _theoreticalDeliveryTemp = 45;
 		bool _isHeating = false;
+		int8_t _mixVRequestingHeat = -1; // only used for logging
 
 		float _upperC, _midC, _bottomC; // calculated capacity factors
 		float _upperV, _midV, _bottomV; // calculated Volumes

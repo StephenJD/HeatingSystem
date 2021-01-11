@@ -14,7 +14,7 @@
 
 void ui_yield();
 Logger& zTempLogger();
-Logger& mTempLogger();
+Logger& profileLogger();
 
 
 namespace Assembly {
@@ -107,7 +107,7 @@ namespace Assembly {
 
 		logger() << L_flush;
 		zTempLogger() << L_flush;
-		mTempLogger() << L_flush;
+		profileLogger() << L_flush;
 		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 
 		for (auto & ts : tempSensorArr) {

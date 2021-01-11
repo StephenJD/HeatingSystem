@@ -24,7 +24,7 @@ namespace Assembly {
 		, _allZoneNames_UI_c{ &db._ds_Zones, RecInt_Zone::e_name, {V + V1} }
 		, _allZoneIsTemp_UI_c{ &db._ds_Zones, RecInt_Zone::e_isTemp, {V + V1} }
 		, _allZoneIsHeating_UI_c{ &db._ds_Zones, RecInt_Zone::e_isHeating, {V + V1} }
-		//, _zoneQuality_c{ &db._ds_Zones, RecInt_Zone::e_quality }
+		, _zoneQuality_c{ &db._ds_Zones, RecInt_Zone::e_quality }
 		, _zoneRatio_c{ &db._ds_Zones, RecInt_Zone::e_ratio }
 		, _zoneTimeConst_c{ &db._ds_Zones, RecInt_Zone::e_timeConst }
 		, _zoneDelay_c{ &db._ds_Zones, RecInt_Zone::e_delay }
@@ -66,6 +66,7 @@ namespace Assembly {
 		, _newTTCmd{ "New", 0, {H + S } }
 		, _testWatchdog{ "Test Watchdog" , 0 }
 		, _towelRailsLbl{ "Room Temp OnFor ToGo" }
+		, _autoSettingLbl{ "Aut Rat Tc  Del Qy" }
 
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection(_currTimeUI_c, _SDCardUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
@@ -94,12 +95,13 @@ namespace Assembly {
 
 		, _iterated_relays_info_c{ 80, makeCollection(_relayNameUI_c, _relayStateUI_c) }
 
-		, _iterated_zoneSettings_info_c{ 80, makeCollection(_allZoneAbbrevUI_c, _zoneRatio_c, _zoneTimeConst_c, _zoneDelay_c),{V + S + L + VnLR + UD_A} }
+		, _iterated_zoneSettings_info_c{ 80, makeCollection(_allZoneAbbrevUI_c, _zoneRatio_c, _zoneTimeConst_c, _zoneDelay_c, _zoneQuality_c),{V + S + L + VnLR + UD_A} }
+		, _page_autoSettings_c{ makeCollection(_autoSettingLbl, _iterated_zoneSettings_info_c)}
 		, _testWatchdog_c{makeCollection(_testWatchdog )}
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeChapter(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{ _user_chapter_c }
-		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _iterated_zoneSettings_info_c, _testWatchdog_c) }
+		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _page_autoSettings_c, _testWatchdog_c) }
 		, _info_chapter_h{ _info_chapter_c }
 	{
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));

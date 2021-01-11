@@ -130,7 +130,7 @@ Logger & zTempLogger() {
 	return _log;
 }
 
-Logger & mTempLogger() {
+Logger & profileLogger() {
 	static Serial_Logger _log(9600, clock_());
 	return _log;
 }
@@ -234,7 +234,7 @@ TEST_CASE("Preheat for next warmer and cooler", "[Preheat]") {
 	Zone zone{};
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[1], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
-	zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
+	zone.zoneRecord().rec().autoTimeC = zone.compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
 	zone.zoneRecord().rec().autoRatio = 0; // linear
 	zone.zoneRecord().rec().autoQuality = 1; 
 	zone.zoneRecord().update();
@@ -250,7 +250,7 @@ TEST_CASE("Preheat for next warmer and cooler", "[Preheat]") {
 		zone.preHeatForNextTT();
 		cout << "Preheat TempReq: " << (int)zone.preheatTempRequest() << endl;
 		CHECK((int)zone.preheatTempRequest() == preheatTemps[t]);
-		zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
+		zone.zoneRecord().rec().autoTimeC = zone.compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
 		zone.zoneRecord().rec().autoRatio = 0; // linear
 		zone.zoneRecord().rec().autoQuality = 1;
 		zone.zoneRecord().update();
@@ -266,7 +266,7 @@ TEST_CASE("Preheat for later warmer", "[Preheat]") {
 	Zone zone{};
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[1], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
-	zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
+	zone.zoneRecord().rec().autoTimeC = zone.compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
 	zone.zoneRecord().rec().autoRatio = 0; // linear
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
@@ -282,7 +282,7 @@ TEST_CASE("Preheat for later warmer", "[Preheat]") {
 		zone.preHeatForNextTT();
 		cout << "Preheat TempReq: " << (int)zone.preheatTempRequest() << endl << endl;
 		CHECK((int)zone.preheatTempRequest() == preheatTemps[t]);
-		zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
+		zone.zoneRecord().rec().autoTimeC = zone.compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
 		zone.zoneRecord().rec().autoRatio = 0; // linear
 		zone.zoneRecord().rec().autoQuality = 1;
 		zone.zoneRecord().update();
@@ -298,7 +298,7 @@ TEST_CASE("Preheat when advanced to next profile", "[Preheat]") {
 	Zone zone{};
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[1], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
-	zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
+	zone.zoneRecord().rec().autoTimeC = zone.compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
 	zone.zoneRecord().rec().autoRatio = 0; // linear
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
@@ -316,7 +316,7 @@ TEST_CASE("Preheat when advanced to next profile", "[Preheat]") {
 		zone.preHeatForNextTT();
 		cout << "Preheat TempReq: " << (int)zone.preheatTempRequest() << endl << endl;
 		CHECK((int)zone.preheatTempRequest() == preheatTemps[t]);
-		zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
+		zone.zoneRecord().rec().autoTimeC = zone.compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
 		zone.zoneRecord().rec().autoRatio = 0; // linear
 		zone.zoneRecord().rec().autoQuality = 1;
 		zone.zoneRecord().update();
@@ -332,7 +332,7 @@ TEST_CASE("Learn warm-up rate", "[Preheat]") {
 	Zone zone{};
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[1], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
-	zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
+	zone.zoneRecord().rec().autoTimeC = zone.compressTC(240); // 60m per degree. TC = minutes - per - 4 - degrees
 	zone.zoneRecord().rec().autoRatio = 0; // linear
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
@@ -349,7 +349,7 @@ TEST_CASE("Learn warm-up rate", "[Preheat]") {
 		}
 		clock_().setDateTime(DateTime(clock_().now()).addOffset({ m10,1 }));
 	}
-	CHECK((int)zone.zoneRecord().rec().autoTimeC == (int)GetExpCurveConsts::compressTC(120)); // 30m per degree. TC = minutes - per - 4 - degrees
+	CHECK((int)zone.zoneRecord().rec().autoTimeC == (int)zone.compressTC(120)); // 30m per degree. TC = minutes - per - 4 - degrees
 }
 #endif
 
@@ -388,7 +388,7 @@ TEST_CASE("Calculate Ratio", "[Preheat]") {
 	Zone zone{};
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[DS_ZONE], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
-	zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(roomTimeConst*2); // 60m per degree. TC = minutes - per - 4 - degrees
+	zone.zoneRecord().rec().autoTimeC = zone.compressTC(roomTimeConst*2); // 60m per degree. TC = minutes - per - 4 - degrees
 	zone.zoneRecord().rec().autoRatio = .66 * Zone::RATIO_DIVIDER; // 0.66
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
@@ -417,8 +417,8 @@ TEST_CASE("Calculate Ratio", "[Preheat]") {
 	}
 	CHECK((int)zone.zoneRecord().rec().autoRatio >= int(actualRatio * Zone::RATIO_DIVIDER)-1); // 30m per degree. TC = minutes - per - 4 - degrees
 	CHECK((int)zone.zoneRecord().rec().autoRatio <= int(actualRatio * Zone::RATIO_DIVIDER)+1); // 30m per degree. TC = minutes - per - 4 - degrees
-	CHECK((int)zone.zoneRecord().rec().autoTimeC >= int(GetExpCurveConsts::compressTC(roomTimeConst))-1); // 30m per degree. TC = minutes - per - 4 - degrees
-	CHECK((int)zone.zoneRecord().rec().autoTimeC <= int(GetExpCurveConsts::compressTC(roomTimeConst))+1); // 30m per degree. TC = minutes - per - 4 - degrees
+	CHECK((int)zone.zoneRecord().rec().autoTimeC >= int(zone.compressTC(roomTimeConst))-1); // 30m per degree. TC = minutes - per - 4 - degrees
+	CHECK((int)zone.zoneRecord().rec().autoTimeC <= int(zone.compressTC(roomTimeConst))+1); // 30m per degree. TC = minutes - per - 4 - degrees
 }
 #endif
 
@@ -466,7 +466,7 @@ TEST_CASE("Calculate DHW TC", "[Preheat]") {
 	Zone zone{};
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[DHW_ZONE], tempSensorArr[CALL_TS], relayArr[1], thermalStore, mixValveControllerArr[0]);
-	zone.zoneRecord().rec().autoTimeC = GetExpCurveConsts::compressTC(roomTimeConst*2); // 60m per degree. TC = minutes - per - 4 - degrees
+	zone.zoneRecord().rec().autoTimeC = zone.compressTC(roomTimeConst*2); // 60m per degree. TC = minutes - per - 4 - degrees
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
 	cout << "\nCalculate TC" << endl;
@@ -498,8 +498,8 @@ TEST_CASE("Calculate DHW TC", "[Preheat]") {
 		}
 		clock_().setDateTime(DateTime(clock_().now()).addOffset({ m10,1 }));
 	}
-	//CHECK((int)zone.zoneRecord().rec().autoTimeC >= int(GetExpCurveConsts::compressTC(roomTimeConst))-1); // 30m per degree. TC = minutes - per - 4 - degrees
-	//CHECK((int)zone.zoneRecord().rec().autoTimeC <= int(GetExpCurveConsts::compressTC(roomTimeConst))+1); // 30m per degree. TC = minutes - per - 4 - degrees
+	//CHECK((int)zone.zoneRecord().rec().autoTimeC >= int(zone.compressTC(roomTimeConst))-1); // 30m per degree. TC = minutes - per - 4 - degrees
+	//CHECK((int)zone.zoneRecord().rec().autoTimeC <= int(zone.compressTC(roomTimeConst))+1); // 30m per degree. TC = minutes - per - 4 - degrees
 }
 #endif
 

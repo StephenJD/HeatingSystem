@@ -103,7 +103,7 @@ Logger & zTempLogger() {
 	return _log;
 }
 
-Logger & mTempLogger() {
+Logger & profileLogger() {
 	static Serial_Logger _log(9600, clock_());
 	return _log;
 }

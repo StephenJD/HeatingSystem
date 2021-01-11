@@ -42,19 +42,30 @@ namespace HardwareInterfaces {
 	}
 
 	error_codes TempSensor::readTemperature() {
-		uint8_t temp[2]; // 1stByte = units, 2nd byte = fraction
-		_error = read(DS75LX_Temp, 2, temp);
+		// check for 5 consecutive same readings.
+		constexpr int CONSECUTIVE_COUNT = 5;
+		uint8_t newTemp[2]; // MSB = units, LSB = fraction
+		int16_t newTempInt = _lastGood;
+		int16_t goodTemp;
+		auto re_read_count = 20;
+		auto sameReadingCount = 0;
+		do {
+			goodTemp = newTempInt;
+			_error = read(DS75LX_Temp, 2, newTemp);
+			newTempInt = (newTemp[0] << 8) + newTemp[1];
+			if (!_error && newTempInt == goodTemp) ++sameReadingCount;
+			else sameReadingCount = 0;
+			--re_read_count;
+		} while (re_read_count > 0 && sameReadingCount < CONSECUTIVE_COUNT);
 
 #ifdef ZPSIM
 		//  if (getAddress() == 0x70) _error = _NACK_during_data_send;
 			//bool debug = true;
 		//_lastGood += change;
-		temp[0] = _lastGood / 256;
 		if (_lastGood < 2560) change = 256;
 		if (_lastGood > 17920) change = -256;
-		temp[1] = _lastGood % 256;
 #endif
-		return checkTemp((temp[0] << 8) + temp[1]);
+		return checkTemp(goodTemp);
 	}
 
 	auto TempSensor::checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::error_codes {

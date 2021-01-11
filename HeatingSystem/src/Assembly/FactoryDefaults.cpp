@@ -88,7 +88,7 @@ namespace Assembly {
 	constexpr R_Zone zones_f[] = {				// maxT, offsetT, autoRatio, autoTimeC, autoQuality, autoDelay;
 		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,	0,			135,	220,		1,			95 }
 		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,55,	0,			104,	202,		1,			65 }
-		,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,	0,			0,		65,			1,			5 }
+		,{ "DHW",   "DHW",T_GasF,R_Gas, 0,		  80,	0,			0,		65,			1,			5 }
 		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,	0,			104,	206,		1,			48 }
 	};
 

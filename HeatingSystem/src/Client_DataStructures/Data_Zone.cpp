@@ -22,7 +22,7 @@ namespace client_data_structures {
 		, _isHeating("",2)
 		, _autoRatio(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 		, _autoTimeC(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
-		, _autoQuality(0, ValRange(e_editAll, 0, 255))
+		, _autoQuality(0, ValRange(e_fixedWidth | e_editAll, 0, 99,0,2))
 		, _autoDelay(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 	{
 	}

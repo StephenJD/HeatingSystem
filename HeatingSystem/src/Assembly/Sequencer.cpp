@@ -9,6 +9,8 @@
 using namespace std;
 #endif
 
+Logger& profileLogger();
+
 void ui_yield();
 
 using namespace RelationalDatabase;
@@ -31,8 +33,8 @@ namespace Assembly {
 			getCurrentSpell(dwelling.id(), dwellInfo);
 			getCurrentProfileID(zoneID, dwellInfo);
 #ifdef ZPSIM
-			logger() << "\t" << dwelling.rec() << " " << timeOfInterest << L_endl;
-			logger() << F("\t\tThis ") << dwellInfo.currTT
+			profileLogger() << "\t" << dwelling.rec() << " " << timeOfInterest << L_endl;
+			profileLogger() << F("\t\tThis ") << dwellInfo.currTT
 				<< F("\n\t\tNext ") << dwellInfo.nextTT << L_endl;
 #endif
 			if (info.nextEvent == Date_Time::JUDGEMEMT_DAY) info = dwellInfo;
@@ -67,8 +69,8 @@ namespace Assembly {
 
 		//ui_yield();
 		}
-		logger() << F("\tNext Event ") << info.nextEvent.getDayStr() << " " << info.nextEvent << L_endl;
-		logger() << F("\t\tCurr ") << info.currTT
+		profileLogger() << F("\tNext Event ") << info.nextEvent.getDayStr() << " " << info.nextEvent << L_endl;
+		profileLogger() << F("\t\tCurr ") << info.currTT
 			<< F("\n\t\tNext ") << info.nextTT << L_endl;
 		return info;
 	}
