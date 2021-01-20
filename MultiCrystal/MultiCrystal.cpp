@@ -1,13 +1,12 @@
 #include "MultiCrystal.h"
-
-
+#include <I2C_Talk_ErrorCodes.h>
 #include "Arduino.h"
 #include <I2C_Device.h>
 #include <Conversions.h>
 #include <Logging.h>
 #include <MemoryFree.h>
 using namespace GP_LIB;
-
+using namespace I2C_Talk_ErrorCodes;
 
 #if defined (ZPSIM)
 using namespace std;
@@ -45,17 +44,14 @@ const uint8_t IPOL = 0x02;    // Sets GPIO Polarity - Set to invert value in the
 const uint8_t GPINTEN = 0x04; // enables interrupt for GPIO port.
 const uint8_t DEFVAL = 0x06;  // Interrupt ocurrs if GPIO not DEFault VALue if INTCON bit is set.
 const uint8_t INTCON = 0x08;  // INTerrupt CONtrol. SET causes interrupt on NOT DEFVAL, CLEAR causes interrupt on GPIO changed.
-const uint8_t INTCAP = 0x10;  // INTerrupt CAPture - Stores GPIO state at interrupt. Cleared when read. Reset on next interrupt.
+const uint8_t INTCAP = 0x10;  // INTerrupt CAPture - Stores GPIO state at interrupt. Cleared when GPIO or INTCAP read (depending on INTCON).
 const uint8_t GPPU = 0x0C;    // GPio Pull Up
-const uint8_t INTF = 0x0E;	  // INTerrupt Flag - indicates which port pin caused interrupt.
 const uint8_t GPIOA = 0x12;   // OLATA = 0x14
 const uint8_t GPIOB = 0x13;   // OLATB = 0x15
-
-const uint8_t IOCON_SET[1] = {0x01}; // Single Bank. Clear INT on reading INTCAP
+constexpr uint8_t CLEAR_INT_ON_READ_INTCAP = 0x01;
+constexpr uint8_t CLEAR_INT_ON_READ_GPIO = 0x00;
 const uint8_t PULL_UP[2] = {0xFF,0xFF};
 const uint16_t PULL_UP_16 = 0xFFFF;
-
-const uint8_t INTCON_SET[2] = {0,0}; // INT on IO change (NOTE: may get switch bounce).
 
 // Constructors for Parallel LCD
 MultiCrystal::MultiCrystal(uint8_t rs,  uint8_t enable,
@@ -204,32 +200,31 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 	} else {
 		// Lambdas
 		// We use interrupt on GPIO change to record which key has been pressed, ready for retrieval when the keyboard is scanned.
-		auto setSingleBank = [this]() {_errorCode = 2; return _i2C_device->write(IOCON, 1, IOCON_SET); };  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading INTCAP
+		auto setSingleBank = [this]() {_errorCode = 2; return _i2C_device->write(IOCON, 1, &CLEAR_INT_ON_READ_GPIO); };  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading GPIO
 		auto setIO_Direction = [this]() {_errorCode = 3; return _i2C_device->write(IODIR, 2, _key_mask); };
-		auto setInt_Polarity = [this]() {_errorCode = 4; return _i2C_device->write(IPOL, 2, _key_mask); };
-		auto setDefaut_IOstate = [this]() {_errorCode = 5; return  _i2C_device->write(DEFVAL, 2, _key_mask); };
-		auto setInterupt_Control = [this]() {_errorCode = 5; return  _i2C_device->write(INTCON, 2, _key_mask); };
-		auto setPullUps = [this]() {_errorCode = 6; return  _i2C_device->write(GPPU, 2, PULL_UP); };
-		auto setInterruptEnable = [this]() {_errorCode = 7; return  _i2C_device->write(GPINTEN, 2, _key_mask); };
-		auto clearInterrupts = [this]() {_errorCode = 7; return  _i2C_device->read(INTCAP, 2, _data); };
+		auto setInt_Polarity = [this]() {_errorCode = 4; return _i2C_device->write(IPOL, 2, _key_mask); };			// GPIO catures inverse of input for keyboard.
+		auto setInterruptEnable = [this]() {_errorCode = 8; return  _i2C_device->write(GPINTEN, 2, _key_mask); };	// INT enabled for keyboard.
+		auto setDefaut_IOstate = [this]() {_errorCode = 5; return  _i2C_device->write(DEFVAL, 2, _key_mask); };		// DEF val is 1 for keyboard.
+		auto setInterrupt_Control = [this]() {_errorCode = 6; return  _i2C_device->write(INTCON, 2, _key_mask); };	// INT on not-default val for keyboard.
+		auto clearInterrupts = [this]() {_errorCode = 9; return  _i2C_device->read(GPIOA, 2, _data); };
+		auto setPullUps = [this]() {_errorCode = 7; return  _i2C_device->write(GPPU, 2, PULL_UP); };
 
 		//Serial.print("Multi-Crystal Begin() Remote at 0x"); Serial.println(_address,HEX);
 		_errorCode = 1;
-		hasFailed = setSingleBank() 
-			|| setIO_Direction() 
-			|| setInt_Polarity() 
-			|| setDefaut_IOstate()
-			|| setInterupt_Control()
-			|| setPullUps()
-			|| setInterruptEnable()
-			|| clearInterrupts();
+		hasFailed = setSingleBank() // 2
+			|| setIO_Direction()	// 3
+			|| setInt_Polarity()	// 4
+			|| setDefaut_IOstate()	// 5
+			|| setInterrupt_Control() // 6
+			|| setPullUps()			// 7
+			|| setInterruptEnable()	// 8
+			|| clearInterrupts();	// 9
 
 		if (hasFailed) {
 			//Serial.print("Multi-Crystal Failed Begin() at "); Serial.println(_errorCode);
 			return hasFailed;
 		} 
 		_data[0] = 0; _data[1] = 0;
-		_errorCode = 8;
 	}
 
 	if (!(_displayfunction & LCD_8BITMODE)) {
@@ -238,7 +233,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		// figure 24, pg 46
 
 		// we start in 8bit mode, try to set 4 bit mode
-		_errorCode = 9;
+		_errorCode = 10;
 		hasFailed = hasFailed | write4bits(0x03);
 		delayMicroseconds(4500); // wait min 4.1ms
 
@@ -255,7 +250,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 	} else {
 		// this is according to the hitachi HD44780 datasheet
 		// page 45 figure 23
-		_errorCode = 10;
+		_errorCode = 11;
 		// Send function set command sequence
 		command(LCD_FUNCTIONSET | _displayfunction);
 		delayMicroseconds(4500); // wait more than 4.1ms
@@ -283,8 +278,8 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 	// set the entry mode
 	command(LCD_ENTRYMODESET | _displaymode);
 	
-	if (!hasFailed) _errorCode = 0; 
-	return _errorCode;
+	if (!hasFailed) _errorCode = _OK; 
+	return _unknownError;
 }
 
 /********** Simulator commands, for the user! */
@@ -615,22 +610,29 @@ uint8_t MultiCrystal::checkI2C_Failed() {
 	return error;
 }
 
-uint16_t MultiCrystal::readI2C_keypad() {	
-	uint16_t & data = reinterpret_cast<uint16_t &>(_data[0]);
-	data = 0;
-	uint8_t readFailed = _i2C_device->read(INTCAP, 2, _data); // Read INTCAP to get key-pressed and clear for next read
-	if (readFailed) {
-		//logging() << F("MultiCrystal::readI2C_keypad() Read failure for: ") << _address << F(" speed ") << _i2C_device->getI2CFrequency() << L_endl;
-		return 0;
-	}
-
-	uint16_t keyPressed = data & _key_mask_16;
+uint16_t MultiCrystal::readI2C_keypad() {
+	// Read INTCAP repeatedly to get consistant result. Then read GPIO to clear interrupt 
+	constexpr int CONSECUTIVE_COUNT = 5;
+	int16_t newRead = 0;
+	int16_t keyPressed = 0;
+	auto canTryAgain = 20;
+	auto needAnotherGoodReading = CONSECUTIVE_COUNT;
+	do {
+		keyPressed = newRead;
+		_errorCode = _i2C_device->read(INTCAP, 2, _data); // Read INTCAP to get key-pressed
+		newRead = (_data[0] << 8) + _data[1];
+		newRead &= _key_mask_16;
+		if (!_errorCode && newRead == keyPressed) --needAnotherGoodReading;
+		else needAnotherGoodReading = CONSECUTIVE_COUNT;
+		--canTryAgain;
+	} while (canTryAgain && needAnotherGoodReading);
+	_i2C_device->read(GPIOA, 2, _data); // Clear INTCAP
 	//log("MultiCrystal::readI2C_keypad() _keyCleared:",_keyCleared, "keyPressed",keyPressed);
 	if (keyPressed == 0) {
-		if (!_keyCleared) _keyCleared = true;
+		_keyCleared = true;
 	} else if (_keyCleared) {
 		_keyCleared = false;
-		if (checkI2C_Failed()) {
+		if (needAnotherGoodReading) {
 			keyPressed = 0;
 			//log("MultiCrystal::readI2C_keypad() Check failed for:",_address);
 		} else {

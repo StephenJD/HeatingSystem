@@ -47,16 +47,16 @@ namespace HardwareInterfaces {
 		uint8_t newTemp[2]; // MSB = units, LSB = fraction
 		int16_t newTempInt = _lastGood;
 		int16_t goodTemp;
-		auto re_read_count = 20;
-		auto sameReadingCount = 0;
+		auto canTryAgain = 20;
+		auto needAnotherGoodReading = CONSECUTIVE_COUNT;
 		do {
 			goodTemp = newTempInt;
 			_error = read(DS75LX_Temp, 2, newTemp);
 			newTempInt = (newTemp[0] << 8) + newTemp[1];
-			if (!_error && newTempInt == goodTemp) ++sameReadingCount;
-			else sameReadingCount = 0;
-			--re_read_count;
-		} while (re_read_count > 0 && sameReadingCount < CONSECUTIVE_COUNT);
+			if (!_error && newTempInt == goodTemp) --needAnotherGoodReading;
+			else needAnotherGoodReading = CONSECUTIVE_COUNT;
+			--canTryAgain;
+		} while (canTryAgain && needAnotherGoodReading);
 
 #ifdef ZPSIM
 		//  if (getAddress() == 0x70) _error = _NACK_during_data_send;

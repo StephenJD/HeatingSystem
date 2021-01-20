@@ -53,7 +53,6 @@ namespace HardwareInterfaces {
 		bool isDHWzone() const;
 		int16_t getFractionalCallSensTemp() const;
 		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
-		uint8_t averageThermalRatio() const;
 		Date_Time::DateTime startDateTime() { return _ttStartDateTime; }
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
@@ -66,11 +65,12 @@ namespace HardwareInterfaces {
 		void setTTStartTime(Date_Time::DateTime time) { _ttStartDateTime = time;}
 		void preHeatForNextTT();
 		RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() { return _zoneRecord; }
-		static constexpr double RATIO_DIVIDER = 255.;
-		static constexpr int REQ_ACCUMULATION_PERIOD = 60; // minutes
 		static constexpr double ERROR_DIVIDER = 2.;
+		static constexpr double RATIO_DIVIDER = 255.;
+		static constexpr int REQ_ACCUMULATION_PERIOD = 120; // minutes
 		static constexpr uint8_t DELAY_COOLING_TIME = 120;
 		static constexpr uint8_t MEASURING_DELAY = 255;
+		static constexpr int16_t PREHEAT_ENDED = -1;
 		static double uncompressTC(uint8_t compressed_tc) {
 			return exp(compressed_tc / 50.) * 20;
 		}
@@ -82,7 +82,6 @@ namespace HardwareInterfaces {
 		}
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
-		void nextAveragedRatio(int16_t currFractionalTemp) const;
 		void saveThermalRatio();
 
 		UI_TempSensor* _callTS = 0;
@@ -95,7 +94,7 @@ namespace HardwareInterfaces {
 		int8_t _offsetT = 0;
 		uint8_t _maxFlowTemp = 0;
 		uint16_t _startCallTemp = 0;
-		uint16_t _minsInPreHeat = 0;
+		int16_t _minsInPreHeat = PREHEAT_ENDED;
 		/// <summary>
 		/// Controls saving of new delay period.
 		/// Cooling State: Is incremented up to DELAY_COOLING_TIME whilst zone is cooling.

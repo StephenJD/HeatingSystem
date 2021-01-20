@@ -5,6 +5,8 @@
 #include "..\Assembly\Sequencer.h"
 #include "Clock.h"
 
+Logger& profileLogger();
+
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;
@@ -23,7 +25,7 @@ namespace client_data_structures {
 		, _autoRatio(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 		, _autoTimeC(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 		, _autoQuality(0, ValRange(e_fixedWidth | e_editAll, 0, 99,0,2))
-		, _autoDelay(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
+		, _autoDelay(0, ValRange(e_fixedWidth | e_editAll, -127, 127))
 	{
 	}
 
@@ -94,10 +96,10 @@ namespace client_data_structures {
 			break; }
 		case e_reqTemp:
 		{
-			logger() << "Save req temp on " << answer().rec().name << " ID: " << recordID() << L_endl;
 			HardwareInterfaces::Zone & z = zone(recordID());
 			auto reqTemp = uint8_t(newValue->val);
 			z.offsetCurrTempRequest(reqTemp);
+			profileLogger() << answer().rec().name << " Save req temp to: " << reqTemp << " Max: " << _requestTemp.valRange.maxVal << L_endl;
 			answer().rec().offsetT = z.offset();
 			break;
 		}
@@ -125,14 +127,15 @@ namespace client_data_structures {
 	bool RecInt_Zone::actionOn_LR(int fieldID, int moveBy) {
 		switch (fieldID) {
 		case e_reqTemp: {
-			logger() << "Select Next Sequence Event " << answer().rec().name << " ID: " << recordID() << L_endl;
 			HardwareInterfaces::Zone& z = zone(recordID());
 			if (moveBy > 0) {
+				profileLogger() << answer().rec().name << " Select Next Profile" <<  L_endl;
 				//if (z.startDateTime() <= clock_().now()) {
 					z.setProfileTempRequest(z.nextTempRequest());
 					z.setTTStartTime(z.nextEventTime());
 				//}
 			} else {
+				profileLogger() << answer().rec().name << " Restore Current Profile" << L_endl;
 				z.refreshProfile();
 			}
 			return true;
@@ -145,11 +148,12 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_reqTemp:
 		{
-			logger() << "Zero Offset " << answer().rec().name << " ID: " << recordID() << L_endl;
+			profileLogger() << answer().rec().name << " Zero Offset" << L_endl;
 			HardwareInterfaces::Zone& z = zone(recordID());
 			answer().rec().offsetT = 0;
 			answer().update();
 			z.resetOffsetToZero();
+			break;
 		}
 		default:;
 		}

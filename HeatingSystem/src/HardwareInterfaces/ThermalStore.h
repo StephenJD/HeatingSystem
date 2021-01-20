@@ -13,29 +13,27 @@ namespace HardwareInterfaces {
 	class ThermalStore : public LCD_UI::VolatileData {
 	public:
 		ThermalStore(UI_TempSensor * tempSensorArr, MixValveController (& mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES], BackBoiler & backBoiler);
-		//int16_t getFractionalOutsideTemp() const;
+		void initialise(client_data_structures::R_ThermalStore thermStoreData);
+
+		// Queries
 		uint8_t getTopTemp() const;
-		//uint8_t getOutsideTemp() const;
-		//bool storeIsUpToTemp() const; // just returns status flag
 		bool dumpHeat() const;
 		uint8_t currDeliverTemp() const { return _theoreticalDeliveryTemp; }
 		uint8_t calcCurrDeliverTemp(int callTemp, float groundT, float topT, float midT, float botT) const;
 		uint8_t getGroundTemp() const;
-		uint8_t getOutsideTemp() const;
+		int8_t getOutsideTemp() const;
 		bool backBoilerIsHeating() const;
 		int8_t heatingRequestOrigin() const { return _mixVRequestingHeat; }
+		int8_t isAheatingDemand() const { return _heatingDemand; }
 
 		// Modifier
-		void initialise(client_data_structures::R_ThermalStore thermStoreData);
-		//bool check(); // checks zones, twl rads & thm store for heat requirement and sets relays accordingly
 		void setLowestCWtemp(bool isFlowing);
-		//void adjustHeatRate(byte change);
 		bool needHeat(int currRequest, int nextRequest);
 		void calcCapacities();
 
 	private:
 		UI_TempSensor * _tempSensorArr;
-		MixValveController(& _mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES];
+		MixValveController(& _mixValveControllerArr)[Assembly::NO_OF_MIX_VALVES]; // ref to array of MixValveControllers
 		BackBoiler & _backBoiler;
 		client_data_structures::R_ThermalStore _thermStoreData;
 		bool dhwDeliveryOK(int currRequest) const;
@@ -44,6 +42,7 @@ namespace HardwareInterfaces {
 		uint8_t _theoreticalDeliveryTemp = 45;
 		bool _isHeating = false;
 		int8_t _mixVRequestingHeat = -1; // only used for logging
+		int8_t _heatingDemand = -1; // TC only calculated if there is no heating demand
 
 		float _upperC, _midC, _bottomC; // calculated capacity factors
 		float _upperV, _midV, _bottomV; // calculated Volumes

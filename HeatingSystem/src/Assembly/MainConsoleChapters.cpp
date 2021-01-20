@@ -43,7 +43,7 @@ namespace Assembly {
 		, _towelRailOnTimeUI_c{ &db._ds_towelRail, RecInt_TowelRail::e_minutesOn }
 		, _towelRailStatus_c{ &db._ds_towelRail, RecInt_TowelRail::e_secondsToGo, {V + V1} }
 
-		, _relayStateUI_c{ &db._ds_relay, RecInt_Relay::e_state,{V + S + VnLR + UD_E} }
+		, _relayStateUI_c{ &db._ds_relay, RecInt_Relay::e_state,{V + S + VnLR + UD_S} }
 		, _relayNameUI_c{ &db._ds_relay, RecInt_Relay::e_name, {V + V1} }
 
 		// Basic UI Elements

@@ -14,7 +14,7 @@ namespace client_data_structures {
 		, _name("",5)
 		, _address(0,ValRange(e_fixedWidth | e_editAll, 1, 127))
 		, _temperature(0,ValRange())
-		, _tempStr("",4)
+		, _tempStr("", ValRange())
 	{
 	}
 

@@ -23,13 +23,13 @@ namespace HardwareInterfaces {
 	}
 
 	error_codes RemoteDisplay::initialiseDevice() {
-		auto rem_error = _lcd.begin(16, 2) == 0 ? _OK : _unknownError;
+		auto rem_error = _lcd.begin(16, 2);
 		if (rem_error != _OK) {
-			logger() << F(" Remote.begin() for display [0x") << L_hex << getAddress() << F("] failed with:") << I2C_Talk::getStatusMsg(rem_error) << L_endl;
+			logger() << F(" Remote.begin() for display [0x") << L_hex << getAddress() << F("] failed with:") << I2C_Talk::getStatusMsg(rem_error) << " at progress " << _lcd.getError() << L_endl;
 		}
 		else 
 			displ().print("Start ");
-		return rem_error;
+		return error_codes(rem_error);
 	}
 
 	void RemoteDisplay::sendToDisplay() {

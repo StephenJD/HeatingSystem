@@ -17,15 +17,18 @@ namespace HardwareInterfaces {
 	public:
 		using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
 		MixValveController() = default;
+		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, UI_TempSensor * tempSensorArr, int flowTempSens, int storeTempSens);
+
+		// Virtual Functions
+		I2C_Talk_ErrorCodes::error_codes testDevice() override;
 
 		// Queries
 		uint8_t flowTemp() const;
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		uint8_t index() const { return _index; }
-		// Virtual Functions
-		I2C_Talk_ErrorCodes::error_codes testDevice() override;
-		//uint8_t initialiseDevice() override;
+		bool controlZoneRelayIsOn() const;
 
+		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
 		uint8_t readFromValve(Mix_Valve::Registers reg); // returns value
 		uint8_t sendSetup();
@@ -43,11 +46,8 @@ namespace HardwareInterfaces {
 //		volatile int8_t motorState = 0; // required by simulator
 //		static std::ofstream lf;
 //#endif
-		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, UI_TempSensor * tempSensorArr, int flowTempSens, int storeTempSens);
 	private:
-		bool controlZoneRelayIsOn() const;
 		I2C_Talk_ErrorCodes::error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
-		//void setLimitZone(int mixValveIndex);
 
 		UI_TempSensor * _tempSensorArr = 0;
 		UI_Bitwise_Relay * _relayArr = 0;

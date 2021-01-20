@@ -6,7 +6,7 @@
 #include "..\Client_DataStructures\Data_TempSensor.h" // relative path required by Arduino
 #include <FlashStrings.h>
 
-Logger& zTempLogger();
+Logger& profileLogger();
 
 namespace HardwareInterfaces {
 
@@ -21,10 +21,6 @@ namespace HardwareInterfaces {
 		calcCapacities();
 	}
 
-	//int16_t ThermalStore::getFractionalOutsideTemp() const {
-	//	return f->tempSensorR(getVal(OutsideTS)).getFractionalSensTemp();
-	//}
-
 	uint8_t ThermalStore::getTopTemp() const {
 		uint8_t temp = _tempSensorArr[_thermStoreData.OvrHeatTS].get_temp();
 		if (_tempSensorArr[_thermStoreData.OvrHeatTS].hasError()) _tempSensorError = true;
@@ -32,10 +28,6 @@ namespace HardwareInterfaces {
 	}
 
 	bool ThermalStore::backBoilerIsHeating() const { return _backBoiler.isOn(); }
-
-	//uint8_t ThermalStore::getOutsideTemp() const {
-	//	return f->tempSensorR(getVal(OutsideTS)).getSensTemp();
-	//}
 
 	void ThermalStore::setLowestCWtemp(bool isFlowing) {
 		if (isFlowing || (_groundT > getGroundTemp())) _groundT = getGroundTemp();
@@ -45,7 +37,7 @@ namespace HardwareInterfaces {
 		return  _tempSensorArr[_thermStoreData.GroundTS].get_temp();
 	}
 
-	uint8_t ThermalStore::getOutsideTemp() const {
+	int8_t ThermalStore::getOutsideTemp() const {
 		return  _tempSensorArr[_thermStoreData.OutsideTS].get_temp();
 	}
 
@@ -58,12 +50,12 @@ namespace HardwareInterfaces {
 		setLowestCWtemp(false);
 		bool needHeat = dhwNeedsHeat(currRequest, nextRequest);
 		_mixVRequestingHeat = -1;
-		if (!needHeat) {
-			for (auto& mixV : _mixValveControllerArr) { // Check temp for each mix valve
-				if (mixV.needHeat(_isHeating)) _mixVRequestingHeat = mixV.index();
-			}
-			needHeat |= (_mixVRequestingHeat != -1);
+		_heatingDemand = -1;
+		for (auto& mixV : _mixValveControllerArr) { // Check temp for each mix valve
+			if (mixV.needHeat(_isHeating)) _mixVRequestingHeat = mixV.index();
+			if (mixV.controlZoneRelayIsOn()) _heatingDemand = mixV.index();
 		}
+		needHeat |= (_mixVRequestingHeat != -1);
 		_isHeating = needHeat;
 		return needHeat;
 	}
@@ -151,7 +143,7 @@ namespace HardwareInterfaces {
 		if (!hasRequestedCondReduction && _theoreticalDeliveryTemp >= callTemp && !dhwTempOK) { // reduce conductivity if claims to be hot enought, but isn't
 			hasRequestedCondReduction = true;
 			//f->eventS().newEvent(EVT_THS_COND_CHANGE,S1_byte(getVal(Conductivity)) - 1);
-			logger() << F("\nThermalStore::dhwNeedsHeat\tPre-Mix temp too low - reduce cond?\t ") 
+			profileLogger() << L_time << F("ThermalStore::dhwNeedsHeat\tPre-Mix temp too low - reduce cond?\t ")
 				<< F(" Cond: ") << _thermStoreData.Conductivity
 				<< F(" CallTemp: ") << callTemp
 				<< F(" NextCallTemp: ") << nextRequest

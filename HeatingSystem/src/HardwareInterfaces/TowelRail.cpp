@@ -23,26 +23,22 @@ namespace HardwareInterfaces {
 	bool TowelRail::check() {
 		// En-suite and Family share a zone / relay, so need to prevent the OFF TR disabling the ON one.
 		bool needHeat = setFlowTemp();
-		if (_callFlowTemp >= sharedZoneCallTemp()) { // required to stop OFF zone taking control from shared ON zone, but if all OFF must process this.
-			if (_mixValveController->amControlZone(_callFlowTemp, TOWEL_RAIL_FLOW_TEMP, _relay->recordID())) { // I am controlling zone, so set flow temp
-			}
-			else { // not control zone
-				_relay->set(needHeat); // too cool
-			}
+		if (!_mixValveController->amControlZone(sharedZoneCallTemp(), TOWEL_RAIL_FLOW_TEMP, _relay->recordID())) {
+			_relay->set(needHeat); // too cool
 		}
 		return needHeat;
 	}
 
 	//// Private Methods
 
-	uint8_t TowelRail::sharedZoneCallTemp() const { // returns other callTemp if shared, otherwise returns 0.
-		uint8_t otherTemp = 0;
+	uint8_t TowelRail::sharedZoneCallTemp() const { // returns max shared request temp.
+		uint8_t maxTemp = _callFlowTemp;
 		for (auto & towelRail : _temperatureController->towelRailArr) {
-			if (&towelRail != this && towelRail.relayPort() == relayPort()) { // got this or shared zone
-				if (towelRail._callFlowTemp > otherTemp) otherTemp = towelRail._callFlowTemp;
+			if (towelRail.relayPort() == relayPort()) { // got this or shared zone
+				if (towelRail._callFlowTemp > maxTemp) maxTemp = towelRail._callFlowTemp;
 			}
 		}
-		return otherTemp;
+		return maxTemp;
 	}
 
 	bool TowelRail::setFlowTemp() { // returns true if ON

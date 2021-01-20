@@ -171,7 +171,9 @@ namespace LCD_UI {
 	}
 
 	Collection_Hndl * Field_StreamingTool_h::on_back() {// function is called on the focus() object to notify it has been cancelled.
-		getData()->back(); // cancels edit
+		if (_cursorMode == HI_BD::e_inEdit) {
+			getData()->back(); // cancels edit
+		}
 		return takeOutOfEdit();
 	}
 

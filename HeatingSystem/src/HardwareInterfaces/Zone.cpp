@@ -48,13 +48,16 @@ namespace HardwareInterfaces {
 		if (_zoneRecord.rec().autoQuality == 0) timeC = _zoneRecord.rec().autoDelay;
 		else timeC = _zoneRecord.rec().autoTimeC;
 		_timeConst = uint16_t(uncompressTC(timeC));
-		if (isDHWzone()) _zoneRecord.rec().autoRatio = RATIO_DIVIDER;
+		if (isDHWzone()) _zoneRecord.rec().autoRatio = uint8_t(RATIO_DIVIDER);
 		refreshProfile(true);
 		_offset_preheatCallTemp = _currProfileTempRequest + offset();
 		_rollingAccumulatedRatio = REQ_ACCUMULATION_PERIOD * _zoneRecord.rec().autoRatio;
+		_startCallTemp = getFractionalCallSensTemp();
 	}
 
 	void Zone::offsetCurrTempRequest(int8_t val) {
+		//auto maxAllowed = maxUserRequestTemp();
+		//if (val > maxAllowed) val = maxAllowed;
 		_offsetT = (val - _currProfileTempRequest);
 	}
 
@@ -91,29 +94,10 @@ namespace HardwareInterfaces {
 		else return getCurrTemp() + 1;
 	}
 
-	void Zone::nextAveragedRatio(int16_t currFractionalTemp) const {
-		if (_averagePeriod > 0) {			
-			if (_averagePeriod >= REQ_ACCUMULATION_PERIOD) {
-				int16_t measuredRatio;
-				if (_mixValveController->zoneHasControl(_relay->recordID())) {
-					measuredRatio = int16_t(RATIO_DIVIDER * (currFractionalTemp / 256. - _thermalStore->getOutsideTemp()) / (_mixValveController->flowTemp() - _thermalStore->getOutsideTemp()));
-				} else {
-					measuredRatio = int16_t(RATIO_DIVIDER * (currFractionalTemp / 256. - _thermalStore->getOutsideTemp()) / (_callFlowTemp - _thermalStore->getOutsideTemp()));
-				}
-				_rollingAccumulatedRatio -= averageThermalRatio();
-				_rollingAccumulatedRatio += measuredRatio;
-			} else ++_averagePeriod;
-		}
-	}
-
-	uint8_t Zone::averageThermalRatio() const {
-		return _rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD;
-	}
-
 	void Zone::saveThermalRatio() {
 		if (_averagePeriod >= REQ_ACCUMULATION_PERIOD) {
-			zoneRecord().rec().autoRatio = averageThermalRatio();
-			profileLogger() << L_time << "Save new ratio for " << zoneRecord().rec().name << " : " << zoneRecord().rec().autoRatio / RATIO_DIVIDER << L_endl;
+			zoneRecord().rec().autoRatio = _rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD;
+			profileLogger() << zoneRecord().rec().name << " Save new ratio: " << zoneRecord().rec().autoRatio / RATIO_DIVIDER << L_endl;
 			zoneRecord().update();
 		}
 		_averagePeriod = 0;
@@ -123,26 +107,12 @@ namespace HardwareInterfaces {
 		int16_t fractionalZoneTemp = getFractionalCallSensTemp(); // get fractional temp. msb is temp is degrees;
 		double ratio;
 		bool isDHW = isDHWzone();
+		auto outsideTemp = isDHW ? int8_t(20) : _thermalStore->getOutsideTemp();
+		bool backBoilerIsOn = _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
 
 		// lambdas
 
-		auto logTemps = [this, isDHW](uint16_t currTempReq, int16_t fractionalZoneTemp, int16_t reqFlow, double ratio) {
-			zTempLogger() << L_time << L_tabs 
-				<< zoneRecord().rec().name 
-				<< F("Req/Is:") << currTempReq << fractionalZoneTemp / 256.
-				<< F("Flow Req/Is:") << reqFlow	<< (isCallingHeat() ? _mixValveController->flowTemp() : fractionalZoneTemp / 256)
-				<< F("Ave Ratio:") << ratio 
-				<< F("Is:") << (fractionalZoneTemp / 256. - _thermalStore->getOutsideTemp()) / (reqFlow - _thermalStore->getOutsideTemp())
-				<< F("AvePer:") << _averagePeriod
-				<< F("CoolPer:") << (int)_minsCooling
-				<< F("Change:") << int(fractionalZoneTemp - _startCallTemp)/16
-				<< F("Outside:") << _thermalStore->getOutsideTemp() 
-				<< (isDHW ? (_thermalStore->heatingRequestOrigin() == -1 ? F("DHW") : F("Mix")) :  (_mixValveController->zoneHasControl(_relay->recordID()) ? F("Master") : F("Slave")))
-				<< L_endl;
-		};
-
-		auto startMeasuringRatio = [this](int tempError, int zoneTemp) -> bool {
-			bool backBoilerIsOn = _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
+		auto startMeasuringRatio = [this, outsideTemp, isDHW, backBoilerIsOn](int tempError, int zoneTemp, int flowTemp ) -> bool {
 			if (backBoilerIsOn) {
 				saveThermalRatio();
 				return false;
@@ -150,65 +120,125 @@ namespace HardwareInterfaces {
 				return
 				_averagePeriod == 0
 				&& abs(tempError) < 16
-				&& _mixValveController->flowTemp() > zoneTemp
-				&& _offset_preheatCallTemp > _thermalStore->getOutsideTemp();
+				&& flowTemp > zoneTemp
+				&& _offset_preheatCallTemp > outsideTemp;
 			}
 		};
 
+		auto measuredThermalRatio = [this](int16_t currFractionalTemp, int flowTemp) -> uint8_t {
+			uint16_t measuredRatio;
+			//if (_mixValveController->zoneHasControl(_relay->recordID())) {
+			measuredRatio = uint16_t(RATIO_DIVIDER * (currFractionalTemp / 256. - _thermalStore->getOutsideTemp()) / (flowTemp - _thermalStore->getOutsideTemp()));
+			//} else {
+			//	measuredRatio = uint8_t(RATIO_DIVIDER * (currFractionalTemp / 256. - _thermalStore->getOutsideTemp()) / (_callFlowTemp - _thermalStore->getOutsideTemp()));
+			//}
+			if (measuredRatio > 255) measuredRatio = 255;
+			return uint8_t(measuredRatio);
+		};
+
+		auto nextAveragedRatio = [this, measuredThermalRatio](int16_t currFractionalTemp, int flowTemp) -> uint8_t {
+			if (_averagePeriod > 0) {
+				if (_averagePeriod == REQ_ACCUMULATION_PERIOD) {
+					auto measuredRatio = measuredThermalRatio(currFractionalTemp, flowTemp);
+					_rollingAccumulatedRatio -= _rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD;
+					_rollingAccumulatedRatio += measuredRatio;
+					//return measuredRatio;
+					return _rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD;
+				} else ++_averagePeriod;
+			}
+			return zoneRecord().rec().autoRatio;
+		};
+
+		auto logTemps = [this, isDHW, outsideTemp, backBoilerIsOn, measuredThermalRatio](uint16_t currTempReq, int16_t fractionalZoneTemp, int16_t reqFlow, int flowTemp, double ratio) {
+			const __FlashStringHelper* controlledBy;
+			if (isDHW) {
+				if (_thermalStore->heatingRequestOrigin() != -1) controlledBy = F("Mix");
+				else controlledBy = _thermalStore->isAheatingDemand() ? F("DHW(H)") : F("DHW(0)");
+			} else if (backBoilerIsOn) {
+				controlledBy = F("Back Boiler");
+			} else {
+				controlledBy = _mixValveController->zoneHasControl(_relay->recordID()) ? F("Master") : F("Slave");
+			}
+			zTempLogger() << L_time << L_tabs
+				<< zoneRecord().rec().name
+				<< F("PreReq/Is:") << currTempReq << fractionalZoneTemp / 256.
+				<< F("Flow Req/Is:") << reqFlow << flowTemp
+				<< F("Used Ratio:") << ratio
+				<< F("Is:") << measuredThermalRatio(fractionalZoneTemp, flowTemp) / RATIO_DIVIDER
+				<< F("Ave:") << (_rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD) / RATIO_DIVIDER
+				<< F("AvePer:") << _averagePeriod
+				<< F("CoolPer:") << (int)_minsCooling
+				<< F("Error:") << (fractionalZoneTemp - _offset_preheatCallTemp * 256) / 256.
+				<< F("Outside:") << outsideTemp
+				<< F("PreheatMins:") << _minsInPreHeat
+				<< controlledBy
+				<< L_endl;
+		};
+
 		// Algorithm
+		int16_t tempError = (fractionalZoneTemp - (_offset_preheatCallTemp << 8)) / 16; // 1/16 degrees +ve = Temp too high
+		uint16_t zoneTemp = fractionalZoneTemp / 256;
+		uint8_t flowTemp;
 		if (isDHW) {
-			_thermalStore->needHeat(_offset_preheatCallTemp, nextTempRequest());
+			auto needHeat = _thermalStore->needHeat(_offset_preheatCallTemp, nextTempRequest());
 			ratio = 1;
+			tempError = needHeat ? -16 : 16;
+			flowTemp = _callTS->get_temp();
+			if (_thermalStore->isAheatingDemand() || backBoilerIsOn) {
+				_minsInPreHeat = PREHEAT_ENDED; // prevent TC calculation
+				_minsCooling = 0; // prevent delay measurement
+			}
 		} else {
 			if (_callTS->hasError()) {
 				logger() << L_endl << L_time << F("Zone::setZFlowTemp\tCall TS Error for zone ") << zoneNames(_recordID) << L_endl;
 				return false;
 			}
-			nextAveragedRatio(fractionalZoneTemp);
-			ratio = averageThermalRatio() / RATIO_DIVIDER;
+			flowTemp = isCallingHeat() ? _mixValveController->flowTemp() : _callFlowTemp;
+			ratio = nextAveragedRatio(fractionalZoneTemp, flowTemp) / RATIO_DIVIDER;
+			if (_thermalStore->dumpHeat()) tempError = -16; // turn zone on to dump heat
 		}
-
-		uint16_t zoneTemp = fractionalZoneTemp / 256;
-		int16_t requestedFlowTemp = 0;
-		int16_t tempError = (fractionalZoneTemp - (_offset_preheatCallTemp << 8)) / 16; // 1/16 degrees +ve = Temp too high
-		if (_thermalStore->dumpHeat()) tempError = -10; // turn zone on to dump heat
 			
-		if (_minsCooling == MEASURING_DELAY && fractionalZoneTemp >= _startCallTemp + 256 / 8) {
-			zoneRecord().rec().autoDelay = uint8_t(_minsInPreHeat);
-			zoneRecord().update();
-			profileLogger() << L_time << F("Save new delay for ") << zoneRecord().rec().name << F(" : ") << _minsInPreHeat << L_endl;
+		if (_minsInPreHeat != PREHEAT_ENDED && _minsCooling == MEASURING_DELAY && fractionalZoneTemp >= _startCallTemp + 256 / 8) {
+			if (_minsInPreHeat > 127) _minsInPreHeat = 127;
+			zoneRecord().rec().autoDelay = int8_t(_minsInPreHeat);
+			profileLogger() << L_time << zoneRecord().rec().name << F(" Save new delay: ") << _minsInPreHeat << L_endl;
 			_minsCooling = 0;
 		}
 
+		int16_t requestedFlowTemp = 0;
 		if (tempError < -8L) {
 			requestedFlowTemp = _maxFlowTemp;
-			++_minsInPreHeat;
-			logTemps(_offset_preheatCallTemp, fractionalZoneTemp, requestedFlowTemp, ratio);
+			if (_minsInPreHeat != PREHEAT_ENDED) ++_minsInPreHeat;
 		} else {
-			auto errorOffset = tempError / ERROR_DIVIDER / ratio; // gives theoretical room-temp offset of twice the error
-			requestedFlowTemp = uint16_t( _thermalStore->getOutsideTemp() - errorOffset + (fractionalZoneTemp/256. - _thermalStore->getOutsideTemp()) / ratio);
-			if (tempError > 8L && requestedFlowTemp > MIN_FLOW_TEMP) { // too warm and out of range, ratio too low
-				ratio = (fractionalZoneTemp / 256. - _thermalStore->getOutsideTemp() - tempError/ERROR_DIVIDER) / (MIN_FLOW_TEMP - _thermalStore->getOutsideTemp());
-				zoneRecord().rec().autoRatio = ratio * RATIO_DIVIDER;
-				profileLogger() << L_time << F("Ratio too low. Save new ratio for ") << zoneRecord().rec().name << F(" : ") << ratio << L_endl;
-				zoneRecord().update();
-				_rollingAccumulatedRatio = REQ_ACCUMULATION_PERIOD * _zoneRecord.rec().autoRatio;
+			if (isDHW) {
+				requestedFlowTemp = MIN_FLOW_TEMP;
+			} else {
+				auto errorOffset = tempError / ERROR_DIVIDER / ratio; // gives theoretical room-temp offset of twice the error
+				requestedFlowTemp = uint16_t( outsideTemp - errorOffset + (fractionalZoneTemp/256. - outsideTemp) / ratio);
+				if (tempError > 8L && requestedFlowTemp > MIN_FLOW_TEMP) { // too warm and out of range, ratio too low
+					ratio = (fractionalZoneTemp / 256. - outsideTemp - tempError / ERROR_DIVIDER) / (MIN_FLOW_TEMP - outsideTemp);
+					if (ratio > 1) ratio = 1;
+					zoneRecord().rec().autoRatio = uint8_t(ratio * RATIO_DIVIDER);
+					profileLogger() << zoneRecord().rec().name << F(" Ratio too low. Save new ratio: ") << ratio << L_endl;
+					zoneRecord().update();
+					_rollingAccumulatedRatio = REQ_ACCUMULATION_PERIOD * _zoneRecord.rec().autoRatio;
+				}
+				if (requestedFlowTemp <= zoneTemp) { requestedFlowTemp = zoneTemp; }
+				else if (requestedFlowTemp >= _maxFlowTemp) requestedFlowTemp = _maxFlowTemp;
+				else if (startMeasuringRatio(tempError, zoneTemp, flowTemp)) {
+					_averagePeriod = 1;
+				}
 			}
-			if (requestedFlowTemp <= zoneTemp) { requestedFlowTemp = zoneTemp; }
-			else if (requestedFlowTemp >= _maxFlowTemp) requestedFlowTemp = _maxFlowTemp;
-			else if (startMeasuringRatio(tempError, zoneTemp)) {
-				_averagePeriod = 1;
-			}
-			if (_callFlowTemp == _maxFlowTemp && requestedFlowTemp < _maxFlowTemp) _finishedFastHeating = true;
-			logTemps(_offset_preheatCallTemp, fractionalZoneTemp, requestedFlowTemp, ratio);
+			if (_minsInPreHeat != PREHEAT_ENDED && _callFlowTemp == _maxFlowTemp && requestedFlowTemp < _maxFlowTemp) _finishedFastHeating = true;
 		}
-		if (requestedFlowTemp <= MIN_FLOW_TEMP && _minsCooling < DELAY_COOLING_TIME) ++_minsCooling; // ensure sufficient time cooling before measuring heating delay 
-		else if (_minsCooling != MEASURING_DELAY) _minsCooling = 0;
+		logTemps(_offset_preheatCallTemp, fractionalZoneTemp, requestedFlowTemp, flowTemp, ratio);
+		
+		if (requestedFlowTemp <= MIN_FLOW_TEMP) {
+			if (_minsCooling < DELAY_COOLING_TIME) ++_minsCooling; // ensure sufficient time cooling before measuring heating delay 
+		} else if (_minsCooling != MEASURING_DELAY) _minsCooling = 0;
 
-		if ( !isDHW && _mixValveController->amControlZone(uint8_t(requestedFlowTemp), _maxFlowTemp, _relay->recordID())) { // I am controlling zone, so set flow temp
-		}
-		else { // not control zone
-			_relay->set(tempError < 0); // too cool
+		if ( isDHW || !_mixValveController->amControlZone(uint8_t(requestedFlowTemp), _maxFlowTemp, _relay->recordID())) { 
+			_relay->set(tempError < 0); // not control zone, so just set relay
 		}
 
 		_callFlowTemp = (int8_t)requestedFlowTemp;
@@ -249,59 +279,64 @@ namespace HardwareInterfaces {
 		// Lambdas
 		auto maxPredictedAchievableTemp = [this, outsideTemp, &zoneRec](int maxFlowTemp) -> int {
 			if (isDHWzone()) {
-				return _thermalStore->calcCurrDeliverTemp(45, outsideTemp, float(maxFlowTemp), float(maxFlowTemp), float(maxFlowTemp));
+				return _thermalStore->calcCurrDeliverTemp(45, float(outsideTemp), float(maxFlowTemp), float(maxFlowTemp), float(maxFlowTemp));
 			} else
 				return int(outsideTemp + 0.5 + (maxFlowTemp - outsideTemp) * zoneRec.autoRatio / RATIO_DIVIDER) ;
 		};
 
-		auto calculatePreheatTime = [this, currTemp_fractional, outsideTemp, &zoneRec
-			, maxPredictedAchievableTemp](int nextTempReq) -> int {
-			int minsToAdd = 0;
+		auto calculatePreheatTime = [this, maxPredictedAchievableTemp](int currTemp_fractional, int nextTempReq) -> int {
+			double minsToAdd = 0.;
 			double finalDiff_fractional = (nextTempReq * 256.) - currTemp_fractional;
 			double limitTemp = maxPredictedAchievableTemp(_maxFlowTemp);
 			
 			double limitDiff_fractional = limitTemp * 256. - currTemp_fractional;	
 			double logRatio = 1. - (finalDiff_fractional / limitDiff_fractional);
-			minsToAdd = int(-_timeConst * log(logRatio));
-			return minsToAdd > 0 ? minsToAdd : 0;
+			minsToAdd = -_timeConst * log(logRatio);
+			if (minsToAdd < 0.) minsToAdd = 0.;
+			return static_cast<int>(minsToAdd);
 		};
 			
-		auto saveNewPreheatParameters = [this, &zoneRec, outsideTemp](int finalTemp, int limit, int timePeriod, int quality) {
-			timePeriod -= zoneRec.autoDelay;
-			auto timeConst = uint16_t(-double(timePeriod) / log(double(limit - finalTemp) / double(limit - _startCallTemp)));
-			auto changeInTC = timeConst - _timeConst;
-			//if (abs(changeInTC) > _timeConst / 5) { // unexpected large change in TC. Probably spurious, but reduce existing quality to allow recalculation.
-			//	_timeConst += changeInTC / 5;
-			//	quality = (quality + 1) / 2;
-			//	profileLogger()() << "\tLarge change in TC. Limited to 20%\n";
-			//} else 
-				_timeConst = timeConst;
+		auto saveNewTimeConst = [this, &zoneRec, outsideTemp](int finalTemp, int limit, int quality) {
+			int timePeriod = _minsInPreHeat - zoneRec.autoDelay;
+			_timeConst = uint16_t(-double(timePeriod) / log(double(limit - finalTemp) / double(limit - _startCallTemp)));
 			auto compressedTimeConst = compressTC(_timeConst);
 			zoneRec.autoTimeC = compressedTimeConst;
 			zoneRec.autoQuality = quality;
 			_zoneRecord.update();
-			profileLogger() << "\tSaved: New Limit: "
+			profileLogger() << "\tNew Pre-heat saved. Limit: "
 			<< limit/256.
 			<< " MaxFlowT: " << _maxFlowTemp
-			<< " New TC: " << _timeConst << " Compressed TC: " << compressedTimeConst
-			<< " New Quality: " << quality
-			<< " New Delay: " << zoneRec.autoDelay
+			<< " TC: " << _timeConst << " Compressed TC: " << compressedTimeConst
+			<< " Quality: " << quality
+			<< " Delay: " << (int)zoneRec.autoDelay
 			<< " OS Temp: " << outsideTemp
 			<< L_endl;
 			_averagePeriod = 0;
 			_minsCooling = 0; // start timing cooling period prior to new delay
 		};
 
-		auto getPreheatTemp = [this, calculatePreheatTime, zoneRec]() -> int {
+		auto saveNewTimeDelay = [calculatePreheatTime, &zoneRec, this]() {
+			auto minsToAdd = calculatePreheatTime(_startCallTemp, _offset_preheatCallTemp);
+			auto newDelay = _minsInPreHeat - minsToAdd;
+			if (newDelay > 127) newDelay = 127;
+			else if (newDelay < -127) newDelay = -127;
+			zoneRec.autoDelay = int8_t(newDelay);
+			_zoneRecord.update();
+			profileLogger() << "\tNew Delay saved: " << zoneRec.autoDelay << L_endl;
+		};
+
+		auto getPreheatTemp = [this, calculatePreheatTime, &zoneRec, currTemp_fractional]() -> int {
 			int minsToAdd;
 			bool needToStart;
 			auto info = refreshProfile(false);
-			if (getCallFlowT() == _maxFlowTemp) return _offset_preheatCallTemp;// is already heating. Don't need to check for pre-heat
+			//if (getCallFlowT() == _maxFlowTemp) return _offset_preheatCallTemp;// is already heating. Don't need to check for pre-heat
 			auto preheatCallTemp = info.currTT.temp() + offset();
 			do {
-				minsToAdd = calculatePreheatTime(info.nextTT.temp() + offset()) + zoneRec.autoDelay + 5;
-				//if (minsToAdd < 10) minsToAdd = 10; // guaruntee we always start recording a pre-heat
-				profileLogger() << "\t" << minsToAdd << " mins preheat for " << zoneRec.name << " : " << info.nextEvent << L_endl << L_endl;
+				minsToAdd = calculatePreheatTime(currTemp_fractional, info.nextTT.temp() + offset());
+				if (minsToAdd > 0) {
+					profileLogger() << "\t" << zoneRec.name << " Preheat mins " << minsToAdd << " Delay: " << zoneRec.autoDelay << L_endl;
+					minsToAdd += zoneRec.autoDelay + 5;
+				}
 				needToStart = clock_().now().minsTo(info.nextEvent) <= minsToAdd;
 				if (needToStart) break;
 				info = _sequencer->getProfileInfo(id(), info.nextEvent);
@@ -309,6 +344,10 @@ namespace HardwareInterfaces {
 			if (needToStart) {
 				preheatCallTemp = info.nextTT.temp() + offset();
 				saveThermalRatio();
+				profileLogger() << zoneRec.name << " Start Preheat " << minsToAdd  
+				<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp() + offset())
+				<< " by " << info.nextEvent
+				<< " Offset: " << (int)offset() << L_endl;
 			}
 			return preheatCallTemp;
 		};
@@ -320,31 +359,37 @@ namespace HardwareInterfaces {
 		 When the actual temp reaches the required temp, stop recording and do a curve-match.
 		 If the temp-range of the curve-match is >= to the preious best, then save the new curve parameters.
 		*/
-		profileLogger() << L_time << "Get ProfileInfo for " << zoneRec.name << " Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << _ttStartDateTime << L_endl;
+		profileLogger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << _ttStartDateTime << L_endl;
 		
 		auto currTempReq = currTempRequest();
 		auto newPreheatTemp = getPreheatTemp();
 		if (_finishedFastHeating) {
 			auto resultQuality = (currTemp_fractional - _startCallTemp) / 25;
-			profileLogger() << L_time << zoneRec.name 
+			profileLogger() << zoneRec.name 
 				<< " Preheat OK. Req " << _offset_preheatCallTemp 
 				<< " is: " << L_fixed  << currTemp_fractional 
 				<< L_dec << " Range: " << resultQuality
 				<< " Ratio: " << zoneRec.autoRatio / RATIO_DIVIDER
-				<< " Delay: " << _minsCooling
+				<< " Delay: " << zoneRec.autoDelay
 				<< L_endl;
-			auto missedTargetTime = _ttStartDateTime.minsTo(clock_().now());
-			profileLogger() << "\tMissed Target Time by " << missedTargetTime << " Aiming for " << _ttStartDateTime << L_endl;
-			if (abs(missedTargetTime) > 10 && resultQuality >= zoneRec.autoQuality) {
-				saveNewPreheatParameters(currTemp_fractional, maxPredictedAchievableTemp(_maxFlowTemp)*256, _minsInPreHeat, resultQuality);
+			bool amLate = _offset_preheatCallTemp == currTempRequest() ? true : false;
+			DateTime targetTime;
+			if (amLate) targetTime = _ttStartDateTime; else targetTime = _ttEndDateTime;
+			auto missedTargetTime = targetTime.minsTo(clock_().now());
+			if (missedTargetTime) {
+				profileLogger() << "\tMissed Target Time by " << missedTargetTime << " Aiming for " << targetTime << L_endl;
+				if (resultQuality >= zoneRec.autoQuality) {
+					saveNewTimeConst(currTemp_fractional, maxPredictedAchievableTemp(_maxFlowTemp) * 256, resultQuality);
+				} else {
+					saveNewTimeDelay();
+				}
 			}
 			_finishedFastHeating = false;
-			_minsInPreHeat = 0;
+			_minsInPreHeat = PREHEAT_ENDED;
 			_minsCooling = 0;
 			_startCallTemp = currTemp_fractional;
 		}
 		if (newPreheatTemp > _offset_preheatCallTemp) {
-			profileLogger() << "\tFirst Temp Registered to pre-heat " << zoneRec.name << " temp is: " << L_fixed << currTemp_fractional << L_endl;
 			_startCallTemp = currTemp_fractional;
 			if (_minsCooling == DELAY_COOLING_TIME) _minsCooling = MEASURING_DELAY;
 			_minsInPreHeat = 0;

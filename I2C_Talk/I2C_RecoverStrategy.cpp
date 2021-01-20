@@ -1,13 +1,8 @@
 #include "I2C_RecoverStrategy.h"
 #include <I2C_Talk_ErrorCodes.h>
 #include <EEPROM.h>
-//#include <Logging.h>
-#include <..\Logging\Logging.h>
+#include <Logging.h>
 #include <FlashStrings.h>
-
-//uint8_t resetRTC(I2C_Talk & i2c, int);
-//extern I2C_Talk rtc;
-//bool checkEEPROM(const char * msg);
 
 EEPROMClass & eeprom();
 

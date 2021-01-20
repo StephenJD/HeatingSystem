@@ -121,7 +121,7 @@ namespace HeatingSystemSupport {
 }
 
 Logger & logger() {
-	static File_Logger _log("PH",9600, clock_());
+	static File_Logger _log("Er",9600, clock_());
 	return _log;
 }
 
@@ -131,7 +131,7 @@ Logger & zTempLogger() {
 }
 
 Logger & profileLogger() {
-	static Serial_Logger _log(9600, clock_());
+	static File_Logger _log("PR", 9600, clock_());
 	return _log;
 }
 
@@ -153,11 +153,11 @@ constexpr R_Dwelling dwellings_f[] = {
 	,{ "HolAppt" }
 };
 
-constexpr R_Zone zones_f[] = {
-	{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,102,216,1,194 }
-	,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,125,192,1,173 }
-	,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,0,35,1,35 }
-	,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,107,217,1,194 }
+constexpr R_Zone zones_f[] = { // maxT, offsetT, autoRatio, autoTimeC, autoQuality, autoDelay;
+	{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,0,102,216,1,0 }
+	,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,45,0,125,192,1,0 }
+	,{ "DHW",   "DHW",T_GasF,R_Gas,M_UpStrs,  80,0,0,35,1,0 }
+	,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,0,107,217,1,0 }
 };
 
 constexpr R_DwellingZone dwellingZones_f[] = {
@@ -388,8 +388,8 @@ TEST_CASE("Calculate Ratio", "[Preheat]") {
 	Zone zone{};
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[DS_ZONE], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
-	zone.zoneRecord().rec().autoTimeC = zone.compressTC(roomTimeConst*2); // 60m per degree. TC = minutes - per - 4 - degrees
-	zone.zoneRecord().rec().autoRatio = .66 * Zone::RATIO_DIVIDER; // 0.66
+	zone.zoneRecord().rec().autoTimeC = zone.compressTC(roomTimeConst/2); // 60m per degree. TC = minutes - per - 4 - degrees
+	zone.zoneRecord().rec().autoRatio = .45 * Zone::RATIO_DIVIDER; // 0.66
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
 	zone.initialise(queries.q_Zones[DS_ZONE], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);

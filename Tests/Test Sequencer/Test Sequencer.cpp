@@ -93,18 +93,18 @@ namespace HeatingSystemSupport {
 	int reader(int address, void * result, int noOfBytes);
 }
 
-Logger & logger() {
-	static Serial_Logger _log(9600, clock_());
+Logger& logger() {
+	static File_Logger _log("Er", 9600, clock_());
 	return _log;
 }
 
-Logger & zTempLogger() {
-	static Serial_Logger _log(9600, clock_());
+Logger& zTempLogger() {
+	static File_Logger _log("ZT", 9600, clock_());
 	return _log;
 }
 
-Logger & profileLogger() {
-	static Serial_Logger _log(9600, clock_());
+Logger& profileLogger() {
+	static File_Logger _log("PR", 9600, clock_());
 	return _log;
 }
 

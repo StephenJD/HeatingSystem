@@ -26,7 +26,7 @@ namespace client_data_structures {
 		uint8_t autoRatio; // heat-in/heat-out : 20 X (flowT-RoomT)/(RoomT-OS_T) 
 		uint8_t autoTimeC; 
 		uint8_t autoQuality; // Longest Averaging Period(mins/8). If == 0, use manual.
-		uint8_t autoDelay;
+		int8_t autoDelay;
 		bool operator < (R_Zone rhs) const { return false; }
 		bool operator == (R_Zone rhs) const { return true; }
 	};

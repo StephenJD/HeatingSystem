@@ -106,9 +106,8 @@ namespace HardwareInterfaces {
 				
 		// Algorithm
 		checkForNewControllingZone();
-		if (!amControllingZone()) {
-			return false;
-		} else {
+		bool amInControl = amControllingZone();
+		if (amInControl) {
 			auto mv_FlowTemp = flowTemp();
 #if defined (ZPSIM)
 			bool debug;
@@ -130,6 +129,7 @@ namespace HardwareInterfaces {
 				newCallTemp = MIN_FLOW_TEMP;
 				_relayArr[_controlZoneRelay].clear(); // turn call relay OFF
 				_limitTemp = 100; // release control of limit temp.
+				amInControl = false;
 			}
 			else {
 				_relayArr[_controlZoneRelay].set(); // turn call relay ON
@@ -148,8 +148,8 @@ namespace HardwareInterfaces {
 				//profileLogger() << F("MV_Request: ") << _mixCallTemp;
 				//profileLogger() << F("Is: ") << mv_FlowTemp << L_endl;
 			}
-			return true;
 		}
+		return amInControl;
 	}
 
 
