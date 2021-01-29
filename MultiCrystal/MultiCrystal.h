@@ -122,8 +122,7 @@ public:
 private:
 	uint8_t _data[2]; // buffer for data sent to I2C ports
 	uint8_t _key_mask[2]; // GPIO channels available for keypad
-	const uint16_t & _key_mask_16; // = reinterpret_cast<uint16_t &>(_key_mask[0]);
-
+	uint16_t _key_mask_16; // = reinterpret_cast<uint16_t &>(_key_mask[0]);
 
 	// Initialize
 	void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
@@ -154,18 +153,14 @@ private:
 	uint8_t _displaymode;
 
 	uint8_t _initialized;
-	//uint8_t _currline;
 	
 	// For I2C keypad
-
-	//unsigned long _time_since_keychange;
-	bool _keyCleared;
+	//bool _keyCleared;
 
 	// I2C stuff
 	bool setControl(uint8_t port_pos, uint8_t value); // returns true if position is on port B
 	void setDataBit(uint8_t position, uint8_t value);
 	uint8_t _errorCode;
-
 };
 
 #endif

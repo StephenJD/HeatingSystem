@@ -30,9 +30,9 @@ namespace HardwareInterfaces {
 		//profileLogger() << F("MixValveController::ini done") << L_endl;
 	}
 
-	error_codes MixValveController::testDevice() { // non-recovery test
+	Error_codes MixValveController::testDevice() { // non-recovery test
 		auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
-		error_codes status;
+		Error_codes status;
 		uint8_t val[1] = { 1 };
 		while (!timeOut) {
 			//profileLogger() << F("warmup used: ") << timeOut.timeUsed() << L_endl;
@@ -72,11 +72,11 @@ namespace HardwareInterfaces {
 		// Lambdas
 		auto relayName = [](int id) -> const char* { // only for error reporting
 			switch (id) {
-			case R_Flat: return "Flat";
+			case R_Flat: return "Flat-UFH";
 			case R_FlTR: return "Fl-TR";
 			case R_HsTR: return "House-TR";
-			case R_UpSt: return "US";
-			case R_DnSt: return "DS";
+			case R_UpSt: return "US-UFH";
+			case R_DnSt: return "DS-UFH";
 			default: return "";
 			}
 		};
@@ -89,13 +89,16 @@ namespace HardwareInterfaces {
 			_controlZoneRelay = zoneRelayID;
 		};
 
-		auto hasLimitPriority = [maxTemp, this, zoneRelayID, setNewControlZone]() -> bool {
-			auto zoneIsHeating = _relayArr[zoneRelayID].logicalState();
-			if (zoneIsHeating && maxTemp < _limitTemp) setNewControlZone();
-			return zoneIsHeating && maxTemp == _limitTemp;
+		auto hasLimitPriority = [maxTemp, this, newCallTemp]() -> bool {
+			auto zoneIsHeating = newCallTemp > MIN_FLOW_TEMP;
+			if (zoneIsHeating && maxTemp <= _limitTemp) {
+				_limitTemp = maxTemp;
+				if (_mixCallTemp > _limitTemp) _mixCallTemp = 0; // trigger take control
+				return true;
+			} else return false;
 		};
 		
-		auto amControllingZone = [this,zoneRelayID]() -> bool {return _controlZoneRelay == zoneRelayID; };
+		auto amControllingZone = [this,zoneRelayID]() -> bool {return _controlZoneRelay == zoneRelayID && _limitTemp < 100; };
 
 		auto checkForNewControllingZone = [newCallTemp, this, amControllingZone, hasLimitPriority, setNewControlZone]() {
 			// controlZone is one calling for heat with lowest max-temp and highest call-temp.
@@ -126,6 +129,7 @@ namespace HardwareInterfaces {
 #endif
 			
 			if (newCallTemp <= MIN_FLOW_TEMP) {
+				profileLogger() << L_time << F("MixValveController: ") << relayName(zoneRelayID) << F(" Released Control.") << L_endl;
 				newCallTemp = MIN_FLOW_TEMP;
 				_relayArr[_controlZoneRelay].clear(); // turn call relay OFF
 				_limitTemp = 100; // release control of limit temp.
@@ -135,6 +139,7 @@ namespace HardwareInterfaces {
 				_relayArr[_controlZoneRelay].set(); // turn call relay ON
 				if (newCallTemp > _limitTemp) newCallTemp = _limitTemp;
 			}
+
 			if (_mixCallTemp != newCallTemp) {
 				_mixCallTemp = newCallTemp;
 				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
@@ -143,11 +148,12 @@ namespace HardwareInterfaces {
 				//if (mv_ReqTemp != _mixCallTemp) { 
 				//	profileLogger() << L_time << F("MixValve Confirm 0x") << L_hex << getAddress() << F(" failed for request_temp. Wrote: ") << L_dec << _mixCallTemp << F(" Read: ") << mv_ReqTemp << L_endl;
 				//}
-			} else if (mv_FlowTemp != _mixCallTemp) {
+			} 
+			//else if (mv_FlowTemp != _mixCallTemp) {
 				//profileLogger() << L_time << L_tabs << relayName(zoneRelayID);
 				//profileLogger() << F("MV_Request: ") << _mixCallTemp;
 				//profileLogger() << F("Is: ") << mv_FlowTemp << L_endl;
-			}
+			//}
 		}
 		return amInControl;
 	}
@@ -155,24 +161,19 @@ namespace HardwareInterfaces {
 
 	// Private Methods
 
-	bool MixValveController::controlZoneRelayIsOn() const {
-		return (_relayArr[_controlZoneRelay].logicalState() != 0);
+	int8_t MixValveController::relayInControl() const {
+		return _relayArr[_controlZoneRelay].logicalState() == 0 ? -1 : _controlZoneRelay;
 	}
 
 	bool MixValveController::needHeat(bool isHeating) {
-		if (!controlZoneRelayIsOn()) return false;
+		if (relayInControl() == -1) return false;
 
 		auto storeTempAtMixer = _tempSensorArr[_storeTempSens].get_temp(); 
-
-		if (isHeating) {
-			return (storeTempAtMixer < _mixCallTemp + THERM_STORE_HYSTERESIS);
-		}
-		else {
-			return (storeTempAtMixer < _mixCallTemp || readFromValve(Mix_Valve::status) == Mix_Valve::e_Water_too_cool);
-		}
+		auto minStoreTemp = isHeating ? _mixCallTemp + THERM_STORE_HYSTERESIS : _mixCallTemp;
+		return (storeTempAtMixer < minStoreTemp /*|| readFromValve(Mix_Valve::status) == Mix_Valve::e_Water_too_cool*/);
 	}
 
-	error_codes  MixValveController::writeToValve(Mix_Valve::Registers reg, uint8_t value) {
+	Error_codes  MixValveController::writeToValve(Mix_Valve::Registers reg, uint8_t value) {
 		auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
 		auto status = recovery().newReadWrite(*this); // see if is disabled.
 		uint8_t mixReg = reg + _index * 16;
@@ -186,7 +187,7 @@ namespace HardwareInterfaces {
 			if (status) {
 				status = write_verify(mixReg, 1, &value); // attempt recovery-write
 				if (status) {
-					profileLogger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << L_endl;
+					logger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << " at freq: " << runSpeed() << L_endl;
 				} 
 				//else {
 				//	uint8_t readValue = readFromValve(reg);
@@ -198,7 +199,7 @@ namespace HardwareInterfaces {
 				//	//}
 				//}
 			} 
-		} else profileLogger() << L_time << F("MixValve Write disabled");
+		} else logger() << L_time << F("MixValve Write disabled");
 		return status;
 	}
 
@@ -214,15 +215,15 @@ namespace HardwareInterfaces {
 			}
 			while (status && !timeOut);
 
+			constexpr int CONSECUTIVE_COUNT = 2;
+			constexpr int MAX_TRIES = 6;
+			constexpr int DATA_MASK = 0xFF;
+			status = read_verify_1byte(reg + _index * 16, value, CONSECUTIVE_COUNT, MAX_TRIES, DATA_MASK);
+
 			if (status) {
-				status = read(reg + _index * 16, 1, &value); // attempt recovery
-				if (status) {
-					profileLogger() << L_time << F("MixValve Read 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << L_endl;
-				} else {
-					profileLogger() << L_time << F("MixValve Read OK after recovery.") << L_endl;
-				}
+				logger() << L_time << F("MixValve Read 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << L_endl;
 			}
-		} else profileLogger() << L_time << F("MixValve Read disabled");
+		} else logger() << L_time << F("MixValve Read disabled");
 		return value;
 	}
 }

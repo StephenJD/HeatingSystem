@@ -2,11 +2,11 @@
 #include <I2C_Talk.h>
 #include <I2C_RecoverRetest.h>
 #include <RDB.h>
-
+#include <MultiCrystal.h>
 #include "HardwareInterfaces\LocalDisplay.h"
 #include <LocalKeypad.h>
 #include <RemoteKeypad.h>
-#include "HardwareInterfaces\RemoteDisplay.h"
+#include <RemoteDisplay.h>
 #include "HardwareInterfaces\Console.h"
 
 #include "Assembly\Initialiser.h"
@@ -53,8 +53,8 @@ public:
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;
-	HardwareInterfaces::RemoteKeypad remoteKeypad[Assembly::NO_OF_REMOTE_DISPLAYS];
 	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
+	HardwareInterfaces::RemoteKeypad remoteKeypad[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;

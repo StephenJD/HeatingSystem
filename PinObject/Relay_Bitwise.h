@@ -18,8 +18,8 @@ namespace HardwareInterfaces {
 	class Bitwise_RelayController {
 	public:
 		void registerRelayChange(Flag relay);
-		virtual auto updateRelays() -> I2C_Talk_ErrorCodes::error_codes  = 0;
-		virtual auto readPorts() -> I2C_Talk_ErrorCodes::error_codes  = 0;
+		virtual auto updateRelays() -> I2C_Talk_ErrorCodes::Error_codes  = 0;
+		virtual auto readPorts() -> I2C_Talk_ErrorCodes::Error_codes  = 0;
 		bool portState(Flag relay);
 	protected:
 		Bitwise_RelayController(RelayPortWidth_T connected_relays) : _connected_relays(connected_relays) {}
@@ -55,10 +55,10 @@ namespace HardwareInterfaces {
 		RelaysPort(RelayPortWidth_T connected_relays, I2C_Recovery::I2C_Recover & recovery, int addr);
 
 		// Virtual Functions
-		auto updateRelays()->I2C_Talk_ErrorCodes::error_codes override;
-		auto readPorts()->I2C_Talk_ErrorCodes::error_codes override;
-		auto initialiseDevice()->I2C_Talk_ErrorCodes::error_codes override;
-		auto testDevice()->I2C_Talk_ErrorCodes::error_codes override;
+		auto updateRelays()->I2C_Talk_ErrorCodes::Error_codes override;
+		auto readPorts()->I2C_Talk_ErrorCodes::Error_codes override;
+		auto initialiseDevice()->I2C_Talk_ErrorCodes::Error_codes override;
+		auto testDevice()->I2C_Talk_ErrorCodes::Error_codes override;
 	private:
 	};
 }

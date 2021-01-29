@@ -19,24 +19,24 @@ namespace I2C_Recovery {
 
 		// Definitions for custom reset functions
 		//using TestFnPtr = (*)(I2C_Talk &, int)->uint8_t;
-		typedef  I2C_Talk_ErrorCodes::error_codes(*TestFnPtr)(I2C_Talk &, int);
+		typedef  I2C_Talk_ErrorCodes::Error_codes(*TestFnPtr)(I2C_Talk &, int);
 		class I_I2CresetFunctor {
 		public:
-			virtual I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) = 0;
+			virtual I2C_Talk_ErrorCodes::Error_codes operator()(I2C_Talk & i2c, int addr) = 0;
 			virtual void postResetInitialisation() {};
 		};
 
 		class I2Creset_Functor : public I_I2CresetFunctor {
 		public:
 			void set(TestFnPtr tfn) { _tfn = tfn; }
-			I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override { return _tfn(i2c, addr); }
+			I2C_Talk_ErrorCodes::Error_codes operator()(I2C_Talk & i2c, int addr) override { return _tfn(i2c, addr); }
 		private:
 			TestFnPtr _tfn = 0;
 		};
 
 		// Polymorphic Modifier Functions for I2C_Talk
-		auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::error_codes override;
-		bool tryReadWriteAgain(I2C_Talk_ErrorCodes::error_codes status) override;
+		auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::Error_codes override;
+		bool tryReadWriteAgain(I2C_Talk_ErrorCodes::Error_codes status) override;
 
 		// Queries 
 		I_I2CresetFunctor * getTimeoutFn() const { return _timeoutFunctor; }
@@ -44,8 +44,8 @@ namespace I2C_Recovery {
 		I_I2Cdevice_Recovery * lastGoodDevice() const override { return _lastGoodDevice; }
 		bool isUnrecoverable() const override {return _deviceWaitingOnFailureFor10Mins < 0;}
 		// Modifiers for I2C_Recover_Retest
-		auto testDevice(int noOfTests, int allowableFailures)-> I2C_Talk_ErrorCodes::error_codes override;
-		//auto findAworkingSpeed() -> I2C_Talk_ErrorCodes::error_codes override;
+		auto testDevice(int noOfTests, int allowableFailures)-> I2C_Talk_ErrorCodes::Error_codes override;
+		//auto findAworkingSpeed() -> I2C_Talk_ErrorCodes::Error_codes override;
 		void setTimeoutFn(I_I2CresetFunctor * timeoutFnPtr);
 		void setTimeoutFn(TestFnPtr timeoutFnPtr);
 		void basicTestsBeforeScan(I_I2Cdevice_Recovery & device);
@@ -56,6 +56,7 @@ namespace I2C_Recovery {
 		// Strategies
 		void call_timeOutFn(int addr);
 		void endReadWrite();
+		void extendStopMargin();
 
 		// Queries for I2C_Recover_Retest
 		// Modifiers for I2C_Recover_Retest

@@ -20,13 +20,13 @@ namespace HardwareInterfaces {
 		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, UI_TempSensor * tempSensorArr, int flowTempSens, int storeTempSens);
 
 		// Virtual Functions
-		I2C_Talk_ErrorCodes::error_codes testDevice() override;
+		I2C_Talk_ErrorCodes::Error_codes testDevice() override;
 
 		// Queries
 		uint8_t flowTemp() const;
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
+		int8_t relayInControl() const;
 		uint8_t index() const { return _index; }
-		bool controlZoneRelayIsOn() const;
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
@@ -47,7 +47,7 @@ namespace HardwareInterfaces {
 //		static std::ofstream lf;
 //#endif
 	private:
-		I2C_Talk_ErrorCodes::error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
+		I2C_Talk_ErrorCodes::Error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
 
 		UI_TempSensor * _tempSensorArr = 0;
 		UI_Bitwise_Relay * _relayArr = 0;

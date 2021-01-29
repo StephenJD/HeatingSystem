@@ -389,7 +389,7 @@ TEST_CASE("Calculate Ratio", "[Preheat]") {
 	Zone::setSequencer(sequencer);
 	zone.initialise(queries.q_Zones[DS_ZONE], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);
 	zone.zoneRecord().rec().autoTimeC = zone.compressTC(roomTimeConst/2); // 60m per degree. TC = minutes - per - 4 - degrees
-	zone.zoneRecord().rec().autoRatio = .45 * Zone::RATIO_DIVIDER; // 0.66
+	zone.zoneRecord().rec().autoRatio = 0.5 + .45 * Zone::RATIO_DIVIDER; // 0.66
 	zone.zoneRecord().rec().autoQuality = 1;
 	zone.zoneRecord().update();
 	zone.initialise(queries.q_Zones[DS_ZONE], tempSensorArr[CALL_TS], relayArr[0], thermalStore, mixValveControllerArr[0]);

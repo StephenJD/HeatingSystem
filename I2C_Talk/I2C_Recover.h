@@ -22,8 +22,8 @@ namespace I2C_Recovery {
 		I_I2Cdevice_Recovery & device() { return *_device; }
 		
 		// Polymorphic Functions for TryAgain
-		virtual auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::error_codes { return I2C_Talk_ErrorCodes::_OK; }
-		virtual bool tryReadWriteAgain(I2C_Talk_ErrorCodes::error_codes status) {
+		virtual auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::Error_codes { return I2C_Talk_ErrorCodes::_OK; }
+		virtual bool tryReadWriteAgain(I2C_Talk_ErrorCodes::Error_codes status) {
 			//Serial.println(" Default non-recovery");
 			return false;
 		}
@@ -31,8 +31,8 @@ namespace I2C_Recovery {
 		virtual bool isUnrecoverable() const { return false; }
 
 		// Polymorphic Functions for I2C_Talk
-		/*virtual*/ auto findAworkingSpeed()->I2C_Talk_ErrorCodes::error_codes;
-		virtual auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::error_codes;
+		/*virtual*/ auto findAworkingSpeed()->I2C_Talk_ErrorCodes::Error_codes;
+		virtual auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::Error_codes;
 		//friend class I_I2C_Scan;
 		constexpr I2C_Recover() = default;
 	protected:

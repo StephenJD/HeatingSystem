@@ -47,7 +47,7 @@ void I2C_Talk::ini(TwoWire & wire_port, int32_t max_I2Cfreq) {
 }
 
 
-error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes, uint8_t *dataBuffer) {
+Error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes, uint8_t *dataBuffer) {
 
 	auto returnStatus = beginTransmission(deviceAddr);
 	if (returnStatus == _OK) {
@@ -56,13 +56,13 @@ error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes,
 		if (returnStatus == _OK) returnStatus = getData(deviceAddr, numberBytes, dataBuffer);
 #ifdef DEBUG_TALK
 		else
-			logger() << F(" I2C_Talk::read, sendRegister failed. 0x") << L_hex << deviceAddr << getStatusMsg(returnStatus) << L_endl;
+			logger() << F(" I2C_Talk::read, sendRegister failed for 0x") << L_hex << deviceAddr << getStatusMsg(returnStatus) << L_endl;
 #endif
 	}
 	return returnStatus;
 }
 
-error_codes I2C_Talk::readEP(int deviceAddr, int pageAddress, int numberBytes, uint8_t *dataBuffer) {
+Error_codes I2C_Talk::readEP(int deviceAddr, int pageAddress, int numberBytes, uint8_t *dataBuffer) {
 	//Serial.print("\treadEP Wire:"); Serial.print((long)&_wire_port); Serial.print(", addr:"); Serial.print(deviceAddr); Serial.print(", page:"); Serial.print(pageAddress);
 	//Serial.print(", NoOfBytes:"); Serial.println(numberBytes);
 	auto returnStatus = _OK;
@@ -86,12 +86,13 @@ error_codes I2C_Talk::readEP(int deviceAddr, int pageAddress, int numberBytes, u
 	return returnStatus;
 }
 
-error_codes I2C_Talk::getData(int deviceAddr, int numberBytes, uint8_t *dataBuffer) {
+Error_codes I2C_Talk::getData(int deviceAddr, int numberBytes, uint8_t *dataBuffer) {
 	// Register address must be loaded into write buffer before entry...
 	//retuns 0=_OK, 1=_Insufficient_data_returned, 2=_NACK_during_address_send, 3=_NACK_during_data_send, 4=_NACK_during_complete, 5=_NACK_receiving_data, 6=_Timeout, 7=_slave_shouldnt_write, 8=_I2C_not_created
 	//logger() << F(" I2C_Talk::getData start") << L_endl;
-
-	uint8_t returnStatus = (_wire().requestFrom((int)deviceAddr, (int)numberBytes) != numberBytes);
+	auto bytesAvailable = _wire().requestFrom((int)deviceAddr, (int)numberBytes);
+	uint8_t returnStatus = (bytesAvailable != numberBytes);
+	auto i = 0;
 	if (returnStatus != _OK) { // returned error
 		returnStatus = _wire().read(); // retrieve error code
 #ifdef DEBUG_TALK
@@ -100,16 +101,16 @@ error_codes I2C_Talk::getData(int deviceAddr, int numberBytes, uint8_t *dataBuff
 	}
 	else {
 		//logger() << F(" I2C_Talk::getData OK") << L_endl;
-		uint8_t i = 0;
-		for (; _wire().available(); ++i) {
+		
+		for (; i < bytesAvailable; ++i) {
 			dataBuffer[i] = _wire().read();
 		}
 	}
-
-	return static_cast<error_codes>(returnStatus);
+	for (; i < numberBytes; ++i) dataBuffer[i] = 0;
+	return static_cast<Error_codes>(returnStatus);
 }
 
-error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes, const uint8_t * dataBuffer) {
+Error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes, const uint8_t * dataBuffer) {
 	//logger() << F(" I2C_Talk::write...") << L_endl; 
 	auto returnStatus = beginTransmission(deviceAddr);
 	if (returnStatus == _OK) {
@@ -128,7 +129,7 @@ error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes
 	return returnStatus;
 }
 
-error_codes I2C_Talk::write_verify(int deviceAddr, int registerAddress, int numberBytes, const uint8_t *dataBuffer) {
+Error_codes I2C_Talk::write_verify(int deviceAddr, int registerAddress, int numberBytes, const uint8_t *dataBuffer) {
 	uint8_t verifyBuffer[32] = {0xAA,0xAA};
 	auto status = write(deviceAddr, registerAddress, numberBytes, dataBuffer);
 	if (status == _OK) status = read(deviceAddr, registerAddress, numberBytes, verifyBuffer);
@@ -140,7 +141,7 @@ error_codes I2C_Talk::write_verify(int deviceAddr, int registerAddress, int numb
 	return status;
 }
 
-error_codes I2C_Talk::writeEP(int deviceAddr, int pageAddress, int numberBytes, const uint8_t * dataBuffer) {
+Error_codes I2C_Talk::writeEP(int deviceAddr, int pageAddress, int numberBytes, const uint8_t * dataBuffer) {
 	auto returnStatus = _OK; 
 	// Lambda
 	auto _writeEP_block = [returnStatus, deviceAddr, this](int pageAddress, uint16_t numberBytes, const uint8_t * dataBuffer) mutable {
@@ -174,7 +175,7 @@ error_codes I2C_Talk::writeEP(int deviceAddr, int pageAddress, int numberBytes, 
 	return returnStatus;
 }
 
-error_codes I2C_Talk::status(int deviceAddr) // Returns in slave mode.
+Error_codes I2C_Talk::status(int deviceAddr) // Returns in slave mode.
 {
 	auto status = beginTransmission(deviceAddr);
 	if (status == _OK) {
@@ -248,8 +249,8 @@ const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 }
 
 // Slave response
-error_codes I2C_Talk::write(const uint8_t *dataBuffer, int numberBytes) {// Called by slave in response to request from a Master. Return errCode.
-	return static_cast<error_codes>(_wire().write(dataBuffer, uint8_t(numberBytes)));
+Error_codes I2C_Talk::write(const uint8_t *dataBuffer, int numberBytes) {// Called by slave in response to request from a Master. Return errCode.
+	return static_cast<Error_codes>(_wire().write(dataBuffer, uint8_t(numberBytes)));
 } 
 
 uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
@@ -262,14 +263,14 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 }
 
 // Private Functions
-error_codes I2C_Talk::beginTransmission(int deviceAddr) { // return false to inhibit access
+Error_codes I2C_Talk::beginTransmission(int deviceAddr) { // return false to inhibit access
 	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) _wire().beginTransmission((uint8_t)deviceAddr); // Puts in Master Mode.
 	return status;
 }
 
-error_codes I2C_Talk::endTransmission() {
-	auto status = static_cast<I2C_Talk_ErrorCodes::error_codes>(_wire().endTransmission());
+Error_codes I2C_Talk::endTransmission() {
+	auto status = static_cast<I2C_Talk_ErrorCodes::Error_codes>(_wire().endTransmission());
 #ifdef DEBUG_TALK
 	if (status >= _Timeout) {
 		logger() << F("_wire().endTransmission() returned ") << status << getStatusMsg(status) << L_endl;

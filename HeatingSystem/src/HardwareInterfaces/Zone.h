@@ -67,6 +67,7 @@ namespace HardwareInterfaces {
 		RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() { return _zoneRecord; }
 		static constexpr double ERROR_DIVIDER = 2.;
 		static constexpr double RATIO_DIVIDER = 255.;
+		static constexpr double MAX_RATIO = (254000 / 255) / 1000.;
 		static constexpr int REQ_ACCUMULATION_PERIOD = 120; // minutes
 		static constexpr uint8_t DELAY_COOLING_TIME = 120;
 		static constexpr uint8_t MEASURING_DELAY = 255;

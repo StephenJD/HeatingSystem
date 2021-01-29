@@ -20,21 +20,21 @@ namespace HardwareInterfaces {
 		// Queries
 		int8_t get_temp() const;
 		int16_t get_fractional_temp() const;
-		/*static*/ bool hasError() { return _error != I2C_Talk_ErrorCodes::_OK; }
-		/*static*/ I2C_Talk_ErrorCodes::error_codes lastError() { return _error; }
+		bool hasError() { return _error != I2C_Talk_ErrorCodes::_OK; }
+		I2C_Talk_ErrorCodes::Error_codes lastError() { return _error; }
 
 		// Modifiers
-		I2C_Talk_ErrorCodes::error_codes readTemperature();
+		I2C_Talk_ErrorCodes::Error_codes readTemperature();
 		uint8_t setHighRes();
 		// Virtual Functions
-		I2C_Talk_ErrorCodes::error_codes testDevice() override;
+		I2C_Talk_ErrorCodes::Error_codes testDevice() override;
 
 		void initialise(int address);
 
 	protected:
-		auto checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::error_codes;
+		auto checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::Error_codes;
 		mutable int16_t _lastGood = 16 * 256;
-		/*static*/ I2C_Talk_ErrorCodes::error_codes _error = I2C_Talk_ErrorCodes::_OK;
+		I2C_Talk_ErrorCodes::Error_codes _error = I2C_Talk_ErrorCodes::_OK;
 #ifdef ZPSIM
 		mutable int16_t change = 256;
 #endif

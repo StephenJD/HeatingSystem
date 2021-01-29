@@ -19,7 +19,7 @@ namespace HardwareInterfaces {
 	class HardReset : public I2C_Recovery::I2C_Recover_Retest::I_I2CresetFunctor {
 	public:
 		HardReset(Pin_Wag resetPinWag) : _resetPinWag(resetPinWag) {}
-		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
+		I2C_Talk_ErrorCodes::Error_codes operator()(I2C_Talk & i2c, int addr) override;
 		static void arduinoReset(const char* msg);
 		bool initialisationRequired = false;
 		unsigned long timeOfReset_mS = 0;
@@ -31,7 +31,7 @@ namespace HardwareInterfaces {
 	public:
 		ResetI2C(I2C_Recovery::I2C_Recover_Retest & recover, I_IniFunctor & resetFn, I_TestDevices & testDevices, Pin_Wag resetPinWag);
 
-		I2C_Talk_ErrorCodes::error_codes operator()(I2C_Talk & i2c, int addr) override;
+		I2C_Talk_ErrorCodes::Error_codes operator()(I2C_Talk & i2c, int addr) override;
 		unsigned long timeOfReset_mS() { return hardReset.timeOfReset_mS; }
 		void postResetInitialisation() override;
 		HardReset hardReset;

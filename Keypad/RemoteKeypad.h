@@ -12,7 +12,7 @@ namespace HardwareInterfaces {
 		int getKey() override;
 		int readKey() override;
 		bool wakeDisplay(bool) override { return true; }
-
+//		MultiCrystal& displ() { return *_lcd; }
 	private:
 		int getKeyCode(int gpio);
 		MultiCrystal * _lcd;

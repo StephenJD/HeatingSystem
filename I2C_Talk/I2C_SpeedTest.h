@@ -33,7 +33,7 @@ public:
 #endif
 	}
 	static bool doingSpeedTest() { return _is_inSpeedTest; }
-	auto error() const -> I2C_Talk_ErrorCodes::error_codes{ return _error; }
+	auto error() const -> I2C_Talk_ErrorCodes::Error_codes{ return _error; }
 	int32_t thisHighestFreq() const { return _thisHighestFreq; }
 	uint8_t stopMargin() const { return _stopMargin; }
 
@@ -48,14 +48,14 @@ private:
 	template<bool serial_out>
 	uint32_t fastest_T();
 
-	auto adjustSpeedTillItWorksAgain(int32_t increment)-> I2C_Talk_ErrorCodes::error_codes;
-	auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::error_codes;
-	auto findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed)->I2C_Talk_ErrorCodes::error_codes;
+	auto adjustSpeedTillItWorksAgain(int32_t increment)-> I2C_Talk_ErrorCodes::Error_codes;
+	auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::Error_codes;
+	auto findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed)->I2C_Talk_ErrorCodes::Error_codes;
 	
 	static bool _is_inSpeedTest;
 	I_I2Cdevice_Recovery * _i2c_device = 0;
 	int32_t _thisHighestFreq = 0;
-	I2C_Talk_ErrorCodes::error_codes _error = I2C_Talk_ErrorCodes::_OK;
+	I2C_Talk_ErrorCodes::Error_codes _error = I2C_Talk_ErrorCodes::_OK;
 	uint8_t _stopMargin = 0;
 };
 

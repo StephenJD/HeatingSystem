@@ -42,7 +42,7 @@ using namespace std;
 			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
 			break;
 		case L_endl: // fall through	
-			if (_flags & L_allwaysFlush) { (*this) << " |F|"; flush(); }
+			if (_flags & L_allwaysFlush) { (*this) << F(" |F|\n"); flush(); }
 			(*this) << F("\n"); // fall through
 		case L_default:
 			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
@@ -75,6 +75,9 @@ using namespace std;
 		auto freeRam = freeMemory();
 		Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
 		if (freeRam < 10) {  while (true); }
+		#ifdef DEBUG_TALK
+		_flags = L_allwaysFlush;
+		#endif
 	}	
 	
 	Serial_Logger::Serial_Logger(uint32_t baudRate, Clock & clock) : Logger(clock) {
@@ -83,6 +86,9 @@ using namespace std;
 		auto freeRam = freeMemory();
 		Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
 		if (freeRam < 10) { while (true); }
+#ifdef DEBUG_TALK
+		_flags = L_allwaysFlush;
+#endif
 	}
 
 	void Serial_Logger::begin(uint32_t baudRate) { Serial.begin(baudRate); }

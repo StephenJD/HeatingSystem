@@ -6,7 +6,7 @@ using namespace I2C_Talk_ErrorCodes;
 
 bool I2C_SpeedTest::_is_inSpeedTest = false;
 
-error_codes I2C_SpeedTest::testDevice(int noOfTests, int allowableFailures) {
+Error_codes I2C_SpeedTest::testDevice(int noOfTests, int allowableFailures) {
 	return _i2c_device->recovery().testDevice(noOfTests, allowableFailures); 
 }
 
@@ -84,7 +84,7 @@ uint32_t I2C_SpeedTest::fastest_T<false>() {
 	return thisHighestFreq();
 }
 
-error_codes I2C_SpeedTest::findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed ) {
+Error_codes I2C_SpeedTest::findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed ) {
 	
 	// lambdas
 	//auto setToLimitSpeed = [bestSpeed, limitSpeed, this](auto & adjustBy) {
@@ -129,7 +129,7 @@ error_codes I2C_SpeedTest::findOptimumSpeed(int32_t & bestSpeed, int32_t limitSp
 	return status != _OK ? _I2C_Device_Not_Found : _OK;
 }
 
-error_codes I2C_SpeedTest::adjustSpeedTillItWorksAgain(int32_t incrementRatio) {
+Error_codes I2C_SpeedTest::adjustSpeedTillItWorksAgain(int32_t incrementRatio) {
 	auto status = _OK;
 	//Serial.print("\n ** Adjust I2C_Speed: "); Serial.println(i2C().getI2CFrequency(),DEC);Serial.flush();
 	auto currFreq = _i2c_device->i2C().getI2CFrequency();

@@ -22,7 +22,7 @@ namespace HardwareInterfaces {
 			_recover->setTimeoutFn(this);
 		}
 
-	error_codes ResetI2C::operator()(I2C_Talk & i2c, int addr) {
+	Error_codes ResetI2C::operator()(I2C_Talk & i2c, int addr) {
 		static bool isInReset = false;
 		if (isInReset) {
 			logger() << F("\nTest: Recursive Reset... for 0x") << L_hex << addr << L_endl;
@@ -30,7 +30,7 @@ namespace HardwareInterfaces {
 		}
 
 		isInReset = true;
-		error_codes status = _OK;
+		Error_codes status = _OK;
 		auto origFn = _recover->getTimeoutFn();
 		_recover->setTimeoutFn(&hardReset);
 
@@ -61,7 +61,7 @@ namespace HardwareInterfaces {
 		digitalWrite(A4, LOW);
 	}
 
-	error_codes HardReset::operator()(I2C_Talk & i2c, int addr) {
+	Error_codes HardReset::operator()(I2C_Talk & i2c, int addr) {
 		LocalKeypad::indicatorLED().set();
 		_resetPinWag.set();
 		delay(128); // interrupts still serviced

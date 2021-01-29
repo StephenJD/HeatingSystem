@@ -14,8 +14,8 @@ protected:
 
 private:
 	void _update() override { loadTime(); }	// called every 10 minutes - reads from RTC
-	virtual auto readData(int start, int numberBytes, uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
-	virtual auto writeData(int start, int numberBytes, const uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::error_codes = 0;
+	virtual auto readData(int start, int numberBytes, uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::Error_codes = 0;
+	virtual auto writeData(int start, int numberBytes, const uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::Error_codes = 0;
 	auto _timeFromRTC(int& minUnits, int& seconds)->Date_Time::DateTime;
 };
 
@@ -38,18 +38,18 @@ public:
 		}
 		return false;
 	}
-	auto testDevice()->I2C_Talk_ErrorCodes::error_codes override;
+	auto testDevice()->I2C_Talk_ErrorCodes::Error_codes override;
 
 private:
-	auto readData(int start, int numberBytes, uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::error_codes override {
+	auto readData(int start, int numberBytes, uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override {
 		//if (I2Cdevice<i2c>::getStatus() != I2C_Talk_ErrorCodes::_OK) logger() << "RTC Unavailable" << L_endl;
 		return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer);
 	}
-	auto writeData(int start, int numberBytes, const uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::error_codes override { return I2Cdevice<i2c>::write_verify(start, numberBytes, dataBuffer); }
+	auto writeData(int start, int numberBytes, const uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override { return I2Cdevice<i2c>::write_verify(start, numberBytes, dataBuffer); }
 };
 
 template<I2C_Talk& i2C>
-auto Clock_I2C<i2C>::testDevice() -> I2C_Talk_ErrorCodes::error_codes {
+auto Clock_I2C<i2C>::testDevice() -> I2C_Talk_ErrorCodes::Error_codes {
 	//Serial.print(" RTC testDevice at "); Serial.println(i2c.getI2CFrequency(),DEC);
 	uint8_t data[1] = { 0 };
 	auto errCode = I2Cdevice<i2C>::write_verify(9, 1, data);

@@ -1,6 +1,6 @@
 #pragma once
 #include "..\..\..\MultiCrystal\MultiCrystal.h"
-#include "LCD_Display.h"
+#include <LCD_Display.h>
 
 namespace HardwareInterfaces {
 

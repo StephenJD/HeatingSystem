@@ -23,7 +23,6 @@ namespace HardwareInterfaces {
 
 	uint8_t ThermalStore::getTopTemp() const {
 		uint8_t temp = _tempSensorArr[_thermStoreData.OvrHeatTS].get_temp();
-		if (_tempSensorArr[_thermStoreData.OvrHeatTS].hasError()) _tempSensorError = true;
 		return temp;
 	}
 
@@ -47,17 +46,40 @@ namespace HardwareInterfaces {
 
 	bool ThermalStore::needHeat(int currRequest, int nextRequest) {
 		// called every Minute.
+		using namespace Assembly;
+		// Note: No DHW hysteresis if back-boiler is on.
 		setLowestCWtemp(false);
-		bool needHeat = dhwNeedsHeat(currRequest, nextRequest);
-		_mixVRequestingHeat = -1;
+		_heatRequestSource = dhwNeedsHeat(currRequest, nextRequest) ? NO_OF_MIX_VALVES : -1;
 		_heatingDemand = -1;
 		for (auto& mixV : _mixValveControllerArr) { // Check temp for each mix valve
-			if (mixV.needHeat(_isHeating)) _mixVRequestingHeat = mixV.index();
-			if (mixV.controlZoneRelayIsOn()) _heatingDemand = mixV.index();
+			if (mixV.needHeat(_isHeating)) {
+				if (_heatRequestSource == -1) _heatRequestSource = mixV.index(); // mixflow temp too low
+			}
+			if (_heatingDemand == -1) _heatingDemand = mixV.relayInControl();
 		}
-		needHeat |= (_mixVRequestingHeat != -1);
-		_isHeating = needHeat;
-		return needHeat;
+
+		_isHeating = (_heatRequestSource != -1);
+		return _isHeating;
+	}
+
+	const __FlashStringHelper* ThermalStore::principalLoad() const {
+		using namespace Assembly;
+		switch (_heatRequestSource) {
+		case M_DownStrs: return F("!Mix DS");
+		case M_UpStrs: return F("!Mix US");
+		case NO_OF_MIX_VALVES: return _backBoiler.isOn() ? F("!DHW+BB") : F("!DHW");
+		default:
+			{
+				switch (_heatingDemand) {
+				case R_Flat: return F("UFH Fl");
+				case R_UpSt: return F("UFH US");
+				case R_FlTR: return F("TR Fl");
+				case R_HsTR: return F("TR Hs");
+				case R_DnSt: return F("UFH DS");
+				default: return F("None");
+				}
+			}
+		}
 	}
 
 	// Private methods
@@ -100,7 +122,7 @@ namespace HardwareInterfaces {
 	uint8_t ThermalStore::calcCurrDeliverTemp(int callTemp, float groundT, float topT, float midT, float botT) const {
 		float boilerPwr = _thermStoreData.BoilerPower;
 		uint8_t duration = _thermStoreData.DHWflowTime;
-		_tempSensorError |= _tempSensorArr[_thermStoreData.MidDhwTS].hasError() || _tempSensorArr[_thermStoreData.LowerDhwTS].hasError();
+		_tempSensorError = _tempSensorArr[_thermStoreData.OvrHeatTS].hasError() || _tempSensorArr[_thermStoreData.MidDhwTS].hasError() || _tempSensorArr[_thermStoreData.LowerDhwTS].hasError();
 		//logger() << F("\nThermalStore::calcCurrDeliverTemp\t_topT ") << topT << F(" mid ") << midT << F(" Bot ") << botT << F(" Grnd ") << _groundT << F(" Cond ") << _thermStoreData.Conductivity << L_endl;
 		//logger() << F("\nThermalStore Capacities\t_upperC ") << _upperC << F(" _midC ") << _midC << F(" _bottomC ") << _bottomC << L_endl;
 
@@ -135,7 +157,10 @@ namespace HardwareInterfaces {
 
 	bool ThermalStore::dhwNeedsHeat(int callTemp, int nextRequest) {
 		_theoreticalDeliveryTemp = calcCurrDeliverTemp(nextRequest > callTemp ? nextRequest : callTemp, _groundT, getTopTemp(), _tempSensorArr[_thermStoreData.MidDhwTS].get_temp(), _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp());
-		if (_tempSensorError) return false;
+		if (_tempSensorError) {
+			logger() << "dhwNeedsHeat TS error." << L_endl;
+			//return false;
+		}
 		//logger() << F("\nThermalStore::dhwNeedsHeat\t_theoreticalDeliveryTemp ") << _theoreticalDeliveryTemp << L_endl;
 		// Note that because callTemp determins the rate of heat-extraction, currDeliverTemp, which is temperature AFTER filling a bath, will change if callTemp changes.
 		static bool hasRequestedCondReduction = false;
@@ -154,17 +179,23 @@ namespace HardwareInterfaces {
 		}
 		if (dhwTempOK) hasRequestedCondReduction = false;
 		uint8_t addHysteresis = 0;
-		if (!_backBoiler.check() && _isHeating) { // only add hysteresis if stove not on.
+		if (_isHeating && !_backBoiler.isOn()) {
 			addHysteresis = THERM_STORE_HYSTERESIS;
 		}
 		return _theoreticalDeliveryTemp < (callTemp + addHysteresis);	// If HWtemp[2] is not hot enough, we need heat.
 	}
 
 	bool ThermalStore::dhwDeliveryOK(int currRequest) const {
+		using namespace Assembly;
 		/*
 		Compare DHW temp each side of thermostatic valve to see if cold is being mixed in.
 		If temps are the same, tank is too cool.
 		*/
+		if (_heatingDemand == R_FlTR || _heatingDemand == R_HsTR) {
+			profileLogger() << L_time << L_tabs << F("DHW-flowTemp:") << L_fixed << _tempSensorArr[_thermStoreData.DHWFlowTS].get_fractional_temp()
+				<< F("DHW-preMixTemp: ") << _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() << L_endl;
+		}
+
 		auto dhwFlowTemp = _tempSensorArr[_thermStoreData.DHWFlowTS].get_temp();
 		auto DHWpreMixTemp = _tempSensorArr[_thermStoreData.DHWpreMixTS].get_temp();
 		if (_tempSensorArr[_thermStoreData.DHWFlowTS].hasError() || _tempSensorArr[_thermStoreData.DHWpreMixTS].hasError()) return true;

@@ -88,8 +88,8 @@ HeatingSystem::HeatingSystem()
 	, _tempController(_recover, _hs_queries, _sequencer, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
 	, mainDisplay(&_hs_queries.q_Displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
-	, remoteKeypad{ {remDispl[0].displ()},{remDispl[0].displ()},{remDispl[0].displ()} }
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, DS_REMOTE_ADDRESS, FL_REMOTE_ADDRESS } // must be same order as zones
+	, remoteKeypad{ {remDispl[0].displ()},{remDispl[1].displ()},{remDispl[2].displ()} }
 	, _mainConsoleChapters{ _hs_datasets, _tempController, *this}
 	, _remoteConsoleChapters{ _hs_datasets }
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)

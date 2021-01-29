@@ -70,7 +70,7 @@ namespace Assembly {
 		//ui_yield();
 		}
 		profileLogger() << F("\tNext Event ") << info.nextEvent.getDayStr() << " " << info.nextEvent << L_endl;
-		profileLogger() << F("\t\tCurr ") << info.currTT
+		profileLogger() << F("\t\tCurr ") << info.currTT 
 			<< F("\n\t\tNext ") << info.nextTT << L_endl;
 		return info;
 	}

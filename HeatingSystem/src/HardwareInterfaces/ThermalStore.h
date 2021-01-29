@@ -23,8 +23,9 @@ namespace HardwareInterfaces {
 		uint8_t getGroundTemp() const;
 		int8_t getOutsideTemp() const;
 		bool backBoilerIsHeating() const;
-		int8_t heatingRequestOrigin() const { return _mixVRequestingHeat; }
-		int8_t isAheatingDemand() const { return _heatingDemand; }
+		int8_t tooCoolRequestOrigin() const { return _heatRequestSource; }
+		int8_t heatingDemandFrom() const { return _heatingDemand; }
+		const __FlashStringHelper* principalLoad() const;
 
 		// Modifier
 		void setLowestCWtemp(bool isFlowing);
@@ -41,8 +42,8 @@ namespace HardwareInterfaces {
 
 		uint8_t _theoreticalDeliveryTemp = 45;
 		bool _isHeating = false;
-		int8_t _mixVRequestingHeat = -1; // only used for logging
-		int8_t _heatingDemand = -1; // TC only calculated if there is no heating demand
+		int8_t _heatRequestSource = -1; // only used for logging
+		int8_t _heatingDemand = -1; // TempConst only calculated if there is no heating demand
 
 		float _upperC, _midC, _bottomC; // calculated capacity factors
 		float _upperV, _midV, _bottomV; // calculated Volumes

@@ -44,11 +44,11 @@ namespace LCD_UI {
 		cout << F("\tedit->back->focus ") << field_streamingTool_h->backUI()->focusIndex() << endl;
 #endif	
 		auto sourceCollection = field_streamingTool_h->backUI()->get()->collection();
-		if (sourceCollection->objectIndex() != sourceCollection->focusIndex()) { 
+		//if (sourceCollection->objectIndex() != sourceCollection->focusIndex()) { 
 			field_streamingTool_h->backUI()->move_focus_by(0); // get data loaded for iterated collections
 			editItem().gotFocus(getDataFormatter()); 
-		}
-		field_streamingTool_h->set_focus(editItem().getEditCursorPos()); // copy data to edit
+		//}
+		field_streamingTool_h->set_focus(editItem().getEditCursorPos());
 		field_streamingTool_h->setCursorMode(HI_BD::e_inEdit);
 		
 		field_streamingTool_h->activeEditBehaviour().make_viewAll(); // Allows UP/DOWN to go to edit collection

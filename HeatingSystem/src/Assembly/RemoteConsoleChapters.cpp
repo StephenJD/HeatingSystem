@@ -13,7 +13,7 @@ namespace Assembly {
 		, _rem_prompt{ "^v adjusts temp" }
 		, _rem_req_lbl{ "Req" }
 		, _rem_is_lbl{ "Is", {V+L0} }
-		, remotePage_c{ 32, makeCollection(_rem_prompt, _rem_req_lbl, _rem_tempReqUI_c, _rem_is_lbl, _rem_tempIsUI_c), {V+S+V1+UD_S} }
+		, remotePage_c{ 32, makeCollection(_rem_prompt, _rem_is_lbl, _rem_tempIsUI_c, _rem_req_lbl, _rem_tempReqUI_c ), {V+S+V1+UD_S} }
 		, _remote_chapter_c(makeChapter(remotePage_c))
 		, _remote_chapter_h( _remote_chapter_c )
 

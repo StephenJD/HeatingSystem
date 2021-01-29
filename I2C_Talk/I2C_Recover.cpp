@@ -18,11 +18,11 @@ namespace I2C_Recovery {
 		i2C().wireBegin();
 	}
 
-	error_codes I2C_Recover::testDevice(int, int) {
+	Error_codes I2C_Recover::testDevice(int, int) {
 		return device().testDevice();
 	}
 
-	error_codes I2C_Recover::findAworkingSpeed() {
+	Error_codes I2C_Recover::findAworkingSpeed() {
 		if (device().getStatus() == _disabledDevice) return _disabledDevice;
 		auto addr = device().getAddress();
 		// Must test MAX_I2C_FREQ as this is skipped in later tests

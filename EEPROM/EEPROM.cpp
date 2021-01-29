@@ -108,7 +108,7 @@ uint8_t EEPROMClass::read(int iAddr)
 	//#endif
 }
 
-error_codes EEPROMClass::write(int iAddr, uint8_t iVal)
+Error_codes EEPROMClass::write(int iAddr, uint8_t iVal)
 {
 	//#if defined (ZPSIM)
 	//	myEEProm[iAddr] = iVal;
@@ -118,7 +118,7 @@ error_codes EEPROMClass::write(int iAddr, uint8_t iVal)
 	//#endif
 }
 
-error_codes EEPROMClass::update(int iAddr, uint8_t iVal) {
+Error_codes EEPROMClass::update(int iAddr, uint8_t iVal) {
 	if (iVal != read(iAddr)) 
 		return write(iAddr,iVal);
 	else return _OK; // ++iAddr;

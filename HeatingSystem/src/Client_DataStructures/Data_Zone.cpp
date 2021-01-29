@@ -11,7 +11,7 @@ namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;
 	using namespace Date_Time;       
-
+	using namespace HardwareInterfaces;
 	//***************************************************
 	//             Dataset_Zone
 	//***************************************************
@@ -22,7 +22,7 @@ namespace client_data_structures {
 		, _abbrev("", 3)
 		, _requestTemp(90, ValRange(e_fixedWidth | e_editAll, 10, 90))
 		, _isHeating("",2)
-		, _autoRatio(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
+		, _autoRatio(0, ValRange(e_fixedWidth | e_editAll, 0, 999))
 		, _autoTimeC(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
 		, _autoQuality(0, ValRange(e_fixedWidth | e_editAll, 0, 99,0,2))
 		, _autoDelay(0, ValRange(e_fixedWidth | e_editAll, -127, 127))
@@ -64,7 +64,7 @@ namespace client_data_structures {
 			return &_isHeating;
 		}
 		case e_ratio:
-			_autoRatio.val = answer().rec().autoRatio;
+			_autoRatio.val = int32_t(answer().rec().autoRatio * 1000. / Zone::RATIO_DIVIDER) ;
 			return &_autoRatio;
 		case e_timeConst:
 			_autoTimeC.val = answer().rec().autoTimeC;
@@ -98,14 +98,15 @@ namespace client_data_structures {
 		{
 			HardwareInterfaces::Zone & z = zone(recordID());
 			auto reqTemp = uint8_t(newValue->val);
+			auto oldOffset = z.offset();
 			z.offsetCurrTempRequest(reqTemp);
-			profileLogger() << answer().rec().name << " Save req temp to: " << reqTemp << " Max: " << _requestTemp.valRange.maxVal << L_endl;
+			profileLogger() << answer().rec().name << " Save req temp to: " << reqTemp << " Max: " << _requestTemp.valRange.maxVal << " Offset was: " << oldOffset << " Now: " << z.offset() << L_endl;
 			answer().rec().offsetT = z.offset();
 			break;
 		}
 		case e_ratio:
 			_autoRatio = *newValue;
-			answer().rec().autoRatio = decltype(answer().rec().autoRatio)(_autoRatio.val);
+			answer().rec().autoRatio = decltype(answer().rec().autoRatio)(_autoRatio.val * Zone::RATIO_DIVIDER / 1000.);
 			break; 
 		case e_timeConst: 
 			_autoTimeC = *newValue;

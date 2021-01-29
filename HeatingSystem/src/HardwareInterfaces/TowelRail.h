@@ -24,7 +24,7 @@ namespace HardwareInterfaces {
 		uint16_t timeToGo() const;
 
 		// Modifier
-		void initialise(int towelRailID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, uint16_t onTime,  Assembly::TemperatureController & temperatureController, MixValveController & mixValveController);
+		void initialise(int towelRailID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, uint16_t onTime, uint8_t onTemp,  Assembly::TemperatureController & temperatureController, MixValveController & mixValveController);
 		bool check();
 	private:
 		RelationalDatabase::RecordID _recordID = 0;
@@ -34,12 +34,13 @@ namespace HardwareInterfaces {
 		//int8_t _maxFlowTemp = 0;
 		Assembly::TemperatureController * _temperatureController;
 
-		bool rapidTempRise() const;
+		bool rapidTempRise(uint8_t hotWaterFlowTemp) const;
 		uint8_t sharedZoneCallTemp() const;
 		bool setFlowTemp();
 
 		uint16_t _onTime = 0;
 		uint8_t _callFlowTemp = 0;
+		uint8_t _onTemp = 0;
 		mutable uint16_t _timer = 0;
 		mutable uint8_t _prevTemp = 0;
 

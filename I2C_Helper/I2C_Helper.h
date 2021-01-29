@@ -56,7 +56,7 @@ public:
 	typedef uint8_t (*TestFnPtr)(I2C_Helper &, int);
 	
 	// Basic Usage //
-	enum error_codes { _OK, _Insufficient_data_returned, _NACK_during_address_send, _NACK_during_data_send, _NACK_during_complete, _NACK_receiving_data, _Timeout, _StopMarginTimeout, _SlaveByteProcessTimeout, _BusReleaseTimeout, _I2C_ClockHungLow, _disabledDevice, _slave_shouldnt_write, _I2C_Device_Not_Found, _I2C_ReadDataWrong, _I2C_AddressOutOfRange, _unknownError, _speedError };
+	enum Error_codes { _OK, _Insufficient_data_returned, _NACK_during_address_send, _NACK_during_data_send, _NACK_during_complete, _NACK_receiving_data, _Timeout, _StopMarginTimeout, _SlaveByteProcessTimeout, _BusReleaseTimeout, _I2C_ClockHungLow, _disabledDevice, _slave_shouldnt_write, _I2C_Device_Not_Found, _I2C_ReadDataWrong, _I2C_AddressOutOfRange, _unknownError, _speedError };
 	enum {_single_master = 255, _no_address = 255};
 
 	I2C_Helper(TwoWire &wire_port = Wire, int32_t i2cFreq = 100000);

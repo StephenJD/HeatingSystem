@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h = ..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h
 		..\..\..\Arduino_Install\libraries\SD\src\utility\SdFile.cpp = ..\..\..\Arduino_Install\libraries\SD\src\utility\SdFile.cpp
 		..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits = ..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_SJD_Watchdog_Timer", "..\..\Sketches\A_SJD_Watchdog_Timer\A_SJD_Watchdog_Timer.vcxproj", "{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}"
@@ -87,6 +89,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Sequencer", "..\..\VS_Projects\NewHeatingSystem\Test Sequencer\Test Sequencer.vcxproj", "{0814AA9A-0C7C-49B5-9695-08F7BFB2D54E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Zone Preheat", "..\..\VS_Projects\NewHeatingSystem\Test Zone Preheat\Test Zone Preheat.vcxproj", "{2E10EC00-156C-4F57-A4FC-5E138136D6FA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "remoteKeypad", "Keypad\examples\remoteKeypad\remoteKeypad.vcxproj", "{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -422,6 +426,16 @@ Global
 		{2E10EC00-156C-4F57-A4FC-5E138136D6FA}.Release|x64.Build.0 = Release|x64
 		{2E10EC00-156C-4F57-A4FC-5E138136D6FA}.Release|x86.ActiveCfg = Release|Win32
 		{2E10EC00-156C-4F57-A4FC-5E138136D6FA}.Release|x86.Build.0 = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|ARM.ActiveCfg = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x64.ActiveCfg = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x86.ActiveCfg = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x86.Build.0 = Debug|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|ARM.ActiveCfg = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|ARM64.ActiveCfg = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x64.ActiveCfg = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.ActiveCfg = Release|Win32
+		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

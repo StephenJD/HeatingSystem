@@ -9,7 +9,7 @@
 #include "..\Client_DataStructures\Data_Spell.h"
 #include "..\Client_DataStructures\Data_Profile.h"
 #include "..\Client_DataStructures\Data_Zone.h"
-#include "..\HardwareInterfaces\LCD_Display.h"
+#include <LCD_Display.h>
 #include <Logging.h>
 #include <EEPROM.h>
 
@@ -88,7 +88,7 @@ namespace Assembly {
 	constexpr R_Zone zones_f[] = {				// maxT, offsetT, autoRatio, autoTimeC, autoQuality, autoDelay;
 		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,	0,			135,	220,		1,			95 }
 		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,55,	0,			104,	202,		1,			65 }
-		,{ "DHW",   "DHW",T_GasF,R_Gas, 0,		  80,	0,			0,		65,			1,			5 }
+		,{ "DHW",   "DHW",T_GasF,R_Gas, 0,		  80,	0,			254,	65,			1,			5 }
 		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,	0,			104,	206,		1,			48 }
 	};
 
@@ -147,7 +147,7 @@ namespace Assembly {
 
 	R_TimeTemp timeTemps_f[] = { // profileID,TT
 		{0, makeTT(7,30,15)}   // At Home US MTWTFSS
-		,{0, makeTT(23,00,19)} // At Home US MTWTFSS
+		,{0, makeTT(23,00,18)} // At Home US MTWTFSS
 		,{1, makeTT(7,45,19)}  // At Home DS MTWTF--
 		,{1, makeTT(23,00,16)} // At Home DS MTWTF--
 		,{2, makeTT(8,00,19)}  // At Home DS -----SS
@@ -162,7 +162,7 @@ namespace Assembly {
 		,{4, makeTT(15,00,45)} // At Home DHW -----SS
 		,{4, makeTT(22,30,30)} // At Home DHW -----SS
 		,{5, makeTT(6,30,15)} // At Work US MTWTFSS
-		,{5, makeTT(23,00,19)} // At Work US MTWTFSS
+		,{5, makeTT(23,00,18)} // At Work US MTWTFSS
 
 		,{6, makeTT(17,30,19)} // At Work DS MTWTF--
 		,{6, makeTT(23,00,16)} // At Work DS MTWTF--
@@ -185,7 +185,7 @@ namespace Assembly {
 		,{13, makeTT(10,00,30)} // Occupied DHW MTWTFSS 
 		,{13, makeTT(16,00,45)} // Occupied DHW MTWTFSS 
 		,{13, makeTT(23,00,30)} // Occupied DHW MTWTFSS 
-		,{14, makeTT(07,00,20)} // Occupied Flat MTWTFSS 
+		,{14, makeTT(07,00,19)} // Occupied Flat MTWTFSS 
 		,{14, makeTT(23,00,18)} // Occupied Flat MTWTFSS 
 		,{15, makeTT(07,00,10)} // Empty DHW 
 		,{16, makeTT(07,00,10)} // Empty Flat  

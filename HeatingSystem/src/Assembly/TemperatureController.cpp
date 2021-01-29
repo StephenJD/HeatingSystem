@@ -90,6 +90,7 @@ namespace Assembly {
 			towelRailArr[index].initialise(towelRail.id()
 				, tempSensorArr[towelRail.rec().callTempSens]
 				, relayArr[towelRail.rec().callRelay]
+				, towelRail.rec().minutes_on
 				, towelRail.rec().onTemp
 				, *this
 				, mixValveControllerArr[towelRail.rec().mixValve]
@@ -101,37 +102,42 @@ namespace Assembly {
 
 	void TemperatureController::checkAndAdjust() { // Called every Arduino loop, enter once per second
 		static uint8_t lastSeconds = clock_().seconds()-1;
+		static uint8_t lastMins = clock_().minUnits()-1;
 		bool isNewSecond = clock_().isNewSecond(lastSeconds);
 		if (!isNewSecond) { return; } // Wait for next second.
+		bool newMinute = clock_().minUnits() != lastMins;
 		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
 
 		logger() << L_flush;
 		zTempLogger() << L_flush;
 		profileLogger() << L_flush;
 		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
-
+		//logger() << L_time << "Check TS's" << L_endl;
 		for (auto & ts : tempSensorArr) {
 			ts.readTemperature();
 			//logger() << F("TS: 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
 		}
 
-		if (lastSeconds == 0) { // each minute
-			//logger() << L_time << F("checkAndAdjust Zones.") << L_endl;
+		if (newMinute) {
+			lastMins = clock_().minUnits();
+			//logger() << L_time << "Check BB & Zones" << L_endl;
+			backBoiler.check();
 			checkZones(checkPreHeat);
 		}
 
+		//logger() << L_time << "Check MixV's" << L_endl;
 		for (auto & mixValveControl : mixValveControllerArr) {
 			mixValveControl.check();
 			if (mixValveControl.recovery().isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 
 			ui_yield(); 
 		}
 
+		//logger() << L_time << "Check TRd's" << L_endl;
 		for (auto & towelRail : towelRailArr) {
 			towelRail.check();
 			ui_yield(); 
 		}
-		backBoiler.check();
 
 		for ( auto & relay : relayArr) {
 			relay.checkControllerStateCorrect();

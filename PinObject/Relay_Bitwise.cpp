@@ -77,11 +77,11 @@ namespace HardwareInterfaces {
 		, I_I2Cdevice_Recovery{ recovery, addr }
 	{}
 
-	auto RelaysPort::testDevice()->I2C_Talk_ErrorCodes::error_codes {// non-recovery test
+	auto RelaysPort::testDevice()->I2C_Talk_ErrorCodes::Error_codes {// non-recovery test
 		return I_I2Cdevice::write_verify(REG_8PORT_OLAT, 1, &_relayRegister); // set latches
 	}
 
-	error_codes RelaysPort::initialiseDevice() {
+	Error_codes RelaysPort::initialiseDevice() {
 		uint8_t pullUp_out[] = { 0 };
 		auto status = _OK;
 		//logger() << F("\n RelaysPort::initialiseDevice start") << L_endl;
@@ -99,28 +99,29 @@ namespace HardwareInterfaces {
 		return status;
 	}
 
-	error_codes RelaysPort::updateRelays() {
+	Error_codes RelaysPort::updateRelays() {
 		writeInSync();
 		//logger() <<  L_time << F("updateRelays") << L_endl;
 		uint8_t io_direction = 0xFF; // 0 == output
 		auto status = read(REG_8PORT_IODIR, 1, &io_direction); 
 		//logger() << "read IODIR done." << L_endl;
 		if (status != _OK || io_direction != 0) {
+			//logger() << "Write IODIR." << L_endl;
 			io_direction = 0;
 			status = write_verify(REG_8PORT_IODIR, 1, &io_direction); // set all as outputs
-			//logger() << F("write_verify IODIR done.") << i2C().getStatusMsg(status) << L_endl;
+			//logger() << F("write_verify IODIR done.") << I2C_Talk::getStatusMsg(status) << L_endl;
 		}
 		if (status == _OK) {
 			//logger() << "write_verify OLAT..." << L_endl;
 			status = write_verify(REG_8PORT_OLAT, 1, &_relayRegister);
 			//logger() << "write_verify OLAT done." << L_endl;
 		} else {
-			logger() << L_time << F("RelaysPort::updateRelays() Data: 0x") << _relayRegister << i2C().getStatusMsg(status) << L_endl;
+			logger() << L_time << F("RelaysPort::updateRelays() failed Reg: 0x") << L_hex << ~_relayRegister << I2C_Talk::getStatusMsg(status) << L_endl;
 		}
 		return status;
 	}
 
-	auto RelaysPort::readPorts()->I2C_Talk_ErrorCodes::error_codes {
+	auto RelaysPort::readPorts()->I2C_Talk_ErrorCodes::Error_codes {
 			return read(REG_8PORT_OLAT, 1, &_relayRegister);
 	}
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "Behaviour.h"
 #include "UI_DisplayBuffer.h"
-#include <cassert>
+#include <assert.h>
 
 #ifdef ZPSIM 
 #include <iostream> 

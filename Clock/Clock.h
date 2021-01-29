@@ -13,14 +13,14 @@
 	public:
 		//Clock(const char* date, const char* time);
 		// Queries
-		int minUnits() const { return _mins1; }
-		int seconds() const { return _secs; }
-		int autoDSThours() const { return _autoDST; }
-		int mins10() const { return _now.mins10(); }
-		int hrs() const { return _now.hrs(); }
-		int day() const { return _now.day(); }
-		int month() const { return _now.month(); }
-		int year() const { return _now.year(); }
+		uint8_t minUnits() const { return _mins1; }
+		uint8_t seconds() const { return _secs; }
+		uint8_t autoDSThours() const { return _autoDST; }
+		uint8_t mins10() const { return _now.mins10(); }
+		uint8_t hrs() const { return _now.hrs(); }
+		uint8_t day() const { return _now.day(); }
+		uint8_t month() const { return _now.month(); }
+		uint8_t year() const { return _now.year(); }
 		virtual bool ok() const { return true; }
 		bool isNewSecond(uint8_t& oldSecond);
 		// Conceptually, these are queries, although reading the time triggers an update-check which might modify the time
