@@ -6,24 +6,32 @@
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
 
-auto I_I2Cdevice::read_verify_2bytes(int registerAddress, uint8_t(& dataBuffer)[2], int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
-	Error_codes errorCode;
-	int16_t newRead = 0;
-	int16_t prevRead = 0;
+auto I_I2Cdevice::read_verify_2bytes(int registerAddress, uint16_t & data, int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
+	// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].
+	// But Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
+	// A two-byte read must reverse the byte-order.
+	i2C().setI2CFrequency(runSpeed());
+	uint8_t dataBuffer[2];
+	Error_codes errorCode; // Non-Recovery
+	uint16_t newRead;
+	data = 0xAAAA; // 1010 1010 1010 1010
 	auto needAnotherGoodReading = requiredConsecutiveReads;
 	do {
 		errorCode = I_I2Cdevice::read(registerAddress, 2, dataBuffer);
-		newRead = (dataBuffer[0] << 8) + dataBuffer[1];
+		newRead = (dataBuffer[0] << 8) + dataBuffer[1]; // convert device to native endianness
 		newRead &= dataMask;
 		if (!errorCode) {
-			if (newRead == prevRead) --needAnotherGoodReading;
+			if (newRead == data) --needAnotherGoodReading;
 			else {
 				needAnotherGoodReading = requiredConsecutiveReads;
 				//logger() << "read_verify_2bytes 0x" << L_hex << newRead << L_endl;
-				prevRead = newRead;
+				data = newRead;
 			}
 		} 
-		//else logger() << "read_verify_2bytes" << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+		else { // abort on first error
+			logger() << "read_verify_2bytes 0x" << L_hex << getAddress() << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+			break;
+		}
 		--canTryAgain;
 	} while (canTryAgain >= needAnotherGoodReading && needAnotherGoodReading > 1);
 	if (!errorCode) errorCode = needAnotherGoodReading > 1 ? _I2C_ReadDataWrong : _OK;
@@ -31,20 +39,20 @@ auto I_I2Cdevice::read_verify_2bytes(int registerAddress, uint8_t(& dataBuffer)[
 }
 
 auto I_I2Cdevice::read_verify_1byte(int registerAddress, uint8_t & dataBuffer, int requiredConsecutiveReads, int canTryAgain, uint8_t dataMask)->Error_codes {
-	Error_codes errorCode;
-	int8_t newRead = 0;
-	int8_t prevRead = 0;
+	i2C().setI2CFrequency(runSpeed());
+	Error_codes errorCode; // Non-Recovery
+	uint8_t newRead;
+	dataBuffer = 0xAA; // 1010 1010
 	auto needAnotherGoodReading = requiredConsecutiveReads;
 	do {
-		errorCode = I_I2Cdevice::read(registerAddress, 1, &dataBuffer);
-		newRead = dataBuffer;
+		errorCode = I_I2Cdevice::read(registerAddress, 1, &newRead);
 		newRead &= dataMask;
 		if (!errorCode) {
-			if (newRead == prevRead) --needAnotherGoodReading;
+			if (newRead == dataBuffer) --needAnotherGoodReading;
 			else {
 				needAnotherGoodReading = requiredConsecutiveReads;
 				//logger() << "read_verify_1byte 0x" << L_hex << newRead << L_endl;
-				prevRead = newRead;
+				dataBuffer = newRead;
 			}
 		} 
 		//else logger() << "read_verify_1byte" << I2C_Talk::getStatusMsg(errorCode) << L_endl;

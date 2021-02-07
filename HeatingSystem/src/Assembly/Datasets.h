@@ -19,6 +19,7 @@ namespace Assembly {
 		client_data_structures::RecInt_TempSensor	_recTempSensor;
 		client_data_structures::RecInt_TowelRail	_recTowelRail;
 		client_data_structures::RecInt_Relay		_recRelay;
+		client_data_structures::RecInt_MixValveController _recMixValve;
 	public:
 		// Datasets
 		client_data_structures::Dataset _ds_currTime;
@@ -33,6 +34,7 @@ namespace Assembly {
 		client_data_structures::Dataset _ds_tempSensors;
 		client_data_structures::Dataset _ds_towelRail;
 		client_data_structures::Dataset _ds_relay;
+		client_data_structures::Dataset _ds_mixValve;
 
 	};
 

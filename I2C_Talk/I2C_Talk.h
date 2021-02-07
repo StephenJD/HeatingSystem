@@ -42,6 +42,8 @@ public:
 	// No point in being constexpr as that implies an immutable object for which wire_port cannot be set.
 	I2C_Talk(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000 ) : I2C_Talk(_single_master, wire_port, max_I2Cfreq) {}
 	void ini(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000);
+	bool begin();
+	
 	auto read(int deviceAddr, int registerAddress, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes; // dataBuffer may not be written to if read fails.
 	auto read(int deviceAddr, int registerAddress, int numberBytes, char *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {return read(deviceAddr, registerAddress, numberBytes, (uint8_t *) dataBuffer);}
 	auto write(int deviceAddr, int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes;
@@ -69,8 +71,7 @@ public:
 	uint8_t stopMargin() const {
 		return _stopMargin_uS;
 	}
-	void setTransferMargin(uint8_t margin) { _stopMargin_uS = margin; }
-	bool begin();
+	void setTransferMargin(uint8_t margin);
 
 	static auto getStatusMsg(int errorCode) -> const __FlashStringHelper *;
 	
@@ -80,7 +81,7 @@ public:
 	// each must use the setAsMaster() function, providing a unique I2C address.
 	// Multi_master mode enables each arduino to act as a master and also respond as a slave.
 	// To switch off multi-master mode, call setAsMaster() without supplying an address.
-	// To resond as a slave, the onReceive() and onRequest() functions must be set.
+	// To respond as a slave, the onReceive() and onRequest() functions must be set.
 	// *** The onReceive() function must not do a Serial.print when it receives a register address prior to a read.
 	I2C_Talk(int multiMaster_MyAddress, TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000);
 	void setAsSlave(int slaveAddress) { _myAddress = slaveAddress; _isMaster = false; begin(); }
@@ -89,8 +90,26 @@ public:
 	// Slave response
 	auto write(const uint8_t *dataBuffer, int numberBytes)->I2C_Talk_ErrorCodes::Error_codes; // Called by slave in response to request from a Master. 
 	auto write(const char *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes {return write((const uint8_t*)dataBuffer, (uint8_t)strlen(dataBuffer)+1);}// Called by slave in response to request from a Master. 
-	void onReceive(void(*fn)(int)) { _wire().onReceive(fn); } // The supplied function is called when data is sent to a slave
-	void onRequest(void(*fn)(void)){ _wire().onRequest(fn); } // The supplied function is called when data is requested from a slave
+	
+
+	/// <summary>		
+	/// The supplied function is called when data is sent by a Master, telling this slave how many bytes have been sent.
+	/// First byte is the register address. If only regAddr sent, then Master wants to read.
+	/// Any further bytes will be data to write.
+	/// Unwanted data can be left unread.
+	/// </summary>	
+	void onReceive(void(*fn)(int howMany)) { _wire().onReceive(fn); }
+
+	/// <summary>
+	/// The supplied function is called when data is requested by a Master.
+	/// The Master will send a NACK when it has received the requested number of bytes, so we should offer as many as could be requested.
+	/// Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
+	/// But I2C devices use big-endianness: MSB at the smallest address: So a uint16_t is [MSB, LSB].
+	/// Thus a single read of a 2-byte value returns the MSB (as in a Temp Sensor); 2-byte read is required to get the LSB.
+	/// So before sending the data we need to reverse the byte-order.
+	/// </summary>	
+	void onRequest(void(*fn)(void)){ _wire().onRequest(fn); }
+
 	uint8_t receiveFromMaster(int howMany, uint8_t *dataBuffer); // Data is written to dataBuffer. Returns how many are written.
 	uint8_t receiveFromMaster(int howMany, char *dataBuffer) {return receiveFromMaster(howMany, (uint8_t *) dataBuffer);}
 	

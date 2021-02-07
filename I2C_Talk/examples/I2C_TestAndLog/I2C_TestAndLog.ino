@@ -827,12 +827,10 @@ Error_codes MixValveController::testDevice() { // non-recovery test
 
 uint8_t MixValveController::getPos(uint8_t & pos) {
 	auto timeOut = Timer_mS(timeOfReset_mS_ + 3000UL - millis());
-	uint8_t status;
 	do {
-		status = I_I2Cdevice::read(valve_pos, 1, &pos);
-	} while (status && !timeOut && !keypad.keyIsWaiting());
+	} while (!timeOut && !keypad.keyIsWaiting());
 
-	if (status) status = read(valve_pos, 1, &pos);
+	uint8_t status = read(valve_pos, 1, &pos);
 	uint8_t dataBuffa = 1;
 	if (status == _OK) status = write(7, 1, &dataBuffa); // debug try writing as well.
 	if (status)  logger() << "\n MixValveController::getPos failed. Addr:" << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;

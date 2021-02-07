@@ -25,8 +25,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I2C_TestAndLog", "I2C_Talk\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SJD_NewHeatingSystem", "..\SJD_NewHeatingSystem\SJD_NewHeatingSystem.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_SJD_MixerValve_Control", "..\..\Sketches\A_SJD_MixerValve_Control\A_SJD_MixerValve_Control.vcxproj", "{382F173C-7C35-4969-AA6F-03E687A74608}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E620AD9-804F-4C1E-90EE-1AC002A26043}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\..\Arduino_Install\libraries\SD\src\File.cpp = ..\..\..\Arduino_Install\libraries\SD\src\File.cpp
@@ -34,9 +32,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\..\..\Arduino_Install\libraries\SD\src\SD.h = ..\..\..\Arduino_Install\libraries\SD\src\SD.h
 		..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h = ..\..\..\Arduino_Install\libraries\SD\src\utility\SdFat.h
 		..\..\..\Arduino_Install\libraries\SD\src\utility\SdFile.cpp = ..\..\..\Arduino_Install\libraries\SD\src\utility\SdFile.cpp
-		..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits = ..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_SJD_Watchdog_Timer", "..\..\Sketches\A_SJD_Watchdog_Timer\A_SJD_Watchdog_Timer.vcxproj", "{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}"
@@ -91,6 +86,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Zone Preheat", "..\..\VS_Projects\NewHeatingSystem\Test Zone Preheat\Test Zone Preheat.vcxproj", "{2E10EC00-156C-4F57-A4FC-5E138136D6FA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "remoteKeypad", "Keypad\examples\remoteKeypad\remoteKeypad.vcxproj", "{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_MixerValve_Slave", "Mix_Valve\examples\MixValve_Control\MixerValve_Control.vcxproj", "{382F173C-7C35-4969-AA6F-03E687A74608}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_MixerValve_Master", "Mix_Valve\examples\MixValve_Master\MixValve_Master.vcxproj", "{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -244,16 +243,6 @@ Global
 		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x64.ActiveCfg = Release|Win32
 		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.ActiveCfg = Release|Win32
 		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.Build.0 = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|ARM.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x64.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.Build.0 = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|ARM.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|ARM64.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x64.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.Build.0 = Release|Win32
 		{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}.Debug|ARM.ActiveCfg = Debug|Win32
 		{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}.Debug|x64.ActiveCfg = Debug|Win32
@@ -436,6 +425,26 @@ Global
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x64.ActiveCfg = Release|Win32
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.ActiveCfg = Release|Win32
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.Build.0 = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|ARM.ActiveCfg = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x64.ActiveCfg = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.ActiveCfg = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.Build.0 = Debug|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|ARM.ActiveCfg = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|ARM64.ActiveCfg = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x64.ActiveCfg = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.ActiveCfg = Release|Win32
+		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.Build.0 = Release|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|ARM.ActiveCfg = Debug|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|x64.ActiveCfg = Debug|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|x86.ActiveCfg = Debug|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|x86.Build.0 = Debug|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|ARM.ActiveCfg = Release|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|ARM64.ActiveCfg = Release|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|x64.ActiveCfg = Release|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|x86.ActiveCfg = Release|Win32
+		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -24,6 +24,7 @@ namespace Assembly {
 		, q_tempSensors{ rdb.tableQuery(TB_TempSensor) }
 		, q_towelRails{ rdb.tableQuery(TB_TowelRail) }
 		, q_relays{ rdb.tableQuery(TB_Relay) }
+		, q_mixValveControllers(rdb.tableQuery(TB_MixValveContr))
 	{
 		logger() << F("Database queries constructed") << L_endl;
 	}

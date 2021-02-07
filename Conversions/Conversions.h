@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 //#include "Logging.h"
 
 #ifdef ZPSIM
@@ -29,6 +30,11 @@ namespace GP_LIB {
 		CStr_20(const char * str) { strncpy(_str, str, STR_CAPACITY); }
 		CStr_20() { _str[0] = 0; }
 		CStr_20 & operator=(const char * str) { strncpy(_str, str, STR_CAPACITY); return *this; }
+		CStr_20 & operator+=(const char * str) { strcat(_str, str); return *this; }
+#ifndef ZPSIM
+		CStr_20 & operator=(const __FlashStringHelper* str) { strncpy(_str, (const char*)str, STR_CAPACITY); return *this; }
+		CStr_20 & operator+=(const __FlashStringHelper* str) { strcat(_str, (const char*)str); return *this; }
+#endif
 		char & operator[](int index) { return _str[index]; }
 		char operator[](int index) const { return _str[index]; }
 		char * str() { return _str; }

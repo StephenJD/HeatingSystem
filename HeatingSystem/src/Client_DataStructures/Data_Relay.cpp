@@ -11,7 +11,7 @@ namespace client_data_structures {
 	//              Dataset_Relay
 	//***************************************************
 
-	RecInt_Relay::RecInt_Relay(VolatileData * runtimeData)
+	RecInt_Relay::RecInt_Relay(UI_Bitwise_Relay* runtimeData)
 		: _runtimeData(runtimeData)
 		, _name("", 6)
 		, _status{ 0, ValRange(e_edOneShort, 0, 1) } {}
@@ -25,7 +25,7 @@ namespace client_data_structures {
 			return &_name;
 		case e_state:
 		{
-			HardwareInterfaces::UI_Bitwise_Relay & rl = relay(recordID());
+			HardwareInterfaces::UI_Bitwise_Relay & rl = runTimeData();
 			relayController().readPorts();
 			rl.getStateFromContoller();
 			_status.val = rl.logicalState();
@@ -48,7 +48,7 @@ namespace client_data_structures {
 			break;
 		}
 		case e_state:
-			HardwareInterfaces::UI_Bitwise_Relay & rl = relay(recordID());
+			HardwareInterfaces::UI_Bitwise_Relay & rl = runTimeData();
 			_status = *newValue;
 			rl.set(_status.val);
 			relayController().updateRelays();

@@ -28,7 +28,7 @@
 #endif
 
 #if defined (ZPSIM)
-#include <A__Constants.h>
+#include "..\HeatingSystem\src\HardwareInterfaces\A__Constants.h"
 #endif
 
 class I2C_Talk;

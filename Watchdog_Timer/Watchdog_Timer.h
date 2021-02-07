@@ -1,19 +1,18 @@
 #pragma once
 /*
 
- Arduino Mini Pro must be upgraded with boot-loader to enable watchdog timer.
+ ******** NOTE select Arduino Pro Mini 328P 3.3v 8MHz **********
+ Arduino Pro Mini must be upgraded with  boot-loader to enable watchdog timer.
  File->Preferences->Additional Boards Manager URLs: https://mcudude.github.io/MiniCore/package_MCUdude_MiniCore_index.json
- Tools->Board->Boards Manager
- Wait for the platform indexes to finish downloading.
- Install latest version of MiniCore
- 1. In Arduino: File->Examples->ArduinoISP->ArduinoISP
- 2. Upload this to any board (other than the one you want to upgrade), including another Mini Pro.
- 3. THEN connect SPI pins to the Mini Pro: MOSI(11)->11, MISO(12)->12, SCK(13)->13, 10->Reset on MiniPro, Vcc and 0c pins.
+ Tools->Board->Boards Manager->Install MiniCore
+ 1. In Arduino: Load File-> Examples->ArduinoISP->ArduinoISP
+ 2. Upload this to any board, including another Mini Pro.
+ 3. THEN connect SPI pins from the ISP board to the Mini Pro: MOSI(11/51)->11, MISO(12/50)->12, SCK(13/52)->13, 10->Reset on MiniPro, Vcc and 0c pins.
  4. Tools->Board->MiniCore Atmega 328
- 5. External 8Mhz clock, BOD disabled, LTO enabled, Variant 328P, UART0.
+ 5. External 8Mhz clock, BOD 1.7v, LTO enabled, Variant 328P, UART0.
  6. Tools->Programmer->Arduino as ISP
  7. Burn Bootloader
- 8. Then upload your desired sketch to ordinary MiniPro board. Tools->Board->Arduino Pro Mini
+ 8. Then upload your desired sketch to ordinary ProMini board. Tools->Board->Arduino Pro Mini / 328/3.3v/8MHz
 
  Arduino Mega's must be upgraded with boot-loader to enable watchdog timer.
  The MegaCore package doesn't work well. Use https://github.com/nickgammon/arduino_sketches
@@ -50,6 +49,12 @@ megao.upload.tool=avrdude
 */
 
 // functions must not be inlined.
+
+// ********** NOTE: ***************
+// If watchdog is being used, set_watchdog_timeout_mS() must be set at the begining of startup, before any calls to delay()
+// Otherwise, depending on how cleanly the Arduino sht down, it may time-out before it is reset.
+// ********************************
+
 void watchdogSetup();
 
 void reset_watchdog();

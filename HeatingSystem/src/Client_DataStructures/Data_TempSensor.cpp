@@ -4,12 +4,13 @@
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;
+	using namespace HardwareInterfaces;
 
 	//***************************************************
 	//              Dataset_TempSensor
 	//***************************************************
 
-	RecInt_TempSensor::RecInt_TempSensor(VolatileData * runtimeData)
+	RecInt_TempSensor::RecInt_TempSensor(UI_TempSensor* runtimeData)
 		: _runTimeData(runtimeData)
 		, _name("",5)
 		, _address(0,ValRange(e_fixedWidth | e_editAll, 1, 127))
@@ -23,20 +24,20 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_temp:
 		{
-			HardwareInterfaces::UI_TempSensor & ts = tempSensor(recordID());
+			HardwareInterfaces::UI_TempSensor & ts = runTimeData();
 			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _temperature.val = -127;
 			else _temperature.val = ts.get_temp();
 			return &_temperature;
 		}
 		case e_temp_str:
 		{
-			HardwareInterfaces::UI_TempSensor & ts = tempSensor(recordID());
+			HardwareInterfaces::UI_TempSensor & ts = runTimeData();
 			strcpy(_tempStr.str(), "`");
 			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK) {
 				strcat(_tempStr.str(), "Err  ");
 			}
 			else {
-				strcat(_tempStr.str(), decToString(ts.get_fractional_temp()/2.56,2,2).str());
+				strcat(_tempStr.str(), decToString(int(ts.get_fractional_temp()/2.56),2,2).str());
 			}
 			return &_tempStr;
 		}

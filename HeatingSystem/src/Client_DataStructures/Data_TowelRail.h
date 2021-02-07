@@ -6,6 +6,10 @@
 #include "..\..\..\DateTime\src\Date_Time.h"
 #include "..\HardwareInterfaces\TowelRail.h"
 
+namespace HardwareInterfaces {
+	class TowelRail;
+}
+
 namespace client_data_structures {
 	using namespace LCD_UI;
 
@@ -40,13 +44,12 @@ namespace client_data_structures {
 	class RecInt_TowelRail : public Record_Interface<R_TowelRail> {
 	public:
 		enum streamable { e_name, e_onTemp, e_minutesOn, e_secondsToGo, e_TowelRailID };
-		RecInt_TowelRail(VolatileData * runtimeData);
-		VolatileData* runTimeData() override { return _runTimeData; }
+		RecInt_TowelRail(HardwareInterfaces::TowelRail* runtimeData);
+		HardwareInterfaces::TowelRail& runTimeData() override { return _runTimeData[recordID()]; }
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
-		HardwareInterfaces::TowelRail & towelRail(int index) { return static_cast<HardwareInterfaces::TowelRail*>(runTimeData())[index]; }
 	private:
-		VolatileData * _runTimeData;
+		HardwareInterfaces::TowelRail* _runTimeData;
 		StrWrapper _name;
 		IntWrapper _onTemp;
 		IntWrapper _minutesOn;

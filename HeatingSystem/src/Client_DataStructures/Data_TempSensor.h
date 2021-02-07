@@ -60,17 +60,16 @@ namespace client_data_structures {
 	{
 	public:
 		enum streamable { e_name, e_temp, e_temp_str, e_addr };
-		RecInt_TempSensor(VolatileData * runtimeData);
-		VolatileData* runTimeData() override { return _runTimeData ; }
+		RecInt_TempSensor(HardwareInterfaces::UI_TempSensor* runtimeData);
+		HardwareInterfaces::UI_TempSensor& runTimeData() override { return _runTimeData[recordID()] ; }
 
 		I_Data_Formatter * getField(int fieldID) override;
 		bool setNewValue(int fieldID, const I_Data_Formatter * val) override {return true;}
 		int recordFieldVal(int) const override {
 			return answer().rec().address;
 		}
-		HardwareInterfaces::UI_TempSensor & tempSensor(int index) { return static_cast<HardwareInterfaces::UI_TempSensor*>(runTimeData())[index]; }
 	private:
-		VolatileData * _runTimeData;
+		HardwareInterfaces::UI_TempSensor* _runTimeData;
 		StrWrapper _name;
 		IntWrapper _address;
 		IntWrapper _temperature;

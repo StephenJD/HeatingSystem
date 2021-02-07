@@ -8,7 +8,6 @@
 #include "..\Client_DataStructures\Data_TimeTemp.h"
 #include "ThermalStore.h"
 #include "MixValveController.h"
-#include "RDB.h"
 #include <Clock.h>
 
 Logger& zTempLogger();
@@ -110,7 +109,8 @@ namespace HardwareInterfaces {
 		bool isDHW = isDHWzone();
 		auto outsideTemp = isDHW ? int8_t(20) : _thermalStore->getOutsideTemp();
 		bool backBoilerIsOn = _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
-
+		bool towelRadOn = _thermalStore->heatingDemandFrom() == R_FlTR || _thermalStore->heatingDemandFrom() == R_HsTR;
+		bool giveDHW_priority = !isDHW && _thermalStore->gasBoilerIsHeating() && towelRadOn;
 		// lambdas
 
 		auto startMeasuringRatio = [this, outsideTemp, isDHW, backBoilerIsOn](int tempError, int zoneTemp, int flowTemp ) -> bool {
@@ -155,10 +155,12 @@ namespace HardwareInterfaces {
 			return zoneRecord().rec().autoRatio;
 		};
 
-		auto logTemps = [this, isDHW, outsideTemp, backBoilerIsOn, measuredThermalRatio](uint16_t currTempReq, int16_t fractionalZoneTemp, int16_t reqFlow, int flowTemp, double ratio) {
+		auto logTemps = [this, isDHW, outsideTemp, backBoilerIsOn, measuredThermalRatio, giveDHW_priority](uint16_t currTempReq, int16_t fractionalZoneTemp, int16_t reqFlow, int flowTemp, double ratio) {
 			const __FlashStringHelper* controlledBy;
 			if (isDHW) {
 				controlledBy = _thermalStore->principalLoad();
+			} else if (giveDHW_priority) {
+				controlledBy = F("DHW Priority");
 			} else if (backBoilerIsOn) {
 				controlledBy = F("Back Boiler");
 			} else {
@@ -240,6 +242,11 @@ namespace HardwareInterfaces {
 		if (requestedFlowTemp <= MIN_FLOW_TEMP) {
 			if (_minsCooling < DELAY_COOLING_TIME) ++_minsCooling; // ensure sufficient time cooling before measuring heating delay 
 		} else if (_minsCooling != MEASURING_DELAY) _minsCooling = 0;
+		
+		if (giveDHW_priority) {
+			tempError = 16;
+			requestedFlowTemp = MIN_FLOW_TEMP;
+		}
 
 		if ( isDHW || !_mixValveController->amControlZone(uint8_t(requestedFlowTemp), _maxFlowTemp, _relay->recordID())) { 
 			_relay->set(tempError < 0); // not control zone, so just set relay

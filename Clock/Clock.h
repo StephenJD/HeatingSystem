@@ -72,12 +72,18 @@
 
 	inline Logger & operator<<(Logger & logger, const Clock & clk) {
 		clk.refresh();
-		return logger << GP_LIB::intToString(clk.day(),2)
-		<< F_SLASH << GP_LIB::intToString(clk.month(),2)
-		<< F_SLASH << GP_LIB::intToString(clk.year(),2)
-		<< F_SPACE << GP_LIB::intToString(clk.hrs(),2)
-		<< F_COLON << clk.mins10() << clk.minUnits()
-		<< F_COLON << GP_LIB::intToString(clk.seconds(),2);
+		GP_LIB::CStr_20 timeStr = GP_LIB::intToString(clk.day(), 2);
+		timeStr += F_SLASH;
+		timeStr += GP_LIB::intToString(clk.month(), 2);
+		timeStr += F_SLASH;
+		timeStr += GP_LIB::intToString(clk.year(), 2);
+		timeStr += F_SPACE;
+		timeStr += GP_LIB::intToString(clk.hrs(), 2);
+		timeStr += F_COLON;
+		timeStr += GP_LIB::intToString(clk.mins10() * 10 + clk.minUnits(),2);
+		timeStr += F_COLON;
+		timeStr += GP_LIB::intToString(clk.seconds(), 2);
+		return logger << timeStr;
 	}
 
 	Clock& clock_();

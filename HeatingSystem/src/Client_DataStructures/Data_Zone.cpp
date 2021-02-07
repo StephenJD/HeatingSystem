@@ -16,7 +16,7 @@ namespace client_data_structures {
 	//             Dataset_Zone
 	//***************************************************
 
-	RecInt_Zone::RecInt_Zone(VolatileData * runtimeData)
+	RecInt_Zone::RecInt_Zone(Zone* runtimeData)
 		: _runTimeData(runtimeData),
 		_name("", 6)
 		, _abbrev("", 3)
@@ -29,8 +29,6 @@ namespace client_data_structures {
 	{
 	}
 
-	HardwareInterfaces::Zone& RecInt_Zone::zone(int index) { return static_cast<HardwareInterfaces::Zone*>(runTimeData())[index]; }
-
 	I_Data_Formatter * RecInt_Zone::getField(int fieldID) {
 		if (recordID() == -1 || status() != TB_OK) return 0;
 		switch (fieldID) {
@@ -42,7 +40,7 @@ namespace client_data_structures {
 			return &_abbrev;
 		case e_reqTemp:
 		{
-			HardwareInterfaces::Zone & z = zone(recordID());
+			HardwareInterfaces::Zone & z = runTimeData();
 			_requestTemp.val = z.currTempRequest();
 			_requestTemp.valRange.maxVal = z.maxUserRequestTemp();
 			return &_requestTemp;
@@ -53,13 +51,13 @@ namespace client_data_structures {
 		case e_isTemp:
 		{
 			//answer().rec(); // trigger answer-load
-			HardwareInterfaces::Zone & z = zone(recordID());
+			HardwareInterfaces::Zone & z = runTimeData();
 			_isTemp.val = z.getCurrTemp();
 			return &_isTemp;
 		}
 		case e_isHeating:
 		{
-			HardwareInterfaces::Zone & z = zone(recordID());
+			HardwareInterfaces::Zone & z = runTimeData();
 			_isHeating = z.isCallingHeat() ? "`!" : "` ";
 			return &_isHeating;
 		}
@@ -96,7 +94,7 @@ namespace client_data_structures {
 			break; }
 		case e_reqTemp:
 		{
-			HardwareInterfaces::Zone & z = zone(recordID());
+			HardwareInterfaces::Zone & z = runTimeData();
 			auto reqTemp = uint8_t(newValue->val);
 			auto oldOffset = z.offset();
 			z.offsetCurrTempRequest(reqTemp);
@@ -128,7 +126,7 @@ namespace client_data_structures {
 	bool RecInt_Zone::actionOn_LR(int fieldID, int moveBy) {
 		switch (fieldID) {
 		case e_reqTemp: {
-			HardwareInterfaces::Zone& z = zone(recordID());
+			HardwareInterfaces::Zone& z = runTimeData();
 			if (moveBy > 0) {
 				profileLogger() << answer().rec().name << " Select Next Profile" <<  L_endl;
 				//if (z.startDateTime() <= clock_().now()) {
@@ -150,7 +148,7 @@ namespace client_data_structures {
 		case e_reqTemp:
 		{
 			profileLogger() << answer().rec().name << " Zero Offset" << L_endl;
-			HardwareInterfaces::Zone& z = zone(recordID());
+			HardwareInterfaces::Zone& z = runTimeData();
 			answer().rec().offsetT = 0;
 			answer().update();
 			z.resetOffsetToZero();

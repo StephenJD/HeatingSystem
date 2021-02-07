@@ -36,7 +36,6 @@ using namespace std;
 
 	Logger & Logger::operator <<(Flags flag) {
 		//enum Flags { L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
-
 		switch (flag) {
 		case L_flush:	flush(); 
 			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
@@ -45,8 +44,11 @@ using namespace std;
 			if (_flags & L_allwaysFlush) { (*this) << F(" |F|\n"); flush(); }
 			(*this) << F("\n"); // fall through
 		case L_default:
-			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
+			if (_flags != L_startWithFlushing && flag != L_time) {
+				_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
+			}
 			break;
+		case L_allwaysFlush: _flags = L_allwaysFlush; break;
 		case L_time:	logTime(); break;
 		case L_concat:	removeFlag(L_tabs); break;
 		case L_dec:
@@ -59,6 +61,9 @@ using namespace std;
 			removeFlag(L_fixed); // fall through
 		default:
 			addFlag(flag);
+		}
+		if (_flags == L_startWithFlushing) {
+			(*this) << F(" |SF|\n"); flush();
 		}
 		return *this;
 	}

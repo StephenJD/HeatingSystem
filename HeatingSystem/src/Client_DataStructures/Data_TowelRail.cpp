@@ -13,7 +13,7 @@ namespace client_data_structures {
 	//             Dataset_TowelRail
 	//***************************************************
 
-	RecInt_TowelRail::RecInt_TowelRail(VolatileData * runtimeData)
+	RecInt_TowelRail::RecInt_TowelRail(TowelRail* runtimeData)
 		: _runTimeData(runtimeData),
 		_name("", 8)
 		, _onTemp(90, ValRange(e_editAll, 10, 60))
@@ -34,8 +34,8 @@ namespace client_data_structures {
 			return &_minutesOn;
 		case e_secondsToGo:
 		{
-			towelRail(recordID()).check();
-			_secondsToGo.val = towelRail(recordID()).timeToGo();
+			runTimeData().check();
+			_secondsToGo.val = runTimeData().timeToGo();
 			if (_secondsToGo.val) logger() << L_time << "TowelRail " << recordID() << " timeToGo: " << _secondsToGo.val << L_endl;
 			return &_secondsToGo;
 		}

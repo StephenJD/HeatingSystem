@@ -57,14 +57,13 @@ namespace client_data_structures {
 	class RecInt_Relay : public Record_Interface<R_Relay> {
 	public:
 		enum streamable { e_name, e_state };
-		RecInt_Relay(VolatileData * runtimeData);
-		VolatileData* runTimeData() override { return _runtimeData; }
+		RecInt_Relay(HardwareInterfaces::UI_Bitwise_Relay* runtimeData);
+		HardwareInterfaces::UI_Bitwise_Relay& runTimeData() override { return _runtimeData[recordID()]; }
 
 		I_Data_Formatter * getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter * val) override;
-		HardwareInterfaces::UI_Bitwise_Relay & relay(int index) { return static_cast<HardwareInterfaces::UI_Bitwise_Relay*>(runTimeData())[index]; }
 	private:
-		VolatileData* _runtimeData;
+		HardwareInterfaces::UI_Bitwise_Relay* _runtimeData;
 		StrWrapper _name;
 		IntWrapper _status;
 	};

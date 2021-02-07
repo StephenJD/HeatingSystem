@@ -33,14 +33,12 @@ int8_t I2C_Talk::TWI_BUFFER_SIZE = 32;
 
 I2C_Talk::I2C_Talk(int multiMaster_MyAddress, TwoWire & wire_port, int32_t max_I2Cfreq) :
 	_max_i2cFreq(max_I2Cfreq)
-	,_i2cFreq(max_I2Cfreq)
+	, _i2cFreq(max_I2Cfreq)
 	, _myAddress(multiMaster_MyAddress)
 	, _wire_port(&wire_port)
 {}
 
 void I2C_Talk::ini(TwoWire & wire_port, int32_t max_I2Cfreq) {
-	//logger() << F("I2C_Talk::ini") << L_endl;
-	//logger() << F("I2C_Talk::wire_port") << long(&wire_port) << L_endl;
 	_max_i2cFreq = max_I2Cfreq;
 	_i2cFreq = max_I2Cfreq;
 	_wire_port = &wire_port;
@@ -92,21 +90,24 @@ Error_codes I2C_Talk::getData(int deviceAddr, int numberBytes, uint8_t *dataBuff
 	//logger() << F(" I2C_Talk::getData start") << L_endl;
 	auto bytesAvailable = _wire().requestFrom((int)deviceAddr, (int)numberBytes);
 	uint8_t returnStatus = (bytesAvailable != numberBytes);
-	auto i = 0;
+	;
 	if (returnStatus != _OK) { // returned error
 		returnStatus = _wire().read(); // retrieve error code
 #ifdef DEBUG_TALK
 		logger() << F(" I2C_Talk::getData Error for: 0x") << L_hex << deviceAddr << F(" ") << returnStatus << getStatusMsg(returnStatus) << L_endl;
 #endif
+		for (auto i = 0; i < numberBytes; ++i) {
+			dataBuffer[i] = 0;
+		}
 	}
 	else {
-		//logger() << F(" I2C_Talk::getData OK") << L_endl;
-		
-		for (; i < bytesAvailable; ++i) {
+#ifdef DEBUG_TALK
+		logger() << F(" I2C_Talk::getData for: 0x") << L_hex << deviceAddr << F(" NoOfBytes:") << bytesAvailable << L_endl;
+#endif
+		for (auto i = 0; i < bytesAvailable; ++i) {
 			dataBuffer[i] = _wire().read();
 		}
 	}
-	for (; i < numberBytes; ++i) dataBuffer[i] = 0;
 	return static_cast<Error_codes>(returnStatus);
 }
 
@@ -217,12 +218,22 @@ void I2C_Talk::setTimeouts(uint32_t slaveByteProcess_uS, int stopMargin_uS, uint
 	_slaveByteProcess_uS = slaveByteProcess_uS;
 	_stopMargin_uS = stopMargin_uS;
 	_busRelease_uS = busRelease_uS;
+	_wire().setTimeouts(_slaveByteProcess_uS, _stopMargin_uS, _busRelease_uS);
+	_wire().setClock(_i2cFreq);
 }
 
 void I2C_Talk::extendTimeouts(uint32_t slaveByteProcess_uS, int stopMargin_uS, uint32_t busRelease_uS) {
 	if (slaveByteProcess_uS > _slaveByteProcess_uS) _slaveByteProcess_uS = slaveByteProcess_uS;
 	if (stopMargin_uS > _stopMargin_uS) _stopMargin_uS = stopMargin_uS;
 	if (busRelease_uS > _busRelease_uS) _busRelease_uS = busRelease_uS;
+	_wire().setTimeouts(_slaveByteProcess_uS, _stopMargin_uS, _busRelease_uS);
+	_wire().setClock(_i2cFreq);
+}
+
+void I2C_Talk::setTransferMargin(uint8_t margin) { 
+	_stopMargin_uS = margin; 
+	_wire().setTimeouts(_slaveByteProcess_uS, _stopMargin_uS, _busRelease_uS);
+	_wire().setClock(_i2cFreq);
 }
 
 const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
@@ -250,6 +261,7 @@ const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 
 // Slave response
 Error_codes I2C_Talk::write(const uint8_t *dataBuffer, int numberBytes) {// Called by slave in response to request from a Master. Return errCode.
+	//logger() << F("Slave-write as ") << (isMaster() ? F("master") : F("slave")) << L_endl;
 	return static_cast<Error_codes>(_wire().write(dataBuffer, uint8_t(numberBytes)));
 } 
 
@@ -259,6 +271,7 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 		dataBuffer[noReceived] = _wire().read();
 		++noReceived;
 	}
+	for (int i = noReceived; i < howMany; ++i) dataBuffer[i] = 0;
 	return noReceived;
 }
 
@@ -280,9 +293,9 @@ Error_codes I2C_Talk::endTransmission() {
 }
 
 bool I2C_Talk::begin() {
+	TWI_BUFFER_SIZE = getTWIbufferSize();
 	wireBegin();
 	_wire().setTimeouts(_slaveByteProcess_uS, _stopMargin_uS, _busRelease_uS);
-	TWI_BUFFER_SIZE = getTWIbufferSize();
 	return true;
 }
 

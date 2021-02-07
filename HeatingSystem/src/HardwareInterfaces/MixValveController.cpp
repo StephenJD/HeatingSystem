@@ -33,16 +33,21 @@ namespace HardwareInterfaces {
 	Error_codes MixValveController::testDevice() { // non-recovery test
 		auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
 		Error_codes status;
-		uint8_t val[1] = { 1 };
+		uint8_t val1[1] = { 1 };
+		uint8_t val2[1] = { 1 };
 		while (!timeOut) {
 			//profileLogger() << F("warmup used: ") << timeOut.timeUsed() << L_endl;
-			status = I_I2Cdevice::write_verify(7, 1, val); // non-recovery write request temp
+			status = I_I2Cdevice::write_verify(Mix_Valve::request_temp, 1, val1); // non-recovery write request temp
 			if (status == _OK) { *_timeOfReset_mS = millis() - 3000; break; }
 			else if (status >= _BusReleaseTimeout) break;
 			ui_yield();
 		}
-		val[0] = uint8_t(i2C().getI2CFrequency() / 2000); // generate any old data
-		status = I_I2Cdevice::write_verify(7, 1, val); // non-recovery write request temp
+		//status = I_I2Cdevice::read(Mix_Valve::mode + _index * 16, 1, val1); // non-recovery 
+		//status = I_I2Cdevice::read(Mix_Valve::state + _index * 16, 1, val2); // non-recovery 
+		//if (val1[0] == 0 && val2[0] == 0) return _I2C_ReadDataWrong;
+
+		val1[0] = 25; // any old data
+		status = I_I2Cdevice::write_verify(Mix_Valve::request_temp, 1, val1); // non-recovery write request temp
 		return status;
 	}
 
@@ -66,6 +71,12 @@ namespace HardwareInterfaces {
 		auto tempError = _tempSensorArr[_flowTempSens].hasError();
 		if (!tempError) writeToValve(Mix_Valve::flow_temp, flowTemp);
 		return true;
+	}
+
+	void MixValveController::setRequestFlowTemp(uint8_t callTemp) {
+		writeToValve(Mix_Valve::request_temp, callTemp);
+		writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
+		_mixCallTemp = callTemp;
 	}
 
 	bool MixValveController::amControlZone(uint8_t newCallTemp, uint8_t maxTemp, uint8_t zoneRelayID) { // highest callflow temp
@@ -141,19 +152,8 @@ namespace HardwareInterfaces {
 			}
 
 			if (_mixCallTemp != newCallTemp) {
-				_mixCallTemp = newCallTemp;
-				writeToValve(Mix_Valve::request_temp, _mixCallTemp);				
-				writeToValve(Mix_Valve::control, Mix_Valve::e_new_temp);
-				//auto mv_ReqTemp = readFromValve(Mix_Valve::request_temp);
-				//if (mv_ReqTemp != _mixCallTemp) { 
-				//	profileLogger() << L_time << F("MixValve Confirm 0x") << L_hex << getAddress() << F(" failed for request_temp. Wrote: ") << L_dec << _mixCallTemp << F(" Read: ") << mv_ReqTemp << L_endl;
-				//}
+				setRequestFlowTemp(newCallTemp);
 			} 
-			//else if (mv_FlowTemp != _mixCallTemp) {
-				//profileLogger() << L_time << L_tabs << relayName(zoneRelayID);
-				//profileLogger() << F("MV_Request: ") << _mixCallTemp;
-				//profileLogger() << F("Is: ") << mv_FlowTemp << L_endl;
-			//}
 		}
 		return amInControl;
 	}
@@ -168,60 +168,53 @@ namespace HardwareInterfaces {
 	bool MixValveController::needHeat(bool isHeating) {
 		if (relayInControl() == -1) return false;
 
-		auto storeTempAtMixer = _tempSensorArr[_storeTempSens].get_temp(); 
+		int storeTempAtMixer = _tempSensorArr[_storeTempSens].get_temp(); 
 		auto minStoreTemp = isHeating ? _mixCallTemp + THERM_STORE_HYSTERESIS : _mixCallTemp;
-		return (storeTempAtMixer < minStoreTemp /*|| readFromValve(Mix_Valve::status) == Mix_Valve::e_Water_too_cool*/);
+		if (storeTempAtMixer < minStoreTemp /*|| readFromValve(Mix_Valve::status) == Mix_Valve::e_Water_too_cool*/) {
+			profileLogger() << L_time << int(index()) << " Mix-Store Temp: " << storeTempAtMixer << L_endl;
+			return true;
+		}
+		return false;
 	}
 
 	Error_codes  MixValveController::writeToValve(Mix_Valve::Registers reg, uint8_t value) {
+		// All writable registers are single-byte
 		auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
 		auto status = recovery().newReadWrite(*this); // see if is disabled.
+		if (timeOut) return status;
 		uint8_t mixReg = reg + _index * 16;
 		if (status == _OK) {
-			do {
-				i2C().setI2CFrequency(runSpeed());
-				status = I_I2Cdevice::write_verify(mixReg, 1, &value); // non-recovery
-				ui_yield();
-			} while (status && !timeOut);
-
+			status = write_verify(mixReg, 1, &value); // recovery-write
 			if (status) {
-				status = write_verify(mixReg, 1, &value); // attempt recovery-write
-				if (status) {
-					logger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << " at freq: " << runSpeed() << L_endl;
-				} 
-				//else {
-				//	uint8_t readValue = readFromValve(reg);
-				//	status = (readValue == value? _OK : _I2C_ReadDataWrong);
-				//	if (status) {
-				//		profileLogger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << F(" Verify OK but then Wrote: ") << L_dec << value << F(" Read: ") << readValue << L_endl;
-				//	} //else {
-				//		//profileLogger() << F("\tMixValveController::writeToValve OK after recovery. Write: ") << value << F(" Read: ") << readValue << L_endl;
-				//	//}
-				//}
+				logger() << L_time << F("MixValve Write 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			} 
 		} else logger() << L_time << F("MixValve Write disabled");
 		return status;
 	}
 
-	uint8_t MixValveController::readFromValve(Mix_Valve::Registers reg) {
+	int16_t MixValveController::readFromValve(Mix_Valve::Registers reg) {
 		auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
-		uint8_t value = 0;
+		uint16_t value = 0;
 		auto status = recovery().newReadWrite(*this); // see if is disabled
-		if (status == _OK) {
-			do {
-				i2C().setI2CFrequency(runSpeed());			
-				status = I_I2Cdevice::read(reg + _index * 16, 1, &value); // non-recovery
-				ui_yield();
-			}
-			while (status && !timeOut);
+		if (timeOut) return status;
 
-			constexpr int CONSECUTIVE_COUNT = 2;
-			constexpr int MAX_TRIES = 6;
-			constexpr int DATA_MASK = 0xFF;
-			status = read_verify_1byte(reg + _index * 16, value, CONSECUTIVE_COUNT, MAX_TRIES, DATA_MASK);
+		constexpr int CONSECUTIVE_COUNT = 2;
+		constexpr int MAX_TRIES = 6;
+		constexpr int DATA_MASK = 0xFFFF;
+		if (status == _OK) {
+			// Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
+			// But I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].
+			// A two-byte read into a uint16_t will put the Device MSB into the uint16_t LSB, and zero MSB - just what we want when reading single-byte registers!
+			status = read(reg + _index * 16, 2, (uint8_t*)&value); // recovery
+			if (status == _OK) { 
+				status = read_verify_2bytes(reg + _index * 16, value, CONSECUTIVE_COUNT, MAX_TRIES, DATA_MASK); // Non-Recovery
+				if (status) status = read(reg + _index * 16, 2, (uint8_t*)&value); // recovery
+				//if (status == _OK) logger() << L_time << F("MixValve readFromValve OK: ") << value << L_endl;
+			}
+			if (reg != Mix_Valve::valve_pos) value >>= 8;
 
 			if (status) {
-				logger() << L_time << F("MixValve Read 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << L_endl;
+				logger() << L_time << F("MixValve Read 0x") << L_hex << getAddress() << F(" failed for Reg: ") << reg << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}
 		} else logger() << L_time << F("MixValve Read disabled");
 		return value;

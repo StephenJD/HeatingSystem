@@ -19,7 +19,7 @@ SD.h/.cpp modified to provide sd_exists();
 	EEPROMClass & eeprom();
 	class Clock;
 
-	enum Flags {L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
+	enum Flags {L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_startWithFlushing, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
 	inline Flags operator +(Flags l_flag, Flags r_flag) {return static_cast<Flags>(l_flag | r_flag);}
 
 	class Logger : public Print {
@@ -57,7 +57,7 @@ SD.h/.cpp modified to provide sd_exists();
 		int base() {return _flags & L_hex ? HEX : DEC;}
 		Logger & toFixed(int decimal);
 		Clock * _clock = 0;
-		Flags _flags = L_default;
+		Flags _flags = L_startWithFlushing;
 	};
 
 	/// <summary>

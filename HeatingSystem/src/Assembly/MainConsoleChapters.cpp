@@ -46,6 +46,12 @@ namespace Assembly {
 		, _relayStateUI_c{ &db._ds_relay, RecInt_Relay::e_state,{V + S + VnLR + UD_S} }
 		, _relayNameUI_c{ &db._ds_relay, RecInt_Relay::e_name, {V + V1} }
 
+		, _mixValveNameUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_name, {V + S + V1} }
+		, _mixValvePosUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_pos, {V + V1} }
+		, _mixValveFlowTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_flowTemp, {V + V1} }
+		, _mixValveReqTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_reqTemp, {V + S + V1} }
+		, _mixValveStateUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_state, {V + V1} }
+
 		// Basic UI Elements
 		, _newLine{ "`" }
 		, _dst{ "DST Hours:" }
@@ -64,8 +70,9 @@ namespace Assembly {
 		, _deleteTTCmd{ "Delete", 0, {H + S + L + VnLR} }
 		, _editTTCmd{ "Edit", 0, {H + S + VnLR} }
 		, _newTTCmd{ "New", 0, {H + S } }
-		, _testWatchdog{ "Test Watchdog" , 0 }
-		, _towelRailsLbl{ "Room Temp OnFor ToGo" }
+		, _testWatchdog  { "Test Watchdog" , 0 }
+		, _towelRailsLbl { "Room Temp OnFor ToGo" }
+		, _mixValveLbl   { "MixV  Pos Is Req St" }
 		, _autoSettingLbl{ "Aut Rat Tc  Del Qy" }
 
 		// Pages & sub-pages - Collections of UI handles
@@ -97,11 +104,15 @@ namespace Assembly {
 
 		, _iterated_zoneSettings_info_c{ 80, makeCollection(_allZoneAbbrevUI_c, _zoneRatio_c, _zoneTimeConst_c, _zoneDelay_c, _zoneQuality_c),{V + S + L + VnLR + UD_A} }
 		, _page_autoSettings_c{ makeCollection(_autoSettingLbl, _iterated_zoneSettings_info_c)}
+
+		, _iterated_mixValve_info_c{ 80, makeCollection(_mixValveNameUI_c,_mixValvePosUI_c, _mixValveFlowTempUI_c, _mixValveReqTempUI_c, _mixValveStateUI_c),{V + S + VnLR + UD_A} }
+		, _page_mixValve_c{ makeCollection(_mixValveLbl, _iterated_mixValve_info_c) }
+
 		, _testWatchdog_c{makeCollection(_testWatchdog )}
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeChapter(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{ _user_chapter_c }
-		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _page_autoSettings_c, _testWatchdog_c) }
+		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _page_autoSettings_c, _page_mixValve_c, _testWatchdog_c) }
 		, _info_chapter_h{ _info_chapter_c }
 	{
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));

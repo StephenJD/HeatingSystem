@@ -45,9 +45,9 @@ namespace HardwareInterfaces {
 		constexpr int CONSECUTIVE_COUNT = 2;
 		constexpr int MAX_TRIES = 6;
 		constexpr int DATA_MASK = 0xFFFF;
-		uint8_t newTemp[2]; // MSB = units, LSB = fraction
+		uint16_t newTemp; // MSB = units, LSB = fraction
 		_error = read_verify_2bytes(DS75LX_Temp, newTemp, CONSECUTIVE_COUNT, MAX_TRIES, DATA_MASK); // Non-Recovery
-		checkTemp((newTemp[0] << 8) + newTemp[1]);
+		checkTemp(newTemp);
 
 #ifdef ZPSIM
 		//  if (getAddress() == 0x70) _error = _NACK_during_data_send;
@@ -57,13 +57,20 @@ namespace HardwareInterfaces {
 		if (_lastGood > 17920) change = -256;
 #endif
 		if (_error != _OK) {
-			logger() << F("Temp Error for 0x") << L_hex << getAddress() << L_endl;
-			_error = read(DS75LX_Temp, 2, newTemp); // Recovery
+			// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].
+			// But Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
+			// A two-byte read must reverse the byte-order.
+			uint8_t buffer[2];
+			read(DS75LX_Temp, 2, buffer); // Recovery
+			_error = read_verify_2bytes(DS75LX_Temp, newTemp, CONSECUTIVE_COUNT, MAX_TRIES, DATA_MASK); // Non-Recovery
+			newTemp = (buffer[0] << 8) + buffer[1];
+			checkTemp(newTemp);
+			if (_error != _OK) logger() << F("Temp Error for 0x") << L_hex << getAddress() << L_endl;
 		}
 		return _error;
 	}
 
-	auto TempSensor::checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::Error_codes {
+	auto TempSensor::checkTemp(uint16_t newTemp)->I2C_Talk_ErrorCodes::Error_codes {
 		if (_error == _OK) {
 			auto lsNibble = newTemp & 0x000F;
 			if (lsNibble) {

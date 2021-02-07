@@ -1,16 +1,13 @@
 #pragma once
 #include <RDB.h>
 #include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
-#include "Date_Time.h"
+#include <Date_Time.h>
 #include "..\Assembly\HeatingSystemEnums.h"
-#include "..\Client_DataStructures\Data_Zone.h"
+#include "..\Client_DataStructures\Rec_Zone.h"
 
 //***************************************************
 //              Zone Dynamic Class
 //***************************************************
-//namespace client_data_structures {
-//	struct R_Zone;
-//}
 
 namespace Assembly {	
 	class TemperatureController;

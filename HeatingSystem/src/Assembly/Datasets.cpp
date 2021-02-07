@@ -7,7 +7,7 @@ namespace Assembly {
 
 	HeatingSystem_Datasets::HeatingSystem_Datasets(HeatingSystem_Queries& queries, TemperatureController& tc) :
 		// DB Record Interfaces
-		  _recCurrTime()
+		_recCurrTime()
 		, _recDwelling()
 		, _recZone(tc.zoneArr)
 		, _recProg()
@@ -17,6 +17,7 @@ namespace Assembly {
 		, _recTempSensor(tc.tempSensorArr)
 		, _recTowelRail(tc.towelRailArr)
 		, _recRelay(tc.relayArr)
+		, _recMixValve(tc.mixValveControllerArr)
 
 		// Datasets
 		, _ds_currTime{ _recCurrTime , _recCurrTime.nullQuery }
@@ -31,6 +32,7 @@ namespace Assembly {
 		, _ds_tempSensors{ _recTempSensor, queries.q_tempSensors }
 		, _ds_towelRail{ _recTowelRail, queries.q_towelRails}
 		, _ds_relay{ _recRelay, queries.q_relays }
+		, _ds_mixValve{ _recMixValve, queries.q_mixValveControllers }
 	{
 		logger() << F("Datasets constructed") << L_endl;
 #ifdef ZPSIM

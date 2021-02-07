@@ -14,6 +14,7 @@ namespace LCD_UI {
 	
 	class VolatileData {}; // base class for all volatile data classes with UI interfaces
 	constexpr VolatileData * noVolData = 0;
+	extern VolatileData noVolDataObj;
 	// ***********  No CPP file for this ***********************
 	// The base collection has void * to a collection of run-time data objects 
 	// Persistant data is obtained from the RDB via the Query.
@@ -41,7 +42,7 @@ namespace LCD_UI {
 		virtual bool back(int fieldID) { return true; }
 		virtual RecordSelector duplicateRecord(RecordSelector& recSel) {return {};}
 
-		virtual VolatileData * runTimeData() { return 0; }
+		virtual VolatileData & runTimeData() { return noVolDataObj; }
 	};
 
 	template<typename Record>

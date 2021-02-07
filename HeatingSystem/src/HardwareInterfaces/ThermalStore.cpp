@@ -179,7 +179,7 @@ namespace HardwareInterfaces {
 		}
 		if (dhwTempOK) hasRequestedCondReduction = false;
 		uint8_t addHysteresis = 0;
-		if (_isHeating && !_backBoiler.isOn()) {
+		if (callTemp > MIN_FLOW_TEMP && _isHeating && !_backBoiler.isOn()) {
 			addHysteresis = THERM_STORE_HYSTERESIS;
 		}
 		return _theoreticalDeliveryTemp < (callTemp + addHysteresis);	// If HWtemp[2] is not hot enough, we need heat.

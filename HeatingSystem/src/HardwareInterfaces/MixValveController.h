@@ -5,6 +5,8 @@
 #include <Mix_Valve.h>
 #include <RDB.h>
 #include "A__Constants.h"
+#include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
+
 #if defined (ZPSIM)
 #include <ostream>
 #endif
@@ -13,7 +15,7 @@ namespace HardwareInterfaces {
 	class UI_Bitwise_Relay;
 	class UI_TempSensor;
 
-	class MixValveController : public I_I2Cdevice_Recovery {
+	class MixValveController : public I_I2Cdevice_Recovery, public LCD_UI::VolatileData {
 	public:
 		using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
 		MixValveController() = default;
@@ -30,11 +32,12 @@ namespace HardwareInterfaces {
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
-		uint8_t readFromValve(Mix_Valve::Registers reg); // returns value
+		int16_t readFromValve(Mix_Valve::Registers reg); // returns value
 		uint8_t sendSetup();
 		void setResetTimePtr(unsigned long * timeOfReset_mS) { _timeOfReset_mS = timeOfReset_mS; }
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
 		bool check();
+		void setRequestFlowTemp(uint8_t callTemp);
 
 //#if defined (ZPSIM)
 //		int16_t getValvePos() const; // public for simulator

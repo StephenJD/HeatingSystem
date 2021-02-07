@@ -100,9 +100,9 @@ namespace HardwareInterfaces {
 	/// </summary>
 	class Pin_Wag : public Flag { // Digital Out-Pin 
 	public:
-		Pin_Wag(int pinNo, bool activeState);
-		void initialise(int pinNo, bool activeState);
-		void begin();
+		Pin_Wag(int pinNo, bool activeState, bool startSet = false);
+		void initialise(int pinNo, bool activeState, bool startSet = false);
+		void begin(bool startSet = false);
 		bool set(bool state);
 		bool set() { return set(true); }
 		bool clear() { return set(false); }

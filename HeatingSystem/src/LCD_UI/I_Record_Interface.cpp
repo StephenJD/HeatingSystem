@@ -10,6 +10,7 @@ namespace LCD_UI {
 	//****************************************************
 	//                Dataset
 	//****************************************************
+	VolatileData noVolDataObj{};
 
 	Dataset::Dataset(I_Record_Interface & recordInterface, Query & query, Dataset * parent) :
 		_recSel(query.begin())

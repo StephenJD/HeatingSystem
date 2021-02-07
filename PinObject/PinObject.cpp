@@ -22,20 +22,19 @@ namespace HardwareInterfaces {
 
 	// *******  Digital Out-Pin  *******
 
-	Pin_Wag::Pin_Wag(int pinNo, bool activeState) : Flag(pinNo, activeState) { 
-		clear(); pinMode(pinNo, OUTPUT);
-		//logger() << "Pin_Wag Modeset. Port: " << int(_port) << L_endl;
+	Pin_Wag::Pin_Wag(int pinNo, bool activeState, bool startSet) : Flag(pinNo, activeState) {
+		begin(startSet);
 	}
 
-	void Pin_Wag::begin() { 
-		_logical_state = true;
-		clear();
+	void Pin_Wag::begin(bool startSet) {
+		_logical_state = !startSet;
+		set(startSet); // Pre-write so that when set to OUTPUT it retains its state, otherwise you get a glitch.
 		pinMode(port(), OUTPUT);
 	};
 
-	void Pin_Wag::initialise(int pinNo, bool activeState) {
+	void Pin_Wag::initialise(int pinNo, bool activeState, bool startSet) {
 		Flag::initialise(pinNo, activeState);
-		begin();
+		begin(startSet);
 	}
 
 	bool Pin_Wag::set(bool state) { // returns true if state is changed

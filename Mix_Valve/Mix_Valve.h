@@ -31,6 +31,7 @@ class Mix_Valve
 public:
 	enum Error { e_OK, e_DS_Temp_failed, e_US_Temp_failed, e_Both_TS_Failed, e_I2C_failed, e_Water_too_cool, e_setup1, e_setup2, e_loop1, e_loop2};
 	enum Registers {
+		// All registers are treated as two-byte, with second-byte un-used for most. Thus single-byte read-write works.
 		/*Read Only Data*/		status, //Has new data, Error code
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
 		/*Read/Write Data*/		flow_temp, request_temp, ratio, control,
@@ -40,10 +41,11 @@ public:
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, };
 	enum State {e_Moving_Coolest = -2, e_NeedsCooling, e_Off, e_NeedsHeating};
 	enum ControlSetting {e_nothing, e_stop_and_wait, e_new_temp};
+	enum MotorDirection {e_cooling = -1, e_stop, e_heating};
 
 	Mix_Valve(HardwareInterfaces::TempSensor & temp_sensr, HardwareInterfaces::Pin_Wag & heat_relay, HardwareInterfaces::Pin_Wag & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp);
 	int8_t getTemperature() const;
-	uint16_t getRegister(int reg) const;
+	uint16_t getRegister(int reg) const; // To make single-byte read-write work, all registers are treated as two-byte, with second-byte un-used for most.
 	
 	bool check_flow_temp();
 	void setControl(uint8_t value);
@@ -61,9 +63,9 @@ private:
 	int8_t getMotorState() const;
 
 	void adjustValve(int8_t tempDiff);
-	void activateMotor(int8_t direction);
+	bool activateMotor(); // Return true if it owns mutex
 	void reverseOneDegree(int new_call_flowDiff, int actualFlowTemp);
-	void allowValveToMove(int secsSinceLast);
+	void serviceMotorRequest(int secsSinceLast);
 	void waitForTempToSettle(int secsSinceLast);
 	void correct_flow_temp(int new_call_flowDiff, int actualFlowTemp);
 	void checkPumpIsOn();
@@ -81,16 +83,17 @@ private:
 	uint8_t _onTimeRatio;
 	uint8_t _max_flowTemp;
 	// Temporary Data
-	int8_t _mixCallTemp;
-	State _state; // the requirement to heat or cool, not the actual motion of the valve.
-	int8_t _call_flowDiff;
-	int16_t _onTime;
-	uint8_t _prevSensorTemp;
-	mutable uint8_t _sensorTemp;
-	uint8_t _lastOKflowTemp;
-	int16_t _valvePos;
-	unsigned long _lastTick;
-	Error _err;
+	int8_t _mixCallTemp = e_MIN_FLOW_TEMP;
+	State _state = e_Off; // the requirement to heat or cool, not the actual motion of the valve.
+	MotorDirection _motorDirection = e_stop;
+	int8_t _call_flowDiff = 0;
+	int16_t _onTime = 0;
+	uint8_t _prevSensorTemp = e_MIN_FLOW_TEMP;
+	mutable uint8_t _sensorTemp = e_MIN_FLOW_TEMP;
+	uint8_t _lastOKflowTemp = e_MIN_FLOW_TEMP;
+	int16_t _valvePos = 0;
+	unsigned long _lastTick = 0;
+	Error _err = e_OK;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 };
 

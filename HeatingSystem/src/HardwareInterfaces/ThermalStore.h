@@ -23,6 +23,7 @@ namespace HardwareInterfaces {
 		uint8_t getGroundTemp() const;
 		int8_t getOutsideTemp() const;
 		bool backBoilerIsHeating() const;
+		bool gasBoilerIsHeating() const { return _isHeating; }
 		int8_t tooCoolRequestOrigin() const { return _heatRequestSource; }
 		int8_t heatingDemandFrom() const { return _heatingDemand; }
 		const __FlashStringHelper* principalLoad() const;

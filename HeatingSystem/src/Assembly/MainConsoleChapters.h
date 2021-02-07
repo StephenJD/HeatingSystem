@@ -60,8 +60,15 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _towelRailTempUI_c;
 		LCD_UI::UI_FieldData _towelRailOnTimeUI_c;
 		LCD_UI::UI_FieldData _towelRailStatus_c;
+
 		LCD_UI::UI_FieldData _relayStateUI_c;
 		LCD_UI::UI_FieldData _relayNameUI_c;
+
+		LCD_UI::UI_FieldData _mixValveNameUI_c;
+		LCD_UI::UI_FieldData _mixValvePosUI_c;
+		LCD_UI::UI_FieldData _mixValveFlowTempUI_c;
+		LCD_UI::UI_FieldData _mixValveReqTempUI_c;
+		LCD_UI::UI_FieldData _mixValveStateUI_c;
 
 		// Basic UI Elements
 		LCD_UI::UI_Label _newLine, _dst, _reqestTemp, _is, _prog, _zone;
@@ -76,6 +83,7 @@ namespace Assembly {
 		client_data_structures::TestWatchdog_Cmd _testWatchdog;
 		LCD_UI::UI_Label _towelRailsLbl;
 		LCD_UI::UI_Label _autoSettingLbl;
+		LCD_UI::UI_Label _mixValveLbl;
 		
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<7> _page_currTime_c;
@@ -98,6 +106,9 @@ namespace Assembly {
 	
 		LCD_UI::UI_IteratedCollection<4> _iterated_towelRails_info_c;
 		LCD_UI::Collection<2> _page_towelRails_c;
+
+		LCD_UI::UI_IteratedCollection<5> _iterated_mixValve_info_c;
+		LCD_UI::Collection<2> _page_mixValve_c;
 		
 		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;
 		LCD_UI::UI_IteratedCollection<5> _iterated_zoneSettings_info_c;
@@ -106,7 +117,7 @@ namespace Assembly {
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;
-		LCD_UI::Collection<5> _info_chapter_c;
+		LCD_UI::Collection<6> _info_chapter_c;
 		LCD_UI::A_Top_UI _info_chapter_h;
 	};
 }

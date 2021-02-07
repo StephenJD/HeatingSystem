@@ -22,7 +22,6 @@ public:
 	virtual void reset() {};
 
 	virtual auto read(int registerAddress, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {
-		//Serial.println("I_I2Cdevice::read");
 		return i2C().read(getAddress(), registerAddress, numberBytes, dataBuffer); 
 	} // Return errCode. dataBuffer may not be written to if read fails.
 	virtual auto readEP(int pageAddress, int numberBytes, uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return i2C().readEP(getAddress(), pageAddress, numberBytes, dataBuffer); }  // Return errCode. dataBuffer may not be written to if read fails.
@@ -32,8 +31,10 @@ public:
 	
 	/// <summary>
 	/// Non-Recovery
+	/// Returns data in Native-endianness, i.e. for Arduino LSB at lowest address.
+	/// Mask applied to device-byte order.
 	/// </summary>
-	auto read_verify_2bytes(int registerAddress, uint8_t(&dataBuffer)[2], int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+	auto read_verify_2bytes(int registerAddress, uint16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 	/// <summary>
 	/// Non-Recovery
 	/// </summary>

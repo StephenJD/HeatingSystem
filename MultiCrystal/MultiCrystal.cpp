@@ -228,8 +228,10 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 			return hasFailed;
 		};
 
+		// Algorithm
 
 		//Serial.print("Multi-Crystal Begin() Remote at 0x"); Serial.println(_address,HEX);
+		_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed()); // non-recovery read/writes
 		_errorCode = 1;
 		hasFailed = setIOCON() // 2
 			|| setIO_Direction()	// 3
@@ -567,6 +569,7 @@ uint8_t MultiCrystal::pulseEnable(void) { // this function sends the data to the
 		digitalWrite(_enable_pin, LOW);
 		delayMicroseconds(100); // commands need > 37us to settle
 	} else {
+		_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
 		bool isBport = setControl(_enable_pin, HIGH);
 		if (isBport) { // enable after data written
 			error = _i2C_device->I_I2Cdevice::write(GPIOA,2,_data); // 0 = success
@@ -627,8 +630,6 @@ void MultiCrystal::setDataBit(uint8_t data_channel, uint8_t value) {
 }
 
 uint8_t MultiCrystal::checkI2C_Failed() {
-	//logger() << L_time << F("Remote-checkI2C... 0X") << L_hex << _i2C_device->getAddress() << L_endl;
-	//_i2C_device->i2C().begin();
 	uint8_t error = _i2C_device->read(IODIR, 2, _data); // recovery-Check GPINTEN is correct
 	uint16_t thisData = (_data[0] << 8) + _data[1];
 	if (error == _OK) {
@@ -660,35 +661,30 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	constexpr int MAX_TRIES = 6;
 	uint16_t keyPressed = 0;
 	// Read Int-pin on GPIO
-
-	auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, _data, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery
-	//auto gpioErr = _i2C_device->read(GPIOA, 2, _data);
-	uint16_t gpio = (_data[0] << 8) + _data[1];
-	gpio &= IOPIN_CONNECTED_TO_INTA;
+	uint16_t gpio;
+	//logger() << "readI2C_keypad" << L_endl;
+	auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, gpio, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery. mask is 0xE300, including interrupt on 0x0200
 	if (gpioErr) {
-		//logger() << L_time << "readI2C_keypad Error Reading GPIO on 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << L_endl;
+		logger() << L_time << "readI2C_keypad Error Reading GPIO on 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << L_endl;
+		checkI2C_Failed(); // Recovery
 	} else {
+		gpio &= IOPIN_CONNECTED_TO_INTA; // 0x0200 [A,B]
 		if (gpio) { // reading INTCAP clears INT, but INTCAP retains last INT state.
-			_errorCode = _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data); // non-recovery
-			//_errorCode = _i2C_device->read_verify_2bytes(INTCAP, _data, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16);
+			_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
+			_errorCode = _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data); // non-recovery to reduce frequency of error msgs.
 			if (_errorCode) {
 				logger() << L_time << "readI2C_keypad Error Reading INTCAP on 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
 			} else {
 				keyPressed = (_data[0] << 8) + _data[1];
 				keyPressed &= _key_mask_16;
 				keyPressed &= ~IOPIN_CONNECTED_TO_INTA; // GPIO may have shown INT set when read.
+				if (keyPressed && checkI2C_Failed()) { // Recovery
+					logger() << L_time << "GotRemoteKey - Checked: " << keyPressed << L_endl;
+					keyPressed = 0;
+				}
 			}
-			//for (int i = 0; i<5; ++i) {
-			//	_i2C_device->I_I2Cdevice::read(INTCAP, 2, _data);
-			//	gpio = (_data[0] << 8) + _data[1];
-			//	gpio &= _key_mask_16;
-			//	logger() << "Re-Read INTCAP-" << i << " 0x" << L_hex << gpio << L_endl;
-			//}
-		}
-		if (keyPressed && checkI2C_Failed()) { // Recovery
-			logger() << L_time << "GotRemoteKey - Checked: " << keyPressed << L_endl;
-			keyPressed = 0;
-		}
+		} 
+		//else logger() << "Non readI2C_keypad" << L_endl;
 	}
 	return keyPressed;
 }
