@@ -15,11 +15,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="EEPROM_Example.ino" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="__vm\.EEPROM_Example.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="EEPROM_rtc_Example.ino" />
   </ItemGroup>
 </Project>

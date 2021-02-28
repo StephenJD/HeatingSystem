@@ -32,7 +32,7 @@ namespace HardwareInterfaces {
 		void initialise(int address);
 
 	protected:
-		auto checkTemp(uint16_t newTemp)->I2C_Talk_ErrorCodes::Error_codes;
+		auto checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::Error_codes;
 		mutable int16_t _lastGood = 16 * 256;
 		I2C_Talk_ErrorCodes::Error_codes _error = I2C_Talk_ErrorCodes::_OK;
 #ifdef ZPSIM

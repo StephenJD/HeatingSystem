@@ -98,12 +98,10 @@
     <ProjectCapability Include="VisualMicro" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="EEPROM_Example.ino">
-      <FileType>CppCode</FileType>
-    </None>
+    <ClInclude Include="__vm\.EEPROM_Example.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="__vm\.EEPROM_Example.vsarduino.h" />
+    <None Include="EEPROM_rtc_Example.ino" />
   </ItemGroup>
   <PropertyGroup>
     <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>

@@ -122,7 +122,7 @@ public:
 private:
 	uint8_t _data[2]; // buffer for data sent to I2C ports
 	uint8_t _key_mask[2]; // GPIO channels available for keypad
-	uint16_t _key_mask_16; // = reinterpret_cast<uint16_t &>(_key_mask[0]);
+	uint16_t _key_mask_16;  // GPIO mask for keypad - excluding interrupt pin
 
 	// Initialize
 	void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,

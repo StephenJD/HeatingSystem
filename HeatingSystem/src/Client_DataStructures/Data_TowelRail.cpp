@@ -21,22 +21,24 @@ namespace client_data_structures {
 	{}
 
 	I_Data_Formatter * RecInt_TowelRail::getField(int fieldID) {
-		if (recordID() == -1 || status() != TB_OK) return 0;
+		bool canDo = status() == TB_OK;
 		switch (fieldID) {
 		case e_name:
-			_name = answer().rec().name;
+			if (canDo) _name = answer().rec().name;
 			return &_name;
 		case e_onTemp:
-			_onTemp.val = answer().rec().onTemp;
+			if (canDo) _onTemp.val = answer().rec().onTemp;
 			return &_onTemp;
 		case e_minutesOn:
-			_minutesOn.val = answer().rec().minutes_on;
+			if (canDo) _minutesOn.val = answer().rec().minutes_on;
 			return &_minutesOn;
 		case e_secondsToGo:
 		{
-			runTimeData().check();
-			_secondsToGo.val = runTimeData().timeToGo();
-			if (_secondsToGo.val) logger() << L_time << "TowelRail " << recordID() << " timeToGo: " << _secondsToGo.val << L_endl;
+			if (canDo) {
+				runTimeData().check();
+				_secondsToGo.val = runTimeData().timeToGo();
+				if (_secondsToGo.val) logger() << L_time << "TowelRail " << recordID() << " timeToGo: " << _secondsToGo.val << L_endl;
+			}
 			return &_secondsToGo;
 		}
 		default: return 0;

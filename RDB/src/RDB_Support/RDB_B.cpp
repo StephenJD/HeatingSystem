@@ -13,7 +13,7 @@ namespace RelationalDatabase {
 	{
 		savePW(password);
 		setDB_Header();
-		logger() << F("RDB_B(create) Constructed") << L_endl;
+		logger() << F("Construct RDB_B. Create new") << L_endl;
 	}
 
 	RDB_B::RDB_B(uint16_t dbStartAddr, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )
@@ -23,10 +23,10 @@ namespace RelationalDatabase {
 	{
 		if (checkPW(password)) {
 			loadDB_Header();
-			logger() << F("RDB_B(load) Constructed Size : ") << _dbEndAddr << L_endl;
+			logger() << F("Construct RDB_B. Load Header. DBSize: ") << _dbEndAddr << L_endl;
 		}
 		else {
-			logger() << F("RDB_B(load) Password mismatch") << L_endl;
+			logger() << F("Construct RDB_B. Password mismatch") << L_endl;
 		}
 	}
 
@@ -45,8 +45,13 @@ namespace RelationalDatabase {
 		size_t pw = 0;
 		_readByte(_dbStartAddr, &pw, SIZE_OF_PASSWORD);
 		logger() << F("PW was ") << pw << F(" Should be ") << password << L_endl;
-		return pw == password;
-		//return false;
+		if (pw == password) {
+			const_cast<RDB_B *>(this)->_dbEndAddr = _dbStartAddr + DB_HeaderSize; // _dbEndAddr != 0 indicates PW was correct.
+			return true;
+		} else {
+			const_cast<RDB_B*>(this)->_dbEndAddr = 0;
+			return false;
+		}
 	}
 
 	void RDB_B::setDB_Header() {

@@ -9,7 +9,7 @@ namespace I2C_Recovery {
 
 	class I2C_Recover { // no-recovery base-class
 	public:
-		I2C_Recover(I2C_Talk & i2C) : _i2C(&i2C) {}
+		I2C_Recover(I2C_Talk& i2C) : _i2C(&i2C) { i2C.begin(); }
 		
 		// Queries
 		const I2C_Talk & i2C() const { return *_i2C; }
@@ -38,7 +38,6 @@ namespace I2C_Recovery {
 	protected:
 		// Non-Polymorphic functions for I2C_Recover
 		TwoWire & wirePort();
-		void wireBegin();
 	private:
 		I_I2Cdevice_Recovery * _device = 0;
 		I2C_Talk * _i2C = 0;

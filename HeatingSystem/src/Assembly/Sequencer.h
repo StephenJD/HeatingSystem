@@ -15,6 +15,7 @@ namespace Assembly {
 		RelationalDatabase::RecordID prevProfileID = -1;
 		RelationalDatabase::RecordID currentProfileID = -1;
 		RelationalDatabase::RecordID nextProfileID = -1;
+		RelationalDatabase::RecordID currTT_ID;
 		client_data_structures::R_TimeTemp currTT;
 		client_data_structures::R_TimeTemp nextTT;
 	};
@@ -23,6 +24,7 @@ namespace Assembly {
 	public:
 		Sequencer(HeatingSystem_Queries& queries);
 		ProfileInfo getProfileInfo(RelationalDatabase::RecordID zoneID, Date_Time::DateTime timeOfInterest);
+		void updateTT(int id, client_data_structures::R_TimeTemp tt);
 		//HeatingSystem_Queries& queries() { return *_queries; }
 	private:
 		void getCurrentSpell(RelationalDatabase::RecordID dwellingID, ProfileInfo& info);

@@ -23,7 +23,8 @@ namespace RelationalDatabase {
 		/// For opening an existing Database
 		/// </summary>	
 		RDB(int dbStartAddr, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStartAddr, wbh, rbh, password) {
-			if (checkPW(password)) {
+			logger() << F("Construct RDB. Load tables.") << L_endl;
+			if (passwordOK()) {
 				getTables(tables, maxNoOfTables);
 			}
 		}

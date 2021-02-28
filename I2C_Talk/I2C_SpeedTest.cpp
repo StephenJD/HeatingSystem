@@ -28,6 +28,22 @@ uint32_t I2C_SpeedTest::show_fastest(I_I2Cdevice_Recovery & i2c_device) {
 // implementation of fully specialized template to test one device
 template<> 
 uint32_t I2C_SpeedTest::fastest_T<false>() {
+	// lambdas
+	auto increaseStopMargin = [this](int status) {
+		if (status == _StopMarginTimeout) {
+			if (_i2c_device->i2C().stopMargin() < I2C_Talk::WORKING_STOP_TIMEOUT) { // try longer timeout margin
+				_i2c_device->i2C().setStopMargin(_i2c_device->i2C().stopMargin() + 1);
+				_i2c_device->i2C().begin();
+#ifdef DEBUG_SPEED_TEST
+				logger() << F("\tTry increasing Stop Margin to ") << _i2c_device->i2C().stopMargin() << L_endl;
+#endif
+				return true;
+			}
+		}
+		return false;
+	};
+
+	// Algorithm
 	if (!_i2c_device->isEnabled()) {
 		_i2c_device->reset();
 		logger() << F("\tRe-enabling disabled device");
@@ -35,12 +51,13 @@ uint32_t I2C_SpeedTest::fastest_T<false>() {
 	auto startFreq = _i2c_device->runSpeed(); // default 100000
 	if (_is_inSpeedTest) return startFreq;
 	_is_inSpeedTest = true;
+	auto originalMargin = _i2c_device->i2C().stopMargin();
+
 	prepareNextTest();
-
-	//Serial.println(startFreq);
-
+	_i2c_device->i2C().setStopMargin(I2C_Talk::SPEED_TEST_INITIAL_STOP_TIMEOUT);
 	_thisHighestFreq = _i2c_device->i2C().setI2CFrequency(startFreq);
 	_i2c_device->recovery().registerDevice(*_i2c_device);
+
 #ifdef DEBUG_SPEED_TEST
 	logger() << F("\tfastest_T Initial test...: ") << L_endl;
 #endif	
@@ -49,48 +66,35 @@ uint32_t I2C_SpeedTest::fastest_T<false>() {
 #ifdef DEBUG_SPEED_TEST
 	logger() << F("\tfastest_T Initial 2 tests at: ") << _i2c_device->i2C().getI2CFrequency() << F(" Result:") << I2C_Talk::getStatusMsg(status) << L_endl;
 #endif
-#ifndef TRY_ALL_SPEEDS_
-	if (status != _OK)
+
+#ifndef DEBUG_TRY_ALL_SPEEDS
+	if (status != _OK) {
 #endif
-		status = _i2c_device->recovery().findAworkingSpeed();
-	
-	auto originalMargin = _i2c_device->i2C().stopMargin();
-	auto marginLimit = originalMargin * 4;
-	while (status == _StopMarginTimeout && _i2c_device->i2C().stopMargin() < marginLimit) { // try longer timeout margin
-		_i2c_device->i2C().setTransferMargin(_i2c_device->i2C().stopMargin() + 1);
-#ifdef DEBUG_SPEED_TEST
-		logger() << F("\tTry increasing transfer Margin to ") << _i2c_device->i2C().stopMargin() << L_endl;
-#endif
-		_i2c_device->i2C().begin();
-		status = _i2c_device->recovery().findAworkingSpeed();
+		do {
+			status = _i2c_device->recovery().findAworkingSpeed();
+		} while (increaseStopMargin(status));
+
+#ifndef DEBUG_TRY_ALL_SPEEDS
 	}
+#endif
 
 	if (status == _OK) {
-		//Serial.println(" ** findMaxSpeed **");
-		_stopMargin = _i2c_device->i2C().stopMargin();
 		_thisHighestFreq = _i2c_device->i2C().getI2CFrequency();
-		status = findOptimumSpeed(_thisHighestFreq, _i2c_device->i2C().max_i2cFreq() /*result.maxSafeSpeed*/);
+		status = findOptimumSpeed(_thisHighestFreq, _i2c_device->i2C().max_i2cFreq());
 	}
 	if (status != _OK) {
 		_i2c_device->reset();
 		_thisHighestFreq = startFreq;
+		_i2c_device->i2C().setStopMargin(originalMargin);
 	}
 	_i2c_device->set_runSpeed(thisHighestFreq());
 	_error = status;
 
-	//Serial.print("fastest_T<false,false> Finished");Serial.flush();
-	_i2c_device->i2C().setTransferMargin(originalMargin);
 	_is_inSpeedTest = false;
 	return thisHighestFreq();
 }
 
 Error_codes I2C_SpeedTest::findOptimumSpeed(int32_t & bestSpeed, int32_t limitSpeed ) {
-	
-	// lambdas
-	//auto setToLimitSpeed = [bestSpeed, limitSpeed, this](auto & adjustBy) {
-	//};
-
-	
 	// enters function at a working frequency
 	int32_t adjustBy = (limitSpeed - bestSpeed) / 3;
 	if (limitSpeed == bestSpeed) adjustBy = limitSpeed / 10;

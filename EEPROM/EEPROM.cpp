@@ -98,24 +98,24 @@ using namespace I2C_Talk_ErrorCodes;
 
 uint8_t EEPROMClass::read(int iAddr)
 {
-	//#if defined (ZPSIM)
-	//	return myEEProm[iAddr];
-	//#else
+	#if defined (ZPSIM)
+		return myEEProm[iAddr];
+	#else
 		uint8_t result;
 		//Serial.println("EP::Read");
 		readEP(iAddr,1,&result);
 		return result;
-	//#endif
+	#endif
 }
 
 Error_codes EEPROMClass::write(int iAddr, uint8_t iVal)
 {
-	//#if defined (ZPSIM)
-	//	myEEProm[iAddr] = iVal;
-	//	return 0;
-	//#else
+	#if defined (ZPSIM)
+		myEEProm[iAddr] = iVal;
+		return _OK;
+	#else
 	  return writeEP(iAddr, iVal);
-	//#endif
+	#endif
 }
 
 Error_codes EEPROMClass::update(int iAddr, uint8_t iVal) {

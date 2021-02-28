@@ -435,7 +435,6 @@ namespace LCD_UI {
 
 		auto coll_focus = activeElement ? iterated_collection()->I_SafeCollection::focusIndex() : -1;
 		// lambdas
-		auto endOfBufferSoFar = [&buffer]() {return strlen(buffer.toCStr());};
 		auto thisElementIsOnAnewLine = [&buffer](size_t bufferStart) {return buffer.toCStr()[bufferStart -1] == '~';};
 		auto removeNewLineSymbol = [](size_t & bufferStart) {--bufferStart; };
 		auto collectionHasfocus = [coll_focus, this]() {return (coll_focus >= 0 && coll_focus < iterated_collection()->I_SafeCollection::endIndex()) ? true : false; };
@@ -459,7 +458,7 @@ namespace LCD_UI {
 		}
 		_beginIndex = itIndex;
 
-		auto bufferStart = endOfBufferSoFar();
+		auto bufferStart = buffer.end();
 		auto mustStartNewLine = thisElementIsOnAnewLine(bufferStart);
 		if (mustStartNewLine) removeNewLineSymbol(bufferStart);
 		startThisField(bufferStart, mustStartNewLine);

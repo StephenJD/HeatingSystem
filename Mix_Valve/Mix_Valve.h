@@ -29,45 +29,43 @@ extern enum Role role;
 class Mix_Valve
 {
 public:
-	enum Error { e_OK, e_DS_Temp_failed, e_US_Temp_failed, e_Both_TS_Failed, e_I2C_failed, e_Water_too_cool, e_setup1, e_setup2, e_loop1, e_loop2};
+	enum Error { e_OK, e_NewTempReq, e_DS_Temp_failed, e_US_Temp_failed, e_Both_TS_Failed, e_I2C_failed, e_Water_too_cool, e_setup1, e_setup2, e_loop1, e_loop2};
 	enum Registers {
 		// All registers are treated as two-byte, with second-byte un-used for most. Thus single-byte read-write works.
-		/*Read Only Data*/		status, //Has new data, Error code
+		/*Read Only Data*/		status,
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
 		/*Read/Write Data*/		flow_temp, request_temp, ratio, control,
 		/*Read/Write Config*/	temp_i2c_addr, max_ontime, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
 		/*End-Stop*/			reg_size
 	};	
-	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, };
-	enum State {e_Moving_Coolest = -2, e_NeedsCooling, e_Off, e_NeedsHeating};
-	enum ControlSetting {e_nothing, e_stop_and_wait, e_new_temp};
-	enum MotorDirection {e_cooling = -1, e_stop, e_heating};
+	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq};
+	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
+	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 
 	Mix_Valve(HardwareInterfaces::TempSensor & temp_sensr, HardwareInterfaces::Pin_Wag & heat_relay, HardwareInterfaces::Pin_Wag & cool_relay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp);
-	int8_t getTemperature() const;
 	uint16_t getRegister(int reg) const; // To make single-byte read-write work, all registers are treated as two-byte, with second-byte un-used for most.
-	
-	bool check_flow_temp();
-	void setControl(uint8_t value);
+	const __FlashStringHelper* name();
+	void check_flow_temp();
 	void setRegister(int reg, uint8_t value);
-	void setRequestTemp(Role role);
+	void setRequestTemp();
 private:
 	enum { e_MIN_FLOW_TEMP = 30};
 	friend void testMixer();
 	friend void testSlave();
 	friend void printModes();
 
-	Mode getMode() const;
-	bool has_overshot(int new_call_flowDiff) const;
+	Mode algorithmMode() const;
+	//bool has_overshot(int new_call_flowDiff);
 	uint8_t saveToEEPROM() const; // returns noOfBytes saved
-	int8_t getMotorState() const;
 
 	void adjustValve(int8_t tempDiff);
 	bool activateMotor(); // Return true if it owns mutex
-	void reverseOneDegree(int new_call_flowDiff, int actualFlowTemp);
-	void serviceMotorRequest(int secsSinceLast);
-	void waitForTempToSettle(int secsSinceLast);
-	void correct_flow_temp(int new_call_flowDiff, int actualFlowTemp);
+	void stopMotor();
+	void startWaiting();
+	//void reverseOneDegree(int new_call_flowDiff, int actualFlowTemp);
+	void serviceMotorRequest();
+	//void waitForTempToSettle();
+	//void correct_flow_temp(int new_call_flowDiff, int actualFlowTemp);
 	void checkPumpIsOn();
 	uint8_t loadFromEEPROM(); // returns noOfBytes read
 
@@ -78,22 +76,21 @@ private:
 	EEPROMClass * _ep;
 	uint8_t _eepromAddr;
 	// EEPROM saved data
-	uint8_t _max_on_time;
+	uint8_t _max_on_time = 140;
 	uint8_t _valve_wait_time;
-	uint8_t _onTimeRatio;
+	uint8_t _onTimeRatio = 30;
 	uint8_t _max_flowTemp;
 	// Temporary Data
 	int8_t _mixCallTemp = e_MIN_FLOW_TEMP;
-	State _state = e_Off; // the requirement to heat or cool, not the actual motion of the valve.
-	MotorDirection _motorDirection = e_stop;
-	int8_t _call_flowDiff = 0;
+	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
+	MotorDirection _motorDirection = e_Stop;
 	int16_t _onTime = 0;
-	uint8_t _prevSensorTemp = e_MIN_FLOW_TEMP;
+	uint8_t _prevReqTemp = 0; // Must have two the same to reduce spurious requests
+	uint8_t _waitFlowTemp = e_MIN_FLOW_TEMP;
 	mutable uint8_t _sensorTemp = e_MIN_FLOW_TEMP;
-	uint8_t _lastOKflowTemp = e_MIN_FLOW_TEMP;
 	int16_t _valvePos = 0;
 	unsigned long _lastTick = 0;
-	Error _err = e_OK;
+	Error _status = e_OK;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 };
 

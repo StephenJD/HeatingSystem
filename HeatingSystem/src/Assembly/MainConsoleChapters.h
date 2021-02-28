@@ -69,6 +69,7 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _mixValveFlowTempUI_c;
 		LCD_UI::UI_FieldData _mixValveReqTempUI_c;
 		LCD_UI::UI_FieldData _mixValveStateUI_c;
+		LCD_UI::UI_FieldData _mixValveWireModeUI_c;
 
 		// Basic UI Elements
 		LCD_UI::UI_Label _newLine, _dst, _reqestTemp, _is, _prog, _zone;
@@ -107,7 +108,7 @@ namespace Assembly {
 		LCD_UI::UI_IteratedCollection<4> _iterated_towelRails_info_c;
 		LCD_UI::Collection<2> _page_towelRails_c;
 
-		LCD_UI::UI_IteratedCollection<5> _iterated_mixValve_info_c;
+		LCD_UI::UI_IteratedCollection<6> _iterated_mixValve_info_c;
 		LCD_UI::Collection<2> _page_mixValve_c;
 		
 		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;

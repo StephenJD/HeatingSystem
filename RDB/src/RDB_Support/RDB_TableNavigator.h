@@ -42,7 +42,7 @@ namespace RelationalDatabase {
 		Answer_R(const TableNavigator & tableNaviagator) : Answer_Locator(tableNaviagator) {}
 		Answer_R(const Answer_Locator & answerLocator) : Answer_Locator(answerLocator) {}
 		Answer_R() = default;	
-		
+		//Answer_R& operator =(const RecordSelector& rs) { Answer_Locator::setID(rs.id()); Answer_Locator::setStatus(rs.status); return *this; }
 		// Queries
 		// Modifiers
 		RecordID field(int fieldIndex) { return rec().field(fieldIndex); }

@@ -12,7 +12,6 @@ namespace client_data_structures {
 	}
 
 	I_Data_Formatter * RecInt_Dwelling::getField(int fieldID) {
-		//if (recordID()==-1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
 		case e_name:
 			_name = answer().rec().name;

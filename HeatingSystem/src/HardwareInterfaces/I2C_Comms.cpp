@@ -65,9 +65,13 @@ namespace HardwareInterfaces {
 		LocalKeypad::indicatorLED().set();
 		_resetPinWag.set();
 		delay(128); // interrupts still serviced
+		delay(128); 
+		delay(128); 
+		delay(128); 
 		_resetPinWag.clear();
 		i2c.begin();
 		timeOfReset_mS = millis();
+		if (timeOfReset_mS == 0) timeOfReset_mS = 1;
 		logger() << L_time << F("Done Hard Reset for 0x") << L_hex << addr << L_endl;
 		LocalKeypad::indicatorLED().clear();
 		if (digitalRead(20) == LOW)

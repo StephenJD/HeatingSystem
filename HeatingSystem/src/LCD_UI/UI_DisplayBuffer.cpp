@@ -17,7 +17,7 @@ namespace LCD_UI {
 		if (stream == 0) return true;
 		if (endPos == 0) endPos = _lcd->size(); else endPos;
 		auto buffer = _lcd->buff();
-		int originalEnd = strlen(buffer) -1; // index of current null
+		int originalEnd = _lcd->end()-1; // index of last character
 		bool hasShortListChar = (buffer[originalEnd] == '>');
 		bool onNewLine = (buffer[originalEnd] == '~');
 		while (buffer[originalEnd] == '~') --originalEnd;
@@ -71,14 +71,15 @@ namespace LCD_UI {
 			_lcd->setCursorPos(appendPos + cursorOffset); 
 		};
 
-		auto appendField = [stream, buffer](int appendPos) -> int {
+		auto appendField = [this, stream, buffer](int appendPos) -> int {
 			int i = 0;
 			while (stream[i] != 0) {
 				buffer[appendPos] = stream[i];
 				++appendPos;
 				++i;
 			}
-			buffer[appendPos] = 0;
+			//buffer[appendPos] = 0;
+			_lcd->setEnd(appendPos);
 			return appendPos;
 		};
 
@@ -107,8 +108,12 @@ namespace LCD_UI {
 		else {
 			if (!hasShortListChar && !(listStatus & e_this_not_showing) && spaceFor_char(originalEnd + 1)) {
 				terminate_with_EndList_char_at(originalEnd + 1);
-				buffer[appendPos] = 0;
-			} else buffer[originalEnd + 1] = 0;
+				//buffer[appendPos] = 0;
+				_lcd->setEnd(appendPos);
+			} else {
+				_lcd->setEnd(originalEnd + 1);
+				//buffer[originalEnd + 1] = 0;
+			}
 			return false;
 		}
 		return true;

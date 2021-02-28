@@ -379,7 +379,7 @@ SCENARIO("Simple Page Scrolling", "[Chapter]") {
 	UI_DisplayBuffer tb(lcd);
 
 	RDB<TB_NoOfTables> db(RDB_START_ADDR, writer, reader, VERSION);
-	if (!db.checkPW(VERSION)) { cout << "Password missmatch\n"; return; }
+	if (!db.passwordOK()) { cout << "Password missmatch\n"; return; }
 	//cout << "\tand some Queries are created" << endl;
 	auto q_Dwellings = db.tableQuery(TB_Dwelling);
 	auto q_ZonesForDwelling = QueryFL_T<R_DwellingZone>{ db.tableQuery(TB_Zone), db.tableQuery(TB_DwellingZone), 0, 1 };

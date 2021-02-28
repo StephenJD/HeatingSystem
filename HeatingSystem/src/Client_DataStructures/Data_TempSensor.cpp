@@ -5,6 +5,7 @@ namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;
 	using namespace HardwareInterfaces;
+	using namespace I2C_Talk_ErrorCodes;
 
 	//***************************************************
 	//              Dataset_TempSensor
@@ -20,33 +21,39 @@ namespace client_data_structures {
 	}
 
 	I_Data_Formatter * RecInt_TempSensor::getField(int fieldID) {
-		if (recordID() == -1 || status() != TB_OK) return 0;
+		//if (recordID() == -1 || status() != TB_OK) return 0;
+		bool canDo = status() == TB_OK;
+
 		switch (fieldID) {
 		case e_temp:
-		{
-			HardwareInterfaces::UI_TempSensor & ts = runTimeData();
-			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK ) _temperature.val = -127;
-			else _temperature.val = ts.get_temp();
-			return &_temperature;
-		}
-		case e_temp_str:
-		{
-			HardwareInterfaces::UI_TempSensor & ts = runTimeData();
-			strcpy(_tempStr.str(), "`");
-			if (ts.readTemperature() != I2C_Talk_ErrorCodes::_OK) {
-				strcat(_tempStr.str(), "Err  ");
+			if (canDo) {
+				HardwareInterfaces::UI_TempSensor & ts = runTimeData();
+				if (ts.readTemperature() != _OK ) _temperature.val = -127;
+				else _temperature.val = ts.get_temp();
 			}
-			else {
-				strcat(_tempStr.str(), decToString(int(ts.get_fractional_temp()/2.56),2,2).str());
+			return &_temperature;
+		case e_temp_str:
+			if (canDo) {
+				HardwareInterfaces::UI_TempSensor & ts = runTimeData();
+				strcpy(_tempStr.str(), "`");
+				auto tsErr = ts.readTemperature();
+				if (tsErr == _disabledDevice) {
+					ts.set_runSpeed(100000);
+					tsErr = ts.readTemperature();
+				}
+				if (tsErr != _OK) {
+					strcat(_tempStr.str(), "Err  ");
+				}
+				else {
+					strcat(_tempStr.str(), decToString(int(ts.get_fractional_temp()/2.56),2,2).str());
+				}
 			}
 			return &_tempStr;
-		}
-
 		case e_name:
-		{
-			strcpy(_name.str(), answer().rec().name);
+			if (canDo) {
+				strcpy(_name.str(), answer().rec().name);
+			}
 			return &_name;
-		}
 		default: return 0;
 		}
 	}

@@ -8,7 +8,9 @@ namespace client_data_structures {
 
 	RecInt_MixValveController::RecInt_MixValveController(MixValveController* mixValveArr)
 		: _mixValveArr(mixValveArr)
-		, _name("", 5)
+		//, _name("", 5)
+		, _name("", 3)
+		, _wireMode(0, ValRange(e_fixedWidth | e_editAll, 0, 7))
 		, _pos(90, ValRange(e_fixedWidth | e_editAll, -127, 127))
 		, _isTemp(90, ValRange(e_fixedWidth | e_editAll, 0, 90))
 		, _reqTemp(90, ValRange(e_fixedWidth | e_editAll, 0, 90))
@@ -16,48 +18,53 @@ namespace client_data_structures {
 		{}
 
 	I_Data_Formatter* RecInt_MixValveController::getField(int fieldID) {
-		auto mode = runTimeData().readFromValve(Mix_Valve::mode);
-		if (recordID() == -1 || status() != TB_OK) return 0;
+		auto wireModeStr = [](int wireMode) {
+			switch (wireMode) {
+			case 0: return "T";
+			case 1: return "AT";
+			case 2: return "DT";
+			case 3: return "ADT";
+			case 4: return "TS";
+			case 5: return "ATS";
+			case 6: return "DTS";
+			case 7: return "ADS";
+			default: return "";
+			}
+		};
+
+		//if (recordID() == -1 || status() != TB_OK) return 0;
+		bool canDo = status() == TB_OK;
 		switch (fieldID) {
 		case e_name:
-			_name = answer().rec().name;
+			if (canDo) {
+				//_name = answer().rec().name;
+				_name = wireModeStr(runTimeData().wireMode);
+			}
 			return &_name;
+		case e_wireMode:
+			if (canDo) _wireMode.val = runTimeData().wireMode;
+			return &_wireMode;
 		case e_pos:
-			if (mode == Mix_Valve::e_Checking) _pos.val = runTimeData().readFromValve(Mix_Valve::valve_pos);
-			else _pos.val = runTimeData().readFromValve(Mix_Valve::count);
+			if (canDo) {
+				if (runTimeData().valveStatus.algorithmMode == Mix_Valve::e_Checking)
+					_pos.val = runTimeData().valveStatus.valvePos;
+				else
+					_pos.val = runTimeData().valveStatus.onTime;
+				if (_pos.val > 500) _pos.val = 500;
+				if (_pos.val < -500) _pos.val = -500;
+			}
 			return &_pos;
 		case e_flowTemp:
-			_isTemp.val = runTimeData().readFromValve(Mix_Valve::flow_temp);
+			if (canDo) _isTemp.val = runTimeData().flowTemp();
 			return &_isTemp;
 		case e_reqTemp:
-			_reqTemp.val = runTimeData().readFromValve(Mix_Valve::request_temp);
+			if (canDo) _reqTemp.val = runTimeData().reqTemp();
 			return &_reqTemp;
 		case e_state:
-			auto state = runTimeData().readFromValve(Mix_Valve::state);
-			if (mode == 0 && state == 0) {
-				logger() << "MixValveController read error" << L_endl;
-				runTimeData().i2C().extendTimeouts(10000, 10, 5000);
-				//auto thisFreq = runTimeData().runSpeed();
-				//logger() << F("\t\tslowdown for 0x") << L_hex << runTimeData().getAddress() << F(" speed was ") << L_dec << thisFreq << L_endl;
-				//runTimeData().set_runSpeed(max(thisFreq - max(thisFreq / 10, 1000), I2C_Talk::MIN_I2C_FREQ));
-				//logger() << F("\t\treduced speed to ") << runTimeData().runSpeed() << L_endl;
+			if (canDo) {
+				runTimeData().monitorMode();
+				_state = (const char*)runTimeData().showState();
 			}
-			switch (state) {
-			case Mix_Valve::e_Moving_Coolest: _state = "Min"; break;
-			case Mix_Valve::e_NeedsCooling: _state = "Cl"; break;
-			case Mix_Valve::e_NeedsHeating: _state = "Ht"; break;
-			case Mix_Valve::e_Off:
-				switch (mode) {
-				case Mix_Valve::e_Mutex: _state = "Mx"; break;
-				case Mix_Valve::e_Wait : _state = "Wt"; break;
-				case Mix_Valve::e_Checking: _state = "Ck"; break;
-				case Mix_Valve::e_Moving: _state = "Mv"; break;
-				default: _state = "MEr";
-				}
-				break;
-			default: _state = "SEr";
-			}
-			profileLogger() << L_time << L_tabs << _name.str() << _pos.val << _isTemp.val << _reqTemp.val << _state.str() << runTimeData().readFromValve(Mix_Valve::ratio) << L_endl;
 			return &_state;
 		default: return 0;
 		}
@@ -75,8 +82,11 @@ namespace client_data_structures {
 		}
 		case e_reqTemp:
 			_reqTemp = *newValue;
-			runTimeData().setRequestFlowTemp((uint8_t)_reqTemp.val);
+			runTimeData().sendRequestFlowTemp((uint8_t)_reqTemp.val);
 			break;
+		case e_wireMode:
+			_wireMode = *newValue;
+			runTimeData().setWireMode(_wireMode.val);
 		}
 		return false;
 	}

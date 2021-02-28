@@ -4,7 +4,6 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\I_Data_Formatter.h"
 
-
 namespace HardwareInterfaces {
 	class MixValveController;
 }
@@ -40,7 +39,7 @@ inline Logger & operator << (Logger & stream, const R_MixValveControl & mixValve
 	/// </summary>
 	class RecInt_MixValveController : public Record_Interface<R_MixValveControl> {
 	public:
-		enum streamable { e_name, e_pos, e_flowTemp, e_reqTemp, e_state};
+		enum streamable { e_name, e_pos, e_flowTemp, e_reqTemp, e_state, e_wireMode	};
 		RecInt_MixValveController(MixValveController* mixValveArr);
 		MixValveController& runTimeData() override { return _mixValveArr[answer().id()]; }
 		I_Data_Formatter* getField(int _fieldID) override;
@@ -48,6 +47,7 @@ inline Logger & operator << (Logger & stream, const R_MixValveControl & mixValve
 	private:
 		MixValveController* _mixValveArr;
 		StrWrapper _name;
+		IntWrapper _wireMode;
 		IntWrapper _pos;
 		IntWrapper _isTemp;
 		IntWrapper _reqTemp;

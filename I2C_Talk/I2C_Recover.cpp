@@ -7,16 +7,13 @@
 #include <Logging.h>
 #endif
 
+void ui_yield();
+
 namespace I2C_Recovery {
 
 	using namespace I2C_Talk_ErrorCodes;
 
 	TwoWire & I2C_Recover::wirePort() { return i2C()._wire(); }
-
-	void I2C_Recover::wireBegin() { 
-		//Serial.print("I2C_Recover::wire: "); Serial.println(long(&i2C())); Serial.flush();
-		i2C().wireBegin();
-	}
 
 	Error_codes I2C_Recover::testDevice(int, int) {
 		return device().testDevice();
@@ -28,12 +25,11 @@ namespace I2C_Recovery {
 		// Must test MAX_I2C_FREQ as this is skipped in later tests
 		constexpr uint32_t tryFreq[] = { 52000,8200,330000,3200,21000,2000,5100,13000,33000,83000,210000 };
 		i2C().setI2CFrequency(i2C().max_i2cFreq());
-		//logger() << F("findAworkingSpeed Try Exists? At:"), i2C().getI2CFrequency());
 		auto testResult = i2C().status(addr);
-		bool marginTimeout = false;
 #ifdef DEBUG_SPEED_TEST
 		logger() << F("findAworkingSpeed Exists? At:") << i2C().getI2CFrequency() << I2C_Talk::getStatusMsg(testResult) << L_endl;
 #endif
+		bool marginTimeout = false;
 		if (testResult == _OK) {
 			testResult = testDevice(2, 1);
 #ifdef DEBUG_SPEED_TEST
@@ -60,6 +56,7 @@ namespace I2C_Recovery {
 					if (testResult == _OK) break;
 #endif
 				}
+				ui_yield();
 			}
 #ifndef DEBUG_TRY_ALL_SPEEDS
 		}

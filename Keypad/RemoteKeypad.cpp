@@ -46,7 +46,7 @@ namespace HardwareInterfaces {
 		case 0x8000: myKey = 3; break; // Right
 		case 0:		 myKey = -1; break;
 		default:
-			logger() << remName(_lcd->i2cAddress()) << F(" Remote Keypad: GPIO err: 0x") << L_hex << gpio << L_endl;
+			logger() << L_time << remName(_lcd->i2cAddress()) << F(" Remote Keypad: MultipleKeys: 0x") << L_hex << gpio << L_endl;
 			myKey = -2; // multiple keys
 		}
 

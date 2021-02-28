@@ -11,6 +11,7 @@ namespace Assembly {
 		, q_ThermStore{ rdb.tableQuery(TB_ThermalStore) }
 		, q_MixValve{ rdb.tableQuery(TB_MixValveContr) }
 		, q_Zones{ rdb.tableQuery(TB_Zone) }
+		, q_TimeTemps{ rdb.tableQuery(TB_TimeTemp) }
 		, q_ZonesForDwelling{ rdb.tableQuery(TB_Zone), rdb.tableQuery(TB_DwellingZone), 0, 1 }
 		, q_DwellingsForZone{ rdb.tableQuery(TB_Dwelling), rdb.tableQuery(TB_DwellingZone), 1, 0 }
 		, q_ProgsForDwelling{ rdb.tableQuery(TB_Program), 1 }
@@ -20,7 +21,7 @@ namespace Assembly {
 		, q_ProfilesForProg{ rdb.tableQuery(TB_Profile), 0 }
 		, q_ProfilesForZone{ rdb.tableQuery(TB_Profile), 1 }
 		, q_ProfilesForZoneProg{ q_ProfilesForZone, 0 }
-		, q_TimeTempsForProfile{ rdb.tableQuery(TB_TimeTemp), 0 }
+		, q_TimeTempsForProfile{ q_TimeTemps, 0 }
 		, q_tempSensors{ rdb.tableQuery(TB_TempSensor) }
 		, q_towelRails{ rdb.tableQuery(TB_TowelRail) }
 		, q_relays{ rdb.tableQuery(TB_Relay) }

@@ -222,12 +222,12 @@ namespace client_data_structures {
 	}
 
 	I_Data_Formatter * RecInt_Profile::getField(int fieldID) {
-		if (recordID() == -1) return 0;
+		bool canDo = status() == TB_OK;
 		switch (fieldID) {
 		case e_days:
 			//logger() << "Curr Profile ReadVer:" << record().lastReadTabVer() << " TableVer: " << record().table()->vrVersion() << L_endl;
 			//logger() << "Curr Profile: " << answer().rec() << L_endl;
-			_days = answer().rec().days;
+			if (canDo) _days = answer().rec().days;
 			return &_days;
 		default: return 0;
 		}

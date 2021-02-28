@@ -17,20 +17,21 @@ namespace client_data_structures {
 		, _status{ 0, ValRange(e_edOneShort, 0, 1) } {}
 
 	I_Data_Formatter * RecInt_Relay::getField(int fieldID) {
-		if (recordID() == -1 || status() != TB_OK) return 0;
-		//logger() << "Relay recordID(): " << int(recordID()) << " " << answer().rec() << L_endl;
+		//if (recordID() == -1 || status() != TB_OK) return 0;
+		bool canDo = status() == TB_OK;
 		switch (fieldID) {
 		case e_name:
-			_name = answer().rec().name;
+			if (canDo) _name = answer().rec().name;
 			return &_name;
 		case e_state:
-		{
-			HardwareInterfaces::UI_Bitwise_Relay & rl = runTimeData();
-			relayController().readPorts();
-			rl.getStateFromContoller();
-			_status.val = rl.logicalState();
+			if (canDo) {
+				HardwareInterfaces::UI_Bitwise_Relay & rl = runTimeData();
+				relayController().readPorts();
+				rl.getStateFromContoller();
+				_status.val = rl.logicalState();
+				return &_status;
+			}
 			return &_status;
-		}
 		default: return 0;
 		}
 	}

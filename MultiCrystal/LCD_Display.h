@@ -21,7 +21,7 @@ namespace HardwareInterfaces {
 		//int rows() const { return size() / cols(); }
 		const char * buff() const { return const_cast<LCD_Display *>(this)->buff(); }
 		virtual uint8_t ambientLight() const { return 0; }
-
+		int end() const { return _end; }
 		// Modifiers
 		virtual void setBackLight(bool wake) {}
 		virtual char * buff() = 0;
@@ -31,11 +31,13 @@ namespace HardwareInterfaces {
 		using Print::print;
 		void print(const char * str, uint32_t val);
 		void reset();
-		void truncate(int newEnd);
 		void setCursorPos(int pos) { *(buff() - 2) = pos; }
 		void setCursorMode(CursorMode mode) { *(buff() - 1) = mode; }
+		void clearFromEnd();
+		void setEnd(int end) { _end = end; buff()[_end] = 0; }
 	protected:
 		RelationalDatabase::Query * _query = 0;
+		uint16_t _end = 0;
 	};
 
 	template<int _cols, int _rows>

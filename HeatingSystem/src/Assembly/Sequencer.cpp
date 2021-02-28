@@ -145,21 +145,21 @@ namespace Assembly {
 			if (nextTTDate < info.nextEvent) info.nextEvent = nextTTDate;
 		};
 
-		auto lastTT = [this](int profile) -> R_TimeTemp {
+		auto lastTT = [this](int profile) -> Answer_R<R_TimeTemp> {
 			_queries->q_TimeTempsForProfile.setMatchArg(profile);
 			Answer_R<R_TimeTemp> timeTemp = *_queries->q_TimeTempsForProfile.last();
-			return timeTemp.rec();
+			return timeTemp;
 		};
 
-		auto currentTT = [this](RecordID currProfileID, TimeOnly time) -> R_TimeTemp {
+		auto currentTT = [this](RecordID currProfileID, TimeOnly time) -> Answer_R<R_TimeTemp> {
 			_queries->q_TimeTempsForProfile.setMatchArg(currProfileID);
 			// Find last TT before/equal to time. Return 0 if none found.
-			auto curr_tt = R_TimeTemp{};
+			Answer_R<R_TimeTemp> curr_tt{};
 			for (Answer_R<R_TimeTemp> timeTemp : _queries->q_TimeTempsForProfile) {
 				if (timeTemp.rec().time_temp.time() > time) {
 					break;
 				}
-				curr_tt = timeTemp.rec();
+				curr_tt = timeTemp;
 			}
 			return curr_tt;
 		};
@@ -175,10 +175,11 @@ namespace Assembly {
 		_queries->q_ProfilesForZoneProg.setMatchArg(info.currSpell.programID);
 		getProfileForDay(info.currEvent.weekDayNo());
 		auto curr_tt = currentTT(info.currentProfileID, info.currEvent);
-		if (!curr_tt) {
+		if (curr_tt.status() != TB_OK) {
 			curr_tt = lastTT(info.prevProfileID);
 		}
-		info.currTT = curr_tt;
+		info.currTT = curr_tt.rec();
+		info.currTT_ID = curr_tt.id();
 		// currTT is last TT for currentSpell Program <= currEvent
 		info.nextTT = getNextTT(info.currentProfileID, info.currTT.time());
 		if (info.nextTT == info.currTT)
@@ -209,4 +210,11 @@ namespace Assembly {
 		}
 		return nextTT;
 	}
+
+	void Sequencer::updateTT(int id, client_data_structures::R_TimeTemp tt) {
+		Answer_R<R_TimeTemp> timeTemp = _queries->q_TimeTemps[id];
+		timeTemp.rec() = tt;
+		timeTemp.update();
+	}
+
 }

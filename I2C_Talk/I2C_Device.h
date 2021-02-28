@@ -19,6 +19,7 @@ public:
 	}
 	virtual int32_t set_runSpeed(int32_t i2cFreq) { return i2C().setI2CFrequency(i2cFreq); }
 	virtual void disable() {};
+	virtual auto reEnable()->I2C_Talk_ErrorCodes::Error_codes { return I2C_Talk_ErrorCodes::_OK; }
 	virtual void reset() {};
 
 	virtual auto read(int registerAddress, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {
@@ -34,11 +35,11 @@ public:
 	/// Returns data in Native-endianness, i.e. for Arduino LSB at lowest address.
 	/// Mask applied to device-byte order.
 	/// </summary>
-	auto read_verify_2bytes(int registerAddress, uint16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+	auto read_verify_2bytes(int registerAddress, int16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask = 0xFFFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 	/// <summary>
 	/// Non-Recovery
 	/// </summary>
-	auto read_verify_1byte(int registerAddress, uint8_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint8_t dataMask)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+	auto read_verify_1byte(int registerAddress, uint8_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint8_t dataMask = 0xFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 	
 		// delegating functions
 	void writeInSync() { i2C().writeInSync(); }
@@ -55,7 +56,6 @@ public:
 
 	uint8_t getAddress() const { return _address; }
 	void setAddress(uint8_t addr) {
-		//Serial.print(" I_I2Cdevice.setAddress: 0x"); Serial.println(addr, HEX); Serial.flush();
 		_address = addr; 
 	}
 
@@ -79,15 +79,25 @@ public:
 
 class I_I2Cdevice_Recovery : public I_I2Cdevice { // cannot be constexpr because of use of non-const class static in constructors
 public:
+	static constexpr decltype(millis()) DISABLE_PERIOD_ON_FAILURE = 60000; // 60 secs
+
 	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice(addr), _recover(&recover) { set_recover = _recover; 
 	//logger() << F("I_I2Cdevice_Recovery done for 0x") << L_hex << addr << L_endl;
 	} // initialiser for first array element 
 	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover) : _recover(&recover) {set_recover = _recover;}
 	I_I2Cdevice_Recovery(int addr) : I_I2Cdevice(addr), _recover(set_recover) {}; // initialiser for subsequent array elements 
 	I_I2Cdevice_Recovery() : I_I2Cdevice(), _recover(set_recover) {}; // initialiser for subsequent array elements 
+	
+	// Queries
 	bool isEnabled() const override { return _i2c_speed != 0; }
+	int32_t runSpeed() const override { return _i2c_speed; }
+	int32_t getFailedTime() const override { return _lastFailedTime; }
+	bool isUnrecoverable() const;
+	I2C_Recovery::I2C_Recover & recovery() const { return *_recover; }
+	
 	auto getStatus()->I2C_Talk_ErrorCodes::Error_codes override;
 	void disable() override { _lastFailedTime = millis(); _i2c_speed = 0; }
+	auto reEnable()->I2C_Talk_ErrorCodes::Error_codes override;
 	void reset() override { _i2c_speed = START_SPEED_AFTER_FAILURE;	}
 
 	using I_I2Cdevice::write;
@@ -96,15 +106,12 @@ public:
 	auto write(int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;  // Return errCode.
 	auto write_verify(int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;
 
-	int32_t runSpeed() const override { return _i2c_speed; }
 	using I_I2Cdevice::i2C;
 	I2C_Talk & i2C() override;
 
 	void setRecovery(I2C_Recovery::I2C_Recover & recovery) { _recover = &recovery; }
 	int32_t set_runSpeed(int32_t i2cFreq) override;
-	int32_t getFailedTime() const override { return _lastFailedTime; }
 
-	I2C_Recovery::I2C_Recover & recovery() const { return *_recover; }
 	static I2C_Recovery::I2C_Recover * set_recover;
 private:
 	int32_t _i2c_speed = START_SPEED_AFTER_FAILURE;

@@ -30,6 +30,7 @@ namespace Assembly {
 	private:
 		uint8_t initialiseTempSensors(); // return 0 for OK
 		uint8_t initialiseRemoteDisplays(); // return 0 for OK
+		uint8_t initialiseMixValveController(); // return 0 for OK
 
 		HeatingSystem & _hs;
 		IniFunctor _iniFunctor;

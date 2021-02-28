@@ -47,7 +47,7 @@ namespace RelationalDatabase {
 		RDB_B(uint16_t dbStartAddr, WriteByte_Handler *, ReadByte_Handler *, size_t password);
 
 		// Queries
-		bool checkPW(size_t password) const;
+		bool passwordOK() const { return _dbEndAddr != 0; }
 
 		// Modifiers
 		virtual void reset(size_t password, uint16_t dbMaxAddr);
@@ -63,6 +63,7 @@ namespace RelationalDatabase {
 		//template <typename Record_T> friend class RecordSelector_T;
 		// Queries
 		static ValidRecord_t unvacantRecords(int noOfRecords);
+		bool checkPW(size_t password) const;
 		// Modifiers
 		void setDB_Header();
 		void updateDB_Header() { _writeByte(_dbStartAddr+ SIZE_OF_PASSWORD, &_dbEndAddr, sizeof(DB_Size_t)); }
@@ -70,13 +71,13 @@ namespace RelationalDatabase {
 		void savePW(size_t password);
 
 		// Data
-		WriteByte_Handler *_writeByte;
-		ReadByte_Handler *_readByte;
-		DB_Size_t _dbStartAddr; // EEPROM address of start of database
+		WriteByte_Handler *_writeByte = 0;
+		ReadByte_Handler *_readByte = 0;
+		DB_Size_t _dbStartAddr = 0; // EEPROM address of start of database
 		// The next items are the DB Header, saved in the DB
 		// the password
-		DB_Size_t _dbEndAddr; // Current DB end addr
-		DB_Size_t _dbMaxAddr; // EEPROM address of end of avaialble space
+		DB_Size_t _dbEndAddr = 0; // Current DB end addr
+		DB_Size_t _dbMaxAddr = 0; // EEPROM address of end of avaialble space
 		// End of Header
 		enum { DB_HeaderSize = SIZE_OF_PASSWORD + sizeof(DB_Size_t) + sizeof(DB_Size_t), ValidRecord_t_Capacity = sizeof(ValidRecord_t) * 8 };
 	};

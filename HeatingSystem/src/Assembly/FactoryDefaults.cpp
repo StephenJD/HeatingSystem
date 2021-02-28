@@ -192,13 +192,6 @@ namespace Assembly {
 	};
 
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {
-		
-		//logger() << F("\n\nsetFactoryDefaults Try DB Readable") << L_endl;
-		//HeatingSystemSupport::initialise_virtualROM();
-		//auto noOpen = db.getTables(db.begin(), TB_NoOfTables);
-
-		//if (noOpen == TB_NoOfTables) return;
-		
 		//enum tableIndex { TB_ThermalStore, TB_MixValveContr, TB_Display, TB_Relay, TB_TempSensor, TB_TowelRail, TB_Dwelling, TB_Zone, TB_DwellingZone, TB_Program, TB_Profile, TB_TimeTemp, TB_Spell, TB_NoOfTables };
 		db.reset(password, RDB_MAX_SIZE);
 		logger() << L_time << F("setFactoryDefaults Started...\n");
@@ -231,11 +224,6 @@ namespace Assembly {
 		logger() << F("\nAll Tables Created\n");
 
 		logger() << F("\nsetFactoryDefaults Completed") << L_endl;
-
-		//logger() << F("\n\nCheck DB Readable") << L_endl;
-		//HeatingSystemSupport::initialise_virtualROM();
-		//db.getTables(db.begin(), TB_NoOfTables);
-
 	}
 	
 }

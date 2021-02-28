@@ -35,7 +35,8 @@ const uint8_t RTC_RESET_PIN = 4;
 
 void ui_yield() {}
 
-const uint8_t ZERO_CROSS_PIN = 15; // active LOW.
+constexpr uint8_t ZERO_CROSS_PIN = 15; // active falling edge.
+constexpr uint16_t ZERO_CROSS_DELAY = 690;
 const uint8_t RESET_OUT_PIN = 14;  // active LOW.
 const uint8_t RESET_LEDP_PIN = 16;  // high supply
 const uint8_t RESET_LEDN_PIN = 19;  // low for on.
@@ -130,7 +131,7 @@ void fullSpeedTest();
 I_I2Cdevice_Recovery & getDevice(int addr);
 uint8_t initialiseRemoteDisplaysFailed_();
 
-I2C_Talk i2c{ Wire, 2300000 }; // Wrapper not required - doesn't solve Wire not being constructed yet.
+I2C_Talk_ZX i2c{ Wire, 2300000 }; // Wrapper not required - doesn't solve Wire not being constructed yet.
 
 I2C_Recover i2c_recover{ i2c }; // Wrapper not required - doesn't solve Wire not being constructed yet.
 
@@ -158,13 +159,20 @@ byte testMode = normal;
 uint8_t relaySequence[] = { 0x7d,0x7e,0x7b,0x77,0x6f,0x5f,0x3f, 0x7c,0x7a,0x73,0x67,0x4f,0x1f,0x7e, 0x79,0x76,0x6b,0x57,0x2f,0x69,0x56,0x2b };
 
 //byte i2cAddr[] =   {0x24, 0x36 };
-byte i2cAddr[] =   {0x26, 0x74 };
-//byte i2cAddr[] =   {0x10, 0x28, 0x29, 0x4F, 0x74 };
+//byte i2cAddr[] =   {0x26, 0x74 };
+byte i2cAddr[] =   {0x10, 0x20, 0x28, 0x29, 0x4F, 0x74 };
 //byte i2cAddr[] =   { 0x28,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
 //byte i2cAddr[] = { 0x10,0x20,0x24,0x25,0x26,0x28,0x29,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
 //byte i2cAddr[] = { 0x10,0x20,0x24,0x25,0x26,0x28,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
 int successCount[sizeof(i2cAddr)] = { 0 };
 unsigned long lastTimeGood[sizeof(i2cAddr)] = { 0 };
+
+//TempSensor tempSens[] = { {i2c_recover, 0x36}};
+//TempSensor tempSens[] = { {i2c_recover, 0x74}};
+TempSensor tempSens[] = { {i2c_recover, 0x28}, 0x29, 0x4F, 0x74 };
+//TempSensor tempSens[] = { {i2c_recover, 0x28},0x29,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
+//TempSensor tempSens[] = { {i2c_recover, 0x28},0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
+const byte FIRST_TEMP_SENS_ADDR = tempSens[0].getAddress();
 
 class RelaysPortSequence : public RelaysPort {
 public:
@@ -201,13 +209,6 @@ private:
 };
 
 MixValveController mixValve{ i2c_recover, 0x10 };
-
-//TempSensor tempSens[] = { {i2c_recover, 0x36}};
-TempSensor tempSens[] = { {i2c_recover, 0x74}};
-//TempSensor tempSens[] = { {i2c_recover, 0x28}, 0x29, 0x4F, 0x74 };
-//TempSensor tempSens[] = { {i2c_recover, 0x28},0x29,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
-//TempSensor tempSens[] = { {i2c_recover, 0x28},0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
-const byte FIRST_TEMP_SENS_ADDR = tempSens[0].getAddress();
 
 Relay_B relays[] = { {1,0},{0,0},{2,0},{3,0},{4,0},{5,0},{6,0} };
 
@@ -287,7 +288,9 @@ void setup() {
 	resetPin.begin();
 	i2c.begin();
 	i2c.extendTimeouts(5000, 4); // default 3
-	//i2c.setTimeouts(1000);
+	i2c.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
+	i2c.setZeroCrossDelay(ZERO_CROSS_DELAY);
+
 	keypad.begin();
 
 #if defined(__SAM3X8E__)
@@ -444,9 +447,9 @@ void loop() {
 	}
 	uint8_t lastKey = 0;
 	int repeatKeyCount = 0;
-	while (true) {
+	//while (true) {
 		//for (int displayID = 0; displayID < 3 ; ++displayID) {
-			int displayID = 2;
+		/*	int displayID = 2;
 			nextRemKey = rem_keypad[displayID].getKey();
 			if (nextRemKey >= 0) {
 				if (nextRemKey == lastKey) ++repeatKeyCount; 
@@ -466,10 +469,10 @@ void loop() {
 					rem_lcd[displayID].displ().clear(); rem_lcd[displayID].displ().print("Down"); break;
 				}
 				rem_lcd[displayID].displ().print(repeatKeyCount);
-			}
+			} */
 		//}
 		//delay(1000);
-	}
+	//}
 
 	if (!showInstructions) {
 		//logger() << "NoShowInstr" << L_endl;
@@ -488,7 +491,6 @@ void loop() {
 					//logger() << "Next Cycle" << L_endl;
 					++tryCount;
 					auto status = rPort.nextSequence();
-					//logger() << "rPort.nextSequence() " << (status == _OK ? "Good" : "Failed") << L_endl;
 				}
 				//logger() << "\nMoved to next device pos" << i2cAddrIndex << L_endl;
 				//logger() << "\nMoved to next device 0x" << L_hex << i2cAddr[i2cAddrIndex]  << L_endl;
@@ -506,9 +508,9 @@ void loop() {
 			mainLCD->print("       ");
 		}
 
-		//logger() << "tryDevice index:" << i2cAddrIndex << L_endl;
-		//uint8_t result = tryDeviceAt(i2cAddrIndex);
-		uint8_t result = 1;
+		logger() << "tryDevice index:" << i2cAddrIndex << L_endl;
+		uint8_t result = tryDeviceAt(i2cAddrIndex);
+		//uint8_t result = 1;
 
 		if (result != lastResult) {
 			displayNeedsRefreshing = true;
@@ -612,7 +614,6 @@ void fullSpeedTest() {
 	logger() << "\n Speedtest I2C.\n";
 	mainLCD->setCursor(0, 2);
 	mainLCD->print("Speed: 0x");
-	i2c.setTimeouts(5000, 2);
 	bool firstFound = false;
 	unsigned long showTill = millis() + 500L;
 	unsigned long startTestTime = millis();
@@ -620,7 +621,7 @@ void fullSpeedTest() {
 	for (int i = 0; i < sizeof(i2cAddr); ++i) {
 		uint8_t addr = i2cAddr[i];
 		auto & dev = getDevice(addr);
-		logger() << L_endl << "Device 0x" << L_hex << dev.getAddress() << L_endl;
+		logger() << L_endl << "device 0x" << L_hex << dev.getAddress() << L_endl;
 		i2c_recover.registerDevice(dev);
 		i2c_test.show_fastest(dev);
 		if (yieldFor(showTill - millis())) break;
@@ -630,7 +631,7 @@ void fullSpeedTest() {
 		mainLCD->setCursor(13, 2);
 		if (i2c_test.error() == 0) {
 			mainLCD->print(dev.runSpeed());
-			logger() << "\t Speed 0x" << L_hex << dev.getAddress() << L_dec << F(" : ") << dev.runSpeed() << L_endl;
+			logger() << "\t Speed device 0x" << L_hex << dev.getAddress() << L_dec << F(" : ") << dev.runSpeed() << L_endl;
 			++(i2c_test.totalDevicesFound);
 		}
 		else {
@@ -640,7 +641,7 @@ void fullSpeedTest() {
 		}
 		showTill = millis() + 500L;
 	}
-	i2c.setTimeouts(5000, 5);
+	i2c.setTimeouts(5000, I2C_Talk::WORKING_STOP_TIMEOUT);
 	logger() << "\tTest took mS: " << millis() - startTestTime;
 	mainLCD->setCursor(0, 3);
 	mainLCD->print("Total:");
@@ -752,7 +753,8 @@ Error_codes RelaysPortSequence::testRelays() {
 	else if (testMode != speedTestExistsOnly) {
 		const int noOfRelays = sizeof(relays) / sizeof(relays[0]);
 		uint8_t numberFailed = 0;
-		for (uint8_t relayNo = 0; relayNo < noOfRelays; ++relayNo) {
+		uint8_t relayNo = 2;
+		//for (uint8_t relayNo = 0; relayNo < noOfRelays; ++relayNo) {
 			auto onStatus = _OK;
 			auto offStatus = _OK;
 			mainLCD->setCursor(13, 1);
@@ -761,7 +763,7 @@ Error_codes RelaysPortSequence::testRelays() {
 			relays[relayNo].set(1);
 			onStatus = updateRelays();
 			if (onStatus == _OK) logger() << " ON OK\n"; else logger() << " ON Failed\n";
-			if (yieldFor(300)) break;
+			if (yieldFor(300)) return status;
 			relays[relayNo].set(0);
 			offStatus = updateRelays();
 			if (offStatus == _OK) logger() << " OFF OK\n"; else logger() << " OFF Failed\n";
@@ -775,9 +777,9 @@ Error_codes RelaysPortSequence::testRelays() {
 				mainLCD->print(" OK   ");
 				logger() << "Test OK\n";
 			}
-			if (yieldFor(300)) break;
+			if (yieldFor(300)) return status;
 			status |= offStatus;
-		}
+		//}
 	}
 	return status;
 }
@@ -833,7 +835,7 @@ uint8_t MixValveController::getPos(uint8_t & pos) {
 	uint8_t status = read(valve_pos, 1, &pos);
 	uint8_t dataBuffa = 1;
 	if (status == _OK) status = write(7, 1, &dataBuffa); // debug try writing as well.
-	if (status)  logger() << "\n MixValveController::getPos failed. Addr:" << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+	if (status)  logger() << "\n MixValveController::getPos failed. device:" << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
 	//else  logger() << "\n MixValveController::getPos OK after mS", tryAgainTime);
 	return status;
 }

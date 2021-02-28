@@ -29,13 +29,12 @@ public:
 	I2C_SpeedTest() = default;
 	I2C_SpeedTest(I_I2Cdevice_Recovery & i2c_device) : _i2c_device(&i2c_device) {
 #ifdef DEBUG_SPEED_TEST		
-		logger() << F("  I2C_SpeedTest 0x") << L_hex << i2c_device.getAddress() << L_endl;
+		logger() << F("  I2C_SpeedTest device 0x") << L_hex << i2c_device.getAddress() << L_endl;
 #endif
 	}
 	static bool doingSpeedTest() { return _is_inSpeedTest; }
 	auto error() const -> I2C_Talk_ErrorCodes::Error_codes{ return _error; }
 	int32_t thisHighestFreq() const { return _thisHighestFreq; }
-	uint8_t stopMargin() const { return _stopMargin; }
 
 	uint32_t fastest();
 	uint32_t fastest(I_I2Cdevice_Recovery & i2c_device);
@@ -56,7 +55,6 @@ private:
 	I_I2Cdevice_Recovery * _i2c_device = 0;
 	int32_t _thisHighestFreq = 0;
 	I2C_Talk_ErrorCodes::Error_codes _error = I2C_Talk_ErrorCodes::_OK;
-	uint8_t _stopMargin = 0;
 };
 
 // specialization implemented in .cpp

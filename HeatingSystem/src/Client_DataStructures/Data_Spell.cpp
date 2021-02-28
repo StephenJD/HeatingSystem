@@ -71,7 +71,6 @@ namespace client_data_structures {
 		: _startDate(DateTime{ 0 }, ValRange(e_editAll, 0, JUDGEMEMT_DAY.asInt(),0, e_NO_OF_DT_EDIT_POS)) {}
 
 	I_Data_Formatter * RecInt_Spell::getField(int fieldID) {
-		//if (recordID() == -1) return getFieldAt(fieldID, 0);
 		switch (fieldID) {
 		case e_date: {
 			_startDate.val = answer().rec().date.asInt();

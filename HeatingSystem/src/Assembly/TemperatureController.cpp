@@ -32,9 +32,8 @@ namespace Assembly {
 		Zone::setSequencer(sequencer);
 		int index = 0;
 		logger() << F("loadtempSensors...") << L_endl;
-		auto tempSensors = queries.q_tempSensors;
 
-		for (Answer_R<R_TempSensor> tempSensor : tempSensors) {
+		for (Answer_R<R_TempSensor> tempSensor : queries.q_tempSensors) {
 			tempSensorArr[index].initialise(tempSensor.id(), tempSensor.rec().address); // Reads temp
 			++index;
 			//if (index == 7)
@@ -43,8 +42,7 @@ namespace Assembly {
 		logger() << F("loadtempSensors Completed") << L_endl;
 
 		index = 0;
-		auto relays = queries.q_relays;
-		for (Answer_R<R_Relay> relay : relays) {
+		for (Answer_R<R_Relay> relay : queries.q_relays) {
 			relayArr[index].initialise(relay.id(), relay.rec().relay_B);
 			++index;
 		}
@@ -56,8 +54,7 @@ namespace Assembly {
 
 		logger() << F("load thermalStore Completed") << L_endl;
 		index = 0;
-		auto mixValveControls = queries.q_MixValve;
-		for (Answer_R<R_MixValveControl> mixValveControl : mixValveControls) {
+		for (Answer_R<R_MixValveControl> mixValveControl : queries.q_MixValve) {
 			mixValveControllerArr[index].initialise(index
 				, MIX_VALVE_I2C_ADDR
 				, relayArr
@@ -71,8 +68,7 @@ namespace Assembly {
 		
 		logger() << F("load mixValveControllerArr Completed") << L_endl;
 		index = 0;
-		auto zones = queries.q_Zones;
-		for (Answer_R<R_Zone> zone : zones) {
+		for (Answer_R<R_Zone> zone : queries.q_Zones) {
 			zoneArr[index].initialise(
 				zone
 				, tempSensorArr[zone.rec().callTempSens]
@@ -85,8 +81,7 @@ namespace Assembly {
 		logger() << F("loadZones Completed") << L_endl;
 
 		index = 0;
-		auto towelrails = queries.q_towelRails;
-		for (Answer_R<R_TowelRail> towelRail : towelrails) {
+		for (Answer_R<R_TowelRail> towelRail : queries.q_towelRails) {
 			towelRailArr[index].initialise(towelRail.id()
 				, tempSensorArr[towelRail.rec().callTempSens]
 				, relayArr[towelRail.rec().callRelay]
@@ -115,7 +110,7 @@ namespace Assembly {
 		//logger() << L_time << "Check TS's" << L_endl;
 		for (auto & ts : tempSensorArr) {
 			ts.readTemperature();
-			//logger() << F("TS: 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
+			//logger() << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
 		}
 
@@ -129,7 +124,8 @@ namespace Assembly {
 		//logger() << L_time << "Check MixV's" << L_endl;
 		for (auto & mixValveControl : mixValveControllerArr) {
 			mixValveControl.check();
-			if (mixValveControl.recovery().isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 
+			if (newMinute && checkPreHeat) mixValveControl.logMixValveOperation(true);
+			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 
 			ui_yield(); 
 		}
 
@@ -143,7 +139,7 @@ namespace Assembly {
 			relay.checkControllerStateCorrect();
 		}
 		relayController().updateRelays();
-		if (static_cast<RelaysPort&>(relayController()).recovery().isUnrecoverable()) HardReset::arduinoReset("RelayController");
+		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
 	}
 

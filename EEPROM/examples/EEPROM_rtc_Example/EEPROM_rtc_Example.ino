@@ -11,22 +11,15 @@
 #define RTC_RESET 4
 using namespace I2C_Recovery;
 
+void ui_yield() {};
 
-I2C_Talk rtc_o(Wire1);
-
-I2C_Talk & rtc() {
-	static I2C_Talk _rtc{ Wire1 };
-	return _rtc;
-}
+I2C_Talk rtc(Wire1);
 
 int st_index;
-//I2C_Scan scan{ rtc() };              // works fine
-//I2C_SpeedTest speed{ rtc() };        // works fine
-//I2C_Recover_Retest recover{ rtc() }; // works fine
 
-I2C_Scan scan{ rtc_o };              // works fine
-I2C_SpeedTest speed{ rtc_o };        // works fine
-I2C_Recover_Retest recover{ rtc_o }; // works fine
+I_I2C_Scan scan{ rtc };              // works fine
+I_I2C_SpeedTestAll speed{rtc};        // works fine
+I2C_Recover_Retest recover{ rtc, 10 }; // works fine
 
 Clock & clock_() {
 	static Clock _clock;
@@ -39,7 +32,7 @@ Logger & logger() {
 }
 
 EEPROMClass & eeprom() {
-	static EEPROMClass _eeprom_obj{ rtc(), 0x50 };
+	static EEPROMClass_T<rtc> _eeprom_obj{0x50 };
 	return _eeprom_obj;
 }
 
@@ -48,7 +41,7 @@ uint8_t resetRTC(I2C_Talk & i2c, int) {
 	digitalWrite(RTC_RESET, HIGH);
 	delayMicroseconds(5000);
 	digitalWrite(RTC_RESET, LOW);
-	i2c.restart();
+	i2c.begin();
 	return I2C_Talk_ErrorCodes::_OK;
 }
 
@@ -68,28 +61,25 @@ void setup() {
 	Serial.println("Serial Begun");
 	pinMode(RTC_RESET, OUTPUT);
 	digitalWrite(RTC_RESET, LOW); // reset pin
-	//rtc_test.setTimeoutFn(resetRTC);
-	resetRTC(rtc(), 0x50);
-	//rtc().restart();
+	resetRTC(rtc, 0x50);
 	Serial.print("Wire addr   "); Serial.println((long)&Wire);
 	Serial.print("Wire 1 addr "); Serial.println((long)&Wire1);
 
-	scan.show_all();
-	speed.showAll_fastest();
-	recover.showAll_fastest();
+	//scan.show_all();
+	//speed.showAll_fastest();
 
-	uint8_t status = rtc().status(0x50);
-	Serial.print("EEPROM Status"); Serial.println(rtc().getStatusMsg(status));
+	uint8_t status = rtc.status(0x50);
+	Serial.print("EEPROM Status"); Serial.println(rtc.getStatusMsg(status));
 	
-	status = rtc().status(0x68);
-	Serial.print("Clock Status"); Serial.println(rtc().getStatusMsg(status));
+	status = rtc.status(0x68);
+	Serial.print("Clock Status"); Serial.println(rtc.getStatusMsg(status));
 	// **** EP Read ****
 	uint8_t dataBuffa[20] = { 0 };
 	Serial.println("\nRead I2C_EEPROM :");
 	//uint8_t status = EEPROM.readEP(0, sizeof(dataBuffa), dataBuffa);
-	status = rtc().readEP(0x50, 0, sizeof(dataBuffa), dataBuffa);
+	status = rtc.readEP(0x50, 0, sizeof(dataBuffa), dataBuffa);
 	if (status) {
-		Serial.print("EEPROM.readEP failed with"); Serial.println(rtc().getStatusMsg(status));
+		Serial.print("EEPROM.readEP failed with"); Serial.println(rtc.getStatusMsg(status));
 	}	
 	
 	for (auto d : dataBuffa) Serial.println(d, DEC);
@@ -99,18 +89,19 @@ void setup() {
 	Serial.println(poem);
 	
 	//status = EEPROM.writeEP(30, sizeof(poem), poem);
-	status = rtc().writeEP(0x50, 30, sizeof(poem), poem);
+	Serial.println("Start writing...");
+	status = rtc.writeEP(0x50, 30, sizeof(poem), poem);
 	if (status) {
-		Serial.print("writeEP failed with"); Serial.println(rtc().getStatusMsg(status));
+		Serial.print("writeEP failed with"); Serial.println(rtc.getStatusMsg(status));
 	}
 	for (char & chr : poem) { chr = 0; }
 
 	Serial.println("\nRead I2C_EEPROM :");
 	//status = EEPROM.readEP(30, sizeof(poem), poem);
-	status = rtc().readEP(0x50, 30, sizeof(poem), poem);
+	status = rtc.readEP(0x50, 30, sizeof(poem), poem);
 	if (status) {
-		Serial.print("readEP failed with"); Serial.println(rtc().getStatusMsg(status));
-		rtc().restart();	
+		Serial.print("readEP failed with"); Serial.println(rtc.getStatusMsg(status));
+		rtc.begin();	
 	}
 
 	Serial.println(poem);
@@ -118,16 +109,18 @@ void setup() {
 }
 
 void loop() {
+/*
 	for (char & chr : poem) { chr = 0; }
 
 	Serial.println("\nRead I2C_EEPROM :");
 	//status = EEPROM.readEP(30, sizeof(poem), poem);
-	auto status = rtc().readEP(0x50, 30, sizeof(poem), poem);
+	auto status = rtc.readEP(0x50, 30, sizeof(poem), poem);
 	if (status) {
-		Serial.print("readEP failed with"); Serial.println(rtc().getStatusMsg(status));
-		rtc().restart();
+		Serial.print("readEP failed with"); Serial.println(rtc.getStatusMsg(status));
+		rtc.begin();
 	}
 
 	Serial.println(poem);
 	Serial.println();
+	*/
 }

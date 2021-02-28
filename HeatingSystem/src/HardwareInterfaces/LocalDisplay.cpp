@@ -32,7 +32,9 @@ namespace HardwareInterfaces {
 
 	void LocalDisplay::sendToDisplay() {
 		//logger() << F(" *** sendToDisplay() *** ") << buff() << L_endl;
-		_lcd.clear();
+		//_lcd.clear();
+		clearFromEnd();
+		_lcd.setCursor(0, 0);
 		//delay(200);
 		//logger() << buff());
 		///0////////9/////////9/////////9/////////9/////////9/////////9///////////////////////////////////

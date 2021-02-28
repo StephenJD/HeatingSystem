@@ -28,6 +28,7 @@ namespace Assembly {
 		RelationalDatabase::TableQuery q_Displays;
 		RelationalDatabase::TableQuery q_Dwellings;
 		RelationalDatabase::TableQuery q_Zones;
+		RelationalDatabase::TableQuery q_TimeTemps;
 		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> q_ZonesForDwelling;
 		RelationalDatabase::QueryFL_T<client_data_structures::R_DwellingZone> q_DwellingsForZone;
 		RelationalDatabase::QueryF_T<client_data_structures::R_Program> q_ProgsForDwelling;

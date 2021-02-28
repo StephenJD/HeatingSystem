@@ -20,7 +20,6 @@ namespace HardwareInterfaces {
 		int8_t showSpeedTestFailed(int line, I_I2Cdevice_Recovery & testFn, const char * device);
 		
 		Assembly::Initialiser & _ini;
-		uint8_t _max_transferMargin_uS = 3;
 	};
 
 }

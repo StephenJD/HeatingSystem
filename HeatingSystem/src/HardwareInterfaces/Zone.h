@@ -39,10 +39,9 @@ namespace HardwareInterfaces {
 		RelationalDatabase::RecordID id() const { return _recordID; }
 		int8_t getCallFlowT() const { return _callFlowTemp; } // only for simulator & reporting
 		int8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
-		int8_t preheatTempRequest() const { return _offset_preheatCallTemp; }
+		int8_t preheatTempRequest() const { return _preheatCallTemp; }
 		int8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
 		int8_t maxUserRequestTemp() const;
-		int8_t offset() const { return _offsetT; }
 		int8_t getCurrTemp() const;
 		bool isCallingHeat() const;
 		Date_Time::DateTime nextEventTime() const { return _ttEndDateTime; }
@@ -53,8 +52,8 @@ namespace HardwareInterfaces {
 		Date_Time::DateTime startDateTime() { return _ttStartDateTime; }
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
-		void resetOffsetToZero() { _offsetT = 0; }
-		void offsetCurrTempRequest(int8_t val);
+		void cancelPreheat();
+		void changeCurrTempRequest(int8_t val);
 		bool setFlowTemp();
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
 		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
@@ -89,7 +88,6 @@ namespace HardwareInterfaces {
 
 		RelationalDatabase::Answer_R<client_data_structures::R_Zone> _zoneRecord;
 		RelationalDatabase::RecordID _recordID = 0;
-		int8_t _offsetT = 0;
 		uint8_t _maxFlowTemp = 0;
 		uint16_t _startCallTemp = 0;
 		int16_t _minsInPreHeat = PREHEAT_ENDED;
@@ -102,9 +100,9 @@ namespace HardwareInterfaces {
 		uint8_t _minsCooling = 0;
 		mutable uint8_t _averagePeriod = 0;
 
-		int8_t _currProfileTempRequest = 0; // current profile temp. Shown with offset on display - user can advance to next.
-		int8_t _nextProfileTempRequest = 0; // next selectable profile temp. Shown with offset on display
-		int8_t _offset_preheatCallTemp = 0; // current called-for temp, adjusted for pre-heat and offset.
+		int8_t _currProfileTempRequest = 0; // current profile temp. - user can advance to next.
+		int8_t _nextProfileTempRequest = 0; // next selectable profile temp.
+		int8_t _preheatCallTemp = 0; // current called-for temp, adjusted for pre-heat.
 		Date_Time::DateTime _ttStartDateTime;
 		Date_Time::DateTime _ttEndDateTime;
 		mutable uint16_t _rollingAccumulatedRatio = 0;

@@ -40,16 +40,16 @@ namespace HardwareInterfaces {
 		if (speedTest.error() != _OK) {
 			hs().mainDisplay.print("Bad");
 			hs().mainDisplay.sendToDisplay();
-			logger() << F("\tspeedTest 0x") << L_hex << device.getAddress() << I2C_Talk::getStatusMsg(speedTest.error()) << L_endl;
+			device.disable();
+			logger() << F("\tspeedTest device 0x") << L_hex << device.getAddress() << I2C_Talk::getStatusMsg(speedTest.error()) << L_endl;
 #ifndef ZPSIM
 			delay(2000);
 #endif
 		}
 		else {
-			if (speedTest.stopMargin() > _max_transferMargin_uS) _max_transferMargin_uS = speedTest.stopMargin();
 			hs().mainDisplay.print(" OK");
 			hs().mainDisplay.sendToDisplay();
-			logger() << F("\tspeedTest 0x") << L_hex << device.getAddress() << F(". OK at ") << L_dec << device.runSpeed() << L_endl;
+			logger() << F("\tspeedTest device 0x") << L_hex << device.getAddress() << F(". OK at ") << L_dec << device.runSpeed() << L_endl;
 		}
 		logger() << L_endl;
 		return speedTest.error();
@@ -59,7 +59,6 @@ namespace HardwareInterfaces {
 
 	uint8_t TestDevices::speedTestDevices() {// returns 0 for success or returns ERR_PORTS_FAILED / ERR_I2C_SPEED_FAIL
 		enum { e_allPassed, e_mixValve, e_relays = 2, e_US_Remote = 4, e_FL_Remote = 8, e_DS_Remote = 16, e_TempSensors = 32 };
-		hs().i2C.setTimeouts(5000, 2);
 		hs()._recover.setTimeoutFn(&_ini._resetI2C.hardReset);
 		int8_t returnVal = 0;
 		hs().mainDisplay.setCursor(0, 0);
@@ -90,7 +89,7 @@ namespace HardwareInterfaces {
 		//auto ts = TempSensor{ hs().recoverObject(),0x29 };
 			//auto & ts = hs()._tempController.tempSensorArr[i];
 			//logger() << F("\tTry TS pos: ") << i << L_endl;
-			//logger() << F("\tTry TS 0x") << L_hex << ts.getAddress() << L_endl;
+			//logger() << F("\tTry TS device 0x") << L_hex << ts.getAddress() << L_endl;
 			auto status = showSpeedTestFailed(1,ts, "TS");
 			//logger() << L_time << "TS Error: " << status << L_endl;
 		}
@@ -102,7 +101,7 @@ namespace HardwareInterfaces {
 
 		hs().mainDisplay.sendToDisplay();
 		hs()._recover.setTimeoutFn(&_ini._resetI2C);
-		hs().i2C.setTimeouts(5000, _max_transferMargin_uS);
+		hs().i2C.setTimeouts(15000, I2C_Talk::WORKING_STOP_TIMEOUT); // give generous stop-timeout in normal use 
 		return returnVal;
 	}
 

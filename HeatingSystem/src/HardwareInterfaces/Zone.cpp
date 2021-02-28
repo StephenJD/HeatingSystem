@@ -43,22 +43,27 @@ namespace HardwareInterfaces {
 		_zoneRecord = zoneRecord;
 		_recordID = zoneRecord.id();
 		_maxFlowTemp = zoneRecord.rec().maxFlowTemp;
-		_offsetT = zoneRecord.rec().offsetT;
 		uint8_t timeC;
 		if (_zoneRecord.rec().autoQuality == 0) timeC = _zoneRecord.rec().autoDelay;
 		else timeC = _zoneRecord.rec().autoTimeC;
 		_timeConst = uint16_t(uncompressTC(timeC));
 		if (isDHWzone()) _zoneRecord.rec().autoRatio = uint8_t(MAX_RATIO * RATIO_DIVIDER);
 		refreshProfile(true);
-		_offset_preheatCallTemp = _currProfileTempRequest + offset();
+		_preheatCallTemp = _currProfileTempRequest;
 		_rollingAccumulatedRatio = REQ_ACCUMULATION_PERIOD * _zoneRecord.rec().autoRatio;
 		_startCallTemp = getFractionalCallSensTemp();
 	}
 
-	void Zone::offsetCurrTempRequest(int8_t val) {
-		//auto maxAllowed = maxUserRequestTemp();
-		//if (val > maxAllowed) val = maxAllowed;
-		_offsetT = (val - _currProfileTempRequest);
+	void Zone::changeCurrTempRequest(int8_t val) {
+		// Adjust current TT.
+		bool doingCurrentProfile = _ttStartDateTime <= clock_().now();
+		auto profileDate = doingCurrentProfile ? clock_().now() : nextEventTime();
+		auto profileInfo = _sequencer->getProfileInfo(id(), profileDate);
+		auto currTT = profileInfo.currTT;
+		currTT.setTemp(val);
+		_sequencer->updateTT(profileInfo.currTT_ID, currTT);
+		_currProfileTempRequest = val;
+		cancelPreheat();
 	}
 
 	bool Zone::isDHWzone() const {
@@ -84,7 +89,6 @@ namespace HardwareInterfaces {
 	}
 
 	int8_t Zone::modifiedCallTemp(int8_t callTemp) const {
-		callTemp += _offsetT;
 		if (callTemp < MIN_ON_TEMP) callTemp = MIN_ON_TEMP;
 		return callTemp;
 	}
@@ -122,7 +126,7 @@ namespace HardwareInterfaces {
 				_averagePeriod == 0
 				&& abs(tempError) < 16
 				//&& flowTemp > zoneTemp
-				&& _offset_preheatCallTemp > outsideTemp;
+				&& _preheatCallTemp > outsideTemp;
 			}
 		};
 
@@ -175,7 +179,7 @@ namespace HardwareInterfaces {
 				<< F("Ave:") << (_rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD) / RATIO_DIVIDER
 				<< F("AvePer:") << _averagePeriod
 				<< F("CoolPer:") << (int)_minsCooling
-				<< F("Error:") << (fractionalZoneTemp - _offset_preheatCallTemp * 256) / 256.
+				<< F("Error:") << (fractionalZoneTemp - _preheatCallTemp * 256) / 256.
 				<< F("Outside:") << outsideTemp
 				<< F("PreheatMins:") << _minsInPreHeat
 				<< controlledBy
@@ -183,11 +187,11 @@ namespace HardwareInterfaces {
 		};
 
 		// Algorithm
-		int16_t tempError = (fractionalZoneTemp - (_offset_preheatCallTemp << 8)) / 16; // 1/16 degrees +ve = Temp too high
+		int16_t tempError = (fractionalZoneTemp - (_preheatCallTemp << 8)) / 16; // 1/16 degrees +ve = Temp too high
 		uint16_t zoneTemp = fractionalZoneTemp / 256;
 		uint8_t flowTemp;
 		if (isDHW) {
-			auto needHeat = _thermalStore->needHeat(_offset_preheatCallTemp, nextTempRequest());
+			auto needHeat = _thermalStore->needHeat(_preheatCallTemp, nextTempRequest());
 			ratio = MAX_RATIO;
 			tempError = needHeat ? -16 : 16;
 			flowTemp = _callTS->get_temp();
@@ -253,7 +257,7 @@ namespace HardwareInterfaces {
 		}
 
 		_callFlowTemp = (int8_t)requestedFlowTemp;
-		logTemps(_offset_preheatCallTemp, fractionalZoneTemp, requestedFlowTemp, flowTemp, ratio);
+		logTemps(_preheatCallTemp, fractionalZoneTemp, requestedFlowTemp, flowTemp, ratio);
 
 		return (tempError < 0);
 	}
@@ -262,20 +266,32 @@ namespace HardwareInterfaces {
 		// Lambdas
 		auto isTimeForNextEvent = [this]() -> bool { return clock_().now() >= _ttEndDateTime; };
 		auto notAdvancedToNextProfile = [this, reset]() -> bool { return reset || _ttStartDateTime <= clock_().now(); };
-		
+		auto doReset = [reset, this](int currTemp, bool doingCurrent)-> bool {
+			bool doReset = reset || (doingCurrent && currTemp != _currProfileTempRequest);
+			if (doReset) cancelPreheat();
+			return doReset;
+		};
+
 		// Algorithm
-		auto profileDate = notAdvancedToNextProfile() ? clock_().now() : nextEventTime();
+		bool doingCurrentProfile = notAdvancedToNextProfile();
+		auto profileDate = doingCurrentProfile ? clock_().now() : nextEventTime();
 		auto profileInfo = _sequencer->getProfileInfo(id(), profileDate);
-	
-		if (reset || isTimeForNextEvent()) {
+		auto currProfileTemp = profileInfo.currTT.temp();
+		if (doReset(currProfileTemp, doingCurrentProfile) || isTimeForNextEvent()) {
 			saveThermalRatio();			
 			setNextEventTime(profileInfo.nextEvent);
 			setNextProfileTempRequest(profileInfo.nextTT.time_temp.temp());
 			setTTStartTime(clock_().now());
-			setProfileTempRequest(profileInfo.currTT.temp());
+			setProfileTempRequest(currProfileTemp);
 		}
 
 		return profileInfo;
+	}
+
+	void Zone::cancelPreheat() {
+		_minsInPreHeat = PREHEAT_ENDED;
+		_finishedFastHeating = false;
+		_minsCooling = 0;
 	}
 
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
@@ -328,7 +344,7 @@ namespace HardwareInterfaces {
 		};
 
 		auto saveNewTimeDelay = [calculatePreheatTime, &zoneRec, this]() {
-			auto minsToAdd = calculatePreheatTime(_startCallTemp, _offset_preheatCallTemp);
+			auto minsToAdd = calculatePreheatTime(_startCallTemp, _preheatCallTemp);
 			auto newDelay = _minsInPreHeat - minsToAdd;
 			if (newDelay > 127) newDelay = 127;
 			else if (newDelay < -127) newDelay = -127;
@@ -341,10 +357,10 @@ namespace HardwareInterfaces {
 			int minsToAdd;
 			bool needToStart;
 			auto info = refreshProfile(false);
-			//if (getCallFlowT() == _maxFlowTemp) return _offset_preheatCallTemp;// is already heating. Don't need to check for pre-heat
-			auto preheatCallTemp = info.currTT.temp() + offset();
+			//if (getCallFlowT() == _maxFlowTemp) return _preheatCallTemp;// is already heating. Don't need to check for pre-heat
+			auto preheatCallTemp = info.currTT.temp();
 			do {
-				minsToAdd = calculatePreheatTime(currTemp_fractional, info.nextTT.temp() + offset());
+				minsToAdd = calculatePreheatTime(currTemp_fractional, info.nextTT.temp());
 				if (minsToAdd > 0) {
 					profileLogger() << "\t" << zoneRec.name << " Preheat mins " << minsToAdd << " Delay: " << zoneRec.autoDelay << L_endl;
 					minsToAdd += zoneRec.autoDelay + 5;
@@ -354,18 +370,18 @@ namespace HardwareInterfaces {
 				info = _sequencer->getProfileInfo(id(), info.nextEvent);
 			} while (clock_().now().minsTo(info.nextEvent) < 60*24);
 			if (needToStart) {
-				preheatCallTemp = info.nextTT.temp() + offset();
+				preheatCallTemp = info.nextTT.temp();
 				saveThermalRatio();
 				profileLogger() << zoneRec.name << " Preheat " << minsToAdd  
-				<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp() + offset())
+				<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp())
 				<< " by " << info.nextEvent
-				<< " Offset: " << (int)offset() << L_endl;
+				<< L_endl;
 			}
 			return preheatCallTemp;
 		};
 
 		auto finishedPreheat = [this](int newPreheatTemp) -> bool {
-			auto finishedEarly = newPreheatTemp < _offset_preheatCallTemp && _minsInPreHeat > 0;
+			auto finishedEarly = newPreheatTemp < _preheatCallTemp && _minsInPreHeat > 0;
 			return _finishedFastHeating || finishedEarly;
 		};
 
@@ -383,13 +399,13 @@ namespace HardwareInterfaces {
 		if (finishedPreheat(newPreheatTemp)) {
 			auto resultQuality = (currTemp_fractional - _startCallTemp) / 25;
 			profileLogger() << zoneRec.name 
-				<< " Preheat OK. Req " << _offset_preheatCallTemp 
+				<< " Preheat OK. Req " << _preheatCallTemp 
 				<< " is: " << L_fixed  << currTemp_fractional 
 				<< L_dec << " Range: " << resultQuality
 				<< " Ratio: " << zoneRec.autoRatio / RATIO_DIVIDER
 				<< " Delay: " << zoneRec.autoDelay
 				<< L_endl;
-			bool amLate = _offset_preheatCallTemp == currTempRequest() ? true : false;
+			bool amLate = _preheatCallTemp == currTempRequest() ? true : false;
 			DateTime targetTime;
 			if (amLate) targetTime = _ttStartDateTime; else targetTime = _ttEndDateTime;
 			auto missedTargetTime = targetTime.minsTo(clock_().now());
@@ -401,18 +417,16 @@ namespace HardwareInterfaces {
 					saveNewTimeDelay();
 				}
 			}
-			_finishedFastHeating = false;
-			_minsInPreHeat = PREHEAT_ENDED;
-			_minsCooling = 0;
+			cancelPreheat();
 			_startCallTemp = currTemp_fractional;
 		}
-		if (newPreheatTemp > _offset_preheatCallTemp) {
+		if (newPreheatTemp > _preheatCallTemp) {
 			profileLogger() << "\tStart Preheat " << zoneRec.name << L_endl;
 			_startCallTemp = currTemp_fractional;
 			if (_minsCooling == DELAY_COOLING_TIME) _minsCooling = MEASURING_DELAY;
 			_minsInPreHeat = 0;
 		} 
-		_offset_preheatCallTemp = newPreheatTemp;
+		_preheatCallTemp = newPreheatTemp;
 	}
 
 }

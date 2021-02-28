@@ -15,7 +15,7 @@ namespace LCD_UI {
 		const char * toCStr() const { return _lcd->buff(); }
 		CursorMode cursorMode() { return _lcd->cursorMode(); }
 		int cursorPos() { return _lcd->cursorPos(); }
-		//bool requestingNewLine() {return toCStr()[strlen(toCStr()) - 1] == '~';}
+		size_t end() { return _lcd->end(); }
 		// Modifiers
 		
 		/// <summary>	
@@ -25,7 +25,7 @@ namespace LCD_UI {
 		bool hasAdded(const char * stream, CursorMode cursorMode, int cursorOffset, int endPos, ListStatus listStatus);
 		void newLine();
 		void reset() {_lcd->reset();}
-		void truncate(int newEnd) { _lcd->truncate(newEnd); }
+		void truncate(int newEnd) { _lcd->setEnd(newEnd); }
 		HardwareInterfaces::LCD_Display * _lcd;
 	};
 }

@@ -56,7 +56,7 @@ enum { e_DS_TempAddr = 0x4f, e_US_TempAddr = 0x2C }; // only used when version-c
 enum Role role = e_Master;
 
 I2C_Talk & i2C() {
-	static I2C_Talk _i2C(MIX_VALVE_I2C_ADDR); // not initialised until this translation unit initialised.
+	static I2C_Talk _i2C; // not initialised until this translation unit initialised.
 	return _i2C;
 }
 
@@ -103,10 +103,10 @@ void setup() {
 	Serial.begin(SERIAL_RATE);
 	Serial.println("Start");
 	psu_enable.begin(true);
-	logger() << L_allwaysFlush << F("Setup Started") << L_endl;
+	logger() << F("Setup Started") << L_endl;
 	role = e_Master;
 
-	i2C().setTimeouts(10000, 10);
+	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT);
 	i2C().setMax_i2cFreq(100000);
 	i2C().onReceive(receiveI2C);
 	i2C().onRequest(requestEventI2C);
@@ -167,14 +167,15 @@ void requestEventI2C() {
 //	delayMicroseconds(1000); // for testing only
 	uint16_t regVal = mixValve[regSet].getRegister(reg);
 	uint8_t * valPtr = (uint8_t *)&regVal;
+	// Mega OK with logging, but DUE master is not!
 	//logger() << F("requestEventI2C: mixV[") << int(regSet) << F("] Reg: ") << int(reg) << F(" Sent:") << regVal << F(" [") << *(valPtr++) << F(",") << *(valPtr) << F("]") << L_endl;
 	i2C().write((uint8_t*)&regVal, 2);
 }
 
 void loop() {
 	static auto nextSecond = Timer_mS(1000);
-	
 	static Mix_Valve::Error err = Mix_Valve::e_OK;
+
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		const auto newRole = getRole();
@@ -183,16 +184,22 @@ void loop() {
 
 		if (role == e_Master) { // not allowed to query the I2C lines in slave mode
 			if (ds_TempSens.getStatus() != _OK) {
-				logger() << F("0x") << L_hex << ds_TempSens.getAddress() << L_endl;
+				logger() << F("DS TS at 0x") << L_hex << ds_TempSens.getAddress() << L_endl;
 				err = Mix_Valve::e_DS_Temp_failed;
+			} else {
+				ds_TempSens.readTemperature();
+				mixValve[ds_mix].setRegister(Mix_Valve::flow_temp, ds_TempSens.get_temp());
 			}
 			if (us_TempSens.getStatus() != _OK) {
-				logger() << F("0x") << L_hex << us_TempSens.getAddress() << L_endl;
+				logger() << F("US TS at 0x") << L_hex << us_TempSens.getAddress() << L_endl;
 				err = static_cast<Mix_Valve::Error>(err | Mix_Valve::e_US_Temp_failed);
 			}
 			if (us_TempSens.lastError() == _BusReleaseTimeout) {
 				logger() << F("BusReleaseTimeout") << L_endl;
 				err = static_cast<Mix_Valve::Error>(err | Mix_Valve::e_I2C_failed);
+			} else {
+				us_TempSens.readTemperature();
+				mixValve[us_mix].setRegister(Mix_Valve::flow_temp, us_TempSens.get_temp());
 			}
 		}
 
@@ -202,9 +209,6 @@ void loop() {
 			reset_watchdog();
 			mixValve[ds_mix].check_flow_temp();
 			mixValve[us_mix].check_flow_temp();
-
-			//logger() << F("DS Flow is: ") << mixValve[ds_mix].getRegister(Mix_Valve::flow_temp) << L_endl;
-			//logger() << F("US Flow is: ") << mixValve[us_mix].getRegister(Mix_Valve::flow_temp) << L_endl;
 		}
 	} else showErr(err);
 }
@@ -220,26 +224,27 @@ Role getRole() {
 }
 
 void roleChanged(Role newRole) {
-	mixValve[ds_mix].setRequestTemp(newRole);
-	mixValve[us_mix].setRequestTemp(newRole);
 	if (e_Slave == newRole) {
 		psu_enable.clear();
 		i2C().setAsSlave(MIX_VALVE_I2C_ADDR);
 		logger() << F("Set to Slave") << L_endl;
 	}
-	else if (role != newRole) {
+	else if (role != newRole) { // changed to Master
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
+		i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
+		mixValve[ds_mix].setRequestTemp();
+		mixValve[us_mix].setRequestTemp();
 		psu_enable.clear();
 	}
 	role = newRole;
-	logger() << F("DS Request: ") << mixValve[ds_mix].getRegister(Mix_Valve::request_temp) << L_endl;
-	logger() << F("US Request: ") << mixValve[us_mix].getRegister(Mix_Valve::request_temp) << L_endl;
+	logger() << F("DS Request: ") << mixValve[ds_mix].getRegister(Mix_Valve::request_temp) / 256 << L_endl;
+	logger() << F("US Request: ") << mixValve[us_mix].getRegister(Mix_Valve::request_temp) / 256 << L_endl;
 }
 
 const __FlashStringHelper * showErr(Mix_Valve::Error err) { // 1-4 errors, 5-9 status
 	// 5 short flashes == start-up.
-	// 1s on / 1s off == Programmer Mode
-	// 3s on / 1s off == Manual Mode
+	// 1s on / 1s off == Programmer Action
+	// 3s on / 1s off == Manual Action
 	// 1 flash / 1s off == DS TS failed
 	// 2 flash / 1s off == US TS failed
 	// 3 flash / 1s off == Both TS failed

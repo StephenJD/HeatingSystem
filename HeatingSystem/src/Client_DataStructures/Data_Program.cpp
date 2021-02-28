@@ -28,10 +28,10 @@ namespace client_data_structures {
 		: _name("", 7) {}
 
 	I_Data_Formatter * RecInt_Program::getField(int fieldID) {
-		//if (recordID() == -1) return getFieldAt(fieldID, 0);
+		bool canDo = status() == TB_OK;
 		switch (fieldID) {
 		case e_name:
-			_name = answer().rec().name;
+			if (canDo)_name = answer().rec().name;
 			return &_name;
 		default: return 0;
 		}

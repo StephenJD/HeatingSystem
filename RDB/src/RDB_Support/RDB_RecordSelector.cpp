@@ -35,9 +35,9 @@ namespace RelationalDatabase {
 		_query->iterationQ().moveTo(*this, id());
 	}
 
-	Answer_Locator RecordSelector::operator*() const {
+	Answer_Locator RecordSelector::operator*() const { // Returns the matching result or TB_RECORD_UNUSED
 		RecordSelector & thisRS = const_cast<RecordSelector&>(*this);
-		return thisRS.query().getMatch(thisRS,1,query().matchArg());
+		return thisRS.query().getMatch(thisRS, 1, query().matchArg());
 	}
 
 	Answer_Locator RecordSelector::incrementRecord() const {

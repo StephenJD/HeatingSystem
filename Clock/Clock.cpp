@@ -10,7 +10,7 @@ using namespace Date_Time;
 
 	uint8_t Clock::_mins1; // minute units
 	uint8_t Clock::_secs;
-	uint8_t Clock::_autoDST;
+	uint8_t Clock::_autoDST = 1;
 	uint8_t Clock::_dstHasBeenSet;
 	Date_Time::DateTime Clock::_now;
 	uint32_t Clock::_lastCheck_mS = millis() /*- uint32_t(60ul * 1000ul * 11ul)*/;

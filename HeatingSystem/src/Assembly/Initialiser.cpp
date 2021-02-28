@@ -34,8 +34,8 @@ namespace Assembly {
 		hs._recover.setTimeoutFn(&_resetI2C);
 		relayPort().setRecovery(hs._recover);
 
-		logger() << F("  Initialiser PW check. req: ") << VERSION << L_endl;
-		if (!_hs.db.checkPW(VERSION)) {
+		logger() << F("Initialiser Construction") << L_endl;
+		if (!_hs.db.passwordOK()) {
 			logger() << F("  Initialiser PW Failed") << L_endl;
 			setFactoryDefaults(_hs.db, VERSION);
 		}
@@ -59,6 +59,7 @@ namespace Assembly {
 		err = _testDevices.speedTestDevices();
 		_testDevices.testRelays();
 		err = postI2CResetInitialisation();
+		for (auto& mixValve : hs().tempController().mixValveControllerArr) { mixValve.sendSetup(); }
 		if (err != _OK) logger() << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
 		else logger() << F("  Initialiser::postI2CResetInitialisation OK\n");
 		return err;
@@ -68,15 +69,16 @@ namespace Assembly {
 		_resetI2C.hardReset.initialisationRequired = false;
 		return initialiseTempSensors()
 			| relayPort().initialiseDevice()
-			| initialiseRemoteDisplays();
+			| initialiseRemoteDisplays()
+			| initialiseMixValveController();
 	}
 
 	uint8_t Initialiser::initialiseTempSensors() {
 		// Set room-sensors to high-res
 		logger() << F("\nSet room-sensors to high-res") << L_endl;
-		return	_hs._tempController.tempSensorArr[T_DR].setHighRes()
-			| _hs._tempController.tempSensorArr[T_FR].setHighRes()
-			| _hs._tempController.tempSensorArr[T_UR].setHighRes();
+		return	_hs.tempController().tempSensorArr[T_DR].setHighRes()
+			| _hs.tempController().tempSensorArr[T_FR].setHighRes()
+			| _hs.tempController().tempSensorArr[T_UR].setHighRes();
 	}
 
 	uint8_t Initialiser::initialiseRemoteDisplays() {
@@ -93,17 +95,25 @@ namespace Assembly {
 		return failed;
 	}
 
+	uint8_t Initialiser::initialiseMixValveController() {
+		logger() << F("\nSend Req Temp") << L_endl;
+		_hs.tempController().mixValveControllerArr[M_DownStrs].sendFlowTemp();
+		_hs.tempController().mixValveControllerArr[M_UpStrs].sendFlowTemp();
+		return _OK;
+	}
+
+
 	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {
 		if (deviceAddr == IO8_PORT_OptCoupl) return relayPort();
-		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs()._tempController.mixValveControllerArr[0];
+		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs().tempController().mixValveControllerArr[0];
 		else if (deviceAddr >= 0x24 && deviceAddr <= 0x26) {
 			return hs().remDispl[deviceAddr-0x24];
 		}
 		else {
-			for (auto & ts : hs()._tempController.tempSensorArr) {
+			for (auto & ts : hs().tempController().tempSensorArr) {
 				if (ts.getAddress() == deviceAddr) return ts;
 			}
-			return hs()._tempController.tempSensorArr[0];
+			return hs().tempController().tempSensorArr[0];
 		}
 	}
 

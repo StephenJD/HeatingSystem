@@ -26,9 +26,12 @@ namespace HardwareInterfaces {
 
 		// Queries
 		uint8_t flowTemp() const;
+		uint8_t reqTemp() const {return _mixCallTemp;}
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		int8_t relayInControl() const;
 		uint8_t index() const { return _index; }
+		const __FlashStringHelper* showState();
+		void monitorMode();
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
@@ -37,8 +40,17 @@ namespace HardwareInterfaces {
 		void setResetTimePtr(unsigned long * timeOfReset_mS) { _timeOfReset_mS = timeOfReset_mS; }
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
 		bool check();
-		void setRequestFlowTemp(uint8_t callTemp);
+		void sendRequestFlowTemp(uint8_t callTemp);
+		void sendFlowTemp();
+		void logMixValveOperation(bool log);
 
+		struct ValveStatus {
+			int8_t algorithmMode = 0;
+			uint8_t onTime = 0;
+			int16_t valvePos = 0;
+			int8_t motorActivity = 0;
+			uint8_t ratio = 0;
+		} valveStatus;
 //#if defined (ZPSIM)
 //		int16_t getValvePos() const; // public for simulator
 //		void reportMixStatus() const;
@@ -49,18 +61,21 @@ namespace HardwareInterfaces {
 //		volatile int8_t motorState = 0; // required by simulator
 //		static std::ofstream lf;
 //#endif
+		void setWireMode(int newMode);
+		static int wireMode;
 	private:
 		I2C_Talk_ErrorCodes::Error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
+		void waitForWarmUp();
 
 		UI_TempSensor * _tempSensorArr = 0;
 		UI_Bitwise_Relay * _relayArr = 0;
 		unsigned long * _timeOfReset_mS = 0;
 		uint8_t _error = 0;
 		uint8_t _index = 0;
-		RelationalDatabase::RecordID _flowTempSens;
-		RelationalDatabase::RecordID _storeTempSens;
+		uint8_t _limitTemp = 100;
+		RelationalDatabase::RecordID _flowTempSens = 0;
+		RelationalDatabase::RecordID _storeTempSens = 0;
 		volatile uint8_t _mixCallTemp = MIN_FLOW_TEMP;
 		volatile uint8_t _controlZoneRelay = 0;
-		uint8_t _limitTemp = 100;
 	};
 }

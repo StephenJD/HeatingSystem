@@ -5,15 +5,20 @@ using namespace RelationalDatabase;
 namespace HardwareInterfaces {
 
 	void LCD_Display::setCursor(int col, int row) {
-		setCursorPos(col + row * cols());
-		for (int i = strlen(buff()); i < cursorPos(); ++i) {
+		auto cursorPos = col + row * cols();
+		setCursorPos(cursorPos);
+		for (int i = end(); i < cursorPos; ++i) {
 			buff()[i] = ' ';
 		}
+		if (cursorPos > end()) setEnd(cursorPos);
 	}
 
 	size_t LCD_Display::write(uint8_t character) {
-		buff()[cursorPos()] = character;
-		setCursorPos(cursorPos() + 1);
+		auto cursorAt = cursorPos();
+		buff()[cursorAt] = character;
+		++cursorAt;
+		setCursorPos(cursorAt);
+		if (cursorAt > end()) setEnd(cursorAt);
 		return 1;
 	}
 
@@ -23,13 +28,16 @@ namespace HardwareInterfaces {
 	}
 
 	void LCD_Display::reset() {
-		buff()[0] = 0;
+		setEnd(0);
 		setCursorPos(0);
 		setCursorMode(e_unselected);
 	}
 
-	void LCD_Display::truncate(int newEnd) {
-		if (newEnd <= size()) buff()[newEnd] = 0;
+	void LCD_Display::clearFromEnd() {
+		for (int i = end(); i <= size(); ++i) {
+			buff()[i] = ' ';
+		}
+		setEnd(size());
 	}
 }
 

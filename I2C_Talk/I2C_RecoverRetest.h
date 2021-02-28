@@ -13,7 +13,6 @@ namespace I2C_Recovery {
 		using I2C_Recover::I2C_Recover;
 		I2C_Recover_Retest(I2C_Talk & i2C, int strategyEEPROMaddr) : I2C_Recover(i2C), _strategy(strategyEEPROMaddr) {}
 		static constexpr decltype(millis()) REPEAT_FAILURE_PERIOD = 10000;
-		static constexpr decltype(millis()) DISABLE_PERIOD_ON_FAILURE = 10000; // 10 secs for display black-out
 		static constexpr decltype(micros()) TIMEOUT = 20000;
 		//static constexpr uint8_t _I2C_DATA_PIN = 20; 	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
 
@@ -42,7 +41,7 @@ namespace I2C_Recovery {
 		I_I2CresetFunctor * getTimeoutFn() const { return _timeoutFunctor; }
 		bool isRecovering() { return _isRecovering; }
 		I_I2Cdevice_Recovery * lastGoodDevice() const override { return _lastGoodDevice; }
-		bool isUnrecoverable() const override {return _deviceWaitingOnFailureFor10Mins < 0;}
+		bool isUnrecoverable() const override {	return _deviceWaitingOnFailureFor10Mins < 0; }
 		// Modifiers for I2C_Recover_Retest
 		auto testDevice(int noOfTests, int allowableFailures)-> I2C_Talk_ErrorCodes::Error_codes override;
 		//auto findAworkingSpeed() -> I2C_Talk_ErrorCodes::Error_codes override;
@@ -56,12 +55,11 @@ namespace I2C_Recovery {
 		// Strategies
 		void call_timeOutFn(int addr);
 		void endReadWrite();
-		void extendStopMargin();
+		//void extendStopMargin();
 
 		// Queries for I2C_Recover_Retest
 		// Modifiers for I2C_Recover_Retest
 		bool restart(const char * name);
-
 		bool slowdown(); // called by timeoutFunction. Reduces I2C speed by 10% if last called within one second. Returns true if speed was reduced
 		void disable() { device().disable(); }
 		

@@ -139,7 +139,8 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 		}
 		_key_mask[0] = ~_data[0];
 		_key_mask[1] = ~_data[1];
-		_key_mask_16 = (_key_mask[0] << 8) + _key_mask[1];
+		_key_mask_16 = I2C_Talk::fromBigEndian(_key_mask);
+		_key_mask_16 &= ~IOPIN_CONNECTED_TO_INTA;
 		//log("MultiCrystal::init for",_address," _key_mask_16", _key_mask_16);
 	} else {  
 		pinMode(_rs_pin, OUTPUT);
@@ -198,9 +199,6 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		if (_rw_pin != -1) digitalWrite(_rw_pin, LOW);
 	} else {
 		// Lambdas
-		uint8_t INT_ENABLE[2] = { uint8_t(_key_mask[0] & uint8_t((~IOPIN_CONNECTED_TO_INTA)>>8)) , _key_mask[1] };
-		//logger() << "Remote Multi-Crystal INT_ENABLE 0x" << L_hex << INT_ENABLE[0] << L_endl;
-
 		// We use interrupt on GPIO change to record which key has been pressed, ready for retrieval when the keyboard is scanned.
 		//auto setSingleBank = [this]() {_errorCode = 2; return _i2C_device->I_I2Cdevice::write(IOCON, 1, &GPIOtoClear_Mirror_INTlow); };  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading GPIO
 		auto setIOCON = [this]() {_errorCode = 2; return _i2C_device->I_I2Cdevice::write(IOCON, 1, &INTCAPtoClear_Mirror_INTlow); };  // IO CONfiguration: 0x01 = Single Bank, Clear INT on reading GPIO
@@ -209,22 +207,25 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		auto setDefaut_IOstate = [this]() {_errorCode = 5; return  _i2C_device->I_I2Cdevice::write(DEFVAL, 2, CLEAR); };			// DEF val is the inverted input val - i.e. 0 for no key.
 		auto setInterrupt_Control = [this]() {_errorCode = 6; return  _i2C_device->I_I2Cdevice::write(INTCON, 2, CLEAR); };	// INT on change - otherwise get multiple INT while key is down.
 		auto setPullUps = [this]() {_errorCode = 7; return  _i2C_device->I_I2Cdevice::write(GPPU, 2, PULL_UP); };
-		auto setInterruptEnable = [this, INT_ENABLE]() {_errorCode = 8; return  _i2C_device->I_I2Cdevice::write(GPINTEN, 2, INT_ENABLE); };	// INT enabled for keyboard.
+		auto setInterruptEnable = [this]() {
+			_errorCode = 8;
+			return  _i2C_device->I_I2Cdevice::write(GPINTEN, 2, I2C_Talk::toBigEndian(_key_mask_16)());
+		};	// INT enabled for keyboard.
 		
 		auto clearInterrupts = [this, setInterruptEnable, setIOCON]() {
 			_errorCode = 9;
 			// To clear INTCAP trigger int while only IOPIN_CONNECTED_TO_INTA is set.
 			// a) Enable INT on IOPIN_CONNECTED_TO_INTA
-			auto hasFailed = _i2C_device->I_I2Cdevice::write(GPINTEN, 2, _key_mask);
+			bool hasFailed = _i2C_device->I_I2Cdevice::write(GPINTEN, 2, _key_mask) != _OK;
 			// b) Clear INTs.
-			hasFailed |= _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data);
+			hasFailed = hasFailed || _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data);
 			// c) Toggle IOCON INT polarity to trigger INT while rest of GPIO is clear.
-			hasFailed |= _i2C_device->I_I2Cdevice::write(IOCON, 1, &INTCAPtoClear_Mirror_INThigh);
-			hasFailed |= setIOCON();
+			hasFailed = hasFailed || _i2C_device->I_I2Cdevice::write(IOCON, 1, &INTCAPtoClear_Mirror_INThigh);
+			hasFailed = hasFailed || setIOCON();
 			// d) call setInterruptEnable() to disable INT on IOPIN_CONNECTED_TO_INTA
-			hasFailed |= setInterruptEnable();
+			hasFailed = hasFailed || setInterruptEnable();
 			// f) clear INT
-			hasFailed |= _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data);
+			hasFailed = hasFailed || _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data);
 			return hasFailed;
 		};
 
@@ -243,7 +244,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 
 		if (hasFailed) {
 			//Serial.print("Multi-Crystal Failed Begin() at "); Serial.println(_errorCode);
-			logger() << "Remote Multi-Crystal SetRegisters Failed 0x" << L_hex << _i2C_device->getAddress() << L_endl;
+			logger() << "Remote Multi-Crystal SetRegisters Failed device 0x" << L_hex << _i2C_device->getAddress() << L_endl;
 			return hasFailed;
 		} 
 		_data[0] = 0; _data[1] = 0;
@@ -268,7 +269,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		delayMicroseconds(150);
 
 		// finally, set to 4-bit interface
-		hasFailed = hasFailed | write4bits(0x02);
+		hasFailed = hasFailed || write4bits(0x02);
 	} else {
 		// this is according to the hitachi HD44780 datasheet
 		// page 45 figure 23
@@ -449,7 +450,11 @@ size_t MultiCrystal::print(const char buffer[] ) {
 	auto noOfChars = 0; 
 	auto endChar = buffer + strlen(buffer);
 	for (auto nextChar = buffer; nextChar < endChar; ++nextChar) {
-		noOfChars += print(*nextChar);
+		if (print(*nextChar) == 0) {
+			logger() << "MultiCrystal Print error" << L_endl;
+			break;
+		}
+		++noOfChars;
 	}
 	return noOfChars;
 }
@@ -549,12 +554,9 @@ uint8_t MultiCrystal::send(uint8_t value, uint8_t mode) { // 0 = success
 	}
 	if (_displayfunction & LCD_8BITMODE) {
 		error = write8bits(value);
-		//static bool LED_ON;
-		//digitalWrite(19, LED_ON);
-		//LED_ON = !LED_ON;
 	} else {
 		error = write4bits(value>>4);
-		error |= write4bits(value);
+		if (error == _OK) error= write4bits(value);
 	}
 	return error; 
 }
@@ -575,13 +577,13 @@ uint8_t MultiCrystal::pulseEnable(void) { // this function sends the data to the
 			error = _i2C_device->I_I2Cdevice::write(GPIOA,2,_data); // 0 = success
 		} else {
 			error = _i2C_device->I_I2Cdevice::write(GPIOB,1,&_data[1]); // 0 = success
-			error |= _i2C_device->I_I2Cdevice::write(GPIOA,1,&_data[0]);
+			if (error == _OK) error = _i2C_device->I_I2Cdevice::write(GPIOA,1,&_data[0]);
 		}
 		setControl(_enable_pin, LOW); // disable
 		if (isBport) {
-			error |= _i2C_device->I_I2Cdevice::write(GPIOB,1,&_data[1]);
+			if (error == _OK) error = _i2C_device->I_I2Cdevice::write(GPIOB,1,&_data[1]);
 		} else {
-			error |= _i2C_device->I_I2Cdevice::write(GPIOA,1,&_data[0]);
+			if (error == _OK) error = _i2C_device->I_I2Cdevice::write(GPIOA,1,&_data[0]);
 		}
 	}
 	return error;
@@ -630,15 +632,18 @@ void MultiCrystal::setDataBit(uint8_t data_channel, uint8_t value) {
 }
 
 uint8_t MultiCrystal::checkI2C_Failed() {
-	uint8_t error = _i2C_device->read(IODIR, 2, _data); // recovery-Check GPINTEN is correct
-	uint16_t thisData = (_data[0] << 8) + _data[1];
-	if (error == _OK) {
-		if (thisData != _key_mask_16) {
-			logger() << L_time << F("Remote Display 0x") << L_hex << _i2C_device->getAddress() << " Wrong IODIR: 0x" << thisData << L_endl;
-			error = _I2C_ReadDataWrong;
-		}// else logger() << L_time << F("Remote Display OK.")  << L_endl;
-	} else logger() << L_time << F("Remote Display 0x") << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << L_endl;
-	return error;
+	if (_i2C_device->reEnable() == _OK) {
+		//logger() << "checkI2C_Failed? ..." << L_endl;
+		uint8_t error = _i2C_device->read(GPINTEN, 2, _data); // recovery-Check GPINTEN is correct
+		uint16_t thisData = I2C_Talk::fromBigEndian(_data);
+		if (error == _OK) {
+			if (thisData != _key_mask_16) {
+				logger() << L_time << F("Remote Display checkI2C device 0x") << L_hex << _i2C_device->getAddress() << " Wrong GPINTEN: 0x" << thisData << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
+				error = _I2C_ReadDataWrong;
+			} //else logger() << L_time << F("Remote Display Check OK.")  << L_endl;
+		} else logger() << L_time << F("Remote Display checkI2C device 0x") << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << L_endl;
+		return error;
+	} else return _disabledDevice;
 }
 
 uint16_t MultiCrystal::readI2C_keypad() {
@@ -659,32 +664,39 @@ uint16_t MultiCrystal::readI2C_keypad() {
 
 	constexpr int CONSECUTIVE_COUNT = 2;
 	constexpr int MAX_TRIES = 6;
-	uint16_t keyPressed = 0;
+	int16_t keyPressed = 0;
 	// Read Int-pin on GPIO
-	uint16_t gpio;
+	int16_t gpio = 0;
 	//logger() << "readI2C_keypad" << L_endl;
-	auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, gpio, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery. mask is 0xE300, including interrupt on 0x0200
-	if (gpioErr) {
-		logger() << L_time << "readI2C_keypad Error Reading GPIO on 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << L_endl;
-		checkI2C_Failed(); // Recovery
-	} else {
-		gpio &= IOPIN_CONNECTED_TO_INTA; // 0x0200 [A,B]
-		if (gpio) { // reading INTCAP clears INT, but INTCAP retains last INT state.
-			_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
-			_errorCode = _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data); // non-recovery to reduce frequency of error msgs.
-			if (_errorCode) {
-				logger() << L_time << "readI2C_keypad Error Reading INTCAP on 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
-			} else {
-				keyPressed = (_data[0] << 8) + _data[1];
-				keyPressed &= _key_mask_16;
-				keyPressed &= ~IOPIN_CONNECTED_TO_INTA; // GPIO may have shown INT set when read.
-				if (keyPressed && checkI2C_Failed()) { // Recovery
-					logger() << L_time << "GotRemoteKey - Checked: " << keyPressed << L_endl;
-					keyPressed = 0;
+	if (_i2C_device->isEnabled()) {
+		auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, gpio, CONSECUTIVE_COUNT, MAX_TRIES, IOPIN_CONNECTED_TO_INTA); // non-recovery.
+		if (gpioErr) {
+			logger() << L_time << "readI2C_keypad Error Reading GPIO device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
+			checkI2C_Failed(); // Recovery
+		} else {
+			if (gpio) { 
+				_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
+				//_errorCode = _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
+				_errorCode = _i2C_device->read_verify_2bytes(INTCAP, keyPressed, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
+				if (_errorCode) { 
+					logger() << L_time << "readI2C_keypad Error Reading INTCAP device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
+				} else {
+					//keyPressed = fromBigEndian(_data);
+					//logger() << L_time << "readI2C_keypad GotKey device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << keyPressed << L_endl;
+					//keyPressed &= _key_mask_16;
+					if (keyPressed == _key_mask_16) return 0;
+					//keyPressed &= ~IOPIN_CONNECTED_TO_INTA; // GPIO may have shown INT set when read.
+					if (keyPressed && checkI2C_Failed()) { // Recovery
+						logger() << L_time << "readI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: " << keyPressed << L_endl;
+						keyPressed = 0;
+					} else if (keyPressed & 0x8100) {
+						keyPressed = 0;
+						if (_i2C_device->runSpeed() > 10000) _i2C_device->set_runSpeed(long(_i2C_device->runSpeed() * 0.8));
+						logger() << L_time << "readI2C_keypad CheckOK but nonexistant Key device 0x" << L_hex << _i2C_device->getAddress() << " Key: " << keyPressed << " Slowed to: " << L_dec << _i2C_device->runSpeed() << L_endl;
+					}
 				}
 			}
-		} 
-		//else logger() << "Non readI2C_keypad" << L_endl;
+		}
 	}
 	return keyPressed;
 }

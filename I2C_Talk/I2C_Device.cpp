@@ -1,3 +1,5 @@
+
+
 #include <I2C_Device.h>
 #include <I2C_Recover.h>
 #include <I2C_Talk.h>
@@ -6,30 +8,30 @@
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
 
-auto I_I2Cdevice::read_verify_2bytes(int registerAddress, uint16_t & data, int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
+auto I_I2Cdevice::read_verify_2bytes(int registerAddress, int16_t & data, int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
 	// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].
 	// But Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
 	// A two-byte read must reverse the byte-order.
 	i2C().setI2CFrequency(runSpeed());
 	uint8_t dataBuffer[2];
 	Error_codes errorCode; // Non-Recovery
-	uint16_t newRead;
-	data = 0xAAAA; // 1010 1010 1010 1010
+	int16_t newRead;
+	data = int16_t(0xAAAA); // 1010 1010 1010 1010
 	auto needAnotherGoodReading = requiredConsecutiveReads;
 	do {
 		errorCode = I_I2Cdevice::read(registerAddress, 2, dataBuffer);
-		newRead = (dataBuffer[0] << 8) + dataBuffer[1]; // convert device to native endianness
+		newRead = i2C().fromBigEndian(dataBuffer); // convert device to native endianness
 		newRead &= dataMask;
 		if (!errorCode) {
 			if (newRead == data) --needAnotherGoodReading;
 			else {
-				needAnotherGoodReading = requiredConsecutiveReads;
+				needAnotherGoodReading = requiredConsecutiveReads - 1;
 				//logger() << "read_verify_2bytes 0x" << L_hex << newRead << L_endl;
 				data = newRead;
 			}
 		} 
 		else { // abort on first error
-			logger() << "read_verify_2bytes 0x" << L_hex << getAddress() << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+			logger() << L_time << "read_verify_2bytes device 0x" << L_hex << getAddress() << " Reg 0x" << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
 			break;
 		}
 		--canTryAgain;
@@ -62,6 +64,10 @@ auto I_I2Cdevice::read_verify_1byte(int registerAddress, uint8_t & dataBuffer, i
 	return errorCode;
 }
 
+// ***********************************
+//		I_I2Cdevice_Recovery
+// ***********************************
+
 I2C_Recovery::I2C_Recover * I_I2Cdevice_Recovery::set_recover;
 
 I2C_Talk & I_I2Cdevice_Recovery::i2C() { return recovery().i2C(); }
@@ -72,6 +78,10 @@ Error_codes I_I2Cdevice_Recovery::getStatus() {
 		i2C().setI2CFrequency(runSpeed());
 		return i2C().status(getAddress());
 	}
+}
+
+bool I_I2Cdevice_Recovery::isUnrecoverable() const {
+	return !isEnabled() && recovery().isUnrecoverable();
 }
 
 int32_t I_I2Cdevice_Recovery::set_runSpeed(int32_t i2cFreq) { return _i2c_speed = recovery().i2C().setI2CFrequency(i2cFreq); }
@@ -110,5 +120,15 @@ Error_codes I_I2Cdevice_Recovery::write_verify(int registerAddress, int numberBy
 		} while (recovery().tryReadWriteAgain(status) && --tries);
 	}
 	return status;
+}
+
+Error_codes I_I2Cdevice_Recovery::reEnable() {
+	if (isEnabled()) return _OK;
+	else if (getAddress() != 0x48 && millis() - getFailedTime() > DISABLE_PERIOD_ON_FAILURE) {
+		reset();
+		logger() << L_time << F("Re-enabling disabled device 0x") << L_hex << getAddress() << L_endl;
+		return _OK;
+	} else 
+	return _disabledDevice;
 }
 

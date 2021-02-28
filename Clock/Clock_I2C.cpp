@@ -9,7 +9,7 @@ using namespace Date_Time;
 ///////////////////////////////////////////////////////////////
 
 DateTime I_Clock_I2C::_timeFromRTC(int& minUnits, int& seconds) {
-	uint8_t data[7] = { 0 };
+	uint8_t data[9] = { 0 };
 	// lambda
 	auto dateInRange = [](const uint8_t* data) {
 		//logger() << " Read: " << int(data[0]) << "s " << int(data[1]) << "m "
@@ -29,7 +29,7 @@ DateTime I_Clock_I2C::_timeFromRTC(int& minUnits, int& seconds) {
 	auto timeout = Timer_mS(1000);
 	auto status = _OK;
 	do {
-		status = readData(0, 7, data);
+		status = readData(0, sizeof(data), data);
 	} while (status != _OK && !timeout);
 	//logger() << F("RTC read in ") << timeout.timeUsed() << I2C_Talk::getStatusMsg(status) << L_endl;
 
@@ -43,8 +43,11 @@ DateTime I_Clock_I2C::_timeFromRTC(int& minUnits, int& seconds) {
 		date.setYear(fromBCD(data[6]));
 		minUnits = data[1] & 15;
 		seconds = fromBCD(data[0]);
+		_autoDST = data[8] >> 1;
+		_dstHasBeenSet = data[8] & 1;
 		//logger() << F("RTC Time: ") << date << L_endl;
 	} else {
+		_autoDST = 1;
 		logger() << F("RTC Bad date.") << I2C_Talk::getStatusMsg(status) << L_endl;
 	}
 	return date;
@@ -72,13 +75,9 @@ uint8_t I_Clock_I2C::loadTime() {
 		saveTime();
 		logger() << L_time << F(" RTC Clock Set from Compiler") << L_endl;
 	} else {
-		uint8_t dst;
-		status = readData(8, 1, &dst);
 		_now = rtcTime;
 		setMinUnits(rtcMinUnits);
 		setSeconds(rtcSeconds);
-		_autoDST = dst >> 1;
-		_dstHasBeenSet = dst & 1;
 		//logger() << L_time << F(" Clock Set from RTC") << L_endl;
 	}
 	return status;

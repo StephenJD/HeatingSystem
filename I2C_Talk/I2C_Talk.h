@@ -31,6 +31,8 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
 // 24LC256 -> 64 bytes
 #define I2C_EEPROM_PAGESIZE 32
+#define I2C_WRITEDELAY  5000
+
 namespace I2C_Recovery {
 	class I2C_Recover;
 }
@@ -39,6 +41,9 @@ class I2C_Talk {
 public:
 	// Basic Usage //
 	enum {_single_master = 255, _no_address = 255};
+	static int constexpr SPEED_TEST_INITIAL_STOP_TIMEOUT = 2;
+	static int constexpr WORKING_STOP_TIMEOUT = 20;
+
 	// No point in being constexpr as that implies an immutable object for which wire_port cannot be set.
 	I2C_Talk(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000 ) : I2C_Talk(_single_master, wire_port, max_I2Cfreq) {}
 	void ini(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000);
@@ -57,7 +62,6 @@ public:
 	auto writeEP(int deviceAddr, int pageAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes;
 	auto writeEP(int deviceAddr, int pageAddress, uint8_t data) ->I2C_Talk_ErrorCodes::Error_codes { return writeEP(deviceAddr, pageAddress, 1, &data); } // Writes 32-byte pages. #define I2C_EEPROM_PAGESIZE
 	auto writeEP(int deviceAddr, int pageAddress, int numberBytes, char *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes {return writeEP(deviceAddr, pageAddress, numberBytes, (const uint8_t *)dataBuffer); }
-	void waitForEPready(int deviceAddr);
 	
 	auto status(int deviceAddr)->I2C_Talk_ErrorCodes::Error_codes;
 	
@@ -66,15 +70,25 @@ public:
 	int32_t setI2CFrequency(int32_t i2cFreq);
 	int32_t getI2CFrequency() const { return _i2cFreq; }
 	
-	void setTimeouts(uint32_t slaveByteProcess_uS = 5000, int stopMargin_uS = 3, uint32_t busRelease_uS = 1000);
+	void setTimeouts(uint32_t slaveByteProcess_uS = 5000, int stopMargin_uS = WORKING_STOP_TIMEOUT, uint32_t busRelease_uS = 1000);
 	void extendTimeouts(uint32_t slaveByteProcess_uS = 5000, int stopMargin_uS = 3, uint32_t busRelease_uS = 1000); // make longer but not shorter
-	uint8_t stopMargin() const {
-		return _stopMargin_uS;
-	}
-	void setTransferMargin(uint8_t margin);
+	uint8_t stopMargin() const {return _stopMargin_uS;}
+	uint32_t slaveByteProcess() const {return _slaveByteProcess_uS;}
+	void setStopMargin(uint8_t margin);
+	void setEndAbort(bool onAddrErr, bool onDataErr, bool alwaysStop) { _wire().setEndAbort(onAddrErr, onDataErr, alwaysStop); }
 
 	static auto getStatusMsg(int errorCode) -> const __FlashStringHelper *;
-	
+	static uint16_t fromBigEndian(const uint8_t* byteArr) { return (byteArr[0] << 8) + byteArr[1]; }
+	typedef const uint8_t Bytes[2];
+	struct Big {
+		Bytes arr;
+		Bytes& operator()() { return arr; }
+	} ;
+
+	static auto toBigEndian(const uint16_t val) -> Big { // usage: auto byteArr = toBigEndian(value)();
+		Big big{ uint8_t(val >> 8), uint8_t(val) };
+		return big;
+	}
 	// Slave Usage //
 	// Where there is a single master, you can set the slave arduino using setAsSlave(), which prohibits it from initiating a write.
 	// Where multiple arduinos need to be able to initiate writes (even if they are not talking to each other),
@@ -132,9 +146,8 @@ private:
 		return *_wire_port;
 	}
 
-	void wireBegin() { _wire().begin(_myAddress); --_i2cFreq;  setI2CFrequency(_i2cFreq+1); } // force Freq Check and set.
 	auto beginTransmission(int deviceAddr) ->I2C_Talk_ErrorCodes::Error_codes; // return false to inhibit access
-	auto getData(int deviceAddr, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes;
+	auto getData(I2C_Talk_ErrorCodes::Error_codes status, int deviceAddr, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes;
 	uint8_t getTWIbufferSize();
 	auto endTransmission()->I2C_Talk_ErrorCodes::Error_codes;
 
@@ -146,7 +159,7 @@ private:
 	int32_t _i2cFreq = 100000;
 	uint32_t _slaveByteProcess_uS = 5000; // timeouts saved here, so they can be set before Wire has been initialised.
 	uint32_t _busRelease_uS = 1000;
-	TwoWire * _wire_port;
+	TwoWire * _wire_port = 0;
 	bool _isMaster = true;
 	uint8_t _stopMargin_uS = 3;
 	uint8_t _myAddress = _single_master;

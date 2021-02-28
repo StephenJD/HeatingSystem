@@ -99,10 +99,11 @@ namespace client_data_structures {
 	{}
 
 	I_Data_Formatter * RecInt_TimeTemp::getField(int fieldID) {
-		if (recordID() == -1) return 0;
+		//if (recordID() == -1) return 0;
+		bool canDo = status() == TB_OK;
 		switch (fieldID) {
 		case e_TimeTemp:
-			_timeTemp = uint16_t(answer().rec().time_temp);
+			if (canDo) _timeTemp = uint16_t(answer().rec().time_temp);
 			return &_timeTemp;
 		default: return 0;
 		}
