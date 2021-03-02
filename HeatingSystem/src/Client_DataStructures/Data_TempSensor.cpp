@@ -37,10 +37,6 @@ namespace client_data_structures {
 				HardwareInterfaces::UI_TempSensor & ts = runTimeData();
 				strcpy(_tempStr.str(), "`");
 				auto tsErr = ts.readTemperature();
-				if (tsErr == _disabledDevice) {
-					ts.set_runSpeed(100000);
-					tsErr = ts.readTemperature();
-				}
 				if (tsErr != _OK) {
 					strcat(_tempStr.str(), "Err  ");
 				}

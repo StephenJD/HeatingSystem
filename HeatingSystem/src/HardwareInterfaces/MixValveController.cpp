@@ -91,13 +91,35 @@ namespace HardwareInterfaces {
 
 	void MixValveController::logMixValveOperation(bool log) {
 		int8_t algorithmMode = (int8_t)readFromValve(Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
-		if (log || algorithmMode != Mix_Valve::e_Checking || valveStatus.algorithmMode != Mix_Valve::e_Checking) {
+		bool ignoreThis = algorithmMode == Mix_Valve::e_Checking
+			|| algorithmMode == Mix_Valve::e_AtLimit;
+
+		if (log || !ignoreThis || valveStatus.algorithmMode != algorithmMode) {
 			valveStatus.motorActivity = (int8_t)readFromValve(Mix_Valve::state); // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
 			valveStatus.algorithmMode = algorithmMode;
 			valveStatus.onTime = (uint8_t)readFromValve(Mix_Valve::count);
 			valveStatus.valvePos = readFromValve(Mix_Valve::valve_pos);
 			valveStatus.ratio = (uint8_t)readFromValve(Mix_Valve::ratio);
 			profileLogger() << L_time << L_tabs << (_index == M_DownStrs ? "DS_Mix R/Is" : "US_Mix R/Is") << _mixCallTemp << flowTemp()  << showState() << valveStatus.onTime << valveStatus.valvePos << valveStatus.ratio << L_endl;
+		}
+	}
+
+	const __FlashStringHelper* MixValveController::showState() {
+			switch (valveStatus.algorithmMode) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
+			case Mix_Valve::e_Wait: return F("Wt");
+			case Mix_Valve::e_Checking: return F("Chk");
+			case Mix_Valve::e_Mutex: return F("Mx");
+			case Mix_Valve::e_NewReq: return F("Req");
+			case Mix_Valve::e_AtLimit: return F("Lim");
+			case Mix_Valve::e_DontWantHeat: return F("Min");
+			case Mix_Valve::e_Moving:
+				switch (valveStatus.motorActivity) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
+				case Mix_Valve::e_Moving_Coolest: return F("Min");
+				case Mix_Valve::e_Cooling: return F("Cl");
+				case Mix_Valve::e_Heating: return F("Ht");
+				default: return F("MEr"); // e_Moving when e_Stop!
+				}
+			default: return F("SEr");
 		}
 	}
 
@@ -242,24 +264,6 @@ namespace HardwareInterfaces {
 		} else logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
 		return value;
 	}
-
-	const __FlashStringHelper* MixValveController::showState() {
-		switch (valveStatus.motorActivity) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
-		case Mix_Valve::e_Moving_Coolest: return F("Min");
-		case Mix_Valve::e_Cooling: return F("Cl");
-		case Mix_Valve::e_Heating: return F("Ht");
-		case Mix_Valve::e_Stop:
-			switch (valveStatus.algorithmMode) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
-			case Mix_Valve::e_NewReq: return F("Rq");
-			case Mix_Valve::e_Mutex: return F("Mx");
-			case Mix_Valve::e_Wait: return F("Wt");
-			case Mix_Valve::e_Checking: return F("Ck");
-			default: return F("MEr"); // e_Moving when e_Stop!
-			}
-			break;
-		default: return F("SEr");
-		}
-	};
 
 	void MixValveController::setWireMode(int newMode) {
 		wireMode = newMode;

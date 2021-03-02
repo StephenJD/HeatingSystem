@@ -38,7 +38,7 @@ public:
 		/*Read/Write Config*/	temp_i2c_addr, max_ontime, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
 		/*End-Stop*/			reg_size
 	};	
-	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq};
+	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 
@@ -54,7 +54,7 @@ private:
 	friend void testSlave();
 	friend void printModes();
 
-	Mode algorithmMode() const;
+	Mode algorithmMode(int call_flowDiff) const;
 	//bool has_overshot(int new_call_flowDiff);
 	uint8_t saveToEEPROM() const; // returns noOfBytes saved
 

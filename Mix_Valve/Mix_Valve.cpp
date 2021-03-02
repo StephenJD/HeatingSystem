@@ -80,13 +80,17 @@ void Mix_Valve::setRequestTemp() { // called by MixValve_Slave.ino when master/s
 	_mixCallTemp = _max_flowTemp;
 }
 
-Mix_Valve::Mode Mix_Valve::algorithmMode() const {
+Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
+	bool dontWantHeat = _mixCallTemp <= e_MIN_FLOW_TEMP;
+	bool valveIsAtLimit = abs(_valvePos) == _max_on_time && (dontWantHeat || (call_flowDiff * _valvePos) >= 0);
+
 	if (_status == e_NewTempReq) return e_NewReq;
+	else if (valveIsAtLimit) return e_AtLimit;
+	else if (dontWantHeat) return e_DontWantHeat;
 	else if (_onTime > 0) {
 		if (motor_mutex && motor_mutex != this) return e_Mutex;
 		else return e_Moving;
-	}
-	else if (_onTime < 0) return e_Wait;
+	} else if (_onTime < 0) return e_Wait;
 	else return e_Checking;
 }
 
@@ -110,65 +114,63 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 		}
 	};
 
-	serviceMotorRequest(); // Will wait if finished moving and check if finished waiting
-	Mode currMode = algorithmMode(); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
-	int new_call_flowDiff = _mixCallTemp - _sensorTemp;
-	bool dontWantHeat = _mixCallTemp <= e_MIN_FLOW_TEMP;
-	bool valveIsAtLimit = abs(_valvePos) == _max_on_time && (dontWantHeat || (new_call_flowDiff * _valvePos) >= 0);
+	int call_flowDiff = _mixCallTemp - _sensorTemp;
+	serviceMotorRequest(); // -> wait if finished moving and -> check if finished waiting
 
-	if (currMode == e_NewReq) {
+	switch (algorithmMode(call_flowDiff)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
+	case e_NewReq:
 		logger() << name() << L_tabs << F("New Temp Req:") << _mixCallTemp << L_endl;
 		if (_valvePos == -_max_on_time) {
 			if (_waitFlowTemp > _sensorTemp && _sensorTemp >= _mixCallTemp ) {
 				startWaiting(); // re-start waiting whilst the pump is cooling the temp sensor
-			} else if (_onTime == 0) { // finished waiting and temp has stopped falling
+			} else if (_sensorTemp < _mixCallTemp || _onTime == 0) { // finished waiting and temp has stopped falling
 				_status = e_OK;
 				_onTimeRatio = _max_on_time / 2;
 				adjustValve(1); // Move valve to centre
 			}
 		} else {
 			_status = e_OK;
-			adjustValve(new_call_flowDiff);
+			if (call_flowDiff != 0) adjustValve(call_flowDiff);
+			else stopMotor();
 		}
-	} else if (valveIsAtLimit) { // false as soon as it overshoots 
-		if (!dontWantHeat && _onTime == 0) startWaiting();
-		//logger() << name() << F("\tLimit") << _valvePos << L_endl;
-	} else if (dontWantHeat) {
+		break;
+	case e_AtLimit: // false as soon as it overshoots 
+		if (_mixCallTemp > e_MIN_FLOW_TEMP && _onTime == 0) startWaiting();
+		break;
+	case e_DontWantHeat:
 		if (_journey != e_Moving_Coolest) turnValveOff();
-	} else {
-		switch (currMode) {
-		case e_Moving: 
-			if (new_call_flowDiff * _motorDirection <= 0) startWaiting();  // Got there early during a move
-			break;
-		case e_Wait:
-			if (new_call_flowDiff * _journey < 0) { // Overshot during wait
-				_onTimeRatio = abs(_valvePos) / 2; // reduce ratio on each overshoot
-				adjustValve(new_call_flowDiff); // action becomes e_Moving
-			} else if (new_call_flowDiff * _journey > 0) { // Got worse during wait
-				adjustValve(new_call_flowDiff); 
-			}
-			break;
-		case e_Checking: 
-			if (new_call_flowDiff == 0) {
-				if (_journey != e_TempOK) {
-					_journey = e_TempOK;
-					_onTimeRatio = abs(_valvePos);
-				}
-				//logger() << name() << F("\tOK") << _valvePos << L_endl;
-			} else {
-				if (_journey == e_TempOK) adjustValve(new_call_flowDiff); // action becomes e_Moving
-				else { // Undershot after a wait - last adjustment was too small
-					auto oldRatio = _onTimeRatio;
-					if (_waitFlowTemp == _sensorTemp) {
-						_onTimeRatio *= 2;
-						oldRatio = 0;
-					} else _onTimeRatio /= 2; // move the rest of the distance, as if the ratio had been 50% bigger
-					adjustValve(1);
-					_onTimeRatio += oldRatio;
-				} 
-			}
-			break;
+		break;
+	case e_Moving: 
+	case e_Mutex:
+		if (call_flowDiff * _motorDirection <= 0) startWaiting();  // Got there early during a move
+		break;
+	case e_Wait:
+		if (call_flowDiff * _journey < 0) { // Overshot during wait
+			_onTimeRatio = abs(_valvePos) / 2; // reduce ratio on each overshoot
+			adjustValve(call_flowDiff); // action becomes e_Moving
+		} else if (call_flowDiff * _journey > 0 && (_waitFlowTemp - _sensorTemp) * _journey > 0) { // Got worse during wait
+			adjustValve(call_flowDiff); 
 		}
+		break;
+	case e_Checking: 
+		if (call_flowDiff == 0) {
+			if (_journey != e_TempOK) {
+				_journey = e_TempOK;
+				_onTimeRatio = abs(_valvePos);
+			}
+		} else {
+			if (_journey == e_TempOK) adjustValve(call_flowDiff); // action becomes e_Moving
+			else { // Undershot after a wait - last adjustment was too small
+				auto oldRatio = _onTimeRatio;
+				if (_waitFlowTemp == _sensorTemp) {
+					_onTimeRatio *= 2;
+					oldRatio = 0;
+				} else _onTimeRatio /= 2; // move the rest of the distance, as if the ratio had been 50% bigger
+				adjustValve(call_flowDiff);
+				_onTimeRatio += oldRatio;
+			} 
+		}
+		break;
 	}
 }
 
@@ -232,8 +234,6 @@ void Mix_Valve::serviceMotorRequest() {
 				}
 			}
 			if (_onTime % 10 == 0) motor_mutex = 0; // Give up ownership every 10 seconds.
-		} else {
-			//logger() << name() << L_tabs << F("Mutex 0x") << L_hex << (long)motor_mutex << L_endl;
 		}
 	}
 	else if (_onTime < 0)  {
@@ -256,7 +256,7 @@ uint16_t Mix_Valve::getRegister(int reg) const {
 	switch (reg) {
 	// read only
 	case status: value = _status; break;
-	case mode: value = algorithmMode(); break; // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
+	case mode: value = algorithmMode(_mixCallTemp - _sensorTemp); break; // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 	case count: value = abs(_onTime); break;
 	case valve_pos: value = _valvePos; break;
 	case state: value = motorActivity(); break; // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
@@ -291,12 +291,13 @@ void Mix_Valve::setRegister(int reg, uint8_t value) {
 	case request_temp:
 		if (_prevReqTemp != value) _prevReqTemp = value;
 		else if (_mixCallTemp != value) {
+			if (_mixCallTemp > e_MIN_FLOW_TEMP) {
+				_status = e_NewTempReq;
+				_journey = e_TempOK;
+				if (value < _sensorTemp) _waitFlowTemp = _sensorTemp + 1; else _waitFlowTemp = _sensorTemp; // Trigger wait if valve was off.	
+			}
 			_mixCallTemp = value;
-			_journey = e_TempOK;
 			_onTime = 0;
-			_status = e_NewTempReq;
-			if (_mixCallTemp < _sensorTemp) _waitFlowTemp = _sensorTemp + 1; else _waitFlowTemp = _sensorTemp; // Trigger wait if valve was off.
-			stopMotor();
 		}
 		break;
 	default:
