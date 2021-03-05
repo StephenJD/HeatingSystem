@@ -30,8 +30,6 @@ namespace Assembly {
 		//clock_().setTime(Date_Time::DateOnly{ 15,9,19 }, Date_Time::TimeOnly{ 10,0 }, 5);
 		//clock_().setTime(Date_Time::DateOnly{ 3,10,19 }, Date_Time::TimeOnly{ 10,0 }, 5);
 #endif
-		hs.i2C.begin();
-		hs._recover.setTimeoutFn(&_resetI2C);
 		relayPort().setRecovery(hs._recover);
 
 		logger() << F("Initialiser Construction") << L_endl;

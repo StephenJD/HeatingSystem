@@ -85,13 +85,7 @@ namespace HardwareInterfaces {
 		}
 
 		for (auto & ts : hs()._tempController.tempSensorArr) {
-		//for (int i = 0; i < sizeof(hs()._tempController.tempSensorArr) / sizeof(hs()._tempController.tempSensorArr[0]); ++i) {
-		//auto ts = TempSensor{ hs().recoverObject(),0x29 };
-			//auto & ts = hs()._tempController.tempSensorArr[i];
-			//logger() << F("\tTry TS pos: ") << i << L_endl;
-			//logger() << F("\tTry TS device 0x") << L_hex << ts.getAddress() << L_endl;
 			auto status = showSpeedTestFailed(1,ts, "TS");
-			//logger() << L_time << "TS Error: " << status << L_endl;
 		}
 
 		logger() << F("\tTry Mix Valve") << L_endl;

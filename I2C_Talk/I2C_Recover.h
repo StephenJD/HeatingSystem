@@ -9,7 +9,7 @@ namespace I2C_Recovery {
 
 	class I2C_Recover { // no-recovery base-class
 	public:
-		I2C_Recover(I2C_Talk& i2C) : _i2C(&i2C) { i2C.begin(); }
+		I2C_Recover(I2C_Talk& i2C) : _i2C(&i2C) { /* Must not do i2C.begin() until entering setup()*/ }
 		
 		// Queries
 		const I2C_Talk & i2C() const { return *_i2C; }

@@ -21,7 +21,7 @@ namespace HardwareInterfaces {
 #else
 	int RemoteKeypad::readKey() {
 		auto myKey = getKeyCode(_lcd->readI2C_keypad());
-		putInKeyQue(keyQue, keyQuePos, myKey);
+		//putInKeyQue(keyQue, keyQuePos, myKey);
 		return myKey;
 	}
 

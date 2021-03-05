@@ -40,10 +40,11 @@ namespace I2C_Recovery {
 		if (testResult != _OK) {
 #endif
 			for (auto freq : tryFreq) {
+				auto originalMargin = i2C().stopMargin();
 				i2C().setI2CFrequency(freq);
 				testResult = i2C().status(addr);
 #ifdef DEBUG_SPEED_TEST				
-				logger() << F("\tTried Exists for 0x") << L_hex << addr << F(" at freq: ") << L_dec << freq << I2C_Talk::getStatusMsg(testResult) << L_endl;
+				logger() << F("\tTried Exists for 0x") << L_hex << addr << F(" at freq: ") << L_dec << freq << F(" timeOut uS: ") << originalMargin << I2C_Talk::getStatusMsg(testResult) << L_endl;
 #endif
 				if (testResult == _OK) {
 					device().set_runSpeed(freq);
@@ -56,7 +57,9 @@ namespace I2C_Recovery {
 					if (testResult == _OK) break;
 #endif
 				}
+				i2C().setStopMargin(I2C_Talk::WORKING_STOP_TIMEOUT);
 				ui_yield();
+				i2C().setStopMargin(originalMargin);
 			}
 #ifndef DEBUG_TRY_ALL_SPEEDS
 		}

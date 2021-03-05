@@ -111,13 +111,13 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 void HeatingSystem::serviceConsoles() {
 	_mainConsole.processKeys();
 	auto zoneIndex = 0;
-	//auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
-	//for (auto & remote : _remoteConsole) {
-	//	activeField->setFocusIndex(zoneIndex);
-	//	remote.processKeys();
-	//	++zoneIndex;
-	//	if (zoneIndex == 2) ++zoneIndex;
-	//}
+	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
+	for (auto & remote : _remoteConsole) {
+		activeField->setFocusIndex(zoneIndex);
+		remote.processKeys();
+		++zoneIndex;
+		if (zoneIndex == 2) ++zoneIndex;
+	}
 }
 
 void HeatingSystem::notifyDataIsEdited() {

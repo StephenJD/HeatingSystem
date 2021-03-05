@@ -23,6 +23,8 @@
 		uint8_t year() const { return _now.year(); }
 		virtual bool ok() const { return true; }
 		bool isNewSecond(uint8_t& oldSecond);
+		bool isNewMinute(uint8_t& oldMin);
+		bool isNew10Min(uint8_t& oldMin);
 		// Conceptually, these are queries, although reading the time triggers an update-check which might modify the time
 		explicit operator Date_Time::DateTime() const { return _dateTime(); }
 		

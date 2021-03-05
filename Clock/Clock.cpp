@@ -85,6 +85,20 @@ using namespace Date_Time;
 		return isNewSec; 
 	}
 
+	bool Clock::isNewMinute(uint8_t& oldMin) {
+		refresh();
+		bool isNewMin = oldMin != minUnits();
+		if (isNewMin) oldMin = minUnits();
+		return isNewMin;
+	}
+
+	bool Clock::isNew10Min(uint8_t& oldMin) {
+		refresh();
+		bool isNewMin = oldMin != mins10();
+		if (isNewMin) oldMin = mins10();
+		return isNewMin;
+	}
+
 #ifdef ZPSIM
 	void Clock::testAdd1Min() {
 		if (minUnits() < 9) setMinUnits(minUnits() + 1);

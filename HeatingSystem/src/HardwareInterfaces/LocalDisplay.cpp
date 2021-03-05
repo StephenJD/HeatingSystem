@@ -14,7 +14,7 @@ namespace HardwareInterfaces {
 	{
 		_lcd.begin(20, 4);
 		setBackLight(true);
-		logger() << F("\nLocalDisplay Constructed");
+		logger() << F("\nLocalDisplay Constructed") << L_endl;
 	}
 
 	void LocalDisplay::blinkCursor(bool isAwake) {

@@ -49,7 +49,7 @@ public:
 	void setRegister(int reg, uint8_t value);
 	void setRequestTemp();
 private:
-	enum { e_MIN_FLOW_TEMP = 30};
+	enum { e_MIN_FLOW_TEMP = 30, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
 	friend void testMixer();
 	friend void testSlave();
 	friend void printModes();
@@ -58,7 +58,7 @@ private:
 	//bool has_overshot(int new_call_flowDiff);
 	uint8_t saveToEEPROM() const; // returns noOfBytes saved
 
-	void adjustValve(int8_t tempDiff);
+	void adjustValve(float tempDiff);
 	bool activateMotor(); // Return true if it owns mutex
 	void stopMotor();
 	void startWaiting();
@@ -87,6 +87,7 @@ private:
 	int16_t _onTime = 0;
 	uint8_t _prevReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _waitFlowTemp = e_MIN_FLOW_TEMP;
+	uint8_t _prevOKTemp = 0;
 	mutable uint8_t _sensorTemp = e_MIN_FLOW_TEMP;
 	int16_t _valvePos = 0;
 	unsigned long _lastTick = 0;

@@ -42,8 +42,8 @@ namespace HardwareInterfaces {
 				initialiseDevice();
 			}
 			clearFromEnd();
-			//displ().setCursor(0, 0);
-			displ().clear();
+			displ().setCursor(0, 0);
+			//displ().clear();
 			displ().print(buff());
 			//logger() << L_time << F("Write Remote Done device 0x") << L_hex << getAddress() << L_endl;
 		}

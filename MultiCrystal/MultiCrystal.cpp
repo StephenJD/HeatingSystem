@@ -680,19 +680,20 @@ uint16_t MultiCrystal::readI2C_keypad() {
 				_errorCode = _i2C_device->read_verify_2bytes(INTCAP, keyPressed, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
 				if (_errorCode) { 
 					logger() << L_time << "readI2C_keypad Error Reading INTCAP device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
-				} else {
+				} else { // KeyPressed is masked with 0xE100 (RUD0 000L)
+// ********* RemoteKeypad::readKey() disabled ***************
 					//keyPressed = fromBigEndian(_data);
 					//logger() << L_time << "readI2C_keypad GotKey device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << keyPressed << L_endl;
 					//keyPressed &= _key_mask_16;
 					if (keyPressed == _key_mask_16) return 0;
 					//keyPressed &= ~IOPIN_CONNECTED_TO_INTA; // GPIO may have shown INT set when read.
 					if (keyPressed && checkI2C_Failed()) { // Recovery
-						logger() << L_time << "readI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: " << keyPressed << L_endl;
+						logger() << L_time << "readI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed << L_endl;
 						keyPressed = 0;
 					} else if (keyPressed & 0x8100) {
-						keyPressed = 0;
 						if (_i2C_device->runSpeed() > 10000) _i2C_device->set_runSpeed(long(_i2C_device->runSpeed() * 0.8));
-						logger() << L_time << "readI2C_keypad CheckOK but nonexistant Key device 0x" << L_hex << _i2C_device->getAddress() << " Key: " << keyPressed << " Slowed to: " << L_dec << _i2C_device->runSpeed() << L_endl;
+						logger() << L_time << "readI2C_keypad CheckOK but nonexistant Key device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed << " Slowed to: " << L_dec << _i2C_device->runSpeed() << L_endl;
+						keyPressed = 0;
 					}
 				}
 			}

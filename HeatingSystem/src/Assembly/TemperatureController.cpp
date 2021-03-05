@@ -46,13 +46,12 @@ namespace Assembly {
 			relayArr[index].initialise(relay.id(), relay.rec().relay_B);
 			++index;
 		}
-
 		logger() << F("loadRelays Completed") << L_endl;
 
 		Answer_R<R_ThermalStore> thStRec = *queries.q_ThermStore.begin();
 		thermalStore.initialise(thStRec.rec());
-
 		logger() << F("load thermalStore Completed") << L_endl;
+
 		index = 0;
 		for (Answer_R<R_MixValveControl> mixValveControl : queries.q_MixValve) {
 			mixValveControllerArr[index].initialise(index
@@ -65,8 +64,8 @@ namespace Assembly {
 			mixValveControllerArr[index].setResetTimePtr(timeOfReset_mS);
 			++index;
 		}
-		
 		logger() << F("load mixValveControllerArr Completed") << L_endl;
+		
 		index = 0;
 		for (Answer_R<R_Zone> zone : queries.q_Zones) {
 			zoneArr[index].initialise(
@@ -100,7 +99,7 @@ namespace Assembly {
 		static uint8_t lastMins = clock_().minUnits()-1;
 		bool isNewSecond = clock_().isNewSecond(lastSeconds);
 		if (!isNewSecond) { return; } // Wait for next second.
-		bool newMinute = clock_().minUnits() != lastMins;
+		bool newMinute = clock_().isNewMinute(lastMins);
 		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
 
 		logger() << L_flush;
@@ -115,7 +114,6 @@ namespace Assembly {
 		}
 
 		if (newMinute) {
-			lastMins = clock_().minUnits();
 			//logger() << L_time << "Check BB & Zones" << L_endl;
 			backBoiler.check();
 			checkZones(checkPreHeat);

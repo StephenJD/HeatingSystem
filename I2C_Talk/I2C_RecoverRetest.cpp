@@ -94,9 +94,10 @@ namespace I2C_Recovery {
 			}
 			endReadWrite();
 			if (device().getAddress() == abs(_deviceWaitingOnFailureFor10Mins)) _deviceWaitingOnFailureFor10Mins = 0;
-		} else if (status == _BusReleaseTimeout) {
-			call_timeOutFn(device().getAddress());
-		}
+		} 
+		//else if (status == _BusReleaseTimeout) {
+		//	call_timeOutFn(device().getAddress());
+		//}
 		else if (status == _disabledDevice || isRecursiveCall()) {
 			;
 		}
@@ -153,39 +154,47 @@ namespace I2C_Recovery {
 			//	//++tryAgain;
 			//	//if (tryAgain < 5) strategy().tryAgain(S_WaitAgain10);
 			//	if (device().testDevice() == _OK) break;
-			case S_SlowDown:
+			case S_SlowDown: // 5
 				if (haveBumpedUpMaxStrategyUsed(S_SlowDown)) {
 					logger() << F("\t\tS_Slow-down") << L_endl;
 					strategyStartTime = micros();
 					auto slowedDown = slowdown();
 					recoveryTime = micros() - strategyStartTime;
-					if (!slowedDown) logger() << F("\n    Slow-down did nothing...\n");
-					if (device().testDevice() == _OK) break;
+					if (slowedDown) {
+						strategy().tryAgain(S_TryAgain); // keep slowing down until can't.
+						break;
+					} else {
+						logger() << F("\n    Slow-down did nothing...\n");
+						if (device().testDevice() == _OK) break;
+					}
 				}
 			case S_SpeedTest: // 6
-				if (haveBumpedUpMaxStrategyUsed(S_SpeedTest)) logger() << F("\t\tS_SpeedTest 0x");
-				else logger() << F("\t\tTry again S_SpeedTest 0x");
-				{ // code block
-					strategyStartTime = micros();
-					auto speedTest = I2C_SpeedTest(device());
-					speedTest.fastest();
-					recoveryTime = micros() - strategyStartTime;
-					if (speedTest.error() == _OK) {
-						strategy().tryAgain(S_TryAgain);
-						logger() << F("\t\tNew Speed ") << device().runSpeed() << L_endl;
-					}
-					else {
-						logger() << F("\t\tDevice Failed\n");
-						disable();
-					}
-					device().i2C().setTimeouts(15000, I2C_Talk::WORKING_STOP_TIMEOUT);
-					if (device().testDevice() == _OK) break;
-				}// fall-through on error
+				if (haveBumpedUpMaxStrategyUsed(S_SpeedTest)) {
+					logger() << F("\t\tS_SpeedTest") << L_endl;
+					{ // code block
+						strategyStartTime = micros();
+						auto speedTest = I2C_SpeedTest(device());
+						speedTest.fastest();
+						recoveryTime = micros() - strategyStartTime;
+						if (speedTest.error() == _OK) {
+							strategy().tryAgain(S_TryAgain);
+							logger() << F("\t\tNew Speed ") << device().runSpeed() << L_endl;
+						}
+						else {
+							logger() << F("\t\tDevice Failed\n");
+							disable();
+						}
+						device().i2C().setTimeouts(15000, I2C_Talk::WORKING_STOP_TIMEOUT);
+						if (device().testDevice() == _OK) break;
+					} // fall-through on error
+				} //else logger() << F("\t\tTry again S_SpeedTest 0x");
 			case S_PowerDown: // 7
 				if (haveBumpedUpMaxStrategyUsed(S_PowerDown)) {
 					//logger() << F("\t\tS_Power-Down") << L_endl;
-					strategyStartTime = micros();
-					//call_timeOutFn(device().getAddress());
+					if (status == _BusReleaseTimeout) {
+						strategyStartTime = micros();
+						call_timeOutFn(device().getAddress());
+					}
 					//strategy().tryAgain(S_SlowDown); // when incremented will do a speed-test
 					if (device().testDevice() == _OK) break;
 				} // fall-through

@@ -20,6 +20,7 @@ namespace HardwareInterfaces {
 		, _testDevices(&testDevices)
 		{
 			_recover->setTimeoutFn(this);
+			_recover->i2C().begin();
 		}
 
 	Error_codes ResetI2C::operator()(I2C_Talk & i2c, int addr) {

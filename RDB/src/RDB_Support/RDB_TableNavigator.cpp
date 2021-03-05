@@ -24,7 +24,7 @@ namespace RelationalDatabase {
 			_lastReadHdrVersionNo = t->hdrVersion();
 		}
 		else {
-			logger() << "Null Table Ptr\n";
+			//logger() << "Null Table Ptr\n";
 			_currRecord.setStatus(TB_INVALID_TABLE);
 		}
 	}

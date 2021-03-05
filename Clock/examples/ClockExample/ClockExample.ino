@@ -10,7 +10,7 @@
 #define EEPROM_CLOCK_ADDR 0
 #define RTC_RESET 4
 
-using namespace Date_Time;
+//using namespace Date_Time;
 
 #if defined(__SAM3X8E__)
 	#include <Wire.h>
@@ -42,6 +42,8 @@ Logger & logger() {
 	static Serial_Logger _log(SERIAL_RATE, clock_());
 	return _log;
 }
+
+void ui_yield() {}
 
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {

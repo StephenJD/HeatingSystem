@@ -121,17 +121,22 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 	case e_NewReq:
 		logger() << name() << L_tabs << F("New Temp Req:") << _mixCallTemp << L_endl;
 		if (_valvePos == -_max_on_time) {
-			if (_waitFlowTemp > _sensorTemp && _sensorTemp >= _mixCallTemp ) {
+			if (/*_waitFlowTemp > _sensorTemp && */_sensorTemp >= _mixCallTemp ) {
 				startWaiting(); // re-start waiting whilst the pump is cooling the temp sensor
 			} else if (_sensorTemp < _mixCallTemp || _onTime == 0) { // finished waiting and temp has stopped falling
 				_status = e_OK;
-				_onTimeRatio = _max_on_time / 2;
-				adjustValve(1); // Move valve to centre
+				//_onTimeRatio = _max_on_time / 2;
+				_valvePos = -_max_on_time / 2;
+				adjustValve(float(call_flowDiff));
 			}
 		} else {
 			_status = e_OK;
-			if (call_flowDiff != 0) adjustValve(call_flowDiff);
-			else stopMotor();
+			if (call_flowDiff != 0) {
+				adjustValve(float(call_flowDiff));
+			} else {
+				_valvePos = 0;
+				stopMotor();
+			}
 		}
 		break;
 	case e_AtLimit: // false as soon as it overshoots 
@@ -146,48 +151,63 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 		break;
 	case e_Wait:
 		if (call_flowDiff * _journey < 0) { // Overshot during wait
-			_onTimeRatio = abs(_valvePos) / 2; // reduce ratio on each overshoot
-			adjustValve(call_flowDiff); // action becomes e_Moving
+			_onTimeRatio /= 2; // reduce ratio on each overshoot
+			adjustValve(float(call_flowDiff)); // action becomes e_Moving
+			//adjustValve(call_flowDiff / 2.0f); // action becomes e_Moving
 		} else if (call_flowDiff * _journey > 0 && (_waitFlowTemp - _sensorTemp) * _journey > 0) { // Got worse during wait
-			adjustValve(call_flowDiff); 
+			_waitFlowTemp = _sensorTemp;
+			adjustValve(float(call_flowDiff));
 		}
 		break;
 	case e_Checking: 
 		if (call_flowDiff == 0) {
 			if (_journey != e_TempOK) {
 				_journey = e_TempOK;
-				_onTimeRatio = abs(_valvePos);
+				auto tempChange = _prevOKTemp - _sensorTemp;
+				if (_valvePos != 0 && tempChange != 0) {
+					_onTimeRatio = abs(_valvePos / tempChange);
+				}
+				_prevOKTemp = _sensorTemp;
+				_valvePos = 0;
 			}
 		} else {
-			if (_journey == e_TempOK) adjustValve(call_flowDiff); // action becomes e_Moving
+			if (_journey == e_TempOK) { // Previously OK temperature has drifted
+				_prevOKTemp = _sensorTemp;
+				adjustValve(float(call_flowDiff)); // action becomes e_Moving
+			}
 			else { // Undershot after a wait - last adjustment was too small
-				auto oldRatio = _onTimeRatio;
-				if (_waitFlowTemp == _sensorTemp) {
+				//auto oldRatio = _onTimeRatio;
+				adjustValve(float(call_flowDiff));
+				//if (_waitFlowTemp == _sensorTemp) { // no change in temp during wait
+					//call_flowDiff *= 2;
 					_onTimeRatio *= 2;
-					oldRatio = 0;
-				} else _onTimeRatio /= 2; // move the rest of the distance, as if the ratio had been 50% bigger
-				adjustValve(call_flowDiff);
-				_onTimeRatio += oldRatio;
+					//oldRatio = 0;
+				//} else {
+					//_onTimeRatio /= 2; // move the rest of the distance, as if the ratio had been 50% bigger
+					//call_flowDiff = call_flowDiff + (call_flowDiff + 1) / 2;
+				//}
+				//_onTimeRatio += oldRatio;
 			} 
 		}
 		break;
 	}
 }
 
-void Mix_Valve::adjustValve(int8_t tempDiff) {
+void Mix_Valve::adjustValve(float tempDiff) {
 	// Get required direction.
 	if (tempDiff < 0) _motorDirection = e_Cooling;  // cool valve 
 	else _motorDirection = e_Heating;  // heat valve
 	if (_journey != Journey(_motorDirection)) {
-		_valvePos = 0;
+		//_valvePos = 0;
 		_journey = Journey(_motorDirection);
 	}
 
-	if (_onTimeRatio < 2) _onTimeRatio = 2;
+	if (_onTimeRatio < e_MIN_RATIO) _onTimeRatio = e_MIN_RATIO;
+	else if (_onTimeRatio > e_MAX_RATIO) _onTimeRatio = e_MAX_RATIO;
 	logger() << name() << L_tabs << F("Move") << tempDiff << F("\tRatio:") << (int)_onTimeRatio << L_endl;
 	auto tempError = abs(tempDiff);
 
-	long onTime = _onTimeRatio * tempError;
+	float onTime = _onTimeRatio * tempError;
 	if (onTime > _max_on_time / 2) _onTime = _max_on_time / 2; else _onTime = (int16_t)onTime;
 }
 
@@ -288,16 +308,16 @@ void Mix_Valve::setRegister(int reg, uint8_t value) {
 	case max_ontime:	_max_on_time = value; break;
 	case wait_time:		_valve_wait_time = value; break;
 	case max_flow_temp:	_max_flowTemp = value; break;
-	case request_temp:
-		if (_prevReqTemp != value) _prevReqTemp = value;
+	case request_temp: 
+		if (_prevReqTemp != value) _prevReqTemp = value; // REQUEST TWICE TO REGISTER.
 		else if (_mixCallTemp != value) {
+			_mixCallTemp = value;
+			_onTime = 0;
 			if (_mixCallTemp > e_MIN_FLOW_TEMP) {
 				_status = e_NewTempReq;
 				_journey = e_TempOK;
-				if (value < _sensorTemp) _waitFlowTemp = _sensorTemp + 1; else _waitFlowTemp = _sensorTemp; // Trigger wait if valve was off.	
+				if (_mixCallTemp < _sensorTemp) _waitFlowTemp = _sensorTemp + 1; else _waitFlowTemp = _sensorTemp; // Trigger wait if valve was off.	
 			}
-			_mixCallTemp = value;
-			_onTime = 0;
 		}
 		break;
 	default:

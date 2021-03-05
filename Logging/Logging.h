@@ -37,7 +37,7 @@ SD.h/.cpp modified to provide sd_exists();
 		virtual void readAll() {}
 		virtual void flush() {}
 		virtual void close() {}
-		virtual void begin(uint32_t baudRate = 0) {}
+		virtual void begin(uint32_t baudRate = 0) { flush(); }
 		Logger & operator <<(Flags);
 		
 		template<class T>
