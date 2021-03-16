@@ -209,7 +209,10 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 		auto setPullUps = [this]() {_errorCode = 7; return  _i2C_device->I_I2Cdevice::write(GPPU, 2, PULL_UP); };
 		auto setInterruptEnable = [this]() {
 			_errorCode = 8;
-			return  _i2C_device->I_I2Cdevice::write(GPINTEN, 2, I2C_Talk::toBigEndian(_key_mask_16)());
+			bool status = _i2C_device->I_I2Cdevice::write(GPINTEN, 2, I2C_Talk::toBigEndian(_key_mask_16)());
+			status = status || _i2C_device->read(GPINTEN, 2, _data); // recovery-Check GPINTEN is correct
+			auto thisData = I2C_Talk::fromBigEndian(_data);
+			return thisData == _key_mask_16 ? _OK : _I2C_ReadDataWrong;
 		};	// INT enabled for keyboard.
 		
 		auto clearInterrupts = [this, setInterruptEnable, setIOCON]() {
@@ -246,7 +249,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 			//Serial.print("Multi-Crystal Failed Begin() at "); Serial.println(_errorCode);
 			logger() << "Remote Multi-Crystal SetRegisters Failed device 0x" << L_hex << _i2C_device->getAddress() << L_endl;
 			return hasFailed;
-		} 
+		} //else logger() << "Remote Multi-Crystal SetRegisters OK 0x" << L_hex << _i2C_device->getAddress() << L_endl;
 		_data[0] = 0; _data[1] = 0;
 	}
 
@@ -573,6 +576,8 @@ uint8_t MultiCrystal::pulseEnable(void) { // this function sends the data to the
 	} else {
 		_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
 		bool isBport = setControl(_enable_pin, HIGH);
+		_data[0] &= ~_key_mask[0]; // Key-masked bits must be zero.
+		_data[1] &= ~_key_mask[1];
 		if (isBport) { // enable after data written
 			error = _i2C_device->I_I2Cdevice::write(GPIOA,2,_data); // 0 = success
 		} else {
@@ -585,6 +590,7 @@ uint8_t MultiCrystal::pulseEnable(void) { // this function sends the data to the
 		} else {
 			if (error == _OK) error = _i2C_device->I_I2Cdevice::write(GPIOA,1,&_data[0]);
 		}
+		if (error) logger() << L_time << "MultiCrystal::pulseEnable device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << " at freq: " << L_dec << _i2C_device->i2C().getI2CFrequency() << L_endl;
 	}
 	return error;
 }
@@ -640,7 +646,10 @@ uint8_t MultiCrystal::checkI2C_Failed() {
 			if (thisData != _key_mask_16) {
 				logger() << L_time << F("Remote Display checkI2C device 0x") << L_hex << _i2C_device->getAddress() << " Wrong GPINTEN: 0x" << thisData << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
 				error = _I2C_ReadDataWrong;
-			} //else logger() << L_time << F("Remote Display Check OK.")  << L_endl;
+			} else {
+				//logger() << L_time << F("Remote Display Read OK.") << L_endl;
+				error = _i2C_device->write(IODIR, 2, _key_mask); // recovery
+			}
 		} else logger() << L_time << F("Remote Display checkI2C device 0x") << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << L_endl;
 		return error;
 	} else return _disabledDevice;
@@ -666,27 +675,26 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	constexpr int MAX_TRIES = 6;
 	int16_t keyPressed = 0;
 	// Read Int-pin on GPIO
+// **********  Disabled in int RemoteKeypad::readKey()
 	int16_t gpio = 0;
-	//logger() << "readI2C_keypad" << L_endl;
 	if (_i2C_device->isEnabled()) {
+		//logger() << "readI2C_keypad" << L_endl;
 		auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, gpio, CONSECUTIVE_COUNT, MAX_TRIES, IOPIN_CONNECTED_TO_INTA); // non-recovery.
+		//auto gpioErr = _i2C_device->I_I2Cdevice::read(GPIOA, 2, _data); // non-recovery.
 		if (gpioErr) {
 			logger() << L_time << "readI2C_keypad Error Reading GPIO device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
 			checkI2C_Failed(); // Recovery
 		} else {
 			if (gpio) { 
-				_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
+				//logger() << L_time << "readI2C_keypad Got gpio" << L_endl;
+				//_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
 				//_errorCode = _i2C_device->I_I2Cdevice::read(INTCAP, 2, _data); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
 				_errorCode = _i2C_device->read_verify_2bytes(INTCAP, keyPressed, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
 				if (_errorCode) { 
 					logger() << L_time << "readI2C_keypad Error Reading INTCAP device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
-				} else { // KeyPressed is masked with 0xE100 (RUD0 000L)
-// ********* RemoteKeypad::readKey() disabled ***************
-					//keyPressed = fromBigEndian(_data);
-					//logger() << L_time << "readI2C_keypad GotKey device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << keyPressed << L_endl;
-					//keyPressed &= _key_mask_16;
+					keyPressed = 0;
+				} else { // KeyPressed is masked with 0xE100 (RUD0 000L 0000 0000)
 					if (keyPressed == _key_mask_16) return 0;
-					//keyPressed &= ~IOPIN_CONNECTED_TO_INTA; // GPIO may have shown INT set when read.
 					if (keyPressed && checkI2C_Failed()) { // Recovery
 						logger() << L_time << "readI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed << L_endl;
 						keyPressed = 0;
@@ -700,25 +708,4 @@ uint16_t MultiCrystal::readI2C_keypad() {
 		}
 	}
 	return keyPressed;
-}
-
-void MultiCrystal::debug() {
-	//uint8_t dataBuffa[2] = {0};
-	//uint8_t failedAt = 0;
-	//uint8_t hasFailed = _i2C_device->write(GPIOA,2,_data);
-	//if (hasFailed) failedAt = 1;
-	//hasFailed = hasFailed | _i2C_device->read(GPIOA,2,dataBuffa);
-	//if (hasFailed && !failedAt) failedAt = 2;
-	//hasFailed = hasFailed | ((dataBuffa[0] & ~0xE3) != (_data[0] & ~_key_mask[0]));
-	//if (hasFailed && !failedAt) failedAt = 3;
-	//hasFailed = hasFailed | (dataBuffa[1] != _data[1]);
-	//if (hasFailed && !failedAt) failedAt = 4;
-	//
-	//if (hasFailed) {
-	//	Serial.print(F("Failed at "));Serial.print(failedAt,DEC);Serial.print(" _data[0]:");Serial.print(_data[0],HEX); Serial.print(" was:");Serial.print(dataBuffa[0],HEX);
-	//	Serial.print(" _data[1]:");Serial.print(_data[1],HEX);Serial.print(" was:");Serial.println(dataBuffa[1],HEX);
-	//} else {
-	//	Serial.print("OK"); Serial.print(" _data[0]:");Serial.print(_data[0],HEX);Serial.print(" _data[1]:");Serial.println(_data[1],HEX);
-	//}
-	//delay(1000);
 }

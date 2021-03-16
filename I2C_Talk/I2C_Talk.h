@@ -42,7 +42,7 @@ public:
 	// Basic Usage //
 	enum {_single_master = 255, _no_address = 255};
 	static int constexpr SPEED_TEST_INITIAL_STOP_TIMEOUT = 2;
-	static int constexpr WORKING_STOP_TIMEOUT = 20;
+	static int constexpr WORKING_STOP_TIMEOUT = 50;
 
 	// No point in being constexpr as that implies an immutable object for which wire_port cannot be set.
 	I2C_Talk(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000 ) : I2C_Talk(_single_master, wire_port, max_I2Cfreq) {}
@@ -76,6 +76,7 @@ public:
 	uint32_t slaveByteProcess() const {return _slaveByteProcess_uS;}
 	void setStopMargin(uint8_t margin);
 	void setEndAbort(bool onAddrErr, bool onDataErr, bool alwaysStop) { _wire().setEndAbort(onAddrErr, onDataErr, alwaysStop); }
+	void nextWireMode() { _wire().nextWireMode(); }
 
 	static auto getStatusMsg(int errorCode) -> const __FlashStringHelper *;
 	static uint16_t fromBigEndian(const uint8_t* byteArr) { return (byteArr[0] << 8) + byteArr[1]; }

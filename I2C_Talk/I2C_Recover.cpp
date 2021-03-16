@@ -49,7 +49,10 @@ namespace I2C_Recovery {
 				if (testResult == _OK) {
 					device().set_runSpeed(freq);
 					testResult = testDevice(2, 1);
-					if (testResult == _StopMarginTimeout) marginTimeout = true;
+					if (testResult == _StopMarginTimeout) {
+						marginTimeout = true;
+						break;
+					}
 #ifdef DEBUG_SPEED_TEST					
 					logger() << F("\tfindAworkingSpeed Test at ") << i2C().getI2CFrequency() << I2C_Talk::getStatusMsg(testResult) << L_endl;
 #endif
@@ -61,10 +64,10 @@ namespace I2C_Recovery {
 				ui_yield();
 				i2C().setStopMargin(originalMargin);
 			}
-#ifndef DEBUG_TRY_ALL_SPEEDS
-		}
-#else
+#ifdef DEBUG_TRY_ALL_SPEEDS
 		testResult = _OK;
+#else
+		}
 #endif
 		if (marginTimeout) testResult = _StopMarginTimeout;
 		else if (testResult != _OK) testResult = _I2C_Device_Not_Found;

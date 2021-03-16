@@ -19,7 +19,6 @@ namespace HardwareInterfaces {
 //	ofstream MixValveController::lf("LogFile.csv");
 //
 //#endif
-	int MixValveController::wireMode = 2;
 
 	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, UI_TempSensor * tempSensorArr, int flowTempSens, int storeTempSens) {
 		//profileLogger() << F("MixValveController::ini ") << index << L_endl;
@@ -38,7 +37,7 @@ namespace HardwareInterfaces {
 		if (*_timeOfReset_mS != 0) {
 			auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
 			while (!timeOut) {
-				logger() << L_time << F("MixV Warmup used: ") << timeOut.timeUsed() << L_endl;
+				//logger() << L_time << F("MixV Warmup used: ") << timeOut.timeUsed() << L_endl;
 				ui_yield();
 			}
 			*_timeOfReset_mS = 0;
@@ -59,7 +58,7 @@ namespace HardwareInterfaces {
 		uint8_t errCode;
 		check();
 		errCode = writeToValve(Mix_Valve::temp_i2c_addr, _tempSensorArr[_flowTempSens].getAddress());
-		errCode |= writeToValve(Mix_Valve::max_ontime, VALVE_FULL_TRANSIT_TIME);
+		errCode |= writeToValve(Mix_Valve::traverse_time, VALVE_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::wait_time, VALVE_WAIT_TIME);
 		logger() <<  F("MixValveController::sendSetup()") << i2C().getStatusMsg(errCode) << L_endl;
 		return errCode;
@@ -76,17 +75,19 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::monitorMode() {
-		_tempSensorArr[_flowTempSens].readTemperature();
-		_relayArr[_controlZoneRelay].set(); // turn call relay ON
-		relayController().updateRelays();
-		sendFlowTemp();
-		logMixValveOperation(true);
-		//writeToValve(Mix_Valve::request_temp, _mixCallTemp);
+		if (reEnable() == _OK) {
+			_tempSensorArr[_flowTempSens].readTemperature();
+			_relayArr[_controlZoneRelay].set(); // turn call relay ON
+			relayController().updateRelays();
+			sendFlowTemp();
+			logMixValveOperation(true);
+			//writeToValve(Mix_Valve::request_temp, _mixCallTemp);
+		}
 	}
 
 	void MixValveController::logMixValveOperation(bool log) {
 		int8_t algorithmMode = (int8_t)readFromValve(Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
-		bool ignoreThis = algorithmMode == Mix_Valve::e_Checking
+		bool ignoreThis = (algorithmMode == Mix_Valve::e_Checking && flowTemp() == _mixCallTemp)
 			|| algorithmMode == Mix_Valve::e_AtLimit;
 
 		if (log || !ignoreThis || valveStatus.algorithmMode != algorithmMode) {
@@ -95,7 +96,12 @@ namespace HardwareInterfaces {
 			valveStatus.onTime = (uint8_t)readFromValve(Mix_Valve::count);
 			valveStatus.valvePos = readFromValve(Mix_Valve::valve_pos);
 			valveStatus.ratio = (uint8_t)readFromValve(Mix_Valve::ratio);
-			profileLogger() << L_time << L_tabs << (_index == M_DownStrs ? "DS_Mix R/Is" : "US_Mix R/Is") << _mixCallTemp << flowTemp()  << showState() << valveStatus.onTime << valveStatus.valvePos << valveStatus.ratio << L_endl;
+			valveStatus.fromPos = readFromValve(Mix_Valve::moveFromPos);
+			valveStatus.fromTemp = (uint8_t)readFromValve(Mix_Valve::moveFromTemp);
+			profileLogger() << L_time << L_tabs 
+				<< (_index == M_DownStrs ? "DS_Mix R/Is" : "US_Mix R/Is") << _mixCallTemp << flowTemp()  
+				<< showState() << valveStatus.onTime << valveStatus.valvePos << valveStatus.ratio 
+				<< valveStatus.fromPos << valveStatus.fromTemp << L_endl;
 		}
 	}
 
@@ -238,9 +244,6 @@ namespace HardwareInterfaces {
 			status = write(mixReg, 1, &value); // recovery-write
 			if (status) {
 				logger() << L_time << F("MixValve Write device 0x") << L_hex << getAddress() << F(" Reg: ") << reg << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
-				if (clock_().isNew10Min(lastMins)) {
-					setWireMode(++wireMode);
-				}
 			} //else logger() << L_time << F("MixValve Write OK device 0x") << L_hex << getAddress() << L_endl;
 		} else logger() << L_time << F("MixValve Write device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
 		return status;
@@ -262,18 +265,5 @@ namespace HardwareInterfaces {
 			}
 		} else logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
 		return value;
-	}
-
-	void MixValveController::setWireMode(int newMode) {
-		wireMode = newMode % 8;
-		bool onAddrErr = wireMode & 0x01;
-		bool onDataErr = wireMode & 0x02;
-		bool alwaysStop = wireMode & 0x04;
-		i2C().setEndAbort(onAddrErr, onDataErr, alwaysStop);
-		logger() << "Wire Aborts on";
-		if (onAddrErr) logger() << " AddrEr,";
-		if (onDataErr) logger() << " DataEr,";
-		if (alwaysStop) logger() << " AlwaysSendStop";
-		logger() << L_endl;
 	}
 }

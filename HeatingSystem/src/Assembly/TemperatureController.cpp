@@ -117,6 +117,9 @@ namespace Assembly {
 			//logger() << L_time << "Check BB & Zones" << L_endl;
 			backBoiler.check();
 			checkZones(checkPreHeat);
+			if (checkPreHeat) {
+				mixValveControllerArr[0].i2C().nextWireMode();
+			}
 		}
 
 		//logger() << L_time << "Check MixV's" << L_endl;

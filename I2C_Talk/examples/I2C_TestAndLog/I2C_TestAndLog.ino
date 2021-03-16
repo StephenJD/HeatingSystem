@@ -193,7 +193,7 @@ public:
 		/*Read Only Data*/		status, //Has new data, Error code
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
 		/*Read/Write Data*/		flow_temp, request_temp, ratio, control,
-		/*Read/Write Config*/	temp_i2c_addr, max_ontime, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
+		/*Read/Write Config*/	temp_i2c_addr, traverse_time, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
 		/*End-Stop*/			reg_size
 	};
 	using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
@@ -205,12 +205,12 @@ private:
 	int _error = 0;
 };
 
-//MixValveController mixValve{ i2c_recover, 0x10 };
+MixValveController mixValve{ i2c_recover, 0x10 };
 
-//Relay_B relays[] = { {1,0},{0,0},{2,0},{3,0},{4,0},{5,0},{6,0} };
+Relay_B relays[] = { {1,0},{0,0},{2,0},{3,0},{4,0},{5,0},{6,0} };
 
-//RemoteDisplay rem_lcd[] = { {i2c_recover, 0x24},  0x25, 0x26 };
-//RemoteKeypad rem_keypad[] = { rem_lcd[0].displ(),  rem_lcd[1].displ(), rem_lcd[2].displ() };
+RemoteDisplay rem_lcd[] = { {i2c_recover, 0x24},  0x25, 0x26 };
+RemoteKeypad rem_keypad[] = { rem_lcd[0].displ(),  rem_lcd[1].displ(), rem_lcd[2].displ() };
 
 LocalKeypad keypad{ LOCAL_INT_PIN, KEY_ANALOGUE, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW } };
 auto resetPin = Pin_Wag{ RESET_OUT_PIN , LOW};
@@ -317,9 +317,9 @@ void setup() {
 
 	delay(200);
 	prepareDisplay();
-	//for (auto & rem : rem_lcd) {
-	//	rem.initialiseDevice();
-	//}
+	for (auto & rem : rem_lcd) {
+		rem.initialiseDevice();
+	}
 
 	logger() << "\n ** End of setup.\n";
 }
@@ -432,7 +432,7 @@ void loop() {
 	int repeatKeyCount = 0;
 	//while (true) {
 		//for (int displayID = 0; displayID < 3 ; ++displayID) {
-		/*	int displayID = 2;
+			int displayID = 2;
 			nextRemKey = rem_keypad[displayID].getKey();
 			if (nextRemKey >= 0) {
 				if (nextRemKey == lastKey) ++repeatKeyCount; 
@@ -452,9 +452,9 @@ void loop() {
 					rem_lcd[displayID].displ().clear(); rem_lcd[displayID].displ().print("Down"); break;
 				}
 				rem_lcd[displayID].displ().print(repeatKeyCount);
-			} */
+			} 
 		//}
-		//delay(1000);
+		//delay(500);
 	//}
 
 	if (!showInstructions) {
@@ -642,26 +642,26 @@ uint8_t initialiseRemoteDisplaysFailed_() {
 	uint8_t rem_error;
 	logger() << "\nInitialiseRemoteDisplays\n";
 	rem_error = 0;
-	//for (auto & rmPtr : rem_lcd) {
-	//	rem_error |= rmPtr.initialiseDevice();
-	//}
+	for (auto & rmPtr : rem_lcd) {
+		rem_error |= rmPtr.initialiseDevice();
+	}
 	return rem_error;
 }
 
 I_I2Cdevice_Recovery & getDevice(int addr) {
-	//if (addr == 0x10) {
-	//	return mixValve;
-	//}
-	//else 
-	//	if (addr == 0x20) {
-	//	return rPort;
-	//}
-	//else if (addr >= 0x24 && addr <= 0x26) {
-	//	return rem_lcd[addr - 0x24];
-	//}
-	//else {
+	if (addr == 0x10) {
+		return mixValve;
+	}
+	else 
+		if (addr == 0x20) {
+		return rPort;
+	}
+	else if (addr >= 0x24 && addr <= 0x26) {
+		return rem_lcd[addr - 0x24];
+	}
+	else {
 		return tempSens[deviceIndex(addr) - deviceIndex(FIRST_TEMP_SENS_ADDR)];
-	//}
+	}
 }
 
 uint8_t tryDeviceAt(int addrIndex) {
@@ -681,14 +681,13 @@ uint8_t tryDeviceAt(int addrIndex) {
 	if (addr == 0) {
 	}
 	else if (addr == 0x10) { // mix arduino
-		//hasFailed = mixValve.getPos(dataBuffa);
+		hasFailed = mixValve.getPos(dataBuffa);
 	}
 	else if (addr == 0x20) { // relay box
 		hasFailed = rPort.testRelays();
 	}
 	else if (addr <= 0x26) {
-		//hasFailed = rem_lcd[addr - 0x24].initialiseDevice();
-		//hasFailed = i2c.read(0x26, GPIOA, 1, &dataBuffa);
+		hasFailed = i2c.read(addr, GPIOA, 1, &dataBuffa);
 	}
 	else {
 		auto & ts = static_cast<TempSensor &>(device);

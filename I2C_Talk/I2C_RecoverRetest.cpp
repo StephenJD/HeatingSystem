@@ -155,9 +155,10 @@ namespace I2C_Recovery {
 			//	//if (tryAgain < 5) strategy().tryAgain(S_WaitAgain10);
 			//	if (device().testDevice() == _OK) break;
 			case S_SlowDown: // 5
-				if (haveBumpedUpMaxStrategyUsed(S_SlowDown)) {
-					logger() << F("\t\tS_Slow-down") << L_endl;
-					strategyStartTime = micros();
+				haveBumpedUpMaxStrategyUsed(S_SlowDown);
+				logger() << F("\t\tS_Slow-down") << L_endl;
+				strategyStartTime = micros();
+				{
 					auto slowedDown = slowdown();
 					recoveryTime = micros() - strategyStartTime;
 					if (slowedDown) {
@@ -184,7 +185,7 @@ namespace I2C_Recovery {
 							logger() << F("\t\tDevice Failed\n");
 							disable();
 						}
-						device().i2C().setTimeouts(15000, I2C_Talk::WORKING_STOP_TIMEOUT);
+						device().i2C().setStopMargin(I2C_Talk::WORKING_STOP_TIMEOUT);
 						if (device().testDevice() == _OK) break;
 					} // fall-through on error
 				} //else logger() << F("\t\tTry again S_SpeedTest 0x");

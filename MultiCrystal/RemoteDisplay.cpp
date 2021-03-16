@@ -38,8 +38,8 @@ namespace HardwareInterfaces {
 		//auto rem_error = _OK;
 		if (rem_error != _disabledDevice) {
 			if (rem_error) {
-				logger() << L_time << F("Restarting RemoteDisplay device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(rem_error) << L_endl;
-				initialiseDevice();
+				rem_error = initialiseDevice();
+				logger() << L_time << F("Restarted RemoteDisplay device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(rem_error) << L_endl;
 			}
 			clearFromEnd();
 			displ().setCursor(0, 0);

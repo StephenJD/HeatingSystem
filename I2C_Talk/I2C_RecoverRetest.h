@@ -44,7 +44,6 @@ namespace I2C_Recovery {
 		bool isUnrecoverable() const override {	return _deviceWaitingOnFailureFor10Mins < 0; }
 		// Modifiers for I2C_Recover_Retest
 		auto testDevice(int noOfTests, int allowableFailures)-> I2C_Talk_ErrorCodes::Error_codes override;
-		//auto findAworkingSpeed() -> I2C_Talk_ErrorCodes::Error_codes override;
 		void setTimeoutFn(I_I2CresetFunctor * timeoutFnPtr);
 		void setTimeoutFn(TestFnPtr timeoutFnPtr);
 		void basicTestsBeforeScan(I_I2Cdevice_Recovery & device);

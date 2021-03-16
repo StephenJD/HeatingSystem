@@ -135,8 +135,6 @@ private:
 	uint8_t pulseEnable();
 	uint8_t command(uint8_t); 
 
-	void debug();
-	
 	uint8_t _numChars, _numCols;
 	I_I2Cdevice * _i2C_device = 0;
 	uint8_t _address;

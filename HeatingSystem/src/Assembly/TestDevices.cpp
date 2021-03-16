@@ -95,7 +95,7 @@ namespace HardwareInterfaces {
 
 		hs().mainDisplay.sendToDisplay();
 		hs()._recover.setTimeoutFn(&_ini._resetI2C);
-		hs().i2C.setTimeouts(15000, I2C_Talk::WORKING_STOP_TIMEOUT); // give generous stop-timeout in normal use 
+		hs().i2C.setStopMargin(I2C_Talk::WORKING_STOP_TIMEOUT);
 		return returnVal;
 	}
 

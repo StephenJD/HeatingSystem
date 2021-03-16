@@ -34,8 +34,8 @@ public:
 		// All registers are treated as two-byte, with second-byte un-used for most. Thus single-byte read-write works.
 		/*Read Only Data*/		status,
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
-		/*Read/Write Data*/		flow_temp, request_temp, ratio, control,
-		/*Read/Write Config*/	temp_i2c_addr, max_ontime, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
+		/*Read/Write Data*/		flow_temp, request_temp, ratio, moveFromTemp, moveFromPos,
+		/*Read/Write Config*/	temp_i2c_addr, traverse_time, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
 		/*End-Stop*/			reg_size
 	};	
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat };
@@ -58,7 +58,7 @@ private:
 	//bool has_overshot(int new_call_flowDiff);
 	uint8_t saveToEEPROM() const; // returns noOfBytes saved
 
-	void adjustValve(float tempDiff);
+	void adjustValve(int tempDiff);
 	bool activateMotor(); // Return true if it owns mutex
 	void stopMotor();
 	void startWaiting();
@@ -74,24 +74,28 @@ private:
 	HardwareInterfaces::Pin_Wag * heat_relay;
 	HardwareInterfaces::Pin_Wag * cool_relay;
 	EEPROMClass * _ep;
+
+	// Temporary Data
+	int16_t _onTime = 0;
+	int16_t _valvePos = 0;
+	int16_t _moveFrom_Pos = 0;
+
+	Error _status = e_OK;
+	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
+	MotorDirection _motorDirection = e_Stop;
+
+	uint8_t _moveFrom_Temp = 0;
+	uint8_t _prevReqTemp = 0; // Must have two the same to reduce spurious requests
+	uint8_t _waitFlowTemp = e_MIN_FLOW_TEMP;
+	mutable uint8_t _sensorTemp = e_MIN_FLOW_TEMP;
+	
 	uint8_t _eepromAddr;
 	// EEPROM saved data
-	uint8_t _max_on_time = 140;
+	uint8_t _traverse_time = 140;
 	uint8_t _valve_wait_time;
 	uint8_t _onTimeRatio = 30;
 	uint8_t _max_flowTemp;
-	// Temporary Data
 	int8_t _mixCallTemp = e_MIN_FLOW_TEMP;
-	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
-	MotorDirection _motorDirection = e_Stop;
-	int16_t _onTime = 0;
-	uint8_t _prevReqTemp = 0; // Must have two the same to reduce spurious requests
-	uint8_t _waitFlowTemp = e_MIN_FLOW_TEMP;
-	uint8_t _prevOKTemp = 0;
-	mutable uint8_t _sensorTemp = e_MIN_FLOW_TEMP;
-	int16_t _valvePos = 0;
-	unsigned long _lastTick = 0;
-	Error _status = e_OK;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 };
 

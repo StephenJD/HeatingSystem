@@ -50,6 +50,8 @@ namespace HardwareInterfaces {
 			int16_t valvePos = 0;
 			int8_t motorActivity = 0;
 			uint8_t ratio = 0;
+			int16_t fromPos = 0;
+			uint8_t fromTemp = 0;
 		} valveStatus;
 //#if defined (ZPSIM)
 //		int16_t getValvePos() const; // public for simulator
@@ -61,8 +63,7 @@ namespace HardwareInterfaces {
 //		volatile int8_t motorState = 0; // required by simulator
 //		static std::ofstream lf;
 //#endif
-		void setWireMode(int newMode);
-		static int wireMode;
+
 	private:
 		I2C_Talk_ErrorCodes::Error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
 		void waitForWarmUp();

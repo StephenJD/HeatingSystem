@@ -35,7 +35,7 @@ namespace HardwareInterfaces {
 
 	/////////////////// Mixing Valves ///////////////////////////////
 	constexpr uint8_t VALVE_WAIT_TIME = 40;
-	constexpr uint16_t VALVE_FULL_TRANSIT_TIME = 140;
+	constexpr uint16_t VALVE_TRANSIT_TIME = 140;
 	////////////////// EEPROM USAGE /////////////////////
 	// clock : 6 bytes
 	// strategy : 11 bytes
