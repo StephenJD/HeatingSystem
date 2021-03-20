@@ -225,8 +225,8 @@ namespace HardwareInterfaces {
 		if (relayInControl() == -1) return false;
 
 		int storeTempAtMixer = _tempSensorArr[_storeTempSens].get_temp(); 
-		auto minStoreTemp = isHeating ? _mixCallTemp + THERM_STORE_HYSTERESIS : _mixCallTemp;
-		if (storeTempAtMixer < minStoreTemp /*|| readFromValve(Mix_Valve::status) == Mix_Valve::e_Water_too_cool*/) {
+		//auto minStoreTemp = isHeating ? _mixCallTemp + THERM_STORE_HYSTERESIS : _mixCallTemp;
+		if (valveStatus.valvePos == VALVE_TRANSIT_TIME) {
 			profileLogger() << L_time << (index() == 0 ? "DS" : "US") << " Mix-Store Temp: " << storeTempAtMixer << L_endl;
 			return true;
 		}

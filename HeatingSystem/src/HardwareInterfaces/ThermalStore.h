@@ -25,7 +25,7 @@ namespace HardwareInterfaces {
 		bool backBoilerIsHeating() const;
 		bool gasBoilerIsHeating() const { return _isHeating; }
 		int8_t tooCoolRequestOrigin() const { return _heatRequestSource; }
-		int8_t heatingDemandFrom() const { return _heatingDemand; }
+		int8_t demandZone() const { return _demandZone; }
 		const __FlashStringHelper* principalLoad() const;
 
 		// Modifier
@@ -43,8 +43,8 @@ namespace HardwareInterfaces {
 
 		uint8_t _theoreticalDeliveryTemp = 45;
 		bool _isHeating = false;
-		int8_t _heatRequestSource = -1; // only used for logging
-		int8_t _heatingDemand = -1; // TempConst only calculated if there is no heating demand
+		int8_t _heatRequestSource = -1;
+		int8_t _demandZone = -1; // TempConst only calculated if there is no zone heating demand
 
 		float _upperC, _midC, _bottomC; // calculated capacity factors
 		float _upperV, _midV, _bottomV; // calculated Volumes

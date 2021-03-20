@@ -132,9 +132,10 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 			_moveFrom_Pos = _valvePos;
 			_moveFrom_Temp = _sensorTemp;
 			stopMotor();
-		} else if (_mixCallTemp == _moveFrom_Temp) {
-			// startWaiting(); // let it continue moving or waiting
-		} else adjustValve(_mixCallTemp - _moveFrom_Temp);
+		} else if (_mixCallTemp == _moveFrom_Temp) {// let it continue moving or waiting		
+		} else if (_valvePos != _traverse_time) {
+			adjustValve(_mixCallTemp - _moveFrom_Temp);
+		}
 		_status = e_OK;
 		break;
 	case e_AtLimit: // false as soon as it overshoots 
@@ -149,7 +150,6 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 		break;
 	case e_Wait:
 		if (call_flowDiff * _journey < 0) { // Overshot during wait
-			//calcRatio(); // reduce ratio on each overshoot
 			_onTimeRatio = (_onTimeRatio * 2) / 3;
 			adjustValve(call_flowDiff);
 		} else if (call_flowDiff * _journey > 0 && (_waitFlowTemp - _sensorTemp) * _journey > 0) { // Got worse (undershot) during wait
@@ -173,10 +173,12 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 			}
 			else { // Undershot after a wait - last adjustment was too small
 				auto oldRatio = _onTimeRatio;
-				auto halfRatio = _onTimeRatio / 2;
-				_onTimeRatio = halfRatio;
+				if ((_moveFrom_Temp - _sensorTemp) * _journey >= 0) {
+					_moveFrom_Pos = _valvePos;
+					_moveFrom_Temp = _sensorTemp;
+				} else _onTimeRatio /= 2;
 				adjustValve(call_flowDiff);
-				_onTimeRatio = oldRatio + halfRatio;
+				_onTimeRatio = oldRatio;
 			} 
 		}
 		break;
@@ -187,9 +189,8 @@ void Mix_Valve::adjustValve(int tempDiff) {
 	// Get required direction.
 	if (tempDiff < 0) _motorDirection = e_Cooling;  // cool valve 
 	else _motorDirection = e_Heating;  // heat valve
-	if (_journey != Journey(_motorDirection)) {
-		_journey = Journey(_motorDirection);
-	}
+	
+	_journey = Journey(_motorDirection);
 
 	if (_onTimeRatio < e_MIN_RATIO) _onTimeRatio = e_MIN_RATIO;
 	else if (_onTimeRatio > e_MAX_RATIO) _onTimeRatio = e_MAX_RATIO;

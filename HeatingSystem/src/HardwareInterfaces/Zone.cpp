@@ -113,8 +113,8 @@ namespace HardwareInterfaces {
 		bool isDHW = isDHWzone();
 		auto outsideTemp = isDHW ? int8_t(20) : _thermalStore->getOutsideTemp();
 		bool backBoilerIsOn = _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
-		bool towelRadOn = _thermalStore->heatingDemandFrom() == R_FlTR || _thermalStore->heatingDemandFrom() == R_HsTR;
-		bool giveDHW_priority = !isDHW && _thermalStore->gasBoilerIsHeating() && towelRadOn;
+		bool towelRadOn = _thermalStore->demandZone() == R_FlTR || _thermalStore->demandZone() == R_HsTR;
+		bool giveDHW_priority = !isDHW && _thermalStore->tooCoolRequestOrigin() == NO_OF_MIX_VALVES;
 		// lambdas
 
 		auto startMeasuringRatio = [this, outsideTemp, isDHW, backBoilerIsOn](int tempError, int zoneTemp, int flowTemp ) -> bool {
@@ -195,7 +195,7 @@ namespace HardwareInterfaces {
 			ratio = MAX_RATIO;
 			tempError = needHeat ? -16 : 16;
 			flowTemp = _callTS->get_temp();
-			if (_thermalStore->heatingDemandFrom() >= 0 || backBoilerIsOn) {
+			if (_thermalStore->demandZone() >= 0 || backBoilerIsOn) {
 				_minsInPreHeat = PREHEAT_ENDED; // prevent TC calculation
 				_minsCooling = 0; // prevent delay measurement
 			}

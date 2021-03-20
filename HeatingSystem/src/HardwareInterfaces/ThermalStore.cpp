@@ -50,12 +50,12 @@ namespace HardwareInterfaces {
 		// Note: No DHW hysteresis if back-boiler is on.
 		setLowestCWtemp(false);
 		_heatRequestSource = dhwNeedsHeat(currRequest, nextRequest) ? NO_OF_MIX_VALVES : -1;
-		_heatingDemand = -1;
+		_demandZone = -1;
 		for (auto& mixV : _mixValveControllerArr) { // Check temp for each mix valve
 			if (mixV.needHeat(_isHeating)) {
 				if (_heatRequestSource == -1) _heatRequestSource = mixV.index(); // mixflow temp too low
 			}
-			if (_heatingDemand == -1) _heatingDemand = mixV.relayInControl();
+			if (_demandZone == -1) _demandZone = mixV.relayInControl();
 		}
 
 		_isHeating = (_heatRequestSource != -1);
@@ -70,7 +70,7 @@ namespace HardwareInterfaces {
 		case NO_OF_MIX_VALVES: return _backBoiler.isOn() ? F("!DHW+BB") : F("!DHW");
 		default:
 			{
-				switch (_heatingDemand) {
+				switch (_demandZone) {
 				case R_Flat: return F("UFH Fl");
 				case R_UpSt: return F("UFH US");
 				case R_FlTR: return F("TR Fl");
@@ -191,7 +191,7 @@ namespace HardwareInterfaces {
 		Compare DHW temp each side of thermostatic valve to see if cold is being mixed in.
 		If temps are the same, tank is too cool.
 		*/
-		if (_heatingDemand == R_FlTR || _heatingDemand == R_HsTR) {
+		if (_demandZone == R_FlTR || _demandZone == R_HsTR) {
 			profileLogger() << L_time << L_tabs << F("DHW-flowTemp:") << L_fixed << _tempSensorArr[_thermStoreData.DHWFlowTS].get_fractional_temp()
 				<< F("DHW-preMixTemp: ") << _tempSensorArr[_thermStoreData.DHWpreMixTS].get_fractional_temp() << L_endl;
 		}
