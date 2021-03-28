@@ -34,7 +34,7 @@ namespace HardwareInterfaces {
 	constexpr uint16_t ZERO_CROSS_DELAY = 690;
 
 	/////////////////// Mixing Valves ///////////////////////////////
-	constexpr uint8_t VALVE_WAIT_TIME = 40;
+	constexpr uint8_t VALVE_WAIT_TIME = 60;
 	constexpr uint16_t VALVE_TRANSIT_TIME = 140;
 	////////////////// EEPROM USAGE /////////////////////
 	// clock : 6 bytes

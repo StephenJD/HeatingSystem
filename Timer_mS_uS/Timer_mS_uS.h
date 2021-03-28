@@ -19,6 +19,7 @@
 		void set_startTime_uS(int32_t start_uS) { _startTime = start_uS; }
 		void restart() { _startTime = micros(); }
 		void repeat() { _startTime += _period; }
+		void newLap() { _period = timeLeft(); restart(); }
 	private:
 		int32_t _period;
 		uint32_t _startTime;

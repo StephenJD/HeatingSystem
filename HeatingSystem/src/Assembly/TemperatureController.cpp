@@ -102,9 +102,9 @@ namespace Assembly {
 		bool newMinute = clock_().isNewMinute(lastMins);
 		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
 
-		logger() << L_flush;
-		zTempLogger() << L_flush;
-		profileLogger() << L_flush;
+		logger().flush();
+		zTempLogger().flush();
+		profileLogger().flush();
 		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 		//logger() << L_time << "Check TS's" << L_endl;
 		for (auto & ts : tempSensorArr) {

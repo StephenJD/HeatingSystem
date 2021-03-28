@@ -20,15 +20,16 @@ SD.h/.cpp modified to provide sd_exists();
 	class Clock;
 
 	enum Flags {L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_startWithFlushing, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
-	inline Flags operator +(Flags l_flag, Flags r_flag) {return static_cast<Flags>(l_flag | r_flag);}
+	inline Flags operator +=(Flags& l_flag, Flags r_flag) { return l_flag = static_cast<Flags>(l_flag | r_flag); }
+	inline Flags operator -=(Flags& l_flag, Flags r_flag) { return l_flag = static_cast<Flags>(l_flag & ~r_flag); }
 
 	class Logger : public Print {
 	public:
 		Logger() = default;
 		Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock) {}
 
-		Flags addFlag(Flags flag) { _flags = _flags + flag; return _flags; }
-		Flags removeFlag(Flags flag) { _flags = static_cast<Flags>(_flags & ~flag); return _flags; }
+		Flags addFlag(Flags flag) { _flags += flag; return _flags; }
+		Flags removeFlag(Flags flag) { _flags -= flag; return _flags; }
 		Logger(Clock & clock);
 		size_t write(uint8_t) override { return 1; }
 		size_t write(const uint8_t *buffer, size_t size) override { return size; }
@@ -37,7 +38,7 @@ SD.h/.cpp modified to provide sd_exists();
 		virtual void readAll() {}
 		virtual void flush() {}
 		virtual void close() {}
-		virtual void begin(uint32_t baudRate = 0) { flush(); }
+		virtual void begin(uint32_t baudRate = 0) {	flush(); }
 		Logger & operator <<(Flags);
 		
 		template<class T>
@@ -116,7 +117,7 @@ SD.h/.cpp modified to provide sd_exists();
 		Serial_Logger() = default;
 		size_t write(uint8_t) override;
 		size_t write(const uint8_t *buffer, size_t size) override;
-		void flush() override { Serial.flush(); }
+		void flush() override { Serial.flush(); _flags -= L_startWithFlushing;	}
 		void begin(uint32_t baudRate) override;
 	protected:
 		Logger & logTime() override;

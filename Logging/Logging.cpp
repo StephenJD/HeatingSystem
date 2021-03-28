@@ -37,14 +37,18 @@ using namespace std;
 	Logger & Logger::operator <<(Flags flag) {
 		//enum Flags { L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
 		switch (flag) {
-		case L_flush:	flush(); 
+		case L_flush:
 			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
+			(*this) << " |F|\n"; 
+			flush();
 			break;
 		case L_endl: // fall through	
-			if (_flags & L_allwaysFlush) { (*this) << F(" |F|\n"); flush(); }
-			(*this) << F("\n"); // fall through
+			if (_flags & L_allwaysFlush) { (*this) << " |F|"; }
+			else if (_flags == L_startWithFlushing) { (*this) << " |SF|"; }
+			(*this) << F("\n");
+			if (_flags & L_allwaysFlush || _flags == L_startWithFlushing) flush();
 		case L_default:
-			if (_flags != L_startWithFlushing && flag != L_time) {
+			if (_flags != L_startWithFlushing) {
 				_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
 			}
 			break;
@@ -61,9 +65,6 @@ using namespace std;
 			removeFlag(L_fixed); // fall through
 		default:
 			addFlag(flag);
-		}
-		if (_flags == L_startWithFlushing) {
-			(*this) << F(" |SF|\n"); flush();
 		}
 		return *this;
 	}
@@ -232,8 +233,8 @@ using namespace std;
 	bool File_Logger::isWorking() { return true; }
 
 	bool File_Logger::openSD() {
-		if (!_dataFile.good()) {
-			_dataFile.open(generateFileName(_fileNameStem, _clock), ios::ate);	// Append
+		if (!_dataFile.is_open()) {
+			_dataFile.open(generateFileName(_fileNameStem, _clock), ios::app);	// Append
 		}
 		return _dataFile.good();
 	}

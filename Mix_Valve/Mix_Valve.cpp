@@ -111,7 +111,7 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 	auto calcRatio = [this]() {
 		auto tempChange = _sensorTemp - _moveFrom_Temp;
 		auto posChange = _valvePos - _moveFrom_Pos;
-		if (posChange != 0 && tempChange != 0) {
+		if (abs(_valvePos) < _traverse_time / 2 && posChange != 0 && tempChange != 0) {
 			auto newRatio = posChange / tempChange;
 			if (newRatio > e_MIN_RATIO) _onTimeRatio = newRatio;
 		}
@@ -119,6 +119,15 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 		_moveFrom_Pos = _valvePos;
 	};
 
+	// Algorithm
+	/* As thermal store cools or heats, the temp will drift off target.
+	* Assuming the store is hot enough for the requested temp, the correction for the drift gives the current ratio.
+	* Likewise the move required for a new temp request gives the current ratio.
+	* Changes & overshoots in the ratio whilst adjusting temp do not matter; it is overshoots in valve-pos that are relevant.
+	* After settling on correct temp, ratio calc should predict next adjustment required.
+	* Ratio should not be changed if valve goes to limit or returns from limit.
+	* 1 degree overshoots are good for speed of response.
+	*/
 	int call_flowDiff = _mixCallTemp - _sensorTemp;
 	serviceMotorRequest(); // -> wait if finished moving and -> check if finished waiting
 
@@ -128,14 +137,13 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 		if (_valvePos == -_traverse_time && _sensorTemp >= _mixCallTemp) {
 			startWaiting(); // keep waiting whilst the pump is cooling the temp sensor
 			break;
-		} else if (call_flowDiff == 0) {
-			_moveFrom_Pos = _valvePos;
-			_moveFrom_Temp = _sensorTemp;
-			stopMotor();
-		} else if (_mixCallTemp == _moveFrom_Temp) {// let it continue moving or waiting		
-		} else if (_valvePos != _traverse_time) {
+		//} else if (_journey == e_TempOK) { // picked up by e_Checking:
+		} else /*if (call_flowDiff == 0)*/ { // happens to be off target, but at the new temp. 
+			startWaiting();
+		//} else if (_mixCallTemp == _moveFrom_Temp) {// let it continue moving or waiting		
+		} /*else if (_valvePos != _traverse_time) {
 			adjustValve(_mixCallTemp - _moveFrom_Temp);
-		}
+		}*/
 		_status = e_OK;
 		break;
 	case e_AtLimit: // false as soon as it overshoots 
@@ -153,11 +161,12 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 			_onTimeRatio = (_onTimeRatio * 2) / 3;
 			adjustValve(call_flowDiff);
 		} else if (call_flowDiff * _journey > 0 && (_waitFlowTemp - _sensorTemp) * _journey > 0) { // Got worse (undershot) during wait
-			if ((_moveFrom_Temp - _sensorTemp) * _journey > 0) { // worse than _moveFrom_Temp
-				_moveFrom_Temp = _sensorTemp;
-				_moveFrom_Pos = _valvePos;
-			}
+			//if ((_moveFrom_Temp - _sensorTemp) * _journey > 0) { // worse than _moveFrom_Temp
+			//	_moveFrom_Temp = _sensorTemp;
+			//	_moveFrom_Pos = _valvePos;
+			//}
 			adjustValve(call_flowDiff);
+			//_onTimeRatio *= 2; // ratio now reflects what has happened so far.
 		}
 		break;
 	case e_Checking: 
@@ -173,12 +182,11 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 			}
 			else { // Undershot after a wait - last adjustment was too small
 				auto oldRatio = _onTimeRatio;
-				if ((_moveFrom_Temp - _sensorTemp) * _journey >= 0) {
-					_moveFrom_Pos = _valvePos;
-					_moveFrom_Temp = _sensorTemp;
-				} else _onTimeRatio /= 2;
+				if ((_moveFrom_Temp - _sensorTemp) * _journey < 0) { // got nearer during last move
+					_onTimeRatio /= 2;
+				} else _moveFrom_Temp = _sensorTemp; // worse or no better
 				adjustValve(call_flowDiff);
-				_onTimeRatio = oldRatio;
+				_onTimeRatio += oldRatio;
 			} 
 		}
 		break;
@@ -310,10 +318,8 @@ void Mix_Valve::setRegister(int reg, uint8_t value) {
 		if (_prevReqTemp != value) _prevReqTemp = value; // REQUEST TWICE TO REGISTER.
 		else if (_mixCallTemp != value) {
 			_mixCallTemp = value;
-			// if (_onTime > 0) _onTime = 0; // Stop move but allow wait to continue.
 			if (_mixCallTemp > e_MIN_FLOW_TEMP) {
 				_status = e_NewTempReq;
-				//_journey = e_TempOK;
 			} else _status = e_OK;
 		}
 		break;
