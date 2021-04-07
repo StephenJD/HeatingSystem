@@ -31,7 +31,7 @@ auto I_I2Cdevice::read_verify_2bytes(int registerAddress, int16_t & data, int re
 			}
 		} 
 		else { // abort on first error
-			logger() << L_time << "read_verify_2bytes device 0x" << L_hex << getAddress() << " Reg 0x" << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+			//logger() << L_time << "read_verify_2bytes device 0x" << L_hex << getAddress() << " Reg 0x" << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
 			break;
 		}
 		--canTryAgain;
@@ -124,7 +124,7 @@ Error_codes I_I2Cdevice_Recovery::write_verify(int registerAddress, int numberBy
 
 Error_codes I_I2Cdevice_Recovery::reEnable() {
 	if (isEnabled()) return _OK;
-	else if (getAddress() != 0x48 && millis() - getFailedTime() > DISABLE_PERIOD_ON_FAILURE) {
+	else if (millis() - getFailedTime() > DISABLE_PERIOD_ON_FAILURE) {
 		reset();
 		logger() << L_time << F("Re-enabling disabled device 0x") << L_hex << getAddress() << L_endl;
 		return _OK;

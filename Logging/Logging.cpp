@@ -35,7 +35,7 @@ using namespace std;
 	}
 
 	Logger & Logger::operator <<(Flags flag) {
-		//enum Flags { L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
+		//enum Flags { L_clearFlags, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
 		switch (flag) {
 		case L_flush:
 			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
@@ -47,7 +47,7 @@ using namespace std;
 			else if (_flags == L_startWithFlushing) { (*this) << " |SF|"; }
 			(*this) << F("\n");
 			if (_flags & L_allwaysFlush || _flags == L_startWithFlushing) flush();
-		case L_default:
+		case L_clearFlags:
 			if (_flags != L_startWithFlushing) {
 				_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
 			}

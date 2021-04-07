@@ -159,15 +159,15 @@ namespace I2C_Recovery {
 				logger() << F("\t\tS_Slow-down") << L_endl;
 				strategyStartTime = micros();
 				{
-					auto slowedDown = slowdown();
+					//auto slowedDown = slowdown();
 					recoveryTime = micros() - strategyStartTime;
-					if (slowedDown) {
-						strategy().tryAgain(S_TryAgain); // keep slowing down until can't.
-						break;
-					} else {
+					//if (slowedDown) {
+					//	strategy().tryAgain(S_TryAgain); // keep slowing down until can't.
+					//	break;
+					//} else {
 						logger() << F("\n    Slow-down did nothing...\n");
 						if (device().testDevice() == _OK) break;
-					}
+					//}
 				}
 			case S_SpeedTest: // 6
 				if (haveBumpedUpMaxStrategyUsed(S_SpeedTest)) {

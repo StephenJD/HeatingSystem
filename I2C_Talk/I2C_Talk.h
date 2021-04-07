@@ -31,7 +31,8 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
 // 24LC256 -> 64 bytes
 #define I2C_EEPROM_PAGESIZE 32
-#define I2C_WRITEDELAY  5000
+#define I2C_WRITE_DELAY  5000
+#define I2C_RETRIES 10
 
 namespace I2C_Recovery {
 	class I2C_Recover;
@@ -75,9 +76,6 @@ public:
 	uint8_t stopMargin() const {return _stopMargin_uS;}
 	uint32_t slaveByteProcess() const {return _slaveByteProcess_uS;}
 	void setStopMargin(uint8_t margin);
-	void setEndAbort(bool onAddrErr, bool onDataErr, bool alwaysStop) { _wire().setEndAbort(onAddrErr, onDataErr, alwaysStop); }
-	void nextWireMode() { _wire().nextWireMode(); }
-
 	static auto getStatusMsg(int errorCode) -> const __FlashStringHelper *;
 	static uint16_t fromBigEndian(const uint8_t* byteArr) { return (byteArr[0] << 8) + byteArr[1]; }
 	typedef const uint8_t Bytes[2];

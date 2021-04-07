@@ -24,9 +24,12 @@ namespace HardwareInterfaces {
 
 	bool TowelRail::check() {
 		// En-suite and Family share a zone / relay, so need to prevent the OFF TR disabling the ON one.
-		bool needHeat = setFlowTemp();
-		if (!_mixValveController->amControlZone(sharedZoneCallTemp(), _onTemp, _relay->recordID())) {
-			_relay->set(needHeat); // too cool
+		bool needHeat = false;
+		if (_temperatureController->outsideTemp() < 19) { // Don't fire TowelRads if outside temp close to room temp (e.g.summer!)
+			needHeat = setFlowTemp();
+			if (!_mixValveController->amControlZone(sharedZoneCallTemp(), _onTemp, _relay->recordID())) {
+				_relay->set(needHeat); // too cool
+			}
 		}
 		return needHeat;
 	}
@@ -44,7 +47,6 @@ namespace HardwareInterfaces {
 	}
 
 	bool TowelRail::setFlowTemp() { // returns true if ON
-		//_temperatureController->towelRailArr[record()].
 		auto currFlowTemp = _callTS->get_temp();
 		if (_timer > 0) {
 			//profileLogger() << L_time << "TowelR " << record() << " tick: " << _timer << " FlowT: " << (int)currFlowTemp << L_endl;
@@ -54,10 +56,7 @@ namespace HardwareInterfaces {
 		_callFlowTemp = 0;
 		if (_timer > TWL_RAD_RISE_TIME || rapidTempRise(currFlowTemp)) {
 			_prevTemp = currFlowTemp;
-			// Don't fire TowelRads if outside temp close to room temp (e.g.summer!)
-			if (_temperatureController->outsideTemp() < 19) {
-				_callFlowTemp = _onTemp;
-			}
+			_callFlowTemp = _onTemp;
 		}
 		return (_callFlowTemp == _onTemp);
 	}

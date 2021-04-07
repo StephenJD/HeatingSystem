@@ -58,15 +58,14 @@ const uint8_t REG_8PORT_OLAT = 0x0A;
 const uint8_t DS75LX_Temp = 0x00; // two bytes must be read. Temp is MS 9 bits, in 0.5 deg increments, with MSB indicating -ve temp.
 const uint8_t DS75LX_Config = 0x01;
 
-const uint8_t PHOTO_ANALOGUE = A0;
-const uint8_t KEY_ANALOGUE = A1;
-const uint8_t KEYPAD_REF_PIN = A3;
-const uint8_t BRIGHNESS_PWM = 5; // pins 5 & 6 are not best for PWM control.
-const uint8_t CONTRAST_PWM = 6;
+uint8_t BRIGHNESS_PWM = 5; // pins 5 & 6 are not best for PWM control.
+uint8_t CONTRAST_PWM = 6;
+uint8_t PHOTO_ANALOGUE = A0;
 
 #if defined(__SAM3X8E__)
-#define DIM_LCD 200
-
+	#define KEYINT LOCAL_INT_PIN
+	const uint8_t KEY_ANALOGUE = A1;
+	const uint8_t KEYPAD_REF_PIN = A3;
 	I2C_Talk rtc{ Wire1 }; // not initialised until this translation unit initialised.
 
 	EEPROMClass & eeprom() {
@@ -95,16 +94,16 @@ const uint8_t CONTRAST_PWM = 6;
 	}
 #else
 	//Code in here will only be compiled if an Arduino Mega is used.
-	#define DIM_LCD 135
+
 	#define NO_RTC
+	#define EEPROM_CLOCK EEPROM_CLOCK_ADDR
+	#include <Clock_EP.h>
+	#define KEYINT 5
+	const uint8_t KEY_ANALOGUE = 0;
+	const uint8_t KEYPAD_REF_PIN = A2;
 
 	EEPROMClass & eeprom() {
 		return EEPROM;
-	}
-
-	Clock & clock_() {
-		static Clock_EEPROM _clock(EEPROM_CLOCK_ADDR);
-		return _clock;
 	}
 	const float megaFactor = 3.3 / 5;
 	const char * LOG_FILE = "Meg.txt"; // max: 8.3
@@ -128,8 +127,8 @@ void fullSpeedTest();
 I_I2Cdevice_Recovery & getDevice(int addr);
 uint8_t initialiseRemoteDisplaysFailed_();
 
-//I2C_Talk_ZX i2c{ Wire, 2300000 }; // Wrapper not required - doesn't solve Wire not being constructed yet.
-I2C_Talk i2c{ Wire, 2300000 }; // Wrapper not required - doesn't solve Wire not being constructed yet.
+I2C_Talk_ZX i2c{ Wire, 2300000 }; // Wrapper not required - doesn't solve Wire not being constructed yet.
+//I2C_Talk i2c{ Wire, 2300000 }; // Wrapper not required - doesn't solve Wire not being constructed yet.
 
 I2C_Recover i2c_recover{ i2c }; // Wrapper not required - doesn't solve Wire not being constructed yet.
 
@@ -156,19 +155,17 @@ byte testMode = normal;
 uint8_t relaySequence[] = { 0x7d,0x7e,0x7b,0x77,0x6f,0x5f,0x3f, 0x7c,0x7a,0x73,0x67,0x4f,0x1f,0x7e, 0x79,0x76,0x6b,0x57,0x2f,0x69,0x56,0x2b };
 
 //byte i2cAddr[] =   {0x24, 0x36 };
-byte i2cAddr[] =   {0x26, 0x74 };
+//byte i2cAddr[] =   {0x26, 0x74 };
 //byte i2cAddr[] =   {0x10, 0x20, 0x28, 0x29, 0x4F, 0x74 };
 //byte i2cAddr[] =   { 0x28,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
-//byte i2cAddr[] = { 0x10,0x20,0x24,0x25,0x26,0x28,0x29,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
-//byte i2cAddr[] = { 0x10,0x20,0x24,0x25,0x26,0x28,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
+byte i2cAddr[] = { 0x10,0x20,0x24,0x25,0x26,0x28,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
 int successCount[sizeof(i2cAddr)] = { 0 };
 unsigned long lastTimeGood[sizeof(i2cAddr)] = { 0 };
 
 //TempSensor tempSens[] = { {i2c_recover, 0x36}};
-TempSensor tempSens[] = { {i2c_recover, 0x74}};
+//TempSensor tempSens[] = { {i2c_recover, 0x74}};
 //TempSensor tempSens[] = { {i2c_recover, 0x28}, 0x29, 0x4F, 0x74 };
-//TempSensor tempSens[] = { {i2c_recover, 0x28},0x29,0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
-//TempSensor tempSens[] = { {i2c_recover, 0x28},0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
+TempSensor tempSens[] = { {i2c_recover, 0x28},0x2B,0x2C,0x2D,0x2E,0x2F,0x35,0x36,0x37,0x48,0x4B,0x4F,0x70,0x71,0x74,0x75,0x76,0x77 };
 const byte FIRST_TEMP_SENS_ADDR = tempSens[0].getAddress();
 
 class RelaysPortSequence : public RelaysPort {
@@ -190,9 +187,10 @@ namespace HardwareInterfaces {
 class MixValveController : public I_I2Cdevice_Recovery {
 public:
 	enum Registers {
-		/*Read Only Data*/		status, //Has new data, Error code
+		// All registers are treated as two-byte, with second-byte un-used for most. Thus single-byte read-write works.
+		/*Read Only Data*/		status,
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
-		/*Read/Write Data*/		flow_temp, request_temp, ratio, control,
+		/*Read/Write Data*/		flow_temp, request_temp, ratio, moveFromTemp, moveFromPos,
 		/*Read/Write Config*/	temp_i2c_addr, traverse_time, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
 		/*End-Stop*/			reg_size
 	};
@@ -212,7 +210,7 @@ Relay_B relays[] = { {1,0},{0,0},{2,0},{3,0},{4,0},{5,0},{6,0} };
 RemoteDisplay rem_lcd[] = { {i2c_recover, 0x24},  0x25, 0x26 };
 RemoteKeypad rem_keypad[] = { rem_lcd[0].displ(),  rem_lcd[1].displ(), rem_lcd[2].displ() };
 
-LocalKeypad keypad{ LOCAL_INT_PIN, KEY_ANALOGUE, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW } };
+LocalKeypad keypad{ KEYINT, KEY_ANALOGUE, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW } };
 auto resetPin = Pin_Wag{ RESET_OUT_PIN , LOW};
 
 Error_codes resetI2C_(I2C_Talk & i2c, int addr) { // addr == 0 forces hard reset
@@ -271,8 +269,8 @@ void setup() {
 	resetPin.begin();
 	i2c.begin();
 	i2c.extendTimeouts(5000, 4); // default 3
-	//i2c.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
-	//i2c.setZeroCrossDelay(ZERO_CROSS_DELAY);
+	i2c.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
+	i2c.setZeroCrossDelay(ZERO_CROSS_DELAY);
 
 	keypad.begin();
 
@@ -283,7 +281,15 @@ void setup() {
 	status = rtc.status(0x68);
 	logger() << "\nClock Status " << status << rtc.getStatusMsg(status) << L_endl;
 #endif
-	mainLCD = new MultiCrystal(46, 44, 42, 40, 38, 36, 34, 32, 30, 28, 26); // new board
+
+	if (analogRead(0) < 10) {// old board; 
+		PHOTO_ANALOGUE = 1;
+		BRIGHNESS_PWM = 6;
+		CONTRAST_PWM = 7;
+		mainLCD = new MultiCrystal(26, 46, 44, 42, 40, 38, 36, 34, 32, 30, 28); // old board
+	} else {
+		mainLCD = new MultiCrystal(46, 44, 42, 40, 38, 36, 34, 32, 30, 28, 26); // new board
+	}
 
 	// set up the LCD's number of rows and columns:
 	mainLCD->begin(20, 4);
@@ -309,7 +315,7 @@ void setup() {
 	logger() << "\nSetup : fullSpeedTest()\n";
 	testMode = speedTestExistsOnly;
 	fullSpeedTest();
-	//testMode = normal;
+	testMode = normal;
 
 	for (int i = 0; i < sizeof(i2cAddr); ++i) {
 		lastTimeGood[i] = -1;
@@ -341,7 +347,8 @@ void loop() {
 		mainLCD->setCursor(0, 1);
 		mainLCD->print("Back: Cycle/One");
 		mainLCD->setCursor(0, 2);
-		mainLCD->print("Sel: Full/Exists/Rst");
+		//mainLCD->print("Sel: Full/Exists/Rst");
+		mainLCD->print("Sel: ErrMode");
 		mainLCD->setCursor(0, 3);
 		mainLCD->print("^+v: SpeedTest");
 		yieldFor(1000);
@@ -391,7 +398,6 @@ void loop() {
 		case 6: // Select
 			++testMode;
 			if (testMode >= NO_OF_MODES) testMode = 0;
-			mainLCD->setCursor(13, 2);
 			switch (testMode) {
 			case normal:  logger() << "\n*** normal ***"; break;
 			case resetBeforeTest:   logger() << "\n*** resetBeforeTest *** "; break;
@@ -420,19 +426,14 @@ void loop() {
 			i2c.setI2CFrequency(device.runSpeed());
 			logger() << "\n Loop set speed: Optimal for 0x" << L_hex << i2cAddr[i2cAddrIndex] << " is " << L_dec << device.runSpeed() << L_endl;
 		}
-		mainLCD->setCursor(14, 2);
-		switch (testMode) {
-		case normal: mainLCD->print("Norm  "); break;
-		case resetBeforeTest:  mainLCD->print("Reboot"); break;
-		case speedTestExistsOnly:  mainLCD->print("Exists"); break;
-		}
+		printTestMode();
 		nextLocalKey = keypad.getKey();
 	}
 	uint8_t lastKey = 0;
 	int repeatKeyCount = 0;
 	//while (true) {
-		//for (int displayID = 0; displayID < 3 ; ++displayID) {
-			int displayID = 2;
+		for (int displayID = 0; displayID < 3 ; ++displayID) {
+			//int displayID = 2;
 			nextRemKey = rem_keypad[displayID].getKey();
 			if (nextRemKey >= 0) {
 				if (nextRemKey == lastKey) ++repeatKeyCount; 
@@ -453,7 +454,7 @@ void loop() {
 				}
 				rem_lcd[displayID].displ().print(repeatKeyCount);
 			} 
-		//}
+		}
 		//delay(500);
 	//}
 
@@ -556,6 +557,15 @@ void loop() {
 	}
 } 
 
+void printTestMode() {
+	mainLCD->setCursor(14, 2);
+	switch (testMode) {
+	case normal: mainLCD->print("Norm  "); break;
+	case resetBeforeTest:  mainLCD->print("Reboot"); break;
+	case speedTestExistsOnly:  mainLCD->print("Exists"); break;
+	}
+}
+
 void printSpeed() {
 	mainLCD->setCursor(13, 0);
 	mainLCD->print("       ");
@@ -570,12 +580,7 @@ void prepareDisplay() {
 	mainLCD->print(" Spd:"); mainLCD->print(i2c.getI2CFrequency(), DEC);
 	mainLCD->setCursor(0, 2);
 	mainLCD->print("All Auto freq");
-	mainLCD->setCursor(14, 2);
-	switch (testMode) {
-	case normal: mainLCD->print("Norm  "); break;
-	case resetBeforeTest:  mainLCD->print("Reboot"); break;
-	case speedTestExistsOnly:  mainLCD->print("Exists"); break;
-	}
+	printTestMode();
 	mainLCD->setCursor(0, 3);
 	mainLCD->print("No of devices:      ");
 	mainLCD->setCursor(15, 3);
@@ -733,21 +738,21 @@ Error_codes RelaysPortSequence::testRelays() {
 	mainLCD->print("Relay        ");
 	mainLCD->setCursor(13, 1);
 	if (status != _OK) mainLCD->print("Ini Bad");
-	else if (testMode != speedTestExistsOnly) {
-		//const int noOfRelays = sizeof(relays) / sizeof(relays[0]);
+	else /*if (testMode != speedTestExistsOnly)*/ {
+		const int noOfRelays = sizeof(relays) / sizeof(relays[0]);
 		uint8_t numberFailed = 0;
-		uint8_t relayNo = 2;
-		//for (uint8_t relayNo = 0; relayNo < noOfRelays; ++relayNo) {
+		//uint8_t relayNo = 2;
+		for (uint8_t relayNo = 0; relayNo < noOfRelays; ++relayNo) {
 			auto onStatus = _OK;
 			auto offStatus = _OK;
 			mainLCD->setCursor(13, 1);
 			mainLCD->print(relayNo, DEC);
 			logger() << "* Relay *" << relayNo << L_endl;
-			//relays[relayNo].set(1);
+			relays[relayNo].set(1);
 			onStatus = updateRelays();
 			if (onStatus == _OK) logger() << " ON OK\n"; else logger() << " ON Failed\n";
 			if (yieldFor(300)) return status;
-			//relays[relayNo].set(0);
+			relays[relayNo].set(0);
 			offStatus = updateRelays();
 			if (offStatus == _OK) logger() << " OFF OK\n"; else logger() << " OFF Failed\n";
 			offStatus |= onStatus;
@@ -762,7 +767,7 @@ Error_codes RelaysPortSequence::testRelays() {
 			}
 			if (yieldFor(300)) return status;
 			status |= offStatus;
-		//}
+		}
 	}
 	return status;
 }

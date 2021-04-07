@@ -5,7 +5,7 @@
 #define VARIANT_MCK F_CPU
 #endif
 
-#ifdef DEBUG_TALK
+//#ifdef DEBUG_TALK
 #include <Logging.h>
 Logger & logger();
 
@@ -17,7 +17,7 @@ extern "C" void I2C_Talk_msg(const char * str) {
 extern "C" void I2C_Talk_msg2(const char * str, long val1, long val2) {
 	logger() << str << val1 << F(" : ") << val2 << L_endl;
 }
-#endif
+//#endif
 
 using namespace I2C_Talk_ErrorCodes;
 using namespace I2C_Recovery;
@@ -46,11 +46,19 @@ void I2C_Talk::ini(TwoWire & wire_port, int32_t max_I2Cfreq) {
 
 
 Error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes, uint8_t *dataBuffer) {
-	auto returnStatus = beginTransmission(deviceAddr);
-	if (returnStatus == _OK) {
-		_wire().write(registerAddress);
-		returnStatus = endTransmission();
-		returnStatus = getData(returnStatus, deviceAddr, numberBytes, dataBuffer);
+	auto retries = I2C_RETRIES;
+	auto returnStatus = _OK;
+	do {
+		returnStatus = beginTransmission(deviceAddr);
+		if (returnStatus == _OK) {
+			_wire().write(registerAddress);
+			returnStatus = endTransmission();
+			returnStatus = getData(returnStatus, deviceAddr, numberBytes, dataBuffer);
+		}
+	} while (returnStatus != _OK && (_wire().begin(_myAddress), --retries));
+
+	if (retries < I2C_RETRIES) {
+		logger() << L_time << L_tabs << "ReadAgain" << I2C_RETRIES - retries << getI2CFrequency() << L_hex << deviceAddr << L_endl;
 	}
 	return returnStatus;
 }
@@ -113,16 +121,25 @@ Error_codes I2C_Talk::getData(Error_codes status, int deviceAddr, int numberByte
 }
 
 Error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes, const uint8_t * dataBuffer) {
-	//logger() << F(" I2C_Talk::write...") << L_endl; 
-	auto returnStatus = beginTransmission(deviceAddr);
-	if (returnStatus == _OK) {
-		_wire().write(registerAddress); // just writes to buffer
-		_wire().write(dataBuffer, uint8_t(numberBytes));
-		synchroniseWrite();
-		//logger() << F(" I2C_Talk::write send data..") << L_endl; 
-		returnStatus = endTransmission(); // returns address-send or data-send error
-		setProcessTime();
+	//logger() << F(" I2C_Talk::write...") << L_endl;
+	auto retries = I2C_RETRIES;
+	auto returnStatus = _OK;
+	do {
+		returnStatus = beginTransmission(deviceAddr);
+		if (returnStatus == _OK) {
+			_wire().write(registerAddress); // just writes to buffer
+			_wire().write(dataBuffer, uint8_t(numberBytes));
+			synchroniseWrite();
+			//logger() << F(" I2C_Talk::write send data..") << L_endl; 
+			returnStatus = endTransmission(); // returns address-send or data-send error
+			setProcessTime();
+		}
+	} while (returnStatus != _OK && (_wire().begin(_myAddress), --retries));
+
+	if (retries < I2C_RETRIES) {
+		logger() << L_time << L_tabs << "WriteAgain" << I2C_RETRIES - retries << getI2CFrequency() << L_hex << deviceAddr << L_endl;
 	}
+
 #ifdef DEBUG_TALK
 	if (returnStatus) {
 		logger() << F(" I2C_Talk::write failed for 0x") << L_hex << deviceAddr << getStatusMsg(returnStatus) << L_endl; 
@@ -272,7 +289,7 @@ Error_codes I2C_Talk::status(int deviceAddr) // Returns in slave mode.
 Error_codes I2C_Talk::beginTransmission(int deviceAddr) { // return false to inhibit access
 	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) {
-		while ((micros() - _lastWrite) <= I2C_WRITEDELAY) {
+		while ((micros() - _lastWrite) <= I2C_WRITE_DELAY) {
 			_wire().beginTransmission((uint8_t)deviceAddr);
 			// NOTE: this puts it in slave mode. Must re-begin to send more data.
 			status = endTransmission();

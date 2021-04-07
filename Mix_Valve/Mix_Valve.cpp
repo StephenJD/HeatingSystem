@@ -167,7 +167,7 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 			//}
 			adjustValve(call_flowDiff);
 			//_onTimeRatio *= 2; // ratio now reflects what has happened so far.
-		}
+		} else if (_waitFlowTemp != _sensorTemp) startWaiting(); // restart waiting if temp has changed.
 		break;
 	case e_Checking: 
 		if (call_flowDiff == 0) {

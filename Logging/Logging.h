@@ -19,7 +19,7 @@ SD.h/.cpp modified to provide sd_exists();
 	EEPROMClass & eeprom();
 	class Clock;
 
-	enum Flags {L_default, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_startWithFlushing, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
+	enum Flags {L_clearFlags, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_startWithFlushing, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
 	inline Flags operator +=(Flags& l_flag, Flags r_flag) { return l_flag = static_cast<Flags>(l_flag | r_flag); }
 	inline Flags operator -=(Flags& l_flag, Flags r_flag) { return l_flag = static_cast<Flags>(l_flag & ~r_flag); }
 
