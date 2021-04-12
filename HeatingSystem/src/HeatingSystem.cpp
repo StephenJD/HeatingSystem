@@ -100,6 +100,7 @@ HeatingSystem::HeatingSystem()
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 		_initialiser.i2C_Test();
+		_mainConsoleChapters(0).rec_select();
 	}
 
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop

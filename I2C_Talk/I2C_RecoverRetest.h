@@ -14,7 +14,6 @@ namespace I2C_Recovery {
 		I2C_Recover_Retest(I2C_Talk & i2C, int strategyEEPROMaddr) : I2C_Recover(i2C), _strategy(strategyEEPROMaddr) {}
 		static constexpr decltype(millis()) REPEAT_FAILURE_PERIOD = 10000;
 		static constexpr decltype(micros()) TIMEOUT = 20000;
-		//static constexpr uint8_t _I2C_DATA_PIN = 20; 	//_I2C_DATA_PIN(wire_port == Wire ? 20 : 70)
 
 		// Definitions for custom reset functions
 		//using TestFnPtr = (*)(I2C_Talk &, int)->uint8_t;
@@ -34,13 +33,12 @@ namespace I2C_Recovery {
 		};
 
 		// Polymorphic Modifier Functions for I2C_Talk
-		auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::Error_codes override;
+		auto newReadWrite(I_I2Cdevice_Recovery & device, int retries)->I2C_Talk_ErrorCodes::Error_codes override;
 		bool tryReadWriteAgain(I2C_Talk_ErrorCodes::Error_codes status) override;
 
 		// Queries 
 		I_I2CresetFunctor * getTimeoutFn() const { return _timeoutFunctor; }
 		bool isRecovering() { return _isRecovering; }
-		I_I2Cdevice_Recovery * lastGoodDevice() const override { return _lastGoodDevice; }
 		bool isUnrecoverable() const override {	return _deviceWaitingOnFailureFor10Mins < 0; }
 		// Modifiers for I2C_Recover_Retest
 		auto testDevice(int noOfTests, int allowableFailures)-> I2C_Talk_ErrorCodes::Error_codes override;
@@ -48,13 +46,10 @@ namespace I2C_Recovery {
 		void setTimeoutFn(TestFnPtr timeoutFnPtr);
 		void basicTestsBeforeScan(I_I2Cdevice_Recovery & device);
 		I2C_RecoverStrategy & strategy() { return _strategy; }
-		//bool Wait_For_I2C_Data_Line_OK();
-		bool i2C_is_frozen();
 	private:
 		// Strategies
 		void call_timeOutFn(int addr);
 		void endReadWrite();
-		//void extendStopMargin();
 
 		// Queries for I2C_Recover_Retest
 		// Modifiers for I2C_Recover_Retest
@@ -66,9 +61,9 @@ namespace I2C_Recovery {
 		unsigned long _lastRestartTime = 0;
 		I2Creset_Functor _i2CresetFunctor; // data member functor to wrap free reset function
 		I_I2CresetFunctor * _timeoutFunctor = 0;
-		I_I2Cdevice_Recovery * _lastGoodDevice = 0;
 		I2C_RecoverStrategy _strategy = I2C_RecoverStrategy{ 0 };
 		bool _isRecovering = false;
+		int _retries;
 	};
 
 }

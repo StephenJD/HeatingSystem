@@ -5,6 +5,7 @@
 	#include <iostream>
 	#include <iomanip>
 #endif
+Logger& debug();
 
 namespace LCD_UI {
 
@@ -55,7 +56,7 @@ namespace LCD_UI {
 		do {
 			tryInner = tryInner->activeUI();
 			if (!tryInner) break;
-			//logger() << F("\tinnerMost: ") << ui_Objects()[(long)tryInner->get()].c_str() << L_endl;
+			//debug() << F("\tinnerMost: ") << ui_Objects()[(long)tryInner->get()].c_str() << L_endl;
 			if (predicate(tryInner)) hasBehaviour = tryInner;
 		} while (tryInner->get()->isCollection());
 		
@@ -71,7 +72,7 @@ namespace LCD_UI {
 			Collection_Hndl* tryInner = uiElement->activeUI();
 			if (!tryInner) break;
 			uiElement = tryInner;
-			//logger() << F("\tinnerUI: ") << ui_Objects()[(long)uiElement->get()].c_str() << L_endl;
+			//debug() << F("\tinnerUI: ") << ui_Objects()[(long)uiElement->get()].c_str() << L_endl;
 		}
 		
 		return uiElement;
@@ -81,16 +82,16 @@ namespace LCD_UI {
 	void A_Top_UI::setEachPageElementToItsFocus(I_SafeCollection& colln) {
 		// Visit each most deeply nested ActiveUI field on the page and set its focusPos.
 		//#ifdef ZPSIM
-		//		logger() << F("\tSetElToFocus?: ") << ui_Objects()[(long)&colln].c_str() << L_endl;
+		//		debug() << F("\tSetElToFocus?: ") << ui_Objects()[(long)&colln].c_str() << L_endl;
 		//#endif
 
 		for (int i = 0; !colln.atEnd(i); ++i) {
 			auto elHdl = static_cast<Collection_Hndl*>(&colln[i]);
-			//logger() << F("\tpageItem: ") << ui_Objects()[(long)elHdl->get()].c_str() << L_endl;
+			//debug() << F("\tpageItem: ") << ui_Objects()[(long)elHdl->get()].c_str() << L_endl;
 			if (elHdl->get()->isCollection()) {
 				auto inner = uiField(elHdl);
 #ifdef ZPSIM
-				logger() << F("\tSetElToFocus: ") << inner->focusIndex() << " for " << ui_Objects()[(long)inner->get()].c_str() << L_endl;
+				debug() << F("\tSetElToFocus: ") << inner->focusIndex() << " for " << ui_Objects()[(long)inner->get()].c_str() << L_endl;
 #endif
 				inner->move_focus_to(inner->focusIndex());
 			}
@@ -104,7 +105,7 @@ namespace LCD_UI {
 		if (top->get()->cursorMode(top) != HardwareInterfaces::LCD_Display::e_unselectable) {
 			if (top != _upDownUI) {
 #ifdef ZPSIM
-				logger() << F("Notify: ") << ui_Objects()[(long)top->get()].c_str() << L_endl;
+				debug() << F("Notify: ") << ui_Objects()[(long)top->get()].c_str() << L_endl;
 #endif
 				top->focusHasChanged();
 			}
@@ -130,7 +131,7 @@ namespace LCD_UI {
 		while (_cursorUI->get()->isCollection()) {
 			tryInner = _cursorUI->activeUI();
 			if (!tryInner) break;
-			//logger() << F("\tinnerMost: ") << ui_Objects()[(long)tryInner->get()].c_str() << L_endl;
+			//debug() << F("\tinnerMost: ") << ui_Objects()[(long)tryInner->get()].c_str() << L_endl;
 			if (tryInner->backUI() == 0) tryInner->setBackUI(_cursorUI);
 			_cursorUI = tryInner;
 		} 
@@ -152,7 +153,7 @@ namespace LCD_UI {
 			//auto thisFocus = tryLeftRight->focusIndex();
 			//tryLeftRight->move_focus_to(thisFocus);
 			//auto thisActive_h = tryLeftRight->activeUI();
-			//logger() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
+			//debug() << F("\ttryLeftRightUI: ") << ui_Objects()[(long)(tryLeftRight->get())].c_str()
 			//	<< (try_behaviour.is_viewAll_LR() ? " ViewAll_LR" : " ViewActive")
 			//	<< " TryActive: " << (thisActive_h ? ui_Objects()[(long)(thisActive_h->get())].c_str() : "Not a collection" ) << L_endl;
 #endif
@@ -181,7 +182,7 @@ namespace LCD_UI {
 			_leftRightBackUI->enter_collection(direction);
 		}
 #ifdef ZPSIM
-		//logger() << F("\tLeftRightUI is: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		//debug() << F("\tLeftRightUI is: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 #endif
 		return topUI;
 	}
@@ -200,7 +201,7 @@ namespace LCD_UI {
 		_upDownUI = innerMost(this_UI_h, isUpDnAble);
 
 #ifdef ZPSIM
-		//logger() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		//debug() << F("\tUD is: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 #endif
 	}
 
@@ -210,13 +211,13 @@ namespace LCD_UI {
 		set_leftRightUI_from(selectedPage_h(),0);
 		set_UpDownUI_from(selectedPage_h());
 #ifdef ZPSIM 
-		logger() << F("\nselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		logger() << F("\tselectedPage focus: ") << selectedPage_h()->focusIndex() << L_endl;
-		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
-		logger() << F("\t_upDownUI focus: ") << _upDownUI->focusIndex() << L_endl;
-		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
-		logger() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
-		if (_cursorUI->get()) logger() << F("\t_cursorUI() focus: ") << _cursorUI->focusIndex() << L_endl;
+		debug() << F("\nselectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
+		debug() << F("\tselectedPage focus: ") << selectedPage_h()->focusIndex() << L_endl;
+		debug() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		debug() << F("\t_upDownUI focus: ") << _upDownUI->focusIndex() << L_endl;
+		debug() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		debug() << F("\t_cursorUI(): ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
+		if (_cursorUI->get()) debug() << F("\t_cursorUI() focus: ") << _cursorUI->focusIndex() << L_endl;
 #endif
 		_cursorUI->setCursorPos();
 	}
@@ -224,7 +225,7 @@ namespace LCD_UI {
 	bool A_Top_UI::rec_left_right(int move) { // left-right movement
 		using HI_BD = HardwareInterfaces::LCD_Display;
 #ifdef ZPSIM
-		logger() << F("LR on _leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		debug() << F("LR on _leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 #endif
 		setEachPageElementToItsFocus(*activeUI()->get()->collection());
 
@@ -279,7 +280,7 @@ namespace LCD_UI {
 				do {
 					_leftRightBackUI = _leftRightBackUI->backUI();
 #ifdef ZPSIM
-	logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+	debug() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
 #endif
 				} while (_leftRightBackUI != this && (_leftRightBackUI->behaviour().is_viewOne()));
 
@@ -297,11 +298,11 @@ namespace LCD_UI {
 			rec_edit();
 
 #ifdef ZPSIM
-		logger() << F("selectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
-		logger() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
-		logger() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
-		logger() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
-		logger() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
+		debug() << F("selectedPage: ") << ui_Objects()[(long)(selectedPage_h()->get())].c_str() << L_endl;
+		debug() << F("\t_leftRightBackUI: ") << ui_Objects()[(long)(_leftRightBackUI->get())].c_str() << L_endl;
+		debug() << F("\trec_activeUI(): ") << ui_Objects()[(long)(rec_activeUI()->get())].c_str() << L_endl;
+		debug() << F("\t_upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		debug() << F("\t_cursorUI: ") << ui_Objects()[(long)(_cursorUI->get())].c_str() << L_endl;
 #endif
 		return hasMoved;
 	}
@@ -309,7 +310,7 @@ namespace LCD_UI {
 	void A_Top_UI::rec_up_down(int move) { // up-down movement
 		auto haveMoved = false;
 #ifdef ZPSIM
-		logger() << F("UD on _upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
+		debug() << F("UD on _upDownUI: ") << ui_Objects()[(long)(_upDownUI->get())].c_str() << L_endl;
 #endif
 		setEachPageElementToItsFocus(*activeUI()->get()->collection());
 

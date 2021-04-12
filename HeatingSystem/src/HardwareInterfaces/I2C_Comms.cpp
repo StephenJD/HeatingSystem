@@ -59,8 +59,8 @@ namespace HardwareInterfaces {
 
 	void HardReset::arduinoReset(const char * msg) {
 		logger() << L_flush << F("\n *** HardReset::arduinoReset called by ") << msg << L_endl << L_flush;
-		pinMode(A4, OUTPUT);
-		digitalWrite(A4, LOW);
+		pinMode(RESET_5vREF_PIN, OUTPUT);
+		digitalWrite(RESET_5vREF_PIN, LOW);
 	}
 
 	Error_codes HardReset::operator()(I2C_Talk & i2c, int addr) {

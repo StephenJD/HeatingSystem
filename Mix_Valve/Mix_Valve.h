@@ -15,6 +15,7 @@
 // 8. Then upload your desired sketch to ordinary MiniPro board. Tools->Board->Arduino Pro Mini / 328/3.3v/8MHz
 
 #include <Arduino.h>
+#include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 
 class EEPROMClass;
 
@@ -49,7 +50,7 @@ public:
 	void setRegister(int reg, uint8_t value);
 	void setRequestTemp();
 private:
-	enum { e_MIN_FLOW_TEMP = 30, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
+	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
 	friend void testMixer();
 	friend void testSlave();
 	friend void printModes();

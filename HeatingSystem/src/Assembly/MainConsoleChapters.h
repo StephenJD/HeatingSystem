@@ -81,6 +81,7 @@ namespace Assembly {
 		client_data_structures::InsertTimeTemp_Cmd _editTTCmd;
 		client_data_structures::InsertTimeTemp_Cmd _newTTCmd;
 		client_data_structures::TestWatchdog_Cmd _testWatchdog;
+		client_data_structures::FactoryReset_Cmd _factoryReset;
 		LCD_UI::UI_Label _towelRailsLbl;
 		LCD_UI::UI_Label _autoSettingLbl;
 		LCD_UI::UI_Label _mixValveLbl;
@@ -113,7 +114,7 @@ namespace Assembly {
 		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;
 		LCD_UI::UI_IteratedCollection<5> _iterated_zoneSettings_info_c;
 		LCD_UI::Collection<2> _page_autoSettings_c;
-		LCD_UI::Collection<1> _testWatchdog_c;
+		LCD_UI::Collection<2> _reset_c;
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;

@@ -71,12 +71,13 @@ namespace Assembly {
 		, _editTTCmd{ "Edit", 0, {H + S + VnLR} }
 		, _newTTCmd{ "New", 0, {H + S } }
 		, _testWatchdog  { "Test Watchdog" , 0 }
+		, _factoryReset{ "Factory Reset" , 0 }
 		, _towelRailsLbl { "Room Temp OnFor ToGo" }
 		, _mixValveLbl   { "MixV  Pos Is Req St" }
 		, _autoSettingLbl{ "Aut Rat Tc  Del Qy" }
 
 		// Pages & sub-pages - Collections of UI handles
-		, _page_currTime_c{ makeCollection(_currTimeUI_c, _SDCardUI_c, _currDateUI_c, _dst, _dstUI_c, _backlightCmd, _contrastCmd) }
+		, _page_currTime_c{ makeCollection( _contrastCmd, _backlightCmd, _currTimeUI_c, _currDateUI_c, _dst, _dstUI_c, _SDCardUI_c) }
 
 		, _iterated_zoneReqTemp_c{ 80, makeCollection(_allZoneNames_UI_c,_reqestTemp,_allZoneReqTemp_UI_c,_is,_allZoneIsTemp_UI_c,_allZoneIsHeating_UI_c) }
 
@@ -108,11 +109,11 @@ namespace Assembly {
 		, _iterated_mixValve_info_c{ 80, makeCollection(_mixValveNameUI_c, _mixValvePosUI_c, _mixValveFlowTempUI_c, _mixValveReqTempUI_c, _mixValveStateUI_c),{V + S + VnLR + UD_S} }
 		, _page_mixValve_c{ makeCollection(_mixValveLbl, _iterated_mixValve_info_c) }
 
-		, _testWatchdog_c{makeCollection(_testWatchdog )}
+		, _reset_c{makeCollection(_testWatchdog, _factoryReset)}
 		// Display - Collection of Page Handles
 		, _user_chapter_c{ makeChapter(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
 		, _user_chapter_h{ _user_chapter_c }
-		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _page_autoSettings_c, _page_mixValve_c, _testWatchdog_c) }
+		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _page_autoSettings_c, _page_mixValve_c, _reset_c) }
 		, _info_chapter_h{ _info_chapter_c }
 	{
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));

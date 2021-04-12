@@ -37,31 +37,31 @@ namespace HardwareInterfaces {
 				// Process Key 400K/100K I2C Clock: takes 0 for time, 47mS for zone temps, 110mS for calendar, 387/1000mS for change zone on Program page
 				// Process Key 19mS with RAM-buffered EEPROM.
 			case 0:
-				logger() << L_time << F("GotKey Info\n");
+				//logger() << L_time << F("GotKey Info\n");
 				_chapterGenerator.setChapterNo(1 /*Book_Info*/);
 				break;
 			case 1:
-				logger() << L_time << F("GotKey UP\n");
+				//logger() << L_time << F("GotKey UP\n");
 				_chapterGenerator().rec_up_down(-1);
 				break;
 			case 2:
-				logger() << L_time << F("GotKey Left\n");
+				//logger() << L_time << F("GotKey Left\n");
 				_chapterGenerator().rec_left_right(-1);
 				break;
 			case 3:
-				logger() << L_time << F("GotKey Right\n");
+				//logger() << L_time << F("GotKey Right\n");
 				_chapterGenerator().rec_left_right(1);
 				break;
 			case 4:
-				logger() << L_time << F("GotKey Down\n");
+				//logger() << L_time << F("GotKey Down\n");
 				_chapterGenerator().rec_up_down(1);
 				break;
 			case 5:
-				logger() << L_time << F("GotKey Back\n");
+				//logger() << L_time << F("GotKey Back\n");
 				_chapterGenerator.backKey();
 				break;
 			case 6:
-				logger() << L_time << F("GotKey Select\n");
+				//logger() << L_time << F("GotKey Select\n");
 				_chapterGenerator().rec_select();
 				break;
 			case 7:

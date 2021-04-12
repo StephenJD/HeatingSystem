@@ -2,10 +2,13 @@
 #include "..\LCD_UI\UI_FieldData.h"
 #include "..\LCD_UI\\I_Record_Interface.h"
 #include "..\HardwareInterfaces\LocalDisplay.h"
+#include "..\HeatingSystem.h"
 
 #ifdef ZPSIM
 	#include <iostream>
 #endif
+
+extern HeatingSystem* heating_system;
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -193,4 +196,11 @@ namespace client_data_structures {
 		ttData->setFocusIndex(ttData->data()->ds_recordID());
 		return backUI()->on_back();
 	}
+
+	Collection_Hndl* FactoryReset_Cmd::select(Collection_Hndl* from) {
+		heating_system->getDB().reset(0,0);
+		HardReset::arduinoReset("Factory Rest");
+		return 0;
+	}
+
 }

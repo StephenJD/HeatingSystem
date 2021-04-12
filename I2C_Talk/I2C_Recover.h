@@ -23,7 +23,7 @@ namespace I2C_Recovery {
 		auto findAworkingSpeed()->I2C_Talk_ErrorCodes::Error_codes;
 		
 		// Polymorphic Functions for TryAgain
-		virtual auto newReadWrite(I_I2Cdevice_Recovery & device)->I2C_Talk_ErrorCodes::Error_codes { return I2C_Talk_ErrorCodes::_OK; }
+		virtual auto newReadWrite(I_I2Cdevice_Recovery & device, int retries)->I2C_Talk_ErrorCodes::Error_codes { return I2C_Talk_ErrorCodes::_OK; }
 		virtual bool tryReadWriteAgain(I2C_Talk_ErrorCodes::Error_codes status) {
 			//Serial.println(" Default non-recovery");
 			return false;

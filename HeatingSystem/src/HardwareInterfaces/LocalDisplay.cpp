@@ -29,7 +29,6 @@ namespace HardwareInterfaces {
 		} else _wasBlinking = false;
 	}
 
-
 	void LocalDisplay::sendToDisplay() {
 		//logger() << F(" *** sendToDisplay() *** ") << buff() << L_endl;
 		//_lcd.clear();
@@ -79,9 +78,9 @@ namespace HardwareInterfaces {
 			brightness = (brightness * (MAX_BL - MIN_BL) / 25) + MIN_BL; // convert to analogue write val.
 			if (brightness > MAX_BL) brightness = MAX_BL;
 			if (brightness < MIN_BL) brightness = MIN_BL;
-
+			auto supplyVcorrection = 2.5 * 1024. / 3.3 / analogRead(RESET_5vREF_PIN);
 			analogWrite(BRIGHNESS_PWM, brightness); // Useful range is 255 (bright) to 200 (dim)
-			analogWrite(CONTRAST_PWM, displayData.contrast * 3); // Useful range is 0 (max) to 70 (min)
+			analogWrite(CONTRAST_PWM, displayData.contrast * 3 * supplyVcorrection); // Useful range is 0 (max) to 70 (min)
 		}
 	}
 
@@ -93,7 +92,7 @@ namespace HardwareInterfaces {
 			if (contrast > 0 && contrast < 70) {
 				displayData.rec().contrast = uint8_t(contrast);
 				displayData.update();
-				logger() << F("\n\tChange Contrast : ") << displayData.rec().contrast;
+				logger() << F("\n\tChange Contrast Rec: ") << displayData.rec().contrast << " PWM: " << displayData.rec().contrast * 3 * 2.5 * 1024. / 3.3 / analogRead(RESET_5vREF_PIN) << L_endl;
 			}
 			setBackLight(true);
 		}

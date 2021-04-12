@@ -3,12 +3,13 @@
 #include "I2C_Recover.h"
 #include "I2C_RecoverRetest.h"
 #include "Mix_Valve.h"
-#include "TempSensor.h"
-#include "PinObject.h"
+#include <TempSensor.h>
+#include <PinObject.h>
 #include <Logging.h>
-#include "EEPROM.h"
+#include <EEPROM.h>
 #include <Watchdog_Timer.h>
 #include <Timer_mS_uS.h>
+#include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 
 // ******** NOTE select Arduino Pro Mini 328P 3.3v 8MHz **********
 // Arduino Pro Mini must be upgraded with  boot-loader to enable watchdog timer.
@@ -40,8 +41,6 @@ using namespace I2C_Talk_ErrorCodes;
 
 constexpr uint32_t SERIAL_RATE = 115200;
 constexpr int noOfMixers = 2;
-constexpr uint8_t MIX_VALVE_I2C_ADDR = 0x10;
-constexpr uint8_t other_address = 0x11;
 constexpr uint8_t eeprom_firstRegister_addr = 0x2;
 uint8_t version_a = 0x2; // change to force re-application of defaults incl temp-sensor addresses
 uint8_t version_b = 0x0;

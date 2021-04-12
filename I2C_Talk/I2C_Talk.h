@@ -24,7 +24,7 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 
 // Degugging options
 //#define DEBUG_TALK
-#define DEBUG_SPEED_TEST
+//#define DEBUG_SPEED_TEST
 //#define DEBUG_TRY_ALL_SPEEDS
 
 // The DEFAULT page size for I2C EEPROM.
@@ -32,7 +32,6 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 // 24LC256 -> 64 bytes
 #define I2C_EEPROM_PAGESIZE 32
 #define I2C_WRITE_DELAY  5000
-#define I2C_RETRIES 10
 
 namespace I2C_Recovery {
 	class I2C_Recover;

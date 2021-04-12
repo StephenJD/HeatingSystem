@@ -55,6 +55,7 @@ namespace HardwareInterfaces {
 		//_lastGood += change;
 		if (_lastGood < 2560) change = 256;
 		if (_lastGood > 17920) change = -256;
+		_error = _NACK_during_address_send;
 #endif
 		if (_error != _OK) {
 			// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].

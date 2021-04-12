@@ -27,11 +27,13 @@ namespace client_data_structures {
 			auto newDate = DateTime(startDate);
 			if (spell.rec().date <= clock_().now() && newDate > clock_().now()) {
 				insertNewData();
+				logger() << "Insert Spell\n";
 			}
 
 			for (Answer_R<R_Spell> spell : query()) {
 				if (spell.rec().date == newDate) {
 					deleteData();
+					logger() << "Delete Spell " << newDate << L_endl;
 					return false;
 				}
 			}

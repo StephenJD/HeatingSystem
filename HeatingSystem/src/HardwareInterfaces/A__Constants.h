@@ -28,7 +28,9 @@ namespace HardwareInterfaces {
 
 	constexpr uint8_t KEYPAD_INT_PIN = 18;
 	constexpr uint8_t KEYPAD_ANALOGUE_PIN = A1;
+	constexpr uint8_t BATT_ANALOGUE = A2;
 	constexpr uint8_t KEYPAD_REF_PIN = A3;
+	constexpr uint8_t RESET_5vREF_PIN = A4;
 
 	constexpr uint8_t ZERO_CROSS_PIN = 15; // active falling edge.
 	constexpr uint16_t ZERO_CROSS_DELAY = 690;
@@ -135,7 +137,7 @@ namespace HardwareInterfaces {
 	const uint8_t MIN_ON_TEMP = 10;
 	const uint8_t MAX_REQ_TEMP = 80;
 	const uint8_t FLOW_TEMP_SENSITIVITY = 32; // no of degrees flow temp changes per degree room-temp error
-	const uint8_t MIN_FLOW_TEMP = 30; // Flow temp below which pump turns off.
+	const uint8_t MIN_FLOW_TEMP = 25; // Flow temp below which pump turns off.
 	const int16_t MAX_MIN_TEMP_ERROR = 256;
 
 #if defined (ZPSIM)
