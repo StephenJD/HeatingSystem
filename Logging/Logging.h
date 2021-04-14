@@ -32,13 +32,13 @@ namespace arduino_logger {
 		void activate(bool makeActive = true) { makeActive ? _flags = L_clearFlags : _flags = L_null; }
 		Flags addFlag(Flags flag) { _flags += flag; return _flags; }
 		Flags removeFlag(Flags flag) { _flags -= flag; return _flags; }
+		virtual bool open() { return false; }
 		virtual void flush() { _flags -= L_startWithFlushing; }
 		virtual Print& stream() { return *this; }
 
 		template<typename T>
 		Logger& log(T value);
 
-		virtual bool isWorking() { return true; }
 		virtual void readAll() {}
 		virtual void begin(uint32_t baudRate = 0) { flush(); }
 		Logger& operator <<(Flags);
@@ -109,7 +109,7 @@ namespace arduino_logger {
 		Serial_Logger(uint32_t baudRate, Clock& clock, Flags initFlags = L_flush);
 		Serial_Logger(uint32_t baudRate, Flags initFlags = L_flush);
 		Print& stream() override { return Serial; }
-
+		bool open() override { return (bool)Serial;}
 		void flush() override { Serial.flush(); Logger::flush(); }
 		void begin(uint32_t baudRate) override;
 		bool mirror_stream(ostreamPtr& mirrorStream) override {
@@ -142,11 +142,10 @@ namespace arduino_logger {
 		SD_Logger(const char* fileNameStem, uint32_t baudRate, Clock& clock, Flags initFlags = L_flush);
 		SD_Logger(const char* fileNameStem, uint32_t baudRate, Flags initFlags = L_flush);
 		Print& stream() override;
-		bool isWorking() override;
 		void flush() override { close(); Serial_Logger::flush(); }
 		bool mirror_stream(Logger::ostreamPtr& mirrorStream) override { return Serial_Logger::mirror_stream(mirrorStream); }
 		
-		bool open();
+		bool open() override;
 		void close() { _dataFile.close(); _dataFile = File{}; }
 	private:
 		Logger& logTime() override;
@@ -166,9 +165,8 @@ namespace arduino_logger {
 		Print& stream() override;
 		void flush() override { close(); MirrorBase::flush(); }
 		bool mirror_stream(Logger::ostreamPtr& mirrorStream) override { return MirrorBase::mirror_stream(mirrorStream); }
-		bool isWorking() override;
 
-		bool open();
+		bool open() override;
 		void close() { _dataFile.close(); }
 	protected:
 		Logger& logTime() override;
@@ -202,9 +200,6 @@ namespace arduino_logger {
 		Serial.print(_fileNameGenerator.stem());
 		Serial.println();
 	}
-
-	template<typename MirrorBase>
-	bool File_Logger<MirrorBase>::isWorking() { return true; }
 
 	template<typename MirrorBase>
 	Print& File_Logger<MirrorBase>::stream() {

@@ -165,7 +165,7 @@ namespace client_data_structures {
 		_currTime.val = clock_().time().asInt();
 		_currDate.val = clock_().date().asInt();
 		_dst.val = clock_().autoDSThours();
-		_SDCard = logger().isWorking() ? "SD OK" : "No SD";
+		_SDCard = logger().open() ? "SD OK" : "No SD";
 		switch (fieldID) {
 		case e_currTime: return &_currTime;
 		case e_currDate: return &_currDate;

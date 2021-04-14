@@ -63,7 +63,7 @@ namespace HardwareInterfaces {
 		hs()._recover.setTimeoutFn(&_ini._resetI2C.hardReset);
 		int8_t returnVal = 0;
 		hs().mainDisplay.setCursor(0, 0);
-		if (logger().isWorking()) hs().mainDisplay.print("SDok"); else hs().mainDisplay.print("SDer");
+		if (logger().open()) hs().mainDisplay.print("SDok"); else hs().mainDisplay.print("SDer");
 		hs().mainDisplay.setCursor(0, 2);
 		hs().mainDisplay.print("Test ");
 		logger() << L_endl << L_time << F("TestDevices::speedTestDevices has been called\n");

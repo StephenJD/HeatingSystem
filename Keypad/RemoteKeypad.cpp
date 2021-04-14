@@ -1,5 +1,8 @@
 #include "RemoteKeypad.h"
 #include <Logging.h>
+
+using namespace arduino_logger;
+
 namespace HardwareInterfaces {
 	namespace {
 		auto remName(int addr) -> const __FlashStringHelper* {

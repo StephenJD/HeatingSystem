@@ -23,7 +23,7 @@ namespace RelationalDatabase {
 		/// For opening an existing Database
 		/// </summary>	
 		RDB(int dbStartAddr, WriteByte_Handler * wbh, ReadByte_Handler * rbh, size_t password) : RDB_B(dbStartAddr, wbh, rbh, password) {
-			logger() << F("Construct RDB. Load tables.") << L_endl;
+			arduino_logger::logger() << F("Construct RDB. Load tables.\n");
 			if (passwordOK()) {
 				getTables(tables, maxNoOfTables);
 			}
@@ -73,11 +73,11 @@ namespace RelationalDatabase {
 		Table & registerTable(const Table & t) {
 			for (auto & tbl : tables) {
 				if (tbl._tableID == t._tableID) {
-					logger() << L_tabs << F(" Registered Table found ID:") << t._tableID << F(" pos") << &tbl - tables << L_endl;
+					arduino_logger::logger() << arduino_logger::L_tabs << F(" Registered Table found ID:") << t._tableID << F(" pos") << &tbl - tables << arduino_logger::L_endl;
 					return tbl;
 				}
 				else if (tbl._tableID == 0) {
-					logger()  << L_tabs << F(" Register Table ID: ") << t._tableID << F(" pos") << &tbl - tables << L_endl;
+					arduino_logger::logger()  << arduino_logger::L_tabs << F(" Register Table ID: ") << t._tableID << F(" pos") << &tbl - tables << arduino_logger::L_endl;
 					tbl = t;
 					return tbl; 
 				}

@@ -149,25 +149,32 @@ bool FileNameGenerator::isNewDay(Clock* clock) {
 // Chip select is usually connected to pin 53 and is active LOW.
 constexpr int chipSelect = 53;
 
-SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Flags initFlags) : Serial_Logger(baudRate, initFlags), _fileNameGenerator(fileNameStem) {
+SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Flags initFlags) 
+	: Serial_Logger(baudRate, initFlags)
+	, _fileNameGenerator(fileNameStem) 
+{
 	// Avoid calling Serial_Logger during construction, in case clock is broken.
 	SD.begin(chipSelect);
 	Serial.print(F("\nSD_Logger Begun without Clock: "));
 	Serial.print(_fileNameGenerator.stem());
-	Serial.print(isWorking() ? F(" OK") : F(" Failed"));
+	Serial.print(open() ? F(" OK") : F(" Failed"));
 	Serial.println();
 }	
 
-SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock, Flags initFlags) : Serial_Logger(baudRate, clock, initFlags), _fileNameGenerator(fileNameStem) {
+SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock, Flags initFlags) 
+	: Serial_Logger(baudRate, clock, initFlags)
+	, _fileNameGenerator(fileNameStem) 
+{
 	// Avoid calling Serial_Logger during construction, in case clock is broken.
 	SD.begin(chipSelect);
 	Serial.print(F("\nSD_Logger Begun with clock: "));
 	Serial.print(_fileNameGenerator.stem());
-	Serial.print(isWorking() ? F(" OK") : F(" Failed"));
+	Serial.print(_fileNameGenerator.dayNo());
+	Serial.print(" : ");
+	Serial.print(clock.day());
+	Serial.print(open() ? F(" OK") : F(" Failed"));
 	Serial.println();
 }
-
-bool SD_Logger::isWorking() { return SD.sd_exists(chipSelect); }
 
 Print& SD_Logger::stream() {
 	if (is_cout() || !open()) return Serial_Logger::stream();
@@ -178,18 +185,13 @@ bool SD_Logger::open() {
 	if (SD.sd_exists(chipSelect)) {
 		if (_fileNameGenerator.isNewDay(_clock)) close();
 		if (!_dataFile) {
-			//auto t0 = micros();
 			_dataFile = SD.open(_fileNameGenerator(_clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
-			//auto d = micros() - t0;
-			//Serial.print(generateFileName(_fileNameStem, _clock)); Serial.println(" File re - opened"); Serial.flush();
 		}
 		else {
 			if (_dataFile.name()[0] != _fileNameGenerator.stem()[0]) close();
-			//Serial.println("File OK");
 		}
 	}
 	else if (_dataFile) {
-		//Serial.println("File closed on fail");
 		close();
 	}
 	return _dataFile;

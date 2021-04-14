@@ -534,7 +534,7 @@ void loop() {
 			}
 			mainLCD->setCursor(0, 3);
 
-			bool sd_ok = logger().isWorking();
+			bool sd_ok = logger().open();
 
 			bool rtc_ok = clock_().ok();
 
