@@ -12,256 +12,210 @@
 #include <iostream>
 using namespace std;
 #endif
-	using namespace GP_LIB;
+using namespace GP_LIB;
 
-	CStr_20 generateFileName(const char * fileNameStem, const Clock * clock) {
-		CStr_20 fileName;
-		strcpy(fileName.str(), fileNameStem);
-		if (clock) {
-			strcat(fileName.str(), intToString(clock->month(), 2));
-			strcat(fileName.str(), intToString(clock->day(), 2));
-		} 
-		strcat(fileName.str(), ".txt");
-		return fileName;
+namespace arduino_logger {
+
+Logger::Logger(Clock& clock, Flags initFlag) : _flags{ initFlag }, _clock(&clock) {}
+
+Logger& Logger::toFixed(int decimal) {
+	int whole = (decimal / 256);
+	double fractional = (decimal % 256) / 256.;
+	print(double(whole + fractional));
+	return *this;
+}
+
+Logger& Logger::operator <<(Flags flag) {
+	if (is_null()) return *this;
+	switch (flag) {
+	case L_time:	logTime(); break;
+	case L_flush:
+		_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
+		*this << " |F|\n";
+		flush();
+		break;
+	case L_endl:
+	{
+		if (_flags & L_allwaysFlush) { *this << " |F|"; } else if (_flags == L_startWithFlushing) { *this << " |SF|"; }
+		auto streamPtr = &stream();
+		do {
+			streamPtr->print("\n");
+		} while (mirror_stream(streamPtr));
+		if (_flags & L_allwaysFlush || _flags == L_startWithFlushing) flush();
 	}
-
-	Logger::Logger(Clock & clock) : _clock(&clock) {}
-
-	Logger & Logger::toFixed(int decimal) {
-		int whole = (decimal / 256);
-		double fractional = (decimal % 256) / 256.;
-		print(double(whole + fractional));
-		return *this;
-	}
-
-	Logger & Logger::operator <<(Flags flag) {
-		//enum Flags { L_clearFlags, L_dec, L_int, L_concat, L_endl, L_time, L_flush, L_cout = 8, L_hex = 16, L_fixed = 32, L_tabs = 64, L_allwaysFlush = 128 };
-		switch (flag) {
-		case L_flush:
+	//[[fallthrough]];
+	case L_clearFlags:
+		if (_flags != L_startWithFlushing) {
 			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
-			(*this) << " |F|\n"; 
-			flush();
-			break;
-		case L_endl: // fall through	
-			if (_flags & L_allwaysFlush) { (*this) << " |F|"; }
-			else if (_flags == L_startWithFlushing) { (*this) << " |SF|"; }
-			(*this) << F("\n");
-			if (_flags & L_allwaysFlush || _flags == L_startWithFlushing) flush();
-		case L_clearFlags:
-			if (_flags != L_startWithFlushing) {
-				_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
-			}
-			break;
-		case L_allwaysFlush: _flags = L_allwaysFlush; break;
-		case L_time:	logTime(); break;
-		case L_concat:	removeFlag(L_tabs); break;
-		case L_dec:
-		case L_int:		
-		case L_hex:
-		case L_fixed:
-			removeFlag(L_dec);
-			removeFlag(L_int);
-			removeFlag(L_hex);
-			removeFlag(L_fixed); // fall through
-		default:
-			addFlag(flag);
 		}
-		return *this;
+		break;
+	case L_allwaysFlush: _flags += L_allwaysFlush; break;
+	case L_concat:	removeFlag(L_tabs); break;
+	case L_dec:
+	case L_int:
+	case L_hex:
+	case L_fixed:
+		removeFlag(L_dec);
+		removeFlag(L_int);
+		removeFlag(L_hex);
+		removeFlag(L_fixed);
+		//[[fallthrough]];
+	default:
+		addFlag(flag);
 	}
-	 
-	////////////////////////////////////
-	//            Serial_Logger       //
-	////////////////////////////////////
-	char logTimeStr[18];
-	char decTempStr[7];
+	return *this;
+}
 
-	Serial_Logger::Serial_Logger(uint32_t baudRate) : Logger() {
-		Serial.flush();
-		Serial.begin(baudRate);
-		auto freeRam = freeMemory();
-		Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
-		if (freeRam < 10) {  while (true); }
-		#ifdef DEBUG_TALK
-		_flags = L_allwaysFlush;
-		#endif
-	}	
-	
-	Serial_Logger::Serial_Logger(uint32_t baudRate, Clock & clock) : Logger(clock) {
-		Serial.flush();
-		Serial.begin(baudRate);
-		auto freeRam = freeMemory();
-		Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
-		if (freeRam < 10) { while (true); }
+Logger& Logger::logTime() {
+	if (_clock) {
+		_clock->refresh();
+		if (_clock->day() == 0) {
+			*this << F("No Time");
+		} else {
+			*this << *_clock;
+		}
+		_flags += L_time;
+	}
+	return *this;
+}
+
+////////////////////////////////////
+//            Serial_Logger       //
+////////////////////////////////////
+char logTimeStr[18];
+char decTempStr[7];
+
+Serial_Logger::Serial_Logger(uint32_t baudRate, Flags initFlags) : Logger(initFlags) {
+	Serial.flush();
+	Serial.begin(baudRate);
+	auto freeRam = freeMemory();
+	Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
+	if (freeRam < 10) { while (true); }
 #ifdef DEBUG_TALK
-		_flags = L_allwaysFlush;
+	_flags = L_allwaysFlush;
 #endif
-	}
+}
 
-	void Serial_Logger::begin(uint32_t baudRate) { Serial.begin(baudRate); }
-
-
-	Logger & Serial_Logger::logTime() {
-		if (_clock) {
-			_clock->refresh();
-			if (_clock->day() == 0) {
-				*this << F("No Time");
-			}
-			else {
-				*this << *_clock;
-			}
-		}
-		_mustTabTime = true;
-		return *this;
-	}
-
-	size_t Serial_Logger::write(uint8_t chr) {
-		Serial.print(char(chr));
-		return 1;
-	}	
-	
-	size_t Serial_Logger::write(const uint8_t *buffer, size_t size) {
-		Serial.print((char*)buffer);
-		return size;
-	}	
-	
-	////////////////////////////////////
-	//            SD_Logger           //
-	////////////////////////////////////
-
-	// On Mega, MISO is internally connected to digital pin 50, MOSI is 51, SCK is 52
-	// Due SPI header does not use digital pins.
-	// Chip select is usually connected to pin 53 and is active LOW.
-	constexpr int chipSelect = 53;
-
-	SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate) : Serial_Logger(baudRate) {
-		strncpy(_fileNameStem, fileNameStem, 5);
-		_fileNameStem[4] = 0;
-		// Avoid calling Serial_Logger during construction, in case clock is broken.
-		SD.begin(chipSelect);
-		_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
-		Serial.print(F("\nSD_Logger Begun without Clock: "));
-		Serial.print(_fileNameStem);
-		Serial.print(isWorking() ? F(" OK") : F(" Failed"));
-		Serial.println();
-	}	
-	
-	SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock) {
-		strncpy(_fileNameStem, fileNameStem, 5);
-		_fileNameStem[4] = 0;
-		// Avoid calling Serial_Logger during construction, in case clock is broken.
-		SD.begin(chipSelect);
-		_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
-		Serial.print(F("\nSD_Logger Begun with clock: "));
-		Serial.print(_fileNameStem);
-		Serial.print(isWorking() ? F(" OK") : F(" Failed"));
-		Serial.println();
-	}
-
-	bool SD_Logger::isWorking() { return SD.sd_exists(chipSelect); }
-
-	File SD_Logger::openSD() {
-		if (SD.sd_exists(chipSelect)) {
-			if (!_dataFile) {
-				//auto t0 = micros();
-				_dataFile = SD.open(generateFileName(_fileNameStem, _clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
-				//auto d = micros() - t0;
-				//Serial.print(generateFileName(_fileNameStem, _clock)); Serial.println(" File re - opened"); Serial.flush();
-			}
-			else {
-				if (_dataFile.name()[0] != _fileNameStem[0]) _dataFile = File{};
-				//Serial.println("File OK");
-			}
-		}
-		else if (_dataFile) {
-			//Serial.println("File closed on fail");
-			_dataFile = File{};
-		}
-		return _dataFile;
-	}
-
-	size_t SD_Logger::write(uint8_t chr) {
-		if (!is_cout() && openSD()) {
-			_dataFile.print(char(chr));
-		}
-		return 1;
-	}
-
-	size_t SD_Logger::write(const uint8_t * buffer, size_t size) {
-		if (!is_cout() && openSD()) {
-			_dataFile.print((const char *)buffer);
-		}
-		return size;
-	}	
-	
-	Logger & SD_Logger::logTime() {
-		if(_clock->time().asInt() == 0 && _clock->minUnits() == 0 && _clock->seconds() == 0) _dataFile = File{};
-		Serial_Logger serial(static_cast<Serial_Logger&>(*this));
-		serial << _fileNameStem;
-		Serial_Logger::logTime();
-		_SD_mustTabTime = true;
-		return *this;
-	}
-
-#ifdef ZPSIM
-	using namespace std;
-	////////////////////////////////////
-	//            File_Logger           //
-	////////////////////////////////////
-
-	// On Mega, MISO is internally connected to digital pin 50, MOSI is 51, SCK is 52
-	// Due SPI header does not use digital pins.
-	// Chip select is usually connected to pin 53 and is active LOW.
-
-	File_Logger::File_Logger(const char * fileNameStem, uint32_t baudRate) : Serial_Logger(baudRate) {
-		strncpy(_fileNameStem, fileNameStem, 5);
-		_fileNameStem[4] = 0;
-		// Avoid calling Serial_Logger during construction, in case clock is broken.
-		Serial.print(F("\nFile_Logger Begun without Clock: "));
-		Serial.print(_fileNameStem);
-		Serial.println();
-	}	
-	
-	File_Logger::File_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock) : Serial_Logger(baudRate, clock) {
-		strncpy(_fileNameStem, fileNameStem, 5);
-		_fileNameStem[4] = 0;
-		// Avoid calling Serial_Logger during construction, in case clock is broken.
-		Serial.print(F("\nFile_Logger Begun with clock: "));
-		Serial.print(_fileNameStem);
-		Serial.println();
-	}
-
-	bool File_Logger::isWorking() { return true; }
-
-	bool File_Logger::openSD() {
-		if (!_dataFile.is_open()) {
-			_dataFile.open(generateFileName(_fileNameStem, _clock), ios::app);	// Append
-		}
-		return _dataFile.good();
-	}
-
-	size_t File_Logger::write(uint8_t chr) {
-		if (!is_cout() && openSD()) {
-			_dataFile.write((char*)&chr, 1);
-		}
-		return 1;
-	}
-
-	size_t File_Logger::write(const uint8_t * buffer, size_t size) {
-		if (!is_cout() && openSD()) {
-			_dataFile.write((char*)buffer, size);
-		}
-		return size;
-	}	
-	
-	Logger & File_Logger::logTime() {
-		if(_clock->time().asInt() == 0 && _clock->minUnits() == 0 && _clock->seconds() == 0) _dataFile.close();
-		Serial_Logger serial(static_cast<Serial_Logger&>(*this));
-		serial << _fileNameStem;
-		Serial_Logger::logTime();
-		_SD_mustTabTime = true;
-		return *this;
-	}
+Serial_Logger::Serial_Logger(uint32_t baudRate, Clock& clock, Flags initFlags) : Logger(clock, initFlags) {
+	Serial.flush();
+	Serial.begin(baudRate);
+	auto freeRam = freeMemory();
+	Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
+	if (freeRam < 10) { while (true); }
+#ifdef DEBUG_TALK
+	_flags = L_allwaysFlush;
 #endif
+}
+
+void Serial_Logger::begin(uint32_t baudRate) { Serial.begin(baudRate); }
+
+size_t Serial_Logger::write(uint8_t chr) {
+	Serial.print(char(chr));
+	return 1;
+}
+
+size_t Serial_Logger::write(const uint8_t* buffer, size_t size) {
+	Serial.print((char*)buffer);
+	return size;
+}
+
+////////////////////////////////////
+//            SD_Logger           //
+////////////////////////////////////
+
+FileNameGenerator::FileNameGenerator(const char* fileNameStem) {
+	strncpy(_fileNameStem, fileNameStem, 5);
+	_fileNameStem[4] = 0;
+}
+
+CStr_20 FileNameGenerator::operator()(Clock* clock) {
+	CStr_20 fileName;
+	strcpy(fileName.str(), _fileNameStem);
+	if (clock) {
+		_fileDayNo = clock->day();
+		strcat(fileName.str(), intToString(clock->month(), 2));
+		strcat(fileName.str(), intToString(_fileDayNo, 2));
+	}
+	strcat(fileName.str(), ".txt");
+	return fileName;
+}
+
+bool FileNameGenerator::isNewDay(Clock* clock) {
+	return clock ? _fileDayNo != clock->day() : false;
+}
+
+// On Mega, MISO is internally connected to digital pin 50, MOSI is 51, SCK is 52
+// Due SPI header does not use digital pins.
+// Chip select is usually connected to pin 53 and is active LOW.
+constexpr int chipSelect = 53;
+
+SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Flags initFlags) : Serial_Logger(baudRate, initFlags), _fileNameGenerator(fileNameStem) {
+	// Avoid calling Serial_Logger during construction, in case clock is broken.
+	SD.begin(chipSelect);
+	Serial.print(F("\nSD_Logger Begun without Clock: "));
+	Serial.print(_fileNameGenerator.stem());
+	Serial.print(isWorking() ? F(" OK") : F(" Failed"));
+	Serial.println();
+}	
+
+SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock, Flags initFlags) : Serial_Logger(baudRate, clock, initFlags), _fileNameGenerator(fileNameStem) {
+	// Avoid calling Serial_Logger during construction, in case clock is broken.
+	SD.begin(chipSelect);
+	Serial.print(F("\nSD_Logger Begun with clock: "));
+	Serial.print(_fileNameGenerator.stem());
+	Serial.print(isWorking() ? F(" OK") : F(" Failed"));
+	Serial.println();
+}
+
+bool SD_Logger::isWorking() { return SD.sd_exists(chipSelect); }
+
+Print& SD_Logger::stream() {
+	if (is_cout() || !open()) return Serial_Logger::stream();
+	else return *this;
+}
+
+bool SD_Logger::open() {
+	if (SD.sd_exists(chipSelect)) {
+		if (_fileNameGenerator.isNewDay(_clock)) close();
+		if (!_dataFile) {
+			//auto t0 = micros();
+			_dataFile = SD.open(_fileNameGenerator(_clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
+			//auto d = micros() - t0;
+			//Serial.print(generateFileName(_fileNameStem, _clock)); Serial.println(" File re - opened"); Serial.flush();
+		}
+		else {
+			if (_dataFile.name()[0] != _fileNameGenerator.stem()[0]) close();
+			//Serial.println("File OK");
+		}
+	}
+	else if (_dataFile) {
+		//Serial.println("File closed on fail");
+		close();
+	}
+	return _dataFile;
+}
+
+size_t SD_Logger::write(uint8_t chr) {
+	_dataFile.print(char(chr));
+	return 1;
+}
+
+size_t SD_Logger::write(const uint8_t * buffer, size_t size) {
+	_dataFile.print((const char *)buffer);
+	return size;
+}	
+
+Logger & SD_Logger::logTime() {
+	auto streamPtr = &stream();
+	while (mirror_stream(streamPtr)) {
+		streamPtr->print(_fileNameGenerator.stem());
+		streamPtr->print(" ");
+	}
+	Serial_Logger::logTime();
+	return *this;
+}
+
+/*
 ////////////////////////////////////
 //            RAM_Logger       //
 ////////////////////////////////////
@@ -292,8 +246,8 @@ using namespace std;
 		if (_filePos >= _ramFile_size) {
 			if (_keepSaving) readAll();
 			_filePos = 0;
-		}		
-		
+		}
+
 		_ramFile[_filePos+1] = 0u;
 		_ramFile[_filePos] = chr;
 		++_filePos;
@@ -370,7 +324,7 @@ using namespace std;
 		: Logger()
 		, _startAddr(startAddr)
 		, _endAddr(endAddr)
-		, _currentAddress(startAddr) 
+		, _currentAddress(startAddr)
 		, _keepSaving(keepSaving)
 	{
 		findStart();
@@ -396,8 +350,8 @@ using namespace std;
 	void EEPROM_Logger::findStart() {
 		_currentAddress = _startAddr;
 		auto thisChar = eeprom().read(_currentAddress);
-		while (thisChar != 0u && _currentAddress < _endAddr) { 
-			thisChar = eeprom().read(++_currentAddress); 
+		while (thisChar != 0u && _currentAddress < _endAddr) {
+			thisChar = eeprom().read(++_currentAddress);
 		}
 	}
 
@@ -407,8 +361,8 @@ using namespace std;
 			if (_keepSaving) readAll();
 			_currentAddress = _startAddr;
 			_hasRecycled = true;
-		}		
-		
+		}
+
 		eeprom().write(_currentAddress+1, 0u);
 		eeprom().write(_currentAddress, chr);
 		++_currentAddress;
@@ -418,8 +372,8 @@ using namespace std;
 	size_t EEPROM_Logger::write(const uint8_t *buffer, size_t size) {
 		//saveOnFirstCall();
 		if (_currentAddress + size >= _endAddr) {
-			while (++_currentAddress < _endAddr) { 
-				eeprom().write(_currentAddress, 0u); 
+			while (++_currentAddress < _endAddr) {
+				eeprom().write(_currentAddress, 0u);
 			}
 			if (_keepSaving) readAll();
 			_currentAddress = _startAddr;
@@ -457,7 +411,7 @@ using namespace std;
 				auto thisChar = char(eeprom().read(addr));
 				Serial.print(thisChar);
 				_dataFile.print(thisChar);
-			}			
+			}
 			//Serial.println(F("\nClose"));
 			//_dataFile.print(F("\nClose"));
 			_dataFile.close();
@@ -478,3 +432,5 @@ using namespace std;
 		}
 		return *this;
 	}
+	*/
+}
