@@ -10,8 +10,11 @@
 #include "MixValveController.h"
 #include <Clock.h>
 
-Logger& zTempLogger();
-Logger& profileLogger();
+namespace arduino_logger {
+	Logger& zTempLogger();
+	Logger& profileLogger();
+}
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 

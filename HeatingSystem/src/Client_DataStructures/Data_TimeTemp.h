@@ -47,7 +47,7 @@ namespace client_data_structures {
 		operator bool() const { return time_temp.time().asInt() != 0; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_TimeTemp & timeTemp) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_TimeTemp & timeTemp) {
 		using namespace Date_Time;
 		return stream << F("TimeTemp for ProfileID: ") << (int)timeTemp.profileID << F(" time: ") 
 			<< intToString(timeTemp.time_temp.time().hrs(), 2, '0') << (int)timeTemp.time_temp.time().mins10() << F("0  Temp: ") << (int)timeTemp.time_temp.temp();

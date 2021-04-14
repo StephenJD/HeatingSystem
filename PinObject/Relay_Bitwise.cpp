@@ -8,6 +8,7 @@ constexpr uint8_t REG_8PORT_IODIR = 0x00; // default all 1's = input
 constexpr uint8_t REG_8PORT_PullUp = 0x06;
 constexpr uint8_t REG_8PORT_OPORT = 0x09;
 constexpr uint8_t REG_8PORT_OLAT = 0x0A;
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace I2C_Recovery;

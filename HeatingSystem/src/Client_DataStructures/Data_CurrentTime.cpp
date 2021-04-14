@@ -2,6 +2,8 @@
 #include "Conversions.h"
 #include <Clock.h>
 
+using namespace arduino_logger;
+
 namespace client_data_structures {
 	using namespace HardwareInterfaces;
 	using namespace GP_LIB;

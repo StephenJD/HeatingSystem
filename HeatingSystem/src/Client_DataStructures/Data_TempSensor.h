@@ -43,7 +43,7 @@ namespace client_data_structures {
 		bool operator == (R_TempSensor rhs) const { return true; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_TempSensor & tempSensor) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_TempSensor & tempSensor) {
 		return stream << F("TempSensor: ") << tempSensor.name << F(" Addr: ") << (int)tempSensor.address;
 	}
 

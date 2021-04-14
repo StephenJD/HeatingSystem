@@ -7,6 +7,8 @@
 	#include <string>
 #endif
 
+using namespace arduino_logger;
+
 namespace LCD_UI {
 	using namespace std;
 

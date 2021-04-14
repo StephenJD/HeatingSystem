@@ -20,7 +20,7 @@ namespace client_data_structures {
 		bool operator == (R_Profile rhs) const { return days == rhs.days; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_Profile & profile) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_Profile & profile) {
 		return stream << F("Profile for ProgID: ") << (int)profile.programID << F(" ZoneID: ") << (int)profile.zoneID << F(" Days: ") << (int)profile.days;
 	}
 

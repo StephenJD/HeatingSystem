@@ -13,9 +13,12 @@
 #include <Timer_mS_uS.h>
 
 void ui_yield();
-Logger& zTempLogger();
-Logger& profileLogger();
+namespace arduino_logger {
+	Logger& zTempLogger();
+	Logger& profileLogger();
+}
 
+using namespace arduino_logger;
 
 namespace Assembly {
 	using namespace RelationalDatabase;

@@ -15,7 +15,7 @@ namespace client_data_structures {
 		bool operator == (R_Dwelling rhs) const { return true; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_Dwelling & dwelling) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_Dwelling & dwelling) {
 		return stream << F("Dwelling: ") << dwelling.name;
 	}
 

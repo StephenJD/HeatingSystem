@@ -3,6 +3,7 @@
 #include <Logging.h>
 
 using namespace I2C_Talk_ErrorCodes;
+using namespace arduino_logger;
 
 bool I2C_SpeedTest::_is_inSpeedTest = false;
 

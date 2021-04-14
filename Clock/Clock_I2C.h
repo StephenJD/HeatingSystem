@@ -10,6 +10,7 @@ class I_Clock_I2C : public Clock {
 public:
 	auto saveTime()->uint8_t override;
 protected:
+	I_Clock_I2C() : Clock{ true } {}
 	auto loadTime()->uint8_t override;
 
 private:

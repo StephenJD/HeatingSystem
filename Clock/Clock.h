@@ -12,6 +12,8 @@
 	class Clock { 
 	public:
 		//Clock(const char* date, const char* time);
+		Clock() { loadTime(); }
+		Clock(bool delayLoad) {}
 		// Queries
 		uint8_t minUnits() const { return _mins1; }
 		uint8_t seconds() const { return _secs; }
@@ -48,7 +50,7 @@
 		void setSeconds(uint8_t secs) { _secs = secs; } // Must NOT saveTime() else recursive on Clock_I2C
 		void setAutoDSThours(int set) { _autoDST = set; saveTime(); }
 		virtual auto saveTime()->uint8_t { return 0; }
-		virtual auto loadTime()->uint8_t { return 0; }
+		virtual auto loadTime()->uint8_t;
 
 #ifdef ZPSIM
 		void testAdd1Min();
@@ -72,7 +74,7 @@
 		void _adjustForDST();
 	};
 
-	inline Logger & operator<<(Logger & logger, const Clock & clk) {
+	inline arduino_logger::Logger & operator<<(arduino_logger::Logger & logger, const Clock & clk) {
 		clk.refresh();
 		GP_LIB::CStr_20 timeStr = GP_LIB::intToString(clk.day(), 2);
 		timeStr += F_SLASH;

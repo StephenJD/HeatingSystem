@@ -24,7 +24,7 @@ namespace client_data_structures {
 		bool operator == (R_Zone rhs) const { return true; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_Zone & zone) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_Zone & zone) {
 		return stream << F("Zone: ") << zone.name;
 	}
 
@@ -38,7 +38,7 @@ namespace client_data_structures {
 		bool operator == (R_DwellingZone rhs) const { return true; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_DwellingZone & dwellingZone) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_DwellingZone & dwellingZone) {
 		return stream << F("DwellingZone DwID: ") << (int)dwellingZone.dwellingID << F(" ZnID: ") << (int)dwellingZone.zoneID;
 	}
 }

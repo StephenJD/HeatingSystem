@@ -28,7 +28,7 @@ namespace client_data_structures {
 	inline bool operator < (R_Spell lhs, Date_Time::DateTime rhs) { return lhs.date < rhs ; }
 	inline bool operator < (Date_Time::DateTime lhs, R_Spell rhs) { return lhs < rhs.date ; }
 
-	inline Logger & operator << (Logger & stream, const R_Spell & spell) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_Spell & spell) {
 		return stream << F("Spell Date: ") << spell.date << F(" with ProgID: ") << (int)spell.programID;
 	}
 

@@ -99,6 +99,14 @@ using namespace Date_Time;
 		return isNewMin;
 	}
 
+	uint8_t Clock::loadTime() {
+		int compilerMins1, compilerSecs;
+		_now = _timeFromCompiler(compilerMins1, compilerSecs);
+		setMinUnits(compilerMins1);
+		setSeconds(compilerSecs);
+		return 0;
+	}
+
 #ifdef ZPSIM
 	void Clock::testAdd1Min() {
 		if (minUnits() < 9) setMinUnits(minUnits() + 1);

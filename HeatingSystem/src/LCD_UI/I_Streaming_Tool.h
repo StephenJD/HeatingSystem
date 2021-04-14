@@ -46,7 +46,7 @@ namespace LCD_UI {
 	protected:
 		I_Streaming_Tool() : I_SafeCollection(0, Behaviour{V+S+V1}) {
 #ifdef ZPSIM
-		logger() << F("\tI_Field_Interface Addr: ") << L_hex << long(this) << L_endl;
+			arduino_logger::logger() << F("\tI_Field_Interface Addr: ") << arduino_logger::L_hex << long(this) << arduino_logger::L_endl;
 #endif
 		}
 		I_Data_Formatter * _data_formatter;

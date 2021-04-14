@@ -31,7 +31,7 @@ namespace client_data_structures {
 		bool operator == (R_ThermalStore rhs) const { return true; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_ThermalStore & thermalStore) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_ThermalStore & thermalStore) {
 		return stream << F("ThermalStore");
 	}
 }

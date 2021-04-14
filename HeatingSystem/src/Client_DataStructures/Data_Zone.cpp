@@ -5,7 +5,10 @@
 #include "..\Assembly\Sequencer.h"
 #include "Clock.h"
 
-Logger& profileLogger();
+namespace arduino_logger {
+	Logger& profileLogger();
+}
+using namespace arduino_logger;
 
 namespace client_data_structures {
 	using namespace LCD_UI;

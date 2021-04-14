@@ -13,6 +13,8 @@
 #include <Logging.h>
 #include <EEPROM.h>
 
+using namespace arduino_logger;
+
 namespace Assembly {
 	using namespace client_data_structures;
 

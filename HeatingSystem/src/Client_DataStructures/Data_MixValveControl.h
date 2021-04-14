@@ -24,7 +24,7 @@ namespace client_data_structures {
 		bool operator == (R_MixValveControl rhs) const { return true; }
 	};
 
-inline Logger & operator << (Logger & stream, const R_MixValveControl & mixValve) {
+inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_MixValveControl & mixValve) {
 	return stream << F("R_MixValveControl ") << mixValve.name;
 }
 

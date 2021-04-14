@@ -9,6 +9,7 @@
 #include <Timer_mS_uS.h>
 
 using namespace HardwareInterfaces;
+using namespace arduino_logger;
 
 void enableRelays(bool enable); // this function must be defined elsewhere
 extern bool receivingNewData;

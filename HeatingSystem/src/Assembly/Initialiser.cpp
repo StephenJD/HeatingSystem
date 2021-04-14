@@ -14,6 +14,7 @@ using namespace client_data_structures;
 using namespace RelationalDatabase;
 using namespace I2C_Talk_ErrorCodes;
 using namespace HardwareInterfaces;
+using namespace arduino_logger;
 
 namespace Assembly {
 	using namespace RelationalDatabase;

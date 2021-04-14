@@ -7,6 +7,7 @@
 EEPROMClass & eeprom();
 
 using namespace I2C_Talk_ErrorCodes;
+using namespace arduino_logger;
 
 namespace I2C_Recovery {
 

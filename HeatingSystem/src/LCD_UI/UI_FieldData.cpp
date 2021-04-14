@@ -8,6 +8,7 @@
 std::map<long, std::string> & ui_Objects();
 using namespace std;
 #endif
+using namespace arduino_logger;
 
 namespace LCD_UI {
 	using namespace RelationalDatabase;

@@ -6,6 +6,7 @@
 
 #ifdef ZPSIM
 	#include <iostream>
+	using namespace arduino_logger;
 #endif
 
 extern HeatingSystem* heating_system;

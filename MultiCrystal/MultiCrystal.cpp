@@ -7,6 +7,7 @@
 #include <MemoryFree.h>
 using namespace GP_LIB;
 using namespace I2C_Talk_ErrorCodes;
+using namespace arduino_logger;
 
 #if defined (ZPSIM)
 using namespace std;

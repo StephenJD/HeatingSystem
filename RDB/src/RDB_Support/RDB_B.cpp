@@ -2,6 +2,7 @@
 #include "RDB_Table.h"
 #include "RDB_TableNavigator.h"
 #include <Logging.h>
+using namespace arduino_logger;
 
 namespace RelationalDatabase {
 	RDB_B::RDB_B(uint16_t dbStartAddr, uint16_t dbMaxAddr, WriteByte_Handler * w, ReadByte_Handler * r, size_t password )

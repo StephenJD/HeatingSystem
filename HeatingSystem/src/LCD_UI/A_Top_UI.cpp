@@ -5,7 +5,11 @@
 	#include <iostream>
 	#include <iomanip>
 #endif
-Logger& debug();
+
+namespace arduino_logger {
+	Logger& debug();
+}
+using namespace arduino_logger;
 
 namespace LCD_UI {
 

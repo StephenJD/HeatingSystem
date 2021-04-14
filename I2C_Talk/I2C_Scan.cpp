@@ -4,6 +4,7 @@
 #include <..\Logging\Logging.h>
 
 using namespace I2C_Talk_ErrorCodes;
+using namespace arduino_logger;
 
 I2C_Recovery::I2C_Recover I_I2C_Scan::nullRecovery;
 

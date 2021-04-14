@@ -56,7 +56,7 @@ namespace Date_Time {
 		uint8_t _mins = 0;
 	};
 
-	inline Logger & operator << (Logger & stream, const TimeOnly & dt) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const TimeOnly & dt) {
 		return stream << intToString(dt.displayHrs(), 2) << F_COLON << dt.mins10() << F_ZERO << (dt.isPM() ? F("pm") : F("am"));
 	}	
 	

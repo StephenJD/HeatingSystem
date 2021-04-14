@@ -41,7 +41,7 @@ namespace client_data_structures {
 		bool operator == (R_Relay rhs) const { return true; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_Relay & r_relay) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_Relay & r_relay) {
 		return stream << F("Relay: ") << r_relay.name << F(" Port: ") << HardwareInterfaces::Relay_B(r_relay.relay_B).port();
 	}
 

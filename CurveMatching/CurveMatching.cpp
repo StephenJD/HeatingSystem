@@ -9,6 +9,7 @@
 
 #include <CurveMatching.h>
 #include <Logging.h>
+using namespace arduino_logger;
 //#include <Arduino.h>
 
 //#define LOG_SD;

@@ -5,6 +5,7 @@
 #include <Logging.h>
 
 void ui_yield();
+using namespace arduino_logger;
 
 namespace I2C_Recovery {
 

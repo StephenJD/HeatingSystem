@@ -7,6 +7,7 @@
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
+using namespace arduino_logger;
 
 auto I_I2Cdevice::read_verify_2bytes(int registerAddress, int16_t & data, int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
 	// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].

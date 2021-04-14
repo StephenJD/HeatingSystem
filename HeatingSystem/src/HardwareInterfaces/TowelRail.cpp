@@ -3,7 +3,10 @@
 #include "..\Assembly\TemperatureController.h"
 
 using namespace Assembly;
-Logger& profileLogger();
+namespace arduino_logger {
+	Logger& profileLogger();
+}
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 

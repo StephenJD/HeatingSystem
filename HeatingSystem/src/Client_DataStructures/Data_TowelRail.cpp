@@ -3,6 +3,8 @@
 #include "..\LCD_UI\UI_FieldData.h"
 #include "..\HardwareInterfaces\TowelRail.h"
 
+using namespace arduino_logger;
+
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace GP_LIB;

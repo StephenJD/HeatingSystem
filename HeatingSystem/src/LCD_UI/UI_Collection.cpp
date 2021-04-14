@@ -14,6 +14,8 @@
 	};
 #endif
 
+using namespace arduino_logger;
+
 namespace LCD_UI {
 	using HI_BD = HardwareInterfaces::LCD_Display;
 	using ListStatus = UI_DisplayBuffer::ListStatus;

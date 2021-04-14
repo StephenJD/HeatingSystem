@@ -28,7 +28,7 @@ namespace client_data_structures {
 		bool operator == (R_TowelRail rhs) const { return true; }
 	};
 
-	inline Logger & operator << (Logger & stream, const R_TowelRail & towelRail) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const R_TowelRail & towelRail) {
 		return stream << F("TowelRail: ") << towelRail.name << F(" On for ") << towelRail.minutes_on << F(" minutes");
 	}
 

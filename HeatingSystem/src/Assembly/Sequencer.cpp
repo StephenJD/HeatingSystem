@@ -9,7 +9,10 @@
 using namespace std;
 #endif
 
-Logger& profileLogger();
+namespace arduino_logger {
+	Logger& profileLogger();
+}
+using namespace arduino_logger;
 
 void ui_yield();
 

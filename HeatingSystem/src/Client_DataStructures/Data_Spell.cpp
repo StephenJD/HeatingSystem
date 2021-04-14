@@ -5,6 +5,7 @@
 	#include <iostream>
 	using namespace std;
 #endif
+	using namespace arduino_logger;
 
 namespace client_data_structures {
 	using namespace LCD_UI;

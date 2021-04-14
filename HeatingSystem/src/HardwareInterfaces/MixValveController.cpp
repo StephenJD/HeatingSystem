@@ -9,7 +9,11 @@
 #include <Clock.h>
 
 void ui_yield();
-Logger& profileLogger();
+
+namespace arduino_logger {
+	Logger& profileLogger();
+}
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace Assembly;

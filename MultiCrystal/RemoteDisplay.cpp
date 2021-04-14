@@ -2,6 +2,7 @@
 #include <Logging.h>
 
 using namespace I2C_Talk_ErrorCodes;
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace I2C_Recovery;

@@ -63,7 +63,7 @@ namespace Date_Time {
 	//inline /*constexpr*/ bool operator<(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() < rhs.asInt(); }
 	//inline /*constexpr*/ bool operator>(const DateTime & lhs, const DateTime & rhs) { return lhs.asInt() > rhs.asInt(); }
 
-	inline Logger & operator << (Logger & stream, const DateTime & dt) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const DateTime & dt) {
 		return stream << dt.day() << F_SLASH << dt.getMonthStr() << F_SLASH << dt.year() << F_SPACE << dt.displayHrs() << F_COLON << dt.mins10() << F_ZERO << (dt.isPM() ? "pm" : "am");
 	}
 

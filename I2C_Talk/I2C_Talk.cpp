@@ -8,6 +8,7 @@
 #ifdef DEBUG_TALK
 #include <Logging.h>
 Logger & logger();
+using namespace arduino_logger;
 
 // For use when debugging twi.c
 extern "C" void I2C_Talk_msg(const char * str) {

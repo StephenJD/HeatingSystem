@@ -3,6 +3,7 @@
 #include "..\..\..\Logging\Logging.h"
 
 //extern bool debugStop;
+using namespace arduino_logger;
 
 namespace RelationalDatabase {
 	/////////////////////////////////////////////////////////////////////

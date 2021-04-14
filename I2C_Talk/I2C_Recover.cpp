@@ -5,6 +5,7 @@
 
 #ifdef DEBUG_SPEED_TEST
 #include <Logging.h>
+using namespace arduino_logger;
 #endif
 
 void ui_yield();

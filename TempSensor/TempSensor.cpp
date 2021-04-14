@@ -3,6 +3,7 @@
 #include "Logging.h"
 
 using namespace I2C_Talk_ErrorCodes;
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	const uint8_t DS75LX_Temp = 0x00;  // two bytes must be read. Temp is MS 9 bits, in 0.5 deg increments, with MSB indicating -ve temp.

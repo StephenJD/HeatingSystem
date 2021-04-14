@@ -89,7 +89,7 @@ namespace Date_Time {
 
 	};
 
-	inline Logger & operator << (Logger & stream, const DateOnly & dt) {
+	inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, const DateOnly & dt) {
 		return stream << dt.getDayStr() << F_SPACE << intToString(dt.day(), 2) << F_SLASH << dt.getMonthStr() << F("/20") << intToString(dt.year(), 2);
 	}
 

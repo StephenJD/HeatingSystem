@@ -2,6 +2,7 @@
 #include "TemperatureController.h"
 
 //using namespace client_data_structures;
+using namespace arduino_logger;
 
 namespace Assembly {
 

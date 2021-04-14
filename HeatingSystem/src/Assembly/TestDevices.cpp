@@ -9,6 +9,7 @@
 #include <MemoryFree.h>
 
 void reset_watchdog();
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace RelationalDatabase;

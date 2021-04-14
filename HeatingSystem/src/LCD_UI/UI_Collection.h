@@ -380,7 +380,7 @@ namespace LCD_UI {
 			: I_SafeCollection(collection)
 			, _array(collection._array) {
 			if (noOfObjects != collection.endIndex()) {
-				logger() << F("\n!!! Collection size missmatch. Capacity is ") << noOfObjects << F(" Size is ") << collection.endIndex() << L_endl;
+				arduino_logger::logger() << F("\n!!! Collection size missmatch. Capacity is ") << noOfObjects << F(" Size is ") << collection.endIndex() << arduino_logger::L_endl;
 				assert(false);
 			}
 			_filter = filter_selectable();

@@ -9,7 +9,7 @@
 using namespace I2C_Talk_ErrorCodes;
 using namespace Date_Time;
 
-Clock_EEPROM::Clock_EEPROM(unsigned int addr) :_addr(addr) { /*loadTime();*/ } // loadtime crashes!
+Clock_EEPROM::Clock_EEPROM(unsigned int addr) : Clock{ true }, _addr(addr) { /*loadTime();*/ } // loadtime crashes!
 
 Error_codes Clock_EEPROM::writer(uint16_t& address, const void* data, int noOfBytes) {
 	const unsigned char* byteData = static_cast<const unsigned char*>(data);
@@ -50,10 +50,10 @@ uint8_t Clock_EEPROM::saveTime() {
 
 uint8_t Clock_EEPROM::loadTime() {
 	// retain and save _now unless it is invalid or before compiler-time
-	auto eepromTime = _now;
+	decltype(_now) eepromTime;
 	uint8_t eepromMins1;
 	uint8_t eepromSecs;
-	auto lastCompilerTime = _now;
+	decltype(_now) lastCompilerTime;
 	auto nextAddr = _addr;
 	auto status = reader(nextAddr, &eepromTime, sizeof(_now));
 	status |= reader(nextAddr, &eepromMins1, 1);
@@ -77,7 +77,7 @@ uint8_t Clock_EEPROM::loadTime() {
 		setSeconds(compilerSecs);
 		saveTime();
 		nextAddr = _addr + sizeof(_now) + 4;
-		writer(nextAddr, &compilerTime, sizeof(_now));
+		writer(nextAddr, &_now, sizeof(_now));
 		Serial.println(F("EE Clock Set from Compiler"));
 	} else if (_now.isValid()) {
 		saveTime();

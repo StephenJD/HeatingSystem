@@ -6,7 +6,10 @@
 #include "..\Client_DataStructures\Data_TempSensor.h" // relative path required by Arduino
 #include <FlashStrings.h>
 
-Logger& profileLogger();
+namespace arduino_logger {
+	Logger& profileLogger();
+}
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 

@@ -15,6 +15,7 @@ using namespace std;
 using namespace client_data_structures;
 using namespace RelationalDatabase;
 using namespace HardwareInterfaces;
+using namespace arduino_logger;
 
 //extern Remote_display * hall_display;
 //extern Remote_display * flat_display;
