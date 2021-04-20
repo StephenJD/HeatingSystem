@@ -49,6 +49,12 @@ namespace arduino_logger {
 			else stream->print(value, base());
 		}
 
+#ifdef ZPSIM
+		Logger& operator <<(std::string str) {
+			return *this << str.c_str();
+		}
+#endif
+
 		template<class T>
 		void streamToPrint(Print* stream, T value, typetraits::__true_type) { streamToPrintInt(stream, value); }
 

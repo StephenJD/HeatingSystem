@@ -82,7 +82,7 @@ namespace HardwareInterfaces {
 			if (brightness < MIN_BL) brightness = MIN_BL;
 			auto supplyVcorrection = 2.5 * 1024. / 3.3 / analogRead(RESET_5vREF_PIN);
 			analogWrite(BRIGHNESS_PWM, brightness); // Useful range is 255 (bright) to 200 (dim)
-			analogWrite(CONTRAST_PWM, (int)displayData.contrast * 3 * supplyVcorrection); // Useful range is 0 (max) to 70 (min)
+			analogWrite(CONTRAST_PWM, int(displayData.contrast * 3 * supplyVcorrection)); // Useful range is 0 (max) to 70 (min)
 		}
 	}
 
