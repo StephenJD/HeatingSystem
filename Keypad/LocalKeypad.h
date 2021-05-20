@@ -16,10 +16,10 @@ namespace HardwareInterfaces {
 		LocalKeypad(int interrupt_Pin, int keyRead_Pin, int keyHighRef_Pin, Pin_Wag indicator_LED);
 		void begin();
 		int getKey() override;
-		int readKey() override;
 		bool isTimeToRefresh() override;
 		static Pin_Wag & indicatorLED() { return reinterpret_cast<Pin_Wag &>(_indicatorLED); }
 		static uint8_t interruptPin;
+		int readKey();
 	private:
 		// members need to be static to allow attachment to interrupt handler
 		static constexpr int16_t adc_LocalKey_val[] = { 874,798,687,612,551,501,440 };

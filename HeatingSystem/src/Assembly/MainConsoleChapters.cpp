@@ -30,7 +30,7 @@ namespace Assembly {
 		, _zoneDelay_c{ &db._ds_Zones, RecInt_Zone::e_delay }
 
 		, _progNameUI_c{ &db._ds_dwProgs, RecInt_Program::e_name, {V + S + V1 + UD_A + R} }
-		, _dwellSpellUI_c{ &db._ds_dwSpells, RecInt_Spell::e_date, {V + S + V1 + UD_E} }
+		, _dwellSpellUI_c{ &db._ds_dwSpells, RecInt_Spell::e_date, {V + S + V1 + UD_A + ER0} }
 		, _spellProgUI_c{ &db._ds_spellProg, RecInt_Program::e_name, {V + S + L + V1 + UD_A + ER + EA} }
 		, _profileDaysUI_c{ &db._ds_profile, RecInt_Profile::e_days, {V + S + V1 + UD_A + R + ER}, RecInt_Program::e_id }
 

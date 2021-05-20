@@ -165,7 +165,7 @@ void receiveI2C(int howMany) {
 void requestEventI2C() { 
 //	delayMicroseconds(1000); // for testing only
 	uint16_t regVal = mixValve[regSet].getRegister(reg);
-	uint8_t * valPtr = (uint8_t *)&regVal;
+	//uint8_t * valPtr = (uint8_t *)&regVal;
 	// Mega OK with logging, but DUE master is not!
 	//logger() << F("requestEventI2C: mixV[") << int(regSet) << F("] Reg: ") << int(reg) << F(" Sent:") << regVal << F(" [") << *(valPtr++) << F(",") << *(valPtr) << F("]") << L_endl;
 	i2C().write((uint8_t*)&regVal, 2);

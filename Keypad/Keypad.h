@@ -7,12 +7,12 @@ namespace HardwareInterfaces {
 	class I_Keypad
 	{
 	public:
-		virtual int getKey() = 0;
-		virtual	int readKey() = 0;
+		virtual int getKey();
 		virtual bool isTimeToRefresh();
 		virtual bool wakeDisplay(bool wake);
 		bool keyIsWaiting() {return keyQuePos != -1;	}
 		void clearKeys() { keyQue[0] = -1;  keyQuePos = -1; }
+		void putKey(int8_t myKey);
 
 #if defined (ZPSIM)
 		int8_t simKey = -1;
@@ -24,9 +24,5 @@ namespace HardwareInterfaces {
 		int8_t	_secsToKeepAwake = 0;
 		uint8_t	_lastSecond = 0;
 	};
-
-	// Functions supporting local interrupt
-	int getFromKeyQue(volatile int8_t * keyQue, volatile int8_t & keyQuePos);
-	bool putInKeyQue(volatile int8_t * keyQue, volatile int8_t & keyQuePos, int8_t myKey);
 }
 

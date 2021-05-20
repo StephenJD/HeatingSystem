@@ -83,8 +83,12 @@ namespace HardwareInterfaces {
 	//  Mine are at 010 0000 and 010 0111
 	// IO Device Addresses
 
-	const uint8_t I2C_MASTER_ADDR = 0x11;
+	const uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 	const uint8_t MIX_VALVE_I2C_ADDR = 0x10;
+	const uint8_t US_REMOTE_MASTER_I2C_ADDR = 0x12;
+	const uint8_t DS_REMOTE_MASTER_I2C_ADDR = 0x13;
+	const uint8_t FL_REMOTE_MASTER_I2C_ADDR = 0x14;
+	
 	const uint8_t US_REMOTE_ADDRESS = 0x24;
 	const uint8_t FL_REMOTE_ADDRESS = 0x25;
 	const uint8_t DS_REMOTE_ADDRESS = 0x26;

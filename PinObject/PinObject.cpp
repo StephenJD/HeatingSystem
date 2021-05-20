@@ -1,4 +1,17 @@
 #include "PinObject.h"
+#include <MsTimer2.h>
+#include <Logging.h>
+
+using namespace arduino_logger;
+
+//#define debug
+#ifdef debug
+	constexpr int MAX_COUNT = 20;
+	uint32_t bounceTime[MAX_COUNT] = { 0 };
+	uint8_t pinVal[MAX_COUNT] = { 0 };
+	uint8_t readAgain[MAX_COUNT] = { 0 };
+	int count = 0;
+#endif
 
 namespace HardwareInterfaces {
 	// *******  Digital In-Pin  *******
@@ -7,7 +20,7 @@ namespace HardwareInterfaces {
 	}
 
 	void Pin_Watch::begin() {
-		pinMode(port(), _pullUp);
+		pinMode(port(), 1+_pullUp);
 	};
 
 	void Pin_Watch::initialise(int pinNo, bool activeState, int pullUpMode) {
@@ -15,10 +28,75 @@ namespace HardwareInterfaces {
 		begin();
 	}
 
-	bool Pin_Watch::logicalState() const {
+	bool Pin_Watch::logicalState() {
 		return (digitalRead(port()) == activeState());
 	}
 
+	Pin_Watch_Debounced* Pin_Watch_Debounced::_currentPin = nullptr;
+
+	int Pin_Watch_Debounced::pinChanged() {
+		_checkState();
+		bool hasChanged = _readAgain == 0; 
+		if (hasChanged) {
+			_readAgain = IDENTICAL_READ_COUNT;
+			if (_previousState) return 1; else return -1;
+		} else return 0;
+	}
+
+	void Pin_Watch_Debounced::_checkState() {
+#ifdef debug
+		auto prevBounce = bounceTime[0];
+		for (int i = 0; i < MAX_COUNT; ++i) {
+			if (bounceTime[i]) {
+				auto interval = bounceTime[i] - prevBounce;
+				logger() << L_tabs << interval << readAgain[i] << pinVal[i] << L_endl;
+				bounceTime[i] = 0;
+			} else break;
+		}
+		count = 0;
+#endif
+		if (Pin_Watch::logicalState() != _previousState) {
+			startDebounce(this);
+		}
+	}
+
+	bool Pin_Watch_Debounced::logicalState() { // call this at least every 50mS
+		if (_readAgain == 0) _readAgain = IDENTICAL_READ_COUNT;
+		_checkState();
+		return _previousState;
+	}
+
+	void Pin_Watch_Debounced::_debouncePin() {
+		--_readAgain;
+
+		auto thisRead = Pin_Watch::logicalState();
+		if (thisRead == _previousState) _readAgain = IDENTICAL_READ_COUNT;
+		else if (!_readAgain) {
+			_previousState = thisRead;
+			stopDebounce();
+		}
+#ifdef debug
+		bounceTime[count] = millis();
+		readAgain[count] = _readAgain;
+		pinVal[count] = thisRead;
+		if (count < MAX_COUNT-2) ++count;
+#endif
+	}
+
+	void Pin_Watch_Debounced::startDebounce(Pin_Watch_Debounced* currentPin) {
+		// Set timer interrupt to re-read pin if change is detected.
+		_currentPin = currentPin;
+		MsTimer2::set(RE_READ_PERIOD_mS, timerFired);
+		MsTimer2::start();
+	}
+
+	void Pin_Watch_Debounced::timerFired() {
+		_currentPin->_debouncePin();
+	}
+
+	void Pin_Watch_Debounced::stopDebounce() {
+		MsTimer2::stop();
+	}
 
 	// *******  Digital Out-Pin  *******
 

@@ -678,12 +678,12 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	constexpr int MAX_TRIES = 6;
 	int16_t keyPressed = 0;
 	// Read Int-pin on GPIO
-// **********  Disabled in int RemoteKeypad::readKey()
+// **********  May be Disabled in int RemoteKeypad::readKey()
 	int16_t gpio = 0;
 	if (_i2C_device->isEnabled()) {
 		//logger() << "readI2C_keypad" << L_endl;
-		//auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, gpio, CONSECUTIVE_COUNT, MAX_TRIES, IOPIN_CONNECTED_TO_INTA); // non-recovery.
-		auto gpioErr = _i2C_device->read(GPIOA, 2, _data); // recovery.
+		auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, gpio, CONSECUTIVE_COUNT, MAX_TRIES, IOPIN_CONNECTED_TO_INTA); // non-recovery.
+		//auto gpioErr = _i2C_device->read(GPIOA, 2, _data); // recovery.
 		if (gpioErr) {
 			//logger() << L_time << "readI2C_keypad Error Reading GPIO device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
 			checkI2C_Failed(); // Recovery
@@ -691,15 +691,15 @@ uint16_t MultiCrystal::readI2C_keypad() {
 			if (gpio) { 
 				//logger() << L_time << "readI2C_keypad Got gpio" << L_endl;
 				//_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
-				_errorCode = _i2C_device->read(INTCAP, 2, _data); // recoverY. Reading INTCAP clears INT, but INTCAP retains last INT state.
-				//_errorCode = _i2C_device->read_verify_2bytes(INTCAP, keyPressed, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
+				//_errorCode = _i2C_device->read(INTCAP, 2, _data); // recoverY. Reading INTCAP clears INT, but INTCAP retains last INT state.
+				_errorCode = _i2C_device->read_verify_2bytes(INTCAP, keyPressed, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
 				if (_errorCode) { 
 					//logger() << L_time << "readI2C_keypad Error Reading INTCAP device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
 					keyPressed = 0;
 				} else { // KeyPressed is masked with 0xE100 (RUD0 000L 0000 0000)
 					if (keyPressed == _key_mask_16) return 0;
 					if (keyPressed && checkI2C_Failed()) { // Recovery
-						//logger() << L_time << "readI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed << L_endl;
+						//logger() << L_time << "r eadI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed << L_endl;
 						keyPressed = 0;
 					} else if (keyPressed & 0x8100) {
 						/* Non-existant keys often come in two-s or threes, indicating this is a software problem, rather than coincidental bad reception.

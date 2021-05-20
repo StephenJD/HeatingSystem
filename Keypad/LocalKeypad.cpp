@@ -57,7 +57,7 @@ namespace HardwareInterfaces {
 #endif
 
 	int LocalKeypad::getKey() {
-		auto returnKey = getFromKeyQue(keyQue, keyQuePos);
+		auto returnKey = I_Keypad::getKey();
 		if (returnKey >= 0) {
 //#if !defined (ZPSIM)
 			if (_secsToKeepAwake == 0) returnKey = sizeof(adc_LocalKey_val)/2;
@@ -93,7 +93,7 @@ namespace HardwareInterfaces {
 					} else if (newKey == -1) break;
 				}
 				//processStart_mS = millis();
-				putInKeyQue(keypad.keyQue, keypad.keyQuePos, myKey);
+				keypad.putKey(myKey);
 			}
 			LocalKeypad::indicatorLED().clear();
 			nextPermissibleInterruptTime = millis() + 5;

@@ -1,5 +1,6 @@
 #pragma once
 #include <Bitfield.h>
+#include <Timer_mS_uS.h>
 
 namespace HardwareInterfaces {
 
@@ -63,7 +64,7 @@ namespace HardwareInterfaces {
 		void initialise(int port, bool activeState, int pullUpMode) { // derived classes follow with set(false) to trigger update.
 			_port = port;
 			_activeState = activeState;
-			_logical_state = pullUpMode;
+			_pullUp = pullUpMode == INPUT_PULLUP;
 		}		
 		
 		union {
@@ -77,7 +78,7 @@ namespace HardwareInterfaces {
 
 	// *******  Digital In-Pin  *******
 	/// <summary>
-	/// Digital Out-Pin constructed with its active state and Pin Number, char-sized.
+	/// Digital In-Pin constructed with its active state and Pin Number, char-sized.
 	/// May require begin() in setup to initialise pin-mode.
 	/// </summary>
 	class Pin_Watch : public Flag { // Digital In-Pin 
@@ -90,7 +91,46 @@ namespace HardwareInterfaces {
 		/// <summary>
 		/// Reads pin.
 		/// </summary>
-		bool logicalState() const;
+		bool logicalState();
+	};	
+	
+	// *******  Digital Debounced In-Pin  *******
+	/// <summary>
+	/// Digital In-Pin constructed with its active state and Pin Number, char-sized.
+	/// Debounced with EMI protection with multiple re-reads.
+	/// Does NOT use ISR to detect pin-change, as this is inefficient and troublesome.
+	/// When a logicalState() or pinChanged() is called, it triggers consecutive reads to establish a correct result.
+	/// Reading every 50mS gives instant-feeling response.
+	/// May require begin() in setup to initialise pin-mode.
+	/// </summary>
+	class Pin_Watch_Debounced : public Pin_Watch { // Digital In-Pin 
+	public:
+		static constexpr int IDENTICAL_READ_COUNT = 4;
+		static constexpr int RE_READ_PERIOD_mS = 1;
+
+		using Pin_Watch::Pin_Watch;
+
+		/// <summary>
+		/// Non-blocking. Triggers mutiple Reads.
+		/// Returns 1 if newly ON, -1 if newly OFF, 0 if no change.
+		/// </summary>
+		int pinChanged();
+
+		/// <summary>
+		/// Non-blocking. Triggers multiple Reads.
+		/// Returns the stable state.
+		/// </summary>
+		bool logicalState();
+
+	private:
+		void _debouncePin();
+		void _checkState();
+		static void startDebounce(Pin_Watch_Debounced * currentPin);
+		static void timerFired();
+		static void stopDebounce();
+		static Pin_Watch_Debounced * _currentPin;
+		mutable bool _previousState = false;
+		mutable uint8_t _readAgain = IDENTICAL_READ_COUNT;
 	};	
 	
 	// *******  Digital Out-Pin  *******

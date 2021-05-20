@@ -61,6 +61,7 @@ namespace client_data_structures {
 		const char * streamData(bool isActiveElement) const override;
 		DateTime valAsDate() const { return DateTime(_editItem.currValue().val); }
 		// Modifiers
+		void haveMovedTo(int currFocus) override;
 		I_Edit_Hndl & editItem() { return _editItem; }
 	protected:
 		Edit_DateTime_h _editItem;

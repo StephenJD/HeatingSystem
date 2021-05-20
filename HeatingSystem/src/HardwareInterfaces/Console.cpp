@@ -5,7 +5,9 @@
 #include <Keypad.h>
 #include <Logging.h>
 #include <MemoryFree.h>
+#include "I2C_Comms.h"
 
+using namespace arduino_logger;
 extern unsigned long processStart_mS;
 void ui_yield();
 

@@ -40,5 +40,14 @@ namespace HardwareInterfaces {
 		I_IniFunctor * _postI2CResetInitialisation;
 		I_TestDevices * _testDevices;
 		I2C_Recovery::I2C_Recover_Retest * _recover;
-	};	
+	};
+
+	namespace I2C_Slave {
+		extern I2C_Talk * i2C;
+		extern uint8_t reg;
+		extern int8_t data;
+		void receiveI2C(int howMany);
+		void requestI2C();
+		int getKey();
+	};
 }

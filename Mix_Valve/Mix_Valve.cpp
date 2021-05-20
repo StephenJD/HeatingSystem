@@ -16,7 +16,7 @@ extern bool receivingNewData;
 extern uint8_t version_a;
 extern uint8_t version_b;
 
-const uint8_t I2C_MASTER_ADDR = 0x11;
+const uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 

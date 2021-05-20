@@ -15,7 +15,7 @@
  8. Then upload your desired sketch to ordinary ProMini board. Tools->Board->Arduino Pro Mini / 328/3.3v/8MHz
 
  Arduino Mega's must be upgraded with boot-loader to enable watchdog timer.
- The MegaCore package doesn't work well. Use https://github.com/nickgammon/arduino_sketches
+ The MegaCore package at https://mcudude.github.io/MegaCore/package_MCUdude_MegaCore_index.json doesn't work well. Use https://github.com/nickgammon/arduino_sketches
  1. Download the zipfile and unpack into your sketch folder.
  2. Upload the Atmega_Board_Programmer sketch to your programmer board (e.g. Arduino Pro Mini).
  3. THEN connect SPI pins to the Mega: MOSI(11)->51, MISO(12)->50, SCK(13)->52, 10->Reset on Mega, Vcc and 0c pins.

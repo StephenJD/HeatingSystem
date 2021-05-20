@@ -4,6 +4,9 @@
 	/// Construct with signed microsecs period, up to 2147s (35 minutes).
 	/// Returns true when period has expired.
 	/// Provides time used and time left.
+	/// restart() starts a new period from now.
+	/// repeat() adds another period, so there is no timing drift.
+	/// newLap() continues the original period, but resets timeUsed() from now.
 	/// Roll-over safe.
 	/// </summary>
 	class Timer_uS {
@@ -25,6 +28,15 @@
 		uint32_t _startTime;
 	};
 
+	/// <summary>
+	/// Construct with signed millisecs period, up to 2147s (35 minutes).
+	/// Returns true when period has expired.
+	/// Provides time used and time left.
+	/// restart() starts a new period from now.
+	/// repeat() adds another period, so there is no timing drift.
+	/// newLap() continues the original period, but resets timeUsed() from now.
+	/// Roll-over safe.
+	/// </summary>
 	class Timer_mS {
 	public:
 		Timer_mS(int32_t period_mS) : _timer_uS(period_mS * 1000) {} // negative period timesout immediatly
@@ -38,6 +50,7 @@
 		void set_startTime_mS(int32_t start_mS) { _timer_uS.set_startTime_uS(start_mS * 1000); }
 		void restart() { _timer_uS.restart(); }
 		void repeat() { _timer_uS.repeat(); }
+		void newLap() { _timer_uS.newLap(); }
 	private:
 		Timer_uS _timer_uS;
 	};

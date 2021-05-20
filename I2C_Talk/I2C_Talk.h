@@ -9,8 +9,9 @@
 /**
 Using this library requires a modified wire.cpp (AVR & Sam) and/or twi.c (AVR)
 NOTE: Arduino may not use the wire/twi versions in its install folder, so check...
-   C:\Program Files (x86)\Arduino1.5\hardware\arduino\avr\libraries\Wire\   
+   <Arduino_Install>\hardware\arduino\avr\libraries\Wire\src\   
    C:\Users\[UserName]\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility
+   C:\Users\[UserName]\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility
    Sam version in: in C:\Users\[UserName]\AppData\Roaming [ or Local] \Arduino15\packages\arduino\hardware\sam\1.6.4\libraries\Wire\src
 
 Small mods required so that in the event of a time-out Wire.endTransmission() returns error 1

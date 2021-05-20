@@ -101,7 +101,11 @@ HeatingSystem::HeatingSystem()
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 		_initialiser.i2C_Test();
+		_initialiser.postI2CResetInitialisation();
 		_mainConsoleChapters(0).rec_select();
+		I2C_Slave::i2C = &i2C;
+		i2C.onReceive(I2C_Slave::receiveI2C);
+		i2C.onRequest(I2C_Slave::requestI2C);
 	}
 
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
@@ -111,6 +115,8 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 }
 
 void HeatingSystem::serviceConsoles() {
+	if (I2C_Slave::data >= 0) logger() << " Got slave key: " << I2C_Slave::data << L_endl;
+	remoteKeypad[D_Hall].putKey(I2C_Slave::getKey());
 	_mainConsole.processKeys();
 	auto zoneIndex = 0;
 	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();

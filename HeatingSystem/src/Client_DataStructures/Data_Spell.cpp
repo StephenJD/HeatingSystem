@@ -1,5 +1,6 @@
 #include "Data_Spell.h"
 #include <Clock.h>
+#include <../LCD_UI/UI_FieldData.h>
 
 #ifdef ZPSIM
 	#include <iostream>
@@ -24,28 +25,29 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_date:
 		{
+			getField(e_date)->ui().dataSource()->getData()->behaviour().make_UD_NextActive();
 			auto startDate = newValue->val;
 			auto newDate = DateTime(startDate);
-			if (spell.rec().date <= clock_().now() && newDate > clock_().now()) {
+			bool modifyingNow  = spell.rec().date <= clock_().now() && newDate > clock_().now();
+
+			if (modifyingNow) {
 				insertNewData();
 				logger() << "Insert Spell\n";
-			}
-
-			for (Answer_R<R_Spell> spell : query()) {
-				if (spell.rec().date == newDate) {
-					deleteData();
-					logger() << "Delete Spell " << newDate << L_endl;
-					return false;
+			} else {
+				// delete duplicate date
+				for (Answer_R<R_Spell> someSpell : query()) {
+					if (someSpell.rec().date == newDate && someSpell.id() != spell.id()) {
+						logger() << "Delete Spell " << newDate << L_endl;
+						someSpell.deleteRecord();
+					}
 				}
 			}
-
+				
 			spell.rec().date = DateTime(startDate);
 			auto newRecordID = spell.update();
-			if (newRecordID != ds_recordID()) {
-				query().moveTo(_recSel, newRecordID);
-				setDS_RecordID(newRecordID);
-				return true;
-			}
+			query().moveTo(_recSel, newRecordID);
+			setDS_RecordID(newRecordID);
+			return true;
 			break;
 		}
 		case e_progID:

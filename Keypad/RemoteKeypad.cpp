@@ -16,15 +16,19 @@ namespace HardwareInterfaces {
 	int RemoteKeypad::readKey() {
 		auto myKey = getKeyCode(_lcd->readI2C_keypad());
 		myKey = simKey;
-		putInKeyQue(keyQue, keyQuePos, myKey);
+		putKey(myKey);
 		simKey = -1;
 		return myKey;
 	}
 	int RemoteKeypad::getKeyCode(int gpio) { return 0; }
 #else
 	int RemoteKeypad::readKey() {
-		auto myKey = getKeyCode(_lcd->readI2C_keypad());
-		putInKeyQue(keyQue, keyQuePos, myKey);
+		auto myKey = -1;
+		if (timeToRead) {
+			myKey = getKeyCode(_lcd->readI2C_keypad());
+			putKey(myKey);
+			timeToRead.repeat();
+		}
 		return myKey;
 	}
 
@@ -62,9 +66,13 @@ namespace HardwareInterfaces {
 #endif
 
 	int RemoteKeypad::getKey() {
-		auto gotKey = readKey();
+		auto gotKey = I_Keypad::getKey();
 		if (gotKey >= 0) {
-			gotKey = getFromKeyQue(keyQue, keyQuePos);
+			logger() << F(" Remote-Master Key: ") << gotKey << L_endl;
+		}
+		if (gotKey == -1) {
+			readKey();
+			gotKey = I_Keypad::getKey();
 		}
 		return gotKey;
 	}

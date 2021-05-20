@@ -8,6 +8,7 @@
 #include <RemoteKeypad.h>
 #include <RemoteDisplay.h>
 #include "HardwareInterfaces\Console.h"
+#include "HardwareInterfaces\I2C_Comms.h"
 
 #include "Assembly\Initialiser.h"
 #include "Assembly\TemperatureController.h"
@@ -41,7 +42,7 @@ public:
 	Assembly::HeatingSystem_Queries & getQueries() { return _hs_queries; }
 	Assembly::TemperatureController & tempController() { return _tempController; }
 private: // data-member ordering matters!
-	I2C_Talk_ZX i2C;
+	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR };
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
 	Assembly::Initialiser _initialiser; // Checks db

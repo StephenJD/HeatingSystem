@@ -54,22 +54,22 @@ namespace Assembly {
 	}
 
 	uint8_t Initialiser::i2C_Test() {
-		uint8_t err = _OK;
-		err = _testDevices.speedTestDevices();
+		uint8_t status = _OK;
+		status = _testDevices.speedTestDevices();
 		_testDevices.testRelays();
-		err = postI2CResetInitialisation();
-		for (auto& mixValve : hs().tempController().mixValveControllerArr) { mixValve.sendSetup(); }
-		if (err != _OK) logger() << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
-		else logger() << F("  Initialiser::postI2CResetInitialisation OK\n");
-		return err;
+		return status;
 	}
 
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		_resetI2C.hardReset.initialisationRequired = false;
-		return initialiseTempSensors()
+		uint8_t status =  initialiseTempSensors()
 			| relayPort().initialiseDevice()
 			| initialiseRemoteDisplays()
 			| initialiseMixValveController();
+		for (auto& mixValve : hs().tempController().mixValveControllerArr) { mixValve.sendSetup(); }
+		if (status != _OK) logger() << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
+		else logger() << F("  Initialiser::postI2CResetInitialisation OK\n");
+		return status;
 	}
 
 	uint8_t Initialiser::initialiseTempSensors() {

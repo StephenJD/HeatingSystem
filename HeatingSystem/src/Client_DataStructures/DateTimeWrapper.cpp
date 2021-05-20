@@ -1,9 +1,13 @@
 #include "DateTimeWrapper.h"
 #include "Conversions.h"
 #include <Clock.h>
+#include <../LCD_UI/I_Streaming_Tool.h>
+#include <../LCD_UI/UI_FieldData.h>
 
 #ifdef ZPSIM
 	#include <iostream>
+#include <Logging.h>
+using namespace arduino_logger;
 #endif
 
 
@@ -116,6 +120,7 @@ namespace client_data_structures {
 		return focusIndex;
 	}
 
+
 	int Edit_DateTime_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(e_month); // initial cursorPos when selected (not in edit)
@@ -125,6 +130,14 @@ namespace client_data_structures {
 	int Edit_DateTime_h::getEditCursorPos() {
 		currValue().valRange.minVal = clock_().asInt(); // can't go earlier than now.
 		return cursorFromFocus(focusIndex());
+	}
+
+	void DateTime_Interface::haveMovedTo(int currFocus) {
+		if (currFocus == 6) {
+			dataSource()->getData()->behaviour().make_EditUD();
+			logger() << ui_Objects()[(long)dataSource()->getData()] << L_endl;
+		}
+		//auto debug = currFocus;
 	}
 
 	const char * DateTime_Interface::streamData(bool isActiveElement) const {
