@@ -28,6 +28,7 @@ namespace I2C_Recovery {
 			//Serial.println(" Default non-recovery");
 			return false;
 		}
+		virtual void resetI2C() {}
 		virtual I_I2Cdevice_Recovery * lastGoodDevice() const { return _device; }
 		virtual bool isUnrecoverable() const { return false; }
 

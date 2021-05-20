@@ -1,8 +1,8 @@
 #include "DateTimeWrapper.h"
 #include "Conversions.h"
 #include <Clock.h>
-#include <../LCD_UI/I_Streaming_Tool.h>
-#include <../LCD_UI/UI_FieldData.h>
+#include "../LCD_UI/I_Streaming_Tool.h"
+#include "../LCD_UI/UI_FieldData.h"
 
 #ifdef ZPSIM
 	#include <iostream>
@@ -85,7 +85,7 @@ namespace client_data_structures {
 		int cursorPos = 0;
 		if (backUI() == 0) { // not in edit
 			focusIndex = e_day;
-			if (editDate <= now) { cursorPos = 2; focusIndex = e_month; }
+			if (editDate <= now) { cursorPos = 2; /*focusIndex = e_month;*/ }
 			else if (isJudgementDay) { cursorPos = 12; }
 			else if (editDate.date() == now.date()) { cursorPos = 12; }
 			else if (isTodayOrTomorrow) { cursorPos = 14; }
@@ -93,7 +93,7 @@ namespace client_data_structures {
 		}
 		else {
 			if (editDate <= now || isJudgementDay) {
-				cursorPos = 0; focusIndex = e_month;
+				cursorPos = 0;
 			}
 			else {
 				if (isTodayOrTomorrow) {
@@ -124,7 +124,7 @@ namespace client_data_structures {
 	int Edit_DateTime_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
 		cursorFromFocus(e_month); // initial cursorPos when selected (not in edit)
-		return e_day;
+		return e_hours;
 	}
 
 	int Edit_DateTime_h::getEditCursorPos() {
@@ -135,9 +135,8 @@ namespace client_data_structures {
 	void DateTime_Interface::haveMovedTo(int currFocus) {
 		if (currFocus == 6) {
 			dataSource()->getData()->behaviour().make_EditUD();
-			logger() << ui_Objects()[(long)dataSource()->getData()] << L_endl;
+			//logger() << ui_Objects()[(long)dataSource()->getData()] << L_endl;
 		}
-		//auto debug = currFocus;
 	}
 
 	const char * DateTime_Interface::streamData(bool isActiveElement) const {

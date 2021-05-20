@@ -1,6 +1,6 @@
 #include "Data_Spell.h"
 #include <Clock.h>
-#include <../LCD_UI/UI_FieldData.h>
+#include "../LCD_UI/UI_FieldData.h"
 
 #ifdef ZPSIM
 	#include <iostream>

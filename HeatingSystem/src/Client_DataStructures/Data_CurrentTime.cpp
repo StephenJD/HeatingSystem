@@ -1,6 +1,7 @@
 #include "Data_CurrentTime.h"
 #include "Conversions.h"
 #include <Clock.h>
+#include <SD.h>
 
 using namespace arduino_logger;
 
@@ -165,7 +166,7 @@ namespace client_data_structures {
 		_currTime.val = clock_().time().asInt();
 		_currDate.val = clock_().date().asInt();
 		_dst.val = clock_().autoDSThours();
-		_SDCard = logger().open() ? "SD OK" : "No SD";
+		_SDCard = SD.sd_exists(53, 100) ? "SD OK" : "No SD";
 		switch (fieldID) {
 		case e_currTime: return &_currTime;
 		case e_currDate: return &_currDate;

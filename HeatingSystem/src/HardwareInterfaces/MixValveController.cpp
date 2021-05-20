@@ -7,6 +7,7 @@
 #include "..\Client_DataStructures\Data_Relay.h"
 #include <Timer_mS_uS.h>
 #include <Clock.h>
+#include "..\HardwareInterfaces\I2C_Comms.h"
 
 void ui_yield();
 
@@ -90,7 +91,18 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::logMixValveOperation(bool log) {
-		int8_t algorithmMode = (int8_t)readFromValve(Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
+		auto algorithmMode = (uint8_t)readFromValve(Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
+		if (algorithmMode >= Mix_Valve::e_Error) {
+			logger() << "MixValve Error: " << algorithmMode << L_endl;
+			sendSetup();
+			if ((uint8_t)readFromValve(Mix_Valve::mode) >= Mix_Valve::e_Error) {
+				recovery().resetI2C();
+				if ((uint8_t)readFromValve(Mix_Valve::mode) >= Mix_Valve::e_Error) {
+					HardReset::arduinoReset("MixValveController InvalidMode");
+				}
+			}
+		}
+
 		bool ignoreThis = (algorithmMode == Mix_Valve::e_Checking && flowTemp() == _mixCallTemp)
 			|| algorithmMode == Mix_Valve::e_AtLimit;
 

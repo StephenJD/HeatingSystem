@@ -35,7 +35,7 @@ namespace I2C_Recovery {
 		// Polymorphic Modifier Functions for I2C_Talk
 		auto newReadWrite(I_I2Cdevice_Recovery & device, int retries)->I2C_Talk_ErrorCodes::Error_codes override;
 		bool tryReadWriteAgain(I2C_Talk_ErrorCodes::Error_codes status) override;
-
+		void resetI2C() override { call_timeOutFn(device().getAddress()); }
 		// Queries 
 		I_I2CresetFunctor * getTimeoutFn() const { return _timeoutFunctor; }
 		bool isRecovering() { return _isRecovering; }

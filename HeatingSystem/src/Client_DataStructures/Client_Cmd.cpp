@@ -37,7 +37,6 @@ namespace client_data_structures {
 			// Hide commands
 			subPage.item(_insert)->get()->behaviour().make_hidden();
 			subPage.item(_dwellingCalendarCmd)->get()->behaviour().make_visible();
-			subPage.move_focus_to(_fromCmd);
 			removeCommandForEdit(spellUIcoll);
 		}
 		return static_cast<Collection_Hndl&>(*subPage.item(dwellSpellUI_c));

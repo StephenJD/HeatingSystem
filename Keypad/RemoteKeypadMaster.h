@@ -15,7 +15,7 @@ namespace HardwareInterfaces {
 	public:
 //		MultiCrystal& displ() { return *_lcd; }
 		int getKeyCode(int gpio);
-		enum KeyNames { UP_PIN = 10, DOWN_PIN, LEFT_PIN, RIGHT_PIN=14, NO_OF_KEYS = 4 }; // leave 13 for LED.
+		enum KeyNames { UP_PIN = A0, DOWN_PIN, LEFT_PIN, RIGHT_PIN, NO_OF_KEYS = 4 };
 		static Pin_Watch_Debounced KeyPins[NO_OF_KEYS];
 	private:
 		//MultiCrystal * _lcd;

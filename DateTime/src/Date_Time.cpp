@@ -39,13 +39,13 @@ namespace Date_Time {
 		}
 
 		if (*this < now) { 
-			if (!isShowingNow /*&& incF.offset < 0*/) 
+			if (!isShowingNow && incF.offset < 0) 
 				*this = now; // first attempt at going back before now, so stop at now.
 			else {
-				if (incF.field <= dd)
+				//if (incF.field <= dd)
 					addOffset({ yy,1 }); // we have persisted in going back before now.
-				else if (incF.field == hh) addOffset({dd,1});
-				else addOffset({ hh,1 });
+				//else if (incF.field == hh) addOffset({dd,1});
+				//else addOffset({ hh,1 });
 			}
 		}
 		else if (now)

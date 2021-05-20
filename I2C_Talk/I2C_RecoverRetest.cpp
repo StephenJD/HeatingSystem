@@ -115,7 +115,7 @@ namespace I2C_Recovery {
 						if (device().testDevice() == _OK) break;
 					//}
 				}
-				[[fallthrough]];
+				//[[fallthrough]];
 			case S_SpeedTest: // 3
 				if (haveBumpedUpMaxStrategyUsed(S_SpeedTest)) {
 					logger() << F("\t\tS_SpeedTest") << L_endl;
@@ -136,7 +136,7 @@ namespace I2C_Recovery {
 						if (device().testDevice() == _OK) break;
 					} // fall-through on error
 				} //else logger() << F("\t\tTry again S_SpeedTest 0x");
-				[[fallthrough]];
+				//[[fallthrough]];
 			case S_PowerDown: // 4
 				if (haveBumpedUpMaxStrategyUsed(S_PowerDown)) {
 					//logger() << F("\t\tS_Power-Down") << L_endl;
@@ -147,7 +147,7 @@ namespace I2C_Recovery {
 					//strategy().tryAgain(S_SlowDown); // when incremented will do a speed-test
 					if (device().testDevice() == _OK) break;
 				} // fall-through
-				[[fallthrough]];
+				//[[fallthrough]];
 			case S_Disable: // 5
 				if (haveBumpedUpMaxStrategyUsed(S_Disable)) {
 					logger() << L_time << F("S_Disable device 0x") << L_hex << device().getAddress() << L_endl;
@@ -162,7 +162,7 @@ namespace I2C_Recovery {
 						_deviceWaitingOnFailureFor10Mins = device().getAddress();
 					}
 				} // fall-through
-				[[fallthrough]];
+				//[[fallthrough]];
 			case S_Unrecoverable: // 6
 				disable();
 				getFinalStrategyRecorded();
