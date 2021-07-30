@@ -91,6 +91,7 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::logMixValveOperation(bool log) {
+#ifndef ZPSIM
 		auto algorithmMode = (uint8_t)readFromValve(Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
 		if (algorithmMode >= Mix_Valve::e_Error) {
 			logger() << "MixValve Error: " << algorithmMode << L_endl;
@@ -119,6 +120,7 @@ namespace HardwareInterfaces {
 				<< showState() << valveStatus.onTime << valveStatus.valvePos << valveStatus.ratio 
 				<< valveStatus.fromPos << valveStatus.fromTemp << L_endl;
 		}
+#endif
 	}
 
 	const __FlashStringHelper* MixValveController::showState() {

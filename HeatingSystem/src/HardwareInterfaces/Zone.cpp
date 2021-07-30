@@ -226,6 +226,8 @@ namespace HardwareInterfaces {
 		} else {
 			if (isDHW) {
 				requestedFlowTemp = MIN_FLOW_TEMP;
+			} else if (outsideTemp >= _preheatCallTemp) {
+				requestedFlowTemp = MIN_FLOW_TEMP;
 			} else {
 				auto errorOffset = tempError / ERROR_DIVIDER / ratio; // gives theoretical room-temp offset of twice the error
 				requestedFlowTemp = uint16_t( outsideTemp - errorOffset + (fractionalZoneTemp/256. - outsideTemp) / ratio);

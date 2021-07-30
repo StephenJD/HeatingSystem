@@ -28,11 +28,19 @@ namespace HardwareInterfaces {
 	bool TowelRail::check() {
 		// En-suite and Family share a zone / relay, so need to prevent the OFF TR disabling the ON one.
 		bool needHeat = false;
-		if (_temperatureController->outsideTemp() < 19) { // Don't fire TowelRads if outside temp close to room temp (e.g.summer!)
-			needHeat = setFlowTemp();
-			if (!_mixValveController->amControlZone(sharedZoneCallTemp(), _onTemp, _relay->recordID())) {
-				_relay->set(needHeat); // too cool
+		for (auto& zone : _temperatureController->zoneArr) {
+			if (zone.getCurrTemp() < 21) { // Don't fire TowelRads if room temp is warm (e.g.summer!)
+				needHeat = true;
+				break;
 			}
+		}
+		if (needHeat) { 
+			needHeat = setFlowTemp();
+		} else {
+			_timer = 0;
+		}
+		if (!_mixValveController->amControlZone(sharedZoneCallTemp(), _onTemp, _relay->recordID())) {
+			_relay->set(needHeat);
 		}
 		return needHeat;
 	}
