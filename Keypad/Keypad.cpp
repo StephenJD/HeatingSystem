@@ -1,35 +1,36 @@
 #include "Keypad.h"
-#include <Clock.h>
-#include <Logging.h>
-using namespace arduino_logger;
-
-using namespace Date_Time;
+#include <Timer_mS_uS.h>
 
 namespace HardwareInterfaces {
-//#if defined (ZPSIM)
-//	int8_t I_Keypad::simKey = -1;
-//#endif
+	//#if defined (ZPSIM)
+	//	int8_t I_Keypad::simKey = -1;
+	//#endif
 
-	// Mutex supporting multiple keypads
+		// Mutex supporting multiple keypads
 	namespace { volatile bool keyQueueMutex = false; }
 
-	bool I_Keypad::isTimeToRefresh() {
+	bool I_Keypad::oneSecondElapsed() {
 		bool isNewSecond = clock_().isNewSecond(_lastSecond);
 		if (isNewSecond && _secsToKeepAwake > 0) {
 			--_secsToKeepAwake; // timeSince set to DISPLAY_WAKE_TIME whenever a key is pressed
 		}
-		return (isNewSecond); // refresh every second
-	}
-
-	bool I_Keypad::wakeDisplay(bool wake) {
-		if (wake) _secsToKeepAwake = DISPLAY_WAKE_TIME;
-		return _secsToKeepAwake > 0;
+		return isNewSecond;
 	}
 
 	void I_Keypad::putKey(int8_t myKey) {
 		if (!keyQueueMutex && keyQuePos < 9 && myKey >= 0) { // 
 			++keyQuePos;
 			keyQue[keyQuePos] = myKey;
+			return true;
+		} else return false;
+	}
+
+	void I_Keypad::readKey(int port) {
+		auto myKey = -1;
+		if (_timeToRead) {
+			myKey = getKeyCode(port);
+			putKey(myKey);
+			_timeToRead.repeat();
 		}
 	}
 
@@ -42,16 +43,17 @@ namespace HardwareInterfaces {
 				for (int i = 0; i < keyQuePos; ++i) {
 					keyQue[i] = keyQue[i + 1];
 				}
-			}
-			else {
-				keyQue[0] = -1;
+			} else {
+				keyQue[0] = NO_KEY;
 			}
 			--keyQuePos;
 			keyQueueMutex = false;
 		}
+
+		if (retKey > NO_KEY) {
+			if (!displayIsAwake()) retKey = KEY_WAKEUP;
+			wakeDisplay();
+		}
 		return retKey;
 	}
-
 }
-
-

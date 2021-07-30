@@ -1,7 +1,7 @@
 #include "RemoteKeypadMaster.h"
-#include <Logging.h>
+//#include <Logging.h>
 
-using namespace arduino_logger;
+//using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	namespace {
@@ -16,23 +16,27 @@ namespace HardwareInterfaces {
 
 	Pin_Watch_Debounced RemoteKeypadMaster::KeyPins[] = { {UP_PIN, LOW}, {DOWN_PIN, LOW}, {LEFT_PIN, LOW}, {RIGHT_PIN, LOW} };
 
-	int RemoteKeypadMaster::getKeyCode(int gpio) {
-		int myKey;
-		switch (gpio) {
-		case LEFT_PIN: myKey = 2; break; // Left
-		case DOWN_PIN: myKey = 4; break; // Down
-		case UP_PIN: myKey = 1; break; // Up
-		case RIGHT_PIN: myKey = 3; break; // Right
-		case 0:		 myKey = -1; break;
-		default:
-			logger() << L_time << /*remName(_lcd->i2cAddress()) <<*/ F(" Remote Keypad: MultipleKeys: 0x") << L_hex << gpio << L_endl;
-			myKey = -2; // multiple keys
-		}
+	int RemoteKeypadMaster::getKeyCode(int port) {
+		auto getKeyCodeForPort = [](int pinNo) {
+			int myKey;
+			switch (pinNo) {
+			case UP_PIN: myKey = KEY_UP; break; // Up
+			case DOWN_PIN: myKey = KEY_DOWN; break; // Down
+			case LEFT_PIN: myKey = KEY_LEFT; break; // Left
+			case RIGHT_PIN: myKey = KEY_RIGHT; break; // Right
+			case 0:		 myKey = NO_KEY; break;
+			default:
+				myKey = BAD_KEY; // multiple keys
+			}
 
-		//if (myKey > -1) {
-			//logger() << L_time << /*remName(_lcd->i2cAddress()) <<*/ F(" Remote Keypad ") << myKey << L_endl;
-		//} 
-		//if (myKey == 2 || myKey == 3) myKey = -1;
-		return myKey;
+			return myKey;
+		};
+
+		for (auto& pin : KeyPins) {
+			if (pin.pinChanged() == 1) {
+				return getKeyCodeForPort(getKeyCode(pin.port()));
+			}
+		}
+		return NO_KEY;
 	}
 }

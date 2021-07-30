@@ -1,24 +1,21 @@
 #include "Console.h"
-#include <LCD_Display.h>
+#include "LCD_Display.h"
 #include "..\LCD_UI\A_Top_UI.h"
 #include "A__Constants.h"
 #include <Keypad.h>
 #include <Logging.h>
 #include <MemoryFree.h>
-#include "I2C_Comms.h"
 
-using namespace arduino_logger;
 extern unsigned long processStart_mS;
 void ui_yield();
 
 namespace HardwareInterfaces {
 	using namespace LCD_UI;
 
-	Console::Console(I_Keypad & keyPad, LCD_Display & lcd_display, Chapter_Generator & chapterGenerator) :
+	Console::Console(I_Keypad& keyPad, LCD_Display& lcd_display, Chapter_Generator& chapterGenerator) :
 		_keyPad(keyPad)
 		, _lcd_UI(lcd_display)
-		, _chapterGenerator(chapterGenerator)
-	{}
+		, _chapterGenerator(chapterGenerator) {}
 
 	bool Console::processKeys() {
 		bool doRefresh;
@@ -38,44 +35,45 @@ namespace HardwareInterfaces {
 			switch (keyPress) {
 				// Process Key 400K/100K I2C Clock: takes 0 for time, 47mS for zone temps, 110mS for calendar, 387/1000mS for change zone on Program page
 				// Process Key 19mS with RAM-buffered EEPROM.
-			case 0:
+			case I_Keypad::KEY_INFO:
 				//logger() << L_time << F("GotKey Info\n");
 				_chapterGenerator.setChapterNo(1 /*Book_Info*/);
 				break;
-			case 1:
+			case I_Keypad::KEY_UP:
 				//logger() << L_time << F("GotKey UP\n");
 				_chapterGenerator().rec_up_down(-1);
 				break;
-			case 2:
-				//logger() << L_time << F("GotKey Left\n");
-				_chapterGenerator().rec_left_right(-1);
-				break;
-			case 3:
-				//logger() << L_time << F("GotKey Right\n");
-				_chapterGenerator().rec_left_right(1);
-				break;
-			case 4:
+			case I_Keypad::KEY_DOWN:
 				//logger() << L_time << F("GotKey Down\n");
 				_chapterGenerator().rec_up_down(1);
 				break;
-			case 5:
+			case I_Keypad::KEY_LEFT:
+				//logger() << L_time << F("GotKey Left\n");
+				_chapterGenerator().rec_left_right(-1);
+				break;
+			case I_Keypad::KEY_RIGHT:
+				//logger() << L_time << F("GotKey Right\n");
+				_chapterGenerator().rec_left_right(1);
+				break;
+			case I_Keypad::KEY_BACK:
 				//logger() << L_time << F("GotKey Back\n");
 				_chapterGenerator.backKey();
 				break;
-			case 6:
+			case I_Keypad::KEY_SELECT:
 				//logger() << L_time << F("GotKey Select\n");
 				_chapterGenerator().rec_select();
 				break;
-			case 7:
+			case I_Keypad::KEY_WAKEUP:
 				// Set backlight to bright.
-				_keyPad.wakeDisplay(true);
+				_keyPad.wakeDisplay();
 				break;
 			default:
-				doRefresh = _keyPad.isTimeToRefresh(); // true every second
+				doRefresh = _keyPad.oneSecondElapsed();
 #if defined (NO_TIMELINE) && defined (ZPSIM)
-				{static bool test = true;// for testing, prevent refresh after first time through unless key pressed
-				doRefresh = test;
-				test = false;
+				{
+					static bool test = true;// for testing, prevent refresh after first time through unless key pressed
+					doRefresh = test;
+					test = false;
 				}
 #endif
 			}
@@ -85,7 +83,7 @@ namespace HardwareInterfaces {
 				//	logger() << F("\tTime to process key mS: ") << keyProcessStart/1000 << L_endl;
 				//	keyProcessStart = micros();
 				//}
-				displayIsAwake = _keyPad.wakeDisplay(false);
+				displayIsAwake = _keyPad.displayIsAwake();
 				//if (!displayIsAwake) { // move off start-page
 					//if (_chapterGenerator.chapter() == 0 && _chapterGenerator.page() == 0) _chapterGenerator().rec_up_down(1);
 				//}
@@ -109,9 +107,8 @@ namespace HardwareInterfaces {
 				//}
 			}
 			keyPress = _keyPad.getKey();
-			//ui_yield();
+			ui_yield();
 		} while (keyPress != -1);
 		return doRefresh;
 	}
 }
-

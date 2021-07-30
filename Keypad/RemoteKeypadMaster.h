@@ -1,6 +1,6 @@
 #pragma once
 #include "Keypad.h"
-#include <MultiCrystal.h>
+//#include <MultiCrystal.h>
 #include <Arduino.h>
 #include <PinObject.h>
 
@@ -10,12 +10,12 @@ namespace HardwareInterfaces {
 	const uint8_t FL_REMOTE_MASTER_I2C_ADDR = 0x14;
 
 
-	class RemoteKeypadMaster : public I_Keypad
-	{
+	class RemoteKeypadMaster : public I_Keypad {
 	public:
-//		MultiCrystal& displ() { return *_lcd; }
-		int getKeyCode(int gpio);
-		enum KeyNames { UP_PIN = A0, DOWN_PIN, LEFT_PIN, RIGHT_PIN, NO_OF_KEYS = 4 };
+		RemoteKeypadMaster(int re_read_interval = 50) : I_Keypad{ re_read_interval } {}
+		//		MultiCrystal& displ() { return *_lcd; }
+		int getKeyCode(int pinNo);
+		enum { UP_PIN = A0, DOWN_PIN, RIGHT_PIN, LEFT_PIN, NO_OF_KEYS = 4 };
 		static Pin_Watch_Debounced KeyPins[NO_OF_KEYS];
 	private:
 		//MultiCrystal * _lcd;
