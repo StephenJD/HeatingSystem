@@ -57,16 +57,6 @@ namespace HardwareInterfaces {
 		}
 	};
 
-	int LocalKeypad::getKey() {
-		auto returnKey = getFromKeyQue(keyQue, keyQuePos);
-		if (returnKey >= 0) {
-			//#if !defined (ZPSIM)
-			if (_secsToKeepAwake == 0) returnKey = sizeof(adc_LocalKey_val) / 2;
-			//#endif
-			wakeDisplay(true);
-		}
-	}
-
 #if defined (ZPSIM)
 	int LocalKeypad::getKeyCode(int port) {
 		int retVal = simKey;

@@ -18,6 +18,8 @@ namespace HardwareInterfaces {
 
 		bool keyIsWaiting() { return keyQuePos != -1; }
 		void clearKeys() { keyQue[0] = -1;  keyQuePos = -1; }
+		
+		void putKey(int8_t myKey);
 
 #if defined (ZPSIM)
 		int8_t simKey = -1;

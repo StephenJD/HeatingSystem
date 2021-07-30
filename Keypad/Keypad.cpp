@@ -1,5 +1,6 @@
 #include "Keypad.h"
 #include <Timer_mS_uS.h>
+#include <Clock.h>
 
 namespace HardwareInterfaces {
 	//#if defined (ZPSIM)
@@ -21,8 +22,7 @@ namespace HardwareInterfaces {
 		if (!keyQueueMutex && keyQuePos < 9 && myKey >= 0) { // 
 			++keyQuePos;
 			keyQue[keyQuePos] = myKey;
-			return true;
-		} else return false;
+		}
 	}
 
 	void I_Keypad::readKey(int port) {
