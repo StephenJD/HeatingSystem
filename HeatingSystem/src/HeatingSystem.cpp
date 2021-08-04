@@ -116,7 +116,7 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 
 void HeatingSystem::serviceConsoles() {
 	if (I2C_Slave::data >= 0) logger() << " Got slave key: " << I2C_Slave::data << L_endl;
-	remoteKeypad[D_Hall].putKey(I2C_Slave::getKey());
+	//remoteKeypad[D_Hall].putKey(I2C_Slave::getKey());
 	_mainConsole.processKeys();
 	auto zoneIndex = 0;
 	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();

@@ -355,7 +355,7 @@ void loop() {
 		//logger() << "\n***** New loop... *****" << digitalRead(LOCAL_INT_PIN) << L_endl;
 	}
 
-	auto nextLocalKey = keypad.getKey();
+	auto nextLocalKey = keypad.popKey();
 	//logger() << "loop...showInstructions: " << showInstructions << " Key: " << (int)nextLocalKey << L_endl;
 //	signed char nextLocalKey = -1;
 	signed char nextRemKey = -1;
@@ -427,14 +427,14 @@ void loop() {
 			logger() << "\n Loop set speed: Optimal for 0x" << L_hex << i2cAddr[i2cAddrIndex] << " is " << L_dec << device.runSpeed() << L_endl;
 		}
 		printTestMode();
-		nextLocalKey = keypad.getKey();
+		nextLocalKey = keypad.popKey();
 	}
 	uint8_t lastKey = 0;
 	int repeatKeyCount = 0;
 	//while (true) {
 		for (int displayID = 0; displayID < 3 ; ++displayID) {
 			//int displayID = 2;
-			nextRemKey = rem_keypad[displayID].getKey();
+			nextRemKey = rem_keypad[displayID].popKey();
 			if (nextRemKey >= 0) {
 				if (nextRemKey == lastKey) ++repeatKeyCount; 
 				else {

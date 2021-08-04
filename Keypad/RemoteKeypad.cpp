@@ -6,24 +6,15 @@
 namespace HardwareInterfaces {
 
 #if defined (ZPSIM)
-	void RemoteKeypad::readKey(int) {
-		auto myKey = getKeyCode(_lcd->readI2C_keypad());
-		myKey = simKey;
-		putKey(myKey);
-		simKey = -1;
+	I_Keypad::KeyOperation RemoteKeypad::getKeyCode() {
+		putKey(simKey);
+		simKey = NO_KEY; 
+		return simKey;
 	}
-	int RemoteKeypad::getKeyCode(int gpio) { return 0; }
 #else
-	void RemoteKeypad::readKey(int) {
-		auto myKey = -1;
-		if (timeToRead) {
-			myKey = getKeyCode(_lcd->readI2C_keypad());
-			putKey(myKey);
-			timeToRead.repeat();
-		}
-	}
 
-	int RemoteKeypad::getKeyCode(int port) { // readI2C_keypad() returns 16 bit register
+	I_Keypad::KeyOperation RemoteKeypad::getKeyCode() { // readI2C_keypad() returns 16 bit register
+		// Lambda
 		auto keyName = [](int keyCode) -> const __FlashStringHelper* {
 			switch (keyCode) {
 			case NO_KEY: return F("None");
@@ -36,7 +27,10 @@ namespace HardwareInterfaces {
 			}
 		};
 
-		int myKey;
+		// Algorithm
+		wakeDisplay();
+		auto port = _lcd->readI2C_keypad();
+		KeyOperation myKey;
 		switch (port) {
 		case 0x0100: myKey = KEY_LEFT; break;
 		case 0x2000: myKey = KEY_DOWN; break;
@@ -56,16 +50,8 @@ namespace HardwareInterfaces {
 	}
 #endif
 
-	int RemoteKeypad::getKey() {
-		wakeDisplay(); // Prevent display sleeping.
-		auto gotKey = I_Keypad::getKey();
-		if (gotKey > NO_KEY) {
-			//logger() << F(" Remote-Master Key: ") << gotKey << L_endl;
-		}
-		if (gotKey == NO_KEY) {
-			readKey(_lcd->readI2C_keypad());
-			gotKey = I_Keypad::getKey();
-		}
-		return gotKey;
+	void RemoteKeypad::startRead() {
+		putKey(getKeyCode());
 	}
+
 }

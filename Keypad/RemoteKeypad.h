@@ -7,11 +7,13 @@ namespace HardwareInterfaces {
 
 	class RemoteKeypad : public I_Keypad {
 	public:
-		RemoteKeypad(MultiCrystal& lcd) : _lcd(&lcd) {}
-		int getKey() override;
-		//		MultiCrystal& displ() { return *_lcd; }
+		RemoteKeypad(MultiCrystal& lcd) : I_Keypad{ 50 }, _lcd(&lcd) {}
+		void startRead() override;
+//#if defined (ZPSIM)
+//		void readKey();
+//#endif
 	private:
-		int getKeyCode(int port) override;
+		KeyOperation getKeyCode() override;
 		MultiCrystal* _lcd;
 	};
 

@@ -14,11 +14,10 @@ namespace HardwareInterfaces {
 	public:
 		RemoteKeypadMaster(int re_read_interval = 50) : I_Keypad{ re_read_interval } {}
 		//		MultiCrystal& displ() { return *_lcd; }
-		int getKeyCode(int pinNo);
+		KeyOperation getKeyCode() override;
 		enum { UP_PIN = A0, DOWN_PIN, RIGHT_PIN, LEFT_PIN, NO_OF_KEYS = 4 };
-		static Pin_Watch_Debounced KeyPins[NO_OF_KEYS];
+		static Pin_Watch KeyPins[NO_OF_KEYS];
 	private:
-		//MultiCrystal * _lcd;
 	};
 
 	extern RemoteKeypadMaster remoteKeypad;  // to be defined by the client (required by interrup handler)

@@ -3,6 +3,7 @@
 #include "Arduino.h"
 #include <I2C_Talk.h>
 #include <I2C_RecoverRetest.h>
+#include <LocalKeypad.h>
 
 namespace HardwareInterfaces {
 
@@ -48,6 +49,6 @@ namespace HardwareInterfaces {
 		extern int8_t data;
 		void receiveI2C(int howMany);
 		void requestI2C();
-		int getKey();
+		I_Keypad::KeyOperation getKey();
 	};
 }

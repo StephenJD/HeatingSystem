@@ -87,7 +87,7 @@ namespace Assembly {
 			failed |= rd.initialiseDevice();
 		}
 		for (auto& kb : _hs.remoteKeypad) {
-			kb.getKey();
+			kb.popKey();
 			kb.clearKeys();
 		}
 		logger() << F("\tinitialiseRemoteDisplays() done") << L_endl;

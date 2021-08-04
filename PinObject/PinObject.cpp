@@ -72,9 +72,10 @@ namespace HardwareInterfaces {
 		--_readAgain;
 
 		auto thisRead = Pin_Watch::logicalState();
-		if (thisRead == _previousState) _readAgain = IDENTICAL_READ_COUNT;
-		else if (!_readAgain) {
+		if (thisRead != _previousState) {
+			_readAgain = IDENTICAL_READ_COUNT;
 			_previousState = thisRead;
+		}  else if (!_readAgain) {
 			stopDebounce();
 		}
 #ifdef debug

@@ -4,6 +4,7 @@
 #include <Date_Time.h>
 #include "..\Assembly\HeatingSystemEnums.h"
 #include "..\Client_DataStructures\Rec_Zone.h"
+#include <math.h>
 
 //***************************************************
 //              Zone Dynamic Class
@@ -75,7 +76,7 @@ namespace HardwareInterfaces {
 		static uint8_t compressTC(double timeConst) {
 			if (timeConst > 3280) timeConst = 3280;
 			if (timeConst < 20) timeConst = 20;
-			return static_cast<uint8_t>(log(timeConst / 20.) * 50. + 0.5);
+			return static_cast<uint8_t>(::log(timeConst / 20.) * 50. + 0.5);
 		}
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;

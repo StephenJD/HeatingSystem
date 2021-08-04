@@ -29,25 +29,30 @@ namespace HardwareInterfaces {
 		attachInterrupt(digitalPinToInterrupt(interruptPin), localKeyboardInterrupt, CHANGE);
 	}
 
-	I_Keypad::KeyOperation LocalKeypad::getAnalogueKey(uint32_t analogueReading) {
-		//uint32_t adc_key_in = analogRead(_keyReadPin);  // read the value from the sensor
-		//int i = 0;
-		//while (adc_key_in != analogRead(_keyReadPin) && ++i < 100) {
-		//	adc_key_in = analogRead(_keyReadPin);
-		//}
-															 // Convert ADC value to key number
+	I_Keypad::KeyOperation LocalKeypad::getKeyCode() {
+#if defined (ZPSIM)
+		Serial.println("SimKey");
+		putKey(simKey);
+		simKey = NO_KEY;
+		return simKey;
+	}
+#else
+		uint32_t keyReading = analogRead(_keyReadPin);
 		uint32_t keyPadRefV = analogRead(_keyHighRefPin);
-		analogueReading *= 1024;
-		analogueReading /= keyPadRefV;
+		keyReading *= 1024;
+		keyReading /= keyPadRefV;
 
 		int key = 0;
 		for (; key < sizeof(adc_LocalKey_val) / sizeof(adc_LocalKey_val[0]); ++key) {
-			if (analogueReading > adc_LocalKey_val[key]) break;
+			if (keyReading > adc_LocalKey_val[key]) break;
 		}
 
+		//Serial.print(keyReading);
+		//Serial.print(F("\t"));
+		//Serial.println(key);
 		switch (key) {
 		case 0: return KEY_INFO;
-		case 1: return KEY_UP;
+		case 1: return KEY_UP_OR_INFO;
 		case 2: return KEY_LEFT;
 		case 3: return KEY_RIGHT;
 		case 4: return KEY_DOWN;
@@ -55,20 +60,6 @@ namespace HardwareInterfaces {
 		case 6: return KEY_SELECT;
 		default: return NO_KEY;
 		}
-	};
-
-#if defined (ZPSIM)
-	int LocalKeypad::getKeyCode(int port) {
-		int retVal = simKey;
-		simKey = -1;
-		return retVal;
-	}
-#else
-	int LocalKeypad::getKeyCode(int) {
-		// Cannot do Serial.print or logtoSD in here.
-		MsTimer2::set(RE_READ_PERIOD_mS, getStableReading);
-		MsTimer2::start();
-		return NO_KEY;
 	}
 #endif
 
@@ -83,8 +74,7 @@ namespace HardwareInterfaces {
 			//{
 #endif
 		LocalKeypad::indicatorLED().set();
-		auto& keypad = *HardwareInterfaces::localKeypad;
-		keypad.getKeyCode(0);
+		localKeypad->startRead();
 		//}
 		LocalKeypad::indicatorLED().clear();
 		//nextPermissibleInterruptTime = millis() + 5;

@@ -8,6 +8,7 @@
 
 extern unsigned long processStart_mS;
 void ui_yield();
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace LCD_UI;
@@ -22,7 +23,7 @@ namespace HardwareInterfaces {
 		bool displayIsAwake;
 		//unsigned long keyProcessStart;
 		int keyPress; // Time to detect press 1mS
-		keyPress = _keyPad.getKey();
+		keyPress = _keyPad.popKey();
 
 		//if (keyPress > -1) {
 		//	processStart_mS = micros() - processStart_mS;
@@ -40,19 +41,19 @@ namespace HardwareInterfaces {
 				_chapterGenerator.setChapterNo(1 /*Book_Info*/);
 				break;
 			case I_Keypad::KEY_UP:
-				//logger() << L_time << F("GotKey UP\n");
+				logger() << L_time << F("GotKey UP\n");
 				_chapterGenerator().rec_up_down(-1);
 				break;
 			case I_Keypad::KEY_DOWN:
-				//logger() << L_time << F("GotKey Down\n");
+				logger() << L_time << F("GotKey Down\n");
 				_chapterGenerator().rec_up_down(1);
 				break;
 			case I_Keypad::KEY_LEFT:
-				//logger() << L_time << F("GotKey Left\n");
+				logger() << L_time << F("GotKey Left\n");
 				_chapterGenerator().rec_left_right(-1);
 				break;
 			case I_Keypad::KEY_RIGHT:
-				//logger() << L_time << F("GotKey Right\n");
+				logger() << L_time << F("GotKey Right\n");
 				_chapterGenerator().rec_left_right(1);
 				break;
 			case I_Keypad::KEY_BACK:
@@ -65,6 +66,7 @@ namespace HardwareInterfaces {
 				break;
 			case I_Keypad::KEY_WAKEUP:
 				// Set backlight to bright.
+				logger() << L_time << F("Wake Key\n");
 				_keyPad.wakeDisplay();
 				break;
 			default:
@@ -106,9 +108,9 @@ namespace HardwareInterfaces {
 				//	logger() << F("\tTime to sendToDisplay mS: ") << keyProcessStart/1000 << L_endl;
 				//}
 			}
-			keyPress = _keyPad.getKey();
+			keyPress = _keyPad.popKey();
 			ui_yield();
-		} while (keyPress != -1);
+		} while (keyPress != I_Keypad::NO_KEY);
 		return doRefresh;
 	}
 }

@@ -16,11 +16,8 @@ namespace HardwareInterfaces {
 		void begin();
 		static Pin_Wag& indicatorLED() { return reinterpret_cast<Pin_Wag&>(_indicatorLED); }
 		static uint8_t interruptPin;
-		void getStableReading();
-		int getKeyCode(int port) override;
+		KeyOperation getKeyCode() override;
 	private:
-		static constexpr int RE_READ_PERIOD_mS = 1;
-		I_Keypad::KeyOperation getAnalogueKey(uint32_t analogueReading);
 		// members need to be static to allow attachment to interrupt handler
 		static constexpr uint16_t adc_LocalKey_val[] = { 874,798,687,612,551,501,440 };
 		//static Pin_Wag _indicatorLED; // static UDT's don't get constructed!

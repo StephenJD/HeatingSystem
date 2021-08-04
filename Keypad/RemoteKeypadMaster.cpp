@@ -12,31 +12,23 @@ namespace HardwareInterfaces {
 		};
 	}
 
-	void keyInterrupt();
+	Pin_Watch RemoteKeypadMaster::KeyPins[] = { {UP_PIN, LOW}, {DOWN_PIN, LOW}, {LEFT_PIN, LOW}, {RIGHT_PIN, LOW} };
 
-	Pin_Watch_Debounced RemoteKeypadMaster::KeyPins[] = { {UP_PIN, LOW}, {DOWN_PIN, LOW}, {LEFT_PIN, LOW}, {RIGHT_PIN, LOW} };
-
-	int RemoteKeypadMaster::getKeyCode(int port) {
-		auto getKeyCodeForPort = [](int pinNo) {
-			int myKey;
-			switch (pinNo) {
-			case UP_PIN: myKey = KEY_UP; break; // Up
-			case DOWN_PIN: myKey = KEY_DOWN; break; // Down
-			case LEFT_PIN: myKey = KEY_LEFT; break; // Left
-			case RIGHT_PIN: myKey = KEY_RIGHT; break; // Right
-			case 0:		 myKey = NO_KEY; break;
-			default:
-				myKey = BAD_KEY; // multiple keys
-			}
-
-			return myKey;
-		};
-
+	I_Keypad::KeyOperation RemoteKeypadMaster::getKeyCode() {
+		auto active_port = 0;
 		for (auto& pin : KeyPins) {
-			if (pin.pinChanged() == 1) {
-				return getKeyCodeForPort(getKeyCode(pin.port()));
+			if (pin.logicalState()) {
+				active_port = pin.port();
+				break;
 			}
 		}
-		return NO_KEY;
+
+		switch (active_port) {
+			case UP_PIN: return KEY_UP;
+			case DOWN_PIN: return KEY_DOWN;
+			case LEFT_PIN: return KEY_LEFT;
+			case RIGHT_PIN: return KEY_RIGHT;
+			default: return NO_KEY;
+		}
 	}
 }

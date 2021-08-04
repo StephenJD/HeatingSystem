@@ -180,9 +180,8 @@ void readKeypad() {
 */
 
 void loop() {
-  //readKeypad();
   remoteKeypad.readKey();
-  auto key = remoteKeypad.getKey();
+  auto key = remoteKeypad.popKey();
   if (wakeDisplay(key)) {
     if (key/2 == MODE_LEFT_RIGHT) changeMode(key);
     else changeValue(key);   

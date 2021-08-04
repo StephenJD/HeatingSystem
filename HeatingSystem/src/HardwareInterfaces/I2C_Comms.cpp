@@ -2,7 +2,6 @@
 #include <Logging.h>
 #include "A__Constants.h"
 #include <I2C_Recover.h>
-#include <LocalKeypad.h>
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
@@ -115,9 +114,9 @@ namespace HardwareInterfaces {
 			i2C->write((uint8_t*)&data, 1);
 		}
 
-		int getKey() { 
-			auto key = data; 
-			data = -1; 
+		I_Keypad::KeyOperation getKey() {
+			I_Keypad::KeyOperation key = I_Keypad::KeyOperation(data);
+			data = I_Keypad::NO_KEY;
 			return key; 
 		}
 	}
