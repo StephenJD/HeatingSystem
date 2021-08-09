@@ -79,7 +79,7 @@ namespace HardwareInterfaces {
 			uint16_t brightness = uint16_t(minBL + blRange * lightFactor); // compensate for light
 			if (!wake) {
 				brightness = (brightness + minBL) / SLEEP_BRIGHTNESS_FACTOR; // compensate for sleep
-				logger() << F("Backlight_Sleep: ") << brightness << L_endl;
+				//logger() << F("Backlight_Sleep: ") << brightness << L_endl;
 			}
 
 			brightness = (brightness * (MAX_BL - MIN_BL) / 25) + MIN_BL; // convert to analogue write val.

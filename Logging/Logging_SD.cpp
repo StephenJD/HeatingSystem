@@ -81,7 +81,6 @@ Print& SD_Logger::stream() {
 
 bool SD_Logger::open() {
 	if (!is_null() && SD.sd_exists(chipSelect)) {
-		ui_yield();
 		if (_fileNameGenerator.isNewDay(_clock)) close();
 		if (!_dataFile) {
 			_dataFile = SD.open(_fileNameGenerator(_clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 
@@ -107,6 +106,7 @@ size_t SD_Logger::write(const uint8_t * buffer, size_t size) {
 }	
 
 Logger & SD_Logger::logTime() {
+	ui_yield();
 	auto streamPtr = &stream();
 	while (mirror_stream(streamPtr)) {
 		streamPtr->print(_fileNameGenerator.stem());

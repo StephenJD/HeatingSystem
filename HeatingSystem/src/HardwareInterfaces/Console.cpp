@@ -7,7 +7,6 @@
 #include <MemoryFree.h>
 
 extern unsigned long processStart_mS;
-void ui_yield();
 using namespace arduino_logger;
 
 namespace HardwareInterfaces {
@@ -20,7 +19,6 @@ namespace HardwareInterfaces {
 
 	bool Console::processKeys() {
 		bool doRefresh;
-		bool displayIsAwake;
 		//unsigned long keyProcessStart;
 		int keyPress; // Time to detect press 1mS
 		keyPress = _keyPad.popKey();
@@ -29,7 +27,7 @@ namespace HardwareInterfaces {
 		//	processStart_mS = micros() - processStart_mS;
 		//	logger() << F("\n** Time to detect Keypress: ") << processStart_mS << L_endl;
 		//}
-		do { // prevents watchdog timer reset!
+		//do { // prevents watchdog timer reset!
 			//logger() << F("Key val: ") << keyPress << L_endl;
 			//keyProcessStart = micros();
 			doRefresh = true;
@@ -57,11 +55,11 @@ namespace HardwareInterfaces {
 				_chapterGenerator().rec_left_right(1);
 				break;
 			case I_Keypad::KEY_BACK:
-				//logger() << L_time << F("GotKey Back\n");
+				logger() << L_time << F("GotKey Back\n");
 				_chapterGenerator.backKey();
 				break;
 			case I_Keypad::KEY_SELECT:
-				//logger() << L_time << F("GotKey Select\n");
+				logger() << L_time << F("GotKey Select\n");
 				_chapterGenerator().rec_select();
 				break;
 			case I_Keypad::KEY_WAKEUP:
@@ -79,38 +77,23 @@ namespace HardwareInterfaces {
 				}
 #endif
 			}
-			if (doRefresh) {
-				//if (keyPress > -1) {
-				//	keyProcessStart = micros() - keyProcessStart;
-				//	logger() << F("\tTime to process key mS: ") << keyProcessStart/1000 << L_endl;
-				//	keyProcessStart = micros();
-				//}
-				displayIsAwake = _keyPad.displayIsAwake();
-				//if (!displayIsAwake) { // move off start-page
-					//if (_chapterGenerator.chapter() == 0 && _chapterGenerator.page() == 0) _chapterGenerator().rec_up_down(1);
-				//}
-#ifndef ZPSIM
-				_lcd_UI._lcd->blinkCursor(displayIsAwake);
-				//changeInFreeMemory(freeMem, "processKeys blinkCursor");
-#endif
-				_lcd_UI._lcd->setBackLight(displayIsAwake);
-				//Edit::checkTimeInEdit(keyPress);
-				_chapterGenerator().stream(_lcd_UI); //400K/100K I2C clock. 6/19mS for Clock, 37/120mS Calendar, 44/140mS ZoneTemps, 80/250mS Program.
-				//if (keyPress > -1) {
-				//	keyProcessStart = micros() - keyProcessStart;
-				//	//logger() << F("\tTime to stream page uS: ") << keyProcessStart << L_endl;
-				//	keyProcessStart = micros();
-				//}
-				_lcd_UI._lcd->sendToDisplay(); // 16mS
-				//logger() << F("sendToDisplay: ") << _lcd_UI._lcd->buff() << L_endl;
-				//if (keyPress > -1) {
-				//	keyProcessStart = micros() - keyProcessStart;
-				//	logger() << F("\tTime to sendToDisplay mS: ") << keyProcessStart/1000 << L_endl;
-				//}
-			}
-			keyPress = _keyPad.popKey();
-			ui_yield();
-		} while (keyPress != I_Keypad::NO_KEY);
+			//if (doRefresh) {
+
+			//} else logger() << L_time << F("SkipRefresh\t") << L_endl;
+			//keyPress = _keyPad.popKey();
+		//} while (keyPress != I_Keypad::NO_KEY);
 		return doRefresh;
+	}
+
+	void Console::refreshDisplay() { 
+		//Serial.println("Stream");
+		auto displayIsAwake = _keyPad.displayIsAwake();
+#ifndef ZPSIM
+		_lcd_UI._lcd->blinkCursor(displayIsAwake);
+#endif
+		_lcd_UI._lcd->setBackLight(displayIsAwake);
+		_chapterGenerator().stream(_lcd_UI); //400K/100K I2C clock. 6/19mS for Clock, 37/120mS Calendar, 44/140mS ZoneTemps, 80/250mS Program.
+		_lcd_UI._lcd->sendToDisplay(); // 16mS
+		//logger() << L_time << F("SendToDisplay:\t") /*<< _lcd_UI._lcd->buff()*/ << L_endl;
 	}
 }

@@ -24,18 +24,18 @@
 //////////////////////////////////////////////////////////
 namespace HeatingSystemSupport {
 	void initialise_virtualROM();
+	extern bool dataHasChanged;
 }
 
 class HeatingSystem {
 public:
 	HeatingSystem();
 	void serviceConsoles();
-	void refreshDisplays();
 	void serviceTemperatureController();
 	/// <summary>
 	/// Checks Zone Temps, then sets each zone.nextEvent to now.
 	/// </summary>
-	void notifyDataIsEdited();
+	void updateChangedData();
 	auto recoverObject() -> I2C_Recovery::I2C_Recover_Retest & { return _recover; }
 	// For testing:...
 	Assembly::MainConsoleChapters & mainConsoleChapters() { return _mainConsoleChapters; }
@@ -65,4 +65,5 @@ private:
 	Assembly::RemoteConsoleChapters _remoteConsoleChapters;
 	HardwareInterfaces::Console _mainConsole;
 	HardwareInterfaces::Console _remoteConsole[Assembly::NO_OF_REMOTE_DISPLAYS];
+	bool _dataHasChanged = true;
 };

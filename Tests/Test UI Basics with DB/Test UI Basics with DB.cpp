@@ -103,7 +103,7 @@ void ui_yield() {
 namespace LCD_UI {
 	void notifyDataIsEdited() { // global function for notifying anyone who needs to know
 		// Checks Zone Temps, then sets each zone.nextEvent to now.
-		if (heating_system) heating_system->notifyDataIsEdited();
+		if (heating_system) heating_system->updateChangedData();
 	}
 }
 

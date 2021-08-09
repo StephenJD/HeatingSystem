@@ -321,7 +321,7 @@ namespace HardwareInterfaces {
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
 		// Modifies _currProfileTempRequest to allow for heat-up for next event
 		// returns true when actual programmed time has expired.
-		decltype(millis()) executionTime[8] = { millis() };
+		//decltype(millis()) executionTime[8] = { millis() };
 
 		using namespace Date_Time;
 		auto & zoneRec = _zoneRecord.rec();
@@ -356,7 +356,7 @@ namespace HardwareInterfaces {
 			zoneRec.autoTimeC = compressedTimeConst;
 			zoneRec.autoQuality = quality;
 			_zoneRecord.update();
-			/*profile*/logger() << "\tNew Pre-heat saved. Limit: "
+			profileLogger() << "\tNew Pre-heat saved. Limit: "
 			<< limit/256.
 			<< " MaxFlowT: " << _maxFlowTemp
 			<< " TC: " << _timeConst << " Compressed TC: " << compressedTimeConst
@@ -375,7 +375,7 @@ namespace HardwareInterfaces {
 			else if (newDelay < -127) newDelay = -127;
 			zoneRec.autoDelay = int8_t(newDelay);
 			_zoneRecord.update();
-			/*profileL*/logger() << "\tNew Delay saved: " << zoneRec.autoDelay << L_endl;
+			profileLogger() << "\tNew Delay saved: " << zoneRec.autoDelay << L_endl;
 		};
 
 		auto getPreheatTemp = [this, calculatePreheatTime, &zoneRec, currTemp_fractional]() -> int {
@@ -387,7 +387,7 @@ namespace HardwareInterfaces {
 			do {
 				minsToAdd = calculatePreheatTime(currTemp_fractional, info.nextTT.temp());
 				if (minsToAdd > 0) {
-					/*profileL*/logger() << "\t" << zoneRec.name << " Preheat mins " << minsToAdd << " Delay: " << zoneRec.autoDelay << L_endl;
+					profileLogger() << "\t" << zoneRec.name << " Preheat mins " << minsToAdd << " Delay: " << zoneRec.autoDelay << L_endl;
 					minsToAdd += zoneRec.autoDelay + 5;
 				}
 				needToStart = clock_().now().minsTo(info.nextEvent) <= minsToAdd;
@@ -397,7 +397,7 @@ namespace HardwareInterfaces {
 			if (needToStart) {
 				preheatCallTemp = info.nextTT.temp();
 				saveThermalRatio();
-				/*profileL*/logger() << zoneRec.name << " Preheat " << minsToAdd  
+				profileLogger() << zoneRec.name << " Preheat " << minsToAdd  
 				<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp())
 				<< " by " << info.nextEvent
 				<< L_endl;
@@ -417,58 +417,58 @@ namespace HardwareInterfaces {
 		 When the actual temp reaches the required temp, stop recording and do a curve-match.
 		 If the temp-range of the curve-match is >= to the preious best, then save the new curve parameters.
 		*/
-		executionTime[1] = millis();
-		/*profileL*/logger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << _ttStartDateTime << L_endl;
-		executionTime[2] = millis();
-		executionTime[3] = millis()-1;
-		executionTime[4] = millis()-2;
-		executionTime[5] = millis()-3;
+		//executionTime[1] = millis();
+		profileLogger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << _ttStartDateTime << L_endl;
+		//executionTime[2] = millis();
+		//executionTime[3] = millis()-1;
+		//executionTime[4] = millis()-2;
+		//executionTime[5] = millis()-3;
 		
 		auto currTempReq = currTempRequest();
 		auto newPreheatTemp = getPreheatTemp();
 		if (finishedPreheat(newPreheatTemp)) {
 			auto resultQuality = (currTemp_fractional - _startCallTemp) / 25;
-			/*profileL*/logger() << zoneRec.name 
+			profileLogger() << zoneRec.name 
 				<< " Preheat OK. Req " << _preheatCallTemp 
 				<< " is: " << L_fixed  << currTemp_fractional 
 				<< L_dec << " Range: " << resultQuality
 				<< " Ratio: " << zoneRec.autoRatio / RATIO_DIVIDER
 				<< " Delay: " << zoneRec.autoDelay
 				<< L_endl;
-			executionTime[3] = millis();
+			//executionTime[3] = millis();
 			bool amLate = _preheatCallTemp == currTempRequest() ? true : false;
 			DateTime targetTime;
 			if (amLate) targetTime = _ttStartDateTime; else targetTime = _ttEndDateTime;
 			auto missedTargetTime = targetTime.minsTo(clock_().now());
 			if (missedTargetTime) {
-				/*profileL*/logger() << "\tMissed Target Time by " << missedTargetTime << " Aiming for " << targetTime << L_endl;
-				executionTime[4] = millis();
+				profileLogger() << "\tMissed Target Time by " << missedTargetTime << " Aiming for " << targetTime << L_endl;
+				//executionTime[4] = millis();
 				if (resultQuality >= zoneRec.autoQuality) {
 					saveNewTimeConst(currTemp_fractional, maxPredictedAchievableTemp(_maxFlowTemp) * 256, resultQuality);
 				} else {
 					saveNewTimeDelay();
 				}
-				executionTime[5] = millis();
+				//executionTime[5] = millis();
 			}
 			cancelPreheat();
 			_startCallTemp = currTemp_fractional;
 		}
-		executionTime[6] = millis();
+		//executionTime[6] = millis();
 		if (newPreheatTemp > _preheatCallTemp) {
-			/*profileL*/logger() << "\tStart Preheat " << zoneRec.name << L_endl;
+			profileLogger() << "\tStart Preheat " << zoneRec.name << L_endl;
 			_startCallTemp = currTemp_fractional;
 			if (_minsCooling == DELAY_COOLING_TIME) _minsCooling = MEASURING_DELAY;
 			_minsInPreHeat = 0;
 		} 
 		_preheatCallTemp = newPreheatTemp;
-		executionTime[7] = millis();
-		logger() << "preHeatForNextTT() Lambdas: " << int(executionTime[1] - executionTime[0]) << "\t" << L_endl;
-		logger() << "preHeatForNextTT() Heading: " << int(executionTime[2] - executionTime[1]) << "\t" << L_endl;
-		logger() << "preHeatForNextTT() FinishedLog: " << int(executionTime[3] - executionTime[2]) << "\t" << L_endl;
-		logger() << "preHeatForNextTT() MissedLog: " << int(executionTime[4] - executionTime[3]) << "\t" << L_endl;
-		logger() << "preHeatForNextTT() SaveTC: " << int(executionTime[5] - executionTime[4]) << "\t" << L_endl;
-		logger() << "preHeatForNextTT() DoneFinished: " << int(executionTime[6] - executionTime[5]) << "\t" << L_endl;
-		logger() << "preHeatForNextTT() StartHeating: " << int(executionTime[7] - executionTime[6]) << "\t" << L_endl;
+		//executionTime[7] = millis();
+		//logger() << "preHeatForNextTT() Lambdas: " << int(executionTime[1] - executionTime[0]) << "\t" << L_endl;
+		//logger() << "preHeatForNextTT() Heading: " << int(executionTime[2] - executionTime[1]) << "\t" << L_endl;
+		//logger() << "preHeatForNextTT() FinishedLog: " << int(executionTime[3] - executionTime[2]) << "\t" << L_endl;
+		//logger() << "preHeatForNextTT() MissedLog: " << int(executionTime[4] - executionTime[3]) << "\t" << L_endl;
+		//logger() << "preHeatForNextTT() SaveTC: " << int(executionTime[5] - executionTime[4]) << "\t" << L_endl;
+		//logger() << "preHeatForNextTT() DoneFinished: " << int(executionTime[6] - executionTime[5]) << "\t" << L_endl;
+		//logger() << "preHeatForNextTT() StartHeating: " << int(executionTime[7] - executionTime[6]) << "\t" << L_endl;
 	}
 
 }

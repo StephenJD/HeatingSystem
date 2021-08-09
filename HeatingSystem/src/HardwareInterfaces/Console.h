@@ -13,6 +13,7 @@ namespace HardwareInterfaces {
 	public:
 		Console(I_Keypad & keyPad, LCD_Display & lcd_display, LCD_UI::Chapter_Generator & chapterGenerator);
 		bool processKeys();
+		void refreshDisplay();
 	private:
 		I_Keypad & _keyPad;
 		LCD_UI::UI_DisplayBuffer _lcd_UI;

@@ -100,29 +100,29 @@ namespace client_data_structures {
 		if (moveBy > 0) {
 			enableCmds(e_NewCmd);
 		}
-		else {
+		else if (moveBy < 0){
 			enableCmds(e_DelCmd);
 		}
 		return true;
 	}
 
-	bool InsertTimeTemp_Cmd::focusHasChanged(bool moveRight) {
-		if (moveRight) {
-			enableCmds(e_NewCmd);
-		}
-		else {
-			enableCmds(e_DelCmd);
-		}
-		return true;
-	}
+	//bool InsertTimeTemp_Cmd::focusHasChanged(bool moveRight) {
+	//	if (moveRight) {
+	//		enableCmds(e_NewCmd);
+	//	}
+	//	else {
+	//		enableCmds(e_DelCmd);
+	//	}
+	//	return true;
+	//}
 
 	Collection_Hndl * InsertTimeTemp_Cmd::enableCmds(int cmd_to_show) {
-		auto ttSubPageHndl = selTarget();
+		auto ttSubPageHndl = selTarget(); // LCD_UI::Object_Hndl/_objectHndl/[LCD_UI::Collection<5>]
 		auto & ttListHndl = *static_cast<Collection_Hndl *>(ttSubPageHndl->get()->collection()->item(e_TTs));
 		auto & ttDeleteHndl = *ttSubPageHndl->get()->collection()->item(e_DelCmd);
 		auto & ttNewHndl = *ttSubPageHndl->get()->collection()->item(e_NewCmd);
 		auto newFocus = cmd_to_show == e_allCmds ? e_EditCmd : e_TTs;
-		if (cmd_to_show == e_DelCmd) {
+		if (cmd_to_show == e_DelCmd) { // show "delete_" and the TT
 			newFocus = e_DelCmd;
 			_hasInsertedNew = true;
 		} else if (cmd_to_show != e_none) _hasInsertedNew = false;

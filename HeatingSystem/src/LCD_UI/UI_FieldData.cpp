@@ -7,6 +7,9 @@
 #include <map>
 std::map<long, std::string> & ui_Objects();
 using namespace std;
+namespace arduino_logger {
+	Logger& debug();
+}
 #endif
 using namespace arduino_logger;
 
@@ -34,7 +37,7 @@ namespace LCD_UI {
 		auto objectAtFocus = _data->query()[focusIndex()];
 		_data->setDS_RecordID(focusIndex());
 #ifdef ZPSIM
-		logger() << F("\tfocusHasChanged on ") << ui_Objects()[(long)this].c_str()
+		debug() << F("\tfocusHasChanged on ") << ui_Objects()[(long)this].c_str()
 			<< F("\n\t\tWas Parent ID: ") << _data->parentIndex()
 			<< F(" FocusIndex: ") << focusIndex()
 			<< F(" ObjectIndex: ") << objectIndex()
@@ -55,7 +58,7 @@ namespace LCD_UI {
 		_data->i_record().answer() = newAnswer;
 		_data->setDS_RecordID(focusIndex());
 #ifdef ZPSIM
-		logger() << F("\t\tNow Parent ID: ") << _data->parentIndex()
+		debug() << F("\t\tNow Parent ID: ") << _data->parentIndex()
 			<< F(" FocusIndex: ") << focusIndex()
 			<< F(" ObjectIndex: ") << objectIndex()
 			<< L_endl;

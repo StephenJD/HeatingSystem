@@ -39,7 +39,7 @@ namespace client_data_structures {
 		InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour);
 		Collection_Hndl * enableCmds(int cmd_to_show);
 		bool move_focus_by(int moveBy, Collection_Hndl* colln_hndl) override;
-		bool focusHasChanged(bool hasFocus) override ;
+		//bool focusHasChanged(bool hasFocus) override ;
 		Collection_Hndl * select(Collection_Hndl * from) override;
 		bool back() override;
 		Collection_Hndl * on_back() override;
