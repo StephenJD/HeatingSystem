@@ -14,8 +14,6 @@ namespace arduino_logger {
 }
 using namespace arduino_logger;
 
-void ui_yield();
-
 using namespace RelationalDatabase;
 using namespace client_data_structures;
 using namespace HardwareInterfaces;
@@ -69,8 +67,6 @@ namespace Assembly {
 			/*bdfh*/ if (dwellInfo.currTT.time_temp.temp() > info.currTT.time_temp.temp()) {
 				info.currTT = dwellInfo.currTT;
 			}			
-
-		//ui_yield();
 		}
 		profileLogger() << F("\tNext Event ") << info.nextEvent.getDayStr() << " " << info.nextEvent << L_endl;
 		profileLogger() << F("\t\tCurr ") << info.currTT 

@@ -7,7 +7,10 @@ namespace HardwareInterfaces {
 
 #if defined (ZPSIM)
 	I_Keypad::KeyOperation RemoteKeypad::getKeyCode() {
-		putKey(simKey);
+		wakeDisplay();
+		if (displayIsAwake()) {
+			putKey(simKey);
+		}
 		simKey = NO_KEY; 
 		return simKey;
 	}

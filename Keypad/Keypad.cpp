@@ -24,8 +24,8 @@
 #endif
 
 namespace HardwareInterfaces {
-
-	//unsigned char log[L_NoOfFields][L_NoOfLogs] = { 0 };
+	//enum { L_ReadTime, L_ReadAgain, L_Key, L_NoOfFields, L_NoOfLogs = 100 };
+	//unsigned char keyLog[L_NoOfFields][L_NoOfLogs] = { 0 };
 	//int logIndex = 0;
 
 	namespace { volatile bool keyQueueLocked = false; }
@@ -33,14 +33,15 @@ namespace HardwareInterfaces {
 	I_Keypad::KeyOperation I_Keypad::_prevKey = NO_KEY;
 	uint8_t I_Keypad::_readAgain = IDENTICAL_READ_COUNT;
 
-	I_Keypad::I_Keypad(int re_read_interval) 
-		: _timeToRead{ re_read_interval } 
+	I_Keypad::I_Keypad(int re_read_interval_mS, int wakeTime_S)
+		: _timeToRead{ re_read_interval_mS }
+		, _wakeTime{ uint8_t(wakeTime_S)}
 		{}
 
 	bool I_Keypad::oneSecondElapsed() {
 		bool isNewSecond = clock_().isNewSecond(_lastSecond);
 		if (isNewSecond && _secsToKeepAwake > 0) {
-			--_secsToKeepAwake; // timeSince set to DISPLAY_WAKE_TIME whenever a key is pressed
+			--_secsToKeepAwake; // timeSince set to _wakeTime whenever a key is pressed
 		}
 		return isNewSecond;
 	}
@@ -59,9 +60,9 @@ namespace HardwareInterfaces {
 		--_readAgain;
 		auto key = _currentKeypad->getKeyCode();
 		//if (logIndex < L_NoOfLogs - 1) ++logIndex;
-		//log[L_ReadTime][logIndex] = (unsigned char)millis();
-		//log[L_ReadAgain][logIndex] = _readAgain;
-		//log[L_Key][logIndex] = key;
+		//keyLog[L_ReadTime][logIndex] = (unsigned char)millis();
+		//keyLog[L_ReadAgain][logIndex] = _readAgain;
+		//keyLog[L_Key][logIndex] = key;
 		if (key != _prevKey) {
 			_readAgain = IDENTICAL_READ_COUNT;
 			_prevKey = key;
@@ -77,8 +78,10 @@ namespace HardwareInterfaces {
 			}
 			// We have a non-KEY_UP_OR_INFO key, or NO_KEY.
 			if (key == KEY_INFO) upKeyCombination = KEY_INFO;
-			else if (upKeyCombination == KEY_UP_OR_INFO) key = KEY_UP;
-			else upKeyCombination = NO_KEY;
+			else {
+				if (upKeyCombination == KEY_UP_OR_INFO) key = KEY_UP;
+				upKeyCombination = NO_KEY;
+			}
 			_currentKeypad->putKey(key);
 		}
 	}
@@ -89,14 +92,14 @@ namespace HardwareInterfaces {
 			++keyQueEnd;
 			keyQue[keyQueEnd] = myKey;
 			keyQueueLocked = false;
-		}
 
-		//Serial.println(F("\nTime, ReadAgain, Key"));
-		//for (int i = 0; i <= logIndex; ++i) {
-		//	Serial.print(log[L_ReadTime][i]); Serial.print(F("\t"));
-		//	Serial.print(log[L_ReadAgain][i]); Serial.print(F("\t"));
-		//	Serial.println((int)log[L_Key][i]);
-		//}
+			//Serial.println(F("\nTime, ReadAgain, Key"));
+			//for (int i = 0; i <= logIndex; ++i) {
+			//	Serial.print(keyLog[L_ReadTime][i]); Serial.print(F("\t"));
+			//	Serial.print(keyLog[L_ReadAgain][i]); Serial.print(F("\t"));
+			//	Serial.println((int)keyLog[L_Key][i]);
+			//}
+		}
 		//logIndex = -1;
 	}
 
@@ -131,6 +134,7 @@ namespace HardwareInterfaces {
 		}
 
 		if (retKey > NO_KEY) {
+			//Serial.print("Popped: "); Serial.println((int)retKey);
 			if (!displayIsAwake()) retKey = KEY_WAKEUP;
 			wakeDisplay();
 		}

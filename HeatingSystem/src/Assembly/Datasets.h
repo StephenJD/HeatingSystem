@@ -1,12 +1,14 @@
 #pragma once
 #include "HeatingSystem_Queries.h"
 
+class HeatingSystem;
+
 namespace Assembly {
 	class TemperatureController;
 
 	struct HeatingSystem_Datasets
 	{
-		HeatingSystem_Datasets(HeatingSystem_Queries& queries, TemperatureController& tc);
+		HeatingSystem_Datasets(HeatingSystem & hs, HeatingSystem_Queries& queries, TemperatureController& tc);
 	private:
 		// DB Record Interfaces - Must be constructed first
 		client_data_structures::RecInt_CurrDateTime	_recCurrTime;
@@ -20,6 +22,7 @@ namespace Assembly {
 		client_data_structures::RecInt_TowelRail	_recTowelRail;
 		client_data_structures::RecInt_Relay		_recRelay;
 		client_data_structures::RecInt_MixValveController _recMixValve;
+		client_data_structures::RecInt_Console _recConsole;
 	public:
 		// Datasets
 		client_data_structures::Dataset _ds_currTime;
@@ -35,6 +38,7 @@ namespace Assembly {
 		client_data_structures::Dataset _ds_towelRail;
 		client_data_structures::Dataset _ds_relay;
 		client_data_structures::Dataset _ds_mixValve;
+		client_data_structures::Dataset _ds_consoles;
 
 	};
 

@@ -10,6 +10,7 @@
 #include "..\Client_DataStructures\Data_TowelRail.h"
 #include "..\Client_DataStructures\Data_Relay.h"
 #include "..\Client_DataStructures\Data_MixValveControl.h"
+#include "..\Client_DataStructures\Data_Console.h"
 #include "..\Client_DataStructures\Data_CurrentTime.h"
 #include "..\Client_DataStructures\Client_Cmd.h"
 #include <RDB.h>
@@ -43,6 +44,7 @@ namespace Assembly {
 		RelationalDatabase::TableQuery q_towelRails;
 		RelationalDatabase::TableQuery q_relays;
 		RelationalDatabase::TableQuery q_mixValveControllers;
+		RelationalDatabase::TableQuery q_Consoles;
 	};
 
 }

@@ -51,6 +51,9 @@ namespace Assembly {
 		, _mixValveFlowTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_flowTemp, {V + V1} }
 		, _mixValveReqTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_reqTemp, {V + S + V1} }
 		, _mixValveStateUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_state, {V + V1} }
+		
+		, _consoleNameUI_c{ &db._ds_consoles, RecInt_Console::e_name, {V + V1 + L} }
+		, _consoleEnabledUI_c{ &db._ds_consoles, RecInt_Console::e_keypad_enabled, {V + S + VnLR + UD_S} }
 
 		// Basic UI Elements
 		, _newLine{ "`" }
@@ -75,6 +78,7 @@ namespace Assembly {
 		, _towelRailsLbl { "Room Temp OnFor ToGo" }
 		, _mixValveLbl   { "MixV  Pos Is Req St" }
 		, _autoSettingLbl{ "Aut Rat Tc  Del Qy" }
+		, _consoleLbl{"Console  KBd-Enabled"}
 
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection( _contrastCmd, _backlightCmd, _currTimeUI_c, _currDateUI_c, _dst, _dstUI_c, _SDCardUI_c) }
@@ -96,10 +100,10 @@ namespace Assembly {
 		, _page_profile_c{ makeCollection(_dwellNameUI_c, _prog, _progNameUI_c, _zone, _dwZoneAbbrevUI_c, _profileDaysCmd, _profileDaysUI_c, _tt_SubPage_c) }
 
 		// Info Pages
-		, _iterated_tempSensorUI{ 80, makeCollection(_tempSensorNameUI_c,_tempSensorTempUI_c) }
-
 		, _iterated_towelRails_info_c{ 80, makeCollection(_towelRailNameUI_c,_towelRailTempUI_c, _towelRailOnTimeUI_c, _towelRailStatus_c),{V + S + VnLR + UD_A} }
 		, _page_towelRails_c{ makeCollection(_towelRailsLbl, _iterated_towelRails_info_c) }
+		
+		, _iterated_tempSensorUI{ 80, makeCollection(_tempSensorNameUI_c,_tempSensorTempUI_c) }
 
 		, _iterated_relays_info_c{ 80, makeCollection(_relayNameUI_c, _relayStateUI_c) }
 
@@ -109,11 +113,14 @@ namespace Assembly {
 		, _iterated_mixValve_info_c{ 80, makeCollection(_mixValveNameUI_c, _mixValvePosUI_c, _mixValveFlowTempUI_c, _mixValveReqTempUI_c, _mixValveStateUI_c),{V + S + VnLR + UD_S} }
 		, _page_mixValve_c{ makeCollection(_mixValveLbl, _iterated_mixValve_info_c) }
 
+		, _iterated_console_info_c{80, makeCollection(_consoleNameUI_c, _consoleEnabledUI_c)}
+		, _page_console_c{makeCollection(_consoleLbl, _iterated_console_info_c)}
+
 		, _reset_c{makeCollection(_testWatchdog, _factoryReset)}
 		// Display - Collection of Page Handles
-		, _user_chapter_c{ makeChapter(_page_currTime_c, _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c) }
+		, _user_chapter_c{ makeChapter( _iterated_zoneReqTemp_c, _page_dwellingMembers_c, _page_profile_c, _page_currTime_c) }
 		, _user_chapter_h{ _user_chapter_c }
-		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _page_autoSettings_c, _page_mixValve_c, _reset_c) }
+		, _info_chapter_c{ makeChapter(_page_towelRails_c, _iterated_tempSensorUI, _iterated_relays_info_c, _page_autoSettings_c, _page_mixValve_c, _page_console_c, _reset_c) }
 		, _info_chapter_h{ _info_chapter_c }
 	{
 		_profileDaysCmd.set_UpDn_Target(_page_profile_c.item(6));
@@ -123,8 +130,8 @@ namespace Assembly {
 		_editTTCmd.set_OnSelFn_TargetUI(_page_profile_c.item(7));
 		_newTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
 		_timeTempUI_c.set_OnSelFn_TargetUI(&_editTTCmd);
-		_contrastCmd.setDisplay(hs.mainDisplay);
-		_backlightCmd.setDisplay(hs.mainDisplay);
+		_contrastCmd.setDisplay(hs.mainDisplay, Contrast_Brightness_Cmd::e_contrast);
+		_backlightCmd.setDisplay(hs.mainDisplay, Contrast_Brightness_Cmd::e_backlight);
 #ifdef ZPSIM
 		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getStreamingTool().f_interface().editItem().get();
 		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";

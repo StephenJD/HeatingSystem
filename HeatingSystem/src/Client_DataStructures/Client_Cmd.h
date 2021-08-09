@@ -25,9 +25,7 @@ namespace client_data_structures {
 		Contrast_Brightness_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour);
 		bool upDown(int moveBy, Collection_Hndl* colln_hndl, LCD_UI::Behaviour ud_behaviour) override;
 
-		LCD_UI::Collection_Hndl * function(e_function fn) { _function = fn; return _self; }
-
-		void setDisplay(HardwareInterfaces::LocalDisplay & lcd);
+		void setDisplay(HardwareInterfaces::LocalDisplay & lcd, e_function function);
 	private:
 		e_function _function = e_contrast;
 		HardwareInterfaces::LocalDisplay * _lcd = 0;

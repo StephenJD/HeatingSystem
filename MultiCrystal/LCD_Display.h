@@ -52,21 +52,4 @@ namespace HardwareInterfaces {
 	private:
 		char _buff[_cols * _rows + 3] = { 0 }; // [0] == cursorPos, [1] == cursorMode. Last is \0
 	};
-
-	struct R_Display {
-		char name[5];
-		uint8_t addr;
-		uint8_t contrast;
-		uint8_t backlight_bright;
-		uint8_t backlight_dim;
-		uint8_t photo_bright;
-		uint8_t photo_dim;
-		uint8_t timeout;
-
-		bool operator < (R_Display rhs) const { return false; }
-		bool operator == (R_Display rhs) const { return true; }
-	};
-	inline arduino_logger::Logger& operator << (arduino_logger::Logger& stream, const R_Display & display) {
-		return stream << F("Display ") << (int)display.name;
-	}
 }

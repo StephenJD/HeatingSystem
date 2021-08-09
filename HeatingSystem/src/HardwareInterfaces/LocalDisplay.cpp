@@ -1,10 +1,12 @@
 #include "LocalDisplay.h"
+#include "../HeatingSystem/src/Client_DataStructures/Data_Console.h"
 #include <Logging.h>
 #include "A__Constants.h"
 #include <MemoryFree.h>
 
 using namespace RelationalDatabase;
 using namespace arduino_logger;
+using namespace client_data_structures;
 
 extern uint8_t BRIGHNESS_PWM;
 extern uint8_t CONTRAST_PWM;
@@ -75,7 +77,10 @@ namespace HardwareInterfaces {
 
 			float lightFactor = photoRange > 1 ? float(ambientLight() - minPhoto) / photoRange : 1.f;
 			uint16_t brightness = uint16_t(minBL + blRange * lightFactor); // compensate for light
-			if (!wake) brightness = (brightness + minBL) / 2; // compensate for sleep
+			if (!wake) {
+				brightness = (brightness + minBL) / SLEEP_BRIGHTNESS_FACTOR; // compensate for sleep
+				logger() << F("Backlight_Sleep: ") << brightness << L_endl;
+			}
 
 			brightness = (brightness * (MAX_BL - MIN_BL) / 25) + MIN_BL; // convert to analogue write val.
 			if (brightness > MAX_BL) brightness = MAX_BL;

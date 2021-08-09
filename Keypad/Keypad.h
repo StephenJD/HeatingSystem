@@ -3,12 +3,7 @@
 #include <Timer_mS_uS.h>
 
 namespace HardwareInterfaces {
-	constexpr uint8_t DISPLAY_WAKE_TIME = 30;
 	constexpr uint8_t KEY_QUEUE_LENGTH = 3;
-
-	enum { L_ReadTime, L_ReadAgain, L_Key, L_NoOfFields, L_NoOfLogs = 100 };
-	//extern unsigned char log[L_NoOfFields][L_NoOfLogs];
-	//extern int logIndex;
 
 	/// <summary>
 	/// Debounced with EMI protection with multiple re-reads.
@@ -23,18 +18,20 @@ namespace HardwareInterfaces {
 		static constexpr int IDENTICAL_READ_COUNT = 4;
 		static constexpr int RE_READ_PERIOD_mS = 5;
 		
+		// Queries
+		bool displayIsAwake() const { return _secsToKeepAwake > 0; }
+		bool keyIsWaiting() const { return keyQueEnd > -1; }
+
+		// Modifiers
 		virtual void startRead(); // for interrupt driven keypads
 		void readKey(); // for non-interrupt driven keypads
 		KeyOperation popKey();
 		virtual KeyOperation getKeyCode() = 0;
 		bool oneSecondElapsed();
-		bool displayIsAwake() { return _secsToKeepAwake > 0; }
-		void wakeDisplay() { _secsToKeepAwake = DISPLAY_WAKE_TIME; }
-
-		bool keyIsWaiting() { return keyQueEnd > -1; }
+		void wakeDisplay() { _secsToKeepAwake = _wakeTime; }
 		void clearKeys() { keyQueEnd = -1; }
-		
 		void putKey(KeyOperation myKey);
+		void setWakeTime(uint8_t wakeTime) { _wakeTime = wakeTime; }
 
 #if defined (ZPSIM)
 		KeyOperation simKey = NO_KEY;
@@ -44,7 +41,7 @@ namespace HardwareInterfaces {
 		static void _getStableKey();
 
 	protected:
-		I_Keypad(int re_read_interval = 50);
+		I_Keypad(int re_read_interval_mS = 50, int wakeTime_S = 30);
 	private:
 		static I_Keypad* _currentKeypad;
 		static KeyOperation _prevKey;
@@ -53,6 +50,7 @@ namespace HardwareInterfaces {
 		int8_t	_secsToKeepAwake = 10;
 		uint8_t	_lastSecond = 0;
 		Timer_mS _timeToRead;
+		uint8_t _wakeTime = 30;
 	};
 }
 

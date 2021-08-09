@@ -70,6 +70,9 @@ namespace Assembly {
 		LCD_UI::UI_FieldData _mixValveReqTempUI_c;
 		LCD_UI::UI_FieldData _mixValveStateUI_c;
 
+		LCD_UI::UI_FieldData _consoleNameUI_c;
+		LCD_UI::UI_FieldData _consoleEnabledUI_c;
+
 		// Basic UI Elements
 		LCD_UI::UI_Label _newLine, _dst, _reqestTemp, _is, _prog, _zone;
 		client_data_structures::Contrast_Brightness_Cmd  _backlightCmd, _contrastCmd;
@@ -85,6 +88,7 @@ namespace Assembly {
 		LCD_UI::UI_Label _towelRailsLbl;
 		LCD_UI::UI_Label _autoSettingLbl;
 		LCD_UI::UI_Label _mixValveLbl;
+		LCD_UI::UI_Label _consoleLbl;
 		
 		// Pages & sub-pages - Collections of UI handles
 		LCD_UI::Collection<7> _page_currTime_c;
@@ -102,23 +106,31 @@ namespace Assembly {
 		LCD_UI::UI_IteratedCollection<1> _iterated_timeTempUI;
 		LCD_UI::Collection<5>_tt_SubPage_c;
 		LCD_UI::Collection<8> _page_profile_c;
+		
 		// Info pages
-		LCD_UI::UI_IteratedCollection<2> _iterated_tempSensorUI;
-	
 		LCD_UI::UI_IteratedCollection<4> _iterated_towelRails_info_c;
 		LCD_UI::Collection<2> _page_towelRails_c;
 
-		LCD_UI::UI_IteratedCollection<5> _iterated_mixValve_info_c;
-		LCD_UI::Collection<2> _page_mixValve_c;
-		
+		LCD_UI::UI_IteratedCollection<2> _iterated_tempSensorUI;
+	
 		LCD_UI::UI_IteratedCollection<2> _iterated_relays_info_c;
+
 		LCD_UI::UI_IteratedCollection<5> _iterated_zoneSettings_info_c;
 		LCD_UI::Collection<2> _page_autoSettings_c;
+		
+		LCD_UI::UI_IteratedCollection<5> _iterated_mixValve_info_c;
+		LCD_UI::Collection<2> _page_mixValve_c;	
+		
+		LCD_UI::UI_IteratedCollection<2> _iterated_console_info_c;
+		LCD_UI::Collection<2> _page_console_c;	
+
 		LCD_UI::Collection<2> _reset_c;
+		
 		// Display - Collection of Page Handles
 		LCD_UI::Collection<4> _user_chapter_c;
 		LCD_UI::A_Top_UI _user_chapter_h;
-		LCD_UI::Collection<6> _info_chapter_c;
+
+		LCD_UI::Collection<7> _info_chapter_c;
 		LCD_UI::A_Top_UI _info_chapter_h;
 	};
 }

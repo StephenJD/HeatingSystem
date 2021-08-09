@@ -42,7 +42,7 @@ namespace HardwareInterfaces {
 		bool check();
 		void sendRequestFlowTemp(uint8_t callTemp);
 		void sendFlowTemp();
-		void logMixValveOperation(bool log);
+		void logMixValveOperation(bool logThis);
 
 		struct ValveStatus {
 			int8_t algorithmMode = 0;

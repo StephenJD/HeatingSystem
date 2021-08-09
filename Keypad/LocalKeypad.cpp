@@ -14,7 +14,7 @@ namespace HardwareInterfaces {
 	uint8_t LocalKeypad::_keyHighRefPin;
 
 	LocalKeypad::LocalKeypad(int interrupt_Pin, int keyRead_Pin, int keyHighRef_Pin, Pin_Wag indicator_LED)
-		: I_Keypad{ 10 } { //Display_Stream & displ) : Keypad(displ) 
+		: I_Keypad{ 10000, 30 } { //Display_Stream & displ) : Keypad(displ) 
 		localKeypad = this;
 		interruptPin = interrupt_Pin;
 		_keyReadPin = keyRead_Pin;
@@ -64,20 +64,8 @@ namespace HardwareInterfaces {
 #endif
 
 	void localKeyboardInterrupt() { // static or global interrupt handler, no arguments
-		//static unsigned long nextPermissibleInterruptTime = 0;
-		//if (millis() > nextPermissibleInterruptTime) {
-			// When releasing the switch, it may bounce back on. 
-			// But it must first go OFF which this handler will capture. It then prohibits re-capture for 5mS.
-#ifndef ZPSIM
-			//if (digitalRead(LocalKeypad::interruptPin) == LOW) {
-#else
-			//{
-#endif
 		LocalKeypad::indicatorLED().set();
 		localKeypad->startRead();
-		//}
 		LocalKeypad::indicatorLED().clear();
-		//nextPermissibleInterruptTime = millis() + 5;
-	//}
 	}
 }

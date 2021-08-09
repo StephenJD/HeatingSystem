@@ -107,7 +107,7 @@ namespace arduino_logger {
 	template<typename MirrorBase>
 	bool File_Logger<MirrorBase>::open() {
 		if (_fileNameGenerator.isNewDay(File_Logger<MirrorBase>::_clock)) _dataFile.close();
-		if (!_dataFile.is_open()) {
+		if (!is_null() && !_dataFile.is_open()) {
 			_dataFile.open(_fileNameGenerator(File_Logger<MirrorBase>::_clock), std::ios::app);	// Append
 		}
 		return _dataFile.good();

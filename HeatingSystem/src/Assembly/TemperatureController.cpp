@@ -145,11 +145,9 @@ namespace Assembly {
 	}
 
 	void TemperatureController::checkZones(bool checkForPreHeat) {
-
 		for (auto & zone : zoneArr) { 
 			if (checkForPreHeat) zone.preHeatForNextTT();
 			zone.setFlowTemp();
-			ui_yield();
 		}
 	}
 }

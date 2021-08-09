@@ -1,12 +1,12 @@
 #include "Datasets.h"
 #include "TemperatureController.h"
-
+#include "..\HeatingSystem.h"
 //using namespace client_data_structures;
 using namespace arduino_logger;
 
 namespace Assembly {
 
-	HeatingSystem_Datasets::HeatingSystem_Datasets(HeatingSystem_Queries& queries, TemperatureController& tc) :
+	HeatingSystem_Datasets::HeatingSystem_Datasets(HeatingSystem& hs, HeatingSystem_Queries& queries, TemperatureController& tc) :
 		// DB Record Interfaces
 		_recCurrTime()
 		, _recDwelling()
@@ -19,6 +19,7 @@ namespace Assembly {
 		, _recTowelRail(tc.towelRailArr)
 		, _recRelay(tc.relayArr)
 		, _recMixValve(tc.mixValveControllerArr)
+		, _recConsole(hs.remoteKeypadArr)
 
 		// Datasets
 		, _ds_currTime{ _recCurrTime , _recCurrTime.nullQuery }
@@ -34,6 +35,7 @@ namespace Assembly {
 		, _ds_towelRail{ _recTowelRail, queries.q_towelRails}
 		, _ds_relay{ _recRelay, queries.q_relays }
 		, _ds_mixValve{ _recMixValve, queries.q_mixValveControllers }
+		, _ds_consoles{ _recConsole, queries.q_Consoles }
 	{
 		logger() << F("Datasets constructed") << L_endl;
 #ifdef ZPSIM

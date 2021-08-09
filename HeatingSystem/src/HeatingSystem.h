@@ -30,6 +30,7 @@ class HeatingSystem {
 public:
 	HeatingSystem();
 	void serviceConsoles();
+	void refreshDisplays();
 	void serviceTemperatureController();
 	/// <summary>
 	/// Checks Zone Temps, then sets each zone.nextEvent to now.
@@ -55,7 +56,7 @@ public:
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;
 	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
-	HardwareInterfaces::RemoteKeypad remoteKeypad[Assembly::NO_OF_REMOTE_DISPLAYS];
+	HardwareInterfaces::RemoteKeypad remoteKeypadArr[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;

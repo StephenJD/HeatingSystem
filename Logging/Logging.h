@@ -26,7 +26,7 @@ namespace arduino_logger {
 		Flags addFlag(Flags flag) { _flags += flag; return _flags; }
 		Flags removeFlag(Flags flag) { _flags -= flag; return _flags; }
 		virtual bool open() { return false; }
-		virtual void flush() { _flags -= L_startWithFlushing; }
+		virtual void flush() {if (!is_null()) _flags -= L_startWithFlushing; }
 		virtual Print& stream() { return *this; }
 
 		template<typename T>

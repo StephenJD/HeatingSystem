@@ -86,9 +86,14 @@ namespace Assembly {
 		for (auto & rd : _hs.remDispl) {
 			failed |= rd.initialiseDevice();
 		}
-		for (auto& kb : _hs.remoteKeypad) {
+
+		auto index = 1;
+		for (auto& kb : _hs.remoteKeypadArr) {
+			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index];
 			kb.popKey();
 			kb.clearKeys();
+			kb.setWakeTime(display.rec().timeout);
+			++index;
 		}
 		logger() << F("\tinitialiseRemoteDisplays() done") << L_endl;
 		return failed;

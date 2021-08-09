@@ -81,9 +81,10 @@ namespace client_data_structures {
 		return true;
 	}
 
-	void Contrast_Brightness_Cmd::setDisplay(HardwareInterfaces::LocalDisplay & lcd) {
+	void Contrast_Brightness_Cmd::setDisplay(HardwareInterfaces::LocalDisplay & lcd, e_function function) {
 		_lcd = &lcd;
 		_lcd->setBackLight(true);
+		_function = function;
 	}
 
 	///////////////// InsertTimeTemp_Cmd /////////////////////////

@@ -90,7 +90,7 @@ namespace HardwareInterfaces {
 		}
 	}
 
-	void MixValveController::logMixValveOperation(bool log) {
+	void MixValveController::logMixValveOperation(bool logThis) {
 #ifndef ZPSIM
 		auto algorithmMode = (uint8_t)readFromValve(Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
 		if (algorithmMode >= Mix_Valve::e_Error) {
@@ -107,7 +107,7 @@ namespace HardwareInterfaces {
 		bool ignoreThis = (algorithmMode == Mix_Valve::e_Checking && flowTemp() == _mixCallTemp)
 			|| algorithmMode == Mix_Valve::e_AtLimit;
 
-		if (log || !ignoreThis || valveStatus.algorithmMode != algorithmMode) {
+		if (logThis || !ignoreThis || valveStatus.algorithmMode != algorithmMode) {
 			valveStatus.motorActivity = (int8_t)readFromValve(Mix_Valve::state); // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
 			valveStatus.algorithmMode = algorithmMode;
 			valveStatus.onTime = (uint8_t)readFromValve(Mix_Valve::count);

@@ -43,20 +43,19 @@ namespace client_data_structures {
 			if (canDo) _abbrev = answer().rec().abbrev;
 			return &_abbrev;
 		case e_reqTemp:
+		case e_remoteReqTemp:
 			if (canDo) {
-				HardwareInterfaces::Zone & z = runTimeData();
+				HardwareInterfaces::Zone& z = runTimeData();
 				_requestTemp.val = z.currTempRequest();
-				_requestTemp.valRange.maxVal = z.maxUserRequestTemp();
+				_requestTemp.valRange.maxVal = z.maxUserRequestTemp(fieldID == e_remoteReqTemp);
 			}
-			return &_requestTemp;		
+			return &_requestTemp;
 		case e_isTemp:
-		{
 			if (canDo) {
 				HardwareInterfaces::Zone& z = runTimeData();
 				_isTemp.val = z.getCurrTemp();
 			}
 			return &_isTemp;
-		}
 		case e_isHeating:
 			if (canDo) {
 				HardwareInterfaces::Zone & z = runTimeData();
@@ -94,6 +93,7 @@ namespace client_data_structures {
 			_abbrev = *strWrapper;
 			strcpy(answer().rec().abbrev, _abbrev.str());
 			break; }
+		case e_remoteReqTemp:
 		case e_reqTemp:
 		{
 			HardwareInterfaces::Zone & z = runTimeData();

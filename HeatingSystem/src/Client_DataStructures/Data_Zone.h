@@ -21,7 +21,7 @@ namespace client_data_structures {
 	/// </summary>
 	class RecInt_Zone : public Record_Interface<R_Zone> {
 	public:
-		enum streamable { e_name, e_abbrev, e_reqTemp, e_offset, e_isTemp, e_isHeating, e_ratio, e_timeConst, e_quality, e_delay	};
+		enum streamable { e_name, e_abbrev, e_reqTemp, e_remoteReqTemp, e_offset, e_isTemp, e_isHeating, e_ratio, e_timeConst, e_quality, e_delay	};
 		RecInt_Zone(HardwareInterfaces::Zone* runtimeData);
 		HardwareInterfaces::Zone& runTimeData() override { return _runTimeData[recordID()]; }
 		I_Data_Formatter * getField(int _fieldID) override;

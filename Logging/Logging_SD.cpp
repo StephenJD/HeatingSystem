@@ -13,6 +13,7 @@
 using namespace std;
 #endif
 using namespace GP_LIB;
+void ui_yield();
 
 namespace arduino_logger {
 
@@ -79,7 +80,8 @@ Print& SD_Logger::stream() {
 }
 
 bool SD_Logger::open() {
-	if (SD.sd_exists(chipSelect)) {
+	if (!is_null() && SD.sd_exists(chipSelect)) {
+		ui_yield();
 		if (_fileNameGenerator.isNewDay(_clock)) close();
 		if (!_dataFile) {
 			_dataFile = SD.open(_fileNameGenerator(_clock), FILE_WRITE); // appends to file. 16mS when OK. 550uS when failed. 

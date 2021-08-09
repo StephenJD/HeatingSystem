@@ -42,7 +42,7 @@ namespace HardwareInterfaces {
 		int8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
 		int8_t preheatTempRequest() const { return _preheatCallTemp; }
 		int8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
-		int8_t maxUserRequestTemp() const;
+		int8_t maxUserRequestTemp(bool setLimit) const;
 		int8_t getCurrTemp() const;
 		bool isCallingHeat() const;
 		Date_Time::DateTime nextEventTime() const { return _ttEndDateTime; }

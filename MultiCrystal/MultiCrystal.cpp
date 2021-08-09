@@ -142,7 +142,7 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 		_key_mask[1] = ~_data[1];
 		_key_mask_16 = I2C_Talk::fromBigEndian(_key_mask);
 		_key_mask_16 &= ~IOPIN_CONNECTED_TO_INTA;
-		//log("MultiCrystal::init for",_address," _key_mask_16", _key_mask_16);
+		//logger() << "MultiCrystal::init for" << _address << " _key_mask_16" << _key_mask_16;
 	} else {  
 		pinMode(_rs_pin, OUTPUT);
 		// we can save 1 pin by not using RW. Indicate by passing -1 instead of pin#
@@ -705,7 +705,7 @@ uint16_t MultiCrystal::readI2C_keypad() {
 						/* Non-existant keys often come in two-s or threes, indicating this is a software problem, rather than coincidental bad reception.
 						*/
 						//if (_i2C_device->runSpeed() > 10000) _i2C_device->set_runSpeed(long(_i2C_device->runSpeed() * 0.8));
-						logger() << L_time << L_tabs << "readI2C_keypad nonexistant Key" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed /*<< " Slowed to: "*/ << L_dec << _i2C_device->runSpeed() << L_endl;
+						//logger() << L_time << L_tabs << "readI2C_keypad nonexistant Key" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed /*<< " Slowed to: "*/ << L_dec << _i2C_device->runSpeed() << L_endl;
 						keyPressed = 0;
 					}
 				}

@@ -12,6 +12,7 @@
 #include <iostream>
 using namespace std;
 #endif
+void ui_yield();
 using namespace GP_LIB;
 
 namespace arduino_logger {
@@ -36,6 +37,7 @@ Logger& Logger::operator <<(Flags flag) {
 		break;
 	case L_endl:
 	{
+		ui_yield();
 		if (_flags & L_allwaysFlush) { *this << " |F|"; } else if (_flags == L_startWithFlushing) { *this << " |SF|"; }
 		auto streamPtr = &stream();
 		do {
