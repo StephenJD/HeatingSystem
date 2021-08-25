@@ -191,7 +191,7 @@ public:
 		/*Read Only Data*/		status,
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
 		/*Read/Write Data*/		flow_temp, request_temp, ratio, moveFromTemp, moveFromPos,
-		/*Read/Write Config*/	temp_i2c_addr, traverse_time, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
+		/*Read/Write Config*/	temp_i2c_addr, full_traverse_time, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
 		/*End-Stop*/			mixValveRegister_size
 	};
 	using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;

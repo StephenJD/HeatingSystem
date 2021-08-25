@@ -14,15 +14,21 @@
 namespace i2c_registers {
 	struct Defaut_Tag_None {};
 
+	class I_Registers {
+	public:
+		void setRegister(int reg, uint8_t value) { regArr()[reg] = value; }
+		void addToRegister(int reg, uint8_t increment) { regArr()[reg] += increment; }
+		uint8_t getRegister(int reg) const { return const_cast<I_Registers*>(this)->regArr()[reg]; }
+		uint8_t* reg_ptr(int reg) { return regArr() + reg; }
+	protected:
+		virtual uint8_t* regArr() = 0;
+	};
+
 	// mono-state class - all static data. Each template instantiation gets its own data.
 	template<I2C_Talk& i2C, int register_size, typename PurposeTag = Defaut_Tag_None>
-	class Registers {
+	class Registers : public I_Registers {
 	public:
-		void setRegister(int reg, uint8_t value) { _regArr[reg] = value; }
-		void modifyRegister(int reg, uint8_t increment) { _regArr[reg] += increment; }
-		uint8_t getRegister(int reg) { return _regArr[reg]; }
 		int noOfRegisters() { return register_size; }
-		uint8_t* reg_ptr(int reg) { return _regArr + reg; }
 
 		// Called when data is sent by a Master, telling this slave how many bytes have been sent.
 		static void receiveI2C(int howMany) {
@@ -48,6 +54,8 @@ namespace i2c_registers {
 			//Serial.print(F(" Val:")); Serial.println((int)*(_regArr + _regAddr));
 		}
 	private:
+		uint8_t* regArr() override {return _regArr;}
+
 		static uint8_t _regArr[register_size];
 		static uint8_t _regAddr; // the register address sent in the request
 	};
