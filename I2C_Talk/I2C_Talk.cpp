@@ -1,5 +1,10 @@
 #include "I2C_Talk.h"
 //#include <FlashStrings.h>
+// 
+//Using this library requires a modified wire.h, wire.cpp(AVR& Sam) and twi.h& twi.c(AVR)
+#ifndef MODIFIED_WIRE_LIB
+	static_assert(false, "Missing wire mods");
+#endif
 
 #ifndef VARIANT_MCK
 #define VARIANT_MCK F_CPU
@@ -107,6 +112,7 @@ Error_codes I2C_Talk::getData(Error_codes status, int deviceAddr, int numberByte
 #endif
 	}
 	if (status != _OK) {
+		//Serial.print(F("reqStat: ")); Serial.println(status);
 		for (auto i = 0; i < numberBytes; ++i) {
 			dataBuffer[i] = 0;
 		}
@@ -249,6 +255,7 @@ const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 
 // Slave response
 Error_codes I2C_Talk::write(const uint8_t *dataBuffer, int numberBytes) {// Called by slave in response to request from a Master. Return errCode.
+	// Writes from the databuffer to the I2C comms.
 	//logger() << F("Slave-write as ") << (isMaster() ? F("master") : F("slave")) << L_endl;
 	return static_cast<Error_codes>(_wire().write(dataBuffer, uint8_t(numberBytes)));
 } 

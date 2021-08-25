@@ -35,7 +35,7 @@ namespace HardwareInterfaces {
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
-		int16_t readFromValve(Mix_Valve::Registers reg); // returns value
+		int16_t readFromValve(Mix_Valve::MixValveRegisterNames reg); // returns value
 		uint8_t sendSetup();
 		void setResetTimePtr(unsigned long * timeOfReset_mS) { _timeOfReset_mS = timeOfReset_mS; }
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
@@ -65,7 +65,7 @@ namespace HardwareInterfaces {
 //#endif
 
 	private:
-		I2C_Talk_ErrorCodes::Error_codes writeToValve(Mix_Valve::Registers reg, uint8_t value); // returns I2C Error 
+		I2C_Talk_ErrorCodes::Error_codes writeToValve(Mix_Valve::MixValveRegisterNames reg, uint8_t value); // returns I2C Error 
 		void waitForWarmUp();
 
 		UI_TempSensor * _tempSensorArr = 0;

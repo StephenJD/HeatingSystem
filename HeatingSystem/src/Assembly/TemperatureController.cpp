@@ -145,9 +145,15 @@ namespace Assembly {
 	}
 
 	void TemperatureController::checkZones(bool checkForPreHeat) {
-		for (auto & zone : zoneArr) { 
+		for (auto& zone : zoneArr) { 
 			if (checkForPreHeat) zone.preHeatForNextTT();
 			zone.setFlowTemp();
+		}
+	}
+
+	void TemperatureController::resetZones() {
+		for (auto& zone : zoneArr) {
+			zone.refreshProfile(true);
 		}
 	}
 }

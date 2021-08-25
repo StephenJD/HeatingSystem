@@ -35,7 +35,7 @@ namespace HardwareInterfaces {
 				// Process Key 400K/100K I2C Clock: takes 0 for time, 47mS for zone temps, 110mS for calendar, 387/1000mS for change zone on Program page
 				// Process Key 19mS with RAM-buffered EEPROM.
 			case I_Keypad::KEY_INFO:
-				//logger() << L_time << F("GotKey Info\n");
+				logger() << L_time << F("GotKey Info\n");
 				_chapterGenerator.setChapterNo(1 /*Book_Info*/);
 				break;
 			case I_Keypad::KEY_UP:

@@ -1,9 +1,12 @@
 #include "Data_CurrentTime.h"
+#include "../HeatingSystem.h"
 #include "Conversions.h"
 #include <Clock.h>
 #include <SD.h>
 
 using namespace arduino_logger;
+
+extern HeatingSystem* heating_system;
 
 namespace client_data_structures {
 	using namespace HardwareInterfaces;
@@ -12,8 +15,8 @@ namespace client_data_structures {
 	namespace { // restrict to local linkage
 		CurrentTime_Interface currentTime_UI{};
 		CurrentDate_Interface currentDate_UI{};
-		enum { e_hours, e_10Mins, e_mins, e_am_pm, e_time };
-		enum { e_10Days, e_day, e_month, e_10Yrs, e_yrs, e_date };
+		enum { c_hours, c_10Mins, c_mins, c_am_pm, c_time };
+		enum { c_10Days, c_day, c_month, c_10Yrs, c_yrs, c_date };
 	}
 
 	//***************************************************
@@ -30,13 +33,13 @@ namespace client_data_structures {
 		if (moveBy == 0) return false;
 		DateTime newDate(TimeOnly(currValue().val));
 		switch (focusIndex()) {
-		case e_hours:	newDate.addOffset_NoRollover({ hh, moveBy }, DateTime{ 0 });
+		case c_hours:	newDate.addOffset_NoRollover({ hh, moveBy }, DateTime{ 0 });
 			break;
-		case e_10Mins: newDate.addOffset_NoRollover({ m10,moveBy }, DateTime{ 0 });
+		case c_10Mins: newDate.addOffset_NoRollover({ m10,moveBy }, DateTime{ 0 });
 			break;
-		case e_mins: clock_().setMinUnits(nextIndex(0,clock_().minUnits(),9,moveBy,false ));
+		case c_mins: clock_().setMinUnits(nextIndex(0,clock_().minUnits(),9,moveBy,false ));
 			break;
-		case e_am_pm: newDate.addOffset_NoRollover({ hh, moveBy * 12 }, DateTime{ 0 });
+		case c_am_pm: newDate.addOffset_NoRollover({ hh, moveBy * 12 }, DateTime{ 0 });
 			break;
 		}
 		currValue().val = newDate.time().asInt();
@@ -48,11 +51,11 @@ namespace client_data_structures {
 		// 08:10:00am
 		int cursorPos = 0;
 		switch (focusIndex) {
-		case e_hours:	cursorPos = 1; break;
-		case e_10Mins: cursorPos = 3; break;
-		case e_mins: cursorPos = 4; break;
-		case e_am_pm: cursorPos = 9; break;
-		case e_time: cursorPos = 9; break;
+		case c_hours:	cursorPos = 1; break;
+		case c_10Mins: cursorPos = 3; break;
+		case c_mins: cursorPos = 4; break;
+		case c_am_pm: cursorPos = 9; break;
+		case c_time: cursorPos = 9; break;
 		default: cursorPos = 0;
 		};
 
@@ -62,8 +65,8 @@ namespace client_data_structures {
 
 	int Edit_CurrentTime_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
-		cursorFromFocus(e_time); // initial cursorPos when selected (not in edit)
-		return e_mins;
+		cursorFromFocus(c_time); // initial cursorPos when selected (not in edit)
+		return c_mins;
 	}
 
 	const char * CurrentTime_Interface::streamData(bool isActiveElement) const {
@@ -95,15 +98,15 @@ namespace client_data_structures {
 		if (moveBy == 0) return false;
 		DateTime newDate(DateOnly( currValue().val ));
 		switch (focusIndex()) {
-		case e_10Days:	newDate.addOffset_NoRollover({ dd, moveBy * 10 }, DateTime{ 0 });
+		case c_10Days:	newDate.addOffset_NoRollover({ dd, moveBy * 10 }, DateTime{ 0 });
 			break;
-		case e_day:	newDate.addOffset_NoRollover({ dd, moveBy }, DateTime{ 0 });
+		case c_day:	newDate.addOffset_NoRollover({ dd, moveBy }, DateTime{ 0 });
 			break;
-		case e_month: newDate.addOffset_NoRollover({ mm, moveBy }, DateTime{ 0 });
+		case c_month: newDate.addOffset_NoRollover({ mm, moveBy }, DateTime{ 0 });
 			break;
-		case e_10Yrs: newDate.addOffset_NoRollover({ yy, moveBy * 10 }, DateTime{ 0 });
+		case c_10Yrs: newDate.addOffset_NoRollover({ yy, moveBy * 10 }, DateTime{ 0 });
 			break;
-		case e_yrs: 
+		case c_yrs: 
 			newDate.addOffset_NoRollover({ yy, moveBy }, DateTime{ 0 });
 			break;
 		}
@@ -116,12 +119,12 @@ namespace client_data_structures {
 		// Wed 12-Feb-2018
 		int cursorPos = 0;
 		switch (focusIndex) {
-		case e_10Days:	cursorPos = 4; break;
-		case e_day:	cursorPos = 5; break;
-		case e_month: cursorPos = 7; break;
-		case e_10Yrs: cursorPos = 13; break;
-		case e_yrs: cursorPos = 14; break;
-		case e_date: cursorPos = 14; break;
+		case c_10Days:	cursorPos = 4; break;
+		case c_day:	cursorPos = 5; break;
+		case c_month: cursorPos = 7; break;
+		case c_10Yrs: cursorPos = 13; break;
+		case c_yrs: cursorPos = 14; break;
+		case c_date: cursorPos = 14; break;
 		default: cursorPos = 0;
 		};
 
@@ -131,8 +134,8 @@ namespace client_data_structures {
 
 	int Edit_CurrentDate_h::gotFocus(const I_Data_Formatter * data) { // returns initial edit focus
 		if (data) currValue() = *data;
-		cursorFromFocus(e_date); // initial cursorPos when selected (not in edit)
-		return e_yrs;
+		cursorFromFocus(c_date); // initial cursorPos when selected (not in edit)
+		return c_yrs;
 	}
 
 	const char * CurrentDate_Interface::streamData(bool isActiveElement) const {
@@ -152,8 +155,8 @@ namespace client_data_structures {
 	//***************************************************
 
 	RecInt_CurrDateTime::RecInt_CurrDateTime()
-		: _currTime{ clock_().time(), ValRange(e_fixedWidth | e_editAll,0,uint16_t(-1),0,e_time) }
-		, _currDate{ clock_().date(), ValRange(e_fixedWidth | e_editAll, 0, uint16_t(-1),0,e_date)}
+		: _currTime{ clock_().time(), ValRange(e_fixedWidth | e_editAll,0,uint16_t(-1),0,c_time) }
+		, _currDate{ clock_().date(), ValRange(e_fixedWidth | e_editAll, 0, uint16_t(-1),0,c_date)}
 		, _dst{ clock_().autoDSThours(),ValRange(e_edOneShort,0,2)}
 		, _SDCard{"",5}
 	{}
@@ -194,6 +197,7 @@ namespace client_data_structures {
 			clock_().setAutoDSThours(uint8_t(newValue->val));
 			break;
 		}
+		heating_system->tempController().resetZones();
 		return false;
 	}
 

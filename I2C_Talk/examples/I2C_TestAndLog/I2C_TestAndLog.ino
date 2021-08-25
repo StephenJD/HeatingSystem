@@ -186,13 +186,13 @@ namespace HardwareInterfaces {
 
 class MixValveController : public I_I2Cdevice_Recovery {
 public:
-	enum Registers {
+	enum MixValveRegisterNames {
 		// All registers are treated as two-byte, with second-byte un-used for most. Thus single-byte read-write works.
 		/*Read Only Data*/		status,
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
 		/*Read/Write Data*/		flow_temp, request_temp, ratio, moveFromTemp, moveFromPos,
 		/*Read/Write Config*/	temp_i2c_addr, traverse_time, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
-		/*End-Stop*/			reg_size
+		/*End-Stop*/			mixValveRegister_size
 	};
 	using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
 	// Virtual Functions

@@ -19,7 +19,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 65;
+	constexpr uint8_t VERSION = 66;
 
 	/////////////////// Pin assignments & misc. ///////////////////
 	constexpr uint8_t RESET_OUT_PIN = 14;  // active low.

@@ -251,7 +251,7 @@ namespace HardwareInterfaces {
 		return false;
 	}
 
-	Error_codes  MixValveController::writeToValve(Mix_Valve::Registers reg, uint8_t value) {
+	Error_codes  MixValveController::writeToValve(Mix_Valve::MixValveRegisterNames reg, uint8_t value) {
 		// All writable registers are single-byte
 		static uint8_t lastMins = clock_().minUnits() - 1;
 		waitForWarmUp();
@@ -267,7 +267,7 @@ namespace HardwareInterfaces {
 		return status;
 	}
 
-	int16_t MixValveController::readFromValve(Mix_Valve::Registers reg) {
+	int16_t MixValveController::readFromValve(Mix_Valve::MixValveRegisterNames reg) {
 		int16_t value = 0;
 		auto status = reEnable(); // see if is disabled
 		waitForWarmUp();

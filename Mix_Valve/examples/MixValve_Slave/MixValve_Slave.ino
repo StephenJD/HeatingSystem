@@ -26,7 +26,7 @@
 
 // ********** NOTE: ***************
 // If watchdog is being used, set_watchdog_timeout_mS() must be set at the begining of startup, before any calls to delay()
-// Otherwise, depending on how cleanly the Arduino sht down, it may time-out before it is reset.
+// Otherwise, depending on how cleanly the Arduino shuts down, it may time-out before it is reset.
 // ********************************
 
 // ********** NOTE: ***************
@@ -94,7 +94,7 @@ auto us_TempSens = TempSensor(i2c_recover, e_US_TempAddr);
 
 Mix_Valve  mixValve[noOfMixers] = {
 	{ ds_TempSens, ds_heatRelay, ds_coolRelay, eeprom(), 0, 55 }
-	, {us_TempSens, us_heatRelay, us_coolRelay, eeprom(), Mix_Valve::reg_size, 55}
+	, {us_TempSens, us_heatRelay, us_coolRelay, eeprom(), Mix_Valve::mixValveRegister_size, 55}
 };
 
 void setup() {
@@ -145,7 +145,7 @@ void receiveI2C(int howMany) {
 		regSet = msgFromMaster[0] / 16;
 		if (regSet >= noOfMixers) regSet = 0;
 		reg = msgFromMaster[0] % 16;
-		if (reg >= Mix_Valve::reg_size) reg = 0;
+		if (reg >= Mix_Valve::mixValveRegister_size) reg = 0;
 		// If howMany > 1, we are receiving data, otherwise Master has selected a register ready to read from.
 		// All writable registers are single-byte, so just read first byte sent.
 		if (howMany > 1) mixValve[regSet].setRegister(reg, msgFromMaster[1]); 

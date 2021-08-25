@@ -48,6 +48,9 @@ namespace HardwareInterfaces {
 		_zoneRecord = zoneRecord;
 		_recordID = zoneRecord.id();
 		_maxFlowTemp = zoneRecord.rec().maxFlowTemp;
+		_ttStartDateTime = clock_().now();
+		_ttEndDateTime = _ttStartDateTime;
+		logger() << "Set tt_start/end to: " << _ttStartDateTime << L_endl;
 		uint8_t timeC;
 		if (_zoneRecord.rec().autoQuality == 0) timeC = _zoneRecord.rec().autoDelay;
 		else timeC = _zoneRecord.rec().autoTimeC;
@@ -289,7 +292,7 @@ namespace HardwareInterfaces {
 	ProfileInfo Zone::refreshProfile(bool reset) { // resets to original profile for UI.
 		// Lambdas
 		auto isTimeForNextEvent = [this]() -> bool { return clock_().now() >= _ttEndDateTime; };
-		auto notAdvancedToNextProfile = [this, reset]() -> bool { return reset || _ttStartDateTime <= clock_().now(); };
+		auto advancedToNextProfile = [this, reset]() -> bool { return _ttStartDateTime > clock_().now(); };
 		auto doReset = [reset, this](int currTemp, bool doingCurrent)-> bool {
 			bool doReset = reset || (doingCurrent && currTemp != _currProfileTempRequest);
 			if (doReset) cancelPreheat();
@@ -297,7 +300,7 @@ namespace HardwareInterfaces {
 		};
 
 		// Algorithm
-		bool doingCurrentProfile = notAdvancedToNextProfile();
+		bool doingCurrentProfile = reset || !advancedToNextProfile();
 		auto profileDate = doingCurrentProfile ? clock_().now() : nextEventTime();
 		auto profileInfo = _sequencer->getProfileInfo(id(), profileDate);
 		auto currProfileTemp = profileInfo.currTT.temp();

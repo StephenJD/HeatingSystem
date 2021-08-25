@@ -1,9 +1,9 @@
 #include "TempSensor.h"
 #include <I2C_Recover.h>
-#include "Logging.h"
+//#include "Logging.h"
 
 using namespace I2C_Talk_ErrorCodes;
-using namespace arduino_logger;
+//using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	const uint8_t DS75LX_Temp = 0x00;  // two bytes must be read. Temp is MS 9 bits, in 0.5 deg increments, with MSB indicating -ve temp.
@@ -66,7 +66,7 @@ namespace HardwareInterfaces {
 			read(DS75LX_Temp, 2, buffer); // Recovery
 			_error = read_verify_2bytes(DS75LX_Temp, newTemp, CONSECUTIVE_COUNT, MAX_TRIES); // Non-Recovery
 			checkTemp(newTemp);
-			if (_error != _OK) logger() << F("Temp Error device 0x") << L_hex << getAddress() << L_endl;
+			//if (_error != _OK) logger() << F("Temp Error device 0x") << L_hex << getAddress() << L_endl;
 		}
 		return _error;
 	}
@@ -75,12 +75,12 @@ namespace HardwareInterfaces {
 		if (_error == _OK) {
 			auto lsNibble = newTemp & 0x000F;
 			if (lsNibble) {
-				logger() << L_time << F("Temp LSNibble Error device 0x") << L_hex << getAddress() << " Was: 0x" << lsNibble << L_endl;
+				//logger() << L_time << F("Temp LSNibble Error device 0x") << L_hex << getAddress() << " Was: 0x" << lsNibble << L_endl;
 				_error = _I2C_ReadDataWrong;
 			} else {
 				if (_lastGood != 0 && abs(_lastGood - newTemp) > 1280) {
 					_error = _I2C_ReadDataWrong;
-					logger() << L_time << F("Temp Jump Error device 0x") << L_hex << getAddress() << " Was: " << L_dec << _lastGood << F(" Now: ") << newTemp << L_endl;
+					//logger() << L_time << F("Temp Jump Error device 0x") << L_hex << getAddress() << " Was: " << L_dec << _lastGood << F(" Now: ") << newTemp << L_endl;
 				}
 				_lastGood = newTemp;
 			}

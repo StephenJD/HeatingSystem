@@ -21,7 +21,7 @@ namespace HardwareInterfaces {
 		MultiCrystal & lcd() { return _lcd; }
 #endif
 	private:
-		static constexpr auto SLEEP_BRIGHTNESS_FACTOR = 2.2;
+		static constexpr auto SLEEP_BRIGHTNESS_FACTOR = 2.0;
 		MultiCrystal _lcd;
 		bool _cursorOn = true;
 		bool _wasBlinking = false;

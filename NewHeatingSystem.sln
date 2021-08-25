@@ -30,6 +30,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E620AD9-804F-4C1E-90EE-1AC002A26043}"
 	ProjectSection(SolutionItems) = preProject
 		Mix_Valve\examples\MixValve_Slave\MixValve_Slave.ino = Mix_Valve\examples\MixValve_Slave\MixValve_Slave.ino
+		..\..\SJD Modified Core Librarys\SD\src\SD.cpp = ..\..\SJD Modified Core Librarys\SD\src\SD.cpp
+		..\..\SJD Modified Core Librarys\SD\src\SD.h = ..\..\SJD Modified Core Librarys\SD\src\SD.h
+		..\..\SJD Modified Core Librarys\SD\src\utility\Sd2Card.cpp = ..\..\SJD Modified Core Librarys\SD\src\utility\Sd2Card.cpp
 		..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits = ..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include\type_traits
 	EndProjectSection
 EndProject
@@ -42,6 +45,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Due", "Due", "{04A9DCA5-DA0
 		DueTimer\DueTimer.h = DueTimer\DueTimer.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\pio.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\pio.c
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\pio.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\pio.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\utility\Sd2Card.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\utility\Sd2Card.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\utility\Sd2Card.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\utility\Sd2Card.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\spi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\spi.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\twi.c
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\twi.h
@@ -51,6 +58,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Due", "Due", "{04A9DCA5-DA0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AVR", "AVR", "{3A89E558-0F5D-451B-8200-DC46494A3C90}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\SD.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\SD.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\SD.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\SD.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\utility\Sd2Card.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\utility\Sd2Card.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\utility\Sd2Card.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\SD\src\utility\Sd2Card.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.c
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.h
 		..\..\..\Arduino_Install\hardware\tools\avr\avr\include\avr\wdt.h = ..\..\..\Arduino_Install\hardware\tools\avr\avr\include\avr\wdt.h
@@ -77,6 +88,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test RDB", "..\..\VS_Projects\NewHeatingSystem\Test RDB\Test RDB.vcxproj", "{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinuxTests", "LinuxTests\LinuxTests.vcxproj", "{B0D701A7-902B-47E0-A408-277028F1F208}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Minicore", "Minicore", "{DD77EDD5-5BC5-4B06-BBED-F5D0C5061D23}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.c
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\Wire.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\Wire.h
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -371,6 +390,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{04A9DCA5-DA0B-42F7-900E-9DF92C531E80} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
 		{3A89E558-0F5D-451B-8200-DC46494A3C90} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
+		{DD77EDD5-5BC5-4B06-BBED-F5D0C5061D23} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8A631AB6-168B-497B-81AB-6570250D9D62}

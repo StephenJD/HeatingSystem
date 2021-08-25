@@ -31,13 +31,13 @@ class Mix_Valve
 {
 public:
 	enum Error { e_OK, e_NewTempReq, e_DS_Temp_failed, e_US_Temp_failed, e_Both_TS_Failed, e_I2C_failed, e_Water_too_cool, e_setup1, e_setup2, e_loop1, e_loop2};
-	enum Registers {
+	enum MixValveRegisterNames {
 		// All registers are treated as two-byte, with second-byte un-used for most. Thus single-byte read-write works.
 		/*Read Only Data*/		status,
 		/*Read Only Data*/		mode, count, valve_pos, state = valve_pos + 2,
 		/*Read/Write Data*/		flow_temp, request_temp, ratio, moveFromTemp, moveFromPos,
 		/*Read/Write Config*/	temp_i2c_addr, traverse_time, wait_time, max_flow_temp, eeprom_OK1, eeprom_OK2,
-		/*End-Stop*/			reg_size
+		/*End-Stop*/			mixValveRegister_size
 	};	
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat, e_Error };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};

@@ -7,13 +7,14 @@
 #include <PinObject.h>
 
 /**
-Using this library requires a modified wire.cpp (AVR & Sam) and/or twi.c (AVR)
+Using this library requires a modified wire.h, wire.cpp (AVR & Sam) and twi.h & twi.c (AVR)
 NOTE: Arduino may not use the wire/twi versions in its install folder, so check...
    <Arduino_Install>\hardware\arduino\avr\libraries\Wire\src\   
    C:\Users\[UserName]\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility
    C:\Users\[UserName]\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility
    Sam version in: in C:\Users\[UserName]\AppData\Roaming [ or Local] \Arduino15\packages\arduino\hardware\sam\1.6.4\libraries\Wire\src
 
+Library now un-blocks bus errors.
 Small mods required so that in the event of a time-out Wire.endTransmission() returns error 1
 and requestFrom() returns 0.
 This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByteSent(), TWI_WaitByteReceived().
@@ -100,6 +101,7 @@ public:
 	void setAsSlave(int slaveAddress) { _myAddress = slaveAddress; _isMaster = false; begin(); }
 	void setAsMaster(int multiMaster_MyAddress = _single_master) {_myAddress = multiMaster_MyAddress; _isMaster = true; begin();}
 	bool isMaster() const { return _isMaster; }
+	uint8_t address() const { return _myAddress; }
 	// Slave response
 	auto write(const uint8_t *dataBuffer, int numberBytes)->I2C_Talk_ErrorCodes::Error_codes; // Called by slave in response to request from a Master. 
 	auto write(const char *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes {return write((const uint8_t*)dataBuffer, (uint8_t)strlen(dataBuffer)+1);}// Called by slave in response to request from a Master. 
