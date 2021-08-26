@@ -35,6 +35,10 @@ namespace HardwareInterfaces {
 	constexpr uint8_t ZERO_CROSS_PIN = 15; // active falling edge.
 	constexpr uint16_t ZERO_CROSS_DELAY = 690;
 
+	/////////////////// No Of Registers ///////////////////////////////
+	constexpr int NO_OF_MIXERS = 2;
+	constexpr int NO_OF_REMOTES = 3;
+
 	/////////////////// Mixing Valves ///////////////////////////////
 	constexpr uint8_t VALVE_WAIT_TIME = 60;
 	constexpr uint16_t VALVE_TRANSIT_TIME = 140;

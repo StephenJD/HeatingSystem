@@ -2,6 +2,9 @@
 //#include <Logging.h>
 
 //using namespace arduino_logger;
+constexpr uint8_t US_REMOTE_MASTER_I2C_ADDR = 0x12;
+constexpr uint8_t DS_REMOTE_MASTER_I2C_ADDR = 0x13;
+constexpr uint8_t FL_REMOTE_MASTER_I2C_ADDR = 0x14;
 
 namespace HardwareInterfaces {
 	namespace {

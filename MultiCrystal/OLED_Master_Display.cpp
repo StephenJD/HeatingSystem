@@ -30,7 +30,7 @@ namespace OLED_Master_Display {
     RemoteKeypadMaster _remoteKeypad{ 50,10 };
     U8X8_SSD1305_128X32_ADAFRUIT_4W_HW_SPI _display(OLED_CS, OLED_DC, OLED_RESET);
     Display_Mode _display_mode = RoomTemp;
-    auto rem_registers = i2c_registers::Registers<i2C, remoteRegister_size>{};
+    auto rem_registers = i2c_registers::Registers<remoteRegister_size>{i2C};
 
     void setRemoteI2CAddress() {
         pinMode(5, INPUT_PULLUP);

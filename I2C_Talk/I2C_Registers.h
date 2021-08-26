@@ -25,18 +25,19 @@ namespace i2c_registers {
 	};
 
 	// mono-state class - all static data. Each template instantiation gets its own data.
-	template<I2C_Talk& i2C, int register_size, typename PurposeTag = Defaut_Tag_None>
+	template<int register_size, typename PurposeTag = Defaut_Tag_None>
 	class Registers : public I_Registers {
 	public:
+		Registers(I2C_Talk& i2C) { _i2C = &i2C; }
 		int noOfRegisters() { return register_size; }
 
 		// Called when data is sent by a Master, telling this slave how many bytes have been sent.
 		static void receiveI2C(int howMany) {
-			i2C.receiveFromMaster(1, &_regAddr); // first byte is reg-address
+			_i2C->receiveFromMaster(1, &_regAddr); // first byte is reg-address
 			if (--howMany) {
 				//flashLED(10);
 				if (_regAddr + howMany > register_size) howMany = register_size - _regAddr;
-				auto noReceived = i2C.receiveFromMaster(howMany, _regArr + _regAddr);
+				auto noReceived = _i2C->receiveFromMaster(howMany, _regArr + _regAddr);
 				//_regAddr += howMany;
 				//Serial.flush(); Serial.print(noReceived); Serial.print(F(" for RAdr: ")); Serial.print((int)_regAddr); Serial.print(F(" V: ")); Serial.println((int)_regArr[_regAddr]);
 			}
@@ -48,21 +49,24 @@ namespace i2c_registers {
 			//flashLED(10);
 			int bytesAvaiable = register_size - _regAddr;
 			if (bytesAvaiable > 32) bytesAvaiable = 32;
-			i2C.write(_regArr + _regAddr, bytesAvaiable);
+			_i2C->write(_regArr + _regAddr, bytesAvaiable);
 			//Serial.flush(); Serial.print(F("SAdr:")); Serial.print((int)_regAddr); 
 			//Serial.print(F(" Len:")); Serial.print((int)bytesAvaiable);
 			//Serial.print(F(" Val:")); Serial.println((int)*(_regArr + _regAddr));
 		}
 	private:
 		uint8_t* regArr() override {return _regArr;}
-
+		static I2C_Talk* _i2C;
 		static uint8_t _regArr[register_size];
 		static uint8_t _regAddr; // the register address sent in the request
 	};
 
-	template<I2C_Talk& i2C, int register_size, typename PurposeTag>
-	uint8_t Registers<i2C, register_size, PurposeTag>::_regArr[register_size];
+	template<int register_size, typename PurposeTag>
+	I2C_Talk* Registers<register_size, PurposeTag>::_i2C;
 
-	template<I2C_Talk& i2C, int register_size, typename PurposeTag>
-	uint8_t Registers<i2C, register_size, PurposeTag>::_regAddr;
+	template<int register_size, typename PurposeTag>
+	uint8_t Registers<register_size, PurposeTag>::_regArr[register_size];
+
+	template<int register_size, typename PurposeTag>
+	uint8_t Registers<register_size, PurposeTag>::_regAddr;
 }
