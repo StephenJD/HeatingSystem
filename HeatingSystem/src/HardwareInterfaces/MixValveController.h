@@ -29,13 +29,13 @@ namespace HardwareInterfaces {
 		uint8_t reqTemp() const {return _mixCallTemp;}
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		int8_t relayInControl() const;
-		uint8_t index() const { return _index; }
+		//uint8_t index() const { return _index; }
 		const __FlashStringHelper* showState();
 		void monitorMode();
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
-		int16_t readFromValve(Mix_Valve::MixValveRegisterNames reg); // returns value
+		uint8_t readFromValve(Mix_Valve::MixValve_Volatile_Register_Names reg); // returns value
 		uint8_t sendSetup();
 		void setResetTimePtr(unsigned long * timeOfReset_mS) { _timeOfReset_mS = timeOfReset_mS; }
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
@@ -47,10 +47,10 @@ namespace HardwareInterfaces {
 		struct ValveStatus {
 			int8_t algorithmMode = 0;
 			uint8_t onTime = 0;
-			int16_t valvePos = 0;
+			uint8_t valvePos = 0;
 			int8_t motorActivity = 0;
 			uint8_t ratio = 0;
-			int16_t fromPos = 0;
+			uint8_t fromPos = 0;
 			uint8_t fromTemp = 0;
 		} valveStatus;
 //#if defined (ZPSIM)
@@ -65,14 +65,14 @@ namespace HardwareInterfaces {
 //#endif
 
 	private:
-		I2C_Talk_ErrorCodes::Error_codes writeToValve(Mix_Valve::MixValveRegisterNames reg, uint8_t value); // returns I2C Error 
+		I2C_Talk_ErrorCodes::Error_codes writeToValve(int reg, uint8_t value); // returns I2C Error 
 		void waitForWarmUp();
 
 		UI_TempSensor * _tempSensorArr = 0;
 		UI_Bitwise_Relay * _relayArr = 0;
 		unsigned long * _timeOfReset_mS = 0;
 		uint8_t _error = 0;
-		uint8_t _index = 0;
+		uint8_t _regOffset = 0;
 		uint8_t _limitTemp = 100;
 		RelationalDatabase::RecordID _flowTempSens = 0;
 		RelationalDatabase::RecordID _storeTempSens = 0;

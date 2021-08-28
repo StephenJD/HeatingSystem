@@ -103,9 +103,8 @@ HeatingSystem::HeatingSystem()
 		_initialiser.i2C_Test();
 		_initialiser.postI2CResetInitialisation();
 		//_mainConsoleChapters(0).rec_select();
-		I2C_Slave::i2C = &i2C;
-		i2C.onReceive(I2C_Slave::receiveI2C);
-		i2C.onRequest(I2C_Slave::requestI2C);
+		i2C.onReceive(all_register_set.receiveI2C);
+		i2C.onRequest(all_register_set.requestI2C);
 	}
 
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop

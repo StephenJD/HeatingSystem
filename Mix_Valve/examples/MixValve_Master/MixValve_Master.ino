@@ -1,121 +1,148 @@
 #include <Arduino.h>
 #include <I2C_Talk.h>
+#include <I2C_Registers.h>
 #include <Logging.h>
 #include <Mix_Valve.h>
+#include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 
 #define I2C_RESET 14
-#define SERIAL_RATE 115200
-constexpr uint8_t MIX_VALVE_I2C_ADDR = 0x10;
+constexpr uint32_t SERIAL_RATE = 115200;
 
 //////////////////////////////// Start execution here ///////////////////////////////
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
 
-Logger & logger() {
-	static Serial_Logger _log(SERIAL_RATE);
-	return _log;
+namespace arduino_logger {
+	Logger& logger() {
+		static Serial_Logger _log(SERIAL_RATE);
+		return _log;
+	}
+}
+using namespace arduino_logger;
+
+//EEPROMClass& eeprom() {
+//	return EEPROM;
+//}
+
+I2C_Talk i2C{}; // default 400kHz
+
+constexpr auto slave_requesting_initialisation = 0;
+constexpr auto mix_register_offset = 1;
+constexpr int SIZE_OF_ALL_REGISTERS = 1 + Mix_Valve::mixValve_volRegister_size * NO_OF_MIXERS;
+i2c_registers::Registers<SIZE_OF_ALL_REGISTERS> all_register_set{ i2C };
+uint8_t valveStatus[NO_OF_MIXERS];
+//i2c_registers::I_Registers& all_registers{ all_register_set };
+
+void sendSlaveIniData() {
+	auto err = _OK;
+	do {
+		Serial.println(F("Sending INI to Slaves"));
+		err = i2C.write(MIX_VALVE_I2C_ADDR, 0, mix_register_offset);
+		if (err) logger() << F("IniErr:") << i2C.getStatusMsg(err) << L_endl;
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1+ Mix_Valve::temp_i2c_addr, DS_TEMPSENS_ADDR);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::temp_i2c_addr, US_TEMPSENS_ADDR);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::full_traverse_time, 130);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::full_traverse_time, 150);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::wait_time, 10);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::wait_time, 15);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::max_flowTemp, 60);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::max_flowTemp, 70);
+	} while (err != _OK);
+	all_register_set.setRegister(slave_requesting_initialisation, 0);
 }
 
-I2C_Talk i2C; // default 400kHz
+void sendReqTempsToMixValve() {
+	auto reqTemp = all_register_set.getRegister(1 + Mix_Valve::request_temp);
+	logger() << F("Master Sent: ") << reqTemp << L_endl;
+	auto err = i2C.write(MIX_VALVE_I2C_ADDR, 1+ Mix_Valve::request_temp, reqTemp);
 
+	reqTemp = all_register_set.getRegister(1 + Mix_Valve::mixValve_volRegister_size + Mix_Valve::request_temp);
 
+	err |= i2C.write(MIX_VALVE_I2C_ADDR, 1+ Mix_Valve::mixValve_all_register_size + Mix_Valve::flow_temp, reqTemp);
+	
+	if (err == _StopMarginTimeout) {
+		i2C.setStopMargin(i2C.stopMargin() + 1);
+		logger() << F("WriteErr. New StopMargin:") << i2C.stopMargin() << L_endl;
+	}
+}
+
+void requestSlaveData() {
+	i2C.read(MIX_VALVE_I2C_ADDR, 1, Mix_Valve::mixValve_volRegister_size, all_register_set.reg_ptr(1));
+	i2C.read(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size, Mix_Valve::mixValve_volRegister_size, all_register_set.reg_ptr(1+ Mix_Valve::mixValve_volRegister_size));
+}
 
 void setup()
 {
   logger() << L_allwaysFlush << F("Start") << L_endl;
-  i2C.setI2CFrequency(100000);
+  i2C.setAsMaster(PROGRAMMER_I2C_ADDR);
+  i2C.setMax_i2cFreq(100000);
   i2C.setTimeouts(15000,I2C_Talk::WORKING_STOP_TIMEOUT);
+  i2C.onReceive(all_register_set.receiveI2C);
+  i2C.onRequest(all_register_set.requestI2C);
   i2C.begin();
+  sendSlaveIniData();
 }
 
-byte x0 = 25;
-byte x1 = 55;
+uint8_t _mixCallTemp = 25;
+uint8_t _mixCallTemp2 = 55;
 
 void loop()
 {
   static int loopCount = 0;
+  if (all_register_set.getRegister(slave_requesting_initialisation)) sendSlaveIniData();
+
   if (loopCount == 0) {
 	  loopCount = 10;
-	  x0 = (x0 == 25 ? 55 : 25) ;
-	  x1 = (x0 == 25 ? 55 : 25) ;
-	  byte data[2];
+	  _mixCallTemp = (_mixCallTemp == 25 ? 55 : 25) ;
+	  _mixCallTemp2 = (_mixCallTemp == 25 ? 55 : 25) ;
 
-	  logger() << F("Master Sent: ") << x0 << F(" then: ") << x1 << L_endl; 
-	  auto err = i2C.write(MIX_VALVE_I2C_ADDR, Mix_Valve::request_temp, x0);
-	  err |= i2C.write(MIX_VALVE_I2C_ADDR, Mix_Valve::flow_temp, x1);
-	  if (err == _StopMarginTimeout) {
-		i2C.setStopMargin(i2C.stopMargin() + 1);
-		logger() << F("WriteErr. New StopMargin:") << i2C.stopMargin() << L_endl;
-	  }
-
-	  err = i2C.read(MIX_VALVE_I2C_ADDR, Mix_Valve::request_temp, 1, data);
-	  err |= i2C.read(MIX_VALVE_I2C_ADDR, Mix_Valve::flow_temp, 1, &data[1]);
-	  if (err == _StopMarginTimeout) {
-		i2C.setStopMargin(i2C.stopMargin() + 1);
-		logger() << F("ReadErr. New StopMargin:") << i2C.stopMargin() << L_endl;
-	  }	  
-	  logger() << F("Slave Sent ") << data[0] << F(" : ") << data[1] <<L_endl;
-  }
-  int16_t mode;
-  int16_t pos;
-  int16_t state;
-
-  i2C.read(MIX_VALVE_I2C_ADDR, Mix_Valve::mode, 2, (uint8_t*)&mode);
-  if (mode == Mix_Valve::e_Checking) i2C.read(MIX_VALVE_I2C_ADDR, Mix_Valve::valve_pos, 2, (uint8_t*)&pos);
-  else i2C.read(MIX_VALVE_I2C_ADDR, Mix_Valve::count, 2, (uint8_t*)&pos);
-  
-  i2C.read(MIX_VALVE_I2C_ADDR, Mix_Valve::state, 2, (uint8_t*)&state);
-  
-  if (mode == 0 && state == 0) {
-		logger() << F("MixValveController read error") << L_endl;
+	  all_register_set.setRegister(1 + Mix_Valve::request_temp, _mixCallTemp);
+	  all_register_set.setRegister(1 + Mix_Valve::mixValve_volRegister_size + Mix_Valve::request_temp, _mixCallTemp2);
+	  sendReqTempsToMixValve();
   }
 
-  logger() << F("Valve Status:") << L_tabs << pos << showState(state, mode) << " State: " << state << " Action: " << mode << L_endl;
-
-  readReg(Mix_Valve::mode);
-  readReg(Mix_Valve::count);
-  readReg(Mix_Valve::valve_pos);
-  readReg(Mix_Valve::state);
-
+  requestSlaveData();
+  logMixValveOperation(1,true);
+  logMixValveOperation(1+ Mix_Valve::mixValve_volRegister_size,true);
   --loopCount;
  delay(1000);
 }
 
-const __FlashStringHelper * showState(int state, int mode) {
-	switch (state) {
-	case Mix_Valve::e_Moving_Coolest: return F("Min");
-	case Mix_Valve::e_NeedsCooling: return F("Cl");
-	case Mix_Valve::e_NeedsHeating: return F("Ht");
-	case Mix_Valve::e_TempOK:
-		switch (mode) {
-		case Mix_Valve::e_Mutex: return F("Mx");
-		case Mix_Valve::e_Wait : return F("Wt");
-		case Mix_Valve::e_Checking: return F("Ck");
-		default: return F("MEr");
-		}
-		break;
-	default: return F("SEr");
+void logMixValveOperation(int regOffset, bool logThis) {
+	int index = regOffset < Mix_Valve::mixValve_volRegister_size ? 0 : 1;
+	auto algorithmMode = all_register_set.getRegister(regOffset + Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
+	if (algorithmMode >= Mix_Valve::e_Error) {
+		logger() << "MixValve Error: " << algorithmMode << L_endl;
+	}
+
+	bool ignoreThis = (algorithmMode == Mix_Valve::e_Checking && all_register_set.getRegister(regOffset + Mix_Valve::flow_temp) == _mixCallTemp)
+		|| algorithmMode == Mix_Valve::e_AtLimit;
+
+	if (logThis || !ignoreThis || valveStatus[index] != algorithmMode) {
+		valveStatus[index] = algorithmMode;
+		auto motorActivity = all_register_set.getRegister(regOffset + Mix_Valve::state); // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
+		logger() << L_time << L_tabs
+			<< (index==0 ? F("DS_Mix Req: ") : F("US_Mix Req: ")) << _mixCallTemp << F(" is ") << all_register_set.getRegister(regOffset + Mix_Valve::flow_temp)
+			<< showState(index, algorithmMode, motorActivity) << all_register_set.getRegister(regOffset + Mix_Valve::count) << all_register_set.getRegister(regOffset + Mix_Valve::valve_pos) << all_register_set.getRegister(regOffset + Mix_Valve::ratio)
+			<< all_register_set.getRegister(regOffset + Mix_Valve::moveFromPos) << all_register_set.getRegister(regOffset + Mix_Valve::moveFromTemp) << L_endl;
 	}
 }
 
-int16_t readReg(int reg) {
-	int16_t value;
-	i2C.read(MIX_VALVE_I2C_ADDR, reg, 2, (uint8_t*)&value);
-	logger() << F("Raw-Read Reg 0x") << reg << " Val:" << L_dec << value << " : " << (value / 256) << L_endl;
-	read_2bytes(reg, value);
-	logger() << F("2-byte Read Reg 0x") << reg << " Val: " << L_dec << value << " : " << (value / 256) << L_endl;
+const __FlashStringHelper* showState(int index, int algorithmMode, int motorActivity) {
+	switch (algorithmMode) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
+	case Mix_Valve::e_Wait: return F("Wt");
+	case Mix_Valve::e_Checking: return F("Chk");
+	case Mix_Valve::e_Mutex: return F("Mx");
+	case Mix_Valve::e_NewReq: return F("Req");
+	case Mix_Valve::e_AtLimit: return F("Lim");
+	case Mix_Valve::e_DontWantHeat: return F("Min");
+	case Mix_Valve::e_Moving:
+		switch (motorActivity) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
+		case Mix_Valve::e_Moving_Coolest: return F("Min");
+		case Mix_Valve::e_Cooling: return F("Cl");
+		case Mix_Valve::e_Heating: return F("Ht");
+		default: return F("Stp"); // Now stopped!
+		}
+	default: return F("SEr");
+	}
 }
-
-void read_2bytes(int reg, int16_t & data) {
-	// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].
-	// But Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
-	// A two-byte read must reverse the byte-order.
-	uint8_t dataBuffer[2];
-	int16_t newRead;
-	data = 0xAAAA; // 1010 1010 1010 1010
-	i2C.read(MIX_VALVE_I2C_ADDR, reg, 2, dataBuffer);
-	//logger() << F("Data[] Read Reg 0x") << reg << " Val: " << L_dec << dataBuffer[0] << " : " << dataBuffer[1] << L_endl;
-	newRead = fromBigEndian(dataBuffer); // convert device to native endianness
-	data = newRead;
-}
-

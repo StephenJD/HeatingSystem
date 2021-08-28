@@ -1,8 +1,9 @@
 //#include <MemoryFree.h>
-#include "I2C_Talk.h"
-#include "I2C_Recover.h"
-#include "I2C_RecoverRetest.h"
-#include "Mix_Valve.h"
+#include <Mix_Valve.h>
+#include <I2C_Talk.h>
+#include <I2C_Registers.h>
+#include <I2C_Recover.h>
+#include <I2C_RecoverRetest.h>
 #include <TempSensor.h>
 #include <PinObject.h>
 #include <Logging.h>
@@ -38,42 +39,45 @@
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
-
 constexpr uint32_t SERIAL_RATE = 115200;
-constexpr int noOfMixers = 2;
-constexpr uint8_t eeprom_firstRegister_addr = 0x2;
-uint8_t version_a = 0x2; // change to force re-application of defaults incl temp-sensor addresses
-uint8_t version_b = 0x0;
+
+namespace arduino_logger {
+	Logger& logger() {
+		static Serial_Logger _log(SERIAL_RATE, L_startWithFlushing);
+		return _log;
+	}
+}
+using namespace arduino_logger;
+
+EEPROMClass & eeprom() {
+	return EEPROM;
+}
+
+constexpr auto slave_requesting_initialisation = 0;
+
+extern const uint8_t version_month;
+extern const uint8_t version_day;
+extern const uint8_t eeprom_firstRegister_addr;
+const uint8_t version_month = 8; // change to force re-application of defaults incl temp-sensor addresses
+const uint8_t version_day = 25;
+const uint8_t eeprom_firstRegister_addr = sizeof(version_month) + sizeof(version_day);
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
 enum { ds_mix, us_mix };
 
 enum { e_US_Heat = 11, e_US_Cool = 10, e_DS_Heat = 12, e_DS_Cool = A0, e_Status = 13 };
 
-enum { e_DS_TempAddr = 0x4f, e_US_TempAddr = 0x2C }; // only used when version-changed
-//enum { e_DS_TempAddr = 0x29, e_US_TempAddr = 0x37 }; // only used when version-changed
-enum Role role = e_Master;
+enum Role { e_Slave, e_Master }; // controls PSU enable
+Role role = e_Slave;
 
-I2C_Talk & i2C() {
-	static I2C_Talk _i2C; // not initialised until this translation unit initialised.
-	return _i2C;
+I2C_Talk& i2C() {
+  static I2C_Talk _i2C{};
+  return _i2C;
 }
 
-Logger & logger() {
-	static Serial_Logger _log(SERIAL_RATE);
-	return _log;
-}
-
-EEPROMClass & eeprom() {
-	return EEPROM;
-}
-
-uint8_t regSet = 0;
-uint8_t reg = 0;
 void roleChanged(Role newRole);
+Role getRole();
 const __FlashStringHelper * showErr(Mix_Valve::Error err);
-
-void ui_yield() {}
 
 auto ds_heatRelay = Pin_Wag(e_DS_Heat, HIGH);
 auto ds_coolRelay = Pin_Wag(e_DS_Cool, HIGH);
@@ -89,37 +93,38 @@ auto led_DS_Cool = Pin_Wag(e_DS_Cool, HIGH);
 
 I2C_Recover i2c_recover(i2C());
 
-auto ds_TempSens = TempSensor(i2c_recover, e_DS_TempAddr); // addr only used when version-changed
-auto us_TempSens = TempSensor(i2c_recover, e_US_TempAddr);
+// register[0] is offset for writing to Programmer
+constexpr int mix_register_offset = 0;
+auto mixV_register_set = i2c_registers::Registers<1 + Mix_Valve::mixValve_all_register_size * NO_OF_MIXERS>{i2C()};
+i2c_registers::I_Registers& mixV_registers = mixV_register_set;
 
-Mix_Valve  mixValve[noOfMixers] = {
-	{ ds_TempSens, ds_heatRelay, ds_coolRelay, eeprom(), 0, 55 }
-	, {us_TempSens, us_heatRelay, us_coolRelay, eeprom(), Mix_Valve::mixValveRegister_size, 55}
+auto ds_TempSens = TempSensor(i2c_recover, DS_TEMPSENS_ADDR); // addr only used when version-changed
+auto us_TempSens = TempSensor(i2c_recover, US_TEMPSENS_ADDR);
+
+Mix_Valve  mixValve[] = {
+	{i2c_recover, ds_TempSens, ds_heatRelay, ds_coolRelay, eeprom(), 1}
+	, {i2c_recover, us_TempSens, us_heatRelay, us_coolRelay, eeprom(), 1 + Mix_Valve::mixValve_all_register_size}
+	//{i2c_recover, DS_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), 1}
+	//, {i2c_recover, US_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 1 + Mix_Valve::mixValve_all_register_size}
 };
 
 void setup() {
-	set_watchdog_timeout_mS(8000);
-	Serial.begin(SERIAL_RATE);
-	Serial.println("Start");
-	psu_enable.begin(true);
 	logger() << F("Setup Started") << L_endl;
-	role = e_Master;
+	//set_watchdog_timeout_mS(8000);
+	//Serial.begin(SERIAL_RATE);
+	//Serial.println("Start");
+	mixValve[0].begin(55);
+	mixValve[1].begin(55);
+	psu_enable.begin(true);
 
+	i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
 	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT);
 	i2C().setMax_i2cFreq(100000);
-	i2C().onReceive(receiveI2C);
-	i2C().onRequest(requestEventI2C);
+	i2C().onReceive(mixV_register_set.receiveI2C);
+	i2C().onRequest(mixV_register_set.requestI2C);
 	i2C().begin();
 
 	pinMode(e_Slave_Sense, INPUT);
-
-	if (mixValve[ds_mix].getRegister(Mix_Valve::request_temp) == 0) {
-		mixValve[ds_mix].setRegister(Mix_Valve::request_temp, 55);
-	}
-
-	if (mixValve[us_mix].getRegister(Mix_Valve::request_temp) == 0) {
-		mixValve[us_mix].setRegister(Mix_Valve::request_temp, 55);
-	}
 
 	for (int i = 0; i < 10; ++i) { // signal a reset
 		led_Status.set();
@@ -128,91 +133,45 @@ void setup() {
 		delay(50);
 	}
 
+	role = e_Slave;
 	roleChanged(e_Master);
-	logger() << F("Setup complete") << L_endl;
+	logger() << F("Setup complete") << L_flush;
+    logger() << F("NoFlush") << L_endl;
 	delay(500);
 	//psu_enable.clear();
 }
 
-// Called when data is sent by Master, telling slave how many bytes have been sent.
-void receiveI2C(int howMany) {  
-	// must not do a Serial.print when it receives a register address prior to a read.
-	//	delayMicroseconds(1000); // for testing only
-	uint8_t msgFromMaster[3]; // = [register, data-0, data-1]
-	if (howMany > 3) howMany = 3;
-	int noOfBytesReceived = i2C().receiveFromMaster(howMany, msgFromMaster);
-	if (noOfBytesReceived) {
-		regSet = msgFromMaster[0] / 16;
-		if (regSet >= noOfMixers) regSet = 0;
-		reg = msgFromMaster[0] % 16;
-		if (reg >= Mix_Valve::mixValveRegister_size) reg = 0;
-		// If howMany > 1, we are receiving data, otherwise Master has selected a register ready to read from.
-		// All writable registers are single-byte, so just read first byte sent.
-		if (howMany > 1) mixValve[regSet].setRegister(reg, msgFromMaster[1]); 
-	}
-}
-
-// Called when data is requested.
-// The Master will send a NACK when it has received the requested number of bytes, so we should offer as many as could be requested.
-// To keep things simple, we will send a max of two-bytes.
-// Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
-// But I2C devices use big-endianness: MSB at the smallest address: So a uint16_t is [MSB, LSB].
-// A single read returns the MSB of a 2-byte value (as in a Temp Sensor), 2-byte read is required to get the LSB.
-// To make single-byte read-write work, all registers are treated as two-byte, with second-byte un-used for most. 
-// getRegister() returns uint8_t as uint16_t which puts LSB at the lower address, which is what we want!
-// We can send the address of the returned value to i2C().write().
-// 
-void requestEventI2C() { 
-//	delayMicroseconds(1000); // for testing only
-	uint16_t regVal = mixValve[regSet].getRegister(reg);
-	//uint8_t * valPtr = (uint8_t *)&regVal;
-	// Mega OK with logging, but DUE master is not!
-	//logger() << F("requestEventI2C: mixV[") << int(regSet) << F("] Reg: ") << int(reg) << F(" Sent:") << regVal << F(" [") << *(valPtr++) << F(",") << *(valPtr) << F("]") << L_endl;
-	i2C().write((uint8_t*)&regVal, 2);
-}
-
 void loop() {
+	// It is up to any connected programmer to initiate sending a new temperature request
+	// and to request register-data.
 	static auto nextSecond = Timer_mS(1000);
 	static Mix_Valve::Error err = Mix_Valve::e_OK;
 
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
+		reset_watchdog();
+		
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
-		err = Mix_Valve::e_OK;
 
-		if (role == e_Master) { // not allowed to query the I2C lines in slave mode
-			if (ds_TempSens.getStatus() != _OK) {
-				logger() << F("DS TS at 0x") << L_hex << ds_TempSens.getAddress() << L_endl;
-				err = Mix_Valve::e_DS_Temp_failed;
-			} else {
-				ds_TempSens.readTemperature();
-				mixValve[ds_mix].setRegister(Mix_Valve::flow_temp, ds_TempSens.get_temp());
-			}
-			if (us_TempSens.getStatus() != _OK) {
-				logger() << F("US TS at 0x") << L_hex << us_TempSens.getAddress() << L_endl;
-				err = static_cast<Mix_Valve::Error>(err | Mix_Valve::e_US_Temp_failed);
-			}
-			if (us_TempSens.lastError() == _BusReleaseTimeout) {
-				logger() << F("BusReleaseTimeout") << L_endl;
-				err = static_cast<Mix_Valve::Error>(err | Mix_Valve::e_I2C_failed);
-			} else {
-				us_TempSens.readTemperature();
-				mixValve[us_mix].setRegister(Mix_Valve::flow_temp, us_TempSens.get_temp());
-			}
+		err = Mix_Valve::e_OK;
+		if (mixValve[ds_mix].check_flow_temp() != Mix_Valve::e_OK) {
+			err = Mix_Valve::e_DS_Temp_failed;
 		}
+		if (mixValve[us_mix].check_flow_temp() != Mix_Valve::e_OK) {
+			err = static_cast<Mix_Valve::Error>(err | Mix_Valve::e_US_Temp_failed);
+		}
+
+	  logger() << F("DS req: ") << mixV_register_set.getRegister(1+ Mix_Valve::request_temp) << L_endl;
+	  logger() << F("US req: ") << mixV_register_set.getRegister(1+ Mix_Valve::mixValve_all_register_size + Mix_Valve::request_temp) << L_endl;
 
 		if (err) {
 			logger() << showErr(err) << L_endl;
-		} else {
-			reset_watchdog();
-			mixValve[ds_mix].check_flow_temp();
-			mixValve[us_mix].check_flow_temp();
 		}
 	} else showErr(err);
 }
 
-void enableRelays(bool enable) {
+void enableRelays(bool enable) { // called by MixValve.cpp
 	if (role == e_Slave) {
 		psu_enable.set(enable);
 	}
@@ -225,19 +184,18 @@ Role getRole() {
 void roleChanged(Role newRole) {
 	if (e_Slave == newRole) {
 		psu_enable.clear();
-		i2C().setAsSlave(MIX_VALVE_I2C_ADDR);
+		while (i2C().write(PROGRAMMER_I2C_ADDR, slave_requesting_initialisation, 1) != _OK);
 		logger() << F("Set to Slave") << L_endl;
 	}
 	else if (role != newRole) { // changed to Master
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
-		i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
-		mixValve[ds_mix].setRequestTemp();
-		mixValve[us_mix].setRequestTemp();
+		mixValve[ds_mix].setDefaultRequestTemp();
+		mixValve[us_mix].setDefaultRequestTemp();
 		psu_enable.clear();
 	}
 	role = newRole;
-	logger() << F("DS Request: ") << mixValve[ds_mix].getRegister(Mix_Valve::request_temp) / 256 << L_endl;
-	logger() << F("US Request: ") << mixValve[us_mix].getRegister(Mix_Valve::request_temp) / 256 << L_endl;
+	logger() << F("DS Request: ") << mixValve[ds_mix].getReg(Mix_Valve::request_temp) / 256 << L_endl;
+	logger() << F("US Request: ") << mixValve[us_mix].getReg(Mix_Valve::request_temp) / 256 << L_endl;
 }
 
 const __FlashStringHelper * showErr(Mix_Valve::Error err) { // 1-4 errors, 5-9 status

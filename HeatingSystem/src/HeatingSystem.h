@@ -9,7 +9,8 @@
 #include <RemoteDisplay.h>
 #include "HardwareInterfaces\Console.h"
 #include "HardwareInterfaces\I2C_Comms.h"
-
+#include <Mix_Valve.h>
+#include <OLED_Master_Display.h>
 #include "Assembly\Initialiser.h"
 #include "Assembly\TemperatureController.h"
 #include "Assembly\HeatingSystem_Queries.h"
@@ -26,6 +27,8 @@ namespace HeatingSystemSupport {
 	void initialise_virtualROM();
 	extern bool dataHasChanged;
 }
+
+constexpr int SIZE_OF_ALL_REGISTERS = 1 + Mix_Valve::mixValve_volRegister_size * NO_OF_MIXERS + OLED_Master_Display::remoteRegister_size * NO_OF_REMOTES;
 
 class HeatingSystem {
 public:
@@ -60,10 +63,13 @@ public:
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;
+
 	// Run-time data arrays
 	Assembly::MainConsoleChapters _mainConsoleChapters;
 	Assembly::RemoteConsoleChapters _remoteConsoleChapters;
 	HardwareInterfaces::Console _mainConsole;
 	HardwareInterfaces::Console _remoteConsole[Assembly::NO_OF_REMOTE_DISPLAYS];
 	bool _dataHasChanged = true;
+	i2c_registers::Registers<SIZE_OF_ALL_REGISTERS> all_register_set{i2C};
+	i2c_registers::I_Registers& all_registers{ all_register_set };
 };

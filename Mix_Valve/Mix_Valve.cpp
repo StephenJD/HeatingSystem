@@ -5,90 +5,104 @@
 #include "PinObject.h"
 #include <EEPROM.h>
 #include <I2C_Talk.h>
+#include <I2C_Recover.h>
+#include <I2C_Registers.h>
+#include <I2C_Talk_ErrorCodes.h>
 #include <Logging.h>
 #include <Timer_mS_uS.h>
 
 using namespace HardwareInterfaces;
 using namespace arduino_logger;
+using namespace I2C_Recovery;
+using namespace I2C_Talk_ErrorCodes;
 
 void enableRelays(bool enable); // this function must be defined elsewhere
 extern bool receivingNewData;
-extern uint8_t version_a;
-extern uint8_t version_b;
+extern const uint8_t version_month;
+extern const uint8_t version_day;
+extern const uint8_t eeprom_firstRegister_addr;
 
+extern i2c_registers::I_Registers& mixV_registers;
 const uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 
-Mix_Valve::Mix_Valve(TempSensor & temp_sensr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int eepromAddr, int defaultMaxTemp)
-	: temp_sensr(&temp_sensr),
-	heat_relay(&heatRelay),
-	cool_relay(&coolRelay),
+//Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset)
+//	: _temp_sensr(i2C_recover, defaultTSaddr),
+Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, TempSensor& defaultTS, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset)
+	: _temp_sensr(&defaultTS),
+	_heat_relay(&heatRelay),
+	_cool_relay(&coolRelay),
 	_ep(&ep),
-	_eepromAddr(eepromAddr)
+	_reg_offset(reg_offset)
 {
-	if (_ep->read(eeprom_OK1 + _eepromAddr) != version_a || _ep->read(eeprom_OK2 + _eepromAddr) != version_b) {
-		_ep->update(eeprom_OK1 + _eepromAddr, version_a);
-		_ep->update(eeprom_OK2 + _eepromAddr, version_b);
-		_traverse_time = 140;
-		_valve_wait_time = 40;
-		_onTimeRatio = 30;
-		_max_flowTemp = defaultMaxTemp;
+	logger() << F("MixValve created\n") << L_endl;
+}
+
+void Mix_Valve::begin(int defaultMaxTemp) {
+	const bool writeDefaultsToEEPROM = _ep->read(0) != version_month || _ep->read(1) != version_day;
+	logger() << F("regOffset: ") << _reg_offset << F(" Saved month: ") << _ep->read(0) << F(" Saved Day: ") << _ep->read(1) << L_endl;
+	if (writeDefaultsToEEPROM) {
+		_ep->write(0, version_month);
+		_ep->write(1, version_day);
+		setReg(temp_i2c_addr, _temp_sensr->getAddress());
+		setReg(full_traverse_time, 140);
+		setReg(wait_time, 40);
+		setReg(max_flowTemp, defaultMaxTemp);
+		setReg(ratio, 30);
 		saveToEEPROM();
 		logger() << F("Saved defaults") << L_endl;
 	} else {
 		loadFromEEPROM();
 		logger() << F("Loaded from EEPROM") << L_endl;
 	}
-	cool_relay->set(false);
-	heat_relay->set(false);
+	setReg(flow_temp, e_MIN_FLOW_TEMP);
+	_cool_relay->set(false);
+	_heat_relay->set(false);
 	enableRelays(false);
-	logger() << F("MixValve created") << L_endl;
+	logger() << F("MixValve begin\n") << L_endl;
 }
 
 const __FlashStringHelper* Mix_Valve::name() {
-	return (heat_relay->port() == 11 ? F("US ") : F("DS "));
+	return (_heat_relay->port() == 11 ? F("US ") : F("DS "));
 }
 
-uint8_t Mix_Valve::saveToEEPROM() const { // returns noOfBytes saved
-	uint8_t i = 0;
-	_ep->update(_eepromAddr, temp_sensr->getAddress());
-	_ep->update(++i + _eepromAddr, _traverse_time);
-	_ep->update(++i + _eepromAddr, _valve_wait_time);
-	_ep->update(++i + _eepromAddr, _onTimeRatio);
-	_ep->update(++i + _eepromAddr, _max_flowTemp);
-	_ep->update(++i + _eepromAddr, _mixCallTemp);
-	//logger() << F("MixValve saveToEEPROM") << L_tabs << (int)_traverse_time << (int)_valve_wait_time << (int)_onTimeRatio << (int)_max_flowTemp << (int)_mixCallTemp << L_endl;
-	return i;
+void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
+	auto eepromRegister = eeprom_firstRegister_addr + _reg_offset;
+	_temp_sensr->setAddress(getReg(temp_i2c_addr));
+	_ep->update(  eepromRegister, getReg(temp_i2c_addr));
+	_ep->update(++eepromRegister, getReg(full_traverse_time));
+	_ep->update(++eepromRegister, getReg(wait_time));
+	_ep->update(++eepromRegister, getReg(max_flowTemp));
+	//logger() << F("MixValve saveToEEPROM") << L_tabs << (int)getReg(full_traverse_time) << (int)getReg(wait_time) << (int)getReg(ratio) << (int)getReg(max_flowTemp) << (int)_currReqTemp << L_endl;
 }
 
-uint8_t Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
-	uint8_t i = 0;
+void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
+	auto eepromRegister = eeprom_firstRegister_addr + _reg_offset;
 #ifdef TEST_MIX_VALVE_CONTROLLER
-	_traverse_time = 140;
-	_valve_wait_time = 10;
-	_max_flowTemp = 55;
+	setReg(full_traverse_time, 140);
+	setReg(wait_time, 10);
+	setReg(max_flowTemp, 55);
 #else	
-	temp_sensr->setAddress(_ep->read(_eepromAddr));
-	_traverse_time = _ep->read(++i + _eepromAddr);
-	_valve_wait_time = _ep->read(++i + _eepromAddr);
-	++i; // ratio
-	_max_flowTemp = _ep->read(++i + _eepromAddr);
-	_mixCallTemp = _ep->read(++i + _eepromAddr);
+	_temp_sensr->setAddress(_ep->read(eepromRegister));
+	setReg(temp_i2c_addr, _temp_sensr->getAddress());
+	setReg(full_traverse_time, _ep->read(++eepromRegister));
+	setReg(wait_time, _ep->read(++eepromRegister));
+	setReg(max_flowTemp, _ep->read(++eepromRegister));
 #endif
-	_onTimeRatio = 30;
-	return i;
+	setReg(ratio, 30);
 }
 
-void Mix_Valve::setRequestTemp() { // called by MixValve_Slave.ino when master/slave mode changes
-	_mixCallTemp = _max_flowTemp;
+void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when master/slave mode changes
+	_currReqTemp = getReg(max_flowTemp);
+	setReg(request_temp, _currReqTemp);
 }
 
 Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
-	bool dontWantHeat = _mixCallTemp <= e_MIN_FLOW_TEMP;
-	bool valveIsAtLimit = abs(_valvePos) == _traverse_time && (dontWantHeat || (call_flowDiff * _valvePos) >= 0);
+	bool dontWantHeat = _currReqTemp <= e_MIN_FLOW_TEMP;
+	bool valveIsAtLimit = (_valvePos == 0 && dontWantHeat) || (_valvePos == getReg(full_traverse_time) && call_flowDiff >= 0);
 
-	if (_status == e_NewTempReq) return e_NewReq;
+	if (getReg(status) == e_NewTempReq) return e_NewReq;
 	else if (valveIsAtLimit) return e_AtLimit;
 	else if (dontWantHeat) return e_DontWantHeat;
 	else if (_onTime > 0) {
@@ -98,26 +112,31 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
 	else return e_Checking;
 }
 
-void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
+Mix_Valve::Error Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
+	auto sensorTemp = _temp_sensr->get_temp();
+	if (_temp_sensr->getStatus() != _OK) return e_I2C_failed;
+	setReg(flow_temp, sensorTemp);
+
 	// lambdas
-	auto turnValveOff = [this]() { // Move valve to cool to prevent gravity circulation
-		if (_sensorTemp <= e_MIN_FLOW_TEMP) _onTime = _traverse_time / 2;
-		else _onTime = _traverse_time;
+	auto turnValveOff = [sensorTemp, this]() { // Move valve to cool to prevent gravity circulation
+		_onTime = getReg(full_traverse_time);
+		if (sensorTemp <= e_MIN_FLOW_TEMP) _onTime /= 2;
 
 		_journey = e_Moving_Coolest;
 		_motorDirection = e_Cooling;
 		logger() << name() << L_tabs << F("Turn Valve OFF:") << _valvePos << L_endl;
 	};
 
-	auto calcRatio = [this]() {
-		auto tempChange = _sensorTemp - _moveFrom_Temp;
-		auto posChange = _valvePos - _moveFrom_Pos;
-		if (abs(_valvePos) < _traverse_time / 2 && posChange != 0 && tempChange != 0) {
+	auto calcRatio = [sensorTemp, this]() {
+		auto tempChange = sensorTemp - getReg(moveFromTemp);
+		auto posChange = _valvePos - _moveFromPos;
+		bool inMidRange = _valvePos > getReg(full_traverse_time) / 4 || _valvePos < int(getReg(full_traverse_time)) * 3 / 4;
+		if (inMidRange && posChange != 0 && tempChange != 0) {
 			auto newRatio = posChange / tempChange;
-			if (newRatio > e_MIN_RATIO) _onTimeRatio = newRatio;
+			if (newRatio > e_MIN_RATIO) setReg(ratio, newRatio);
 		}
-		_moveFrom_Temp = _sensorTemp;
-		_moveFrom_Pos = _valvePos;
+		setReg(moveFromTemp, sensorTemp);
+		_moveFromPos = _valvePos;
 	};
 
 	// Algorithm
@@ -129,26 +148,26 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 	* Ratio should not be changed if valve goes to limit or returns from limit.
 	* 1 degree overshoots are good for speed of response.
 	*/
-	int call_flowDiff = _mixCallTemp - _sensorTemp;
+	int call_flowDiff = _currReqTemp - sensorTemp;
 	serviceMotorRequest(); // -> wait if finished moving and -> check if finished waiting
 
 	switch (algorithmMode(call_flowDiff)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 	case e_NewReq:
-		logger() << name() << L_tabs << F("New Temp Req:") << _mixCallTemp << L_endl;
-		if (_valvePos == -_traverse_time && _sensorTemp >= _mixCallTemp) {
+		logger() << name() << L_tabs << F("New Temp Req:") << _currReqTemp << L_endl;
+		if (_valvePos == 0 && sensorTemp >= _currReqTemp) {
 			startWaiting(); // keep waiting whilst the pump is cooling the temp sensor
 			break;
 		//} else if (_journey == e_TempOK) { // picked up by e_Checking:
 		} else /*if (call_flowDiff == 0)*/ { // happens to be off target, but at the new temp. 
 			startWaiting();
-		//} else if (_mixCallTemp == _moveFrom_Temp) {// let it continue moving or waiting		
-		} /*else if (_valvePos != _traverse_time) {
-			adjustValve(_mixCallTemp - _moveFrom_Temp);
+		//} else if (_currReqTemp == _moveFrom_Temp) {// let it continue moving or waiting		
+		} /*else if (_valvePos != getReg(full_traverse_time)) {
+			adjustValve(_currReqTemp - _moveFrom_Temp);
 		}*/
-		_status = e_OK;
+		setReg(status, e_OK);
 		break;
 	case e_AtLimit: // false as soon as it overshoots 
-		if (_mixCallTemp > e_MIN_FLOW_TEMP && _onTime == 0) startWaiting();
+		if (_currReqTemp > e_MIN_FLOW_TEMP && _onTime == 0) startWaiting();
 		break;
 	case e_DontWantHeat:
 		if (_journey != e_Moving_Coolest) turnValveOff();
@@ -159,16 +178,16 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 		break;
 	case e_Wait:
 		if (call_flowDiff * _journey < 0) { // Overshot during wait
-			_onTimeRatio = (_onTimeRatio * 2) / 3;
+			setReg(ratio, (getReg(ratio) * 2) / 3);
 			adjustValve(call_flowDiff);
-		} else if (call_flowDiff * _journey > 0 && (_waitFlowTemp - _sensorTemp) * _journey > 0) { // Got worse (undershot) during wait
-			//if ((_moveFrom_Temp - _sensorTemp) * _journey > 0) { // worse than _moveFrom_Temp
-			//	_moveFrom_Temp = _sensorTemp;
-			//	_moveFrom_Pos = _valvePos;
+		} else if (call_flowDiff * _journey > 0 && (_flowTempAtStartOfWait - sensorTemp) * _journey > 0) { // Got worse (undershot) during wait
+			//if ((_moveFrom_Temp - sensorTemp) * _journey > 0) { // worse than _moveFrom_Temp
+			//	_moveFrom_Temp = sensorTemp;
+			//	_moveFromPos = _valvePos;
 			//}
 			adjustValve(call_flowDiff);
 			//_onTimeRatio *= 2; // ratio now reflects what has happened so far.
-		} else if (_waitFlowTemp != _sensorTemp) startWaiting(); // restart waiting if temp has changed.
+		} else if (_flowTempAtStartOfWait != sensorTemp) startWaiting(); // restart waiting if temp has changed.
 		break;
 	case e_Checking: 
 		if (call_flowDiff == 0) {
@@ -178,20 +197,22 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 			}
 		} else {
 			if (_journey == e_TempOK) { // Previously OK temperature has drifted
-				_moveFrom_Temp = _sensorTemp;
+				setReg(moveFromTemp, sensorTemp);
 				adjustValve(call_flowDiff); // action becomes e_Moving
 			}
 			else { // Undershot after a wait - last adjustment was too small
-				auto oldRatio = _onTimeRatio;
-				if ((_moveFrom_Temp - _sensorTemp) * _journey < 0) { // got nearer during last move
-					_onTimeRatio /= 2;
-				} else _moveFrom_Temp = _sensorTemp; // worse or no better
+				auto oldRatio = getReg(ratio);
+				if ((getReg(moveFromTemp) - sensorTemp) * _journey < 0) { // got nearer during last move
+					setReg(ratio, getReg(ratio) / 2);
+				} else setReg(moveFromTemp, sensorTemp); // worse or no better
 				adjustValve(call_flowDiff);
-				_onTimeRatio += oldRatio;
+				mixV_registers.addToRegister(ratio, oldRatio);
 			} 
 		}
 		break;
 	}
+	refreshRegisters();
+	return e_OK;
 }
 
 void Mix_Valve::adjustValve(int tempDiff) {
@@ -200,22 +221,23 @@ void Mix_Valve::adjustValve(int tempDiff) {
 	else _motorDirection = e_Heating;  // heat valve
 	
 	_journey = Journey(_motorDirection);
-
-	if (_onTimeRatio < e_MIN_RATIO) _onTimeRatio = e_MIN_RATIO;
-	else if (_onTimeRatio > e_MAX_RATIO) _onTimeRatio = e_MAX_RATIO;
-	logger() << name() << L_tabs << F("Move") << tempDiff << F("\tRatio:") << (int)_onTimeRatio << L_endl;
+	const auto curr_ratio = getReg(ratio);
+	if (curr_ratio < e_MIN_RATIO) setReg(ratio, e_MIN_RATIO);
+	else if (curr_ratio > e_MAX_RATIO) setReg(ratio, e_MAX_RATIO);
+	logger() << name() << L_tabs << F("Move") << tempDiff << F("\tRatio:") << (int)curr_ratio << L_endl;
 	auto tempError = abs(tempDiff);
 
-	auto onTime = _onTimeRatio * tempError;
-	if (onTime > _traverse_time/2) _onTime = _traverse_time/2; else _onTime = (int16_t)onTime;
+	int16_t onTime = curr_ratio * tempError;
+	_onTime = getReg(full_traverse_time) / 2;
+	if (onTime < _onTime) _onTime = onTime;
 }
 
 bool Mix_Valve::activateMotor() {
 	if (!motor_mutex || motor_mutex == this) { // we have control
 		if (_motorDirection == e_Stop) motor_mutex = 0;
 		else motor_mutex = this;
-		cool_relay->set(_motorDirection == e_Cooling); // turn Cool relay on/off
-		heat_relay->set(_motorDirection == e_Heating); // turn Heat relay on/off
+		_cool_relay->set(_motorDirection == e_Cooling); // turn Cool relay on/off
+		_heat_relay->set(_motorDirection == e_Heating); // turn Heat relay on/off
 		enableRelays(_motorDirection != e_Stop);
 		return true;
 	} else {
@@ -229,103 +251,83 @@ void Mix_Valve::stopMotor() {
 }
 
 void Mix_Valve::startWaiting() {
-	_onTime = -_valve_wait_time;
-	_waitFlowTemp = _sensorTemp;
+	_onTime = -getReg(wait_time);
+	_flowTempAtStartOfWait = getReg(flow_temp);
 	stopMotor();
 }
 
 void Mix_Valve::serviceMotorRequest() {
 	if (_onTime > 0) {
 		if (activateMotor()) {
-			logger() << name() << L_tabs << F("ValveMoving") << (_motorDirection == e_Heating ? "H" : (_motorDirection == e_Stop ? "Off" : "C")) << _onTime << F("ValvePos:") << _valvePos << F("Temp:") << _sensorTemp << F("Call") << _mixCallTemp << L_endl;
+			auto traverseTime = getReg(full_traverse_time);
+			logger() << name() << L_tabs << F("ValveMoving") << (_motorDirection == e_Heating ? "H" : (_motorDirection == e_Stop ? "Off" : "C")) << _onTime << F("ValvePos:") << _valvePos << F("Temp:") << getReg(flow_temp) << F("Call") << _currReqTemp << L_endl;
 			--_onTime;
-			if (abs(_valvePos) == _traverse_time) _valvePos /= 2; // we were stopped at limit, but are now moving off the limit.
 			_valvePos += _motorDirection;
-			if (abs(_valvePos) >= _traverse_time) {
+			if (_valvePos <= 0 || _valvePos >= traverseTime) {
 				if (_motorDirection == e_Heating) {
-					_status = e_Water_too_cool;
-					_valvePos = _traverse_time;
+					setReg(status, e_Water_too_cool);
+					_valvePos = traverseTime;
 				} else {
 					_journey = e_TempOK;
-					_valvePos = -_traverse_time;
+					_valvePos = 0;
 				}
 				_onTime = 0;
 				stopMotor();
 			} else if (_onTime == 0) {  // Turn motor off and wait
-				if (_journey == e_Moving_Coolest) _onTime = _traverse_time / 2;
+				if (_journey == e_Moving_Coolest) _onTime = traverseTime / 2;
 				else {
 					startWaiting();
-					if (_status == e_Water_too_cool) _status = e_OK;
+					if (getReg(status) == e_Water_too_cool) setReg(status, e_OK);
 				}
 			} else if (_onTime % 10 == 0) {
 				motor_mutex = 0; // Give up ownership every 10 seconds.
-				cool_relay->set(false);
-				heat_relay->set(false);
+				_cool_relay->set(false);
+				_heat_relay->set(false);
 				enableRelays(false);
 			}
 		}
 	}
 	else if (_onTime < 0)  {
-		logger() << name() << L_tabs << F("WaitSettle:\t") << _onTime << F("\t\tTemp:") << _sensorTemp << L_endl;
+		logger() << name() << L_tabs << F("WaitSettle:\t") << _onTime << F("\t\tTemp:") << getReg(flow_temp) << L_endl;
 		++_onTime;
 	}
 }
 
-void checkPumpIsOn() {
+void Mix_Valve::checkPumpIsOn() {
 }
 
-uint16_t Mix_Valve::getRegister(int reg) const {
+void Mix_Valve::refreshRegisters() {
 	//lambda
-	auto motorActivity = [this]() -> uint16_t {if (_motorDirection == e_Cooling && _journey == e_Moving_Coolest) return e_Moving_Coolest; else return _motorDirection; };
+	auto motorActivity = [this]() -> uint8_t {if (_motorDirection == e_Cooling && _journey == e_Moving_Coolest) return e_Moving_Coolest; else return _motorDirection; };
 
-	// To make single-byte read-write work, all registers are treated as two-byte, with second-byte un-used for most.
-	// Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
-	// Thus returning uint8_t as uint16_t puts LSB at the lower address, which is what we want!
-	uint16_t value = 0;
-	switch (reg) {
-	// read only
-	case status:		value = _status; break;
-	case mode:			value = algorithmMode(_mixCallTemp - _sensorTemp); break; // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
-	case count:			value = abs(_onTime); break;
-	case valve_pos:		value = _valvePos; break;
-	case state:			value = motorActivity(); break; // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
-	case moveFromTemp:	value = _moveFrom_Temp; break;
-	case moveFromPos:	value = _moveFrom_Pos; break;
-	case ratio:			value = _onTimeRatio; break;
-	// read/write
-	case flow_temp:		value = _sensorTemp;  break;
-	case request_temp:	value = _mixCallTemp; break;
-	case temp_i2c_addr:	value = temp_sensr->getAddress(); break;
-	case traverse_time: value = _traverse_time; break;
-	case wait_time:		value = _valve_wait_time; break;
-	case max_flow_temp:	value = _max_flowTemp; break;
-	default: return 0;
-	}
-	value = (value >> 8) | ((value & 0xFF) << 8);
-	return value; // Two-byte and negative values need to send MSB first by swapping bytes
+	setReg(mode, algorithmMode(_currReqTemp - mixV_registers.getRegister(flow_temp))); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
+	setReg(count, abs(_onTime));
+	setReg(state, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
+	setReg(valve_pos, (uint8_t)_valvePos);
+	setReg(moveFromPos, (uint8_t)_moveFromPos);
 }
 
-void Mix_Valve::setRegister(int reg, uint8_t value) {
-	bool saveToEE = true;
-	// ********* Must NOT seral.print in here, cos called by ISR.
-	switch (reg) {
-	// register address. Only handle writable registers - they are all single byte.
-	case flow_temp:		_sensorTemp = value; break;
-	case temp_i2c_addr:	temp_sensr->setAddress(value); break;
-	case traverse_time:	_traverse_time = value; break;
-	case wait_time:		_valve_wait_time = value; break;
-	case max_flow_temp:	_max_flowTemp = value; break;
-	case request_temp: 
-		if (_prevReqTemp != value) _prevReqTemp = value; // REQUEST TWICE TO REGISTER.
-		else if (_mixCallTemp != value) {
-			_mixCallTemp = value;
-			if (_mixCallTemp > e_MIN_FLOW_TEMP) {
-				_status = e_NewTempReq;
-			} else _status = e_OK;
+uint8_t Mix_Valve::getReg(int reg) const {
+	auto regBank = _reg_offset + reg;
+	return mixV_registers.getRegister(regBank);
+}
+
+void Mix_Valve::setReg(int reg, uint8_t value) {
+	const auto regBank = _reg_offset + reg;
+	mixV_registers.setRegister(regBank, value);
+}
+
+void Mix_Valve::checkForNewData() {
+	if (mixV_registers.registerHasBeenWrittenTo()) {
+		saveToEEPROM();
+		mixV_registers.markAsRead();
+		const auto newReqTemp = mixV_registers.getRegister(_reg_offset + request_temp);
+		if (_newReqTemp != newReqTemp) _newReqTemp = newReqTemp; // REQUEST TWICE TO REGISTER.
+		else if (_currReqTemp != newReqTemp) {
+			_currReqTemp = newReqTemp;
+			if (newReqTemp > e_MIN_FLOW_TEMP) {
+				mixV_registers.setRegister(_reg_offset + status, e_NewTempReq);
+			} else mixV_registers.setRegister(_reg_offset + status, e_OK);
 		}
-		break;
-	default:
-		saveToEE = false; // Non-writable registers
 	}
-	if (saveToEE) saveToEEPROM();
 }

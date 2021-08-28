@@ -2,6 +2,8 @@
 #include <Logging.h>
 #include "A__Constants.h"
 #include <I2C_Recover.h>
+#include <Mix_Valve.h>
+#include <OLED_Master_Display.h>
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
@@ -81,43 +83,5 @@ namespace HardwareInterfaces {
 			logger() << "\tData stuck after reset" << L_endl;
 		initialisationRequired = true;
 		return _OK;
-	}
-
-	namespace I2C_Slave {
-		I2C_Talk* i2C;
-		uint8_t reg = 0;
-		int8_t data = -1;
-
-		// Called when data is sent by Master, telling slave how many bytes have been sent.
-		void receiveI2C(int howMany) {
-			// must not do a Serial.print when it receives a register address prior to a read.
-			uint8_t msgFromMaster[3]; // = [register, data-0, data-1]
-			if (howMany > 3) howMany = 3;
-			int noOfBytesReceived = i2C->receiveFromMaster(howMany, msgFromMaster);
-			if (noOfBytesReceived) {
-				reg = msgFromMaster[0];
-				if (howMany > 1) data = msgFromMaster[1];
-			}
-		}
-
-		// Called when data is requested.
-		// The Master will send a NACK when it has received the requested number of bytes, so we should offer as many as could be requested.
-		// To keep things simple, we will send a max of two-bytes.
-		// Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
-		// But I2C devices use big-endianness: MSB at the smallest address: So a uint16_t is [MSB, LSB].
-		// A single read returns the MSB of a 2-byte value (as in a Temp Sensor), 2-byte read is required to get the LSB.
-		// To make single-byte read-write work, all registers are treated as two-byte, with second-byte un-used for most. 
-		// getRegister() returns uint8_t as uint16_t which puts LSB at the lower address, which is what we want!
-		// We can send the address of the returned value to i2C().write().
-		// 
-		void requestI2C() {
-			i2C->write((uint8_t*)&data, 1);
-		}
-
-		I_Keypad::KeyOperation getKey() {
-			I_Keypad::KeyOperation key = I_Keypad::KeyOperation(data);
-			data = I_Keypad::NO_KEY;
-			return key; 
-		}
 	}
 }
