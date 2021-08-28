@@ -59,10 +59,13 @@ I2C_Talk & i2C() {
 	return _i2C;
 }
 
-Logger & logger() {
-	static Serial_Logger _log(SERIAL_RATE);
-	return _log;
+namespace arduino_logger {
+	Logger& logger() {
+		static Serial_Logger _log(SERIAL_RATE, L_startWithFlushing);
+		return _log;
+	}
 }
+using namespace arduino_logger;
 
 EEPROMClass & eeprom() {
 	return EEPROM;
