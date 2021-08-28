@@ -11,7 +11,7 @@ constexpr uint8_t FL_REMOTE_I2C_ADDR = 0x14;
 
 I2C_Talk i2C;
 //I2C_Talk i2C2(DS_REMOTE_I2C_ADDR, Wire1);
-  constexpr auto slave_requesting_resend_data = 0;
+  constexpr auto slave_requesting_initialisation = 0;
 
 	enum RemoteRegisterName {
 		  remote_register_offset // ini
@@ -55,8 +55,8 @@ I2C_Talk i2C;
   };
 
   constexpr auto remRegStart = 1 + mixValve_volRegister_size*2;
-  auto all_registers = i2c_registers::Registers<i2C, remRegStart + 3*remoteRegister_size>{};
-  auto rem_registers = i2c_registers::Registers<i2C, remoteRegister_size>{};
+  auto all_registers = i2c_registers::Registers<remRegStart + 3*remoteRegister_size>{i2C};
+  auto rem_registers = i2c_registers::Registers<remoteRegister_size>{i2C};
   //auto rtc_registers = i2c_registers::Registers<i2C2, rtcRegister_size>{};
 
 void setMyI2CAddress() {
@@ -110,12 +110,12 @@ void createMyRegisters() {
   }
 }
 
-void sendI2CregisterOffsets() {
+void sendSlaveIniData() {
   Serial.println(F("Sending Offs to Rems"));
   i2C.write(DS_REMOTE_I2C_ADDR, remote_register_offset, remRegStart);
   i2C.write(US_REMOTE_I2C_ADDR, remote_register_offset, remRegStart + remoteRegister_size);
   i2C.write(FL_REMOTE_I2C_ADDR, remote_register_offset, remRegStart + 2 * remoteRegister_size);
-  all_registers.setRegister(slave_requesting_resend_data,0);
+  all_registers.setRegister(slave_requesting_initialisation,0);
 }
 
 void sendDataToRemotes() {
@@ -141,7 +141,7 @@ void requestDataFromProgrammer() {
 
 void printRegisters() {
   if (i2C.address() == PROGRAMMER_I2C_ADDR) {
-    Serial.print(F("Of Req ")); Serial.println(all_registers.getRegister(slave_requesting_resend_data));
+    Serial.print(F("Of Req ")); Serial.println(all_registers.getRegister(slave_requesting_initialisation));
 
     Serial.print(F("Of 1 ")); Serial.println(remRegStart);
     Serial.print(F("Of 2 ")); Serial.println(remRegStart + remoteRegister_size);
@@ -207,7 +207,7 @@ void setup() {
   setMyI2CAddress();
   createMyRegisters();
   if (i2C.address() == PROGRAMMER_I2C_ADDR) {
-    sendI2CregisterOffsets();
+    sendSlaveIniData();
     i2C.onReceive(all_registers.receiveI2C);
     i2C.onRequest(all_registers.requestI2C);
   } else {
@@ -220,7 +220,7 @@ void setup() {
 }
 
 void loop() {
-  if (all_registers.getRegister(slave_requesting_resend_data)) sendI2CregisterOffsets();
+  if (all_registers.getRegister(slave_requesting_initialisation)) sendSlaveIniData();
   Serial.println("\nSend Data");
   if (i2C.address() == PROGRAMMER_I2C_ADDR) sendDataToRemotes();
   else sendDataToProgrammer();

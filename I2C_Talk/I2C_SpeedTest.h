@@ -29,7 +29,7 @@ public:
 	I2C_SpeedTest() = default;
 	I2C_SpeedTest(I_I2Cdevice_Recovery & i2c_device) : _i2c_device(&i2c_device) {
 #ifdef DEBUG_SPEED_TEST		
-		logger() << F("  I2C_SpeedTest device 0x") << L_hex << i2c_device.getAddress() << L_endl;
+		arduino_logger::logger() << F("  I2C_SpeedTest device 0x") << arduino_logger::L_hex << i2c_device.getAddress() << arduino_logger::L_endl;
 #endif
 	}
 	static bool doingSpeedTest() { return _is_inSpeedTest; }

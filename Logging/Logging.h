@@ -24,16 +24,19 @@ namespace arduino_logger {
 	public:
 		void activate(bool makeActive = true) { makeActive ? _flags = L_clearFlags : _flags = L_null; }
 		Flags addFlag(Flags flag) { _flags += flag; return _flags; }
-		Flags removeFlag(Flags flag) { _flags -= flag; return _flags; }
+		Flags removeFlag(Flags flag) {
+			if(_flags != L_startWithFlushing) _flags -= flag;
+			return _flags; 
+		}
 		virtual bool open() { return false; }
-		virtual void flush() {if (!is_null()) _flags -= L_startWithFlushing; }
+		virtual void flush() {} // must not clear L_startWithFlushing.
 		virtual Print& stream() { return *this; }
 
 		template<typename T>
 		Logger& log(T value);
 
 		virtual void readAll() {}
-		virtual void begin(uint32_t baudRate = 0) { flush(); }
+		virtual void begin(uint32_t baudRate = 0) {/* flush(); */}
 		Logger& operator <<(Flags);
 
 		template<class T>

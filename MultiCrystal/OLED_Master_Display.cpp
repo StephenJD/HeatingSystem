@@ -18,7 +18,7 @@ using namespace HardwareInterfaces;
 I2C_Talk i2C;
 I2C_Recover i2c_recover(i2C);
 auto tempSensor = TempSensor{ i2c_recover };
-constexpr auto slave_requesting_resend_data = 0;
+constexpr auto slave_requesting_initialisation = 0;
 
 namespace OLED_Master_Display {
 
@@ -56,12 +56,12 @@ namespace OLED_Master_Display {
 
     void requestRegisterOffsetFromProgrammer() {
         uint8_t registerOffsetReqStillLodged = 1;
-        while (i2C.write(PROGRAMMER_I2C_ADDR, slave_requesting_resend_data, registerOffsetReqStillLodged) != _OK);
+        while (i2C.write(PROGRAMMER_I2C_ADDR, slave_requesting_initialisation, registerOffsetReqStillLodged) != _OK);
         do {
             Serial.flush();
             Serial.println(F("wait for offset..."));
             delay(100);
-            i2C.read(PROGRAMMER_I2C_ADDR, slave_requesting_resend_data, 1, &registerOffsetReqStillLodged);
+            i2C.read(PROGRAMMER_I2C_ADDR, slave_requesting_initialisation, 1, &registerOffsetReqStillLodged);
         } while (registerOffsetReqStillLodged);
     }
 

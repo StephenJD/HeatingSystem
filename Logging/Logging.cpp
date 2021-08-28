@@ -43,7 +43,7 @@ Logger& Logger::operator <<(Flags flag) {
 		} while (mirror_stream(streamPtr));
 		if (_flags & L_allwaysFlush || _flags == L_startWithFlushing) flush();
 	}
-	//[[fallthrough]];
+	[[fallthrough]];
 	case L_clearFlags:
 		if (_flags != L_startWithFlushing) {
 			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
@@ -59,7 +59,7 @@ Logger& Logger::operator <<(Flags flag) {
 		removeFlag(L_int);
 		removeFlag(L_hex);
 		removeFlag(L_fixed);
-		//[[fallthrough]];
+		[[fallthrough]];
 	default:
 		addFlag(flag);
 	}
