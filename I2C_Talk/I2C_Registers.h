@@ -35,7 +35,7 @@ namespace i2c_registers {
 	template<int register_size, typename PurposeTag = Defaut_Tag_None>
 	class Registers : public I_Registers {
 	public:
-		Registers(I2C_Talk& i2C) { _i2C = &i2C; Serial.println(F("Register")); Serial.flush(); }
+		Registers(I2C_Talk& i2C) { _i2C = &i2C; }
 		int noOfRegisters() { return register_size; }
 
 		// Called when data is sent by a Master, telling this slave how many bytes have been sent.
