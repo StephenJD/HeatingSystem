@@ -34,7 +34,8 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 	_ep(&ep),
 	_regOffset(reg_offset)
 {
-	const bool writeDefaultsToEEPROM = _ep->read(0) != version_month || _ep->read(1) != version_day;
+	//const bool writeDefaultsToEEPROM = _ep->read(0) != version_month || _ep->read(1) != version_day;
+	const bool writeDefaultsToEEPROM = true;
 	logger() << F("regOffset: ") << _regOffset << F(" Saved month: ") << _ep->read(0) << F(" Saved Day: ") << _ep->read(1) << L_endl;
 	if (writeDefaultsToEEPROM) {
 		_ep->write(0, version_month);
@@ -107,7 +108,11 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
 }
 
 Mix_Valve::MV_Status Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
+	auto ts_status = _temp_sensr.readTemperature();
 	auto sensorTemp = _temp_sensr.get_temp();
+	if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
+		<< F(" Err:") << _temp_sensr.lastError() 
+		<< F(" Status:") << _temp_sensr.getStatus() << L_endl;
 	setReg(R_FLOW_TEMP, sensorTemp);
 	checkForNewReqTemp();
 
@@ -206,7 +211,7 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp() { // Called once every second.
 		break;
 	}
 	refreshRegisters();
-	if (_temp_sensr.getStatus() != _OK) return MV_I2C_FAILED;
+	if (ts_status != _OK) return MV_I2C_FAILED;
 	else return MV_OK;
 }
 
@@ -294,8 +299,9 @@ void Mix_Valve::checkPumpIsOn() {
 void Mix_Valve::refreshRegisters() {
 	//lambda
 	auto motorActivity = [this]() -> uint8_t {if (_motorDirection == e_Cooling && _journey == e_Moving_Coolest) return e_Moving_Coolest; else return _motorDirection; };
-
-	setReg(R_MODE, algorithmMode(_currReqTemp - mixV_registers.getRegister(R_FLOW_TEMP))); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
+	auto mode = algorithmMode(_currReqTemp - mixV_registers.getRegister(R_FLOW_TEMP));
+	logger() << F("Mode:") << mode << L_endl;
+	setReg(R_MODE, mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 	setReg(R_COUNT, abs(_onTime));
 	setReg(R_STATE, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
 	setReg(R_VALVE_POS, (uint8_t)_valvePos);

@@ -113,12 +113,13 @@ Error_codes I2C_Talk::getData(Error_codes status, int deviceAddr, int numberByte
 		logger() << F(" I2C_Talk::read, sendRegister failed for 0x") << L_hex << deviceAddr << getStatusMsg(status) << L_endl;
 #endif
 	}
-	if (status != _OK) {
-		//Serial.print(F("reqStat: ")); Serial.println(status);
-		for (auto i = 0; i < numberBytes; ++i) {
-			dataBuffer[i] = 0;
-		}
-	}
+	// Leave buffer unchanged if read fails
+	//if (status != _OK) {
+	//	//Serial.print(F("reqStat: ")); Serial.println(status);
+	//	for (auto i = 0; i < numberBytes; ++i) {
+	//		dataBuffer[i] = 0;
+	//	}
+	//}
 	return status;
 }
 

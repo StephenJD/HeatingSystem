@@ -48,6 +48,7 @@ public:
 		, R_FLOW_TEMP //Send/Receive
 		// receive
 		, R_REQUEST_FLOW_TEMP
+		, R_MAX_FLOW_TEMP
 		, R_MV_VOLATILE_REG_SIZE
 	};
 
@@ -55,7 +56,6 @@ public:
 		  R_TS_ADDRESS = R_MV_VOLATILE_REG_SIZE
 		, R_FULL_TRAVERSE_TIME
 		, R_SETTLE_TIME
-		, R_MAX_FLOW_TEMP
 		, R_MV_ALL_REG_SIZE
 	};
 

@@ -21,13 +21,13 @@ namespace HardwareInterfaces {
 		setAddress(addr);
 		auto remoteConsole_register = RC_REG_MASTER_US_OFFSET + (R_DISPL_REG_SIZE * index);
 		_regOffset = remoteConsole_register;
-		_prog_registers.setRegister(_regOffset + R_DISPL_REG_OFFSET, _regOffset);
-		_prog_registers.setRegister(_regOffset + R_ROOM_TS_ADDR, roomTS_addr);
+		setReg(R_DISPL_REG_OFFSET, _regOffset);
+		setReg(R_ROOM_TS_ADDR, roomTS_addr);
 		_towelRail = &towelRail;
 		_thermalStore = &thermalStore;
 		_zone = &zone;
 		_timeOfReset_mS = &timeOfReset_mS;
-		//logger() << F("RemoteConsole::ini done") << L_endl;
+		logger() << F("RemoteConsole::ini done. Reg:") << _regOffset + R_DISPL_REG_OFFSET << ":" << _regOffset << L_endl;
 	}
 
 	void RemoteConsole::waitForWarmUp() {
@@ -56,11 +56,13 @@ namespace HardwareInterfaces {
 	}
 
 	void RemoteConsole::setReg(int reg, uint8_t value) {
+		logger() << F("RemoteConsole::setReg:") << _regOffset + reg << ":" << value << L_endl;
 		_prog_registers.setRegister(_regOffset + reg, value);
 	}
 
 	uint8_t RemoteConsole::sendSlaveIniData(uint8_t requestINI_flag) {
-		uint8_t errCode = writeRegistersToConsole(R_DISPL_REG_OFFSET, R_ROOM_TEMP);
+		uint8_t errCode = writeRegistersToConsole(R_DISPL_REG_OFFSET, R_ROOM_TS_ADDR+1);
+		errCode |= writeRegistersToConsole(R_REQUESTED_ROOM_TEMP, R_REQUESTED_ROOM_TEMP+1);
 		if (errCode == _OK) {
 			auto newIniStatus = _prog_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION);
 			newIniStatus &= ~requestINI_flag;
@@ -89,7 +91,7 @@ namespace HardwareInterfaces {
 		constexpr int CONSECUTIVE_COUNT = 1;
 		constexpr int MAX_TRIES = 1;
 		if (status == _OK) {
-			status = read(getReg(R_ROOM_TEMP), R_WARM_UP_ROOM_M10-R_ROOM_TEMP, _prog_registers.reg_ptr(_regOffset+ R_ROOM_TEMP));
+			status = read(R_ROOM_TEMP, R_WARM_UP_ROOM_M10-R_ROOM_TEMP, _prog_registers.reg_ptr(_regOffset+ R_ROOM_TEMP));
 			if (status) {
 				logger() << L_time << F("RemoteConsole Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}
@@ -98,18 +100,23 @@ namespace HardwareInterfaces {
 	}
 
 	void RemoteConsole::refreshRegisters() {
+		logger() << "\nRegisters\n";
+		for (int i = 0; i < SIZE_OF_ALL_REGISTERS; ++i) {
+			logger() << i << "," << *_prog_registers.reg_ptr(i) << L_endl;
+		}		
+		
 		auto iniStatus = _prog_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION);
 		uint8_t requestINI_flag = 1 << index();
 		if (iniStatus | requestINI_flag) sendSlaveIniData(requestINI_flag);
-
-		_towelRail->setMode(getReg(R_REQUESTING_T_RAIL));
-		_thermalStore->setMode(getReg(R_REQUESTING_DHW));
-		auto limitRequest = _zone->maxUserRequestTemp(true);
-		if (limitRequest > getReg(R_REQUESTED_ROOM_TEMP)) {
-			setReg(R_REQUESTED_ROOM_TEMP, limitRequest);
+		else {
+			_towelRail->setMode(getReg(R_REQUESTING_T_RAIL));
+			_thermalStore->setMode(getReg(R_REQUESTING_DHW));
+			auto limitRequest = _zone->maxUserRequestTemp(true);
+			if (limitRequest > getReg(R_REQUESTED_ROOM_TEMP)) {
+				setReg(R_REQUESTED_ROOM_TEMP, limitRequest);
+			}
+			_zone->changeCurrTempRequest(getReg(R_REQUESTED_ROOM_TEMP));
 		}
-		_zone->changeCurrTempRequest(getReg(R_REQUESTED_ROOM_TEMP));
-
 		setReg(R_WARM_UP_ROOM_M10, _zone->warmUpTime_m10());
 		setReg(R_ON_TIME_T_RAIL, uint8_t(_towelRail->timeToGo()/60));
 		setReg(R_DHW_TEMP, _thermalStore->currDeliverTemp());

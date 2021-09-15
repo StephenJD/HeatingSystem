@@ -38,8 +38,8 @@ namespace HardwareInterfaces {
 		_controlZoneRelay = index == M_DownStrs ? R_DnSt : R_UpSt;
 		i2C().extendTimeouts(15000, 6, 1000);
 		auto slaveRegOffset = index == 0 ? MV_REG_SLAVE_0_OFFSET : MV_REG_SLAVE_1_OFFSET;
-		_prog_registers.setRegister(_regOffset + Mix_Valve::R_MV_REG_OFFSET, slaveRegOffset);
-		//profileLogger() << F("MixValveController::ini done") << L_endl;
+		setReg(Mix_Valve::R_MV_REG_OFFSET, slaveRegOffset);
+		//logger() << F("MixValveController::ini done. Reg:") << _regOffset + Mix_Valve::R_MV_REG_OFFSET << ":" << slaveRegOffset << L_endl;
 	}
 
 	void MixValveController::waitForWarmUp() {
@@ -99,12 +99,12 @@ namespace HardwareInterfaces {
 //#ifndef ZPSIM
 		auto algorithmMode = Mix_Valve::Mix_Valve::Mode(getReg(Mix_Valve::R_MODE)); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
 		if (algorithmMode >= Mix_Valve::e_Error) {
-			logger() << "MixValve Error: " << algorithmMode << L_endl;
+			logger() << "MixValve Mode Error: " << algorithmMode << L_endl;
 			sendSlaveIniData();
 			if (getReg(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
 				recovery().resetI2C();
 				if (getReg(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
-					HardReset::arduinoReset("MixValveController InvalidMode");
+					//HardReset::arduinoReset("MixValveController InvalidMode");
 				}
 			}
 		}
@@ -247,6 +247,7 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::setReg(int reg, uint8_t value) {
+		logger() << F("MixValveController::setReg:") << _regOffset + reg << ":" << value << L_endl;
 		_prog_registers.setRegister(_regOffset + reg, value);
 	}
 
@@ -271,9 +272,7 @@ namespace HardwareInterfaces {
 		constexpr int CONSECUTIVE_COUNT = 1;
 		constexpr int MAX_TRIES = 1;
 		if (status == _OK) {
-			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET), Mix_Valve::R_MV_VOLATILE_REG_SIZE, _prog_registers.reg_ptr(_regOffset));
-
-
+			status = read(getReg(Mix_Valve::R_STATUS), Mix_Valve::R_REQUEST_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_STATUS));
 			if (status) {
 				logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}

@@ -64,5 +64,6 @@ namespace HardwareInterfaces {
 		, RC_US_REQUESTING_INI = 2
 		, RC_DS_REQUESTING_INI = 4
 		, RC_F_REQUESTING_INI = 8
+		, ALL_REQUESTING = (RC_F_REQUESTING_INI * 2) - 1
 	};
 }

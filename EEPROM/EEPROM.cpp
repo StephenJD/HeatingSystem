@@ -52,6 +52,7 @@ using namespace I2C_Talk_ErrorCodes;
 		if (myfile.is_open()) {
 			//myfile.read((char*)Wire1.i2CArr, sizeof(Wire1.i2CArr));
 			myfile.read((char*)Wire.i2CArr, sizeof(Wire.i2CArr));
+			cout << myfile.gcount() << " bytes read from I2C.dat\n";
 			myfile.close();
 		}
 		else cout << "Unable to open I2C file\n";
