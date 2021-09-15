@@ -24,6 +24,11 @@ namespace HardwareInterfaces {
 		calcCapacities();
 	}
 
+	uint8_t ThermalStore::getGasFlowTemp() const {
+		uint8_t temp = _tempSensorArr[_thermStoreData.GasTS].get_temp();
+		return temp;
+	}
+
 	uint8_t ThermalStore::getTopTemp() const {
 		uint8_t temp = _tempSensorArr[_thermStoreData.OvrHeatTS].get_temp();
 		return temp;
@@ -159,7 +164,12 @@ namespace HardwareInterfaces {
 	}
 
 	bool ThermalStore::dhwNeedsHeat(int callTemp, int nextRequest) {
-		_theoreticalDeliveryTemp = calcCurrDeliverTemp(nextRequest > callTemp ? nextRequest : callTemp, _groundT, getTopTemp(), _tempSensorArr[_thermStoreData.MidDhwTS].get_temp(), _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp());
+		auto requestTempWhenCalling = nextRequest > callTemp ? nextRequest : callTemp;
+		enum { e_Auto, e_Off, e_On };
+		if (_mode == e_Off) callTemp = 30;
+		else if (_mode == e_On) callTemp = requestTempWhenCalling;
+
+		_theoreticalDeliveryTemp = calcCurrDeliverTemp(requestTempWhenCalling, _groundT, getTopTemp(), _tempSensorArr[_thermStoreData.MidDhwTS].get_temp(), _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp());
 		if (_tempSensorError) {
 			logger() << "dhwNeedsHeat TS error." << L_endl;
 			//return false;

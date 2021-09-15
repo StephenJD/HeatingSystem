@@ -25,6 +25,12 @@ namespace HardwareInterfaces {
 		return _timer > TWL_RAD_RISE_TIME ? _timer - TWL_RAD_RISE_TIME : 0;
 	}
 
+	void TowelRail::setMode(int mode) {
+		enum { e_Auto, e_Off, e_On };
+		if (mode == e_Off) _timer = 0;
+		if (mode == e_On) _timer = _onTime * 60 + TWL_RAD_RISE_TIME;
+	}
+
 	bool TowelRail::check() {
 		// En-suite and Family share a zone / relay, so need to prevent the OFF TR disabling the ON one.
 		bool needHeat = false;

@@ -84,4 +84,5 @@ namespace HardwareInterfaces {
 		initialisationRequired = true;
 		return _OK;
 	}
+
 }

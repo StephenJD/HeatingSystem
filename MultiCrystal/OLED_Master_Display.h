@@ -31,18 +31,18 @@ namespace OLED_Master_Display {
 	};
 
 	enum RemoteRegisterName {
-		  remote_register_offset // ini
-		, roomTempSensorAddr	// ini
-		, roomTemp				// send
-		, roomTemp_fraction		// send
-		, towelRailRequest		// send
-		, hotWaterRequest		// send
-		, roomTempRequest		// send/receive
-		, roomWarmupTime_m10	// receive
-		, towelRailOnTime_m		// receive
-		, hotWaterTemp			// receive
-		, hotWaterWarmupTime_m10 // If -ve, in 0-60 mins, if +ve in min_10
-		, remoteRegister_size
+		  R_DISPL_REG_OFFSET	// ini
+		, R_ROOM_TS_ADDR		// ini
+		, R_ROOM_TEMP			// send
+		, R_ROOM_TEMP_FRACTION	// send
+		, R_REQUESTING_T_RAIL	// send
+		, R_REQUESTING_DHW		// send
+		, R_REQUESTED_ROOM_TEMP	// send/receive
+		, R_WARM_UP_ROOM_M10	// receive
+		, R_ON_TIME_T_RAIL		// receive
+		, R_DHW_TEMP			// receive
+		, R_WARM_UP_DHW_M10		// If -ve, in 0-60 mins, if +ve in min_10
+		, R_DISPL_REG_SIZE
 	};
 
 	void setRemoteI2CAddress();

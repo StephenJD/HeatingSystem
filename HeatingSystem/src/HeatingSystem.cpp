@@ -86,7 +86,7 @@ HeatingSystem::HeatingSystem()
 	, _hs_queries(db)
 	, _hs_datasets(*this, _hs_queries, _tempController)
 	, _sequencer(_hs_queries)
-	, _tempController(_recover, _hs_queries, _sequencer, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
+	, _tempController(_recover, _hs_queries, _sequencer, _prog_registers, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
 	, mainDisplay(&_hs_queries.q_Displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, DS_REMOTE_ADDRESS, FL_REMOTE_ADDRESS } // must be same order as zones
@@ -94,37 +94,48 @@ HeatingSystem::HeatingSystem()
 	, _mainConsoleChapters{ _hs_datasets, _tempController, *this}
 	, _remoteConsoleChapters{ _hs_datasets }
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
-	, _remoteConsole{ {remoteKeypadArr[0], remDispl[0], _remoteConsoleChapters},{remoteKeypadArr[1], remDispl[1], _remoteConsoleChapters},{remoteKeypadArr[2], remDispl[2], _remoteConsoleChapters} }
-	{
+	, _remoteLCDConsole{ {remoteKeypadArr[0], remDispl[0], _remoteConsoleChapters},{remoteKeypadArr[1], remDispl[1], _remoteConsoleChapters},{remoteKeypadArr[2], remDispl[2], _remoteConsoleChapters} }
+	, remOLED_ConsoleArr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
+	, temporary_remoteTSArr{ {_recover, 0x36}, {_recover, 0x74}, {_recover, 0x70} }
+{
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
+		_initialiser.initializeRemoteConsoles();
 		_initialiser.i2C_Test();
 		_initialiser.postI2CResetInitialisation();
 		//_mainConsoleChapters(0).rec_select();
-		i2C.onReceive(all_register_set.receiveI2C);
-		i2C.onRequest(all_register_set.requestI2C);
+		i2C.onReceive(_prog_register_set.receiveI2C);
+		i2C.onRequest(_prog_register_set.requestI2C);
 	}
 
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
 	if (_mainConsoleChapters.chapter() == 0) {
-		_tempController.checkAndAdjust();
+		if (_tempController.checkAndAdjust()) {
+			for (auto& remote : remOLED_ConsoleArr) {
+				remote.refreshRegisters();
+			}
+		}
 	}
 }
 
-void HeatingSystem::serviceConsoles() {
+void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 	//if (I2C_Slave::data >= 0) logger() << " Got slave key: " << I2C_Slave::data << L_endl;
 	//remoteKeypadArr[D_Hall].putKey(I2C_Slave::getKey());
 	//Serial.println("HS.serviceConsoles");
 	if (_mainConsole.processKeys()) _mainConsole.refreshDisplay();
 	auto zoneIndex = 0;
 	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
-	for (auto & remote : _remoteConsole) {
+	for (auto & remote : _remoteLCDConsole) {
+		auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_ROOM_TEMP) + (OLED_Master_Display::R_DISPL_REG_SIZE * zoneIndex);
+		temporary_remoteTSArr[zoneIndex].readTemperature();
+		auto roomTemp = temporary_remoteTSArr[zoneIndex].get_fractional_temp();
+		_prog_registers.setRegister(remoteTS_register, roomTemp>>8);
+		_prog_registers.setRegister(remoteTS_register+1, uint8_t(roomTemp));
 		activeField->setFocusIndex(zoneIndex);
 		if (remote.processKeys()) remote.refreshDisplay();
 		++zoneIndex;
-		if (zoneIndex == 2) ++zoneIndex;
 	}
 }
 

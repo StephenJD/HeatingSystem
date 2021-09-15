@@ -18,7 +18,7 @@ namespace client_data_structures {
 
 	struct R_MixValveControl {
 		char name[5];
-		RecordID flowTempSens;
+		RecordID flowTS_addr;
 		RecordID storeTempSens;
 		bool operator < (R_MixValveControl rhs) const { return false; }
 		bool operator == (R_MixValveControl rhs) const { return true; }

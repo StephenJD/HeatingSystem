@@ -107,7 +107,13 @@ Serial_Logger::Serial_Logger(uint32_t baudRate, Clock& clock, Flags initFlags) :
 #endif
 }
 
-void Serial_Logger::begin(uint32_t baudRate) { Serial.begin(baudRate); }
+void Serial_Logger::begin(uint32_t baudRate) { 
+	if (baudRate == 0) Serial.println(F("Baud Rate must be provided"));
+	else {
+		Serial.begin(baudRate);
+		Serial.print(F("Baud Rate: ")); Serial.println(baudRate);
+	}
+}
 
 size_t Serial_Logger::write(uint8_t chr) {
 	Serial.print(char(chr));

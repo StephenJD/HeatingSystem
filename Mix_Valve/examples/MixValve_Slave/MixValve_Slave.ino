@@ -40,6 +40,8 @@ using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
 constexpr uint32_t SERIAL_RATE = 115200;
+constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
+constexpr auto MV_REQUESTING_INI = 1;
 
 namespace arduino_logger {
 	Logger& logger() {
@@ -53,17 +55,15 @@ EEPROMClass & eeprom() {
 	return EEPROM;
 }
 
-constexpr auto slave_requesting_initialisation = 0;
-
 extern const uint8_t version_month;
 extern const uint8_t version_day;
 extern const uint8_t eeprom_firstRegister_addr;
-const uint8_t version_month = 8; // change to force re-application of defaults incl temp-sensor addresses
-const uint8_t version_day = 25;
+const uint8_t version_month = 9; // change to force re-application of defaults incl temp-sensor addresses
+const uint8_t version_day = 15;
 const uint8_t eeprom_firstRegister_addr = sizeof(version_month) + sizeof(version_day);
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
-enum { ds_mix, us_mix };
+enum { us_mix, ds_mix };
 
 enum { e_US_Heat = 11, e_US_Cool = 10, e_DS_Heat = 12, e_DS_Cool = A0, e_Status = 13 };
 
@@ -77,12 +77,13 @@ I2C_Talk& i2C() {
 
 void roleChanged(Role newRole);
 Role getRole();
-const __FlashStringHelper * showErr(Mix_Valve::Error err);
+const __FlashStringHelper * showErr(Mix_Valve::MV_Status err);
 
-auto ds_heatRelay = Pin_Wag(e_DS_Heat, HIGH);
-auto ds_coolRelay = Pin_Wag(e_DS_Cool, HIGH);
 auto us_heatRelay = Pin_Wag(e_US_Heat, HIGH);
 auto us_coolRelay = Pin_Wag(e_US_Cool, HIGH);
+auto ds_heatRelay = Pin_Wag(e_DS_Heat, HIGH);
+auto ds_coolRelay = Pin_Wag(e_DS_Cool, HIGH);
+
 auto psu_enable = Pin_Wag(e_PSU, LOW, true);
 
 auto led_Status = Pin_Wag(e_Status, HIGH);
@@ -93,28 +94,19 @@ auto led_DS_Cool = Pin_Wag(e_DS_Cool, HIGH);
 
 I2C_Recover i2c_recover(i2C());
 
-// register[0] is offset for writing to Programmer
-constexpr int mix_register_offset = 0;
-auto mixV_register_set = i2c_registers::Registers<1 + Mix_Valve::mixValve_all_register_size * NO_OF_MIXERS>{i2C()};
+// All I2C transfers are initiated by Master
+auto mixV_register_set = i2c_registers::Registers<Mix_Valve::R_MV_ALL_REG_SIZE * NO_OF_MIXERS>{i2C()};
 i2c_registers::I_Registers& mixV_registers = mixV_register_set;
 
-auto ds_TempSens = TempSensor(i2c_recover, DS_TEMPSENS_ADDR); // addr only used when version-changed
-auto us_TempSens = TempSensor(i2c_recover, US_TEMPSENS_ADDR);
-
 Mix_Valve  mixValve[] = {
-	{i2c_recover, ds_TempSens, ds_heatRelay, ds_coolRelay, eeprom(), 1}
-	, {i2c_recover, us_TempSens, us_heatRelay, us_coolRelay, eeprom(), 1 + Mix_Valve::mixValve_all_register_size}
-	//{i2c_recover, DS_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), 1}
-	//, {i2c_recover, US_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 1 + Mix_Valve::mixValve_all_register_size}
+	{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 1, 55}
+  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), 1 + Mix_Valve::R_MV_ALL_REG_SIZE, 55}
 };
 
 void setup() {
+	logger().begin(SERIAL_RATE);
 	logger() << F("Setup Started") << L_endl;
-	//set_watchdog_timeout_mS(8000);
-	//Serial.begin(SERIAL_RATE);
-	//Serial.println("Start");
-	mixValve[0].begin(55);
-	mixValve[1].begin(55);
+	set_watchdog_timeout_mS(8000);
 	psu_enable.begin(true);
 
 	i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
@@ -136,16 +128,14 @@ void setup() {
 	role = e_Slave;
 	roleChanged(e_Master);
 	logger() << F("Setup complete") << L_flush;
-    logger() << F("NoFlush") << L_endl;
 	delay(500);
 	//psu_enable.clear();
 }
 
 void loop() {
-	// It is up to any connected programmer to initiate sending a new temperature request
-	// and to request register-data.
+	// All I2C transfers are initiated by Master
 	static auto nextSecond = Timer_mS(1000);
-	static Mix_Valve::Error err = Mix_Valve::e_OK;
+	static Mix_Valve::MV_Status err = Mix_Valve::MV_OK;
 
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
@@ -154,16 +144,13 @@ void loop() {
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 
-		err = Mix_Valve::e_OK;
-		if (mixValve[ds_mix].check_flow_temp() != Mix_Valve::e_OK) {
-			err = Mix_Valve::e_DS_Temp_failed;
+		err = Mix_Valve::MV_OK;
+		if (mixValve[us_mix].check_flow_temp() == Mix_Valve::MV_I2C_FAILED) {
+			err = Mix_Valve::MV_US_TS_FAILED;
+		}		
+    if (mixValve[ds_mix].check_flow_temp() == Mix_Valve::MV_I2C_FAILED) {
+      	err = static_cast<Mix_Valve::MV_Status>(err | Mix_Valve::MV_DS_TS_FAILED);
 		}
-		if (mixValve[us_mix].check_flow_temp() != Mix_Valve::e_OK) {
-			err = static_cast<Mix_Valve::Error>(err | Mix_Valve::e_US_Temp_failed);
-		}
-
-	  logger() << F("DS req: ") << mixV_register_set.getRegister(1+ Mix_Valve::request_temp) << L_endl;
-	  logger() << F("US req: ") << mixV_register_set.getRegister(1+ Mix_Valve::mixValve_all_register_size + Mix_Valve::request_temp) << L_endl;
 
 		if (err) {
 			logger() << showErr(err) << L_endl;
@@ -184,21 +171,21 @@ Role getRole() {
 void roleChanged(Role newRole) {
 	if (e_Slave == newRole) {
 		psu_enable.clear();
-		while (i2C().write(PROGRAMMER_I2C_ADDR, slave_requesting_initialisation, 1) != _OK);
+		for (int i = 0; i < 10; ++i) {
+      if (i2C().write(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, MV_REQUESTING_INI) == _OK) break;
+    } 
 		logger() << F("Set to Slave") << L_endl;
 	}
 	else if (role != newRole) { // changed to Master
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
-		mixValve[ds_mix].setDefaultRequestTemp();
-		mixValve[us_mix].setDefaultRequestTemp();
+		mixValve[us_mix].setDefaultRequestTemp();		
+    mixValve[ds_mix].setDefaultRequestTemp();
 		psu_enable.clear();
 	}
 	role = newRole;
-	logger() << F("DS Request: ") << mixValve[ds_mix].getReg(Mix_Valve::request_temp) / 256 << L_endl;
-	logger() << F("US Request: ") << mixValve[us_mix].getReg(Mix_Valve::request_temp) / 256 << L_endl;
 }
 
-const __FlashStringHelper * showErr(Mix_Valve::Error err) { // 1-4 errors, 5-9 status
+const __FlashStringHelper * showErr(Mix_Valve::MV_Status err) { // 1-4 errors, 5-9 status
 	// 5 short flashes == start-up.
 	// 1s on / 1s off == Programmer Action
 	// 3s on / 1s off == Manual Action
@@ -213,7 +200,7 @@ const __FlashStringHelper * showErr(Mix_Valve::Error err) { // 1-4 errors, 5-9 s
 	if (lastStatus != statusOn) {
 		lastStatus = statusOn;
 
-		if (err == Mix_Valve::e_OK) {
+		if (err == Mix_Valve::MV_OK) {
 			statusLed /= 4; // 1111,2222,3333,4444 changes every second
 			statusOn = (statusLed % 4);// 0-1-2-3, 0-1-2-3 : on three-in-four seconds
 			if (role == e_Slave) {
@@ -236,22 +223,19 @@ const __FlashStringHelper * showErr(Mix_Valve::Error err) { // 1-4 errors, 5-9 s
 	}
 
 	switch (err) {
-	case Mix_Valve::e_DS_Temp_failed:
+	case Mix_Valve::MV_US_TS_FAILED:
+		us_heatRelay.clear();
+		us_coolRelay.clear();
+		return F("US TS Failed");	
+  case Mix_Valve::MV_DS_TS_FAILED:
 		ds_heatRelay.clear();
 		ds_coolRelay.clear();
 		return F("DS TS Failed");
-	case Mix_Valve::e_US_Temp_failed:
+	case Mix_Valve::MV_TS_FAILED:
 		us_heatRelay.clear();
-		us_coolRelay.clear();
-		return F("US TS Failed");
-	case Mix_Valve::e_I2C_failed:
-		i2C().begin();
-		// fall-through
-	case Mix_Valve::e_Both_TS_Failed:
-		ds_heatRelay.clear();
+		us_coolRelay.clear();		
+    ds_heatRelay.clear();
 		ds_coolRelay.clear();
-		us_heatRelay.clear();
-		us_coolRelay.clear();
 		return F("US/DS TS Failed");
 	default:
 		return F("");

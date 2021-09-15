@@ -19,7 +19,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 66;
+	constexpr uint8_t VERSION = 67;
 
 	/////////////////// Pin assignments & misc. ///////////////////
 	constexpr uint8_t RESET_OUT_PIN = 14;  // active low.
@@ -92,8 +92,13 @@ namespace HardwareInterfaces {
 	constexpr uint8_t US_REMOTE_MASTER_I2C_ADDR = 0x12;
 	constexpr uint8_t DS_REMOTE_MASTER_I2C_ADDR = 0x13;
 	constexpr uint8_t FL_REMOTE_MASTER_I2C_ADDR = 0x14;
-	constexpr uint8_t DS_TEMPSENS_ADDR = 0x4f;
-	constexpr uint8_t US_TEMPSENS_ADDR = 0x2C;
+	constexpr uint8_t REMOTE_CONSOLE_ADDR[] = {US_REMOTE_MASTER_I2C_ADDR, DS_REMOTE_MASTER_I2C_ADDR, FL_REMOTE_MASTER_I2C_ADDR };
+	constexpr uint8_t US_FLOW_TEMPSENS_ADDR = 0x2C;
+	constexpr uint8_t DS_FLOW_TEMPSENS_ADDR = 0x4f;
+	constexpr uint8_t US_ROOM_TEMPSENS_ADDR = 0x36;
+	constexpr uint8_t DS_ROOM_TEMPSENS_ADDR = 0x74;
+	constexpr uint8_t F_ROOM_TEMPSENS_ADDR = 0x70;
+	constexpr uint8_t REMOTE_ROOM_TS_ADDR[] = { US_ROOM_TEMPSENS_ADDR, DS_ROOM_TEMPSENS_ADDR, F_ROOM_TEMPSENS_ADDR };
 
 	constexpr uint8_t US_REMOTE_ADDRESS = 0x24;
 	constexpr uint8_t FL_REMOTE_ADDRESS = 0x25;
@@ -104,7 +109,7 @@ namespace HardwareInterfaces {
 	constexpr uint8_t IO8_PORT_MixValvesActive = 0;
 	constexpr uint8_t MIX_VALVE_USED = 128 | 8 | 2 | 1;
 
-	// registers
+	// Hardware Registers
 	constexpr uint8_t REG_16PORT_INTCAPA = 0x10;
 	constexpr uint8_t REG_16PORT_GPIOA = 0x12;
 

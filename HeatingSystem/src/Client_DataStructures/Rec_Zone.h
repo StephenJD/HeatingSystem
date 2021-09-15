@@ -11,7 +11,7 @@ namespace client_data_structures {
 	struct R_Zone {
 		char name[7];
 		char abbrev[4];
-		RecordID callTempSens;
+		RecordID callTempSens_addr;
 		RecordID callRelay;
 		RecordID mixValve;
 		uint8_t maxFlowTemp;

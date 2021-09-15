@@ -28,10 +28,10 @@ namespace client_data_structures {
 			return &_name;
 		case e_pos:
 			if (canDo) {
-				if (runTimeData().valveStatus.algorithmMode == Mix_Valve::e_Checking)
-					_pos.val = runTimeData().valveStatus.valvePos;
+				if (runTimeData().getReg(Mix_Valve::R_MODE) == Mix_Valve::e_Checking)
+					_pos.val = runTimeData().getReg(Mix_Valve::R_VALVE_POS);
 				else
-					_pos.val = runTimeData().valveStatus.onTime;
+					_pos.val = runTimeData().getReg(Mix_Valve::R_COUNT);
 				if (_pos.val > 70) _pos.val = 70;
 				if (_pos.val < -70) _pos.val = -70;
 			}

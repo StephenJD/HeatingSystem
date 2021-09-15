@@ -30,40 +30,43 @@ namespace I2C_Recovery {
 class Mix_Valve
 {
 public:
-	enum Error { e_OK, e_NewTempReq, e_DS_Temp_failed, e_US_Temp_failed, e_Both_TS_Failed, e_I2C_failed, e_Water_too_cool, e_setup1, e_setup2, e_loop1, e_loop2};
+	enum MV_Status { MV_OK, MV_DS_TS_FAILED, MV_US_TS_FAILED, MV_TS_FAILED, MV_I2C_FAILED, MV_NEW_TEMP_REQUEST, MV_STORE_TOO_COOL};
 	
-	enum MixValve_Volatile_Register_Names { // Programmer only has copies of these registers
+	enum MixValve_Volatile_Register_Names { 
+		// Registers provided by MixValve_Slave
+		// Copies of the VOLATILE set provided in Programmer reg-set
 		// All registers are single-byte.
+		// All Mix-Valve I2C transfers are initiated by Master
+
 		// send
-		status, mode, state, ratio
-		, moveFromTemp
-		, count
-		, valve_pos
-		, moveFromPos
-		, flow_temp //Send/Receive
+		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
+		, R_STATUS, R_MODE, R_STATE, R_RATIO
+		, R_FROM_TEMP
+		, R_COUNT
+		, R_VALVE_POS
+		, R_FROM_POS
+		, R_FLOW_TEMP //Send/Receive
 		// receive
-		, request_temp
-		, mixValve_volRegister_size
+		, R_REQUEST_FLOW_TEMP
+		, R_MV_VOLATILE_REG_SIZE
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
-		  temp_i2c_addr = mixValve_volRegister_size
-		, full_traverse_time
-		, wait_time
-		, max_flowTemp
-		, mixValve_all_register_size
+		  R_TS_ADDRESS = R_MV_VOLATILE_REG_SIZE
+		, R_FULL_TRAVERSE_TIME
+		, R_SETTLE_TIME
+		, R_MAX_FLOW_TEMP
+		, R_MV_ALL_REG_SIZE
 	};
 
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat, e_Error };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 
-	//Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
-	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, HardwareInterfaces::TempSensor& defaultTS, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
-	void begin(int defaultMaxTemp);
+	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset, int defaultMaxTemp);
 	uint8_t getReg(int reg) const;
 	const __FlashStringHelper* name();
-	Error check_flow_temp();
+	MV_Status check_flow_temp();
 	void setDefaultRequestTemp();
 private:
 	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
@@ -74,7 +77,7 @@ private:
 
 	Mode algorithmMode(int call_flowDiff) const;
 	void saveToEEPROM();
-	void checkForNewData();
+	void checkForNewReqTemp();
 	void refreshRegisters();
 
 	void adjustValve(int tempDiff);
@@ -86,8 +89,8 @@ private:
 	void loadFromEEPROM();
 
 	// Object state
-	HardwareInterfaces::TempSensor* _temp_sensr;
-	uint8_t _reg_offset;
+	HardwareInterfaces::TempSensor _temp_sensr;
+	uint8_t _regOffset;
 
 	// Injected dependancies
 	HardwareInterfaces::Pin_Wag * _heat_relay;

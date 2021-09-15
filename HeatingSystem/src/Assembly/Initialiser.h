@@ -24,13 +24,13 @@ namespace Assembly {
 		uint8_t postI2CResetInitialisation(); // return 0 for OK
 		HeatingSystem & hs() { return _hs; }
 		I_I2Cdevice_Recovery & getDevice(uint8_t deviceAddr);
-
+		void initializeRemoteConsoles();
 		HardwareInterfaces::ResetI2C _resetI2C;
 		HardwareInterfaces::RelaysPort & relayPort() { return static_cast<HardwareInterfaces::RelaysPort &>(HardwareInterfaces::relayController()); }
 	private:
-		uint8_t initialiseTempSensors(); // return 0 for OK
-		uint8_t initialiseRemoteDisplays(); // return 0 for OK
-		uint8_t initialiseMixValveController(); // return 0 for OK
+		uint8_t temporary_initialiseTempSensors(); // return 0 for OK
+		uint8_t temporary_initialiseRemoteDisplays(); // return 0 for OK
+		//uint8_t initialiseMixValveController(); // return 0 for OK
 
 		HeatingSystem & _hs;
 		IniFunctor _iniFunctor;

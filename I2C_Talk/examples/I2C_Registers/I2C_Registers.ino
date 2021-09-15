@@ -11,21 +11,21 @@ constexpr uint8_t FL_REMOTE_I2C_ADDR = 0x14;
 
 I2C_Talk i2C;
 //I2C_Talk i2C2(DS_REMOTE_I2C_ADDR, Wire1);
-  constexpr auto slave_requesting_initialisation = 0;
+  constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
 
 	enum RemoteRegisterName {
-		  remote_register_offset // ini
-		, roomTempSensorAddr	// ini
-		, roomTemp				    // send
-		, roomTemp_fraction		// send
-		, towelRailRequest		// send
-		, hotWaterRequest		  // send
-		, roomTempRequest		  // send/receive
-		, roomWarmupTime_m10	// receive
-		, towelRailOnTime_m		// receive
-		, hotWaterTemp			  // receive
-		, hotWaterWarmupTime_m10 // If -ve, in 0-60 mins, if +ve in min_10
-		, remoteRegister_size
+		  R_DISPL_REG_OFFSET // ini
+		, R_ROOM_TS_ADDR	// ini
+		, R_ROOM_TEMP				    // send
+		, R_ROOM_TEMP_FRACTION		// send
+		, R_REQUESTING_T_RAIL		// send
+		, R_REQUESTING_DHW		  // send
+		, R_REQUESTED_ROOM_TEMP		  // send/receive
+		, R_WARM_UP_ROOM_M10	// receive
+		, R_ON_TIME_T_RAIL		// receive
+		, R_DHW_TEMP			  // receive
+		, R_WARM_UP_DHW_M10 // If -ve, in 0-60 mins, if +ve in min_10
+		, R_DISPL_REG_SIZE
 	};
 
  	enum MixValve_Volatile_Register_Names {
@@ -55,8 +55,8 @@ I2C_Talk i2C;
   };
 
   constexpr auto remRegStart = 1 + mixValve_volRegister_size*2;
-  auto all_registers = i2c_registers::Registers<remRegStart + 3*remoteRegister_size>{i2C};
-  auto rem_registers = i2c_registers::Registers<remoteRegister_size>{i2C};
+  auto all_registers = i2c_registers::Registers<remRegStart + 3*R_DISPL_REG_SIZE>{i2C};
+  auto rem_registers = i2c_registers::Registers<R_DISPL_REG_SIZE>{i2C};
   //auto rtc_registers = i2c_registers::Registers<i2C2, rtcRegister_size>{};
 
 void setMyI2CAddress() {
@@ -85,109 +85,109 @@ void createMyRegisters() {
   if (i2C.address() == PROGRAMMER_I2C_ADDR) {
     Serial.println(F("Create PR"));
  
-    all_registers.setRegister(remRegStart + roomTempRequest,17);
-    all_registers.setRegister(remRegStart + roomWarmupTime_m10,12);
-    all_registers.setRegister(remRegStart + towelRailOnTime_m,55);
-    all_registers.setRegister(remRegStart + hotWaterTemp,47);
-    all_registers.setRegister(remRegStart + hotWaterWarmupTime_m10,-35);
+    all_registers.setRegister(remRegStart + R_REQUESTED_ROOM_TEMP,17);
+    all_registers.setRegister(remRegStart + R_WARM_UP_ROOM_M10,12);
+    all_registers.setRegister(remRegStart + R_ON_TIME_T_RAIL,55);
+    all_registers.setRegister(remRegStart + R_DHW_TEMP,47);
+    all_registers.setRegister(remRegStart + R_WARM_UP_DHW_M10,-35);
     
-    all_registers.setRegister(remRegStart + remoteRegister_size + roomTempRequest,18);
-    all_registers.setRegister(remRegStart + remoteRegister_size + roomWarmupTime_m10,13);
-    all_registers.setRegister(remRegStart + remoteRegister_size + towelRailOnTime_m,56);
-    all_registers.setRegister(remRegStart + remoteRegister_size + hotWaterTemp,48);
-    all_registers.setRegister(remRegStart + remoteRegister_size + hotWaterWarmupTime_m10,-36);
+    all_registers.setRegister(remRegStart + R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP,18);
+    all_registers.setRegister(remRegStart + R_DISPL_REG_SIZE + R_WARM_UP_ROOM_M10,13);
+    all_registers.setRegister(remRegStart + R_DISPL_REG_SIZE + R_ON_TIME_T_RAIL,56);
+    all_registers.setRegister(remRegStart + R_DISPL_REG_SIZE + R_DHW_TEMP,48);
+    all_registers.setRegister(remRegStart + R_DISPL_REG_SIZE + R_WARM_UP_DHW_M10,-36);
 
-    all_registers.setRegister(remRegStart + 2*remoteRegister_size + roomTempRequest,19);
-    all_registers.setRegister(remRegStart + 2*remoteRegister_size + roomWarmupTime_m10,14);
-    all_registers.setRegister(remRegStart + 2*remoteRegister_size + towelRailOnTime_m,57);
-    all_registers.setRegister(remRegStart + 2*remoteRegister_size + hotWaterTemp,49);
-    all_registers.setRegister(remRegStart + 2*remoteRegister_size + hotWaterWarmupTime_m10,-37);
+    all_registers.setRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP,19);
+    all_registers.setRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_WARM_UP_ROOM_M10,14);
+    all_registers.setRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_ON_TIME_T_RAIL,57);
+    all_registers.setRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_DHW_TEMP,49);
+    all_registers.setRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_WARM_UP_DHW_M10,-37);
   } else {
     Serial.println(F("Create Rem"));
-    rem_registers.setRegister(roomTemp,20);
-    rem_registers.setRegister(towelRailRequest,0);
-    rem_registers.setRegister(hotWaterRequest,1);
+    rem_registers.setRegister(R_ROOM_TEMP,20);
+    rem_registers.setRegister(R_REQUESTING_T_RAIL,0);
+    rem_registers.setRegister(R_REQUESTING_DHW,1);
   }
 }
 
 void sendSlaveIniData() {
   Serial.println(F("Sending Offs to Rems"));
-  i2C.write(DS_REMOTE_I2C_ADDR, remote_register_offset, remRegStart);
-  i2C.write(US_REMOTE_I2C_ADDR, remote_register_offset, remRegStart + remoteRegister_size);
-  i2C.write(FL_REMOTE_I2C_ADDR, remote_register_offset, remRegStart + 2 * remoteRegister_size);
-  all_registers.setRegister(slave_requesting_initialisation,0);
+  i2C.write(DS_REMOTE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart);
+  i2C.write(US_REMOTE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + R_DISPL_REG_SIZE);
+  i2C.write(FL_REMOTE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + 2 * R_DISPL_REG_SIZE);
+  all_registers.setRegister(R_SLAVE_REQUESTING_INITIALISATION,0);
 }
 
 void sendDataToRemotes() {
-  i2C.write(DS_REMOTE_I2C_ADDR, roomTempRequest, 5, all_registers.reg_ptr(remRegStart + roomTempRequest));
-  i2C.write(US_REMOTE_I2C_ADDR, roomTempRequest, 5, all_registers.reg_ptr(remRegStart + remoteRegister_size + roomTempRequest));
-  i2C.write(FL_REMOTE_I2C_ADDR, roomTempRequest, 5, all_registers.reg_ptr(remRegStart + 2 * remoteRegister_size + roomTempRequest));
+  i2C.write(DS_REMOTE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_REQUESTED_ROOM_TEMP));
+  i2C.write(US_REMOTE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
+  i2C.write(FL_REMOTE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
 }
 
 void sendDataToProgrammer() {
-  Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(remote_register_offset));
-  i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(remote_register_offset) + roomTemp, 5, rem_registers.reg_ptr(roomTemp));
+  Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
+  i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_ROOM_TEMP, 5, rem_registers.reg_ptr(R_ROOM_TEMP));
 }
 
 void requestDataFromRemotes() {
-  i2C.read(DS_REMOTE_I2C_ADDR, roomTemp, 5, all_registers.reg_ptr(remRegStart + roomTemp));
-  i2C.read(US_REMOTE_I2C_ADDR, roomTemp, 5, all_registers.reg_ptr(remRegStart + remoteRegister_size + roomTemp));
-  i2C.read(FL_REMOTE_I2C_ADDR, roomTemp, 5, all_registers.reg_ptr(remRegStart + 2 * remoteRegister_size + roomTemp));
+  i2C.read(DS_REMOTE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_ROOM_TEMP));
+  i2C.read(US_REMOTE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_ROOM_TEMP));
+  i2C.read(FL_REMOTE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_ROOM_TEMP));
 }
 
 void requestDataFromProgrammer() {
-  i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(remote_register_offset) + roomTempRequest, 5, rem_registers.reg_ptr(roomTempRequest));
+  i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_REQUESTED_ROOM_TEMP, 5, rem_registers.reg_ptr(R_REQUESTED_ROOM_TEMP));
 }
 
 void printRegisters() {
   if (i2C.address() == PROGRAMMER_I2C_ADDR) {
-    Serial.print(F("Of Req ")); Serial.println(all_registers.getRegister(slave_requesting_initialisation));
+    Serial.print(F("Of Req ")); Serial.println(all_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION));
 
     Serial.print(F("Of 1 ")); Serial.println(remRegStart);
-    Serial.print(F("Of 2 ")); Serial.println(remRegStart + remoteRegister_size);
-    Serial.print(F("Of 3 ")); Serial.println(remRegStart + 2*remoteRegister_size);
+    Serial.print(F("Of 2 ")); Serial.println(remRegStart + R_DISPL_REG_SIZE);
+    Serial.print(F("Of 3 ")); Serial.println(remRegStart + 2*R_DISPL_REG_SIZE);
 
-    Serial.print(F("Rr 1 ")); Serial.println(all_registers.getRegister(remRegStart + roomTempRequest));
-    Serial.print(F("Rr 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + roomTempRequest));
-    Serial.print(F("Rr 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + roomTempRequest));
+    Serial.print(F("Rr 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_REQUESTED_ROOM_TEMP));
+    Serial.print(F("Rr 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
+    Serial.print(F("Rr 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
 
-    Serial.print(F("Rt 1 ")); Serial.println(all_registers.getRegister(remRegStart + roomTemp));
-    Serial.print(F("Rt 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + roomTemp));
-    Serial.print(F("Rt 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + roomTemp));
+    Serial.print(F("Rt 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_ROOM_TEMP));
+    Serial.print(F("Rt 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_ROOM_TEMP));
+    Serial.print(F("Rt 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_ROOM_TEMP));
 
-    Serial.print(F("Rm 1 ")); Serial.println(all_registers.getRegister(remRegStart + roomWarmupTime_m10));
-    Serial.print(F("Rm 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + roomWarmupTime_m10));
-    Serial.print(F("Rm 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + roomWarmupTime_m10));
+    Serial.print(F("Rm 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_WARM_UP_ROOM_M10));
+    Serial.print(F("Rm 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_WARM_UP_ROOM_M10));
+    Serial.print(F("Rm 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_WARM_UP_ROOM_M10));
 
-    Serial.print(F("TRr 1 ")); Serial.println(all_registers.getRegister(remRegStart + towelRailRequest));
-    Serial.print(F("TRr 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + towelRailRequest));
-    Serial.print(F("TRr 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + towelRailRequest));
+    Serial.print(F("TRr 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_REQUESTING_T_RAIL));
+    Serial.print(F("TRr 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_REQUESTING_T_RAIL));
+    Serial.print(F("TRr 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_REQUESTING_T_RAIL));
 
-    Serial.print(F("TRm 1 ")); Serial.println(all_registers.getRegister(remRegStart + towelRailOnTime_m));
-    Serial.print(F("TRm 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + towelRailOnTime_m));
-    Serial.print(F("TRm 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + towelRailOnTime_m));
+    Serial.print(F("TRm 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_ON_TIME_T_RAIL));
+    Serial.print(F("TRm 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_ON_TIME_T_RAIL));
+    Serial.print(F("TRm 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_ON_TIME_T_RAIL));
 
-    Serial.print(F("HWr 1 ")); Serial.println(all_registers.getRegister(remRegStart + hotWaterRequest));
-    Serial.print(F("HWr 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + hotWaterRequest));
-    Serial.print(F("HWr 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + hotWaterRequest));
+    Serial.print(F("HWr 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_REQUESTING_DHW));
+    Serial.print(F("HWr 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_REQUESTING_DHW));
+    Serial.print(F("HWr 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_REQUESTING_DHW));
 
-    Serial.print(F("HWt 1 ")); Serial.println(all_registers.getRegister(remRegStart + hotWaterTemp));
-    Serial.print(F("HWt 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + hotWaterTemp));
-    Serial.print(F("HWt 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + hotWaterTemp));
+    Serial.print(F("HWt 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_DHW_TEMP));
+    Serial.print(F("HWt 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_DHW_TEMP));
+    Serial.print(F("HWt 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_DHW_TEMP));
 
-    Serial.print(F("HWm 1 ")); Serial.println(all_registers.getRegister(remRegStart + hotWaterWarmupTime_m10));
-    Serial.print(F("HWm 2 ")); Serial.println(all_registers.getRegister(remRegStart + remoteRegister_size + hotWaterWarmupTime_m10));
-    Serial.print(F("HWm 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*remoteRegister_size + hotWaterWarmupTime_m10));
+    Serial.print(F("HWm 1 ")); Serial.println(all_registers.getRegister(remRegStart + R_WARM_UP_DHW_M10));
+    Serial.print(F("HWm 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_WARM_UP_DHW_M10));
+    Serial.print(F("HWm 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_WARM_UP_DHW_M10));
   } else {
-    Serial.print(F("Of ")); Serial.println(rem_registers.getRegister(remote_register_offset));
-    Serial.print(F("Rr ")); Serial.println(rem_registers.getRegister(roomTempRequest));
-    Serial.print(F("Rt ")); Serial.println(rem_registers.getRegister(roomTemp));
-    Serial.print(F("Rm ")); Serial.println(rem_registers.getRegister(roomWarmupTime_m10));
-    Serial.print(F("TRr ")); Serial.println(rem_registers.getRegister(towelRailRequest)); 
-    Serial.print(F("TRm ")); Serial.println(rem_registers.getRegister(towelRailOnTime_m));
-    Serial.print(F("HWr ")); Serial.println(rem_registers.getRegister(hotWaterRequest));
-    Serial.print(F("HWt ")); Serial.println(rem_registers.getRegister(hotWaterTemp));
-    Serial.print(F("HWm ")); Serial.println(rem_registers.getRegister(hotWaterWarmupTime_m10));
+    Serial.print(F("Of ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
+    Serial.print(F("Rr ")); Serial.println(rem_registers.getRegister(R_REQUESTED_ROOM_TEMP));
+    Serial.print(F("Rt ")); Serial.println(rem_registers.getRegister(R_ROOM_TEMP));
+    Serial.print(F("Rm ")); Serial.println(rem_registers.getRegister(R_WARM_UP_ROOM_M10));
+    Serial.print(F("TRr ")); Serial.println(rem_registers.getRegister(R_REQUESTING_T_RAIL)); 
+    Serial.print(F("TRm ")); Serial.println(rem_registers.getRegister(R_ON_TIME_T_RAIL));
+    Serial.print(F("HWr ")); Serial.println(rem_registers.getRegister(R_REQUESTING_DHW));
+    Serial.print(F("HWt ")); Serial.println(rem_registers.getRegister(R_DHW_TEMP));
+    Serial.print(F("HWm ")); Serial.println(rem_registers.getRegister(R_WARM_UP_DHW_M10));
   }
   Serial.println();
 }
@@ -220,7 +220,7 @@ void setup() {
 }
 
 void loop() {
-  if (all_registers.getRegister(slave_requesting_initialisation)) sendSlaveIniData();
+  if (all_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION)) sendSlaveIniData();
   Serial.println("\nSend Data");
   if (i2C.address() == PROGRAMMER_I2C_ADDR) sendDataToRemotes();
   else sendDataToProgrammer();

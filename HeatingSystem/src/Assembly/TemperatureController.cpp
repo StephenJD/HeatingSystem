@@ -26,11 +26,12 @@ namespace Assembly {
 	using namespace client_data_structures;
 	using namespace I2C_Recovery;
 
-	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, unsigned long * timeOfReset_mS) :
+	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers, unsigned long * timeOfReset_mS) :
 		tempSensorArr{ recovery }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
-		, mixValveControllerArr{ recovery }
+		, mixValveControllerArr{ {recovery, prog_registers}, {recovery, prog_registers} }
+		, _prog_registers(prog_registers)
 	{
 		Zone::setSequencer(sequencer);
 		int index = 0;
@@ -60,20 +61,20 @@ namespace Assembly {
 			mixValveControllerArr[index].initialise(index
 				, MIX_VALVE_I2C_ADDR
 				, relayArr
-				, tempSensorArr
-				, mixValveControl.rec().flowTempSens
-				, mixValveControl.rec().storeTempSens
+				, tempSensorArr[mixValveControl.rec().storeTempSens]
+				, mixValveControl.rec().flowTS_addr
+				, *timeOfReset_mS
 			);
-			mixValveControllerArr[index].setResetTimePtr(timeOfReset_mS);
 			++index;
 		}
 		logger() << F("load mixValveControllerArr Completed") << L_endl;
 		
 		index = 0;
 		for (Answer_R<R_Zone> zone : queries.q_Zones) {
+			auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_ROOM_TEMP) + OLED_Master_Display::R_DISPL_REG_SIZE * index;
 			zoneArr[index].initialise(
 				zone
-				, tempSensorArr[zone.rec().callTempSens]
+				, *_prog_registers.reg_ptr(remoteTS_register)
 				, relayArr[zone.rec().callRelay]
 				, thermalStore
 				, mixValveControllerArr[zone.rec().mixValve]
@@ -97,17 +98,20 @@ namespace Assembly {
 		logger() << F("loadTowelRails Completed") << L_endl;
 	}
 
-	void TemperatureController::checkAndAdjust() { // Called every Arduino loop, enter once per second
+	bool TemperatureController::checkAndAdjust() { // Called every Arduino loop, enter/returns true once per second
 		static uint8_t lastSeconds = clock_().seconds()-1;
 		static uint8_t lastMins = clock_().minUnits()-1;
 		bool isNewSecond = clock_().isNewSecond(lastSeconds);
-		if (!isNewSecond) { return; } // Wait for next second.
+		if (!isNewSecond) { return false; } // Wait for next second.
+		
+		// Entered once per second
 		bool newMinute = clock_().isNewMinute(lastMins);
 		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
 
 		logger().flush();
 		zTempLogger().flush();
 		profileLogger().flush();
+
 		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 		//logger() << L_time << "Check TS's" << L_endl;
 		for (auto & ts : tempSensorArr) {
@@ -122,8 +126,9 @@ namespace Assembly {
 			checkZones(checkPreHeat);
 		}
 
-		//logger() << L_time << "Check MixV's" << L_endl;
+		auto mixReqestingIni = _prog_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION) & MV_REQUESTING_INI;
 		for (auto & mixValveControl : mixValveControllerArr) {
+			if (mixReqestingIni) mixValveControl.sendSlaveIniData();
 			mixValveControl.check();
 			if (newMinute && checkPreHeat) mixValveControl.logMixValveOperation(true);
 			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 
@@ -142,6 +147,7 @@ namespace Assembly {
 		relayController().updateRelays();
 		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
+		return true;
 	}
 
 	void TemperatureController::checkZones(bool checkForPreHeat) {

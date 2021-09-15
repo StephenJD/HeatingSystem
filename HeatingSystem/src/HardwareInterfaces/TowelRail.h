@@ -26,6 +26,8 @@ namespace HardwareInterfaces {
 		// Modifier
 		void initialise(int towelRailID, UI_TempSensor & callTS, UI_Bitwise_Relay & callRelay, uint16_t onTime, uint8_t onTemp,  Assembly::TemperatureController & temperatureController, MixValveController & mixValveController);
 		bool check();
+		void setMode(int mode);
+
 	private:
 		RelationalDatabase::RecordID _recordID = 0;
 		UI_TempSensor * _callTS = 0;

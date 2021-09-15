@@ -9,11 +9,11 @@ namespace HardwareInterfaces {
 	class TempSensor : public I_I2Cdevice_Recovery {
 	public:
 		using I_I2Cdevice_Recovery::I_I2Cdevice_Recovery;
+		TempSensor(I2C_Recovery::I2C_Recover & recover, uint8_t addr, int16_t temp) : I_I2Cdevice_Recovery(recover, addr) { _lastGood = temp << 8; }
 		TempSensor(I2C_Recovery::I2C_Recover & recover, int addr);
 		TempSensor(I2C_Recovery::I2C_Recover & recover);
 		TempSensor() = default;
 #ifdef ZPSIM
-		TempSensor(I2C_Recovery::I2C_Recover & recover, uint8_t addr, int16_t temp) : I_I2Cdevice_Recovery(recover, addr) { _lastGood = temp << 8; }
 		void setTestTemp(uint8_t temp) {_lastGood = temp << 8;}
 		void setTestTemp(double temp) {_lastGood = int16_t(temp*256.);}
 #endif

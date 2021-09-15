@@ -44,9 +44,7 @@ I2C_Talk::I2C_Talk(int multiMaster_MyAddress, TwoWire & wire_port, int32_t max_I
 	, _i2cFreq(max_I2Cfreq)
 	, _myAddress(multiMaster_MyAddress)
 	, _wire_port(&wire_port)
-{
-	logger() << F("I2C_Talk") << L_endl;
-}
+{}
 
 void I2C_Talk::ini(TwoWire & wire_port, int32_t max_I2Cfreq) {
 	_max_i2cFreq = max_I2Cfreq;
@@ -310,7 +308,7 @@ Error_codes I2C_Talk::endTransmission() {
 }
 
 bool I2C_Talk::begin() {
-	logger() << F("I2C_Talk::begin()") << L_endl;
+	//Flogger() << F("I2C_Talk::begin()") << L_endl;
 	if (TWI_BUFFER_SIZE == 0) TWI_BUFFER_SIZE = getTWIbufferSize();
 	_lastWrite = micros();
 	_wire().begin(_myAddress); 

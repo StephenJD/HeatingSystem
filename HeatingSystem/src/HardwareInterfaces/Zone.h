@@ -27,13 +27,13 @@ namespace HardwareInterfaces {
 		Zone() = default;
 		void initialise(
 			RelationalDatabase::Answer_R<client_data_structures::R_Zone> zoneRecord
-			, UI_TempSensor& callTS
+			, uint8_t & callTS_register
 			, UI_Bitwise_Relay& callRelay
 			, ThermalStore& thermalStore
 			, MixValveController& mixValveController
 		);
 #ifdef ZPSIM
-		Zone(UI_TempSensor& ts, int reqTemp, UI_Bitwise_Relay& callRelay);
+		Zone(uint8_t & callTS_register, int reqTemp, UI_Bitwise_Relay& callRelay);
 #endif
 		static void setSequencer(Assembly::Sequencer& sequencer) { _sequencer = &sequencer; }
 		// Queries
@@ -51,6 +51,7 @@ namespace HardwareInterfaces {
 		int16_t getFractionalCallSensTemp() const;
 		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
 		Date_Time::DateTime startDateTime() { return _ttStartDateTime; }
+		uint8_t warmUpTime_m10() {return (_minsToPreheat + 5) / 10;}
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
 		void cancelPreheat();
@@ -82,16 +83,17 @@ namespace HardwareInterfaces {
 		int8_t modifiedCallTemp(int8_t callTemp) const;
 		void saveThermalRatio();
 
-		UI_TempSensor* _callTS = 0;
 		UI_Bitwise_Relay* _relay = 0;
 		ThermalStore* _thermalStore = 0;
 		MixValveController* _mixValveController;
+		uint8_t * _callTS_register = 0;
 
 		RelationalDatabase::Answer_R<client_data_structures::R_Zone> _zoneRecord;
 		RelationalDatabase::RecordID _recordID = 0;
 		uint8_t _maxFlowTemp = 0;
 		uint16_t _startCallTemp = 0;
 		int16_t _minsInPreHeat = PREHEAT_ENDED;
+		uint16_t _minsToPreheat;
 		/// <summary>
 		/// Controls saving of new delay period.
 		/// Cooling State: Is incremented up to DELAY_COOLING_TIME whilst zone is cooling.

@@ -14,7 +14,7 @@ using namespace I2C_Talk_ErrorCodes;
 
 namespace arduino_logger {
 	Logger& logger() {
-		static Serial_Logger _log(SERIAL_RATE);
+		static Serial_Logger _log(SERIAL_RATE, L_startWithFlushing);
 		return _log;
 	}
 }
@@ -26,39 +26,48 @@ using namespace arduino_logger;
 
 I2C_Talk i2C{}; // default 400kHz
 
-constexpr auto slave_requesting_initialisation = 0;
-constexpr auto mix_register_offset = 1;
-constexpr int SIZE_OF_ALL_REGISTERS = 1 + Mix_Valve::mixValve_volRegister_size * NO_OF_MIXERS;
-i2c_registers::Registers<SIZE_OF_ALL_REGISTERS> all_register_set{ i2C };
-uint8_t valveStatus[NO_OF_MIXERS];
-//i2c_registers::I_Registers& all_registers{ all_register_set };
+// All Mix-Valve I2C transfers are initiated by this Master
+enum Register_Constants {
+	R_SLAVE_REQUESTING_INITIALISATION = 0
+	, MV_REG_MASTER_0_OFFSET = 1
+	, MV_REG_MASTER_1_OFFSET = MV_REG_MASTER_0_OFFSET + Mix_Valve::R_MV_VOLATILE_REG_SIZE
+	, MV_REG_SLAVE_0_OFFSET = 0
+	, MV_REG_SLAVE_1_OFFSET = MV_REG_SLAVE_0_OFFSET + Mix_Valve::R_MV_ALL_REG_SIZE
+	, SIZE_OF_ALL_REGISTERS = MV_REG_MASTER_0_OFFSET + Mix_Valve::R_MV_VOLATILE_REG_SIZE * NO_OF_MIXERS
+	, MV_REQUESTING_INI = 1
+}; 
+
+i2c_registers::Registers<SIZE_OF_ALL_REGISTERS> mixV_x2_registers{ i2C };
+uint8_t previous_valveStatus[NO_OF_MIXERS];
+
+uint8_t _mixCallTemp = 35;
+uint8_t _mixCallTemp2 = 55;
 
 void sendSlaveIniData() {
 	auto err = _OK;
 	do {
 		Serial.println(F("Sending INI to Slaves"));
-		err = i2C.write(MIX_VALVE_I2C_ADDR, 0, mix_register_offset);
+		err = i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_0_OFFSET + Mix_Valve::R_TS_ADDRESS, DS_TEMPSENS_ADDR);
 		if (err) logger() << F("IniErr:") << i2C.getStatusMsg(err) << L_endl;
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1+ Mix_Valve::temp_i2c_addr, DS_TEMPSENS_ADDR);
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::temp_i2c_addr, US_TEMPSENS_ADDR);
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::full_traverse_time, 130);
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::full_traverse_time, 150);
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::wait_time, 10);
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::wait_time, 15);
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::max_flowTemp, 60);
-		err |= i2C.write(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size + Mix_Valve::max_flowTemp, 70);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_1_OFFSET + Mix_Valve::R_TS_ADDRESS, US_TEMPSENS_ADDR);
+		
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_0_OFFSET + Mix_Valve::R_FULL_TRAVERSE_TIME, 130);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_1_OFFSET + Mix_Valve::R_FULL_TRAVERSE_TIME, 150);
+		
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_0_OFFSET + Mix_Valve::R_SETTLE_TIME, 10);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_1_OFFSET + Mix_Valve::R_SETTLE_TIME, 15);
+		
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_0_OFFSET + Mix_Valve::R_MAX_FLOW_TEMP, 60);
+		err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_1_OFFSET + Mix_Valve::R_MAX_FLOW_TEMP, 70);
+		
+		mixV_x2_registers.setRegister(R_SLAVE_REQUESTING_INITIALISATION, 0);
 	} while (err != _OK);
-	all_register_set.setRegister(slave_requesting_initialisation, 0);
 }
 
 void sendReqTempsToMixValve() {
-	auto reqTemp = all_register_set.getRegister(1 + Mix_Valve::request_temp);
-	logger() << F("Master Sent: ") << reqTemp << L_endl;
-	auto err = i2C.write(MIX_VALVE_I2C_ADDR, 1+ Mix_Valve::request_temp, reqTemp);
-
-	reqTemp = all_register_set.getRegister(1 + Mix_Valve::mixValve_volRegister_size + Mix_Valve::request_temp);
-
-	err |= i2C.write(MIX_VALVE_I2C_ADDR, 1+ Mix_Valve::mixValve_all_register_size + Mix_Valve::flow_temp, reqTemp);
+	logger() << F("Master Sent: ") << _mixCallTemp << L_endl;
+	auto err = i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_0_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
+	err |= i2C.write(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_1_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp2);
 	
 	if (err == _StopMarginTimeout) {
 		i2C.setStopMargin(i2C.stopMargin() + 1);
@@ -67,64 +76,71 @@ void sendReqTempsToMixValve() {
 }
 
 void requestSlaveData() {
-	i2C.read(MIX_VALVE_I2C_ADDR, 1, Mix_Valve::mixValve_volRegister_size, all_register_set.reg_ptr(1));
-	i2C.read(MIX_VALVE_I2C_ADDR, 1 + Mix_Valve::mixValve_all_register_size, Mix_Valve::mixValve_volRegister_size, all_register_set.reg_ptr(1+ Mix_Valve::mixValve_volRegister_size));
+	i2C.read(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_0_OFFSET, Mix_Valve::R_MV_VOLATILE_REG_SIZE, mixV_x2_registers.reg_ptr(MV_REG_MASTER_0_OFFSET));
+	i2C.read(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_1_OFFSET, Mix_Valve::R_MV_VOLATILE_REG_SIZE, mixV_x2_registers.reg_ptr(MV_REG_MASTER_1_OFFSET));
+}
+
+bool slaveRequestsResendRequestTemp() {
+	// All Mix-Valve I2C transfers are initiated by this Master
+	i2C.read(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_0_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP, 1, mixV_x2_registers.reg_ptr(MV_REG_MASTER_0_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP));
+	i2C.read(MIX_VALVE_I2C_ADDR, MV_REG_SLAVE_1_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP, 1, mixV_x2_registers.reg_ptr(MV_REG_MASTER_1_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP));
+	return (mixV_x2_registers.getRegister(MV_REG_MASTER_0_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP) == 0 || mixV_x2_registers.getRegister(MV_REG_MASTER_1_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP) == 0);
 }
 
 void setup()
 {
-  logger() << L_allwaysFlush << F("Start") << L_endl;
+	logger().begin(SERIAL_RATE);
+	logger() << F("Start") << L_flush;
   i2C.setAsMaster(PROGRAMMER_I2C_ADDR);
   i2C.setMax_i2cFreq(100000);
   i2C.setTimeouts(15000,I2C_Talk::WORKING_STOP_TIMEOUT);
-  i2C.onReceive(all_register_set.receiveI2C);
-  i2C.onRequest(all_register_set.requestI2C);
+  i2C.onReceive(mixV_x2_registers.receiveI2C);
+  i2C.onRequest(mixV_x2_registers.requestI2C);
   i2C.begin();
   sendSlaveIniData();
 }
 
-uint8_t _mixCallTemp = 25;
-uint8_t _mixCallTemp2 = 55;
-
 void loop()
 {
+	// All Mix-Valve I2C transfers are initiated by this Master
   static int loopCount = 0;
-  if (all_register_set.getRegister(slave_requesting_initialisation)) sendSlaveIniData();
+  if (mixV_x2_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION)) sendSlaveIniData();
 
   if (loopCount == 0) {
 	  loopCount = 10;
-	  _mixCallTemp = (_mixCallTemp == 25 ? 55 : 25) ;
-	  _mixCallTemp2 = (_mixCallTemp == 25 ? 55 : 25) ;
+	  auto temp = _mixCallTemp;
+	  _mixCallTemp = _mixCallTemp2;
+	  _mixCallTemp2 = temp;
 
-	  all_register_set.setRegister(1 + Mix_Valve::request_temp, _mixCallTemp);
-	  all_register_set.setRegister(1 + Mix_Valve::mixValve_volRegister_size + Mix_Valve::request_temp, _mixCallTemp2);
+	  mixV_x2_registers.setRegister(MV_REG_MASTER_0_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
+	  mixV_x2_registers.setRegister(MV_REG_MASTER_1_OFFSET + Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp2);
 	  sendReqTempsToMixValve();
   }
-
   requestSlaveData();
+  if (slaveRequestsResendRequestTemp()) sendReqTempsToMixValve();
   logMixValveOperation(1,true);
-  logMixValveOperation(1+ Mix_Valve::mixValve_volRegister_size,true);
+  logMixValveOperation(1+ Mix_Valve::R_MV_VOLATILE_REG_SIZE,true);
   --loopCount;
  delay(1000);
 }
 
 void logMixValveOperation(int regOffset, bool logThis) {
-	int index = regOffset < Mix_Valve::mixValve_volRegister_size ? 0 : 1;
-	auto algorithmMode = all_register_set.getRegister(regOffset + Mix_Valve::mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
+	int index = regOffset < Mix_Valve::R_MV_VOLATILE_REG_SIZE ? 0 : 1;
+	auto algorithmMode = mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_MODE); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
 	if (algorithmMode >= Mix_Valve::e_Error) {
 		logger() << "MixValve Error: " << algorithmMode << L_endl;
 	}
 
-	bool ignoreThis = (algorithmMode == Mix_Valve::e_Checking && all_register_set.getRegister(regOffset + Mix_Valve::flow_temp) == _mixCallTemp)
+	bool ignoreThis = (algorithmMode == Mix_Valve::e_Checking && mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_FLOW_TEMP) == _mixCallTemp)
 		|| algorithmMode == Mix_Valve::e_AtLimit;
 
-	if (logThis || !ignoreThis || valveStatus[index] != algorithmMode) {
-		valveStatus[index] = algorithmMode;
-		auto motorActivity = all_register_set.getRegister(regOffset + Mix_Valve::state); // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
+	if (logThis || !ignoreThis || previous_valveStatus[index] != algorithmMode) {
+		previous_valveStatus[index] = algorithmMode;
+		auto motorActivity = mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_STATE); // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
 		logger() << L_time << L_tabs
-			<< (index==0 ? F("DS_Mix Req: ") : F("US_Mix Req: ")) << _mixCallTemp << F(" is ") << all_register_set.getRegister(regOffset + Mix_Valve::flow_temp)
-			<< showState(index, algorithmMode, motorActivity) << all_register_set.getRegister(regOffset + Mix_Valve::count) << all_register_set.getRegister(regOffset + Mix_Valve::valve_pos) << all_register_set.getRegister(regOffset + Mix_Valve::ratio)
-			<< all_register_set.getRegister(regOffset + Mix_Valve::moveFromPos) << all_register_set.getRegister(regOffset + Mix_Valve::moveFromTemp) << L_endl;
+			<< (index==0 ? F("DS_Mix Req: ") : F("US_Mix Req: ")) << _mixCallTemp << F(" is ") << mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_FLOW_TEMP)
+			<< showState(index, algorithmMode, motorActivity) << mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_COUNT) << mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_VALVE_POS) << mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_RATIO)
+			<< mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_FROM_POS) << mixV_x2_registers.getRegister(regOffset + Mix_Valve::R_FROM_TEMP) << L_endl;
 	}
 }
 

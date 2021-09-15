@@ -20,6 +20,9 @@ namespace arduino_logger {
 	inline Flags operator +=(Flags& l_flag, Flags r_flag) { return l_flag = static_cast<Flags>(l_flag | r_flag); }
 	inline Flags operator -=(Flags& l_flag, Flags r_flag) { return l_flag = static_cast<Flags>(l_flag & ~r_flag); }
 
+	/// <summary>
+	/// Logger or Serial MUST call .begin(boud-rate) as first line in setup()
+	/// </summary>
 	class Logger : public Print {
 	public:
 		void activate(bool makeActive = true) { makeActive ? _flags = L_clearFlags : _flags = L_null; }
@@ -36,7 +39,9 @@ namespace arduino_logger {
 		Logger& log(T value);
 
 		virtual void readAll() {}
-		virtual void begin(uint32_t baudRate = 0) {/* flush(); */}
+		virtual void begin(uint32_t baudRate = 0) {
+			//Serial.print(F("Root_Baud Rate: ")); Serial.println(baudRate);
+		}
 		Logger& operator <<(Flags);
 
 		template<class T>

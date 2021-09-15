@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Clock.h>
+#include <Clock_I2C.h>
 #include <Logging.h>
+#include <Logging_SD.h>
 #include <I2C_Talk.h>
 #include <EEPROM.h>
 #include <SD.h>
@@ -50,6 +52,7 @@ Clock & clock_() {
 }
 
 #endif
+namespace arduino_logger {
 
 Logger & timelessLogger() {
 	static Serial_Logger _log(SERIAL_RATE);
@@ -57,7 +60,7 @@ Logger & timelessLogger() {
 }
 
 Logger & nullLogger() {
-	static Logger _log{};
+	static Serial_Logger _log{SERIAL_RATE, L_null};
 	return _log;
 }
 
@@ -76,15 +79,17 @@ Logger & sdLogLogger() {
 	return _log;
 }
 
-Logger & ramlogger() {
-	static RAM_Logger _log("R.txt", 1000, false, clock_());
-	return _log;
-}
+// Logger & ramlogger() {
+// 	static RAM_Logger _log("R.txt", 1000, false, clock_());
+// 	return _log;
+// }
 
-Logger & eplogger() {
-	static EEPROM_Logger _log("E.txt", 3000, 4000, false, clock_());
-	return _log;
+// Logger & eplogger() {
+// 	static EEPROM_Logger _log("E.txt", 3000, 4000, false, clock_());
+// 	return _log;
+// }
 }
+using namespace arduino_logger;
 
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
@@ -105,7 +110,7 @@ void setup() {
 #if defined(__SAM3X8E__)
 	pinMode(RTC_RESET, OUTPUT);
 	digitalWrite(RTC_RESET, LOW); // reset pin
-	rtc.restart();
+	rtc.begin();
 #endif
 	logger() << "Notime Logger Message\n";
 	start = millis();
@@ -164,57 +169,57 @@ void setup() {
 	took = millis() - start;
 	Serial.print("sdLogLogger no time x10 took "); Serial.println(took);
 
-	start = millis();
-	ramlogger(); // 0mS
-	took = millis() - start;
-	Serial.print("RAMLogger start took "); Serial.println(took);
+	// start = millis();
+	// ramlogger(); // 0mS
+	// took = millis() - start;
+	// Serial.print("RAMLogger start took "); Serial.println(took);
 
 
-	start = millis();
-	for (int i = 0; i < 10; ++i) { // 1/6 mS Due/Mega
-		ramlogger() << L_time << "ram log count " << i << L_endl;
-	}
-	took = millis() - start;
-	Serial.print("RAMLogger time x10 took "); Serial.println(took);
+	// start = millis();
+	// for (int i = 0; i < 10; ++i) { // 1/6 mS Due/Mega
+	// 	ramlogger() << L_time << "ram log count " << i << L_endl;
+	// }
+	// took = millis() - start;
+	// Serial.print("RAMLogger time x10 took "); Serial.println(took);
 
-	start = millis();
-	for (int i = 0; i < 10; ++i) { // 0/1 mS Due/Mega
-		ramlogger() << "ram log count " << i << L_endl;
-	}
-	took = millis() - start;
-	Serial.print("RAMLogger no time x10 took "); Serial.println(took);
+	// start = millis();
+	// for (int i = 0; i < 10; ++i) { // 0/1 mS Due/Mega
+	// 	ramlogger() << "ram log count " << i << L_endl;
+	// }
+	// took = millis() - start;
+	// Serial.print("RAMLogger no time x10 took "); Serial.println(took);
 
-	start = millis();
-	for (int i = 0; i < 70; ++i) { // 7/48 mS Due/Mega
-		ramlogger() << L_time << "ram log count " << i << L_endl;
-	}
-	took = millis() - start;
-	Serial.print("RAMLogger x70 took "); Serial.println(took);
+	// start = millis();
+	// for (int i = 0; i < 70; ++i) { // 7/48 mS Due/Mega
+	// 	ramlogger() << L_time << "ram log count " << i << L_endl;
+	// }
+	// took = millis() - start;
+	// Serial.print("RAMLogger x70 took "); Serial.println(took);
 	
-	start = millis();
-	ramlogger().readAll(); // 243/148 mS Due/Mega
-	took = millis() - start;
-	Serial.print("RAMLogger read took "); Serial.println(took);
+	// start = millis();
+	// ramlogger().readAll(); // 243/148 mS Due/Mega
+	// took = millis() - start;
+	// Serial.print("RAMLogger read took "); Serial.println(took);
 	
-	logger() << "Trigger dump" << L_endl;
-	start = millis();
-	eplogger(); // 661/223 mS Due/Mega
-	took = millis() - start;
-	Serial.print("EPLogger start took "); Serial.println(took);
+	// logger() << "Trigger dump" << L_endl;
+	// start = millis();
+	// eplogger(); // 661/223 mS Due/Mega
+	// took = millis() - start;
+	// Serial.print("EPLogger start took "); Serial.println(took);
 	
-	//logger() << "Fill Log" << L_endl;
-	//start = millis();
-	//for (int i = 0; i < 70; ++i) { // 8/11.7 S Due/Mega
-	//	eplogger() << L_time << "EP log count " << i << L_endl;
-	//}
-	//took = millis() - start;
-	//Serial.print("EPLogger x70 took "); Serial.println(took);
+	// //logger() << "Fill Log" << L_endl;
+	// //start = millis();
+	// //for (int i = 0; i < 70; ++i) { // 8/11.7 S Due/Mega
+	// //	eplogger() << L_time << "EP log count " << i << L_endl;
+	// //}
+	// //took = millis() - start;
+	// //Serial.print("EPLogger x70 took "); Serial.println(took);
 	
-	logger() << "Request Read" << L_endl;
-	start = millis();
-	eplogger().readAll(); // 652/180 mS Due/Mega
-	took = millis() - start;
-	Serial.print("EPLogger read took "); Serial.println(took);
+	// logger() << "Request Read" << L_endl;
+	// start = millis();
+	// eplogger().readAll(); // 652/180 mS Due/Mega
+	// took = millis() - start;
+	// Serial.print("EPLogger read took "); Serial.println(took);
 	
 	
 	timelessLogger() << "timelessLogger\n";

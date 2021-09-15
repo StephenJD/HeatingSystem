@@ -13,7 +13,7 @@
 using namespace std;
 #endif
 using namespace GP_LIB;
-void ui_yield();
+//void ui_yield();
 
 namespace arduino_logger {
 
@@ -106,7 +106,7 @@ size_t SD_Logger::write(const uint8_t * buffer, size_t size) {
 }	
 
 Logger & SD_Logger::logTime() {
-	ui_yield();
+	//ui_yield();
 	auto streamPtr = &stream();
 	while (mirror_stream(streamPtr)) {
 		streamPtr->print(_fileNameGenerator.stem());

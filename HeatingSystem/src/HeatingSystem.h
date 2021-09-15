@@ -4,6 +4,7 @@
 #include <RDB.h>
 #include <MultiCrystal.h>
 #include "HardwareInterfaces\LocalDisplay.h"
+#include "HardwareInterfaces\RemoteConsole.h"
 #include <LocalKeypad.h>
 #include <RemoteKeypad.h>
 #include <RemoteDisplay.h>
@@ -28,8 +29,6 @@ namespace HeatingSystemSupport {
 	extern bool dataHasChanged;
 }
 
-constexpr int SIZE_OF_ALL_REGISTERS = 1 + Mix_Valve::mixValve_volRegister_size * NO_OF_MIXERS + OLED_Master_Display::remoteRegister_size * NO_OF_REMOTES;
-
 class HeatingSystem {
 public:
 	HeatingSystem();
@@ -49,17 +48,22 @@ private: // data-member ordering matters!
 	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR };
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
+	i2c_registers::Registers<HardwareInterfaces::SIZE_OF_ALL_REGISTERS> _prog_register_set{i2C};
+	i2c_registers::I_Registers& _prog_registers = _prog_register_set;
 	Assembly::Initialiser _initialiser; // Checks db
 	Assembly::HeatingSystem_Queries _hs_queries;
 	Assembly::HeatingSystem_Datasets _hs_datasets;
 	Assembly::Sequencer _sequencer;
 	Assembly::TemperatureController _tempController;
 public:	
+	// Temporary Remote TS
+	HardwareInterfaces::UI_TempSensor temporary_remoteTSArr[3];
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;
 	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 	HardwareInterfaces::RemoteKeypad remoteKeypadArr[Assembly::NO_OF_REMOTE_DISPLAYS];
+	HardwareInterfaces::RemoteConsole remOLED_ConsoleArr[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;
@@ -68,8 +72,6 @@ private:
 	Assembly::MainConsoleChapters _mainConsoleChapters;
 	Assembly::RemoteConsoleChapters _remoteConsoleChapters;
 	HardwareInterfaces::Console _mainConsole;
-	HardwareInterfaces::Console _remoteConsole[Assembly::NO_OF_REMOTE_DISPLAYS];
+	HardwareInterfaces::Console _remoteLCDConsole[Assembly::NO_OF_REMOTE_DISPLAYS];
 	bool _dataHasChanged = true;
-	i2c_registers::Registers<SIZE_OF_ALL_REGISTERS> all_register_set{i2C};
-	i2c_registers::I_Registers& all_registers{ all_register_set };
 };

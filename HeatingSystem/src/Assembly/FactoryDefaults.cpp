@@ -32,8 +32,8 @@ namespace Assembly {
 	};
 
 	constexpr R_MixValveControl mixValveControl_f[] = {
-		{"DnS", T_DUfh, T_TkDs}
-		,{"UpS", T_UUfh, T_TkUs}
+		{"UpS", US_FLOW_TEMPSENS_ADDR, T_TkUs}
+		, {"DnS", DS_FLOW_TEMPSENS_ADDR, T_TkDs}
 	};
 
 	constexpr R_Display displays_f[] = {
@@ -54,9 +54,6 @@ namespace Assembly {
 	};
 
 	constexpr R_TempSensor tempSensors_f[] = {
-		{ "UpSt",0x36 },
-		{ "DnSt",0x74 },
-		{ "Flat",0x70 },
 		{ "HsTR",0x71 },
 		{ "EnST",0x76 },
 		{ "FlTR",0x48 },
@@ -65,8 +62,6 @@ namespace Assembly {
 
 		{ "Pdhw",0x37 },
 		{ "DHot",0x28 },
-		{ "US-F",0x2C },
-		{ "DS-F",0x4F },
 		{ "TkTp",0x2D },
 		{ "TkUs",0x2E },
 		{ "TkDs",0x77 },
@@ -74,7 +69,7 @@ namespace Assembly {
 
 		{ "TMfl",0x75 },
 		{ "MFBF",0x2F }
-	};	
+	};
 	
 	constexpr R_TowelRail towelRails_f[] = {
 		  { "EnSuite", T_ETrS, R_HsTR, M_UpStrs, 50, 60 }
@@ -88,18 +83,19 @@ namespace Assembly {
 	};
 
 	constexpr R_Zone zones_f[] = {				// maxT, offsetT, autoRatio, autoTimeC, autoQuality, autoDelay;
-		{ "UpStrs", "US", T_UR,R_UpSt, M_UpStrs,  55,	0,			135,	220,		1,			95 }
-		,{ "DnStrs","DS", T_DR,R_DnSt, M_DownStrs,55,	0,			104,	202,		1,			65 }
-		,{ "DHW",   "DHW",T_GasF,R_Gas, 0,		  80,	0,			254,	65,			1,			5 }
-		,{ "Flat",  "Flt",T_FR,R_Flat, M_UpStrs,  55,	0,			104,	206,		1,			48 }
+		{ "UpStrs", "US", US_ROOM_TEMPSENS_ADDR, R_UpSt, M_UpStrs,  55,	0,			135,	220,		1,			95 }
+		,{ "DnStrs","DS", DS_ROOM_TEMPSENS_ADDR, R_DnSt, M_DownStrs,55,	0,			104,	202,		1,			65 }
+		,{ "Flat",  "Flt",F_ROOM_TEMPSENS_ADDR, R_Flat, M_UpStrs,  55,	0,			104,	206,		1,			48 }
+		,{ "DHW",   "DHW",T_GasF, R_Gas, 0,		  80,	0,			254,	65,			1,			5 }
 	};
 
 	constexpr R_DwellingZone dwellingZones_f[] = {
-		{ 1,3 }
+		// DwID,ZID
+		{ 1,2 }
 		,{ 0,0 }
 		,{ 0,1 }
-		,{ 1,2 } 
-		,{ 0,2 }
+		,{ 1,3 } 
+		,{ 0,3 }
 	};
 
 	constexpr R_Program programs_f[] = { // Name , Dwelling
@@ -124,23 +120,23 @@ namespace Assembly {
 		{ 0,0,255 } // [0] At Home US MTWTFSS
 		,{ 0,1,124 }// [1] At Home DS MTWTF--
 		,{ 0,1,3 }  // [2] At Home DS -----SS
-		,{ 0,2,124 }// [3] At Home DHW MTWTF--
-		,{ 0,2,3 }  // [4] At Home DHW -----SS
+		,{ 0,3,124 }// [3] At Home DHW MTWTF--
+		,{ 0,3,3 }  // [4] At Home DHW -----SS
 
 		,{ 2,0,255 }// [5] At Work US MTWTFSS
 		,{ 2,1,124 }// [6] At Work DS MTWTF--
 		,{ 2,1,3 }  // [7] At Work DS -----SS
-		,{ 2,2,124 }// [8] At Work DHW MTWTF--
-		,{ 2,2,3 }  // [9] At Work DHW -----SS		
+		,{ 2,3,124 }// [8] At Work DHW MTWTF--
+		,{ 2,3,3 }  // [9] At Work DHW -----SS		
 
 		,{ 4,0,255 } // [10] Away US MTWTFSS
 		,{ 4,1,255 } // [11] Away DS MTWTFSS
-		,{ 4,2,255 } // [12] Away DHW MTWTFSS
+		,{ 4,3,255 } // [12] Away DHW MTWTFSS
 
-		,{ 1,2,255 } // [13] Occupied DHW MTWTFSS
-		,{ 1,3,255}  // [14] Occupied Flat MTWTFSS
-		,{ 3,2,255 } // [15] Empty DHW 
-		,{ 3,3,255}  // [16] Empty Flat 
+		,{ 1,3,255 } // [13] Occupied DHW MTWTFSS
+		,{ 1,2,255}  // [14] Occupied Flat MTWTFSS
+		,{ 3,3,255 } // [15] Empty DHW 
+		,{ 3,2,255}  // [16] Empty Flat 
 	};
 
 	constexpr TimeTemp makeTT(int hrs, int mins, int temp) {

@@ -18,7 +18,11 @@ using namespace HardwareInterfaces;
 I2C_Talk i2C;
 I2C_Recover i2c_recover(i2C);
 auto tempSensor = TempSensor{ i2c_recover };
-constexpr auto slave_requesting_initialisation = 0;
+constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
+constexpr auto RC_US_REQUESTING_INI = 2;
+constexpr auto RC_DS_REQUESTING_INI = 4;
+constexpr auto RC_F_REQUESTING_INI = 8;
+auto REQUESTING_INI = 0;
 
 namespace OLED_Master_Display {
 
@@ -30,7 +34,7 @@ namespace OLED_Master_Display {
     RemoteKeypadMaster _remoteKeypad{ 50,10 };
     U8X8_SSD1305_128X32_ADAFRUIT_4W_HW_SPI _display(OLED_CS, OLED_DC, OLED_RESET);
     Display_Mode _display_mode = RoomTemp;
-    auto rem_registers = i2c_registers::Registers<remoteRegister_size>{i2C};
+    auto rem_registers = i2c_registers::Registers<R_DISPL_REG_SIZE>{i2C};
 
     void setRemoteI2CAddress() {
         pinMode(5, INPUT_PULLUP);
@@ -38,31 +42,36 @@ namespace OLED_Master_Display {
         pinMode(7, INPUT_PULLUP);
         if (!digitalRead(5)) {
             i2C.setAsMaster(DS_REMOTE_I2C_ADDR);
+            REQUESTING_INI = RC_DS_REQUESTING_INI;
         } else if (!digitalRead(6)) {
             i2C.setAsMaster(US_REMOTE_I2C_ADDR);
+            REQUESTING_INI = RC_US_REQUESTING_INI;
         } else if (!digitalRead(7)) {
             i2C.setAsMaster(FL_REMOTE_I2C_ADDR);
+            REQUESTING_INI = RC_F_REQUESTING_INI;
         } else Serial.println(F("Err: None of Pins 5-7 selected."));
     }
 
     void sendDataToProgrammer() {
-        //Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(remote_register_offset));
-        i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(remote_register_offset) + roomTemp, 5, rem_registers.reg_ptr(roomTemp));
+        //Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
+        i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_ROOM_TEMP, 5, rem_registers.reg_ptr(R_ROOM_TEMP));
     }
 
     void requestDataFromProgrammer() {
-        i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(remote_register_offset) + roomTempRequest, 5, rem_registers.reg_ptr(roomTempRequest));
+        i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_REQUESTED_ROOM_TEMP, 5, rem_registers.reg_ptr(R_REQUESTED_ROOM_TEMP));
     }
 
     void requestRegisterOffsetFromProgrammer() {
-        uint8_t registerOffsetReqStillLodged = 1;
-        while (i2C.write(PROGRAMMER_I2C_ADDR, slave_requesting_initialisation, registerOffsetReqStillLodged) != _OK);
+        uint8_t registerOffsetReqStillLodged = 0;
+        i2C.read(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, 1, &registerOffsetReqStillLodged);
+        registerOffsetReqStillLodged |= REQUESTING_INI;
+        while (i2C.write(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, registerOffsetReqStillLodged) != _OK);
         do {
             Serial.flush();
             Serial.println(F("wait for offset..."));
             delay(100);
-            i2C.read(PROGRAMMER_I2C_ADDR, slave_requesting_initialisation, 1, &registerOffsetReqStillLodged);
-        } while (registerOffsetReqStillLodged);
+            i2C.read(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, 1, &registerOffsetReqStillLodged);
+        } while (registerOffsetReqStillLodged | REQUESTING_INI);
     }
 
     void begin() {
@@ -71,7 +80,7 @@ namespace OLED_Master_Display {
         i2C.onReceive(rem_registers.receiveI2C);
         i2C.onRequest(rem_registers.requestI2C);
         requestRegisterOffsetFromProgrammer();
-        tempSensor.initialise(rem_registers.getRegister(roomTempSensorAddr));
+        tempSensor.initialise(rem_registers.getRegister(R_ROOM_TS_ADDR));
         tempSensor.setHighRes();
         requestDataFromProgrammer();
         sendDataToProgrammer();
@@ -123,11 +132,11 @@ namespace OLED_Master_Display {
         auto increment = keyCode == I_Keypad::KEY_UP ? 1 : -1;
         switch (_display_mode) {
         case RoomTemp:
-            rem_registers.addToRegister(roomTempRequest, increment);
-            Serial.print(F("Rr ")); Serial.println(rem_registers.getRegister(roomTempRequest));
+            rem_registers.addToRegister(R_REQUESTED_ROOM_TEMP, increment);
+            Serial.print(F("Rr ")); Serial.println(rem_registers.getRegister(R_REQUESTED_ROOM_TEMP));
             break;
-        case TowelRail: rem_registers.setRegister(towelRailRequest, (rem_registers.getRegister(towelRailRequest) + increment) % 2); break;
-        case HotWater: rem_registers.setRegister(hotWaterRequest, (rem_registers.getRegister(hotWaterRequest) + increment) % 2); break;
+        case TowelRail: rem_registers.setRegister(R_REQUESTING_T_RAIL, (rem_registers.getRegister(R_REQUESTING_T_RAIL) + increment) % 3); break;
+        case HotWater: rem_registers.setRegister(R_REQUESTING_DHW, (rem_registers.getRegister(R_REQUESTING_DHW) + increment) % 3); break;
         }
         dataChanged = true;
         sendDataToProgrammer();
@@ -135,6 +144,7 @@ namespace OLED_Master_Display {
     }
 
     void displayPage() {
+        enum { e_Auto, e_Off, e_On };
         stopDisplaySleep();
         _display.clear();
         _display.setFont(getFont());
@@ -145,36 +155,42 @@ namespace OLED_Master_Display {
             _display.setCursor(0, 1);
             _display.print(F("Ask "));
             _display.setFont(getFont(true));
-            _display.print(rem_registers.getRegister(roomTempRequest));
+            _display.print(rem_registers.getRegister(R_REQUESTED_ROOM_TEMP));
             _display.setFont(getFont());
             _display.print(F(" Is "));
-            _display.print(rem_registers.getRegister(roomTemp));
+            _display.print(rem_registers.getRegister(R_ROOM_TEMP));
             _display.setCursor(0, 2);
             _display.print(F("Warmup in "));
-            _display.print(rem_registers.getRegister(roomWarmupTime_m10) / 6.);
+            _display.print(rem_registers.getRegister(R_WARM_UP_ROOM_M10) / 6.);
             _display.print(F("h"));
             break;
         case TowelRail:
             _display.print(F("Towel Rail"));
             _display.setCursor(0, 1);
             _display.setFont(getFont(true));
-            _display.print(rem_registers.getRegister(towelRailRequest) ? F("Manual ") : F("Auto "));
+            {
+                auto request = rem_registers.getRegister(R_REQUESTING_T_RAIL);
+                _display.print(request == e_Auto ? F("Auto ") : (request == e_Off ? F("Off ") : F("Manual ")));
+            }
             _display.setFont(getFont());
-            _display.print(rem_registers.getRegister(towelRailOnTime_m) ? F("(Is On)") : F("(Is Off)"));
+            _display.print(rem_registers.getRegister(R_ON_TIME_T_RAIL) ? F("(Is On)") : F("(Is Off)"));
             break;
         case HotWater:
             _display.print(F("Hot Water"));
             _display.setCursor(0, 1);
             _display.setFont(getFont(true));
-            _display.print(rem_registers.getRegister(hotWaterRequest) ? F("Manual ") : F("Auto "));
+            {
+                auto request = rem_registers.getRegister(R_REQUESTING_DHW);
+                _display.print(request == e_Auto ? F("Auto ") : (request == e_Off ? F("Off ") : F("Manual ")));
+            }
             _display.setFont(getFont());
             _display.setCursor(0, 2);
             _display.print(F("Warm in "));
-            if (rem_registers.getRegister(hotWaterWarmupTime_m10) <= 0) {
-                _display.print(-rem_registers.getRegister(hotWaterWarmupTime_m10));
+            if (rem_registers.getRegister(R_WARM_UP_DHW_M10) <= 0) {
+                _display.print(-rem_registers.getRegister(R_WARM_UP_DHW_M10));
                 _display.print(F("m"));
             } else {
-                _display.print(rem_registers.getRegister(hotWaterWarmupTime_m10) / 6.);
+                _display.print(rem_registers.getRegister(R_WARM_UP_DHW_M10) / 6.);
                 _display.print(F("h"));
             }
         }
@@ -185,7 +201,7 @@ namespace OLED_Master_Display {
         _display.clear();
         _display.setFont(getFont());
         _display.setCursor(_sleepCol, _sleepRow);
-        _display.print(rem_registers.getRegister(roomTemp));
+        _display.print(rem_registers.getRegister(R_ROOM_TEMP));
     }
 
     void processKeys() {
@@ -217,10 +233,10 @@ namespace OLED_Master_Display {
 
     void readTempSensor() {
         auto fractional_temp = tempSensor.get_fractional_temp();
-        rem_registers.setRegister(roomTemp, fractional_temp >> 8);
+        rem_registers.setRegister(R_ROOM_TEMP, fractional_temp >> 8);
         uint8_t fraction = uint8_t(fractional_temp);
-        if (fraction != rem_registers.getRegister(roomTemp_fraction)) {
-            rem_registers.setRegister(roomTemp_fraction, fraction);
+        if (fraction != rem_registers.getRegister(R_ROOM_TEMP_FRACTION)) {
+            rem_registers.setRegister(R_ROOM_TEMP_FRACTION, fraction);
             sendDataToProgrammer();
         }
     }

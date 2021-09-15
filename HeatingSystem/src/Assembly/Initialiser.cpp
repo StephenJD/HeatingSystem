@@ -53,6 +53,14 @@ namespace Assembly {
 		logger() << F("  Initialiser Constructed") << L_endl;
 	}
 
+	void Initialiser::initializeRemoteConsoles() {
+		auto consoleIndex = 0;
+		for (auto& rc : _hs.remOLED_ConsoleArr) {
+			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex], hs().tempController().towelRailArr[consoleIndex], hs().tempController().thermalStore, hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS);
+			++consoleIndex;
+		}
+	}
+
 	uint8_t Initialiser::i2C_Test() {
 		uint8_t status = _OK;
 		status = _testDevices.speedTestDevices();
@@ -62,27 +70,27 @@ namespace Assembly {
 
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		_resetI2C.hardReset.initialisationRequired = false;
-		uint8_t status =  initialiseTempSensors()
+		uint8_t status =  temporary_initialiseTempSensors()
 			| relayPort().initialiseDevice()
-			| initialiseRemoteDisplays()
-			| initialiseMixValveController();
-		for (auto& mixValve : hs().tempController().mixValveControllerArr) { mixValve.sendSetup(); }
+			| temporary_initialiseRemoteDisplays()
+			/* | initialiseMixValveController() */ ;
+		for (auto& mixValve : hs().tempController().mixValveControllerArr) { mixValve.sendSlaveIniData(); }
 		if (status != _OK) logger() << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
 		else logger() << F("  Initialiser::postI2CResetInitialisation OK\n");
 		return status;
 	}
 
-	uint8_t Initialiser::initialiseTempSensors() {
+	uint8_t Initialiser::temporary_initialiseTempSensors() {
 		// Set room-sensors to high-res
 		logger() << F("\nSet room-sensors to high-res") << L_endl;
-		return	_hs.tempController().tempSensorArr[T_DR].setHighRes()
-			| _hs.tempController().tempSensorArr[T_FR].setHighRes()
-			| _hs.tempController().tempSensorArr[T_UR].setHighRes();
+		return	_hs.temporary_remoteTSArr[0].setHighRes()
+			| _hs.temporary_remoteTSArr[1].setHighRes()
+			| _hs.temporary_remoteTSArr[2].setHighRes();
 	}
 
-	uint8_t Initialiser::initialiseRemoteDisplays() {
+	uint8_t Initialiser::temporary_initialiseRemoteDisplays() {
 		uint8_t failed = 0;
-		logger() << L_time << F("initialiseRemoteDisplays()") << L_endl;
+		logger() << L_time << F("temporary_initialiseRemoteDisplays()") << L_endl;
 		for (auto & rd : _hs.remDispl) {
 			failed |= rd.initialiseDevice();
 		}
@@ -99,12 +107,12 @@ namespace Assembly {
 		return failed;
 	}
 
-	uint8_t Initialiser::initialiseMixValveController() {
-		logger() << F("\nSend Req Temp") << L_endl;
-		_hs.tempController().mixValveControllerArr[M_DownStrs].sendFlowTemp();
-		_hs.tempController().mixValveControllerArr[M_UpStrs].sendFlowTemp();
-		return _OK;
-	}
+	//uint8_t Initialiser::initialiseMixValveController() {
+	//	logger() << F("\nSend Req Temp") << L_endl;
+	//	_hs.tempController().mixValveControllerArr[M_DownStrs].sendRequestFlowTemp();
+	//	_hs.tempController().mixValveControllerArr[M_UpStrs].sendRequestFlowTemp();
+	//	return _OK;
+	//}
 
 
 	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {

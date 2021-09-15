@@ -21,17 +21,21 @@ namespace HardwareInterfaces {
 		uint8_t currDeliverTemp() const { return _theoreticalDeliveryTemp; }
 		uint8_t calcCurrDeliverTemp(int callTemp, float groundT, float topT, float midT, float botT) const;
 		uint8_t getGroundTemp() const;
+		uint8_t getGasFlowTemp() const;
 		int8_t getOutsideTemp() const;
 		bool backBoilerIsHeating() const;
 		bool gasBoilerIsHeating() const { return _isHeating; }
 		int8_t tooCoolRequestOrigin() const { return _heatRequestSource; }
 		int8_t demandZone() const { return _demandZone; }
 		const __FlashStringHelper* principalLoad() const;
+		int8_t warmUpTime_m10() { return _preheat_m10; }
 
 		// Modifier
+		void setMode(int mode) { _mode = mode; }
 		void setLowestCWtemp(bool isFlowing);
 		bool needHeat(int currRequest, int nextRequest);
 		void calcCapacities();
+		void setPreheatM10(int8_t mins10) { _preheat_m10 = mins10; }
 
 	private:
 		UI_TempSensor * _tempSensorArr;
@@ -41,7 +45,9 @@ namespace HardwareInterfaces {
 		bool dhwDeliveryOK(int currRequest) const;
 		bool dhwNeedsHeat(int callTemp, int nextRequest);
 
+		int8_t _preheat_m10;
 		uint8_t _theoreticalDeliveryTemp = 45;
+		uint8_t _mode = 0;
 		bool _isHeating = false;
 		int8_t _heatRequestSource = -1;
 		int8_t _demandZone = -1; // TempConst only calculated if there is no zone heating demand

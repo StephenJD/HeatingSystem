@@ -14,7 +14,7 @@ namespace I2C_Recovery {
 
 	using namespace I2C_Talk_ErrorCodes;
 
-	I2C_Recover::I2C_Recover(I2C_Talk& i2C) : _i2C(&i2C) { logger() << F("I2C_Recover") << L_endl; /* Must not do i2C.begin() until entering setup()*/ }
+	I2C_Recover::I2C_Recover(I2C_Talk& i2C) : _i2C(&i2C) { /*logger() << F("I2C_Recover") << L_endl;*/ /* Must not do i2C.begin() until entering setup()*/ }
 
 	TwoWire & I2C_Recover::wirePort() { return i2C()._wire(); }
 
