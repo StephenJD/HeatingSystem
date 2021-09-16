@@ -38,21 +38,23 @@ public:
 		// All registers are single-byte.
 		// All Mix-Valve I2C transfers are initiated by Master
 
-		// send
+		// Receive
 		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
-		, R_STATUS, R_MODE, R_STATE, R_RATIO
+		// Send
+		, R_STATUS, R_MODE, R_STATE, R_RATIO 
 		, R_FROM_TEMP
 		, R_COUNT
 		, R_VALVE_POS
 		, R_FROM_POS
-		, R_FLOW_TEMP //Send/Receive
-		// receive
+		, R_FLOW_TEMP
+		// Receive
 		, R_REQUEST_FLOW_TEMP
 		, R_MAX_FLOW_TEMP
 		, R_MV_VOLATILE_REG_SIZE
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
+		// Receive
 		  R_TS_ADDRESS = R_MV_VOLATILE_REG_SIZE
 		, R_FULL_TRAVERSE_TIME
 		, R_SETTLE_TIME

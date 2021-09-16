@@ -27,7 +27,7 @@ namespace HardwareInterfaces {
 //#endif
 	MixValveController::MixValveController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers) : I_I2Cdevice_Recovery{recover}, _prog_registers(prog_registers) {}
 
-	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, UI_TempSensor & storeTempSens, int flowTS_addr, unsigned long& timeOfReset_mS) {
+	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS) {
 		//profileLogger() << F("MixValveController::ini ") << index << L_endl;
 		setAddress(addr);
 		_regOffset = index == 0 ? MV_REG_MASTER_0_OFFSET : MV_REG_MASTER_1_OFFSET;
@@ -58,29 +58,48 @@ namespace HardwareInterfaces {
 		Error_codes status = _OK;
 		uint8_t val1 = 55;
 		waitForWarmUp();
-		status = I_I2Cdevice::write(Mix_Valve::R_REQUEST_FLOW_TEMP + _regOffset, 1, &val1); // non-recovery
-		if (status == _OK) status = I_I2Cdevice::read(Mix_Valve::R_MODE + _regOffset, 1, &val1); // non-recovery 
+		status = I_I2Cdevice::write(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_REQUEST_FLOW_TEMP, 1, &val1); // non-recovery
+		if (status == _OK) status = I_I2Cdevice::read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_REQUEST_FLOW_TEMP, 1, &val1); // non-recovery 
 		return status;
 	}
 
-	uint8_t MixValveController::sendSlaveIniData() {
+	uint8_t MixValveController::sendSlaveIniData(uint8_t requestINI_flag) {
 		uint8_t errCode;
-		errCode = writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
+		uint8_t(&debug)[58] = reinterpret_cast<uint8_t(&)[58]>(*_prog_registers.reg_ptr(0));
+		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(Wire.i2CArr[getAddress()][0]);
+
+		errCode = writeToValve(Mix_Valve::R_MV_REG_OFFSET, _regOffset);
+		errCode |= writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
 		errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
+		setReg(Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
+		setReg(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
+		setReg(Mix_Valve::R_STATE, Mix_Valve::e_Stop);
+		setReg(Mix_Valve::R_RATIO, 30);
+		setReg(Mix_Valve::R_FROM_TEMP, 55);
+		setReg(Mix_Valve::R_COUNT, 0);
+		setReg(Mix_Valve::R_VALVE_POS, 70);
+		setReg(Mix_Valve::R_FROM_POS, 75);
+		setReg(Mix_Valve::R_FLOW_TEMP, 55);
+		setReg(Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
+		setReg(Mix_Valve::R_MAX_FLOW_TEMP, 55);
+		write(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::R_MAX_FLOW_TEMP, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_STATUS));
 		if (errCode == _OK) {
 			auto newIniStatus = _prog_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION);
-			newIniStatus &= ~MV_REQUESTING_INI;
+			newIniStatus &= ~requestINI_flag;
 			_prog_registers.setRegister(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
 		}
 		logger() <<  F("MixValveController::sendSlaveIniData()") << i2C().getStatusMsg(errCode) << L_endl;
 		return errCode;
 	}
 
-	uint8_t MixValveController::flowTemp() const { return _prog_registers.getRegister(Mix_Valve::R_FLOW_TEMP); }
+	uint8_t MixValveController::flowTemp() const { return getReg(Mix_Valve::R_FLOW_TEMP); }
 
 	bool MixValveController::check() { // called once per second
 		if (reEnable() == _OK) {
+			auto mixIniStatus = _prog_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION);
+			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
+			if (mixIniStatus & requestINI_flag) sendSlaveIniData(requestINI_flag);
 			readRegistersFromValve();
 			logMixValveOperation(false);
 		}
@@ -100,7 +119,8 @@ namespace HardwareInterfaces {
 		auto algorithmMode = Mix_Valve::Mix_Valve::Mode(getReg(Mix_Valve::R_MODE)); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
 		if (algorithmMode >= Mix_Valve::e_Error) {
 			logger() << "MixValve Mode Error: " << algorithmMode << L_endl;
-			sendSlaveIniData();
+			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
+			sendSlaveIniData(requestINI_flag);
 			if (getReg(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
 				recovery().resetI2C();
 				if (getReg(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
@@ -257,7 +277,7 @@ namespace HardwareInterfaces {
 		auto status = reEnable(); // see if is disabled.
 		if (status == _OK) {
 			//status = write_verify(reg + _regOffset, 1, &value); // recovery-write
-			status = write(reg + _regOffset, 1, &value); // recovery-write
+			status = write(getReg(Mix_Valve::R_MV_REG_OFFSET) + reg, 1, &value); // recovery-write
 			if (status) {
 				logger() << L_time << F("MixValve Write device 0x") << L_hex << getAddress() << F(" Reg: ") << reg << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			} //else logger() << L_time << F("MixValve Write OK device 0x") << L_hex << getAddress() << L_endl;
@@ -266,13 +286,17 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::readRegistersFromValve() {
+		//return;
+		uint8_t (&debug)[58] = reinterpret_cast<uint8_t (&)[58]>(*_prog_registers.reg_ptr(0));
+		uint8_t (&debugWire)[30] = reinterpret_cast<uint8_t (&)[30]>(Wire.i2CArr[getAddress()][0]);
 		uint8_t value = 0;
 		auto status = reEnable(); // see if is disabled
 		waitForWarmUp();
 		constexpr int CONSECUTIVE_COUNT = 1;
 		constexpr int MAX_TRIES = 1;
 		if (status == _OK) {
-			status = read(getReg(Mix_Valve::R_STATUS), Mix_Valve::R_REQUEST_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_STATUS));
+			logger() << "Read :" << Mix_Valve::R_REQUEST_FLOW_TEMP - Mix_Valve::R_STATUS << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS << " to : " << _regOffset + Mix_Valve::R_STATUS << L_endl;
+			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS , Mix_Valve::R_REQUEST_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_STATUS));
 			if (status) {
 				logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}

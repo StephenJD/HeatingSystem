@@ -20,7 +20,7 @@ namespace HardwareInterfaces {
 	class MixValveController : public I_I2Cdevice_Recovery, public LCD_UI::VolatileData {
 	public:
 		MixValveController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
-		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, UI_TempSensor & storeTempSens, int flowTS_addr, unsigned long& timeOfReset_mS);
+		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS);
 
 		// Virtual Functions
 		I2C_Talk_ErrorCodes::Error_codes testDevice() override;
@@ -38,7 +38,7 @@ namespace HardwareInterfaces {
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
 		void readRegistersFromValve(); // returns value
-		uint8_t sendSlaveIniData();
+		uint8_t sendSlaveIniData(uint8_t requestINI_flag);
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
 		bool check();
 		void sendRequestFlowTemp(uint8_t callTemp);

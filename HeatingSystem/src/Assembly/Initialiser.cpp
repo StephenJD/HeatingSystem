@@ -75,7 +75,10 @@ namespace Assembly {
 			| relayPort().initialiseDevice()
 			| temporary_initialiseRemoteDisplays()
 			/* | initialiseMixValveController() */ ;
-		for (auto& mixValve : hs().tempController().mixValveControllerArr) { mixValve.sendSlaveIniData(); }
+		for (auto& mixValve : hs().tempController().mixValveControllerArr) { 
+			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
+			mixValve.sendSlaveIniData(requestINI_flag); 
+		}
 		if (status != _OK) logger() << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
 		else logger() << F("  Initialiser::postI2CResetInitialisation OK\n");
 		return status;

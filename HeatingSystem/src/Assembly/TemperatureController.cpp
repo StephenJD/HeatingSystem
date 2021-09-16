@@ -61,8 +61,8 @@ namespace Assembly {
 			mixValveControllerArr[index].initialise(index
 				, MIX_VALVE_I2C_ADDR
 				, relayArr
-				, tempSensorArr[mixValveControl.rec().storeTempSens]
 				, mixValveControl.rec().flowTS_addr
+				, tempSensorArr[mixValveControl.rec().storeTempSens]
 				, *timeOfReset_mS
 			);
 			++index;
@@ -126,9 +126,7 @@ namespace Assembly {
 			checkZones(checkPreHeat);
 		}
 
-		auto mixReqestingIni = _prog_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION) & MV_REQUESTING_INI;
 		for (auto & mixValveControl : mixValveControllerArr) {
-			if (mixReqestingIni) mixValveControl.sendSlaveIniData();
 			mixValveControl.check();
 			if (newMinute && checkPreHeat) mixValveControl.logMixValveOperation(true);
 			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 
