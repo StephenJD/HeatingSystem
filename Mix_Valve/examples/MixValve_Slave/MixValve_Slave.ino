@@ -2,7 +2,7 @@
 #include <Mix_Valve.h>
 #include <I2C_Talk.h>
 #include <I2C_Registers.h>
-#include <I2C_Recover.h>
+//#include <I2C_Recover.h>
 #include <I2C_RecoverRetest.h>
 #include <TempSensor.h>
 #include <PinObject.h>
@@ -90,6 +90,7 @@ auto led_US_Cool = Pin_Wag(e_US_Cool, HIGH);
 auto led_DS_Heat = Pin_Wag(e_DS_Heat, HIGH);
 auto led_DS_Cool = Pin_Wag(e_DS_Cool, HIGH);
 
+//I2C_Recover_Retest i2c_recover(i2C());
 I2C_Recover i2c_recover(i2C());
 
 // All I2C transfers are initiated by Master

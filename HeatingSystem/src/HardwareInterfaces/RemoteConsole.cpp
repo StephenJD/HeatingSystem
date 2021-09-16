@@ -27,7 +27,7 @@ namespace HardwareInterfaces {
 		_thermalStore = &thermalStore;
 		_zone = &zone;
 		_timeOfReset_mS = &timeOfReset_mS;
-		logger() << F("RemoteConsole::ini done. Reg:") << _regOffset + R_DISPL_REG_OFFSET << ":" << _regOffset << L_endl;
+		//logger() << F("RemoteConsole::ini done. Reg:") << _regOffset + R_DISPL_REG_OFFSET << ":" << _regOffset << L_endl;
 	}
 
 	void RemoteConsole::waitForWarmUp() {
@@ -56,7 +56,7 @@ namespace HardwareInterfaces {
 	}
 
 	void RemoteConsole::setReg(int reg, uint8_t value) {
-		logger() << F("RemoteConsole::setReg:") << _regOffset + reg << ":" << value << L_endl;
+		//logger() << F("RemoteConsole::setReg:") << _regOffset + reg << ":" << value << L_endl;
 		_prog_registers.setRegister(_regOffset + reg, value);
 	}
 
@@ -82,7 +82,7 @@ namespace HardwareInterfaces {
 			newIniStatus &= ~requestINI_flag;
 			_prog_registers.setRegister(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
 		}
-		logger() << F("RemoteConsole::sendSlaveIniData()") << i2C().getStatusMsg(errCode) << L_endl;
+		//logger() << F("RemoteConsole::sendSlaveIniData()") << i2C().getStatusMsg(errCode) << L_endl;
 		return errCode;
 	}
 
@@ -94,7 +94,7 @@ namespace HardwareInterfaces {
 			if (status) {
 				logger() << L_time << F("RemoteConsole Write device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			} //else logger() << L_time << F("MixValve Write OK device 0x") << L_hex << getAddress() << L_endl;
-		} else logger() << L_time << F("RemoteConsole Write device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
+		} //else logger() << L_time << F("RemoteConsole Write device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
 		return status;
 	}
 
@@ -109,7 +109,7 @@ namespace HardwareInterfaces {
 			if (status) {
 				logger() << L_time << F("RemoteConsole Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}
-		} else logger() << L_time << F("RemoteConsole Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
+		} //else logger() << L_time << F("RemoteConsole Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
 		return status;
 	}
 

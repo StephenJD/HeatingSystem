@@ -58,8 +58,8 @@ namespace HardwareInterfaces {
 		Error_codes status = _OK;
 		uint8_t val1 = 55;
 		waitForWarmUp();
-		status = I_I2Cdevice::write(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_REQUEST_FLOW_TEMP, 1, &val1); // non-recovery
-		if (status == _OK) status = I_I2Cdevice::read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_REQUEST_FLOW_TEMP, 1, &val1); // non-recovery 
+		status = I_I2Cdevice::write(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MAX_FLOW_TEMP, 1, &val1); // non-recovery
+		if (status == _OK) status = I_I2Cdevice::read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MAX_FLOW_TEMP, 1, &val1); // non-recovery 
 		return status;
 	}
 
@@ -111,6 +111,7 @@ namespace HardwareInterfaces {
 		if (reEnable() == _OK) {
 			_relayArr[_controlZoneRelay].set(); // turn call relay ON
 			relayController().updateRelays();
+			readRegistersFromValve();
 			logMixValveOperation(true);
 		}
 	}
@@ -125,7 +126,7 @@ namespace HardwareInterfaces {
 			if (getReg(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
 				recovery().resetI2C();
 				if (getReg(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
-					//HardReset::arduinoReset("MixValveController InvalidMode");
+					HardReset::arduinoReset("MixValveController InvalidMode");
 				}
 			}
 		}
@@ -134,6 +135,12 @@ namespace HardwareInterfaces {
 			|| algorithmMode == Mix_Valve::e_AtLimit;
 
 		auto valveIndex = _regOffset ? 1 : 0;
+		static bool wasLogging = false;
+		if (!logThis) wasLogging = false;
+		else if (!wasLogging  ) {
+			wasLogging = true;
+			profileLogger() << L_time << "Logging\t\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
+		}
 		if (logThis || !ignoreThis || _previous_valveStatus[valveIndex] != algorithmMode) {
 			_previous_valveStatus[valveIndex] = algorithmMode;
 			profileLogger() << L_time << L_tabs 
@@ -165,8 +172,8 @@ namespace HardwareInterfaces {
 
 	void MixValveController::sendRequestFlowTemp(uint8_t callTemp) {
 		_mixCallTemp = callTemp;
-		setReg(Mix_Valve::R_REQUEST_FLOW_TEMP, callTemp);
-		writeToValve(Mix_Valve::R_REQUEST_FLOW_TEMP, callTemp);
+		setReg(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
+		writeToValve(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
 	}
 
 	bool MixValveController::amControlZone(uint8_t newCallTemp, uint8_t maxTemp, uint8_t zoneRelayID) { // highest callflow temp
@@ -268,7 +275,7 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::setReg(int reg, uint8_t value) {
-		logger() << F("MixValveController::setReg:") << _regOffset + reg << ":" << value << L_endl;
+		//logger() << F("MixValveController::setReg:") << _regOffset + reg << ":" << value << L_endl;
 		_prog_registers.setRegister(_regOffset + reg, value);
 	}
 
@@ -297,11 +304,18 @@ namespace HardwareInterfaces {
 		constexpr int CONSECUTIVE_COUNT = 1;
 		constexpr int MAX_TRIES = 1;
 		if (status == _OK) {
-			logger() << "Read :" << Mix_Valve::R_REQUEST_FLOW_TEMP - Mix_Valve::R_STATUS << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS << " to : " << _regOffset + Mix_Valve::R_STATUS << L_endl;
-			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS , Mix_Valve::R_REQUEST_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_STATUS));
+			profileLogger() << "Read :" << Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS << " to : " << _regOffset + Mix_Valve::R_STATUS << L_endl;
+			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS , Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_STATUS));
 			if (status) {
 				logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}
 		} else logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
+		
+		if (getReg(Mix_Valve::R_REQUEST_FLOW_TEMP) != _mixCallTemp) {
+			profileLogger() << "Mix_Valve::R_REQUEST_FLOW_TEMP :" << getReg(Mix_Valve::R_REQUEST_FLOW_TEMP) << " Req: " << _mixCallTemp << L_endl;
+			profileLogger() << "Mix_Valve::R_FLOW_TEMP :" << getReg(Mix_Valve::R_FLOW_TEMP) << L_endl;
+			setReg(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
+			writeToValve(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
+		}
 	}
 }

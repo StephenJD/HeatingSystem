@@ -4,7 +4,7 @@
 #include <I2C_Talk_ErrorCodes.h>
 #include <Logging.h>
 
-void ui_yield();
+//void ui_yield();
 using namespace arduino_logger;
 
 namespace I2C_Recovery {
@@ -175,7 +175,7 @@ namespace I2C_Recovery {
 			}
 			_isRecovering = false;
 		}
-		ui_yield();
+		//ui_yield();
 		return shouldTryReadingAgain;
 	}
 

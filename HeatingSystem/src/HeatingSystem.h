@@ -63,7 +63,7 @@ public:
 	HardwareInterfaces::LocalKeypad localKeypad;
 	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 	HardwareInterfaces::RemoteKeypad remoteKeypadArr[Assembly::NO_OF_REMOTE_DISPLAYS];
-	HardwareInterfaces::RemoteConsole remOLED_ConsoleArr[Assembly::NO_OF_REMOTE_DISPLAYS];
+	//HardwareInterfaces::RemoteConsole remOLED_ConsoleArr[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;

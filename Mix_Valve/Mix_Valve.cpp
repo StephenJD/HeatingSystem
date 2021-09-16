@@ -5,6 +5,7 @@
 #include "PinObject.h"
 #include <EEPROM.h>
 #include <I2C_Talk.h>
+#include <I2C_SpeedTest.h>
 #include <I2C_Recover.h>
 #include <I2C_Registers.h>
 #include <I2C_Talk_ErrorCodes.h>
@@ -54,6 +55,8 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 	_cool_relay->set(false);
 	_heat_relay->set(false);
 	enableRelays(false);
+	//auto speedTest = I2C_SpeedTest(_temp_sensr);
+	//speedTest.fastest();
 	logger() << F("MixValve created\n") << L_endl;
 }
 
@@ -108,11 +111,18 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
 }
 
 Mix_Valve::MV_Status Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
-	auto ts_status = _temp_sensr.readTemperature();
-	auto sensorTemp = _temp_sensr.get_temp();
+	auto retry = 5;
+	auto ts_status = _OK;
+	auto sensorTemp = 0;
+	do {
+		ts_status = _temp_sensr.readTemperature();
+		sensorTemp = _temp_sensr.get_temp();
+	} while (ts_status && --retry);
 	if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
-		<< F(" Err:") << _temp_sensr.lastError() 
-		<< F(" Status:") << _temp_sensr.getStatus() << L_endl;
+		<< F(" Err:") << _temp_sensr.lastError()
+		<< F(" Status:") << _temp_sensr.getStatus()
+		<< F(" ReadErr:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
+
 	setReg(R_FLOW_TEMP, sensorTemp);
 	checkForNewReqTemp();
 
@@ -205,7 +215,7 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp() { // Called once every second.
 					setReg(R_RATIO, getReg(R_RATIO) / 2);
 				} else setReg(R_FROM_TEMP, sensorTemp); // worse or no better
 				adjustValve(call_flowDiff);
-				mixV_registers.addToRegister(R_RATIO, oldRatio);
+				mixV_registers.addToRegister(_regOffset + R_RATIO, oldRatio);
 			} 
 		}
 		break;
@@ -299,7 +309,7 @@ void Mix_Valve::checkPumpIsOn() {
 void Mix_Valve::refreshRegisters() {
 	//lambda
 	auto motorActivity = [this]() -> uint8_t {if (_motorDirection == e_Cooling && _journey == e_Moving_Coolest) return e_Moving_Coolest; else return _motorDirection; };
-	auto mode = algorithmMode(_currReqTemp - mixV_registers.getRegister(R_FLOW_TEMP));
+	auto mode = algorithmMode(_currReqTemp - getReg(R_FLOW_TEMP));
 	logger() << F("Mode:") << mode << L_endl;
 	setReg(R_MODE, mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 	setReg(R_COUNT, abs(_onTime));
@@ -309,29 +319,27 @@ void Mix_Valve::refreshRegisters() {
 }
 
 uint8_t Mix_Valve::getReg(int reg) const {
-	auto regBank = _regOffset + reg;
-	return mixV_registers.getRegister(regBank);
+	return mixV_registers.getRegister(_regOffset + reg);
 }
 
 void Mix_Valve::setReg(int reg, uint8_t value) {
-	const auto regBank = _regOffset + reg;
-	mixV_registers.setRegister(regBank, value);
+	mixV_registers.setRegister(_regOffset + reg, value);
 }
 
 void Mix_Valve::checkForNewReqTemp() {
-	auto reqTempReg = mixV_registers.getRegister(_regOffset + R_REQUEST_FLOW_TEMP);
+	auto reqTempReg = getReg(R_REQUEST_FLOW_TEMP);
 	if (reqTempReg != 0 && reqTempReg != _currReqTemp) {
-		//logger() << F("registerHasBeenWrittenTo") << L_endl;
-		const auto newReqTemp = mixV_registers.getRegister(_regOffset + R_REQUEST_FLOW_TEMP);
+		logger() << F("R_REQUEST_FLOW_TEMP HasBeenWrittenTo") << L_endl;
+		const auto newReqTemp = getReg(R_REQUEST_FLOW_TEMP);
 		logger() << F("Offs:") << _regOffset << F(" new:") << newReqTemp << F(" _new:") << _newReqTemp << F(" Curr:") << _currReqTemp <<  L_endl;
 		if (_newReqTemp != newReqTemp) {
 			_newReqTemp = newReqTemp; // REQUEST TWICE TO REGISTER.
-			mixV_registers.setRegister(_regOffset + R_REQUEST_FLOW_TEMP, 0);
+			setReg(R_REQUEST_FLOW_TEMP, 0);
 		} else if (_currReqTemp != newReqTemp) {
 			_currReqTemp = newReqTemp;
 			if (newReqTemp > e_MIN_FLOW_TEMP) {
-				mixV_registers.setRegister(_regOffset + R_STATUS, MV_NEW_TEMP_REQUEST);
-			} else mixV_registers.setRegister(_regOffset + R_STATUS, MV_OK);
+				setReg(R_STATUS, MV_NEW_TEMP_REQUEST);
+			} else setReg(R_STATUS, MV_OK);
 			saveToEEPROM();
 		}
 	}
