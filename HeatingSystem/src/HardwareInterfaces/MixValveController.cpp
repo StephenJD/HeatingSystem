@@ -64,10 +64,11 @@ namespace HardwareInterfaces {
 	}
 
 	uint8_t MixValveController::sendSlaveIniData(uint8_t requestINI_flag) {
-		uint8_t errCode;
+#ifdef ZPSIM
 		uint8_t(&debug)[58] = reinterpret_cast<uint8_t(&)[58]>(*_prog_registers.reg_ptr(0));
 		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(Wire.i2CArr[getAddress()][0]);
-
+#endif
+		uint8_t errCode;
 		errCode = writeToValve(Mix_Valve::R_MV_REG_OFFSET, _regOffset);
 		errCode |= writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
 		errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
@@ -286,9 +287,10 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::readRegistersFromValve() {
-		//return;
+#ifdef ZPSIM
 		uint8_t (&debug)[58] = reinterpret_cast<uint8_t (&)[58]>(*_prog_registers.reg_ptr(0));
 		uint8_t (&debugWire)[30] = reinterpret_cast<uint8_t (&)[30]>(Wire.i2CArr[getAddress()][0]);
+#endif
 		uint8_t value = 0;
 		auto status = reEnable(); // see if is disabled
 		waitForWarmUp();

@@ -61,8 +61,10 @@ namespace HardwareInterfaces {
 	}
 
 	uint8_t RemoteConsole::sendSlaveIniData(uint8_t requestINI_flag) {
+#ifdef ZPSIM
 		uint8_t(&debug)[58] = reinterpret_cast<uint8_t(&)[58]>(*_prog_registers.reg_ptr(0));
 		uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(Wire.i2CArr[getAddress()][0]);
+#endif
 		uint8_t errCode = writeRegistersToConsole(R_DISPL_REG_OFFSET, R_ROOM_TS_ADDR+1);
 		errCode |= writeRegistersToConsole(R_REQUESTED_ROOM_TEMP, R_REQUESTED_ROOM_TEMP+1);
 		setReg(R_ROOM_TEMP, 20);
@@ -112,11 +114,12 @@ namespace HardwareInterfaces {
 	}
 
 	void RemoteConsole::refreshRegisters() {
+#ifdef ZPSIM
 		logger() << "\nRegisters\n";
 		for (int i = 0; i < SIZE_OF_ALL_REGISTERS; ++i) {
 			logger() << i << "," << *_prog_registers.reg_ptr(i) << L_endl;
 		}		
-		
+#endif		
 		auto iniStatus = _prog_registers.getRegister(R_SLAVE_REQUESTING_INITIALISATION);
 		uint8_t requestINI_flag = RC_US_REQUESTING_INI << index();
 		if (iniStatus & requestINI_flag) sendSlaveIniData(requestINI_flag);
