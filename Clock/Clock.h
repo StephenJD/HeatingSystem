@@ -54,6 +54,7 @@
 
 #ifdef ZPSIM
 		void testAdd1Min();
+		Clock(Date_Time::DateTime dateTime) { _now = dateTime; }
 #endif
 
 	protected:

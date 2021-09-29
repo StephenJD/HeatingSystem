@@ -56,10 +56,10 @@ namespace Assembly {
 	void Initialiser::initializeRemoteConsoles() {
 		_hs._prog_register_set.setRegister(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
-		//for (auto& rc : _hs.remOLED_ConsoleArr) {
-		//	rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex], hs().tempController().towelRailArr[consoleIndex], hs().tempController().thermalStore, hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS);
-		//	++consoleIndex;
-		//}
+		for (auto& rc : _hs.remOLED_ConsoleArr) {
+			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex], hs().tempController().towelRailArr[consoleIndex], hs().tempController().zoneArr[Z_DHW], hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS);
+			++consoleIndex;
+		}
 	}
 
 	uint8_t Initialiser::i2C_Test() {

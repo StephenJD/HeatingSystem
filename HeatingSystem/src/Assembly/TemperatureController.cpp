@@ -102,8 +102,9 @@ namespace Assembly {
 		static uint8_t lastSeconds = clock_().seconds()-1;
 		static uint8_t lastMins = clock_().minUnits()-1;
 		bool isNewSecond = clock_().isNewSecond(lastSeconds);
+#ifndef ZPSIM
 		if (!isNewSecond) { return false; } // Wait for next second.
-		
+#endif		
 		// Entered once per second
 		bool newMinute = clock_().isNewMinute(lastMins);
 		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes

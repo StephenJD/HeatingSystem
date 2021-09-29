@@ -5,9 +5,9 @@
 #include <I2C_Registers.h>
 
 constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
-constexpr uint8_t DS_REMOTE_I2C_ADDR = 0x12;
-constexpr uint8_t US_REMOTE_I2C_ADDR = 0x13;
-constexpr uint8_t FL_REMOTE_I2C_ADDR = 0x14;
+constexpr uint8_t US_CONSOLE_I2C_ADDR = 0x12;
+constexpr uint8_t DS_CONSOLE_I2C_ADDR = 0x13;
+constexpr uint8_t FL_CONSOLE_I2C_ADDR = 0x14;
 
 namespace I2C_Recovery { class I2C_Recover; }
 
@@ -40,17 +40,27 @@ namespace OLED_Master_Display {
 		, R_REQUESTED_ROOM_TEMP	// send/receive
 		, R_WARM_UP_ROOM_M10	// receive
 		, R_ON_TIME_T_RAIL		// receive
-		, R_DHW_TEMP			// receive
 		, R_WARM_UP_DHW_M10		// If -ve, in 0-60 mins, if +ve in min_10
 		, R_DISPL_REG_SIZE
 	};
 
+	enum { e_Auto, e_On, e_Off, e_ModeIsSet };
+
+	// Room temp and requests are sent by the console to the Programmer.
+	// The programmer does not read them from the console.
+	// New request temps initiated by the programmer are sent by the programmer and not read by the console.
+	// Warmup-times are read by the console from the programmer.
+
 	void setRemoteI2CAddress();
-	void sendDataToProgrammer();
+	void sendDataToProgrammer(int reg);
 	void requestDataFromProgrammer();
 	void readTempSensor();
 	void begin();
 	void displayPage();
 	void sleepPage();
 	void processKeys();
+#ifdef ZPSIM
+	void setKey(HardwareInterfaces::I_Keypad::KeyOperation key);
+	char* oledDisplay();
+#endif
 }

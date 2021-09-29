@@ -68,6 +68,7 @@ public:
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset, int defaultMaxTemp);
+	void begin();
 	uint8_t getReg(int reg) const;
 	const __FlashStringHelper* name();
 	MV_Status check_flow_temp();

@@ -78,7 +78,7 @@ namespace HardwareInterfaces {
 			float lightFactor = photoRange > 1 ? float(ambientLight() - minPhoto) / photoRange : 1.f;
 			uint16_t brightness = uint16_t(minBL + blRange * lightFactor); // compensate for light
 			if (!wake) {
-				brightness = (brightness + minBL) / SLEEP_BRIGHTNESS_FACTOR; // compensate for sleep
+				brightness = int16_t((brightness + minBL) / SLEEP_BRIGHTNESS_FACTOR); // compensate for sleep
 				//logger() << F("Backlight_Sleep: ") << brightness << L_endl;
 			}
 

@@ -9,6 +9,7 @@ namespace I2C_Recovery {
 	{
 	public:
 		explicit I2C_RecoverStrategy(int strategyEEPROMaddr);
+		explicit I2C_RecoverStrategy() = default;
 		void initialise();
 		void next();
 		void succeeded();
@@ -19,7 +20,7 @@ namespace I2C_Recovery {
 	private:
 		uint8_t score(int index);
 		void score(int index, uint8_t val);
-		int _strategyEEPROMaddr;
+		int _strategyEEPROMaddr = -1;
 		Strategy _strategy = S_NoProblem;
 	};
 }

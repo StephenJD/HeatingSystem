@@ -73,6 +73,9 @@ I2C_Talk& i2C() {
   return _i2C;
 }
 
+I2C_Recover_Retest i2c_recover(i2C());
+//I2C_Recover i2c_recover(i2C());
+
 void roleChanged(Role newRole);
 Role getRole();
 const __FlashStringHelper * showErr(Mix_Valve::MV_Status err);
@@ -90,16 +93,14 @@ auto led_US_Cool = Pin_Wag(e_US_Cool, HIGH);
 auto led_DS_Heat = Pin_Wag(e_DS_Heat, HIGH);
 auto led_DS_Cool = Pin_Wag(e_DS_Cool, HIGH);
 
-//I2C_Recover_Retest i2c_recover(i2C());
-I2C_Recover i2c_recover(i2C());
 
 // All I2C transfers are initiated by Master
 auto mixV_register_set = i2c_registers::Registers<Mix_Valve::R_MV_ALL_REG_SIZE * NO_OF_MIXERS>{i2C()};
 i2c_registers::I_Registers& mixV_registers = mixV_register_set;
 
 Mix_Valve  mixValve[] = {
-	{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 1, 55}
-  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), 1 + Mix_Valve::R_MV_ALL_REG_SIZE, 55}
+	{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0, 55}
+  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::R_MV_ALL_REG_SIZE, 55}
 };
 
 void setup() {
@@ -126,6 +127,8 @@ void setup() {
 
 	role = e_Slave;
 	roleChanged(e_Master);
+	mixValve[0].begin();
+	mixValve[1].begin();
 	logger() << F("Setup complete") << L_flush;
 	delay(500);
 	//psu_enable.clear();
@@ -147,8 +150,8 @@ void loop() {
 		if (mixValve[us_mix].check_flow_temp() == Mix_Valve::MV_I2C_FAILED) {
 			err = Mix_Valve::MV_US_TS_FAILED;
 		}		
-    if (mixValve[ds_mix].check_flow_temp() == Mix_Valve::MV_I2C_FAILED) {
-      	err = static_cast<Mix_Valve::MV_Status>(err | Mix_Valve::MV_DS_TS_FAILED);
+		if (mixValve[ds_mix].check_flow_temp() == Mix_Valve::MV_I2C_FAILED) {
+      		err = static_cast<Mix_Valve::MV_Status>(err | Mix_Valve::MV_DS_TS_FAILED);
 		}
 
 		if (err) {
@@ -171,8 +174,8 @@ void roleChanged(Role newRole) {
 	if (e_Slave == newRole) {
 		psu_enable.clear();
 		for (int i = 0; i < 10; ++i) {
-      if (i2C().write(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, MV_REQUESTING_INI) == _OK) break;
-    } 
+			if (i2C().write(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, MV_REQUESTING_INI) == _OK) break;
+		} 
 		logger() << F("Set to Slave") << L_endl;
 	}
 	else if (role != newRole) { // changed to Master

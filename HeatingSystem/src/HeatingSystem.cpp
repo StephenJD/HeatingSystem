@@ -95,7 +95,7 @@ HeatingSystem::HeatingSystem()
 	, _remoteConsoleChapters{ _hs_datasets }
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
 	, _remoteLCDConsole{ {remoteKeypadArr[0], remDispl[0], _remoteConsoleChapters},{remoteKeypadArr[1], remDispl[1], _remoteConsoleChapters},{remoteKeypadArr[2], remDispl[2], _remoteConsoleChapters} }
-	//, remOLED_ConsoleArr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
+	, remOLED_ConsoleArr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
 	, temporary_remoteTSArr{ {_recover, 0x36}, {_recover, 0x74}, {_recover, 0x70} }
 {
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
@@ -113,9 +113,10 @@ HeatingSystem::HeatingSystem()
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
 	if (_mainConsoleChapters.chapter() == 0) {
 		if (_tempController.checkAndAdjust()) {
-			//for (auto& remote : remOLED_ConsoleArr) {
-			//	remote.refreshRegisters();
-			//}
+			for (auto& remote : remOLED_ConsoleArr) {
+				//remote.readRegistersFromConsole();
+				remote.refreshRegisters();
+			}
 		}
 	}
 }
@@ -131,8 +132,10 @@ void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 		auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_ROOM_TEMP) + (OLED_Master_Display::R_DISPL_REG_SIZE * zoneIndex);
 		temporary_remoteTSArr[zoneIndex].readTemperature();
 		auto roomTemp = temporary_remoteTSArr[zoneIndex].get_fractional_temp();
-		_prog_registers.setRegister(remoteTS_register, roomTemp>>8);
-		_prog_registers.setRegister(remoteTS_register+1, uint8_t(roomTemp));
+		if (zoneIndex != Z_UpStairs) {
+			_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
+			_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
+		}
 		activeField->setFocusIndex(zoneIndex);
 		if (remote.processKeys()) remote.refreshDisplay();
 		++zoneIndex;

@@ -13,7 +13,7 @@ namespace HardwareInterfaces {
 		using TempSensor::TempSensor;
 		UI_TempSensor() = default;
 #ifdef ZPSIM
-		UI_TempSensor(I2C_Recovery::I2C_Recover & recover, uint8_t addr, int16_t temp) : TempSensor(recover, addr) { _lastGood = temp << 8; }
+		//UI_TempSensor(I2C_Recovery::I2C_Recover & recover, uint8_t addr, int16_t temp) : TempSensor(recover, addr) { _lastGood = temp << 8; }
 #endif
 		// Queries
 		bool operator== (const UI_TempSensor & rhs) const { return _recordID == rhs._recordID; }

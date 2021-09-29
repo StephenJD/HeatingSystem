@@ -27,6 +27,7 @@ Logger& Logger::toFixed(int decimal) {
 
 Logger& Logger::operator <<(Flags flag) {
 	if (is_null()) return *this;
+	//Serial.print("<<flag:"); Serial.print(flag); Serial.print(" Flag:"); Serial.print(_flags); Serial.print(" FlshF:"); Serial.println(_flags & L_startWithFlushing); Serial.flush();
 	switch (flag) {
 	case L_time:	logTime(); break;
 	case L_flush:
@@ -36,32 +37,37 @@ Logger& Logger::operator <<(Flags flag) {
 		break;
 	case L_endl:
 	{
-		if (_flags & L_allwaysFlush) { *this << " |F|"; } else if (_flags == L_startWithFlushing) { *this << " |SF|"; }
+		if (_flags & L_allwaysFlush) { *this << " |F|"; } else if ((_flags & L_startWithFlushing) == L_startWithFlushing) { *this << " |SF|"; }
 		auto streamPtr = &stream();
 		do {
 			streamPtr->print("\n");
 		} while (mirror_stream(streamPtr));
-		if (_flags & L_allwaysFlush || _flags == L_startWithFlushing) flush();
+		if (_flags & L_allwaysFlush || ((_flags & L_startWithFlushing) == L_startWithFlushing)) flush();
 	}
 	[[fallthrough]];
 	case L_clearFlags:
-		if (_flags != L_startWithFlushing) {
-			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
-		}
+	{
+		bool isStartWithFlushing = (_flags & L_startWithFlushing) == L_startWithFlushing;
+		_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
+		if (isStartWithFlushing) _flags += L_startWithFlushing;
+	}
 		break;
 	case L_allwaysFlush: _flags += L_allwaysFlush; break;
 	case L_concat:	removeFlag(L_tabs); break;
 	case L_dec:
 	case L_int:
+		removeFlag(L_fixed);
+		removeFlag(L_hex);
+		//removeFlag(L_dec);
+		//removeFlag(L_int);
+		//Serial.print("dec/int Flag:"); Serial.println(_flags); Serial.flush();
+		break;
 	case L_hex:
 	case L_fixed:
-		removeFlag(L_dec);
-		removeFlag(L_int);
-		removeFlag(L_hex);
-		removeFlag(L_fixed);
 		[[fallthrough]];
 	default:
 		addFlag(flag);
+		//Serial.print("AddFlag:"); Serial.println(_flags); Serial.flush();
 	}
 	return *this;
 }

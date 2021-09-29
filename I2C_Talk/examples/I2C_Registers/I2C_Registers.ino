@@ -5,12 +5,12 @@
 #define SERIAL_RATE 115200
 
 constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
-constexpr uint8_t DS_REMOTE_I2C_ADDR = 0x12;
-constexpr uint8_t US_REMOTE_I2C_ADDR = 0x13;
-constexpr uint8_t FL_REMOTE_I2C_ADDR = 0x14;
+constexpr uint8_t US_CONSOLE_I2C_ADDR = 0x12;
+constexpr uint8_t DS_CONSOLE_I2C_ADDR = 0x13;
+constexpr uint8_t FL_CONSOLE_I2C_ADDR = 0x14;
 
 I2C_Talk i2C;
-//I2C_Talk i2C2(DS_REMOTE_I2C_ADDR, Wire1);
+//I2C_Talk i2C2(DS_CONSOLE_I2C_ADDR, Wire1);
   constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
 
 	enum RemoteRegisterName {
@@ -64,15 +64,15 @@ void setMyI2CAddress() {
   pinMode(6, INPUT_PULLUP);
   pinMode(7, INPUT_PULLUP);
   if (!digitalRead(5)) {
-    i2C.setAsMaster(DS_REMOTE_I2C_ADDR);
+    i2C.setAsMaster(DS_CONSOLE_I2C_ADDR);
     Serial.println(F("DS"));
   }
   else if (!digitalRead(6)) {
-    i2C.setAsMaster(US_REMOTE_I2C_ADDR);  
+    i2C.setAsMaster(US_CONSOLE_I2C_ADDR);  
     Serial.println(F("US"));
   } 
   else if (!digitalRead(7)) {
-    i2C.setAsMaster(FL_REMOTE_I2C_ADDR);
+    i2C.setAsMaster(FL_CONSOLE_I2C_ADDR);
     Serial.println(F("FL"));
   }
   else {
@@ -112,16 +112,16 @@ void createMyRegisters() {
 
 void sendSlaveIniData() {
   Serial.println(F("Sending Offs to Rems"));
-  i2C.write(DS_REMOTE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart);
-  i2C.write(US_REMOTE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + R_DISPL_REG_SIZE);
-  i2C.write(FL_REMOTE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + 2 * R_DISPL_REG_SIZE);
+  i2C.write(DS_CONSOLE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart);
+  i2C.write(US_CONSOLE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + R_DISPL_REG_SIZE);
+  i2C.write(FL_CONSOLE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + 2 * R_DISPL_REG_SIZE);
   all_registers.setRegister(R_SLAVE_REQUESTING_INITIALISATION,0);
 }
 
 void sendDataToRemotes() {
-  i2C.write(DS_REMOTE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_REQUESTED_ROOM_TEMP));
-  i2C.write(US_REMOTE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
-  i2C.write(FL_REMOTE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
+  i2C.write(DS_CONSOLE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_REQUESTED_ROOM_TEMP));
+  i2C.write(US_CONSOLE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
+  i2C.write(FL_CONSOLE_I2C_ADDR, R_REQUESTED_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_REQUESTED_ROOM_TEMP));
 }
 
 void sendDataToProgrammer() {
@@ -130,9 +130,9 @@ void sendDataToProgrammer() {
 }
 
 void requestDataFromRemotes() {
-  i2C.read(DS_REMOTE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_ROOM_TEMP));
-  i2C.read(US_REMOTE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_ROOM_TEMP));
-  i2C.read(FL_REMOTE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_ROOM_TEMP));
+  i2C.read(DS_CONSOLE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_ROOM_TEMP));
+  i2C.read(US_CONSOLE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_ROOM_TEMP));
+  i2C.read(FL_CONSOLE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_ROOM_TEMP));
 }
 
 void requestDataFromProgrammer() {

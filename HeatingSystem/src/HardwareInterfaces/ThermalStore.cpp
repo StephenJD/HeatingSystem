@@ -5,11 +5,14 @@
 #include "A__Constants.h"
 #include "..\Client_DataStructures\Data_TempSensor.h" // relative path required by Arduino
 #include <FlashStrings.h>
+#include "OLED_Master_Display.h"
 
 namespace arduino_logger {
 	Logger& profileLogger();
 }
 using namespace arduino_logger;
+
+using namespace OLED_Master_Display;
 
 namespace HardwareInterfaces {
 
@@ -165,7 +168,6 @@ namespace HardwareInterfaces {
 
 	bool ThermalStore::dhwNeedsHeat(int callTemp, int nextRequest) {
 		auto requestTempWhenCalling = nextRequest > callTemp ? nextRequest : callTemp;
-		enum { e_Auto, e_Off, e_On };
 		if (_mode == e_Off) callTemp = 30;
 		else if (_mode == e_On) callTemp = requestTempWhenCalling;
 

@@ -13,10 +13,7 @@ namespace HardwareInterfaces {
 		TempSensor(I2C_Recovery::I2C_Recover & recover, int addr);
 		TempSensor(I2C_Recovery::I2C_Recover & recover);
 		TempSensor() = default;
-#ifdef ZPSIM
-		void setTestTemp(uint8_t temp) {_lastGood = temp << 8;}
-		void setTestTemp(double temp) {_lastGood = int16_t(temp*256.);}
-#endif
+
 		// Queries
 		int8_t get_temp() const;
 		int16_t get_fractional_temp() const;
@@ -37,6 +34,8 @@ namespace HardwareInterfaces {
 		I2C_Talk_ErrorCodes::Error_codes _error = I2C_Talk_ErrorCodes::_OK;
 #ifdef ZPSIM
 		mutable int16_t change = 256;
+	//public:
+		//void setTemp(int temp) {_lastGood = temp * 256;}
 #endif
 	};
 

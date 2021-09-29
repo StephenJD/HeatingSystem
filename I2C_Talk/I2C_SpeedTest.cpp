@@ -47,7 +47,9 @@ uint32_t I2C_SpeedTest::fastest_T<false>() {
 	// Algorithm
 	if (!_i2c_device->isEnabled()) {
 		_i2c_device->reset();
+#ifdef DEBUG_SPEED_TEST
 		logger() << F("\tRe-enabling disabled device");
+#endif
 	}	
 	auto startFreq = _i2c_device->runSpeed(); // default 100000
 	if (_is_inSpeedTest) return startFreq;

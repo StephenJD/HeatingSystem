@@ -2,15 +2,15 @@
 //#include <Logging.h>
 
 //using namespace arduino_logger;
-constexpr uint8_t US_REMOTE_MASTER_I2C_ADDR = 0x12;
-constexpr uint8_t DS_REMOTE_MASTER_I2C_ADDR = 0x13;
-constexpr uint8_t FL_REMOTE_MASTER_I2C_ADDR = 0x14;
+constexpr uint8_t US_CONSOLE_I2C_ADDR = 0x12;
+constexpr uint8_t DS_CONSOLE_I2C_ADDR = 0x13;
+constexpr uint8_t FL_CONSOLE_I2C_ADDR = 0x14;
 
 namespace HardwareInterfaces {
 	namespace {
 		auto remName(int addr) -> const __FlashStringHelper* {
-			if (addr == US_REMOTE_MASTER_I2C_ADDR) return F("UpSt");
-			if (addr == DS_REMOTE_MASTER_I2C_ADDR) return F("DnSt");
+			if (addr == US_CONSOLE_I2C_ADDR) return F("UpSt");
+			if (addr == DS_CONSOLE_I2C_ADDR) return F("DnSt");
 			return F("Flat");
 		};
 	}

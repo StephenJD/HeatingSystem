@@ -130,17 +130,11 @@ namespace client_data_structures {
 			if (moveBy > 0) {
 				profileLogger() << answer().rec().name << " Select Next Profile" <<  L_endl;
 				//if (z.startDateTime() <= clock_().now()) {
-					z.setProfileTempRequest(z.nextTempRequest());
-					z.setTTStartTime(z.nextEventTime());
-					z.cancelPreheat();
-					z.preHeatForNextTT();
-					z.setFlowTemp();
+					z.startNextProfile();
 				//}
 			} else {
 				profileLogger() << answer().rec().name << " Restore Current Profile" << L_endl;
-				z.refreshProfile();			
-				z.preHeatForNextTT();
-				z.setFlowTemp();
+				z.revertToCurrentProfile();
 			}
 			return true;
 		}

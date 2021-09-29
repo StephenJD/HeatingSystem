@@ -48,7 +48,11 @@ private: // data-member ordering matters!
 	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR };
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
+#ifdef ZPSIM
+	i2c_registers::Registers<HardwareInterfaces::SIZE_OF_ALL_REGISTERS, HardwareInterfaces::PROGRAMMER_I2C_ADDR> _prog_register_set{i2C};
+#else
 	i2c_registers::Registers<HardwareInterfaces::SIZE_OF_ALL_REGISTERS> _prog_register_set{i2C};
+#endif
 	i2c_registers::I_Registers& _prog_registers = _prog_register_set;
 	Assembly::Initialiser _initialiser; // Checks db
 	Assembly::HeatingSystem_Queries _hs_queries;
@@ -63,7 +67,7 @@ public:
 	HardwareInterfaces::LocalKeypad localKeypad;
 	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 	HardwareInterfaces::RemoteKeypad remoteKeypadArr[Assembly::NO_OF_REMOTE_DISPLAYS];
-	//HardwareInterfaces::RemoteConsole remOLED_ConsoleArr[Assembly::NO_OF_REMOTE_DISPLAYS];
+	HardwareInterfaces::RemoteConsole remOLED_ConsoleArr[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;

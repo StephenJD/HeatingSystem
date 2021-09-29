@@ -28,7 +28,9 @@ namespace arduino_logger {
 		void activate(bool makeActive = true) { makeActive ? _flags = L_clearFlags : _flags = L_null; }
 		Flags addFlag(Flags flag) { _flags += flag; return _flags; }
 		Flags removeFlag(Flags flag) {
-			if(_flags != L_startWithFlushing) _flags -= flag;
+			bool isStartWithFlushing = (_flags & L_startWithFlushing) == L_startWithFlushing;
+			_flags -= flag;
+			if (isStartWithFlushing) _flags += L_startWithFlushing;
 			return _flags; 
 		}
 		virtual bool open() { return false; }

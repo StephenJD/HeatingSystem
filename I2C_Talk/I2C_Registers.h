@@ -32,7 +32,11 @@ namespace i2c_registers {
 	};
 
 	// mono-state class - all static data. Each template instantiation gets its own data.
+#if defined(ZPSIM)
+	template<int register_size, int i2C_addr>
+#else
 	template<int register_size, typename PurposeTag = Defaut_Tag_None>
+#endif
 	class Registers : public I_Registers {
 	public:
 		Registers(I2C_Talk& i2C) { _i2C = &i2C; }
@@ -42,7 +46,7 @@ namespace i2c_registers {
 		static void receiveI2C(int howMany) {
 			_i2C->receiveFromMaster(1, &_regAddr); // first byte is reg-address
 			if (--howMany) {
-#ifndef ZPSIM
+#if !defined(ZPSIM) && !defined(__SAM3X8E__)
 				//flashLED(10);
 #endif
 				if (_regAddr + howMany > register_size) howMany = register_size - _regAddr;
@@ -54,8 +58,8 @@ namespace i2c_registers {
 		// Called when data is requested by a Master from this slave, reading from the last register address sent.
 		static void requestI2C() { 
 			// The Master will send a NACK when it has received the requested number of bytes, so we should offer as many as could be requested.
-#ifndef ZPSIM
-			//flashLED(10);
+#if !defined(ZPSIM) && !defined(__SAM3X8E__)
+			//flashLED(50);
 #endif
 			int bytesAvaiable = register_size - _regAddr;
 			if (bytesAvaiable > 32) bytesAvaiable = 32;
@@ -68,10 +72,26 @@ namespace i2c_registers {
 		uint8_t* regArr() override {return _regArr;}
 		uint8_t& regAddr() override {return _regAddr;}
 		static I2C_Talk* _i2C;
+#ifdef ZPSIM
+		static uint8_t* _regArr;
+#else
 		static uint8_t _regArr[register_size];
+#endif
 		static uint8_t _regAddr; // the register address sent in the request
 	};
 
+
+#ifdef ZPSIM
+#include "Wire.h"
+	template<int register_size, int i2C_addr>
+	I2C_Talk* Registers<register_size, i2C_addr>::_i2C;
+
+	template<int register_size, int i2C_addr>
+	uint8_t* Registers<register_size, i2C_addr>::_regArr = (uint8_t*)&Wire.i2CArr[i2C_addr];
+
+	template<int register_size, int i2C_addr>
+	uint8_t Registers<register_size, i2C_addr>::_regAddr;
+#else
 	template<int register_size, typename PurposeTag>
 	I2C_Talk* Registers<register_size, PurposeTag>::_i2C;
 
@@ -80,4 +100,5 @@ namespace i2c_registers {
 
 	template<int register_size, typename PurposeTag>
 	uint8_t Registers<register_size, PurposeTag>::_regAddr;
+#endif
 }

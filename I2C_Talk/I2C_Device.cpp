@@ -32,7 +32,7 @@ auto I_I2Cdevice::read_verify_2bytes(int registerAddress, int16_t & data, int re
 			}
 		} 
 		else { // abort on first error
-			//logger() << L_time << "read_verify_2bytes device 0x" << L_hex << getAddress() << " Reg 0x" << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+			logger() << L_time << "read_verify_2bytes device 0x" << L_hex << getAddress() << " Reg 0x" << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
 			break;
 		}
 		--canTryAgain;

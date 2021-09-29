@@ -62,7 +62,7 @@ namespace HardwareInterfaces {
 		_startCallTemp = getFractionalCallSensTemp();
 	}
 
-	void Zone::changeCurrTempRequest(int8_t val) {
+	bool Zone::changeCurrTempRequest(int8_t val) {
 		if (val != _currProfileTempRequest) {
 			// Adjust current TT.
 			bool doingCurrentProfile = _ttStartDateTime <= clock_().now();
@@ -73,12 +73,17 @@ namespace HardwareInterfaces {
 			_sequencer->updateTT(profileInfo.currTT_ID, currTT);
 			_currProfileTempRequest = val;
 			cancelPreheat();
-		}
+			preHeatForNextTT();
+			setFlowTemp();
+			return true;
+		} else return false;
 	}
 
 	bool Zone::isDHWzone() const {
 		return (_relay->recordID() == R_Gas);
 	}
+
+	void Zone::setMode(int mode) { if (isDHWzone()) _thermalStore->setMode(mode); }
 
 	bool Zone::isCallingHeat() const {
 		return _relay->logicalState();
@@ -118,6 +123,21 @@ namespace HardwareInterfaces {
 		_averagePeriod = 0;
 	}
 
+	void Zone::startNextProfile() {
+		setProfileTempRequest(nextTempRequest());
+		setTTStartTime(nextEventTime());
+		cancelPreheat();
+		preHeatForNextTT();
+		setFlowTemp();
+	}
+
+	void Zone::revertToCurrentProfile() {
+		refreshProfile();
+		preHeatForNextTT();
+		setFlowTemp();
+	}
+
+
 	bool Zone::setFlowTemp() { // Called every minute. Sets flow temps. Returns true if needs heat.
 		//decltype(millis()) executionTime[7] = { millis() };
 
@@ -128,6 +148,9 @@ namespace HardwareInterfaces {
 		bool backBoilerIsOn = _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
 		bool towelRadOn = _thermalStore->demandZone() == R_FlTR || _thermalStore->demandZone() == R_HsTR;
 		bool giveDHW_priority = !isDHW && _thermalStore->tooCoolRequestOrigin() == NO_OF_MIX_VALVES;
+#ifdef ZPSIM
+		giveDHW_priority = false;
+#endif
 		// lambdas
 
 		auto startMeasuringRatio = [this, outsideTemp, isDHW, backBoilerIsOn](int tempError, int zoneTemp, int flowTemp ) -> bool {
@@ -382,27 +405,33 @@ namespace HardwareInterfaces {
 		auto getPreheatTemp = [this, calculatePreheatTime, &zoneRec, currTemp_fractional]() -> int {
 			bool needToStart;
 			auto info = refreshProfile(false);
-			//if (getCallFlowT() == _maxFlowTemp) return _preheatCallTemp;// is already heating. Don't need to check for pre-heat
 			auto preheatCallTemp = info.currTT.temp();
-			do {
-				_minsToPreheat = calculatePreheatTime(currTemp_fractional, info.nextTT.temp());
-				if (_minsToPreheat > 0) {
-					profileLogger() << "\t" << zoneRec.name << " Preheat mins " << _minsToPreheat << " Delay: " << zoneRec.autoDelay << L_endl;
-					_minsToPreheat += zoneRec.autoDelay + 5;
-				}
-				needToStart = clock_().now().minsTo(info.nextEvent) <= _minsToPreheat;
-				if (needToStart) break;
-				info = _sequencer->getProfileInfo(id(), info.nextEvent);
-			} while (clock_().now().minsTo(info.nextEvent) < 60*24);
-			if (needToStart) {
-				preheatCallTemp = info.nextTT.temp();
-				saveThermalRatio();
-				profileLogger() << zoneRec.name << " Preheat " << _minsToPreheat  
-				<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp())
-				<< " by " << info.nextEvent
-				<< L_endl;
+			if (preheatCallTemp * 256 > currTemp_fractional) {
+				_minsToPreheat = calculatePreheatTime(currTemp_fractional, preheatCallTemp);// is already heating. Don't need to check for pre-heat
+			} else {
+				int32_t minsToFutureEvent = clock_().now().minsTo(info.nextEvent);
+				auto minsToNextEvent = uint16_t(minsToFutureEvent);
+				do {
+					_minsToPreheat = calculatePreheatTime(currTemp_fractional, info.nextTT.temp());
+					if (_minsToPreheat > 0) {
+						profileLogger() << "\t" << zoneRec.name << " " << info.nextTT.temp() << "deg. Preheat mins " << _minsToPreheat << " Delay: " << zoneRec.autoDelay << L_endl;
+						_minsToPreheat += zoneRec.autoDelay + 5;
+					}
+					needToStart = minsToFutureEvent <= _minsToPreheat;
+					if (needToStart) break;
+					info = _sequencer->getProfileInfo(id(), info.nextEvent);
+					minsToFutureEvent = clock_().now().minsTo(info.nextEvent);
+				} while (minsToFutureEvent < 60 * 24);
+				if (needToStart) {
+					preheatCallTemp = info.nextTT.temp();
+					saveThermalRatio();
+					profileLogger() << zoneRec.name << " Preheat " << _minsToPreheat
+						<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp())
+						<< " by " << info.nextEvent
+						<< L_endl;
+				} else if (isDHWzone() && _minsToPreheat)
+					_minsToPreheat = minsToNextEvent;
 			}
-			if (isDHWzone()) _thermalStore->setPreheatM10((_minsToPreheat + 5)/10);
 			return preheatCallTemp;
 		};
 

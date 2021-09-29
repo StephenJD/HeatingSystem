@@ -54,8 +54,11 @@ namespace HardwareInterfaces {
 		uint8_t warmUpTime_m10() {return (_minsToPreheat + 5) / 10;}
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
+		void setMode(int mode);
+		void startNextProfile();
+		void revertToCurrentProfile();
 		void cancelPreheat();
-		void changeCurrTempRequest(int8_t val);
+		bool changeCurrTempRequest(int8_t val); // true if changed
 		bool setFlowTemp();
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
 		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }

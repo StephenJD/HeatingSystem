@@ -61,9 +61,9 @@ namespace I2C_Recovery {
 		unsigned long _lastRestartTime = 0;
 		I2Creset_Functor _i2CresetFunctor; // data member functor to wrap free reset function
 		I_I2CresetFunctor * _timeoutFunctor = 0;
-		I2C_RecoverStrategy _strategy = I2C_RecoverStrategy{ 0 };
+		I2C_RecoverStrategy _strategy;
 		bool _isRecovering = false;
-		int _retries;
+		int _retries = 0;
 	};
 
 }

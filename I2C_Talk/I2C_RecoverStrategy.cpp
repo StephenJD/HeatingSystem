@@ -16,7 +16,7 @@ namespace I2C_Recovery {
 	}
 
 	void I2C_RecoverStrategy::initialise() {
-		if (score(0) != STRATEGY_VERSION) {
+		if (_strategyEEPROMaddr >= 0 && score(0) != STRATEGY_VERSION) {
 			//checkEEPROM("I2C_RecoverStrategy::initialise()");
 			 logger() << F("\tI2C_RecoverStrategy::initialise() from ") << _strategyEEPROMaddr << L_endl;
 			for (int s = 1; s < S_NoOfStrategies; ++s) score(s, 0);
@@ -26,13 +26,15 @@ namespace I2C_Recovery {
 	}
 
 	uint8_t I2C_RecoverStrategy::score(int index) {
-		//uint8_t dataBuffa;
+		if (_strategyEEPROMaddr == -1) return 0;
 		return eeprom().read(_strategyEEPROMaddr + index);
 	}
 
 	void I2C_RecoverStrategy::score(int index, uint8_t val) {
-		//checkEEPROM("I2C_RecoverStrategy::score()");
-		eeprom().write(_strategyEEPROMaddr + index, val);
+		if (_strategyEEPROMaddr >= 0) {
+			//checkEEPROM("I2C_RecoverStrategy::score()");
+			eeprom().write(_strategyEEPROMaddr + index, val);
+		}
 	}
 
 	void I2C_RecoverStrategy::next() {

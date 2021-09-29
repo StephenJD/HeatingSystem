@@ -55,9 +55,13 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 	_cool_relay->set(false);
 	_heat_relay->set(false);
 	enableRelays(false);
-	//auto speedTest = I2C_SpeedTest(_temp_sensr);
-	//speedTest.fastest();
-	logger() << F("MixValve created\n") << L_endl;
+	logger() << F("MixValve created") << L_endl;
+}
+
+void Mix_Valve::begin() {
+	auto speedTest = I2C_SpeedTest(_temp_sensr);
+	speedTest.fastest();
+	logger() << F("TS Speed:") << _temp_sensr.runSpeed() << L_endl;
 }
 
 const __FlashStringHelper* Mix_Valve::name() {
@@ -118,6 +122,7 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp() { // Called once every second.
 		ts_status = _temp_sensr.readTemperature();
 		sensorTemp = _temp_sensr.get_temp();
 	} while (ts_status && --retry);
+//ts_status = _OK;
 	if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
 		<< F(" Err:") << _temp_sensr.lastError()
 		<< F(" Status:") << _temp_sensr.getStatus()
@@ -328,10 +333,11 @@ void Mix_Valve::setReg(int reg, uint8_t value) {
 
 void Mix_Valve::checkForNewReqTemp() {
 	auto reqTempReg = getReg(R_REQUEST_FLOW_TEMP);
+	//logger() << F("R_REQUEST_FLOW_TEMP from: ") << _regOffset + R_REQUEST_FLOW_TEMP << F(" reg:") << reqTempReg << F(" Curr : ") << _currReqTemp << L_endl;
 	if (reqTempReg != 0 && reqTempReg != _currReqTemp) {
 		logger() << F("R_REQUEST_FLOW_TEMP HasBeenWrittenTo") << L_endl;
 		const auto newReqTemp = getReg(R_REQUEST_FLOW_TEMP);
-		logger() << F("Offs:") << _regOffset << F(" new:") << newReqTemp << F(" _new:") << _newReqTemp << F(" Curr:") << _currReqTemp <<  L_endl;
+		logger() << F("Reg:") << _regOffset + R_REQUEST_FLOW_TEMP << F(" newReq:") << newReqTemp << F(" lastReq:") << _newReqTemp << F(" Curr:") << _currReqTemp <<  L_endl;
 		if (_newReqTemp != newReqTemp) {
 			_newReqTemp = newReqTemp; // REQUEST TWICE TO REGISTER.
 			setReg(R_REQUEST_FLOW_TEMP, 0);
