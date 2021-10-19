@@ -97,6 +97,7 @@ namespace client_data_structures {
 		case e_reqTemp:
 		{
 			HardwareInterfaces::Zone & z = runTimeData();
+			if (z.isDHWzone()) return false;
 			auto reqTemp = uint8_t(newValue->val);
 			z.changeCurrTempRequest(reqTemp);
 			profileLogger() << answer().rec().name << " Save req temp to: " << reqTemp << " Max: " << _requestTemp.valRange.maxVal << L_endl;

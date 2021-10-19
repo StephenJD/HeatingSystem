@@ -51,7 +51,7 @@ namespace HardwareInterfaces {
 		int16_t getFractionalCallSensTemp() const;
 		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
 		Date_Time::DateTime startDateTime() { return _ttStartDateTime; }
-		uint8_t warmUpTime_m10() {return (_minsToPreheat + 5) / 10;}
+		uint8_t warmUpTime_m10() {return _minsToPreheat < 0 ? _minsToPreheat : (_minsToPreheat + 5) / 10;}
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
 		void setMode(int mode);
@@ -61,7 +61,6 @@ namespace HardwareInterfaces {
 		bool changeCurrTempRequest(int8_t val); // true if changed
 		bool setFlowTemp();
 		void setProfileTempRequest(int8_t temp) { _currProfileTempRequest = temp; }
-		void setNextProfileTempRequest(int8_t temp) { _nextProfileTempRequest = temp; }
 		void setNextEventTime(Date_Time::DateTime time) { _ttEndDateTime = time; }
 		void setTTStartTime(Date_Time::DateTime time) { _ttStartDateTime = time;}
 		void preHeatForNextTT();
@@ -96,7 +95,7 @@ namespace HardwareInterfaces {
 		uint8_t _maxFlowTemp = 0;
 		uint16_t _startCallTemp = 0;
 		int16_t _minsInPreHeat = PREHEAT_ENDED;
-		uint16_t _minsToPreheat;
+		int16_t _minsToPreheat;
 		/// <summary>
 		/// Controls saving of new delay period.
 		/// Cooling State: Is incremented up to DELAY_COOLING_TIME whilst zone is cooling.

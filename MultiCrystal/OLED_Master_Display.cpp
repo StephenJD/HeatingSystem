@@ -54,12 +54,15 @@ namespace OLED_Master_Display {
         if (!digitalRead(5)) {
             i2C.setAsMaster(DS_CONSOLE_I2C_ADDR);
             REQUESTING_INI = RC_DS_REQUESTING_INI;
+            Serial.println(F("DS_CONSOLE"));
         } else if (!digitalRead(6)) {
             i2C.setAsMaster(US_CONSOLE_I2C_ADDR);
             REQUESTING_INI = RC_US_REQUESTING_INI;
+            Serial.println(F("US_CONSOLE"));
         } else if (!digitalRead(7)) {
             i2C.setAsMaster(FL_CONSOLE_I2C_ADDR);
             REQUESTING_INI = RC_F_REQUESTING_INI;
+            Serial.println(F("FL_CONSOLE"));
         } else Serial.println(F("Err: None of Pins 5-7 selected."));
     }
 
@@ -110,6 +113,8 @@ namespace OLED_Master_Display {
         setRemoteI2CAddress();
         i2C.onReceive(rem_registers.receiveI2C);
         i2C.onRequest(rem_registers.requestI2C);
+        //auto speedTest = I2C_SpeedTest{ programmer };
+        //speedTest.fastest();
         rem_registers.setRegister(R_DISPL_REG_OFFSET, 0);
         requestRegisterOffsetFromProgrammer();
         tempSensor.initialise(rem_registers.getRegister(R_ROOM_TS_ADDR));
@@ -238,11 +243,12 @@ namespace OLED_Master_Display {
             _display.setFont(getFont());
             _display.setCursor(0, 2);
             _display.print(F("Warm in "));
-            if (rem_registers.getRegister(R_WARM_UP_DHW_M10) <= 0) {
-                _display.print(-rem_registers.getRegister(R_WARM_UP_DHW_M10));
+            int8_t dhw_warmupTime = rem_registers.getRegister(R_WARM_UP_DHW_M10);
+            if (dhw_warmupTime  < 0 && dhw_warmupTime > -60) {
+                _display.print(-dhw_warmupTime);
                 _display.print(F("m"));
             } else {
-                _display.print(rem_registers.getRegister(R_WARM_UP_DHW_M10) / 6.);
+                _display.print((uint8_t)dhw_warmupTime / 6.);
                 _display.print(F("h"));
             }
         }

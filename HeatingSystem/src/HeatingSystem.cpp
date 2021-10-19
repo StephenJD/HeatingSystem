@@ -129,13 +129,12 @@ void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 	auto zoneIndex = 0;
 	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
 	for (auto & remote : _remoteLCDConsole) {
+		if (zoneIndex == Z_DownStairs) { ++zoneIndex; continue; }
 		auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_ROOM_TEMP) + (OLED_Master_Display::R_DISPL_REG_SIZE * zoneIndex);
 		temporary_remoteTSArr[zoneIndex].readTemperature();
 		auto roomTemp = temporary_remoteTSArr[zoneIndex].get_fractional_temp();
-		if (zoneIndex != Z_UpStairs) {
-			_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
-			_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
-		}
+		_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
+		_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
 		activeField->setFocusIndex(zoneIndex);
 		if (remote.processKeys()) remote.refreshDisplay();
 		++zoneIndex;

@@ -328,7 +328,7 @@ namespace HardwareInterfaces {
 		if (doReset(currProfileTemp, doingCurrentProfile) || isTimeForNextEvent()) {
 			saveThermalRatio();			
 			setNextEventTime(profileInfo.nextEvent);
-			setNextProfileTempRequest(profileInfo.nextTT.time_temp.temp());
+			_nextProfileTempRequest = profileInfo.nextTT.time_temp.temp();
 			setTTStartTime(clock_().now());
 			setProfileTempRequest(currProfileTemp);
 		}
@@ -345,7 +345,7 @@ namespace HardwareInterfaces {
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
 		// Modifies _currProfileTempRequest to allow for heat-up for next event
 		// returns true when actual programmed time has expired.
-		//decltype(millis()) executionTime[8] = { millis() };
+		// decltype(millis()) executionTime[8] = { millis() };
 
 		using namespace Date_Time;
 		auto & zoneRec = _zoneRecord.rec();
@@ -361,10 +361,12 @@ namespace HardwareInterfaces {
 				return int(outsideTemp + 0.5 + (maxFlowTemp - outsideTemp) * zoneRec.autoRatio / RATIO_DIVIDER) ;
 		};
 
-		auto calculatePreheatTime = [this, maxPredictedAchievableTemp](int currTemp_fractional, int nextTempReq) -> int {
+		const auto max_PredictedAchievableTemp = maxPredictedAchievableTemp(_maxFlowTemp);
+
+		auto calculatePreheatTime = [this, max_PredictedAchievableTemp](int currTemp_fractional, int nextTempReq) -> int {
 			double minsToAdd = 0.;
 			double finalDiff_fractional = (nextTempReq * 256.) - currTemp_fractional;
-			double limitTemp = maxPredictedAchievableTemp(_maxFlowTemp);
+			double limitTemp = max_PredictedAchievableTemp;
 			
 			double limitDiff_fractional = limitTemp * 256. - currTemp_fractional;	
 			double logRatio = 1. - (finalDiff_fractional / limitDiff_fractional);
@@ -404,15 +406,23 @@ namespace HardwareInterfaces {
 
 		auto getPreheatTemp = [this, calculatePreheatTime, &zoneRec, currTemp_fractional]() -> int {
 			bool needToStart;
+			bool gotDifferentProfileTemp = false;
 			auto info = refreshProfile(false);
 			auto preheatCallTemp = info.currTT.temp();
 			if (preheatCallTemp * 256 > currTemp_fractional) {
 				_minsToPreheat = calculatePreheatTime(currTemp_fractional, preheatCallTemp);// is already heating. Don't need to check for pre-heat
+				if (isDHWzone()) {
+					if (_minsToPreheat < 60) _minsToPreheat = -_minsToPreheat;
+				}
 			} else {
 				int32_t minsToFutureEvent = clock_().now().minsTo(info.nextEvent);
-				auto minsToNextEvent = uint16_t(minsToFutureEvent);
+				auto minsToNextEvent = int16_t(minsToFutureEvent);
 				do {
 					_minsToPreheat = calculatePreheatTime(currTemp_fractional, info.nextTT.temp());
+					if (!gotDifferentProfileTemp && info.nextTT.temp() != _currProfileTempRequest) {
+						_nextProfileTempRequest = info.nextTT.temp();
+						gotDifferentProfileTemp = true;
+					}
 					if (_minsToPreheat > 0) {
 						profileLogger() << "\t" << zoneRec.name << " " << info.nextTT.temp() << "deg. Preheat mins " << _minsToPreheat << " Delay: " << zoneRec.autoDelay << L_endl;
 						_minsToPreheat += zoneRec.autoDelay + 5;
@@ -429,8 +439,9 @@ namespace HardwareInterfaces {
 						<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp())
 						<< " by " << info.nextEvent
 						<< L_endl;
-				} else if (isDHWzone() && _minsToPreheat)
-					_minsToPreheat = minsToNextEvent;
+				} else if (isDHWzone())
+					if (minsToNextEvent < 60) _minsToPreheat = -minsToNextEvent;
+					else _minsToPreheat = minsToNextEvent;
 			}
 			return preheatCallTemp;
 		};

@@ -9,6 +9,9 @@
 constexpr uint32_t SERIAL_RATE = 115200;
 
 //////////////////////////////// Start execution here ///////////////////////////////
+
+// This sketch mimicks the programmer for testing the slave.
+
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
 

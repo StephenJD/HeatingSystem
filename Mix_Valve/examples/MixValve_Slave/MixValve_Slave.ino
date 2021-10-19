@@ -130,6 +130,9 @@ void setup() {
 	mixValve[0].begin();
 	mixValve[1].begin();
 	logger() << F("Setup complete") << L_flush;
+	//auto speedTest = I2C_SpeedTest{ programmer };
+	//speedTest.fastest();
+
 	delay(500);
 	//psu_enable.clear();
 }
