@@ -95,7 +95,7 @@ Serial_Logger::Serial_Logger(uint32_t baudRate, Flags initFlags) : Logger(initFl
 	Serial.flush();
 	Serial.begin(baudRate);
 	auto freeRam = freeMemory();
-	Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
+	Serial.print(F("\n\n\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
 	if (freeRam < 10) { while (true); }
 #ifdef DEBUG_TALK
 	_flags = L_allwaysFlush;

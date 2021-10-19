@@ -99,8 +99,8 @@ auto mixV_register_set = i2c_registers::Registers<Mix_Valve::R_MV_ALL_REG_SIZE *
 i2c_registers::I_Registers& mixV_registers = mixV_register_set;
 
 Mix_Valve  mixValve[] = {
-	{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0, 55}
-  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::R_MV_ALL_REG_SIZE, 55}
+	{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0}
+  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::R_MV_ALL_REG_SIZE}
 };
 
 void setup() {
@@ -127,8 +127,8 @@ void setup() {
 
 	role = e_Slave;
 	roleChanged(e_Master);
-	mixValve[0].begin();
-	mixValve[1].begin();
+	mixValve[0].begin(55);
+	mixValve[1].begin(55);
 	logger() << F("Setup complete") << L_flush;
 	//auto speedTest = I2C_SpeedTest{ programmer };
 	//speedTest.fastest();

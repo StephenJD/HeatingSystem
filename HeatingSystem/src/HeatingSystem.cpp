@@ -114,7 +114,7 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 	if (_mainConsoleChapters.chapter() == 0) {
 		if (_tempController.checkAndAdjust()) {
 			for (auto& remote : remOLED_ConsoleArr) {
-				//remote.readRegistersFromConsole();
+				if (remote.getAddress() != 0x13) continue;
 				remote.refreshRegisters();
 			}
 		}
@@ -135,6 +135,7 @@ void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 		auto roomTemp = temporary_remoteTSArr[zoneIndex].get_fractional_temp();
 		_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
 		_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
+		if (zoneIndex != Z_Flat) { ++zoneIndex; continue; }
 		activeField->setFocusIndex(zoneIndex);
 		if (remote.processKeys()) remote.refreshDisplay();
 		++zoneIndex;

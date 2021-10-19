@@ -42,7 +42,7 @@ namespace HardwareInterfaces {
 			hs().mainDisplay.print("Bad");
 			hs().mainDisplay.sendToDisplay();
 			device.disable();
-			logger() << F("\tspeedTest device 0x") << L_hex << device.getAddress() << I2C_Talk::getStatusMsg(speedTest.error()) << L_endl;
+			logger() << F("\tspeedTest ") << deviceName << F(" 0x") << L_hex << device.getAddress() << I2C_Talk::getStatusMsg(speedTest.error()) << L_endl;
 #ifndef ZPSIM
 			delay(2000);
 #endif
@@ -50,7 +50,7 @@ namespace HardwareInterfaces {
 		else {
 			hs().mainDisplay.print(" OK");
 			hs().mainDisplay.sendToDisplay();
-			logger() << F("\tspeedTest device 0x") << L_hex << device.getAddress() << F(". OK at ") << L_dec << device.runSpeed() << L_endl;
+			logger() << F("\tspeedTest ") << deviceName << F(" 0x") << L_hex << device.getAddress() << F(". OK at ") << L_dec << device.runSpeed() << L_endl;
 		}
 		logger() << L_endl;
 		return speedTest.error();
@@ -77,7 +77,7 @@ namespace HardwareInterfaces {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
-		if (showSpeedTestFailed(0, hs().remOLED_ConsoleArr[D_Hall], "DS Rem")) {
+		if (showSpeedTestFailed(0, hs().remOLED_ConsoleArr[D_Hall], "DS OLED")) {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 

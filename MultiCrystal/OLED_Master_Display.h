@@ -4,14 +4,15 @@
 #include "RemoteKeypadMaster.h"
 #include <I2C_Registers.h>
 
-constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
-constexpr uint8_t US_CONSOLE_I2C_ADDR = 0x12;
-constexpr uint8_t DS_CONSOLE_I2C_ADDR = 0x13;
-constexpr uint8_t FL_CONSOLE_I2C_ADDR = 0x14;
 
 namespace I2C_Recovery { class I2C_Recover; }
 
 namespace OLED_Master_Display {
+	constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
+	constexpr uint8_t US_CONSOLE_I2C_ADDR = 0x12;
+	constexpr uint8_t DS_CONSOLE_I2C_ADDR = 0x13;
+	constexpr uint8_t FL_CONSOLE_I2C_ADDR = 0x14;
+
 	constexpr auto SLEEP_MOVE_PERIOD_mS = 500;
 	constexpr auto SCREEN_WIDTH = 128;  // OLED display width, in pixels
 	constexpr auto SCREEN_HEIGHT = 32; // OLED display height, in pixels

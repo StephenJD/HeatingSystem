@@ -27,13 +27,16 @@ const uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 
-Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset, int defaultMaxTemp)
+Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset)
 	: _temp_sensr(i2C_recover, defaultTSaddr, 40),
 	_heat_relay(&heatRelay),
 	_cool_relay(&coolRelay),
 	_ep(&ep),
 	_regOffset(reg_offset)
-{
+	{}
+
+void Mix_Valve::begin(int defaultMaxTemp) {
+	logger() << F("MixValve begin") << L_endl;
 	const bool writeDefaultsToEEPROM = _ep->read(_regOffset + R_VERSION_MONTH) != version_month || _ep->read(_regOffset + R_VERSION_DAY) != version_day;
 	//const bool writeDefaultsToEEPROM = true;
 	logger() << F("regOffset: ") << _regOffset << F(" Saved month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Saved Day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
@@ -43,9 +46,9 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 		setReg(R_TS_ADDRESS, _temp_sensr.getAddress());
 		setReg(R_FULL_TRAVERSE_TIME, 140);
 		setReg(R_SETTLE_TIME, 40);
-		setReg(R_MAX_FLOW_TEMP, defaultMaxTemp);
+		setReg(R_DEFAULT_MAX_FLOW_TEMP, defaultMaxTemp);
 		saveToEEPROM();
-		logger() << F("Saved defaults") << L_endl;
+		logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
 	} else {
 		loadFromEEPROM();
 		logger() << F("Loaded from EEPROM") << L_endl;
@@ -55,10 +58,7 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 	_cool_relay->set(false);
 	_heat_relay->set(false);
 	enableRelays(false);
-	logger() << F("MixValve created") << L_endl;
-}
 
-void Mix_Valve::begin() {
 	auto speedTest = I2C_SpeedTest(_temp_sensr);
 	speedTest.fastest();
 	logger() << F("TS Speed:") << _temp_sensr.runSpeed() << L_endl;
@@ -69,33 +69,35 @@ const __FlashStringHelper* Mix_Valve::name() {
 }
 
 void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
-	auto eepromRegister = _regOffset;
+	auto eepromRegister = _regOffset + R_TS_ADDRESS;
 	_temp_sensr.setAddress(getReg(R_TS_ADDRESS));
 	_ep->update(  eepromRegister, getReg(R_TS_ADDRESS));
 	_ep->update(++eepromRegister, getReg(R_FULL_TRAVERSE_TIME));
 	_ep->update(++eepromRegister, getReg(R_SETTLE_TIME));
-	_ep->update(++eepromRegister, getReg(R_MAX_FLOW_TEMP));
+	_ep->update(++eepromRegister, getReg(R_DEFAULT_MAX_FLOW_TEMP));
 	_ep->update(++eepromRegister, getReg(R_VERSION_MONTH));
 	_ep->update(++eepromRegister, getReg(R_VERSION_DAY));
-	//logger() << F("MixValve saveToEEPROM") << L_tabs << (int)getReg(R_FULL_TRAVERSE_TIME) << (int)getReg(R_SETTLE_TIME) << (int)getReg(R_RATIO) << (int)getReg(R_MAX_FLOW_TEMP) << (int)_currReqTemp << L_endl;
+	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)getReg(R_FULL_TRAVERSE_TIME) << (int)getReg(R_SETTLE_TIME)
+		<< (int)getReg(R_DEFAULT_MAX_FLOW_TEMP) << (int)getReg(R_VERSION_MONTH) << (int)getReg(R_VERSION_DAY) << L_endl;
 }
 
 void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
-	auto eepromRegister = _regOffset;
+	auto eepromRegister = _regOffset + R_TS_ADDRESS;
 #ifdef TEST_MIX_VALVE_CONTROLLER
 	setReg(R_FULL_TRAVERSE_TIME, 140);
 	setReg(R_SETTLE_TIME, 10);
-	setReg(R_MAX_FLOW_TEMP, 55);
+	setReg(R_DEFAULT_MAX_FLOW_TEMP, 55);
 #else	
 	_temp_sensr.setAddress(_ep->read(eepromRegister));
 	setReg(R_TS_ADDRESS, _temp_sensr.getAddress());
 	setReg(R_FULL_TRAVERSE_TIME, _ep->read(++eepromRegister));
 	setReg(R_SETTLE_TIME, _ep->read(++eepromRegister));
-	setReg(R_MAX_FLOW_TEMP, _ep->read(++eepromRegister));
+	setReg(R_DEFAULT_MAX_FLOW_TEMP, _ep->read(++eepromRegister));
 #endif
 }
 
 void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when master/slave mode changes
+	setReg(R_MAX_FLOW_TEMP, getReg(R_DEFAULT_MAX_FLOW_TEMP));
 	_currReqTemp = getReg(R_MAX_FLOW_TEMP);
 	setReg(R_REQUEST_FLOW_TEMP, _currReqTemp);
 }

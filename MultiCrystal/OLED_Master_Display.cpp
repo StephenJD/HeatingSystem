@@ -19,6 +19,8 @@ using namespace GP_LIB;
 
 I2C_Talk i2C;
 I2C_Recover i2c_recover(i2C);
+//I2C_Recover_Retest i2c_recover(i2C());
+
 auto tempSensor = TempSensor{ i2c_recover };
 constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
 enum SlaveRequestIni {

@@ -50,7 +50,7 @@ public:
 		// Receive
 		, R_REQUEST_FLOW_TEMP
 		, R_MAX_FLOW_TEMP
-		, R_MV_VOLATILE_REG_SIZE
+		, R_MV_VOLATILE_REG_SIZE // 12
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
@@ -58,17 +58,18 @@ public:
 		  R_TS_ADDRESS = R_MV_VOLATILE_REG_SIZE
 		, R_FULL_TRAVERSE_TIME
 		, R_SETTLE_TIME
+		, R_DEFAULT_MAX_FLOW_TEMP
 		, R_VERSION_MONTH
 		, R_VERSION_DAY
-		, R_MV_ALL_REG_SIZE
+		, R_MV_ALL_REG_SIZE // = 17
 	};
 
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat, e_Error };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 
-	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset, int defaultMaxTemp);
-	void begin();
+	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
+	void begin(int defaultMaxTemp);
 	uint8_t getReg(int reg) const;
 	const __FlashStringHelper* name();
 	MV_Status check_flow_temp();

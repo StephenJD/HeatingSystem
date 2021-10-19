@@ -88,7 +88,7 @@ namespace Assembly {
 		// Set room-sensors to high-res
 		logger() << F("\nSet room-sensors to high-res") << L_endl;
 		return	_hs.temporary_remoteTSArr[0].setHighRes()
-			| _hs.temporary_remoteTSArr[1].setHighRes()
+			//| _hs.temporary_remoteTSArr[1].setHighRes()
 			| _hs.temporary_remoteTSArr[2].setHighRes();
 	}
 
@@ -96,11 +96,13 @@ namespace Assembly {
 		uint8_t failed = 0;
 		logger() << L_time << F("temporary_initialiseRemoteDisplays()") << L_endl;
 		for (auto & rd : _hs.remDispl) {
+			if (rd.getAddress() != 0x25) continue;
 			failed |= rd.initialiseDevice();
 		}
 
 		auto index = 1;
 		for (auto& kb : _hs.remoteKeypadArr) {
+			if (index != 3) { ++index; continue; }
 			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index];
 			kb.popKey();
 			kb.clearKeys();
@@ -122,8 +124,11 @@ namespace Assembly {
 	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {
 		if (deviceAddr == IO8_PORT_OptCoupl) return relayPort();
 		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs().tempController().mixValveControllerArr[0];
-		else if (deviceAddr >= 0x24 && deviceAddr <= 0x26) {
-			return hs().remDispl[deviceAddr-0x24];
+		else if (deviceAddr >= US_CONSOLE_I2C_ADDR && deviceAddr <= FL_CONSOLE_I2C_ADDR) {
+			return hs().remOLED_ConsoleArr[deviceAddr- US_CONSOLE_I2C_ADDR];
+		} 
+		else if (deviceAddr >= US_REMOTE_ADDRESS && deviceAddr <= DS_REMOTE_ADDRESS) {
+			return hs().remDispl[deviceAddr- US_REMOTE_ADDRESS];
 		}
 		else {
 			for (auto & ts : hs().tempController().tempSensorArr) {
