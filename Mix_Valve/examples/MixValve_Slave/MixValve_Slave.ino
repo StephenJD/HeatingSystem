@@ -73,8 +73,8 @@ I2C_Talk& i2C() {
   return _i2C;
 }
 
-I2C_Recover_Retest i2c_recover(i2C());
-//I2C_Recover i2c_recover(i2C());
+//I2C_Recover_Retest i2c_recover(i2C());
+I2C_Recover i2c_recover(i2C());
 
 void roleChanged(Role newRole);
 Role getRole();

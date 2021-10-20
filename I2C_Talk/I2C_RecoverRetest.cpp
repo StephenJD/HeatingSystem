@@ -74,11 +74,12 @@ namespace I2C_Recovery {
 		uint32_t strategyStartTime;
 		bool shouldTryReadingAgain = false;
 		if (status == _OK) {
+			//logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
 			if (recoveryWasAttempted()) {
 				if (I_I2Cdevice_Recovery::I2C_RETRIES - _retries > 2) logger() << L_time << L_tabs << F("Max Strategy") << maxStrategyUsed << I_I2Cdevice_Recovery::I2C_RETRIES - _retries << recoveryTime
-					 << device().runSpeed() << L_hex << device().getAddress() << L_endl;
+					 << device().runSpeed() << L_hex << device().getAddress() << L_flush;
 				auto thisMaxStrategy = maxStrategyUsed;
-				(*_timeoutFunctor).postResetInitialisation();
+				if (_timeoutFunctor) (*_timeoutFunctor).postResetInitialisation();
 				maxStrategyUsed = thisMaxStrategy;
 				getFinalStrategyRecorded();
 				resetRecoveryStrategy();
@@ -87,6 +88,7 @@ namespace I2C_Recovery {
 			recoveryTime = 0;
 			if (device().getAddress() == abs(_deviceWaitingOnFailureFor10Mins)) _deviceWaitingOnFailureFor10Mins = 0;
 		} else if (_retries > 0) {
+			//logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
 			--_retries;
 			strategyStartTime = micros();
 			restart("");
@@ -200,7 +202,7 @@ namespace I2C_Recovery {
 
 	void I2C_Recover_Retest::call_timeOutFn(int addr) {
 		static bool doingTimeOut;
-		if (_timeoutFunctor != 0) {
+		if (_timeoutFunctor) {
 			if (doingTimeOut) {
 				logger() << F("\n\t**** call_timeOutFn called recursively ***") << L_endl;
 				return;

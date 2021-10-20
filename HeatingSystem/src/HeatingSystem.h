@@ -24,6 +24,10 @@
 //////////////////////////////////////////////////////////
 //    Single Responsibility is to connect the parts     //
 //////////////////////////////////////////////////////////
+
+constexpr bool OLED_DS = true;
+constexpr bool ALL_OLD_REMOTES = true;
+
 namespace HeatingSystemSupport {
 	void initialise_virtualROM();
 	extern bool dataHasChanged;
