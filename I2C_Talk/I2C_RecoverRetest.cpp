@@ -14,7 +14,9 @@ namespace I2C_Recovery {
 
 	Error_codes I2C_Recover_Retest::testDevice(int noOfTests, int allowableFailures) { // Tests should all be non-recovering
 		auto status = _OK;
-		//logger() << F("Test device 0x") << L_hex << device().getAddress() << F(" at ") << 
+#ifdef DEBUG_RECOVER
+		logger() << F("Test device 0x") << L_hex << device().getAddress() << L_endl;
+#endif
 		do {
 			status = device().testDevice(); // called on I_I2Cdevice_Recovery device from I2C_Device.h. 
 			// Calls non-recovering device-defined testDevice().
@@ -25,7 +27,9 @@ namespace I2C_Recovery {
 				}
 				--allowableFailures;
 			}
-			//logger() << F("testDevice Tests/Failures ") << noOfTests << F_SLASH << allowableFailures << I2C_Talk::getStatusMsg(status) << L_endl;
+#ifdef DEBUG_RECOVER
+			logger() << F("testDevice Tests/Failures ") << noOfTests << F("/") << allowableFailures << I2C_Talk::getStatusMsg(status) << L_endl;
+#endif
 			--noOfTests;
 		} while (allowableFailures >= 0 && noOfTests > allowableFailures);
 		return status;
@@ -40,13 +44,17 @@ namespace I2C_Recovery {
 
 	Error_codes I2C_Recover_Retest::newReadWrite(I_I2Cdevice_Recovery & i2Cdevice, int retries) {
 		if (_isRecovering) return i2Cdevice.isEnabled() ? _OK : _disabledDevice;
-		//logger() << F("newReadWrite Register device 0x") << L_hex << device().getAddress() << L_endl;
+#ifdef DEBUG_RECOVER
+		logger() << F("newReadWrite Register device 0x") << L_hex << i2Cdevice.getAddress() << L_endl;
+#endif
 		if (i2Cdevice.reEnable() == _disabledDevice) {
 			return _disabledDevice;
 		}
 		registerDevice(i2Cdevice);
 		_retries = retries;
-		//logger() << F("newReadWrite setspeed to: ") << device.runSpeed() << L_endl;
+#ifdef DEBUG_RECOVER
+		logger() << F("newReadWrite setspeed to: ") << i2Cdevice.runSpeed() << L_endl;
+#endif
 		i2C().setI2CFrequency(i2Cdevice.runSpeed());
 		return _OK;
 	}
@@ -74,7 +82,9 @@ namespace I2C_Recovery {
 		uint32_t strategyStartTime;
 		bool shouldTryReadingAgain = false;
 		if (status == _OK) {
-			//logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
+#ifdef DEBUG_RECOVER
+			logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
+#endif
 			if (recoveryWasAttempted()) {
 				if (I_I2Cdevice_Recovery::I2C_RETRIES - _retries > 2) logger() << L_time << L_tabs << F("Max Strategy") << maxStrategyUsed << I_I2Cdevice_Recovery::I2C_RETRIES - _retries << recoveryTime
 					 << device().runSpeed() << L_hex << device().getAddress() << L_flush;
@@ -88,7 +98,9 @@ namespace I2C_Recovery {
 			recoveryTime = 0;
 			if (device().getAddress() == abs(_deviceWaitingOnFailureFor10Mins)) _deviceWaitingOnFailureFor10Mins = 0;
 		} else if (_retries > 0) {
-			//logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
+#ifdef DEBUG_RECOVER
+			logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
+#endif
 			--_retries;
 			strategyStartTime = micros();
 			restart("");
@@ -97,7 +109,9 @@ namespace I2C_Recovery {
 		} else {
 			shouldTryReadingAgain = true;
 			_isRecovering = true;
+#ifdef DEBUG_RECOVER
 			logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
+#endif
 			_strategy.next();
 
 			switch (_strategy.strategy()) {

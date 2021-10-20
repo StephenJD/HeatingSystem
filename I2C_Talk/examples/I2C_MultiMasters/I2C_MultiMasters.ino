@@ -15,7 +15,7 @@ using namespace I2C_Talk_ErrorCodes;
 
 namespace arduino_logger {
 	Logger& logger() {
-		static Serial_Logger _log(SERIAL_RATE, L_startWithFlushing);
+		static Serial_Logger _log(SERIAL_RATE, L_allwaysFlush);
 		return _log;
 	}
 }
@@ -41,7 +41,7 @@ I2C_Talk i2C{};
 
 I2C_Recover_Retest i2c_recover(i2C);
 //I2C_Recover i2c_recover(i2C);
-I_I2Cdevice_Recovery masters[] = { {i2c_recover, 5},{i2c_recover, 7} };
+I_I2Cdevice_Recovery masters[] = { {i2c_recover, 5},{i2c_recover, 6} };
 
 constexpr int NO_OF_MASTERS = 2;
 constexpr int NO_OF_REGISTERS = 8;
@@ -57,15 +57,12 @@ void setI2CAddress(I2C_Talk & i2C) {
 	pinMode(7, INPUT_PULLUP);
 	if (!digitalRead(5)) {
 		i2C.setAsMaster(5);
-		nextMaster = 1;
 		Serial.println(F("Master 5"));
 	} else if (!digitalRead(6)) {
 		i2C.setAsMaster(6);
-		nextMaster = 2;
 		Serial.println(F("Master 6"));
 	} else if (!digitalRead(7)) {
 		i2C.setAsMaster(7);
-		nextMaster = 0;
 		Serial.println(F("Master 7"));
 	} else Serial.println(F("Err: None of Pins 5-7 set LOW."));
 }
@@ -133,7 +130,7 @@ void logRegisters(const __FlashStringHelper* msg) {
 
 void setup() {
 	Serial.begin(SERIAL_RATE);
-	set_watchdog_timeout_mS(8000);
+	set_watchdog_timeout_mS(8000); // max 16S
 	logger().begin(SERIAL_RATE);
 	logger() << F("Setup Started") << L_endl;
 	setI2CAddress(i2C);
@@ -160,7 +157,6 @@ void loop() {
 		delay(DELAY_MS);
 	} else {
 		setRegListen();
-		//logger().begin(SERIAL_RATE);
 		logger() << F("Listening...") << L_flush;
 		delay(1000);
 	}

@@ -10,7 +10,7 @@
 #define VARIANT_MCK F_CPU
 #endif
 
-#if defined DEBUG_TALK || defined SHOW_TWI_ERROR
+#if defined DEBUG_TALK || defined SHOW_TWI_DEBUG
 #include <Logging.h>
 namespace arduino_logger {
 	Logger& logger();
@@ -18,7 +18,7 @@ namespace arduino_logger {
 using namespace arduino_logger;
 #endif
 
-#ifdef SHOW_TWI_ERROR
+#ifdef SHOW_TWI_DEBUG
 // For use when debugging twi.c
 extern "C" void I2C_Talk_msg(const char * str) {
 	logger() << str << L_endl;

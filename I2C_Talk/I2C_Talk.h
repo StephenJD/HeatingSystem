@@ -27,7 +27,9 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 // Degugging options
 //#define DEBUG_TALK
 #define DEBUG_SPEED_TEST
-#define SHOW_TWI_ERROR
+//#define DEBUG_RECOVER
+//#define SHOW_TWI_DEBUG
+//#define SHOW_TWI_TIMINGS
 //#define DEBUG_TRY_ALL_SPEEDS
 
 // The DEFAULT page size for I2C EEPROM.
