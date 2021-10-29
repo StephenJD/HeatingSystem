@@ -34,7 +34,7 @@ namespace I2C_Recovery {
 
 		// Polymorphic Functions for I2C_Talk
 		virtual auto testDevice(int noOfTests, int allowableFailures)->I2C_Talk_ErrorCodes::Error_codes;
-		//friend class I_I2C_Scan;
+		//friend class I2C_Scan;
 		constexpr I2C_Recover() = default;
 	protected:
 		// Non-Polymorphic functions for I2C_Recover

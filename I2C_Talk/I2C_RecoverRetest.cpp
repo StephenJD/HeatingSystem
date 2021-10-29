@@ -6,7 +6,6 @@
 
 //void ui_yield();
 using namespace arduino_logger;
-
 namespace I2C_Recovery {
 
 	using namespace I2C_Talk_ErrorCodes;
@@ -14,7 +13,7 @@ namespace I2C_Recovery {
 
 	Error_codes I2C_Recover_Retest::testDevice(int noOfTests, int allowableFailures) { // Tests should all be non-recovering
 		auto status = _OK;
-#ifdef DEBUG_RECOVER
+#ifdef DEBUG_SPEED_TEST
 		logger() << F("Test device 0x") << L_hex << device().getAddress() << L_endl;
 #endif
 		do {
@@ -27,10 +26,11 @@ namespace I2C_Recovery {
 				}
 				--allowableFailures;
 			}
-#ifdef DEBUG_RECOVER
+#ifdef DEBUG_SPEED_TEST
 			logger() << F("testDevice Tests/Failures ") << noOfTests << F("/") << allowableFailures << I2C_Talk::getStatusMsg(status) << L_endl;
 #endif
 			--noOfTests;
+			//delayMicroseconds(2000);
 		} while (allowableFailures >= 0 && noOfTests > allowableFailures);
 		return status;
 	}

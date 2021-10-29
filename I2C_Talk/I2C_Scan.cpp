@@ -6,21 +6,21 @@
 using namespace I2C_Talk_ErrorCodes;
 using namespace arduino_logger;
 
-I2C_Recovery::I2C_Recover I_I2C_Scan::nullRecovery;
+I2C_Recovery::I2C_Recover I2C_Scan::nullRecovery;
 
-I_I2C_Scan::I_I2C_Scan(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recovery) 
+I2C_Scan::I2C_Scan(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recovery) 
 	:_device(recovery)
 {
 	recovery.set_I2C_Talk(i2c);
 }
 
-void I_I2C_Scan::scanFromZero(){
+void I2C_Scan::scanFromZero(){
 	foundDeviceAddr = 0; // address 0 is a call-all, not a specific device
 	totalDevicesFound = 0;
     _error = _OK;
 }
 
-int8_t I_I2C_Scan::nextDevice() { // returns address of next device found or zero
+int8_t I2C_Scan::nextDevice() { // returns address of next device found or zero
 	if (!i2C().isMaster()) return 0;
 	inScan(true);
 	if (foundDeviceAddr <= 0) scanFromZero();

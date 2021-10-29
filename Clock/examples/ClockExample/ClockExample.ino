@@ -17,7 +17,7 @@
 	#include <Clock_I2C.h>
 
 	I2C_Talk rtc(Wire1);
-	I_I2C_Scan scanner{ rtc };
+	I2C_Scan scanner{ rtc };
 
 	EEPROMClass & eeprom() {
 		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1), 0x50) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.

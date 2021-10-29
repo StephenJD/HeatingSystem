@@ -89,9 +89,9 @@ uint32_t I2C_SpeedTest::fastest_T() {
 
 ///////////////////////  SpeedTestAll ///////////////////////////////
 
-class I_I2C_SpeedTestAll : public I_I2C_Scan {
+class I_I2C_SpeedTestAll : public I2C_Scan {
 public:
-	I_I2C_SpeedTestAll(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recover = I_I2C_Scan::nullRecovery);
+	I_I2C_SpeedTestAll(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recover = I2C_Scan::nullRecovery);
 	int8_t prepareTestAll(); // returns addr 0;
 	uint32_t fastest(uint8_t devAddr);
 	uint32_t show_fastest(uint8_t devAddr);
@@ -103,7 +103,7 @@ public:
 	uint8_t error() const { return _speedTester.error(); }
 
 protected:
-	I_I2C_Scan & scanner() { return *this; }
+	I2C_Scan & scanner() { return *this; }
 	I_I2Cdevice_Recovery & scan_device() {return device();}
 private:
 	template<bool non_stop, bool serial_out>

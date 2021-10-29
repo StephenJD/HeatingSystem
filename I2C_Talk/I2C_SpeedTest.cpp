@@ -162,7 +162,7 @@ Error_codes I2C_SpeedTest::adjustSpeedTillItWorksAgain(int32_t incrementRatio) {
 }
 
 I_I2C_SpeedTestAll::I_I2C_SpeedTestAll(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recover) 
-	: I_I2C_Scan(i2c, recover) {}
+	: I2C_Scan(i2c, recover) {}
 
 int8_t I_I2C_SpeedTestAll::prepareTestAll() {
 	_maxSafeSpeed = scanner().i2C().max_i2cFreq();

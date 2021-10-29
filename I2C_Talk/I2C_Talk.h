@@ -26,7 +26,7 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 
 // Degugging options
 //#define DEBUG_TALK
-#define DEBUG_SPEED_TEST
+//#define DEBUG_SPEED_TEST
 //#define DEBUG_RECOVER
 //#define SHOW_TWI_DEBUG
 //#define SHOW_TWI_TIMINGS
@@ -36,7 +36,7 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
 // 24LC256 -> 64 bytes
 #define I2C_EEPROM_PAGESIZE 32
-#define I2C_WRITE_DELAY  5000
+#define I2C_WRITE_DELAY_uS  5000
 
 namespace I2C_Recovery {
 	class I2C_Recover;
@@ -68,7 +68,7 @@ public:
 	auto writeEP(int deviceAddr, int pageAddress, uint8_t data) ->I2C_Talk_ErrorCodes::Error_codes { return writeEP(deviceAddr, pageAddress, 1, &data); } // Writes 32-byte pages. #define I2C_EEPROM_PAGESIZE
 	auto writeEP(int deviceAddr, int pageAddress, int numberBytes, char *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes {return writeEP(deviceAddr, pageAddress, numberBytes, (const uint8_t *)dataBuffer); }
 	
-	auto status(int deviceAddr)->I2C_Talk_ErrorCodes::Error_codes;
+	auto status(int deviceAddr) const ->I2C_Talk_ErrorCodes::Error_codes;
 	
 	void setMax_i2cFreq(int32_t max_I2Cfreq);
 	int32_t max_i2cFreq() {	return _max_i2cFreq; }
@@ -138,22 +138,22 @@ public:
 private:
 	static int8_t TWI_BUFFER_SIZE;
 	friend class I2C_Recovery::I2C_Recover;
-	friend class I_I2C_Scan;
+	friend class I2C_Scan;
 	friend class I_I2C_SpeedTest;
 
-	auto validAddressStatus(int addr)->I2C_Talk_ErrorCodes::Error_codes {
+	auto validAddressStatus(int addr) const ->I2C_Talk_ErrorCodes::Error_codes {
 		if (!isMaster()) return I2C_Talk_ErrorCodes::_slave_shouldnt_write; else return addressOutOfRange(addr);
 	}
 
-	TwoWire & _wire() {
+	TwoWire & _wire() const {
 		if (_wire_port == 0) Serial.println(F("_wire_port == 0"));
 		return *_wire_port;
 	}
 
-	auto beginTransmission(int deviceAddr) ->I2C_Talk_ErrorCodes::Error_codes; // return false to inhibit access
+	auto beginTransmission(int deviceAddr) const ->I2C_Talk_ErrorCodes::Error_codes; // return false to inhibit access
 	auto getData(I2C_Talk_ErrorCodes::Error_codes status, int deviceAddr, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes;
 	uint8_t getTWIbufferSize();
-	auto endTransmission()->I2C_Talk_ErrorCodes::Error_codes;
+	auto endTransmission() const ->I2C_Talk_ErrorCodes::Error_codes;
 
 	virtual void setProcessTime() {}
 	virtual void synchroniseWrite() {}

@@ -73,10 +73,10 @@ I2C_Recovery::I2C_Recover * I_I2Cdevice_Recovery::set_recover;
 
 I2C_Talk & I_I2Cdevice_Recovery::i2C() { return recovery().i2C(); }
 
-Error_codes I_I2Cdevice_Recovery::getStatus() {
+Error_codes I_I2Cdevice_Recovery::getStatus() const {
 	if (!isEnabled()) return _disabledDevice;
 	else {
-		i2C().setI2CFrequency(runSpeed());
+		//i2C().setI2CFrequency(runSpeed());
 		return i2C().status(getAddress());
 	}
 }

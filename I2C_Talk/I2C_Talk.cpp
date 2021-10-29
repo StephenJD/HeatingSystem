@@ -39,6 +39,10 @@ using namespace I2C_Recovery;
 // private global variables //
 static const uint16_t HALF_MAINS_PERIOD = 10000; // in microseconds. 10000 for 50Hz, 8333 for 60Hz
 
+bool hasExpired(uint32_t someTime_uS) {
+	return int32_t(micros() - someTime_uS) >= 0;
+}
+
 int8_t I2C_Talk::TWI_BUFFER_SIZE = 0;
 
 I2C_Talk::I2C_Talk(int multiMaster_MyAddress, TwoWire & wire_port, int32_t max_I2Cfreq) :
@@ -135,6 +139,7 @@ Error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes
 		synchroniseWrite();
 		//logger() << F(" I2C_Talk::write send data..") << L_endl; 
 		returnStatus = endTransmission(); // returns address-send or data-send error
+		if (isMaster()) _lastWrite = micros(); // allow time for other masters to write.
 		setProcessTime();
 	}
 
@@ -275,7 +280,7 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
 	return noReceived;
 }
 
-Error_codes I2C_Talk::status(int deviceAddr) // Returns in slave mode.
+Error_codes I2C_Talk::status(int deviceAddr) const // Returns in slave mode.
 {
 	Error_codes status = beginTransmission(deviceAddr);
 	if (status == _OK) {
@@ -285,10 +290,11 @@ Error_codes I2C_Talk::status(int deviceAddr) // Returns in slave mode.
 }
 
 // Private Functions
-Error_codes I2C_Talk::beginTransmission(int deviceAddr) { // return false to inhibit access
+Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false to inhibit access
 	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) {
-		while ((micros() - _lastWrite) <= I2C_WRITE_DELAY) {
+		if (isMaster()) while (!hasExpired(_lastWrite + 1000));
+		while (!hasExpired(_lastWrite + I2C_WRITE_DELAY_uS)) {
 			_wire().beginTransmission((uint8_t)deviceAddr);
 			// NOTE: this puts it in slave mode. Must re-begin to send more data.
 			status = endTransmission();
@@ -300,7 +306,8 @@ Error_codes I2C_Talk::beginTransmission(int deviceAddr) { // return false to inh
 	return status;
 }
 
-Error_codes I2C_Talk::endTransmission() {
+Error_codes I2C_Talk::endTransmission() const {
+	if (isMaster()) while (!hasExpired(_lastWrite + 1000));
 	auto status = static_cast<I2C_Talk_ErrorCodes::Error_codes>(_wire().endTransmission());
 #ifdef DEBUG_TALK
 	if (status >= _Timeout) {
@@ -338,15 +345,15 @@ void I2C_Talk_ZX::synchroniseWrite() {
 		if (s_zeroCrossPinWatch.port() != 0) { //////////// Zero Cross Detection function ////////////////////////
 			uint32_t zeroCrossSignalTime = micros();
 			//logger() << "Wait for zLow" << L_endl;
-			while (s_zeroCrossPinWatch.logicalState() != false && int32_t(micros() - zeroCrossSignalTime) < HALF_MAINS_PERIOD); // We need non-active state.
+			while (s_zeroCrossPinWatch.logicalState() != false && !hasExpired(zeroCrossSignalTime + HALF_MAINS_PERIOD)); // We need non-active state.
 			zeroCrossSignalTime = micros();
 			//logger() << "Wait for zHigh" << L_endl;
-			while (s_zeroCrossPinWatch.logicalState() != true && int32_t(micros() - zeroCrossSignalTime) < HALF_MAINS_PERIOD); // Now wait for active state.
+			while (s_zeroCrossPinWatch.logicalState() != true && !hasExpired(zeroCrossSignalTime + HALF_MAINS_PERIOD)); // Now wait for active state.
 			zeroCrossSignalTime = micros();
 			int32_t fireDelay = s_zxSigToXdelay - relayDelay;
 			if (fireDelay < 0) fireDelay += HALF_MAINS_PERIOD;
 			//logger() << "Delay for zzz " << fireDelay << L_endl;
-			while (int32_t(micros() - zeroCrossSignalTime) < fireDelay) {
+			while (!hasExpired(zeroCrossSignalTime + fireDelay)) {
 				//logger() << "so far... " << int32_t(micros() - zeroCrossSignalTime) << L_endl; // wait for fireTime.
 			}
 			relayStart = micros(); // time relay delay

@@ -21,7 +21,7 @@ Logger & logger() {
 
 I2C_Talk i2C;
 auto i2c_recover = I2C_Recover{i2C};
-I_I2C_Scan scanner{ i2C };
+I2C_Scan scanner{ i2C };
 ///	<para>speedTest.show_fastest(0x41)
 auto anyTempSensor = TempSensor(i2c_recover);
 

@@ -8,17 +8,18 @@
 /// Usage:
 ///	<para>auto i2C = I2C_Talk{};</para>
 ///	<para>auto scanner = I2C_Scan(i2C);</para>
-///	<para>scanner.show_all()// scan all addresses and print results to serial port</para>
 ///	
+///	<para>scanner.show_all()// scan all addresses and print results to serial port</para>
+///	<para>scanner.show_next()// scan next address and print results to serial port</para>
 ///	or to LCD ...
 ///	<para>scanner.scanFromZero(); // reset to start scanning at 0</para>
 ///	<para>while (scanner.next()){ // return after each device found. Don't output to serial port.</para>
 ///	<para>	lcd->print(scanner.foundDeviceAddr,HEX);</para>
 ///	<para>}</para>
 ///	</summary>
-class I_I2C_Scan {
+class I2C_Scan {
 public:	
-	I_I2C_Scan(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recovery = I_I2C_Scan::nullRecovery);
+	I2C_Scan(I2C_Talk & i2c, I2C_Recovery::I2C_Recover & recovery = I2C_Scan::nullRecovery);
 	void scanFromZero();
 	int8_t next() { return next_T<false, false>(); } // returns next address
 	int8_t show_all() { return next_T<true, true>(); } // returns last address
@@ -50,7 +51,7 @@ private:
 //*************************************************************************************
 // Template Function implementations //
 template<bool non_stop, bool serial_out>
-int8_t I_I2C_Scan::next_T(){
+int8_t I2C_Scan::next_T(){
 	if /*constexpr*/ (non_stop) {
 		scanFromZero();
 		if /*constexpr*/(serial_out) Serial.println("\nScan");
