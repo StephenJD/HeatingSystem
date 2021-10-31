@@ -293,7 +293,7 @@ Error_codes I2C_Talk::status(int deviceAddr) const // Returns in slave mode.
 Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false to inhibit access
 	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) {
-		if (isMaster()) while (!hasExpired(_lastWrite + 1000));
+		if (isMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
 		while (!hasExpired(_lastWrite + I2C_WRITE_DELAY_uS)) {
 			_wire().beginTransmission((uint8_t)deviceAddr);
 			// NOTE: this puts it in slave mode. Must re-begin to send more data.

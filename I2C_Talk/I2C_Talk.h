@@ -36,7 +36,8 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
 // 24LC256 -> 64 bytes
 #define I2C_EEPROM_PAGESIZE 32
-#define I2C_WRITE_DELAY_uS  5000
+constexpr uint32_t I2C_WRITE_DELAY_uS = 5000;
+constexpr uint32_t I2C_MULTI_MASTER_DELAY_uS = 5000;
 
 namespace I2C_Recovery {
 	class I2C_Recover;

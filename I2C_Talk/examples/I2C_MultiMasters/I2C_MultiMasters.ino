@@ -87,7 +87,7 @@ void findOtherMasters() {
 	myMasterIndex = 0;
 	noOfMasters = 0;
 	while (scanner.show_next()) {
-		//reset_watchdog();
+		reset_watchdog();
 		badMessageCount = 1;
 		flashLED();
 		if (scanner.foundDeviceAddr < myMasterAddress) ++myMasterIndex;
@@ -96,6 +96,8 @@ void findOtherMasters() {
 			masterIndexPasssed = true;
 		}
 		masters[noOfMasters].setAddress(scanner.foundDeviceAddr);
+//logger() << F("\nMaster at: 0x") << L_hex << masters[noOfMasters].getAddress() << L_endl;
+//delay(1000);
 		++noOfMasters;
 	}
 	masters[myMasterIndex].setAddress(myMasterAddress);
@@ -111,9 +113,11 @@ void findOtherMasters() {
 
 void setup() {
 	Serial.begin(SERIAL_RATE);
-	disable_watchdog();
+	set_watchdog_timeout_mS(16000); // max 16S
+	//disable_watchdog();
 	logger().begin(SERIAL_RATE);
 	logger() << F("Setup Started") << L_endl;
+delay(1000);
 	setI2CAddress(i2C);
 	i2C.setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 20000);
 	i2C.setMax_i2cFreq(100000);
@@ -123,7 +127,7 @@ void setup() {
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, LOW);
 	findOtherMasters();
-	set_watchdog_timeout_mS(16000); // max 16S
+	//set_watchdog_timeout_mS(16000); // max 16S
 	logger() << F("\nSetup Done") << L_flush;
 }
 
@@ -263,10 +267,12 @@ void loop() {
 	*	Else slow-flash the LED.
 	*/
 	reset_watchdog();
-	if (!mastersForwardingOK) sendCheckMastersMessage();
+	//if (!mastersForwardingOK) sendCheckMastersMessage();
 	bool foundAMessage = retrieveMessages();
 	if (myMasterIndex == 0 && !foundAMessage) {
 		initiateMessage(1);
 	}
 	flashLED();
+	//delay(1000);
+	//Serial.println(millis() / 1000);
 }

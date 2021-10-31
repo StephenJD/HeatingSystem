@@ -18,8 +18,10 @@ public:
 	virtual auto initialiseDevice()-> I2C_Talk_ErrorCodes::Error_codes {return I2C_Talk_ErrorCodes::_OK; }
 	virtual auto testDevice()-> I2C_Talk_ErrorCodes::Error_codes {
 		// NOTE: derived implementations should call base-class write/read functions to avoid recovery strategies being applied during tests.
-		//Serial.print(" I_I2Cdevice.testDevice at: 0x"); Serial.println(getAddress(), HEX);
-		return i2C().status(getAddress()); 
+		//Serial.print(" I_I2Cdevice.testDevice_read at: 0x"); Serial.println(getAddress(), HEX);
+		uint8_t readBuffer;
+		return I_I2Cdevice::read(0, 1, &readBuffer);
+		//return i2C().status(getAddress()); 
 	}
 	virtual int32_t set_runSpeed(int32_t i2cFreq) { return i2C().setI2CFrequency(i2cFreq); }
 	virtual void disable() {};

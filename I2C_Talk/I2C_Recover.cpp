@@ -3,8 +3,8 @@
 #include <I2C_Device.h>
 #include <I2C_Talk_ErrorCodes.h>
 
-//#define DEBUG_SPEED_TEST
-#ifdef DEBUG_SPEED_TEST
+//#define DEBUG_TEST_DEVICE
+#if defined DEBUG_SPEED_TEST || defined DEBUG_TEST_DEVICE
 #include <Logging.h>
 using namespace arduino_logger;
 #endif
@@ -21,24 +21,23 @@ namespace I2C_Recovery {
 
 	Error_codes I2C_Recover::testDevice(int noOfTests, int allowableFailures) {
 		auto status = _OK;
-#ifdef DEBUG_SPEED_TEST
+#ifdef DEBUG_TEST_DEVICE
 		logger() << F("Test device 0x") << L_hex << device().getAddress() << L_endl;
 #endif
 		do {
 			status = device().testDevice(); // called on I_I2Cdevice_Recovery device from I2C_Device.h. 
 			// Calls non-recovering device-defined testDevice().
-
-			if (status != _OK) --allowableFailures;
-#ifdef DEBUG_SPEED_TEST
+#ifdef DEBUG_TEST_DEVICE
 			logger() << F("testDevice Tests/Failures ") << noOfTests << F("/") << allowableFailures << I2C_Talk::getStatusMsg(status) << L_endl;
 #endif
+			if (status != _OK) --allowableFailures;
 			--noOfTests;
 		} while (allowableFailures >= 0 && noOfTests > allowableFailures);
 		return status;
 	}
 
 	Error_codes I2C_Recover::findAworkingSpeed() {
-		constexpr int NO_OF_TESTS = 4;
+		constexpr int NO_OF_TESTS = 6;
 		if (device().getStatus() == _disabledDevice) return _disabledDevice;
 		auto addr = device().getAddress();
 		// Must test MAX_I2C_FREQ as this is skipped in later tests
@@ -46,7 +45,7 @@ namespace I2C_Recovery {
 		i2C().setI2CFrequency(i2C().max_i2cFreq());
 		auto testResult = i2C().status(addr);
 #ifdef DEBUG_SPEED_TEST
-		logger() << F("findAworkingSpeed 0x") << L_hex << addr << F(" Exists ? At : ") << L_dec << i2C().getI2CFrequency() << I2C_Talk::getStatusMsg(testResult) << L_endl;
+		logger() << F("\nfindAworkingSpeed 0x") << L_hex << addr << F(" Exists ? At : ") << L_dec << i2C().getI2CFrequency() << I2C_Talk::getStatusMsg(testResult) << L_endl;
 #endif
 		bool marginTimeout = false;
 		if (testResult == _OK) {
