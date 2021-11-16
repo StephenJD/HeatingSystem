@@ -29,9 +29,10 @@ namespace RelationalDatabase {
 			}
 		}
 
-		void reset(size_t password, uint16_t dbMaxAddr) override {
-			RDB_B::reset(password, dbMaxAddr);
+		bool reset_OK(size_t password, uint16_t dbMaxAddr) override {
+			auto status = RDB_B::reset_OK(password, dbMaxAddr);
 			for (auto & table : tables) table = Table{};
+			return status;
 		}
 
 		template <typename Record_T>

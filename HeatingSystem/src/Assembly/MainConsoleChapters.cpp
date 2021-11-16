@@ -53,7 +53,7 @@ namespace Assembly {
 		, _mixValveStateUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_state, {V + V1} }
 		
 		, _consoleNameUI_c{ &db._ds_consoles, RecInt_Console::e_name, {V + V1 + L} }
-		, _consoleEnabledUI_c{ &db._ds_consoles, RecInt_Console::e_keypad_enabled, {V + S + VnLR + UD_S} }
+		, _consoleEnabledUI_c{ &db._ds_consoles, RecInt_Console::e_console_options, {V + S + VnLR + UD_S} }
 
 		// Basic UI Elements
 		, _newLine{ "`" }
@@ -78,7 +78,7 @@ namespace Assembly {
 		, _towelRailsLbl { "Room Temp OnFor ToGo" }
 		, _mixValveLbl   { "MixV  Pos Is Req St" }
 		, _autoSettingLbl{ "Aut Rat Tc  Del Qy" }
-		, _consoleLbl{"Console  KBd-Enabled"}
+		, _consoleLbl{"Console  Options"}
 
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection( _contrastCmd, _backlightCmd, _currTimeUI_c, _currDateUI_c, _dst, _dstUI_c, _SDCardUI_c) }

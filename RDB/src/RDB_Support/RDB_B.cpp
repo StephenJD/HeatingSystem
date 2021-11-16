@@ -12,7 +12,7 @@ namespace RelationalDatabase {
 		_dbEndAddr(dbStartAddr + DB_HeaderSize),
 		_dbMaxAddr(dbMaxAddr)
 	{
-		savePW(password);
+		savePW_OK(password);
 		setDB_Header();
 		logger() << F("Construct RDB_B. Create new") << L_endl;
 	}
@@ -31,15 +31,16 @@ namespace RelationalDatabase {
 		}
 	}
 
-	void RDB_B::reset(size_t password, uint16_t dbMaxAddr) {
-		savePW(password);
+	bool RDB_B::reset_OK(size_t password, uint16_t dbMaxAddr) {
+		auto status = savePW_OK(password);
 		_dbEndAddr = _dbStartAddr + DB_HeaderSize;
 		_dbMaxAddr = dbMaxAddr;
 		setDB_Header();
+		return status;
 	}
 
-	void RDB_B::savePW(size_t password) {
-		_writeByte(_dbStartAddr, &password, SIZE_OF_PASSWORD);
+	bool RDB_B::savePW_OK(size_t password) {
+		return _writeByte(_dbStartAddr, &password, SIZE_OF_PASSWORD) >= 0;
 	}
 
 	bool RDB_B::checkPW(size_t password) const {
@@ -83,6 +84,10 @@ namespace RelationalDatabase {
 			th.insertionStrategy(strategy);
 			th.validRecords(unvacantRecords(initialNoOfRecords));	// set all bits to "Used"
 			addr = _writeByte(addr, &th, Table::HeaderSize);
+			if (addr < 0) {
+				logger() << F("RDB_B::createTable() Failed to write") << L_endl;
+				return { *this, 0, th };
+			}
 			for (int i = 0; i < extraValidRecordBytes; ++i) {
 				// unset bits up to initialNoOfRecords
 				initialNoOfRecords = initialNoOfRecords - (sizeof(ValidRecord_t) << 3);
@@ -91,7 +96,6 @@ namespace RelationalDatabase {
 			}
 			_dbEndAddr += table_size;
 			updateDB_Header();
-			logger() << F("RDB_B::createTable() New DB_Size: ") << _dbEndAddr << L_endl;
 			//logger() << F("RDB_B::createTable() ExtraVR's: ") << extraValidRecordBytes << L_endl;
 			//logger() << F("RDB_B::createTable() IsFinalChunk: ") << th.isFinalChunk() << L_endl;
 			//logger() << F("RDB_B::createTable() NextChunk(not valid if final): ") << th.nextChunk() << L_endl;

@@ -80,7 +80,7 @@ namespace arduino_logger {
 		//static Serial_Logger _log(SERIAL_RATE);
 		//static RAM_Logger _log("R", ramFileSize, true, clock_());
 		//static EEPROM_Logger _log("E", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
-		static SD_Logger _log("E", SERIAL_RATE, clock_());
+		static SD_Logger _log("E", SERIAL_RATE, clock_(), L_allwaysFlush);
 		return _log;
 	}
 
@@ -162,6 +162,7 @@ void setup() {
 	logger() << F("Construct HeatingSystem") << L_endl;
 	HeatingSystem hs{};
 	heating_system = &hs;
+	logger() << L_time << F("set_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
 	set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
 	while (true) {
 		//Serial.println("Loop");

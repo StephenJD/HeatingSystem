@@ -31,6 +31,23 @@ namespace LCD_UI {
 	};
 
 	/// <summary>
+	/// This Object derivative wraps integer data with string-labels.
+	/// It is constructed with the value and a ValRange formatting object.
+	/// It provides streaming and editing by delegation to a file-static Options_Interface object via ui().
+	/// </summary>
+	class OptionsWrapper : public I_Data_Formatter {
+	public:
+		OptionsWrapper() = default;
+		OptionsWrapper(int32_t val, ValRange valRangeArg, const char** options) : I_Data_Formatter(val, valRangeArg), _options(options) {}
+		OptionsWrapper& operator= (const I_Data_Formatter & wrapper) { I_Data_Formatter::operator=(wrapper); return *this; }
+
+		I_Streaming_Tool& ui() override;
+		const char* option(int i) const { return _options[i]; }
+	private:
+		const char** _options;
+	};
+
+	/// <summary>
 	/// This Object derivative wraps fixed-point Integer values displayed as decimals.
 	/// It is constructed with the value and a ValRange formatting object.
 	/// It provides streaming and editing by delegation to a file-static Decimal_Interface object via ui().
@@ -164,6 +181,25 @@ namespace LCD_UI {
 #endif
 		using I_Streaming_Tool::editItem;
 		void haveMovedTo(int currFocus) override;
+
+		const char * streamData(bool isActiveElement) const override;
+		I_Edit_Hndl & editItem() override { return _editItem; }
+	protected:
+		Edit_Int_h _editItem;
+	};	
+	
+	/// <summary>
+	/// This LazyCollection derivative is the UI for Options
+	/// Base-class setWrapper() points the object to the wrapped value.
+	/// It behaves like a UI_Object when not in edit and like a LazyCollection of field-characters when in edit.
+	/// It provides streaming and delegates editing of the underlying integer.
+	/// </summary>
+	class Option_Interface : public I_Streaming_Tool { // Shared stateless UI interface
+	public:
+#ifdef ZPSIM
+		Option_Interface() { ui_Objects()[(long)this] = "Option_Interfacet_Interface"; }
+#endif
+		using I_Streaming_Tool::editItem;
 
 		const char * streamData(bool isActiveElement) const override;
 		I_Edit_Hndl & editItem() override { return _editItem; }

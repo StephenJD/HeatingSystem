@@ -9,8 +9,6 @@
 using namespace arduino_logger;
 #endif
 
-//void ui_yield();
-
 namespace I2C_Recovery {
 
 	using namespace I2C_Talk_ErrorCodes;
@@ -79,7 +77,6 @@ namespace I2C_Recovery {
 #endif
 				}
 				i2C().setStopMargin(I2C_Talk::WORKING_STOP_TIMEOUT);
-				//ui_yield();
 				i2C().setStopMargin(originalMargin);
 			}
 #ifdef DEBUG_TRY_ALL_SPEEDS

@@ -17,6 +17,8 @@ namespace HardwareInterfaces {
 		, _lcd_UI(lcd_display)
 		, _chapterGenerator(chapterGenerator) {}
 
+	int Console::consoleMode() const { return _keyPad.consoleOption(); }
+
 	bool Console::processKeys() {
 		bool doRefresh;
 		//unsigned long keyProcessStart;

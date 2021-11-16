@@ -24,7 +24,7 @@ namespace HardwareInterfaces {
 		{
 			_recover->setTimeoutFn(this);
 			_recover->i2C().begin();
-			_recover->i2C().setTimeouts(15000, I2C_Talk::WORKING_STOP_TIMEOUT, 5000); // give generous stop-timeout in normal use 
+			_recover->i2C().setTimeouts(15000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000); // give generous stop-timeout in normal use 
 		}
 
 	Error_codes ResetI2C::operator()(I2C_Talk & i2c, int addr) {

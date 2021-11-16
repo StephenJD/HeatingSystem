@@ -20,6 +20,7 @@ using namespace arduino_logger;
 //extern Remote_display * hall_display;
 //extern Remote_display * flat_display;
 //extern Remote_display * us_display;
+void ui_yield();
 
 namespace HeatingSystemSupport {
 	// Due has 96kB RAM
@@ -37,9 +38,10 @@ namespace HeatingSystemSupport {
 		//if (address == 495) {
 		//	auto debug = false;
 		//}
+		uint8_t status = 0;
 		if (address < RDB_START_ADDR || address + noOfBytes > RDB_START_ADDR + RDB_MAX_SIZE) {
 			logger() << F("Illegal RDB write address: ") << int(address) << L_endl;
-			return address;
+			return -1;
 		}
 		const unsigned char * byteData = static_cast<const unsigned char *>(data);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
@@ -47,15 +49,15 @@ namespace HeatingSystemSupport {
 			virtualProm[address] = *byteData;
 			//logger() << F("RDB write address: ") << int(address) << " Data: " << (noOfBytes - address > 10 ? (char)*byteData : (int)virtualProm[address]) << L_endl;
 #endif
-			eeprom().update(address, *byteData);
+			status |= eeprom().update(address, *byteData);
 		}
-		return address;
+		return status ? -1 : address;
 	}
 
 	int reader(int address, void * result, int noOfBytes) {
 		if (address < RDB_START_ADDR || address + noOfBytes > RDB_START_ADDR + RDB_MAX_SIZE) {
 			logger() << F("Illegal RDB read address: ") << int(address) << L_endl;
-			return address;
+			return -1;
 		}		
 		uint8_t * byteData = static_cast<uint8_t *>(result);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
@@ -97,7 +99,7 @@ HeatingSystem::HeatingSystem()
 	, _remoteLCDConsole{ {remoteKeypadArr[0], remDispl[0], _remoteConsoleChapters},{remoteKeypadArr[1], remDispl[1], _remoteConsoleChapters},{remoteKeypadArr[2], remDispl[2], _remoteConsoleChapters} }
 	, remOLED_ConsoleArr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
 	, temporary_remoteTSArr{ {_recover, 0x36}, {_recover, 0x74}, {_recover, 0x70} }
-{
+	{
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
 		localKeypad.begin();
@@ -113,7 +115,7 @@ HeatingSystem::HeatingSystem()
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
 	if (_mainConsoleChapters.chapter() == 0) {
 		if (_tempController.checkAndAdjust()) {
-			if constexpr (!ALL_OLD_REMOTES) {
+			if (ENABLE_OLED_REMOTES) {
 				for (auto& remote : remOLED_ConsoleArr) {
 					if (remote.getAddress() != 0x13) continue;
 					remote.refreshRegisters();
@@ -124,22 +126,24 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 }
 
 void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
-	//if (I2C_Slave::data >= 0) logger() << " Got slave key: " << I2C_Slave::data << L_endl;
-	//remoteKeypadArr[D_Hall].putKey(I2C_Slave::getKey());
 	//Serial.println("HS.serviceConsoles");
+	ui_yield();
 	if (_mainConsole.processKeys()) _mainConsole.refreshDisplay();
 	auto zoneIndex = 0;
 	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
 	for (auto & remote : _remoteLCDConsole) {
-		if (OLED_DS && zoneIndex == Z_DownStairs) { ++zoneIndex; continue; }
+		auto console_mode = remote.consoleMode();
+		if (console_mode < 2) { ++zoneIndex; continue; }
 		auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_ROOM_TEMP) + (OLED_Master_Display::R_DISPL_REG_SIZE * zoneIndex);
 		temporary_remoteTSArr[zoneIndex].readTemperature();
 		auto roomTemp = temporary_remoteTSArr[zoneIndex].get_fractional_temp();
 		_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
 		_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
-		if (OLED_DS && zoneIndex != Z_Flat) { ++zoneIndex; continue; }
 		activeField->setFocusIndex(zoneIndex);
-		if (remote.processKeys()) remote.refreshDisplay();
+
+		if (remote.processKeys()) {
+			remote.refreshDisplay();
+		}
 		++zoneIndex;
 	}
 }
@@ -150,6 +154,9 @@ void HeatingSystem::updateChangedData() {
 		_tempController.checkZones(true);
 		dataHasChanged = false;
 	}
+#if defined ZPSIM
+	else logger() << L_time << F("No ChangedData\n");
+#endif
 }
 
 RelationalDatabase::RDB<Assembly::TB_NoOfTables> & HeatingSystem::getDB() { return db; }

@@ -28,7 +28,6 @@ namespace Assembly {
 		HardwareInterfaces::ResetI2C _resetI2C;
 		HardwareInterfaces::RelaysPort & relayPort() { return static_cast<HardwareInterfaces::RelaysPort &>(HardwareInterfaces::relayController()); }
 	private:
-		uint8_t temporary_initialiseTempSensors(); // return 0 for OK
 		uint8_t temporary_initialiseRemoteDisplays(); // return 0 for OK
 		//uint8_t initialiseMixValveController(); // return 0 for OK
 

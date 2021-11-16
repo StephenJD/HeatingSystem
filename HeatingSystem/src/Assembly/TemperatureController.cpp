@@ -117,7 +117,7 @@ namespace Assembly {
 		//logger() << L_time << "Check TS's" << L_endl;
 		for (auto & ts : tempSensorArr) {
 			ts.readTemperature();
-			//logger() << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
+			//logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
 		}
 
@@ -128,6 +128,7 @@ namespace Assembly {
 		}
 
 		for (auto & mixValveControl : mixValveControllerArr) {
+			//logger() << L_time << "Check mixValveControl" << L_endl;
 			mixValveControl.check();
 			if (newMinute && checkPreHeat) mixValveControl.logMixValveOperation(true);
 			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 

@@ -77,14 +77,14 @@ namespace HardwareInterfaces {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
-		if (showSpeedTestFailed(0, hs().remOLED_ConsoleArr[D_Hall], "DS OLED")) {
+		if (OLED_DS && showSpeedTestFailed(0, hs().remOLED_ConsoleArr[D_Hall], "DS OLED")) {
 			returnVal = ERR_I2C_READ_FAILED;
 		}
 
-		// 	
-		// if (showSpeedTestFailed(0,hs().remDispl[D_Hall], "DS Rem")) {
-		//	returnVal = ERR_I2C_READ_FAILED;
-		//}		
+		 	
+		if (!OLED_DS && showSpeedTestFailed(0,hs().remDispl[D_Hall], "DS Rem")) {
+			returnVal = ERR_I2C_READ_FAILED;
+		}		
 		
 		if (showSpeedTestFailed(0,hs().remDispl[D_Flat], "FL Rem")) {
 			returnVal = ERR_I2C_READ_FAILED;

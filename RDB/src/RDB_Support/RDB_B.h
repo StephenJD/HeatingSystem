@@ -50,7 +50,7 @@ namespace RelationalDatabase {
 		bool passwordOK() const { return _dbEndAddr != 0; }
 
 		// Modifiers
-		virtual void reset(size_t password, uint16_t dbMaxAddr);
+		virtual bool reset_OK(size_t password, uint16_t dbMaxAddr);
 		int getTables(Table * table, int maxNoOfTables);
 		int moveRecords(int fromAddress, int toAddress, int noOfBytes);
 
@@ -68,7 +68,7 @@ namespace RelationalDatabase {
 		void setDB_Header();
 		void updateDB_Header() { _writeByte(_dbStartAddr+ SIZE_OF_PASSWORD, &_dbEndAddr, sizeof(DB_Size_t)); }
 		void loadDB_Header();
-		void savePW(size_t password);
+		bool savePW_OK(size_t password);
 
 		// Data
 		WriteByte_Handler *_writeByte = 0;

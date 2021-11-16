@@ -1,7 +1,10 @@
+// This is the Multi-Master Arduino Mini Controller
+
 //#include <MemoryFree.h>
 #include <Mix_Valve.h>
 #include <I2C_Talk.h>
 #include <I2C_Registers.h>
+#include <I2C_Device.h>
 //#include <I2C_Recover.h>
 #include <I2C_RecoverRetest.h>
 #include <TempSensor.h>
@@ -39,6 +42,7 @@
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
+
 constexpr uint32_t SERIAL_RATE = 115200;
 constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
 constexpr auto MV_REQUESTING_INI = 1;
@@ -73,8 +77,9 @@ I2C_Talk& i2C() {
   return _i2C;
 }
 
-//I2C_Recover_Retest i2c_recover(i2C());
-I2C_Recover i2c_recover(i2C());
+I2C_Recover_Retest i2c_recover(i2C());
+//I2C_Recover i2c_recover(i2C());
+I_I2Cdevice_Recovery programmer = {i2c_recover, PROGRAMMER_I2C_ADDR };
 
 void roleChanged(Role newRole);
 Role getRole();
@@ -110,7 +115,7 @@ void setup() {
 	psu_enable.begin(true);
 
 	i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
-	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT);
+	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	i2C().setMax_i2cFreq(100000);
 	i2C().onReceive(mixV_register_set.receiveI2C);
 	i2C().onRequest(mixV_register_set.requestI2C);
@@ -127,12 +132,12 @@ void setup() {
 
 	role = e_Slave;
 	roleChanged(e_Master);
-	mixValve[0].begin(55);
+	mixValve[0].begin(55); // does speed-test
 	mixValve[1].begin(55);
 	logger() << F("Setup complete") << L_flush;
-	//auto speedTest = I2C_SpeedTest{ programmer };
-	//speedTest.fastest();
-
+	auto speedTest = I2C_SpeedTest{ programmer };
+	speedTest.fastest();
+	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	delay(500);
 	//psu_enable.clear();
 }

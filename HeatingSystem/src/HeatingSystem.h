@@ -25,8 +25,9 @@
 //    Single Responsibility is to connect the parts     //
 //////////////////////////////////////////////////////////
 
-constexpr bool OLED_DS = true;
-constexpr bool ALL_OLD_REMOTES = true;
+constexpr bool OLED_DS = false;
+constexpr bool ENABLE_LCD_REMOTES = true;
+constexpr bool ENABLE_OLED_REMOTES = false;
 
 namespace HeatingSystemSupport {
 	void initialise_virtualROM();
@@ -65,7 +66,7 @@ private: // data-member ordering matters!
 	Assembly::TemperatureController _tempController;
 public:	
 	// Temporary Remote TS
-	HardwareInterfaces::UI_TempSensor temporary_remoteTSArr[3];
+	HardwareInterfaces::UI_TempSensor temporary_remoteTSArr[Assembly::NO_OF_REMOTE_DISPLAYS];
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;

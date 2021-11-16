@@ -41,14 +41,19 @@ namespace client_data_structures {
 	/// </summary>
 	class RecInt_Console : public Record_Interface<R_Display> {
 	public:
-		enum streamable { e_name, e_keypad_enabled	};
+		enum streamable { e_name, e_console_options	};
 		RecInt_Console(HardwareInterfaces::RemoteKeypad* remoteKeypadArr);
 		I_Data_Formatter* getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter* val) override;
 	private:
+		static const char OLD_D[7];
+		static const char _OLD_DK[7];
+		static const char _LCD_D[7];
+		static const char _LCD_DK[7];
+		static const char* _options[4];
 		HardwareInterfaces::RemoteKeypad* _remoteKeypadArr;
 		StrWrapper _name;
-		IntWrapper _keypad_enabled;
+		OptionsWrapper _console_options;
 	};
 }
 

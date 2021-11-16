@@ -10,8 +10,6 @@
 #include "MixValveController.h"
 #include <Clock.h>
 
-void ui_yield();
-
 namespace arduino_logger {
 	Logger& zTempLogger();
 	Logger& profileLogger();

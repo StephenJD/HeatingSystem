@@ -12,6 +12,7 @@ namespace HardwareInterfaces {
 	{
 	public:
 		Console(I_Keypad & keyPad, LCD_Display & lcd_display, LCD_UI::Chapter_Generator & chapterGenerator);
+		int consoleMode() const;
 		bool processKeys();
 		void refreshDisplay();
 	private:

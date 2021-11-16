@@ -442,8 +442,9 @@ size_t MultiCrystal::print(char chr) {
 }
 
 size_t MultiCrystal::print(const char buffer[] ) {
+	const auto buffLen = strlen(buffer);
 #ifdef ZPSIM
-	for (size_t i = 0; i < strlen(buffer); i++) {
+	for (size_t i = 0; i < buffLen; i++) {
 		lcd_Arr[lcdPos] = buffer[i];
 		write(buffer[i]);
 		nextCol();
@@ -452,7 +453,7 @@ size_t MultiCrystal::print(const char buffer[] ) {
 #endif
 	//logger() << F("MultiCrystal::print ") << buffer << L_endl;
 	auto noOfChars = 0; 
-	auto endChar = buffer + strlen(buffer);
+	auto endChar = buffer + buffLen;
 	for (auto nextChar = buffer; nextChar < endChar; ++nextChar) {
 		if (print(*nextChar) == 0) {
 			logger() << L_time << "MultiCrystal Print error." << L_endl;
@@ -542,7 +543,6 @@ inline size_t MultiCrystal::write(uint8_t value) { // 0 = error, 1 = success
 // write either command or data, with automatic 4/8-bit selection
 uint8_t MultiCrystal::send(uint8_t value, uint8_t mode) { // 0 = success
 	uint8_t error = 0;
-
 	if (_i2C_device == 0 ) {
 		digitalWrite(_rs_pin, mode);
 		//logger() << F(" MultiCrystal::send RS: ") << mode << L_endl;

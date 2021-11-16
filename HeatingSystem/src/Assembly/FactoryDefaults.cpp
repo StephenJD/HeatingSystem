@@ -37,10 +37,10 @@ namespace Assembly {
 	};
 
 	constexpr R_Display displays_f[] = {
-		{"Main", 0, 16, 20, 16, 250, 70, 30}
-		,{"US", US_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 1}
-		,{"DS", DS_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 1}
-		,{"Flat", FL_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 1}
+		{"Main", 0, 16, 20, 16, 250, 70, 3}
+		,{"US", US_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 3}
+		,{"DS", DS_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 3}
+		,{"Flat", FL_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 3}
 	};
 
 	constexpr R_Relay relays_f[] = {
@@ -191,37 +191,38 @@ namespace Assembly {
 
 	void setFactoryDefaults(RDB<TB_NoOfTables> & db, size_t password) {
 		//enum tableIndex { TB_ThermalStore, TB_MixValveContr, TB_Display, TB_Relay, TB_TempSensor, TB_TowelRail, TB_Dwelling, TB_Zone, TB_DwellingZone, TB_Program, TB_Profile, TB_TimeTemp, TB_Spell, TB_NoOfTables };
-		db.reset(password, RDB_MAX_SIZE);
-		logger() << L_time << F("setFactoryDefaults Started...\n");
-		logger() << F("ThermalStore Table\n");
-		db.createTable(thermalStore_f);
-		logger() << F("\nMixValveContr Table\n");
-		db.createTable(mixValveControl_f);
-		logger() << F("\nDisplay Table\n");
-		db.createTable(displays_f);
-		logger() << F("\nRelays Table\n");
-		db.createTable(relays_f);
-		logger() << F("\nTempSensors Table\n");
-		db.createTable(tempSensors_f);
-		logger() << F("\nTowelRails Table\n");
-		db.createTable(towelRails_f);
-		logger() << F("\nDwellings Table\n");
-		db.createTable(dwellings_f);
-		logger() << F("\nZones Table\n");
-		db.createTable(zones_f);
-		logger() << F("\nDwellingZones Table\n");
-		db.createTable(dwellingZones_f);
-		logger() << F("\nPrograms Table\n");
-		db.createTable(programs_f);
-		logger() << F("\nProfiles Table\n");
-		db.createTable(profiles_f);
-		logger() << F("\nTimeTemps Table\n");
-		db.createTable(timeTemps_f, i_09_orderedInsert);
-		logger() << F("\nSpells Table\n");
-		db.createTable(spells_f, i_09_orderedInsert);
-		logger() << F("\nAll Tables Created\n");
+		if (db.reset_OK(password, RDB_MAX_SIZE)) {
+			logger() << L_time << F("setFactoryDefaults Started...\n");
+			logger() << F("ThermalStore Table\n");
+			db.createTable(thermalStore_f);
+			logger() << F("\nMixValveContr Table\n");
+			db.createTable(mixValveControl_f);
+			logger() << F("\nDisplay Table\n");
+			db.createTable(displays_f);
+			logger() << F("\nRelays Table\n");
+			db.createTable(relays_f);
+			logger() << F("\nTempSensors Table\n");
+			db.createTable(tempSensors_f);
+			logger() << F("\nTowelRails Table\n");
+			db.createTable(towelRails_f);
+			logger() << F("\nDwellings Table\n");
+			db.createTable(dwellings_f);
+			logger() << F("\nZones Table\n");
+			db.createTable(zones_f);
+			logger() << F("\nDwellingZones Table\n");
+			db.createTable(dwellingZones_f);
+			logger() << F("\nPrograms Table\n");
+			db.createTable(programs_f);
+			logger() << F("\nProfiles Table\n");
+			db.createTable(profiles_f);
+			logger() << F("\nTimeTemps Table\n");
+			db.createTable(timeTemps_f, i_09_orderedInsert);
+			logger() << F("\nSpells Table\n");
+			db.createTable(spells_f, i_09_orderedInsert);
+			logger() << F("\nAll Tables Created\n");
 
-		logger() << F("\nsetFactoryDefaults Completed") << L_endl;
+			logger() << F("\nsetFactoryDefaults Completed") << L_endl;
+		}
 	}
 	
 }

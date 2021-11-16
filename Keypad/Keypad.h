@@ -21,6 +21,7 @@ namespace HardwareInterfaces {
 		// Queries
 		bool displayIsAwake() const { return _secsToKeepAwake > 0; }
 		bool keyIsWaiting() const { return keyQueEnd > -1; }
+		int consoleOption() const { return _wakeTime > 3 ? 3 : _wakeTime; }
 
 		// Modifiers
 		virtual void startRead(); // for interrupt driven keypads
@@ -28,7 +29,7 @@ namespace HardwareInterfaces {
 		KeyOperation popKey();
 		virtual KeyOperation getKeyCode() = 0;
 		bool oneSecondElapsed();
-		void wakeDisplay() { _secsToKeepAwake = _wakeTime; }
+		void wakeDisplay() { _secsToKeepAwake = _wakeTime > 2 ? _wakeTime : 0; }
 		void clearKeys() { keyQueEnd = -1; }
 		void putKey(KeyOperation myKey);
 		void setWakeTime(uint8_t wakeTime) { _wakeTime = wakeTime; }
@@ -47,10 +48,10 @@ namespace HardwareInterfaces {
 		static KeyOperation _prevKey;
 		static uint8_t _readAgain;
 
-		int8_t	_secsToKeepAwake = 10;
+		int8_t	_secsToKeepAwake = 30;
 		uint8_t	_lastSecond = 0;
 		Timer_mS _timeToRead;
-		uint8_t _wakeTime = 30;
+		uint8_t _wakeTime = 30; // 0:OLED-Display, 1:OLED_Display/KBd, 2:LCD-Display, >=3:LCD-Display/KBd
 	};
 }
 

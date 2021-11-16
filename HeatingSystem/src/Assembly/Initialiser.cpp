@@ -71,55 +71,36 @@ namespace Assembly {
 
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		_resetI2C.hardReset.initialisationRequired = false;
-		uint8_t status =  temporary_initialiseTempSensors()
-			| relayPort().initialiseDevice()
-			| temporary_initialiseRemoteDisplays()
-			/* | initialiseMixValveController() */ ;
+		uint8_t status = relayPort().initialiseDevice();
+		temporary_initialiseRemoteDisplays(); // Non-critical
 		for (auto& mixValve : hs().tempController().mixValveControllerArr) { 
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
-			mixValve.sendSlaveIniData(requestINI_flag); 
+			status |= mixValve.sendSlaveIniData(requestINI_flag);
 		}
-		if (status != _OK) logger() << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
-		else logger() << F("  Initialiser::postI2CResetInitialisation OK\n");
+		if (status != _OK) logger() << L_time << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
+		else logger() << L_time << F("  Initialiser::postI2CResetInitialisation OK\n");
 		return status;
-	}
-
-	uint8_t Initialiser::temporary_initialiseTempSensors() {
-		// Set room-sensors to high-res
-		logger() << F("\nSet room-sensors to high-res") << L_endl;
-		return	_hs.temporary_remoteTSArr[0].setHighRes()
-			//| _hs.temporary_remoteTSArr[1].setHighRes()
-			| _hs.temporary_remoteTSArr[2].setHighRes();
 	}
 
 	uint8_t Initialiser::temporary_initialiseRemoteDisplays() {
 		uint8_t failed = 0;
 		logger() << L_time << F("temporary_initialiseRemoteDisplays()") << L_endl;
-		for (auto & rd : _hs.remDispl) {
-			if (rd.getAddress() != 0x25) continue;
-			failed |= rd.initialiseDevice();
-		}
-
-		auto index = 1;
+		auto index = 0;
 		for (auto& kb : _hs.remoteKeypadArr) {
-			if (index != 3) { ++index; continue; }
-			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index];
+			auto console_mode = kb.consoleOption();
+			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index+1];
+			kb.setWakeTime(display.rec().timeout);
 			kb.popKey();
 			kb.clearKeys();
-			kb.setWakeTime(display.rec().timeout);
+			if (console_mode < 2) { ++index; continue; }
+			failed |= _hs.remDispl[index].initialiseDevice();
+			failed |= _hs.temporary_remoteTSArr[index].setHighRes();
 			++index;
-		}
+		}		
+		
 		logger() << F("\tinitialiseRemoteDisplays() done") << L_endl;
 		return failed;
 	}
-
-	//uint8_t Initialiser::initialiseMixValveController() {
-	//	logger() << F("\nSend Req Temp") << L_endl;
-	//	_hs.tempController().mixValveControllerArr[M_DownStrs].sendRequestFlowTemp();
-	//	_hs.tempController().mixValveControllerArr[M_UpStrs].sendRequestFlowTemp();
-	//	return _OK;
-	//}
-
 
 	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {
 		if (deviceAddr == IO8_PORT_OptCoupl) return relayPort();

@@ -1,4 +1,4 @@
-// This is the Arduino Mini Controller
+// This is the Multi-Master Arduino Mini Controller
 
 #include <Mix_Valve.h>
 #include <TempSensor.h>
@@ -23,7 +23,6 @@ extern const uint8_t version_month;
 extern const uint8_t version_day;
 
 extern i2c_registers::I_Registers& mixV_registers;
-const uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 
@@ -122,13 +121,15 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp() { // Called once every second.
 	auto sensorTemp = 0;
 	do {
 		ts_status = _temp_sensr.readTemperature();
+		if (ts_status == _disabledDevice) {
+			_temp_sensr.reset();
+		}
 		sensorTemp = _temp_sensr.get_temp();
 	} while (ts_status && --retry);
 //ts_status = _OK;
 	if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
-		<< F(" Err:") << _temp_sensr.lastError()
-		<< F(" Status:") << _temp_sensr.getStatus()
-		<< F(" ReadErr:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
+		<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
+		<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
 
 	setReg(R_FLOW_TEMP, sensorTemp);
 	checkForNewReqTemp();
@@ -314,6 +315,7 @@ void Mix_Valve::checkPumpIsOn() {
 }
 
 void Mix_Valve::refreshRegisters() {
+	// All I2C transfers are initiated by Programmer: Reading status and temps, sending new requests.
 	//lambda
 	auto motorActivity = [this]() -> uint8_t {if (_motorDirection == e_Cooling && _journey == e_Moving_Coolest) return e_Moving_Coolest; else return _motorDirection; };
 	auto mode = algorithmMode(_currReqTemp - getReg(R_FLOW_TEMP));
@@ -334,6 +336,7 @@ void Mix_Valve::setReg(int reg, uint8_t value) {
 }
 
 void Mix_Valve::checkForNewReqTemp() {
+	// All I2C transfers are initiated by Programmer: Reading status and temps, sending new requests.
 	auto reqTempReg = getReg(R_REQUEST_FLOW_TEMP);
 	//logger() << F("R_REQUEST_FLOW_TEMP from: ") << _regOffset + R_REQUEST_FLOW_TEMP << F(" reg:") << reqTempReg << F(" Curr : ") << _currReqTemp << L_endl;
 	if (reqTempReg != 0 && reqTempReg != _currReqTemp) {

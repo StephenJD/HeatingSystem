@@ -199,7 +199,7 @@ namespace client_data_structures {
 	}
 
 	Collection_Hndl* FactoryReset_Cmd::select(Collection_Hndl* from) {
-		heating_system->getDB().reset(0,0);
+		heating_system->getDB().reset_OK(0,0);
 		HardReset::arduinoReset("Factory Rest");
 		return 0;
 	}

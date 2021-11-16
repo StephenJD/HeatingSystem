@@ -291,10 +291,16 @@ Error_codes I2C_Talk::status(int deviceAddr) const // Returns in slave mode.
 
 // Private Functions
 Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false to inhibit access
+	//auto _exec_time = micros();
+	//logger() << "beginTrans _lastWrite: " << _exec_time - _lastWrite << L_endl;
 	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) {
+#ifndef ZPSIM
 		if (isMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
+#endif
+		//logger() << "beginTrans expir: " << micros() - _exec_time << L_endl; _exec_time = micros();
 		while (!hasExpired(_lastWrite + I2C_WRITE_DELAY_uS)) {
+			//logger() << "beginTrans WRITE_DELAY: " << micros() - _exec_time << L_endl; _exec_time = micros();
 			_wire().beginTransmission((uint8_t)deviceAddr);
 			// NOTE: this puts it in slave mode. Must re-begin to send more data.
 			status = endTransmission();
@@ -307,7 +313,9 @@ Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false 
 }
 
 Error_codes I2C_Talk::endTransmission() const {
-	if (isMaster()) while (!hasExpired(_lastWrite + 1000));
+	//auto _exec_time = micros();
+	//if (isMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
+	//logger() << "endTrans wait: " << micros() - _exec_time << L_endl; _exec_time = micros();
 	auto status = static_cast<I2C_Talk_ErrorCodes::Error_codes>(_wire().endTransmission());
 #ifdef DEBUG_TALK
 	if (status >= _Timeout) {

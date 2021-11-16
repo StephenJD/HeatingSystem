@@ -1,5 +1,6 @@
 #pragma once
-// This is the Arduino Mini Controller
+// This is the Multi-Master Arduino Mini Controller
+
 // ******** NOTE select Arduino Mini Pro 328P 8MHz **********
 // See A_SJD_MixerValve_Control.ini
 // Arduino Mini Pro must be upgraded with boot-loader to enable watchdog timer.
@@ -36,7 +37,8 @@ public:
 		// Registers provided by MixValve_Slave
 		// Copies of the VOLATILE set provided in Programmer reg-set
 		// All registers are single-byte.
-		// All Mix-Valve I2C transfers are initiated by Master
+		// The valve is a multi-master, so it reads its own temp sensors.
+		// All I2C transfers are initiated by Programmer: Reading status and temps, sending new requests.
 
 		// Receive
 		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
