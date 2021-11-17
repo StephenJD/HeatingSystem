@@ -10,8 +10,9 @@ namespace client_data_structures {
 	using namespace HardwareInterfaces;
 
 	RecInt_MixValveController::RecInt_MixValveController(MixValveController* mixValveArr)
-		: _mixValveArr(mixValveArr)
-		, _name("", 5)
+		: _options{ _name0, _name1 }
+		, _mixValveArr(mixValveArr)
+		, _name_mode(0, ValRange(e_edOneShort, 0, 1), _options)
 		, _pos(90, ValRange(e_fixedWidth | e_editAll, -127, 127))
 		, _isTemp(90, ValRange(e_fixedWidth | e_editAll, 0, 90))
 		, _reqTemp(90, ValRange(e_fixedWidth | e_editAll, 0, 90))
@@ -21,11 +22,15 @@ namespace client_data_structures {
 	I_Data_Formatter* RecInt_MixValveController::getField(int fieldID) {
 		bool canDo = status() == TB_OK;
 		switch (fieldID) {
-		case e_name:
+		case e_multiMode:
 			if (canDo) {
-				_name = answer().rec().name;
+				strcpy(_name0, answer().rec().name);
+				strcpy(_name1, answer().rec().name);
+				strcat(_name0, "  ");
+				strcat(_name1, "-M");
 			}
-			return &_name;
+			_name_mode.val = runTimeData().multi_master_mode();
+			return &_name_mode;
 		case e_pos:
 			if (canDo) {
 				if (runTimeData().getReg(Mix_Valve::R_MODE) == Mix_Valve::e_Checking)
@@ -54,12 +59,9 @@ namespace client_data_structures {
 
 	bool RecInt_MixValveController::setNewValue(int fieldID, const I_Data_Formatter* newValue) {
 		switch (fieldID) {
-		case e_name:
+		case e_multiMode:
 		{
-			const StrWrapper* strWrapper(static_cast<const StrWrapper*>(newValue));
-			_name = *strWrapper;
-			strcpy(answer().rec().name, _name.str());
-			answer().update();
+			runTimeData().enable_multi_master_mode(newValue->val);
 			break;
 		}
 		case e_reqTemp:

@@ -326,7 +326,7 @@ void Mix_Valve::refreshRegisters() {
 	//lambda
 	auto motorActivity = [this]() -> uint8_t {if (_motorDirection == e_Cooling && _journey == e_Moving_Coolest) return e_Moving_Coolest; else return _motorDirection; };
 	auto mode = algorithmMode(_currReqTemp - getReg(R_FLOW_TEMP));
-	logger() << F("Mode:") << mode << L_endl;
+	//logger() << F("Mode:") << mode << L_endl;
 	setReg(R_MODE, mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 	setReg(R_COUNT, abs(_onTime));
 	setReg(R_STATE, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating

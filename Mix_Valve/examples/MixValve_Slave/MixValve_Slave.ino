@@ -146,11 +146,16 @@ void loop() {
 	// All I2C transfers are initiated by Master
 	static auto nextSecond = Timer_mS(1000);
 	static Mix_Valve::MV_Status err = Mix_Valve::MV_OK;
+	static bool multimaster_mode;
 
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		reset_watchdog();
-		
+		auto currMultiMode = mixV_registers.getRegister(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE);
+		if (currMultiMode != multimaster_mode) {
+			multimaster_mode = currMultiMode;
+			logger() << F("New Mode: ") << (currMultiMode ? F("SingleMaster") : F("MultiMaster")) << L_endl;
+		}
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 
@@ -189,7 +194,7 @@ void roleChanged(Role newRole) {
 	else if (role != newRole) { // changed to Master
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
 		mixValve[us_mix].setDefaultRequestTemp();		
-    mixValve[ds_mix].setDefaultRequestTemp();
+		mixValve[ds_mix].setDefaultRequestTemp();
 		psu_enable.clear();
 	}
 	role = newRole;

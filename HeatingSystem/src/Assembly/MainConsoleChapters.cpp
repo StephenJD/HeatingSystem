@@ -46,7 +46,7 @@ namespace Assembly {
 		, _relayStateUI_c{ &db._ds_relay, RecInt_Relay::e_state,{V + S + VnLR + UD_S} }
 		, _relayNameUI_c{ &db._ds_relay, RecInt_Relay::e_name, {V + V1} }
 
-		, _mixValveNameUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_name, {V + S + V1} }
+		, _mixValveNameUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_multiMode, {V + S + V1} }
 		, _mixValvePosUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_pos, {V + V1} }
 		, _mixValveFlowTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_flowTemp, {V + V1} }
 		, _mixValveReqTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_reqTemp, {V + S + V1} }
@@ -110,7 +110,7 @@ namespace Assembly {
 		, _iterated_zoneSettings_info_c{ 80, makeCollection(_allZoneAbbrevUI_c, _zoneRatio_c, _zoneTimeConst_c, _zoneDelay_c, _zoneQuality_c),{V + S + L + VnLR + UD_A} }
 		, _page_autoSettings_c{ makeCollection(_autoSettingLbl, _iterated_zoneSettings_info_c)}
 
-		, _iterated_mixValve_info_c{ 80, makeCollection(_mixValveNameUI_c, _mixValvePosUI_c, _mixValveFlowTempUI_c, _mixValveReqTempUI_c, _mixValveStateUI_c),{V + S + VnLR + UD_S} }
+		, _iterated_mixValve_info_c{ 80, makeCollection(_mixValveNameUI_c, _mixValvePosUI_c, _mixValveFlowTempUI_c, _mixValveReqTempUI_c, _mixValveStateUI_c),{V + S + VnLR + UD_A} }
 		, _page_mixValve_c{ makeCollection(_mixValveLbl, _iterated_mixValve_info_c) }
 
 		, _iterated_console_info_c{80, makeCollection(_consoleNameUI_c, _consoleEnabledUI_c)}

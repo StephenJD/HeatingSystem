@@ -67,7 +67,7 @@ private: // data-member ordering matters!
 public:	
 	// Temporary Remote TS
 	HardwareInterfaces::UI_TempSensor temporary_remoteTSArr[Assembly::NO_OF_REMOTE_DISPLAYS];
-	HardwareInterfaces::UI_TempSensor temporary_mix_valve_TSArr[Assembly::NO_OF_MIX_VALVES];
+	//HardwareInterfaces::UI_TempSensor temporary_mix_valve_TSArr[Assembly::NO_OF_MIX_VALVES];
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;

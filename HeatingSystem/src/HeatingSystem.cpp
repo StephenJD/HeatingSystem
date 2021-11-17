@@ -99,7 +99,7 @@ HeatingSystem::HeatingSystem()
 	, _remoteLCDConsole{ {remoteKeypadArr[0], remDispl[0], _remoteConsoleChapters},{remoteKeypadArr[1], remDispl[1], _remoteConsoleChapters},{remoteKeypadArr[2], remDispl[2], _remoteConsoleChapters} }
 	, remOLED_ConsoleArr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
 	, temporary_remoteTSArr{ {_recover, 0x36}, {_recover, 0x74}, {_recover, 0x70} }
-	, temporary_mix_valve_TSArr{ {_recover, US_FLOW_TEMPSENS_ADDR}, {_recover, DS_FLOW_TEMPSENS_ADDR} }
+	//, temporary_mix_valve_TSArr{ {_recover, US_FLOW_TEMPSENS_ADDR}, {_recover, DS_FLOW_TEMPSENS_ADDR} }
 	{
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);

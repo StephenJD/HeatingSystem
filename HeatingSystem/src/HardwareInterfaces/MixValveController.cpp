@@ -3,7 +3,7 @@
 #include "..\Assembly\HeatingSystemEnums.h"
 #include <I2C_Talk_ErrorCodes.h>
 #include <Logging.h>
-#include "..\Client_DataStructures\Data_TempSensor.h"
+//#include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\Client_DataStructures\Data_Relay.h"
 #include <Timer_mS_uS.h>
 #include <Clock.h>
@@ -39,6 +39,7 @@ namespace HardwareInterfaces {
 		i2C().extendTimeouts(15000, 6, 1000);
 		auto slaveRegOffset = index == 0 ? MV_REG_SLAVE_0_OFFSET : MV_REG_SLAVE_1_OFFSET;
 		setReg(Mix_Valve::R_MV_REG_OFFSET, slaveRegOffset);
+		_disabled_multimaster_flowTempSensor.setAddress(_flowTS_addr);
 		//logger() << F("MixValveController::ini done. Reg:") << _regOffset + Mix_Valve::R_MV_REG_OFFSET << ":" << slaveRegOffset << L_endl;
 	}
 
@@ -73,7 +74,7 @@ namespace HardwareInterfaces {
 		errCode |= writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
 		errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
-		errCode |= writeToValve(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE, true);
+		errCode |= writeToValve(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE, _disabled_multimaster);
 		setReg(Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
 		setReg(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 		setReg(Mix_Valve::R_STATE, Mix_Valve::e_Stop);
@@ -95,9 +96,13 @@ namespace HardwareInterfaces {
 		return errCode;
 	}
 
+	void MixValveController::enable_multi_master_mode(bool enable) {
+		_disabled_multimaster = !enable;
+		writeToValve(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE, _disabled_multimaster);
+	}
+
 	uint8_t MixValveController::flowTemp() const {
-		return temporary_mix_valve_TSArr[index()].get_temp();
-		//return getReg(Mix_Valve::R_FLOW_TEMP);
+		return getReg(Mix_Valve::R_FLOW_TEMP);
 	}
 
 	bool MixValveController::check() { // called once per second
@@ -155,7 +160,7 @@ namespace HardwareInterfaces {
 //#endif
 	}
 
-	const __FlashStringHelper* MixValveController::showState() {
+	const __FlashStringHelper* MixValveController::showState() const {
 			switch (getReg(Mix_Valve::R_MODE)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 			case Mix_Valve::e_Wait: return F("Wt");
 			case Mix_Valve::e_Checking: return F("Chk");
@@ -302,6 +307,10 @@ namespace HardwareInterfaces {
 		uint8_t (&debug)[58] = reinterpret_cast<uint8_t (&)[58]>(*_prog_registers.reg_ptr(0));
 		uint8_t (&debugWire)[30] = reinterpret_cast<uint8_t (&)[30]>(Wire.i2CArr[getAddress()][0]);
 #endif
+		if (_disabled_multimaster) {
+			_disabled_multimaster_flowTempSensor.readTemperature();
+			setReg(Mix_Valve::R_FLOW_TEMP, _disabled_multimaster_flowTempSensor.get_temp());
+		}
 		uint8_t value = 0;
 		auto status = reEnable(); // see if is disabled
 		waitForWarmUp();

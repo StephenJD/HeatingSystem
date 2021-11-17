@@ -149,21 +149,6 @@ namespace LCD_UI {
 		return optionsWrapper->option(data);
 	}
 
-	//const char* String_Interface::streamData(bool isActiveElement) const {
-	//	if (_data_formatter == 0) return 0;
-	//	const StrWrapper* strWrapper(static_cast<const StrWrapper*>(_data_formatter));
-
-	//	if (isActiveElement) {
-	//		auto field_streamingTool_h = dataSource();
-	//		if (field_streamingTool_h && field_streamingTool_h->cursor_Mode() == HardwareInterfaces::LCD_Display::e_inEdit) { // any item may be in edit
-	//			if (field_streamingTool_h->activeEditBehaviour().is_edit_on_UD()) {
-	//				return _editItem.stream_edited_copy;
-	//			}
-	//		}
-	//	}
-	//	return strWrapper->str();
-	//}
-
 	const char * Decimal_Interface::streamData(bool isActiveElement) const {
 		strcpy(scratch,decToString(getData(isActiveElement),_data_formatter->valRange.editablePlaces, _data_formatter->valRange.noOfDecPlaces,_data_formatter->valRange.format));
 		return scratch;

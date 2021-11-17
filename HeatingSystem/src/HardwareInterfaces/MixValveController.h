@@ -7,6 +7,7 @@
 #include <RDB.h>
 #include "A__Constants.h"
 #include "I2C_Comms.h"
+#include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\LCD_UI\I_Record_Interface.h" // relative path required by Arduino
 
 #if defined (ZPSIM)
@@ -15,7 +16,7 @@
 
 namespace HardwareInterfaces {
 	class UI_Bitwise_Relay;
-	class UI_TempSensor;
+	//class UI_TempSensor;
 
 	class MixValveController : public I_I2Cdevice_Recovery, public LCD_UI::VolatileData {
 	public:
@@ -31,9 +32,9 @@ namespace HardwareInterfaces {
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		int8_t relayInControl() const;
 		uint8_t index() const { return _regOffset == MV_REG_MASTER_0_OFFSET ? 0 : 1; }
-		const __FlashStringHelper* showState();
-		void monitorMode();
+		const __FlashStringHelper* showState() const;
 		uint8_t getReg(int reg) const;
+		bool multi_master_mode() const { return !_disabled_multimaster; }
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
@@ -43,6 +44,8 @@ namespace HardwareInterfaces {
 		bool check();
 		void sendRequestFlowTemp(uint8_t callTemp);
 		void logMixValveOperation(bool logThis);
+		void monitorMode();
+		void enable_multi_master_mode(bool enable);
 
 //#if defined (ZPSIM)
 //		int16_t getValvePos() const; // public for simulator
@@ -66,8 +69,10 @@ namespace HardwareInterfaces {
 		unsigned long * _timeOfReset_mS = 0;
 		i2c_registers::I_Registers& _prog_registers;
 
-		Mix_Valve::Mode _previous_valveStatus[NO_OF_MIXERS];
+		UI_TempSensor _disabled_multimaster_flowTempSensor;
 
+		Mix_Valve::Mode _previous_valveStatus[NO_OF_MIXERS];
+		bool _disabled_multimaster = true;
 		uint8_t _error = 0;
 		uint8_t _regOffset = 0;
 		uint8_t _limitTemp = 100;
