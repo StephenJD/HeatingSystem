@@ -42,28 +42,29 @@ public:
 
 		// Receive
 		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
-		// Send
+		// Send on request
 		, R_STATUS, R_MODE, R_STATE, R_RATIO 
 		, R_FROM_TEMP
 		, R_COUNT
 		, R_VALVE_POS
 		, R_FROM_POS
-		, R_FLOW_TEMP
+		, R_FLOW_TEMP // Received in DISABLE_MULTI_MASTER_MODE
 		// Receive
 		, R_REQUEST_FLOW_TEMP
 		, R_MAX_FLOW_TEMP
-		, R_MV_VOLATILE_REG_SIZE // 12
+		, MV_VOLATILE_REG_SIZE // 12
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
 		// Receive
-		  R_TS_ADDRESS = R_MV_VOLATILE_REG_SIZE
+		  R_TS_ADDRESS = MV_VOLATILE_REG_SIZE
 		, R_FULL_TRAVERSE_TIME
 		, R_SETTLE_TIME
 		, R_DEFAULT_MAX_FLOW_TEMP
+		, R_DISABLE_MULTI_MASTER_MODE
 		, R_VERSION_MONTH
 		, R_VERSION_DAY
-		, R_MV_ALL_REG_SIZE // = 17
+		, MV_ALL_REG_SIZE // = 17
 	};
 
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat, e_Error };
@@ -74,7 +75,7 @@ public:
 	void begin(int defaultMaxTemp);
 	uint8_t getReg(int reg) const;
 	const __FlashStringHelper* name();
-	MV_Status check_flow_temp();
+	MV_Status check_flow_temp(bool programmerConnected);
 	void setDefaultRequestTemp();
 private:
 	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};

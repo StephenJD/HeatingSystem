@@ -80,6 +80,7 @@ void setNext_PrevRecipients() {
 }
 
 void findOtherMasters() {
+	logger() << F("\nfindOtherMasters") << L_endl;
 	auto scanner = I2C_Scan(i2C);
 	scanner.scanFromZero();
 	auto myMasterAddress = i2C.address();
@@ -106,9 +107,9 @@ void findOtherMasters() {
 	for (int i = 0; i < noOfMasters; ++i) {
 		logger() << F("Master at: 0x") << L_hex << masters[i].getAddress() << L_endl;
 	}
-	logger() << F("This Master Index:") << myMasterIndex << L_endl;
+	logger() << F("This Master Index:") << myMasterIndex << L_endl << L_endl;
 	setNext_PrevRecipients();
-	mastersForwardingOK = 10;
+	mastersForwardingOK = 100;
 }
 
 void setup() {
@@ -138,7 +139,10 @@ delay(1000);
 bool thisIsOneIsent(uint8_t & message) {
 	if (myMasterIndex == 0) {
 		if (message == HAPPY_MESSAGE || message == LOST_MASTER_MESSAGE) return true;
-		else message = LOST_MASTER_MESSAGE;
+		else {
+			logger() << myMasterIndex << F("\n*** Send LostMasterMsg ***\n") << L_endl;
+			message = LOST_MASTER_MESSAGE;
+		}
 	}
 	return false;
 	//auto messageBase = myMasterIndex * MAX_NO_OF_MASTERS;
@@ -177,14 +181,14 @@ void sendMessageTo(int remoteIndex, uint8_t message) {
 	if (timeout) {
 		logger() << myMasterIndex << F(": forced send to break deadly-embrace with M") << remoteIndex << L_endl;
 	}
-	logger() << myMasterIndex << F(": sendMessage ") << message << F(" to M") << remoteIndex << F(" at 0x") << L_hex << masters[remoteIndex].getAddress() << L_endl;
+	logger() << myMasterIndex << F(": at: ") << millis() << F(" : sendMessage ") << message << F(" to M") << remoteIndex << F(" at 0x") << L_hex << masters[remoteIndex].getAddress() << L_endl;
 	masters[remoteIndex].write(myMasterIndex, 1, &message);
 	sentMessages[remoteIndex] = message;
 }
 
 bool retrieveMessages() {
 	bool foundAMessage = false;
-	for (int reg = 0; reg < noOfMasters; ++reg) {
+	for (int reg = 0; reg < MAX_NO_OF_MASTERS; ++reg) {
 		reset_watchdog();
 		auto message = register_set.getRegister(reg);
 		if (message != 0) {
@@ -193,12 +197,14 @@ bool retrieveMessages() {
 			logger() << myMasterIndex << F(": Received ") << message << F(" from M") << reg << L_endl;
 			if (thisIsOneIsent(message)) {
 				logger() << myMasterIndex << F(": One I sent!") << L_endl;
+				initiateMessage(1);
 				mastersForwardingOK = 10;
 			} else {
 				sendMessageTo(nextRecipientIndex, message);
 				if (message == HAPPY_MESSAGE) {
 					mastersForwardingOK = 10;
 				} else {
+					findOtherMasters();
 					break;
 				}
 			}
@@ -213,19 +219,26 @@ void initiateMessage(int recipient) {
 }
 
 void sendCheckMastersMessage() {
+	logger() << L_endl << myMasterIndex << F("\nsendCheckMastersMessage\n") << L_endl;
 	findOtherMasters();
 	auto recipient = 0;
 	if (myMasterIndex == 0) recipient = 1;
 	sendMessageTo(recipient, LOST_MASTER_MESSAGE + myMasterIndex);
-	mastersForwardingOK = 10;
+	mastersForwardingOK = 100;
 }
 
 int flashLength() {
 	if (badMessageCount) {
 		badMessageCount = 0;
+		logger() << "Bad Msg" << L_endl;
 		return 10;
-	} else if (--mastersForwardingOK) {
+	} else if (mastersForwardingOK > 10) {
+		--mastersForwardingOK;
+		logger() << "Try: " << mastersForwardingOK << L_endl;
 		return 50;
+	} else if (mastersForwardingOK > 0) {
+		--mastersForwardingOK;
+		return 200;
 	} else {
 		return 1000;
 	}
@@ -267,9 +280,10 @@ void loop() {
 	*	Else slow-flash the LED.
 	*/
 	reset_watchdog();
-	//if (!mastersForwardingOK) sendCheckMastersMessage();
+	if (!mastersForwardingOK) sendCheckMastersMessage();
 	bool foundAMessage = retrieveMessages();
 	if (myMasterIndex == 0 && !foundAMessage) {
+	//if (myMasterIndex == 0 && mastersForwardingOK == 0) {
 		initiateMessage(1);
 	}
 	flashLED();

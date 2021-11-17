@@ -61,16 +61,16 @@ EEPROMClass & eeprom() {
 
 extern const uint8_t version_month;
 extern const uint8_t version_day;
-const uint8_t version_month = 9; // change to force re-application of defaults incl temp-sensor addresses
-const uint8_t version_day = 15;
+const uint8_t version_month = 11; // change to force re-application of defaults incl temp-sensor addresses
+const uint8_t version_day = 17;
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
 enum { us_mix, ds_mix };
 
 enum { e_US_Heat = 11, e_US_Cool = 10, e_DS_Heat = 12, e_DS_Cool = A0, e_Status = 13 };
 
-enum Role { e_Slave, e_Master }; // controls PSU enable
-Role role = e_Slave;
+enum Role { e_Master, e_Slave }; // controls PSU enable
+Role role = e_Slave; // trigger role-change
 
 I2C_Talk& i2C() {
   static I2C_Talk _i2C{};
@@ -100,12 +100,12 @@ auto led_DS_Cool = Pin_Wag(e_DS_Cool, HIGH);
 
 
 // All I2C transfers are initiated by Master
-auto mixV_register_set = i2c_registers::Registers<Mix_Valve::R_MV_ALL_REG_SIZE * NO_OF_MIXERS>{i2C()};
+auto mixV_register_set = i2c_registers::Registers<Mix_Valve::MV_ALL_REG_SIZE * NO_OF_MIXERS>{i2C()};
 i2c_registers::I_Registers& mixV_registers = mixV_register_set;
 
 Mix_Valve  mixValve[] = {
 	{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0}
-  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::R_MV_ALL_REG_SIZE}
+  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE}
 };
 
 void setup() {
@@ -155,10 +155,10 @@ void loop() {
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 
 		err = Mix_Valve::MV_OK;
-		if (mixValve[us_mix].check_flow_temp() == Mix_Valve::MV_I2C_FAILED) {
+		if (mixValve[us_mix].check_flow_temp(role) == Mix_Valve::MV_I2C_FAILED) {
 			err = Mix_Valve::MV_US_TS_FAILED;
 		}		
-		if (mixValve[ds_mix].check_flow_temp() == Mix_Valve::MV_I2C_FAILED) {
+		if (mixValve[ds_mix].check_flow_temp(role) == Mix_Valve::MV_I2C_FAILED) {
       		err = static_cast<Mix_Valve::MV_Status>(err | Mix_Valve::MV_DS_TS_FAILED);
 		}
 

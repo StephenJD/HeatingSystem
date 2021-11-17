@@ -73,6 +73,7 @@ namespace HardwareInterfaces {
 		errCode |= writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
 		errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
+		errCode |= writeToValve(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE, true);
 		setReg(Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
 		setReg(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 		setReg(Mix_Valve::R_STATE, Mix_Valve::e_Stop);
@@ -94,7 +95,10 @@ namespace HardwareInterfaces {
 		return errCode;
 	}
 
-	uint8_t MixValveController::flowTemp() const { return getReg(Mix_Valve::R_FLOW_TEMP); }
+	uint8_t MixValveController::flowTemp() const {
+
+		return getReg(Mix_Valve::R_FLOW_TEMP);
+	}
 
 	bool MixValveController::check() { // called once per second
 		if (reEnable() == _OK) {
@@ -304,7 +308,7 @@ namespace HardwareInterfaces {
 		constexpr int CONSECUTIVE_COUNT = 1;
 		constexpr int MAX_TRIES = 1;
 		if (status == _OK) {
-			profileLogger() << "Read :" << Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS << " to : " << _regOffset + Mix_Valve::R_STATUS << L_endl;
+			//profileLogger() << "Read :" << Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS << " to : " << _regOffset + Mix_Valve::R_STATUS << L_endl;
 			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS , Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_STATUS));
 			if (status) {
 				logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;

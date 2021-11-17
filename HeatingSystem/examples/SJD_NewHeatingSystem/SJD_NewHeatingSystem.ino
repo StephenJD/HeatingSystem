@@ -147,11 +147,11 @@ void setup() {
 	set_watchdog_timeout_mS(60000);
 	resetRTC(rtc, rtc_reset_wag); // Before logging to avoid no-date SD logs.
 	//logger().begin(SERIAL_RATE);
-	logger().flush();
+	logger() << L_flush;
 	logger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 	logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
-	zTempLogger().flush();
-	profileLogger().flush();
+	zTempLogger() << L_flush;
+	profileLogger() << L_flush;
 	pinMode(RESET_LEDP_PIN, OUTPUT);
 	digitalWrite(RESET_LEDP_PIN, HIGH);
 	auto supplyVcorrection = 2.5 * 1024. / 3.3 / analogRead(RESET_5vREF_PIN);

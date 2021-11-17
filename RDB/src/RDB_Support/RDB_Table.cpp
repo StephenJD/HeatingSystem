@@ -63,7 +63,7 @@ namespace RelationalDatabase {
 
 			if (!tableOK) {
 				logger() << F(" Corrupt Table found. Database Reset.") << L_endl;
-				_db->reset(0,0);
+				_db->reset_OK(0,0);
 				markAsInvalid();
 				return;
 			}
