@@ -52,8 +52,8 @@ namespace client_data_structures {
 	class TestWatchdog_Cmd : public LCD_UI::UI_Cmd {
 	public:
 		using LCD_UI::UI_Cmd::UI_Cmd;
-		Collection_Hndl* select(Collection_Hndl* from) override { while (true); };
-	};	
+		Collection_Hndl* select(Collection_Hndl* from) override;
+	};
 	
 	class FactoryReset_Cmd : public LCD_UI::UI_Cmd {
 	public:

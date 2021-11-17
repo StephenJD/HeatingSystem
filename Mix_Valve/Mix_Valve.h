@@ -33,7 +33,7 @@ class Mix_Valve
 public:
 	enum MV_Status { MV_OK, MV_DS_TS_FAILED, MV_US_TS_FAILED, MV_TS_FAILED, MV_I2C_FAILED, MV_NEW_TEMP_REQUEST, MV_STORE_TOO_COOL};
 	
-	enum MixValve_Volatile_Register_Names { 
+	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
 		// Copies of the VOLATILE set provided in Programmer reg-set
 		// All registers are single-byte.
@@ -43,7 +43,7 @@ public:
 		// Receive
 		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
 		// Send on request
-		, R_STATUS, R_MODE, R_STATE, R_RATIO 
+		, R_STATUS, R_MODE, R_STATE, R_RATIO
 		, R_FROM_TEMP
 		, R_COUNT
 		, R_VALVE_POS
@@ -51,8 +51,8 @@ public:
 		, R_FLOW_TEMP // Received in DISABLE_MULTI_MASTER_MODE
 		// Receive
 		, R_REQUEST_FLOW_TEMP
-		, R_MAX_FLOW_TEMP
-		, MV_VOLATILE_REG_SIZE // 12
+		, MV_VOLATILE_REG_SIZE // 11
+		, MV_NO_TO_READ = R_FLOW_TEMP
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
@@ -60,11 +60,11 @@ public:
 		  R_TS_ADDRESS = MV_VOLATILE_REG_SIZE
 		, R_FULL_TRAVERSE_TIME
 		, R_SETTLE_TIME
-		, R_DEFAULT_MAX_FLOW_TEMP
+		, R_DEFAULT_FLOW_TEMP
 		, R_DISABLE_MULTI_MASTER_MODE
 		, R_VERSION_MONTH
 		, R_VERSION_DAY
-		, MV_ALL_REG_SIZE // = 17
+		, MV_ALL_REG_SIZE // = 18
 	};
 
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat, e_Error };
@@ -72,7 +72,7 @@ public:
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
-	void begin(int defaultMaxTemp);
+	void begin(int defaultFlowTemp);
 	uint8_t getReg(int reg) const;
 	const __FlashStringHelper* name();
 	MV_Status check_flow_temp(bool programmerConnected);

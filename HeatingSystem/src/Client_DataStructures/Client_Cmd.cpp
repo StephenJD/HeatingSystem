@@ -3,11 +3,13 @@
 #include "..\LCD_UI\\I_Record_Interface.h"
 #include "..\HardwareInterfaces\LocalDisplay.h"
 #include "..\HeatingSystem.h"
+#include <Watchdog_Timer.h>
 
 #ifdef ZPSIM
 	#include <iostream>
-	using namespace arduino_logger;
 #endif
+
+using namespace arduino_logger;
 
 extern HeatingSystem* heating_system;
 
@@ -203,5 +205,11 @@ namespace client_data_structures {
 		HardReset::arduinoReset("Factory Rest");
 		return 0;
 	}
+
+	Collection_Hndl* TestWatchdog_Cmd::select(Collection_Hndl* from) {
+		logger() << L_time << "\n\n*** Manual Watchdog Start ***" << L_endl;
+		reset_watchdog();
+		while (true);
+	};
 
 }

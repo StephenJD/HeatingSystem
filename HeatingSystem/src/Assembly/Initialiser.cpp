@@ -88,11 +88,16 @@ namespace Assembly {
 		auto index = 0;
 		for (auto& kb : _hs.remoteKeypadArr) {
 			auto console_mode = kb.consoleOption();
+			logger() << L_time << F("console query[] ") << index+1 << L_endl;
 			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index+1];
+			logger() << L_time << F("setWakeTime ") << L_endl;
 			kb.setWakeTime(display.rec().timeout);
+			logger() << L_time << F("popKey ") << L_endl;
 			kb.popKey();
+			logger() << L_time << F("clearKeys ") << L_endl;
 			kb.clearKeys();
 			if (console_mode < 2) { ++index; continue; }
+			logger() << L_time << F("initialise remDispl[] ") << index << L_endl;
 			failed |= _hs.remDispl[index].initialiseDevice();
 			failed |= _hs.temporary_remoteTSArr[index].setHighRes();
 			++index;

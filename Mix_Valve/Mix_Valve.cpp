@@ -34,7 +34,7 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 	_regOffset(reg_offset)
 	{}
 
-void Mix_Valve::begin(int defaultMaxTemp) {
+void Mix_Valve::begin(int defaultFlowTemp) {
 	logger() << F("MixValve begin") << L_endl;
 	const bool writeDefaultsToEEPROM = _ep->read(_regOffset + R_VERSION_MONTH) != version_month || _ep->read(_regOffset + R_VERSION_DAY) != version_day;
 	//const bool writeDefaultsToEEPROM = true;
@@ -45,7 +45,7 @@ void Mix_Valve::begin(int defaultMaxTemp) {
 		setReg(R_TS_ADDRESS, _temp_sensr.getAddress());
 		setReg(R_FULL_TRAVERSE_TIME, 140);
 		setReg(R_SETTLE_TIME, 40);
-		setReg(R_DEFAULT_MAX_FLOW_TEMP, defaultMaxTemp);
+		setReg(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
 		setReg(R_DISABLE_MULTI_MASTER_MODE, true);
 		saveToEEPROM();
 		logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
@@ -74,12 +74,12 @@ void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
 	_ep->update(  eepromRegister, getReg(R_TS_ADDRESS));
 	_ep->update(++eepromRegister, getReg(R_FULL_TRAVERSE_TIME));
 	_ep->update(++eepromRegister, getReg(R_SETTLE_TIME));
-	_ep->update(++eepromRegister, getReg(R_DEFAULT_MAX_FLOW_TEMP));
+	_ep->update(++eepromRegister, getReg(R_DEFAULT_FLOW_TEMP));
 	_ep->update(++eepromRegister, getReg(R_DISABLE_MULTI_MASTER_MODE));
 	_ep->update(++eepromRegister, getReg(R_VERSION_MONTH));
 	_ep->update(++eepromRegister, getReg(R_VERSION_DAY));
 	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)getReg(R_FULL_TRAVERSE_TIME) << (int)getReg(R_SETTLE_TIME)
-		<< (int)getReg(R_DEFAULT_MAX_FLOW_TEMP) << (int)getReg(R_VERSION_MONTH) << (int)getReg(R_VERSION_DAY) << L_endl;
+		<< (int)getReg(R_DEFAULT_FLOW_TEMP) << (int)getReg(R_VERSION_MONTH) << (int)getReg(R_VERSION_DAY) << L_endl;
 }
 
 void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
@@ -87,20 +87,19 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 #ifdef TEST_MIX_VALVE_CONTROLLER
 	setReg(R_FULL_TRAVERSE_TIME, 140);
 	setReg(R_SETTLE_TIME, 10);
-	setReg(R_DEFAULT_MAX_FLOW_TEMP, 55);
+	setReg(R_DEFAULT_FLOW_TEMP, 55);
 #else	
 	_temp_sensr.setAddress(_ep->read(eepromRegister));
 	setReg(R_TS_ADDRESS, _temp_sensr.getAddress());
 	setReg(R_FULL_TRAVERSE_TIME, _ep->read(++eepromRegister));
 	setReg(R_SETTLE_TIME, _ep->read(++eepromRegister));
-	setReg(R_DEFAULT_MAX_FLOW_TEMP, _ep->read(++eepromRegister));
+	setReg(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
 	setReg(R_DISABLE_MULTI_MASTER_MODE, _ep->read(++eepromRegister));
 #endif
 }
 
 void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when master/slave mode changes
-	setReg(R_MAX_FLOW_TEMP, getReg(R_DEFAULT_MAX_FLOW_TEMP));
-	_currReqTemp = getReg(R_MAX_FLOW_TEMP);
+	_currReqTemp = getReg(R_DEFAULT_FLOW_TEMP);
 	setReg(R_REQUEST_FLOW_TEMP, _currReqTemp);
 }
 

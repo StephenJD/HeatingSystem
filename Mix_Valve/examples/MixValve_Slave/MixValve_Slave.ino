@@ -62,7 +62,7 @@ EEPROMClass & eeprom() {
 extern const uint8_t version_month;
 extern const uint8_t version_day;
 const uint8_t version_month = 11; // change to force re-application of defaults incl temp-sensor addresses
-const uint8_t version_day = 17;
+const uint8_t version_day = 18;
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
 enum { us_mix, ds_mix };
