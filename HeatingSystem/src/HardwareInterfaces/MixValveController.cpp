@@ -96,8 +96,8 @@ namespace HardwareInterfaces {
 	}
 
 	uint8_t MixValveController::flowTemp() const {
-
-		return getReg(Mix_Valve::R_FLOW_TEMP);
+		return temporary_mix_valve_TSArr[index()].get_temp();
+		//return getReg(Mix_Valve::R_FLOW_TEMP);
 	}
 
 	bool MixValveController::check() { // called once per second
