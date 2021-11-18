@@ -11,8 +11,7 @@ namespace arduino_logger {
 	Logger& profileLogger();
 }
 using namespace arduino_logger;
-
-using namespace OLED_Master_Display;
+using namespace OLED_Master_Display; // included for e_Off/On
 
 namespace HardwareInterfaces {
 
