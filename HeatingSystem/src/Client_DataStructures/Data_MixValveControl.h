@@ -45,8 +45,8 @@ inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, co
 		I_Data_Formatter* getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter* val) override;
 	private:
-		char _name0[6] = { 0 };
-		char _name1[6] = { 0 };
+		char _name0[5] = { 0 };
+		char _name1[5] = { 0 };
 		const char* _options[2];
 		MixValveController* _mixValveArr;
 		OptionsWrapper _name_mode;

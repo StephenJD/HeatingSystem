@@ -344,12 +344,13 @@ namespace HardwareInterfaces {
 		// Modifies _currProfileTempRequest to allow for heat-up for next event
 		// returns true when actual programmed time has expired.
 		// decltype(millis()) executionTime[8] = { millis() };
-
+		//logger() << L_time << "preHeatForNextTT" << L_endl;
 		using namespace Date_Time;
 		auto & zoneRec = _zoneRecord.rec();
 		auto nextTempReq = nextTempRequest();
 		auto outsideTemp = isDHWzone() ? uint8_t(20) : _thermalStore->getOutsideTemp();
 		auto currTemp_fractional = getFractionalCallSensTemp();
+		//logger() << L_time << "\tini_OK" << L_endl;
 		
 		// Lambdas
 		auto maxPredictedAchievableTemp = [this, outsideTemp, &zoneRec](int maxFlowTemp) -> int {
@@ -360,6 +361,7 @@ namespace HardwareInterfaces {
 		};
 
 		const auto max_PredictedAchievableTemp = maxPredictedAchievableTemp(_maxFlowTemp);
+		//logger() << L_time << "\tmax_PredictedAchievableTemp_OK" << L_endl;
 
 		auto calculatePreheatTime = [this, max_PredictedAchievableTemp](int currTemp_fractional, int nextTempReq) -> int {
 			double minsToAdd = 0.;
@@ -457,12 +459,14 @@ namespace HardwareInterfaces {
 		 If the temp-range of the curve-match is >= to the preious best, then save the new curve parameters.
 		*/
 		//executionTime[1] = millis();
+		//logger() << L_time << "\tLambdas_OK" << L_endl;
 		profileLogger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << _ttStartDateTime << L_endl;
 		//executionTime[2] = millis();
 		//executionTime[3] = millis()-1;
 		//executionTime[4] = millis()-2;
 		//executionTime[5] = millis()-3;
-		
+		//logger() << L_time << "\tprofileLog_OK" << L_endl;
+
 		auto currTempReq = currTempRequest();
 		auto newPreheatTemp = getPreheatTemp();
 		if (finishedPreheat(newPreheatTemp)) {

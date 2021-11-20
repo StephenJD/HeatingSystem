@@ -13,9 +13,9 @@ namespace client_data_structures {
 		: _options{ _name0, _name1 }
 		, _mixValveArr(mixValveArr)
 		, _name_mode(0, ValRange(e_edOneShort, 0, 1), _options)
-		, _pos(90, ValRange(e_fixedWidth | e_editAll, -127, 127))
-		, _isTemp(90, ValRange(e_fixedWidth | e_editAll, 0, 90))
-		, _reqTemp(90, ValRange(e_fixedWidth | e_editAll, 0, 90))
+		, _pos(0, ValRange(e_fixedWidth | e_editAll, 0, 255))
+		, _isTemp(55, ValRange(e_fixedWidth | e_editAll, 0, 90))
+		, _reqTemp(55, ValRange(e_fixedWidth | e_editAll, 0, 90))
 		, _state("", 3)
 		{}
 
@@ -26,6 +26,8 @@ namespace client_data_structures {
 			if (canDo) {
 				strcpy(_name0, answer().rec().name);
 				strcpy(_name1, answer().rec().name);
+				_name0[2] = 0;
+				_name1[2] = 0;
 				strcat(_name0, "  ");
 				strcat(_name1, "-M");
 			}
@@ -33,12 +35,11 @@ namespace client_data_structures {
 			return &_name_mode;
 		case e_pos:
 			if (canDo) {
-				if (runTimeData().getReg(Mix_Valve::R_MODE) == Mix_Valve::e_Checking)
-					_pos.val = runTimeData().getReg(Mix_Valve::R_VALVE_POS);
-				else
+				auto mode = runTimeData().getReg(Mix_Valve::R_MODE);
+				if (mode == Mix_Valve::e_NewReq || mode == Mix_Valve::e_Wait)
 					_pos.val = runTimeData().getReg(Mix_Valve::R_COUNT);
-				if (_pos.val > 70) _pos.val = 70;
-				if (_pos.val < -70) _pos.val = -70;
+				else
+					_pos.val = runTimeData().getReg(Mix_Valve::R_VALVE_POS);
 			}
 			return &_pos;
 		case e_flowTemp:
@@ -61,7 +62,10 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_multiMode:
 		{
+			answer().rec().name[2] = 0;
+			strcat(answer().rec().name, (newValue->val ? "-M" : "  "));
 			runTimeData().enable_multi_master_mode(newValue->val);
+			answer().update();
 			break;
 		}
 		case e_reqTemp:

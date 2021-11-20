@@ -36,7 +36,7 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
 // 24LC256 -> 64 bytes
 #define I2C_EEPROM_PAGESIZE 32
-constexpr uint32_t I2C_WRITE_DELAY_uS = 5000;
+constexpr uint32_t I2C_EEPROM_WRITE_DELAY_uS = 5000;
 constexpr uint32_t I2C_MULTI_MASTER_DELAY_uS = 500;
 
 namespace I2C_Recovery {
@@ -105,6 +105,7 @@ public:
 	void setAsSlave(int slaveAddress) { _myAddress = slaveAddress; _isMaster = false; begin(); }
 	void setAsMaster(int multiMaster_MyAddress = _single_master) {_myAddress = multiMaster_MyAddress; _isMaster = true; begin();}
 	bool isMaster() const { return _isMaster; }
+	bool isMultiMaster() const { return _myAddress != _single_master && _isMaster; }
 	uint8_t address() const { return _myAddress; }
 	// Slave response
 	auto write(const uint8_t *dataBuffer, int numberBytes)->I2C_Talk_ErrorCodes::Error_codes; // Called by slave in response to request from a Master. 

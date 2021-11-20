@@ -32,8 +32,8 @@ namespace Assembly {
 	};
 
 	constexpr R_MixValveControl mixValveControl_f[] = {
-		{"UpS", US_FLOW_TEMPSENS_ADDR, T_TkUs}
-		, {"DnS", DS_FLOW_TEMPSENS_ADDR, T_TkDs}
+		{"US", US_FLOW_TEMPSENS_ADDR, T_TkUs}
+		, {"DS", DS_FLOW_TEMPSENS_ADDR, T_TkDs}
 	};
 
 	constexpr R_Display displays_f[] = {

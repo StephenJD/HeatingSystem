@@ -265,11 +265,11 @@ uint8_t I2C_eeprom::_ReadBlock(const uint16_t memoryAddress, uint8_t* buffer, co
 
 void I2C_eeprom::waitEEReady()
 {
-#define I2C_WRITE_DELAY_uS  5000
+#define I2C_EEPROM_WRITE_DELAY_uS  5000
 
     // Wait until EEPROM gives ACK again.
     // this is a bit faster than the hardcoded 5 milliSeconds
-    while ((micros() - _lastWrite) <= I2C_WRITE_DELAY_uS)
+    while ((micros() - _lastWrite) <= I2C_EEPROM_WRITE_DELAY_uS)
     {
         _wire_port->beginTransmission(_deviceAddress);
         int x = _wire_port->endTransmission();

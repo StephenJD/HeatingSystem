@@ -21,7 +21,7 @@ namespace HardwareInterfaces {
 	class MixValveController : public I_I2Cdevice_Recovery, public LCD_UI::VolatileData {
 	public:
 		MixValveController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
-		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS);
+		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS, bool multi_master_mode);
 
 		// Virtual Functions
 		I2C_Talk_ErrorCodes::Error_codes testDevice() override;

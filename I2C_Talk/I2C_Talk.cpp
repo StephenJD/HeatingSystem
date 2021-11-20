@@ -37,10 +37,11 @@ using namespace I2C_Recovery;
 // since any changes to these would "dirty" the header file unnecessarily.
 
 // private global variables //
-static const uint16_t HALF_MAINS_PERIOD = 10000; // in microseconds. 10000 for 50Hz, 8333 for 60Hz
+constexpr uint16_t HALF_MAINS_PERIOD = 10000; // in microseconds. 10000 for 50Hz, 8333 for 60Hz
 
 bool hasExpired(uint32_t someTime_uS) {
-	return int32_t(micros() - someTime_uS) >= 0;
+	int32_t timeToGo = someTime_uS - micros();
+	return timeToGo <= 0 || timeToGo > 20000;
 }
 
 int8_t I2C_Talk::TWI_BUFFER_SIZE = 0;
@@ -139,7 +140,7 @@ Error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes
 		synchroniseWrite();
 		//logger() << F(" I2C_Talk::write send data..") << L_endl; 
 		returnStatus = endTransmission(); // returns address-send or data-send error
-		if (isMaster()) _lastWrite = micros(); // allow time for other masters to write.
+		if (isMultiMaster()) _lastWrite = micros(); else _lastWrite = micros() - I2C_MULTI_MASTER_DELAY_uS; // allow time for other masters to write.
 		setProcessTime();
 	}
 
@@ -296,10 +297,10 @@ Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false 
 	auto status = validAddressStatus(deviceAddr);
 	if (status == _OK) {
 #ifndef ZPSIM
-		if (isMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
+		if (isMultiMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
 #endif
 		//logger() << "beginTrans expir: " << micros() - _exec_time << L_endl; _exec_time = micros();
-		while (!hasExpired(_lastWrite + I2C_WRITE_DELAY_uS)) {
+		while (!hasExpired(_lastWrite + I2C_EEPROM_WRITE_DELAY_uS)) {
 			//logger() << "beginTrans WRITE_DELAY: " << micros() - _exec_time << L_endl; _exec_time = micros();
 			_wire().beginTransmission((uint8_t)deviceAddr);
 			// NOTE: this puts it in slave mode. Must re-begin to send more data.
@@ -314,7 +315,7 @@ Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false 
 
 Error_codes I2C_Talk::endTransmission() const {
 	//auto _exec_time = micros();
-	//if (isMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
+	//if (isMultiMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
 	//logger() << "endTrans wait: " << micros() - _exec_time << L_endl; _exec_time = micros();
 	auto status = static_cast<I2C_Talk_ErrorCodes::Error_codes>(_wire().endTransmission());
 #ifdef DEBUG_TALK

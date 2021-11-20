@@ -43,7 +43,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		setReg(R_VERSION_MONTH, version_month);
 		setReg(R_VERSION_DAY, version_day);
 		setReg(R_TS_ADDRESS, _temp_sensr.getAddress());
-		setReg(R_FULL_TRAVERSE_TIME, 140);
+		setReg(R_FULL_TRAVERSE_TIME, 255);
 		setReg(R_SETTLE_TIME, 40);
 		setReg(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
 		setReg(R_DISABLE_MULTI_MASTER_MODE, true);
@@ -55,6 +55,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	}
 	setReg(R_RATIO, 30);
 	setReg(R_FLOW_TEMP, e_MIN_FLOW_TEMP);
+	setReg(R_STATUS, MV_OK);
 	_cool_relay->set(false);
 	_heat_relay->set(false);
 	enableRelays(false);
@@ -144,7 +145,6 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp(bool programmerConnected) { // C
 	auto turnValveOff = [sensorTemp, this]() { // Move valve to cool to prevent gravity circulation
 		_onTime = getReg(R_FULL_TRAVERSE_TIME);
 		if (sensorTemp <= e_MIN_FLOW_TEMP) _onTime /= 2;
-
 		_journey = e_Moving_Coolest;
 		_motorDirection = e_Cooling;
 		logger() << name() << L_tabs << F("Turn Valve OFF:") << _valvePos << L_endl;
@@ -177,7 +177,7 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp(bool programmerConnected) { // C
 	switch (algorithmMode(call_flowDiff)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 	case e_NewReq:
 		logger() << name() << L_tabs << F("New Temp Req:") << _currReqTemp <<  L_endl;
-		if (_valvePos == 0 && sensorTemp >= _currReqTemp) {
+		if (_onTime >= 0 && _valvePos == 0 && sensorTemp >= _currReqTemp) {
 			startWaiting(); // keep waiting whilst the pump is cooling the temp sensor
 			break;
 		//} else if (_journey == e_TempOK) { // picked up by e_Checking:
@@ -287,21 +287,21 @@ void Mix_Valve::serviceMotorRequest() {
 			logger() << name() << L_tabs << F("ValveMoving") << (_motorDirection == e_Heating ? "H" : (_motorDirection == e_Stop ? "Off" : "C")) << _onTime << F("ValvePos:") << _valvePos << F("Temp:") << getReg(R_FLOW_TEMP) << F("Call") << _currReqTemp << L_endl;
 			--_onTime;
 			_valvePos += _motorDirection;
-			if (_valvePos <= 0 || _valvePos >= traverseTime) {
-				if (_motorDirection == e_Heating) {
-					setReg(R_STATUS, MV_STORE_TOO_COOL);
-					_valvePos = traverseTime;
-				} else {
+			if (_onTime == 0) {
+				if (_valvePos <= 0) {
 					_journey = e_TempOK;
 					_valvePos = 0;
-				}
-				_onTime = 0;
-				stopMotor();
-			} else if (_onTime == 0) {  // Turn motor off and wait
-				if (_journey == e_Moving_Coolest) _onTime = traverseTime / 2;
-				else {
-					startWaiting();
-					if (getReg(R_STATUS) == MV_STORE_TOO_COOL) setReg(R_STATUS, MV_OK);
+					stopMotor();
+				} else if (_valvePos >= traverseTime) {
+					setReg(R_STATUS, MV_STORE_TOO_COOL);
+					_valvePos = traverseTime;
+					stopMotor();
+				} else {  // Turn motor off and wait
+					if (_journey == e_Moving_Coolest) _onTime = traverseTime / 2;
+					else {
+						startWaiting();
+						if (getReg(R_STATUS) == MV_STORE_TOO_COOL) setReg(R_STATUS, MV_OK);
+					}
 				}
 			} else if (_onTime % 10 == 0) {
 				motor_mutex = 0; // Give up ownership every 10 seconds.

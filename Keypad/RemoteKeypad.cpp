@@ -1,7 +1,7 @@
 #include "RemoteKeypad.h"
-//#include <Logging.h>
+#include <Logging.h>
 
-//using namespace arduino_logger;
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 
@@ -30,6 +30,14 @@ namespace HardwareInterfaces {
 			}
 		};
 
+		auto remName = [](int addr) -> const __FlashStringHelper* {
+			switch (addr) {
+			case 0x24: return F("US");
+			case 0x25: return F("FL");
+			case 0x26: return F("DS");
+			}
+		};
+
 		// Algorithm
 		wakeDisplay();
 		auto port = _lcd->readI2C_keypad();
@@ -46,7 +54,7 @@ namespace HardwareInterfaces {
 		}
 
 		if (myKey > NO_KEY) {
-			//logger() << L_time << remName(_lcd->i2cAddress()) << F(" Remote Keypad ") << keyName(myKey) << L_endl;
+			logger() << L_time << remName(_lcd->i2cAddress()) << F(" Remote Keypad ") << keyName(myKey) << L_endl;
 		}
 		if (myKey / 2 == MODE_LEFT_RIGHT) myKey = NO_KEY;
 		return myKey;

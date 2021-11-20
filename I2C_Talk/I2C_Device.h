@@ -2,6 +2,9 @@
 #include <I2C_Talk.h>
 #include <I2C_Talk_ErrorCodes.h>
 
+/// <summary>
+/// Non-Recovery read/write functions
+/// </summary>
 class I_I2Cdevice {
 public:
 	static constexpr auto START_SPEED_AFTER_FAILURE = 100000;
@@ -45,7 +48,7 @@ public:
 	/// Mask applied to device-byte order.
 	/// </summary>
 	auto read_verify_2bytes(int registerAddress, int16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask = 0xFFFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
-	/// <summary>
+																																														   /// <summary>
 	/// Non-Recovery
 	/// </summary>
 	auto read_verify_1byte(int registerAddress, uint8_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint8_t dataMask = 0xFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
@@ -72,6 +75,9 @@ private:
 	uint8_t _address = 0;
 };
 
+/// <summary>
+/// Non-Recovery read/write functions
+/// </summary>
 template <I2C_Talk & i2c>
 class I2Cdevice : public I_I2Cdevice {
 public:
@@ -80,6 +86,9 @@ public:
 	I2C_Talk & i2C() override { return i2c; }
 };
 
+/// <summary>
+/// Read/Write functions retry and apply recovery strategy
+/// </summary>
 class I_I2Cdevice_Recovery : public I_I2Cdevice { // cannot be constexpr because of use of non-const class static in constructors
 public:
 	static constexpr decltype(millis()) DISABLE_PERIOD_ON_FAILURE = 60000; // 60 secs

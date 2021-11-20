@@ -28,8 +28,10 @@ DateTime I_Clock_I2C::_timeFromRTC(int& minUnits, int& seconds) {
 
 	auto timeout = Timer_mS(1000);
 	auto status = _OK;
+	//logger() << L_time << F("RTC read... ") << L_endl;
 	do {
 		status = readData(0, sizeof(data), data);
+		//logger() << F("RTC read in ") << timeout.timeUsed() << I2C_Talk::getStatusMsg(status) << L_endl;
 	} while (status != _OK && !timeout);
 	//logger() << F("RTC read in ") << timeout.timeUsed() << I2C_Talk::getStatusMsg(status) << L_endl;
 
@@ -53,7 +55,8 @@ DateTime I_Clock_I2C::_timeFromRTC(int& minUnits, int& seconds) {
 	return date;
 }
 
-uint8_t I_Clock_I2C::loadTime() {
+uint8_t I_Clock_I2C::loadTime() { // called every 10 minutes
+	//logger() << L_time << F("Clock_I2C::loadTime") << L_endl;
 	// lambda
 	auto shouldUseCompilerTime = [](DateTime rtcTime, DateTime compilerTime) -> bool {
 		if (rtcTime == DateTime{}) {
@@ -64,21 +67,24 @@ uint8_t I_Clock_I2C::loadTime() {
 
 	int rtcMinUnits, rtcSeconds;
 	auto rtcTime = _timeFromRTC(rtcMinUnits, rtcSeconds); // 0 if failed
+	//logger() << L_time << F("\t_timeFromRTC_OK") << L_endl;
 	int compilerMinUnits, compilerSeconds;
 	auto compilerTime = _timeFromCompiler(compilerMinUnits, compilerSeconds);
+	//logger() << L_time << F("\t_timeFromCompiler_OK") << L_endl;
 	auto status = _OK;
 	_lastCheck_mS = millis();
 	if (shouldUseCompilerTime(rtcTime, compilerTime)) {
 		_now = compilerTime;
 		setMinUnits(compilerMinUnits);
 		setSeconds(compilerSeconds);
+		//logger() << L_time << F("\tRTC Clock Set from Compiler - Save...") << L_endl;
 		saveTime();
-		logger() << L_time << F(" RTC Clock Set from Compiler") << L_endl;
+		//logger() << L_time << F("\tRTC Clock Set from Compiler - Saved") << L_endl;
 	} else {
 		_now = rtcTime;
 		setMinUnits(rtcMinUnits);
 		setSeconds(rtcSeconds);
-		//logger() << L_time << F(" Clock Set from RTC") << L_endl;
+		//logger() << L_time << F("\tClock Set from RTC") << L_endl;
 	}
 	return status;
 }

@@ -43,16 +43,19 @@ public:
 		// Receive
 		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
 		// Send on request
-		, R_STATUS, R_MODE, R_STATE, R_RATIO
-		, R_FROM_TEMP
+		, R_MODE
+		, R_STATE
 		, R_COUNT
 		, R_VALVE_POS
 		, R_FROM_POS
+		, R_STATUS
+		, R_RATIO	
+		, R_FROM_TEMP
 		, R_FLOW_TEMP // Received in DISABLE_MULTI_MASTER_MODE
 		// Receive
-		, R_REQUEST_FLOW_TEMP
+		, R_REQUEST_FLOW_TEMP // also sent to confirm
 		, MV_VOLATILE_REG_SIZE // 11
-		, MV_NO_TO_READ = R_FLOW_TEMP
+		, MV_NO_TO_READ = R_REQUEST_FLOW_TEMP
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers

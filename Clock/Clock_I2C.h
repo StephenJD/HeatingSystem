@@ -20,6 +20,9 @@ private:
 	auto _timeFromRTC(int& minUnits, int& seconds)->Date_Time::DateTime;
 };
 
+/// <summary>
+/// Non-Recovery read/write functions
+/// </summary>
 template<I2C_Talk& i2c>
 class Clock_I2C : public I_Clock_I2C, public I2Cdevice<i2c> {
 public:
@@ -44,7 +47,7 @@ public:
 private:
 	auto readData(int start, int numberBytes, uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override {
 		//if (I2Cdevice<i2c>::getStatus() != I2C_Talk_ErrorCodes::_OK) logger() << "RTC Unavailable" << L_endl;
-		return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer);
+		return I2Cdevice<i2c>::read(start, numberBytes, dataBuffer); // Non-revovery
 	}
 	auto writeData(int start, int numberBytes, const uint8_t* dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override { return I2Cdevice<i2c>::write_verify(start, numberBytes, dataBuffer); }
 };

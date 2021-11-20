@@ -194,7 +194,7 @@ bool retrieveMessages() {
 		if (message != 0) {
 			register_set.setRegister(reg, 0);
 			foundAMessage = true;
-			logger() << myMasterIndex << F(": Received ") << message << F(" from M") << reg << L_endl;
+			logger() << myMasterIndex << F(": at: ") << millis() << F(" : Received ") << message << F(" from M") << reg << L_endl;
 			if (thisIsOneIsent(message)) {
 				logger() << myMasterIndex << F(": One I sent!") << L_endl;
 				initiateMessage(1);
@@ -282,8 +282,8 @@ void loop() {
 	reset_watchdog();
 	if (!mastersForwardingOK) sendCheckMastersMessage();
 	bool foundAMessage = retrieveMessages();
-	if (myMasterIndex == 0 && !foundAMessage) {
-	//if (myMasterIndex == 0 && mastersForwardingOK == 0) {
+	//if (myMasterIndex == 0 && !foundAMessage) {
+	if (myMasterIndex == 0 && mastersForwardingOK == 0) {
 		initiateMessage(1);
 	}
 	flashLED();

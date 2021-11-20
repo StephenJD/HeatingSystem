@@ -64,6 +64,7 @@ namespace Assembly {
 				, mixValveControl.rec().flowTS_addr
 				, tempSensorArr[mixValveControl.rec().storeTempSens]
 				, *timeOfReset_mS
+				, mixValveControl.rec().name[3] == 'M' ? false : true
 			);
 			++index;
 		}
@@ -117,12 +118,12 @@ namespace Assembly {
 		//logger() << L_time << "Check TS's" << L_endl;
 		for (auto & ts : tempSensorArr) {
 			ts.readTemperature();
-			//logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
+			//if (checkPreHeat) logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
 		}
 
 		if (newMinute) {
-			//logger() << L_time << "Check BB & Zones" << L_endl;
+			//logger() << L_time << "Check BB" << L_endl;
 			backBoiler.check();
 			checkZones(checkPreHeat);
 		}
