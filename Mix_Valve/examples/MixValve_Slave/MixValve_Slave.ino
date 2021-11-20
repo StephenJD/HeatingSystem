@@ -109,10 +109,11 @@ Mix_Valve  mixValve[] = {
 };
 
 void setup() {
-	logger().begin(SERIAL_RATE);
-	logger() << F("Setup Started") << L_endl;
 	set_watchdog_timeout_mS(8000);
+	logger().begin(SERIAL_RATE);
+	logger() << F("Setup Started") << L_flush;
 	psu_enable.begin(true);
+	role = e_Master; // prevent PSU-Turn-off
 
 	i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
 	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
@@ -130,8 +131,6 @@ void setup() {
 		delay(50);
 	}
 
-	role = e_Slave;
-	roleChanged(e_Master);
 	mixValve[0].begin(55); // does speed-test
 	mixValve[1].begin(55);
 	logger() << F("Setup complete") << L_flush;
@@ -139,7 +138,6 @@ void setup() {
 	speedTest.fastest();
 	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	delay(500);
-	//psu_enable.clear();
 }
 
 void loop() {
@@ -191,11 +189,11 @@ void roleChanged(Role newRole) {
 		} 
 		logger() << F("Set to Slave") << L_endl;
 	}
-	else if (role != newRole) { // changed to Master
+	else { // changed to Master
+		psu_enable.set();
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
 		mixValve[us_mix].setDefaultRequestTemp();		
 		mixValve[ds_mix].setDefaultRequestTemp();
-		psu_enable.clear();
 	}
 	role = newRole;
 }

@@ -97,6 +97,7 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	setReg(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
 	setReg(R_DISABLE_MULTI_MASTER_MODE, _ep->read(++eepromRegister));
 #endif
+	setDefaultRequestTemp();
 }
 
 void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when master/slave mode changes
