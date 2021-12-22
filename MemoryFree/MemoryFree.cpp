@@ -14,16 +14,16 @@ char * __brkval = 0;
 
 int freeMemory() {
   char top;
-  //logger() << "&top: " << long(&top) << " __brkval: " << long(__brkval) << " __malloc_heap_start: " << long(__malloc_heap_start) << L_endl;
+  //logger() << "&top: " << reinterpret_cast<uintptr_t>(&top) << " __brkval: " << static_cast<long>(__brkval) << " __malloc_heap_start: " << reinterpret_cast<uintptr_t>(__malloc_heap_start) << L_endl;
   // __malloc_heap_start is top of statics (start of heap) - approximates to Arduino reporting global variables use.
   // __brkval is the top of the heap, if it has been used, otherwise it's zero.
 
 #ifdef __arm__
-  return &top - reinterpret_cast<char*>(sbrk(0));
+  return static_cast<int>(&top - reinterpret_cast<char*>(sbrk(0)));
 //#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
 //  return &top - __brkval;
 #else  // __arm__
-  return &top - (__brkval == 0 ? __malloc_heap_start : __brkval);
+  return static_cast<int>(&top - (__brkval == 0 ? __malloc_heap_start : __brkval));
 #endif  // __arm__
 }
 //

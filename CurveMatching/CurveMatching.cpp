@@ -102,10 +102,10 @@ namespace GP_LIB {
 		else newTC = (-_xy.lastRiseTime / log((limit - _xy.lastRiseValue) / (limit - _xy.firstRiseValue)));
 		if (!(newTC > 0) || !(newTC < 3736)) OK = false;
 #ifdef LOG_SD
-		logToSD("GetExpCurveConsts::calcNewTimeConst: Temps*10/Times", long(_xy.firstRiseValue / 25.6),
-			long(_xy.midRiseValue / 25.6), _xy.midRiseTime,
-			long(_twiceMidRiseValue / 25.6), _twiceMidRiseTime,
-			long(_xy.lastRiseValue / 25.6), _xy.lastRiseTime);
+		logToSD("GetExpCurveConsts::calcNewTimeConst: Temps*10/Times", static_cast<long>(_xy.firstRiseValue / 25.6),
+			static_cast<long>(_xy.midRiseValue / 25.6), _xy.midRiseTime,
+			static_cast<long>(_twiceMidRiseValue / 25.6), _twiceMidRiseTime,
+			static_cast<long>(_xy.lastRiseValue / 25.6), _xy.lastRiseTime);
 #endif
 		return static_cast<uint16_t>(newTC);
 	}
@@ -143,7 +143,7 @@ namespace GP_LIB {
 #endif
 		_xy.lastRiseTime = (_timeSinceStart + _lastRiseStartTime) / 2;
 #ifdef LOG_SD
-		logToSD("GetExpCurveConsts::averageTimeAtThisValue\tAveTime:", 0L, long(_xy.lastRiseTime), 0L);
+		logToSD("GetExpCurveConsts::averageTimeAtThisValue\tAveTime:", 0L, static_cast<long>(_xy.lastRiseTime), 0L);
 #endif
 	}
 
@@ -156,7 +156,7 @@ namespace GP_LIB {
 		_twiceMidRiseValue = _xy.lastRiseValue;
 		_twiceMidRiseTime = _xy.lastRiseTime;
 #ifdef LOG_SD
-		logToSD("GetExpCurveConsts::shuffleRecordsAlong\tTemp[2]*10,Time:", 0L, long(_twiceMidRiseValue / 25.6), long(_twiceMidRiseTime));
+		logToSD("GetExpCurveConsts::shuffleRecordsAlong\tTemp[2]*10,Time:", 0L, static_cast<long>(_twiceMidRiseValue / 25.6), static_cast<long>(_twiceMidRiseTime));
 #endif
 	}
 
@@ -171,7 +171,7 @@ namespace GP_LIB {
 		_xy.lastRiseTime = _timeSinceStart; // averaged start time
 		_lastRiseStartTime = _timeSinceStart; // actual start time
 #ifdef LOG_SD
-		logToSD("GetExpCurveConsts::recordCurrent\tTemp[3]*10,Time:", 0L, long(_xy.lastRiseValue / 25.6), long(_xy.lastRiseTime));
+		logToSD("GetExpCurveConsts::recordCurrent\tTemp[3]*10,Time:", 0L, static_cast<long>(_xy.lastRiseValue / 25.6), static_cast<long>(_xy.lastRiseTime));
 #endif
 	}
 

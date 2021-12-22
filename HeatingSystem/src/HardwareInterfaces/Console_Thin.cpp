@@ -1,4 +1,4 @@
-#include "Console.h"
+#include "Console_Thin.h"
 #include "LCD_Display.h"
 #include "..\LCD_UI\A_Top_UI.h"
 #include "A__Constants.h"
@@ -12,14 +12,14 @@ using namespace arduino_logger;
 namespace HardwareInterfaces {
 	using namespace LCD_UI;
 
-	Console::Console(I_Keypad& keyPad, LCD_Display& lcd_display, Chapter_Generator& chapterGenerator) :
+	Console_Thin::Console_Thin(I_Keypad& keyPad, LCD_Display& lcd_display, Chapter_Generator& chapterGenerator) :
 		_keyPad(keyPad)
 		, _lcd_UI(lcd_display)
 		, _chapterGenerator(chapterGenerator) {}
 
-	int Console::consoleMode() const { return _keyPad.consoleOption(); }
+	int Console_Thin::consoleMode() const { return _keyPad.consoleMode(); }
 
-	bool Console::processKeys() {
+	bool Console_Thin::processKeys() {
 		bool doRefresh;
 		//unsigned long keyProcessStart;
 		int keyPress; // Time to detect press 1mS
@@ -87,7 +87,7 @@ namespace HardwareInterfaces {
 		return doRefresh;
 	}
 
-	void Console::refreshDisplay() { 
+	void Console_Thin::refreshDisplay() { 
 		//Serial.println("Stream");
 		auto displayIsAwake = _keyPad.displayIsAwake();
 #ifndef ZPSIM

@@ -54,7 +54,7 @@ namespace client_data_structures {
 	class DateTime_Interface : public I_Streaming_Tool {
 	public:
 #ifdef ZPSIM
-		DateTime_Interface() { ui_Objects()[(long)this] = "DateTime_Interface"; }
+		DateTime_Interface() { ui_Objects()[this] = "DateTime_Interface"; }
 #endif
 		using  I_Streaming_Tool::editItem;
 		// Queries

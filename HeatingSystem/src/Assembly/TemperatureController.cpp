@@ -28,6 +28,7 @@ namespace Assembly {
 
 	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers, unsigned long * timeOfReset_mS) :
 		tempSensorArr{ recovery }
+		, slaveConsole_TSArr{ {recovery, 0x36}, {recovery, 0x74}, {recovery, 0x70} }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
 		, mixValveControllerArr{ {recovery, prog_registers}, {recovery, prog_registers} }
@@ -40,8 +41,6 @@ namespace Assembly {
 		for (Answer_R<R_TempSensor> tempSensor : queries.q_tempSensors) {
 			tempSensorArr[index].initialise(tempSensor.id(), tempSensor.rec().address); // Reads temp
 			++index;
-			//if (index == 7)
-			//	auto a = true;
 		}
 		logger() << F("loadtempSensors Completed") << L_endl;
 
@@ -64,7 +63,7 @@ namespace Assembly {
 				, mixValveControl.rec().flowTS_addr
 				, tempSensorArr[mixValveControl.rec().storeTempSens]
 				, *timeOfReset_mS
-				, mixValveControl.rec().name[3] == 'M' ? false : true
+				, mixValveControl.rec().name[3] == 'M' ? true : false
 			);
 			++index;
 		}
@@ -72,7 +71,7 @@ namespace Assembly {
 		
 		index = 0;
 		for (Answer_R<R_Zone> zone : queries.q_Zones) {
-			auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_ROOM_TEMP) + OLED_Master_Display::R_DISPL_REG_SIZE * index;
+			auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + OLED_Thick_Display::R_DISPL_REG_SIZE * index;
 			zoneArr[index].initialise(
 				zone
 				, *_prog_registers.reg_ptr(remoteTS_register)
@@ -120,6 +119,15 @@ namespace Assembly {
 			ts.readTemperature();
 			//if (checkPreHeat) logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
+		}
+
+		auto zoneIndex = 0;
+		for (auto& zone : zoneArr) {
+			auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + (OLED_Thick_Display::R_DISPL_REG_SIZE * zoneIndex);
+			slaveConsole_TSArr[zoneIndex].readTemperature();
+			auto roomTemp = slaveConsole_TSArr[zoneIndex].get_fractional_temp();
+			_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
+			_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
 		}
 
 		if (newMinute) {

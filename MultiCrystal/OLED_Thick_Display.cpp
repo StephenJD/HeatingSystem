@@ -1,4 +1,4 @@
-#include "OLED_Master_Display.h"
+#include "OLED_Thick_Display.h"
 #include <MsTimer2.h>
 
 #include <I2C_Talk.h>
@@ -34,7 +34,7 @@ enum SlaveRequestIni {
 }; 
 auto REQUESTING_INI = RC_US_REQUESTING_INI;
 
-namespace OLED_Master_Display {
+namespace OLED_Thick_Display {
 
     // Free functions
     int8_t _sleepRow = -1;
@@ -69,23 +69,26 @@ namespace OLED_Master_Display {
     }
 
     void sendDataToProgrammer(int reg) {
-        // Room temp and requests are sent by the console to the Programmer.
-        // The programmer does not read them from the console.
-        // New request temps initiated by the programmer are sent by the programmer and not read by the console.
-        // Warmup-times are read by the console from the programmer.
+        // New request temps initiated by the programmer are sent by the programmer.
+        // In Multi-Master Mode: 
+        //		Room temp and requests are sent by the console to the Programmer.
+        //		Warmup-times are read by the console from the programmer.
+        // In Slave-Mode: 
+        //		Requests are read from the console by the Programmer.
+        //		Room Temp and Warmup-times are sent to the console by the programmer.
 
 #ifdef ZPSIM
         uint8_t(&debug)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(*rem_registers.reg_ptr(0));
         uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(Wire.i2CArr[US_CONSOLE_I2C_ADDR][0]);
 #endif
-        if (rem_registers.getRegister(R_DISPL_REG_OFFSET) != 0) {
+        if (rem_registers.getRegister(R_IS_MASTER) && rem_registers.getRegister(R_DISPL_REG_OFFSET) != 0) {
             //Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
             i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + reg, 1, rem_registers.reg_ptr(reg));
         }
     }
 
     void readDataFromProgrammer() {
-        if (rem_registers.getRegister(R_DISPL_REG_OFFSET) != 0) {
+        if (rem_registers.getRegister(R_IS_MASTER) && rem_registers.getRegister(R_DISPL_REG_OFFSET) != 0) {
             i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_WARM_UP_ROOM_M10, R_DISPL_REG_SIZE - R_WARM_UP_ROOM_M10, rem_registers.reg_ptr(R_WARM_UP_ROOM_M10));
         }
         bool towelRailNowOff = rem_registers.getRegister(R_ON_TIME_T_RAIL) == 0;

@@ -21,7 +21,7 @@ namespace client_data_structures {
 	InsertSpell_Cmd::InsertSpell_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
 		: UI_Cmd(label_text, onSelect, behaviour) {
 #ifdef ZPSIM
-		logger() << F("InsertSpell_Cmd at: ") << L_hex << (long)this << L_endl;
+		logger() << F("InsertSpell_Cmd at: ") << L_hex << reinterpret_cast<uintptr_t>(this) << L_endl;
 #endif
 	}
 
@@ -73,7 +73,7 @@ namespace client_data_structures {
 	Contrast_Brightness_Cmd::Contrast_Brightness_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
 		: UI_Cmd(label_text, onSelect, behaviour) {
 #ifdef ZPSIM
-		logger() << F("Contrast_Brightness_Cmd at: ") << L_hex << (long)this << L_endl;
+		logger() << F("Contrast_Brightness_Cmd at: ") << L_hex << reinterpret_cast<uintptr_t>(this) << L_endl;
 #endif
 	}
 
@@ -94,7 +94,7 @@ namespace client_data_structures {
 	InsertTimeTemp_Cmd::InsertTimeTemp_Cmd(const char * label_text, LCD_UI::OnSelectFnctr onSelect, LCD_UI::Behaviour behaviour)
 		: UI_Cmd(label_text, onSelect, behaviour) {
 #ifdef ZPSIM
-		logger() << F("InsertTimeTemp_Cmd at: ") << L_hex << (long)this << L_endl;
+		logger() << F("InsertTimeTemp_Cmd at: ") << L_hex << reinterpret_cast<uintptr_t>(this) << L_endl;
 #endif
 	}	
 	

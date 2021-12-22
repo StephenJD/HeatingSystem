@@ -8,7 +8,7 @@
 #ifdef ZPSIM
 #include <map>
 using namespace std;
-map<long, string> & ui_Objects();
+map<const void*, string> & ui_Objects();
 #endif
 
 namespace LCD_UI {
@@ -39,8 +39,8 @@ namespace LCD_UI {
 		auto field_streamingTool_h = static_cast<Field_StreamingTool_h*>(from);
 		editItem().setBackUI(from);
 #ifdef ZPSIM
-		cout << F("Edit Interface: ") << ui_Objects()[(long)this] << endl;
-		cout << F("\tedit->back ") << ui_Objects()[(long)field_streamingTool_h->backUI()->get()] << endl; // Collection with field to be edited
+		cout << F("Edit Interface: ") << ui_Objects()[this] << endl;
+		cout << F("\tedit->back ") << ui_Objects()[field_streamingTool_h->backUI()->get()] << endl; // Collection with field to be edited
 		cout << F("\tedit->back->focus ") << field_streamingTool_h->backUI()->focusIndex() << endl;
 #endif	
 		auto sourceCollection = field_streamingTool_h->backUI()->get()->collection();
@@ -160,7 +160,7 @@ namespace LCD_UI {
 
 	Collection_Hndl * Field_StreamingTool_h::on_select() { // Saves edit
 #ifdef ZPSIM
-		cout << F("on_select ") << ui_Objects()[(long)backUI()->get()] << endl;
+		cout << F("on_select ") << ui_Objects()[backUI()->get()] << endl;
 #endif	
 		backUI()->getItem(backUI()->focusIndex());
 		auto fieldData = backUI()->get()->collection();		

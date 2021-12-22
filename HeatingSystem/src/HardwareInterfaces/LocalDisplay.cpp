@@ -63,7 +63,7 @@ namespace HardwareInterfaces {
 	}
 
 	void LocalDisplay::setBackLight(bool wake) {
-		//logger() << F("SetBackLight Query set:") << (long)_query << L_endl;
+		//logger() << F("SetBackLight Query set:") << reinterpret_cast<uintptr_t>(_query) << L_endl;
 		if (_query) {
 			auto displayDataRS = _query->begin();
 			Answer_R<R_Display> displayDataA = *_query->begin();

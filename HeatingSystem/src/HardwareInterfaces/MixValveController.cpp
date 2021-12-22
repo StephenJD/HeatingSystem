@@ -28,7 +28,7 @@ namespace HardwareInterfaces {
 	MixValveController::MixValveController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers) 
 		: I_I2Cdevice_Recovery{recover}
 		, _prog_registers(prog_registers)
-		, _disabled_multimaster_flowTempSensor{ recover }
+		, _slaveMode_flowTempSensor{ recover }
 	{}
 
 	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS, bool multi_master_mode) {
@@ -43,8 +43,8 @@ namespace HardwareInterfaces {
 		i2C().extendTimeouts(15000, 6, 1000);
 		auto slaveRegOffset = index == 0 ? MV_REG_SLAVE_0_OFFSET : MV_REG_SLAVE_1_OFFSET;
 		setReg(Mix_Valve::R_MV_REG_OFFSET, slaveRegOffset);
-		_disabled_multimaster_flowTempSensor.setAddress(_flowTS_addr);
-		_disabled_multimaster = multi_master_mode;
+		_slaveMode_flowTempSensor.setAddress(_flowTS_addr);
+		_is_multimaster = multi_master_mode;
 		//logger() << F("MixValveController::ini done. Reg:") << _regOffset + Mix_Valve::R_MV_REG_OFFSET << ":" << slaveRegOffset << L_endl;
 	}
 
@@ -80,7 +80,7 @@ namespace HardwareInterfaces {
 		errCode |= writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
 		errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
 		errCode |= writeToValve(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
-		errCode |= writeToValve(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE, _disabled_multimaster);
+		errCode |= writeToValve(Mix_Valve::R_MULTI_MASTER_MODE, _is_multimaster);
 		setReg(Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
 		setReg(Mix_Valve::R_RATIO, 30);
 		setReg(Mix_Valve::R_FROM_TEMP, 55);
@@ -98,8 +98,8 @@ namespace HardwareInterfaces {
 	}
 
 	void MixValveController::enable_multi_master_mode(bool enable) {
-		_disabled_multimaster = !enable;
-		writeToValve(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE, _disabled_multimaster);
+		_is_multimaster = enable;
+		writeToValve(Mix_Valve::R_MULTI_MASTER_MODE, _is_multimaster);
 	}
 
 	uint8_t MixValveController::flowTemp() const {
@@ -307,9 +307,9 @@ namespace HardwareInterfaces {
 		uint8_t (&debug)[58] = reinterpret_cast<uint8_t (&)[58]>(*_prog_registers.reg_ptr(0));
 		uint8_t (&debugWire)[30] = reinterpret_cast<uint8_t (&)[30]>(Wire.i2CArr[getAddress()][0]);
 #endif
-		if (_disabled_multimaster) {
-			_disabled_multimaster_flowTempSensor.readTemperature();
-			auto flowTemp = _disabled_multimaster_flowTempSensor.get_temp();
+		if (!_is_multimaster) {
+			_slaveMode_flowTempSensor.readTemperature();
+			auto flowTemp = _slaveMode_flowTempSensor.get_temp();
 			writeToValve(Mix_Valve::R_FLOW_TEMP, flowTemp);
 			setReg(Mix_Valve::R_FLOW_TEMP, flowTemp);
 			//logger() << "ReadMixVTempS: " << flowTemp << L_endl;
@@ -322,6 +322,11 @@ namespace HardwareInterfaces {
 		if (status == _OK) {
 			//profileLogger() << "Read :" << Mix_Valve::MV_NO_TO_READ << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE << " to : " << _regOffset + Mix_Valve::R_MODE << L_endl;
 			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE, Mix_Valve::MV_NO_TO_READ, _prog_registers.reg_ptr(_regOffset + Mix_Valve::R_MODE));
+			if (getReg(Mix_Valve::R_FLOW_TEMP) == 255) {
+				logger() << L_time << F("MixValve Reads Wrong device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+				auto speedTest = I2C_SpeedTest(*this);
+				speedTest.fastest();
+			}
 			if (status) {
 				logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}

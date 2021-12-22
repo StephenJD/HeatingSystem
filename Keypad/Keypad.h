@@ -4,6 +4,10 @@
 
 namespace HardwareInterfaces {
 	constexpr uint8_t KEY_QUEUE_LENGTH = 3;
+	constexpr int LAST_CONSOLE_MODE = 5; // { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
+	constexpr int LCD_CONSOLE_MODE = LAST_CONSOLE_MODE - 1;
+	constexpr int SLAVE_CONSOLE_MODE = 2;
+
 
 	/// <summary>
 	/// Debounced with EMI protection with multiple re-reads.
@@ -21,7 +25,7 @@ namespace HardwareInterfaces {
 		// Queries
 		bool displayIsAwake() const { return _secsToKeepAwake > 0; }
 		bool keyIsWaiting() const { return keyQueEnd > -1; }
-		int consoleOption() const { return _wakeTime > 3 ? 3 : _wakeTime; }
+		int consoleMode() const { return _wakeTime > LAST_CONSOLE_MODE ? LAST_CONSOLE_MODE : _wakeTime; }
 
 		// Modifiers
 		virtual void startRead(); // for interrupt driven keypads
@@ -29,7 +33,7 @@ namespace HardwareInterfaces {
 		KeyOperation popKey();
 		virtual KeyOperation getKeyCode() = 0;
 		bool oneSecondElapsed();
-		void wakeDisplay() { _secsToKeepAwake = _wakeTime > 2 ? _wakeTime : 0; }
+		void wakeDisplay() { _secsToKeepAwake = _wakeTime > LAST_CONSOLE_MODE ? _wakeTime : 0; }
 		void clearKeys() { keyQueEnd = -1; }
 		void putKey(KeyOperation myKey);
 		void setWakeTime(uint8_t wakeTime) { _wakeTime = wakeTime; }
@@ -51,7 +55,7 @@ namespace HardwareInterfaces {
 		int8_t	_secsToKeepAwake = 30;
 		uint8_t	_lastSecond = 0;
 		Timer_mS _timeToRead;
-		uint8_t _wakeTime = 30; // 0:OLED-Display, 1:OLED_Display/KBd, 2:LCD-Display, >=3:LCD-Display/KBd
+		uint8_t _wakeTime = 30; // 0 - LAST_CONSOLE_MODE for remotes
 	};
 }
 

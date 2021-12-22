@@ -19,7 +19,7 @@ namespace Assembly {
 		, _recTowelRail(tc.towelRailArr)
 		, _recRelay(tc.relayArr)
 		, _recMixValve(tc.mixValveControllerArr)
-		, _recConsole(hs.remoteKeypadArr)
+		, _recConsole(hs.remoteKeypadArr, hs.thickConsole_Arr)
 
 		// Datasets
 		, _ds_currTime{ _recCurrTime , _recCurrTime.nullQuery }
@@ -39,7 +39,7 @@ namespace Assembly {
 	{
 		logger() << F("Datasets constructed") << L_endl;
 #ifdef ZPSIM
-		ui_Objects()[(long)&_ds_ZonesForDwelling] = "_ds_ZonesForDwelling";
+		ui_Objects()[&_ds_ZonesForDwelling] = "_ds_ZonesForDwelling";
 #endif
 	}
 

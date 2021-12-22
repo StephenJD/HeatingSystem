@@ -217,7 +217,7 @@ namespace client_data_structures {
 		: _days(0, ValRange(e_editAll, 0, 127, 0, 7))
 	{
 #ifdef ZPSIM
-		ui_Objects()[(long)this] = "Dataset_Profile";
+		ui_Objects()[this] = "Dataset_Profile";
 #endif
 	}
 

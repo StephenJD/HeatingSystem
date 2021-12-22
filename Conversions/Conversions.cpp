@@ -71,7 +71,7 @@ namespace GP_LIB {
 		int charIndex = 0;
 
 		auto numStr_20 = intToString(abs(value));
-		int editablePlaces = strlen(numStr_20);
+		int editablePlaces = static_cast<int>(strlen(numStr_20));
 
 		auto padStr_10 = CStr_20{};
 
@@ -112,7 +112,7 @@ namespace GP_LIB {
 		// TODO: implement using arduino Print / PString
 		auto padStr_10 = intToString(number, minNoOfChars,' ',format);
 
-		int decPos = strlen(padStr_10) - noOfDecPlaces - 1;
+		int decPos = static_cast<int>(strlen(padStr_10)) - noOfDecPlaces - 1;
 		if (padStr_10[decPos] < '0' || padStr_10[decPos] > '9') {
 			// insert preceeding 0 if there is no digit to left of dec place.
 			if (decPos -1 >= 0) padStr_10[decPos - 1] = padStr_10[decPos];

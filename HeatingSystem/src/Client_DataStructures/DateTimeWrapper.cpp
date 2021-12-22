@@ -135,7 +135,7 @@ namespace client_data_structures {
 	void DateTime_Interface::haveMovedTo(int currFocus) {
 		if (currFocus == 6) {
 			dataSource()->getData()->behaviour().make_EditUD();
-			//logger() << ui_Objects()[(long)dataSource()->getData()] << L_endl;
+			//logger() << ui_Objects()[dataSource()->getData()] << L_endl;
 		}
 	}
 

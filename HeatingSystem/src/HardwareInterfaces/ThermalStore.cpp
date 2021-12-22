@@ -5,13 +5,13 @@
 #include "A__Constants.h"
 #include "..\Client_DataStructures\Data_TempSensor.h" // relative path required by Arduino
 #include <FlashStrings.h>
-#include "OLED_Master_Display.h"
+#include "OLED_Thick_Display.h"
 
 namespace arduino_logger {
 	Logger& profileLogger();
 }
 using namespace arduino_logger;
-using namespace OLED_Master_Display; // for Mode e_Off/On
+using namespace OLED_Thick_Display; // for Mode e_Off/On
 
 namespace HardwareInterfaces {
 

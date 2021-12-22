@@ -404,18 +404,18 @@ SCENARIO("Simple Page Scrolling", "[Chapter]") {
 	UI_Cmd C3("C3", 0, Behaviour{ V + S + L + V1 + UD_A});
 
 	// UI Element Arays / Collections
-	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
-	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&C3] = "C3";
-	ui_Objects()[(long)&L1] = "L1";
+	ui_Objects()[&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[&C3] = "C3";
+	ui_Objects()[&L1] = "L1";
 
 	auto page1_c = makeCollection(L1, dwellNameUI_c, zoneNameUI_c, progNameUI_c, C3);
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&display1_c] = "display1_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
+	ui_Objects()[&page1_c] = "page1_c";
 
 	GIVEN("There is only one Page") {
 		REQUIRE(test_stream(display1_h.stream(tb)) == "L1 House   UpStrs   At Home             C3");
@@ -568,13 +568,13 @@ SCENARIO("View-All scroll and edit", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
-	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&C3] = "C3";
-	ui_Objects()[(long)&L1] = "L1";
-	ui_Objects()[(long)&display1_c] = "display1_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
+	ui_Objects()[&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[&C3] = "C3";
+	ui_Objects()[&L1] = "L1";
+	ui_Objects()[&display1_c] = "display1_c";
+	ui_Objects()[&page1_c] = "page1_c";
 
 	cout << "\n **** All Constructed ****\n\n";
 	GIVEN("Moving Focus on ViewAll Names") {
@@ -766,20 +766,20 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 	auto dwellNameUI_c = UI_FieldData(&ds_dwellings, RecInt_Dwelling::e_name);
 	auto zoneNameUI_c = UI_FieldData(&ds_ZonesForDwelling, RecInt_Zone::e_name);
 	auto progNameUI_c = UI_FieldData(&ds_dwProgs, RecInt_Program::e_name);
-	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
-	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[&progNameUI_c] = "progNameUI_c";
 
 	auto label_c = makeCollection(C1, C2, C3, C4);
-	ui_Objects()[(long)&label_c] = "label_c";
+	ui_Objects()[&label_c] = "label_c";
 
 	//cout << "\n **** Next create Short-collection wrappers ****\n";
 	auto iterated_zoneName = UI_IteratedCollection{ 19, makeCollection(zoneNameUI_c) };
 	auto iterated_progName = UI_IteratedCollection{ 30, makeCollection(progNameUI_c) };
 	auto iterated_label = UI_IteratedCollection{ 3, makeCollection(label_c) };
-	ui_Objects()[(long)&iterated_zoneName] = "iterated_zoneName";
-	ui_Objects()[(long)&iterated_progName] = "iterated_progName";
-	ui_Objects()[(long)&iterated_label] = "iterated_label";
+	ui_Objects()[&iterated_zoneName] = "iterated_zoneName";
+	ui_Objects()[&iterated_progName] = "iterated_progName";
+	ui_Objects()[&iterated_label] = "iterated_label";
 
 	// UI Element Arays / Collections	cout << "\npage1 Collection\n";
 	auto page1_c = makeCollection(L1, dwellNameUI_c, iterated_zoneName, iterated_progName);
@@ -788,10 +788,10 @@ SCENARIO("Multiple pages scroll with Short List Items", "[Chapter]") {
 	//cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(page1_c, page2_c, page3_c);
 	auto display1_h = A_Top_UI(display1_c);
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&page2_c] = "page2_c";
-	ui_Objects()[(long)&page3_c] = "page3_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&page2_c] = "page2_c";
+	ui_Objects()[&page3_c] = "page3_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	//cout << " **** All Constructed ****\n\n";
 
@@ -1472,12 +1472,12 @@ SCENARIO("Edit on UP/DOWN", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&currTimeUI_c] = "currTimeUI_c";
-	ui_Objects()[(long)&currDateUI_c] = "currDateUI_c";
-	ui_Objects()[(long)&dstUI_c] = "dstUI_c";
-	ui_Objects()[(long)&L1] = "L1";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&currTimeUI_c] = "currTimeUI_c";
+	ui_Objects()[&currDateUI_c] = "currDateUI_c";
+	ui_Objects()[&dstUI_c] = "dstUI_c";
+	ui_Objects()[&L1] = "L1";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	clock_().setTime({ 31,7,17 }, { 8,10 }, 5);
 	GIVEN("Custom UI_Wrapper with Edit-on-up-down") {
@@ -1550,14 +1550,14 @@ SCENARIO("Iterated View-all Variants UD_A", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
-	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
-	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
-	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
-	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
-	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	display1_h.rec_select();
 	GIVEN("Self-iterating View-all can be scrolled LR") {
@@ -1723,14 +1723,14 @@ SCENARIO("Iterated View-all Variants UD_C", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
-	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
-	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
-	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
-	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
-	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	display1_h.rec_select();
 	GIVEN("Self-iterating UD_C moves to next iteration at end of collection on LR ") {
@@ -1790,14 +1790,14 @@ SCENARIO("Iterated View-all Variants UD_E", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
-	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
-	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
-	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
-	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
-	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	display1_h.rec_select();
 	GIVEN("Self-iterating UD_E ER0 moves to next field on LR") {
@@ -1869,14 +1869,14 @@ SCENARIO("Iterated View-all Variants UD_S", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
-	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
-	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
-	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
-	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
-	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	display1_h.rec_select();
 	GIVEN("Self-iterating UD_E ER0 moves to next field on LR") {
@@ -1940,14 +1940,14 @@ SCENARIO("Iterated SingleSel Variants UD_A", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
-	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
-	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
-	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
-	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
-	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	display1_h.rec_select();
 	GIVEN("Self-iterating UD_C moves to next iteration on LR") {
@@ -2007,14 +2007,14 @@ SCENARIO("Iterated UD_C with Alternative UP Action", "[Chapter]") {
 
 	//_allZoneRatio_UI_c.getStreamingTool().onSelect().
 
-	ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
-	ui_Objects()[(long)&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
-	ui_Objects()[(long)&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
-	ui_Objects()[(long)&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
-	ui_Objects()[(long)&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
-	ui_Objects()[(long)&_iterated_AllZones_c] = "_iterated_AllZones_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+	ui_Objects()[&_allZoneAbbrev_UI_c] = "_allZoneAbbrev_UI_c";
+	ui_Objects()[&_allZoneOffset_UI_c] = "_allZoneOffset_UI_c";
+	ui_Objects()[&_allZoneRatio_UI_c] = "_allZoneRatio_UI_c";
+	ui_Objects()[&_allZoneTC_UI_c] = "_allZoneTC_UI_c";
+	ui_Objects()[&_iterated_AllZones_c] = "_iterated_AllZones_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	display1_h.rec_select();
 	GIVEN("Self-iterating UD_C moves to next iteration at end of collection on LR ") {
@@ -2080,9 +2080,9 @@ SCENARIO("Iterated Request Temps - Change Temp", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	//for (auto & z : zoneArr) z.setFlowTemp(); // Can't setflowtemp and get heating requirement unless constructed a thermstore and backboiler...
 	display1_h.rec_select();
@@ -2168,10 +2168,10 @@ SCENARIO("Iterated Request Temps - Change Profile", "[Chapter]") {
 	auto display1_c = makeChapter(page1_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
-	ui_Objects()[(long)&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
-	ui_Objects()[(long)&page1_c] = "page1_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
+	ui_Objects()[&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
+	ui_Objects()[&page1_c] = "page1_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	//for (auto & z : zoneArr) z.setFlowTemp(); // Can't setflowtemp and get heating requirement unless constructed a thermstore and backboiler...
 	display1_h.rec_select();
@@ -2326,11 +2326,11 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto dwellSpellUI_c = UI_FieldData(&ds_dwSpells, RecInt_Spell::e_date, { V + S + V1 + UD_E });
 	auto spellProgUI_c = UI_FieldData(&ds_spellProg, RecInt_Program::e_name, { V + S +L+ V1+UD_A+ER+EA });
 
-	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&zoneNameUI_c] = "zoneNameUI_c";
-	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&dwellSpellUI_c] = "dwellSpellUI_c";
-	ui_Objects()[(long)&spellProgUI_c] = "spellProgUI_c";
+	ui_Objects()[&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[&zoneNameUI_c] = "zoneNameUI_c";
+	ui_Objects()[&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[&dwellSpellUI_c] = "dwellSpellUI_c";
+	ui_Objects()[&spellProgUI_c] = "spellProgUI_c";
 
 	// UI Elements
 	auto iteratedZoneName = UI_IteratedCollection<1>{ 60, zoneNameUI_c};
@@ -2340,13 +2340,13 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	UI_Label _insert = { "Insert-Prog", Behaviour{H+L0} };
 	UI_Label _newline = { "`"};
 
-	ui_Objects()[(long)&iteratedZoneName] = "iteratedZoneName";
-	ui_Objects()[(long)&iteratedProgName] = "iteratedProgName";
-	ui_Objects()[(long)&_dwellingZoneCmd] = "_dwellingZoneCmd";
-	ui_Objects()[(long)&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
-	ui_Objects()[(long)&_dwellingProgCmd] = "_dwellingProgCmd";
-	ui_Objects()[(long)&_fromCmd] = "_fromCmd";
-	ui_Objects()[(long)&_insert] = "_insert";
+	ui_Objects()[&iteratedZoneName] = "iteratedZoneName";
+	ui_Objects()[&iteratedProgName] = "iteratedProgName";
+	ui_Objects()[&_dwellingZoneCmd] = "_dwellingZoneCmd";
+	ui_Objects()[&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
+	ui_Objects()[&_dwellingProgCmd] = "_dwellingProgCmd";
+	ui_Objects()[&_fromCmd] = "_fromCmd";
+	ui_Objects()[&_insert] = "_insert";
 
 	// UI Element Arays / Collections
 	auto zone_subpage_c = makeCollection(_dwellingZoneCmd, _newline, iteratedZoneName);
@@ -2356,9 +2356,9 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	calendar_subpage_c.behaviour().make_noRecycle();
 	prog_subpage_c.behaviour().make_noRecycle();
 	
-	ui_Objects()[(long)&zone_subpage_c] = "zone_subpage_c";
-	ui_Objects()[(long)&calendar_subpage_c] = "calendar_subpage_c";
-	ui_Objects()[(long)&prog_subpage_c] = "prog_subpage_c";
+	ui_Objects()[&zone_subpage_c] = "zone_subpage_c";
+	ui_Objects()[&calendar_subpage_c] = "calendar_subpage_c";
+	ui_Objects()[&prog_subpage_c] = "prog_subpage_c";
 
 	auto _page_dwellingMembers_subpage_c = makeCollection(zone_subpage_c, calendar_subpage_c, prog_subpage_c);
 	_page_dwellingMembers_subpage_c.set(Behaviour{V+S+V1+UD_A+R});
@@ -2370,9 +2370,9 @@ SCENARIO("View-one nested Calendar element", "[Display]") {
 	auto display1_c = makeChapter(_page_dwellingMembers_c);
 	auto display1_h = A_Top_UI(display1_c);
 
-	ui_Objects()[(long)&_page_dwellingMembers_subpage_c] = "_page_dwellingMembers_subpage_c";
-	ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_page_dwellingMembers_subpage_c] = "_page_dwellingMembers_subpage_c";
+	ui_Objects()[&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	for (Answer_R<R_Program>program : q_ProgsForDwelling) {
 		cout << (int)program.id() << " " << program.rec().name << endl;
@@ -2769,11 +2769,11 @@ SCENARIO("View-one nested Profile element", "[Display]") {
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(profile_page_c);
 	auto display1_h = A_Top_UI(display1_c);
-	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&zoneAbbrevUI_c] = "zoneAbbrevUI_c";
-	ui_Objects()[(long)&profileDaysUI_c] = "profileDaysUI_c";
-	ui_Objects()[(long)&profile_page_c] = "profile_page_c";
+	ui_Objects()[&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[&zoneAbbrevUI_c] = "zoneAbbrevUI_c";
+	ui_Objects()[&profileDaysUI_c] = "profileDaysUI_c";
+	ui_Objects()[&profile_page_c] = "profile_page_c";
 
 	cout << "\n **** All Constructed ****\n\n";
 	display1_h.stream(tb);
@@ -2867,10 +2867,10 @@ SCENARIO("View-one Program and Iterated Programs", "[Display]") {
 	cout << "\nDisplay     Collection\n";
 	auto display1_c = makeChapter(prog_page_c);
 	auto display1_h = A_Top_UI(display1_c);
-	ui_Objects()[(long)&dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&iteratedProgName] = "iteratedProgName";
-	ui_Objects()[(long)&prog_page_c] = "prog_page_c";
+	ui_Objects()[&dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[&progNameUI_c] = "progNameUI_c";
+	ui_Objects()[&iteratedProgName] = "iteratedProgName";
+	ui_Objects()[&prog_page_c] = "prog_page_c";
 
 	cout << "\n **** All Constructed ****\n\n";
 	display1_h.stream(tb);
@@ -3022,19 +3022,19 @@ TEST_CASE("TimeTemps", "[Display]") {
 	_newTTCmd.set_OnSelFn_TargetUI(&_editTTCmd);
 	_timeTempUI_c.set_OnSelFn_TargetUI(&_editTTCmd);
 
-	ui_Objects()[(long)&_dwellNameUI_c] = "dwellNameUI_c";
-	ui_Objects()[(long)&_dwZoneAbbrevUI_c] = "_dwZoneAbbrevUI_c";
-	ui_Objects()[(long)&_progNameUI_c] = "progNameUI_c";
-	ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
-	ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
-	ui_Objects()[(long)&_newLine] = "_newLine";
-	ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
-	ui_Objects()[(long)&_deleteTTCmd] = "_deleteTTCmd";
-	ui_Objects()[(long)&_editTTCmd] = "_editTTCmd";
-	ui_Objects()[(long)&_newTTCmd] = "_newTTCmd";
-	ui_Objects()[(long)&_tt_SubPage_c] = "_tt_SubPage_c";
-	ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
-	ui_Objects()[(long)&display1_c] = "display1_c";
+	ui_Objects()[&_dwellNameUI_c] = "dwellNameUI_c";
+	ui_Objects()[&_dwZoneAbbrevUI_c] = "_dwZoneAbbrevUI_c";
+	ui_Objects()[&_progNameUI_c] = "progNameUI_c";
+	ui_Objects()[&_profileDaysUI_c] = "_profileDaysUI_c";
+	ui_Objects()[&_timeTempUI_c] = "_timeTempUI_c";
+	ui_Objects()[&_newLine] = "_newLine";
+	ui_Objects()[&_iterated_timeTempUI] = "_iterated_timeTempUI";
+	ui_Objects()[&_deleteTTCmd] = "_deleteTTCmd";
+	ui_Objects()[&_editTTCmd] = "_editTTCmd";
+	ui_Objects()[&_newTTCmd] = "_newTTCmd";
+	ui_Objects()[&_tt_SubPage_c] = "_tt_SubPage_c";
+	ui_Objects()[&_page_profile_c] = "_page_profile_c";
+	ui_Objects()[&display1_c] = "display1_c";
 
 	auto display1_h = A_Top_UI(display1_c);
 
@@ -3443,7 +3443,7 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 	auto showActive = [](auto & ui) {
 		for (auto & obj : *ui->get()->collection()) {
 			UI_FieldData & fieldData = static_cast<UI_FieldData &>(obj);
-			cout << ui_Objects()[(long)&fieldData] << "\tFocus: " << fieldData.focusIndex() << " RecID: " << fieldData.data()->ds_recordID() << endl;
+			cout << ui_Objects()[&fieldData] << "\tFocus: " << fieldData.focusIndex() << " RecID: " << fieldData.data()->ds_recordID() << endl;
 		}
 	};
 

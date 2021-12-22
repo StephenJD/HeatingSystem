@@ -3,6 +3,7 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\I_Data_Formatter.h"
 #include <RemoteKeypad.h>
+#include <ConsoleController_Thick.h>
 
 namespace client_data_structures {
 	using namespace LCD_UI;
@@ -20,14 +21,14 @@ namespace client_data_structures {
 		uint8_t backlight_dim;
 		uint8_t photo_bright;
 		uint8_t photo_dim;
-		uint8_t timeout; // 0 == disabled keypad
+		uint8_t timeout; // <= LAST_CONSOLE_MODE for remote displays
 
 		bool operator < (R_Display rhs) const { return false; }
 		bool operator == (R_Display rhs) const { return true; }
 	};
 
 	inline arduino_logger::Logger& operator << (arduino_logger::Logger& stream, const R_Display& display) {
-		return stream << F("Display ") << (int)display.name;
+		return stream << F("Display ") << reinterpret_cast<uintptr_t>(display.name);
 	}
 
 //***************************************************
@@ -35,23 +36,26 @@ namespace client_data_structures {
 //***************************************************
 
 	/// <summary>
-	/// DB Interface to all Console Data
+	/// DB Interface to all Console_Thin Data
 	/// Provides streamable fields which may be populated by a database or the runtime-data.
 	/// A single object may be used to stream and edit any of the fields via getFieldAt
 	/// </summary>
 	class RecInt_Console : public Record_Interface<R_Display> {
 	public:
 		enum streamable { e_name, e_console_options	};
-		RecInt_Console(HardwareInterfaces::RemoteKeypad* remoteKeypadArr);
+		RecInt_Console(RemoteKeypad* remoteKeypadArr, ConsoleController_Thick* thickConsole_Arr);
 		I_Data_Formatter* getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter* val) override;
 	private:
-		static const char OLD_D[7];
-		static const char _OLD_DK[7];
+		static const char _OLM_D[7];
+		static const char _OLM_DK[7];
+		static const char _OLS_D[7];
+		static const char _OLS_DK[7];
 		static const char _LCD_D[7];
 		static const char _LCD_DK[7];
-		static const char* _options[4];
+		static const char* _options[LAST_CONSOLE_MODE + 1];
 		HardwareInterfaces::RemoteKeypad* _remoteKeypadArr;
+		HardwareInterfaces::ConsoleController_Thick* _thickConsole_Arr;
 		StrWrapper _name;
 		OptionsWrapper _console_options;
 	};

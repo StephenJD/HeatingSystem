@@ -12,9 +12,9 @@ namespace HardwareInterfaces {
 	class ThermalStore;
 	class Zone;
 
-	class RemoteConsole : public I_I2Cdevice_Recovery {
+	class ConsoleController_Thick : public I_I2Cdevice_Recovery {
 	public:
-		RemoteConsole(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
+		ConsoleController_Thick(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
 		void initialise(int index, int addr, int roomTS_addr, TowelRail& towelRail, Zone& dhw, Zone& zone, unsigned long& timeOfReset_mS);
 		
 		// Virtual Functions
@@ -22,9 +22,10 @@ namespace HardwareInterfaces {
 
 		uint8_t sendSlaveIniData(uint8_t requestINI_flag);
 		uint8_t getReg(int reg) const;
-		uint8_t index() const { return (_regOffset - RC_REG_MASTER_US_OFFSET) / OLED_Master_Display::R_DISPL_REG_SIZE; }
+		uint8_t index() const { return (_regOffset - RC_REG_MASTER_US_OFFSET) / OLED_Thick_Display::R_DISPL_REG_SIZE; }
 		void refreshRegisters();
-
+		int isMaster() const;
+		void setMasterMode(uint8_t mode);
 	private:
 		I2C_Talk_ErrorCodes::Error_codes writeRegisterToConsole(int reg);
 		void waitForWarmUp();

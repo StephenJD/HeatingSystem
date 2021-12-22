@@ -94,18 +94,16 @@ HeatingSystem::HeatingSystem()
 	, remDispl{ {_recover, US_REMOTE_ADDRESS}, DS_REMOTE_ADDRESS, FL_REMOTE_ADDRESS } // must be same order as zones
 	, remoteKeypadArr{ {remDispl[0].displ()},{remDispl[1].displ()},{remDispl[2].displ()} }
 	, _mainConsoleChapters{ _hs_datasets, _tempController, *this}
-	, _remoteConsoleChapters{ _hs_datasets }
+	, _thinConsole_Chapters{ _hs_datasets }
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
-	, _remoteLCDConsole{ {remoteKeypadArr[0], remDispl[0], _remoteConsoleChapters},{remoteKeypadArr[1], remDispl[1], _remoteConsoleChapters},{remoteKeypadArr[2], remDispl[2], _remoteConsoleChapters} }
-	, remOLED_ConsoleArr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
-	, temporary_remoteTSArr{ {_recover, 0x36}, {_recover, 0x74}, {_recover, 0x70} }
-	//, temporary_mix_valve_TSArr{ {_recover, US_FLOW_TEMPSENS_ADDR}, {_recover, DS_FLOW_TEMPSENS_ADDR} }
+	, _thinConsole_Arr{ {remoteKeypadArr[0], remDispl[0], _thinConsole_Chapters},{remoteKeypadArr[1], remDispl[1], _thinConsole_Chapters},{remoteKeypadArr[2], remDispl[2], _thinConsole_Chapters} }
+	, thickConsole_Arr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
 	{
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
-		_initialiser.initializeRemoteConsoles();
+		_initialiser.initialize_Thick_Consoles();
 		_initialiser.i2C_Test();
 		_initialiser.postI2CResetInitialisation();
 		//_mainConsoleChapters(0).rec_select();
@@ -116,11 +114,8 @@ HeatingSystem::HeatingSystem()
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
 	if (_mainConsoleChapters.chapter() == 0) {
 		if (_tempController.checkAndAdjust()) {
-			if (ENABLE_OLED_REMOTES) {
-				for (auto& remote : remOLED_ConsoleArr) {
-					if (remote.getAddress() != 0x13) continue;
-					remote.refreshRegisters();
-				}
+			for (auto& remote : thickConsole_Arr) {
+				remote.refreshRegisters();
 			}
 		}
 	}
@@ -131,17 +126,10 @@ void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 	ui_yield();
 	if (_mainConsole.processKeys()) _mainConsole.refreshDisplay();
 	auto zoneIndex = 0;
-	auto activeField = _remoteConsoleChapters.remotePage_c.activeUI();
-	for (auto & remote : _remoteLCDConsole) {
-		auto console_mode = remote.consoleMode();
-		if (console_mode < 2) { ++zoneIndex; continue; }
-		auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_ROOM_TEMP) + (OLED_Master_Display::R_DISPL_REG_SIZE * zoneIndex);
-		temporary_remoteTSArr[zoneIndex].readTemperature();
-		auto roomTemp = temporary_remoteTSArr[zoneIndex].get_fractional_temp();
-		_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
-		_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
+	auto activeField = _thinConsole_Chapters.remotePage_c.activeUI();
+	for (auto & remote : _thinConsole_Arr) {
+		if (remote.consoleMode() < LCD_CONSOLE_MODE) { ++zoneIndex; continue; }
 		activeField->setFocusIndex(zoneIndex);
-
 		if (remote.processKeys()) {
 			remote.refreshDisplay();
 		}

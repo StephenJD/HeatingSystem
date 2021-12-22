@@ -2,7 +2,7 @@
 //#include <I2C_Talk.h>
 //#include <Logging.h>
 //#include <avr/interrupt.h>
-#include "OLED_Master_Display.h"
+#include "OLED_Thick_Display.h"
 #include <Clock.h>
 
 #define SERIAL_RATE 115200
@@ -24,9 +24,9 @@ void setup() {
   Serial.begin(SERIAL_RATE);
   //logger() << F("Start") << L_endl;
   for (int pin = 0; pin < 18; ++pin) pinMode(pin, INPUT_PULLUP);
-  OLED_Master_Display::begin();
+  OLED_Thick_Display::begin();
 }
 
 void loop() {
-	OLED_Master_Display::processKeys();
+	OLED_Thick_Display::processKeys();
 }

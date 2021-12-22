@@ -80,7 +80,7 @@ namespace RelationalDatabase {
 			if (_status == TB_OK) {
 				_tb->db()._readByte(_recordAddress, rec, _tb->recordSize());
 				_lastReadVRver = _tb->vrVersion();
-		//logger() << "AL_Refresh: " << long(this) << " RecAddr: " << _recordAddress << " at: " << lastReadTabVer() << " Table: " << _tb->vrVersion() <<  L_endl;
+		//logger() << "AL_Refresh: " << reinterpret_cast<uintptr_t>(this) << " RecAddr: " << _recordAddress << " at: " << lastReadTabVer() << " Table: " << _tb->vrVersion() <<  L_endl;
 			}
 		}
 	}

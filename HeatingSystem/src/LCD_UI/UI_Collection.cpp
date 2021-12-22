@@ -8,8 +8,8 @@
 	#include <map>
 	#include <string>
 	using namespace std;
-	map<long, string> & ui_Objects() {
-		static map<long, string> _ui_Objects;
+	map<const void*, string> & ui_Objects() {
+		static map<const void*, string> _ui_Objects;
 		return _ui_Objects;
 	};
 	namespace arduino_logger {
@@ -111,7 +111,7 @@ namespace LCD_UI {
 
 	Collection_Hndl * Collection_Hndl::move_focus_to(int index) {
 #ifdef ZPSIM
-		debug() << F("\tmove_focus_to on ") << ui_Objects()[(long)get()].c_str() << L_endl;
+		debug() << F("\tmove_focus_to on ") << ui_Objects()[get()].c_str() << L_endl;
 #endif		
 		auto newObject = this;
 		auto collection = get()->collection();
@@ -196,7 +196,7 @@ namespace LCD_UI {
 
 	bool I_SafeCollection::move_focus_by(int nth, Collection_Hndl* colln_hndl) {
 #ifdef ZPSIM
-		debug() << F("\tmove_focus_by on ") << ui_Objects()[(long)this].c_str() << L_endl;
+		debug() << F("\tmove_focus_by on ") << ui_Objects()[this].c_str() << L_endl;
 #endif
 		move_focus_to(focusIndex());
 		const int startFocus = focusIndex(); // might be endIndex()
@@ -351,7 +351,7 @@ namespace LCD_UI {
 		filter(filter_viewable());
 		auto hasStreamed = false;
 #ifdef ZPSIM
-		debug() << "\nI_SafeC_Stream each element of " << ui_Objects()[(long)this] << (activeElement ? " HasActive" : " Inactive") << L_endl;
+		debug() << "\nI_SafeC_Stream each element of " << ui_Objects()[this] << (activeElement ? " HasActive" : " Inactive") << L_endl;
 #endif
 		if (behaviour().is_viewOne()) {
 			hasStreamed = activeUI()->get()->streamElement(buffer, activeElement,endPos , listStatus);
@@ -359,7 +359,7 @@ namespace LCD_UI {
 			for (auto & element : *this) {
 				auto i = objectIndex();
 #ifdef ZPSIM
-				debug() << "\t[" << i << "]: " << ui_Objects()[(long)&element] << L_endl;
+				debug() << "\t[" << i << "]: " << ui_Objects()[&element] << L_endl;
 #endif
 				if (element.behaviour().is_OnNewLine()) buffer.newLine();
 				if (element.collection() && element.behaviour().is_viewOne()) {
@@ -367,7 +367,7 @@ namespace LCD_UI {
 					if (thisActiveObj) {
 						auto & object = *thisActiveObj->get();
 #ifdef ZPSIM
-						debug() << F("\t\tView Object: ") << ui_Objects()[(long)&object] << L_endl << L_endl;
+						debug() << F("\t\tView Object: ") << ui_Objects()[&object] << L_endl << L_endl;
 #endif
 						hasStreamed = object.streamElement(buffer, activeElement, endPos, listStatus);
 					} 
@@ -382,7 +382,7 @@ namespace LCD_UI {
 						thisActiveObj = 0;
 					}
 #ifdef ZPSIM
-					debug() << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[(long)thisActiveObj->get()] : "") << L_endl;
+					debug() << F("\t\tViewAll. Active: ") << (thisActiveObj ? ui_Objects()[thisActiveObj->get()] : "") << L_endl;
 #endif
 					hasStreamed = element.streamElement(buffer, thisActiveObj,endPos , listStatus);
 				}
@@ -477,7 +477,7 @@ namespace LCD_UI {
 			bool isFirst = true;
 			for (auto & object : *iterated_collection()) {
 #ifdef ZPSIM
-//				debug() << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[(long)&object] << F(" Iteration-ActiveField ") << ui_Objects()[(long)iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << L_endl;
+//				debug() << F("Iteration-Streaming [") << itIndex << "] " << ui_Objects()[&object] << F(" Iteration-ActiveField ") << ui_Objects()[iteratedActiveUI_h.get()] << " ActiveInd: " << activeFocus << L_endl;
 #endif
 				auto collHasfocus = collectionHasfocus();
 				auto firstVisIndex = h_firstVisibleItem();
@@ -513,8 +513,8 @@ namespace LCD_UI {
 		auto active = iterated_collection()->activeUI();
 		active->get()->collection()->move_to_object(newIndex);
 #ifdef ZPSIM
-		//debug() << F("\tUI_IteratedCollection: ") << ui_Objects()[(long)iterated_collection()] << L_endl;
-		//debug() << F("\t\tactive item: ") << ui_Objects()[(long)active->get()->collection()];
+		//debug() << F("\tUI_IteratedCollection: ") << ui_Objects()[iterated_collection()] << L_endl;
+		//debug() << F("\t\tactive item: ") << ui_Objects()[active->get()->collection()];
 		//debug() << " NewIndex : " << newIndex << " SubCollection obj: " << iterated_collection()->objectIndex() << " SubCollection Focus: " << iterated_collection()->focusIndex() << L_endl;
 #endif
 		return active;
@@ -585,7 +585,7 @@ namespace LCD_UI {
 		//if (lr_behaviour.is_next_on_UpDn()) {
 		auto & activeObject = (*iterated_collection())[_iteratedMemberIndex];
 #ifdef ZPSIM
-		debug() << F("LR on iteratedActive: ") << ui_Objects()[(long)(activeObject.get())].c_str() << L_endl;
+		debug() << F("LR on iteratedActive: ") << ui_Objects()[activeObject.get()].c_str() << L_endl;
 #endif
 		return activeObject->leftRight(moveBy, colln_hndl, lr_behaviour);
 		//}

@@ -7,7 +7,7 @@
 #include <iostream> 
 #include <map>
 #include <string>
-std::map<long, std::string>& ui_Objects();
+std::map<const void*, std::string>& ui_Objects();
 #endif
 
 namespace LCD_UI {

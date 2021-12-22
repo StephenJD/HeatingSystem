@@ -8,10 +8,10 @@ namespace LCD_UI {
 namespace HardwareInterfaces {
 	class I_Keypad;
 
-	class Console
+	class Console_Thin
 	{
 	public:
-		Console(I_Keypad & keyPad, LCD_Display & lcd_display, LCD_UI::Chapter_Generator & chapterGenerator);
+		Console_Thin(I_Keypad & keyPad, LCD_Display & lcd_display, LCD_UI::Chapter_Generator & chapterGenerator);
 		int consoleMode() const;
 		bool processKeys();
 		void refreshDisplay();

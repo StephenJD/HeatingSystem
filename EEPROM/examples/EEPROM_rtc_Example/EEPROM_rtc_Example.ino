@@ -62,8 +62,8 @@ void setup() {
 	pinMode(RTC_RESET, OUTPUT);
 	digitalWrite(RTC_RESET, LOW); // reset pin
 	resetRTC(rtc, 0x50);
-	Serial.print("Wire addr   "); Serial.println((long)&Wire);
-	Serial.print("Wire 1 addr "); Serial.println((long)&Wire1);
+	Serial.print("Wire addr   "); Serial.println(reinterpret_cast<uintptr_t>(&Wire));
+	Serial.print("Wire 1 addr "); Serial.println(reinterpret_cast<uintptr_t>(&Wire1));
 
 	//scan.show_all();
 	//speed.showAll_fastest();

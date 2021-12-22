@@ -101,7 +101,7 @@ namespace client_data_structures {
 	class TimeTemp_Interface : public I_Streaming_Tool {
 	public:
 #ifdef ZPSIM
-		TimeTemp_Interface() { ui_Objects()[(long)this] = "TimeTemp_Interface"; }
+		TimeTemp_Interface() { ui_Objects()[this] = "TimeTemp_Interface"; }
 #endif
 		using I_Streaming_Tool::editItem;
 		const char * streamData(bool isActiveElement) const override;

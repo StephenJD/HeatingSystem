@@ -149,10 +149,10 @@ void loop() {
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		reset_watchdog();
-		auto currMultiMode = mixV_registers.getRegister(Mix_Valve::R_DISABLE_MULTI_MASTER_MODE);
+		auto currMultiMode = mixV_registers.getRegister(Mix_Valve::R_MULTI_MASTER_MODE);
 		if (currMultiMode != multimaster_mode) {
 			multimaster_mode = currMultiMode;
-			logger() << F("New Mode: ") << (currMultiMode ? F("SingleMaster") : F("MultiMaster")) << L_endl;
+			logger() << F("New Mode: ") << (currMultiMode ? F(MultiMaster") : F("SingleMaster")) << L_endl;
 		}
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!

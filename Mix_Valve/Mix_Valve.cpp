@@ -46,7 +46,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		setReg(R_FULL_TRAVERSE_TIME, 255);
 		setReg(R_SETTLE_TIME, 40);
 		setReg(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
-		setReg(R_DISABLE_MULTI_MASTER_MODE, true);
+		setReg(R_MULTI_MASTER_MODE, false);
 		saveToEEPROM();
 		logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
 	} else {
@@ -76,7 +76,7 @@ void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
 	_ep->update(++eepromRegister, getReg(R_FULL_TRAVERSE_TIME));
 	_ep->update(++eepromRegister, getReg(R_SETTLE_TIME));
 	_ep->update(++eepromRegister, getReg(R_DEFAULT_FLOW_TEMP));
-	_ep->update(++eepromRegister, getReg(R_DISABLE_MULTI_MASTER_MODE));
+	_ep->update(++eepromRegister, getReg(R_MULTI_MASTER_MODE));
 	_ep->update(++eepromRegister, getReg(R_VERSION_MONTH));
 	_ep->update(++eepromRegister, getReg(R_VERSION_DAY));
 	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)getReg(R_FULL_TRAVERSE_TIME) << (int)getReg(R_SETTLE_TIME)
@@ -95,7 +95,7 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	setReg(R_FULL_TRAVERSE_TIME, _ep->read(++eepromRegister));
 	setReg(R_SETTLE_TIME, _ep->read(++eepromRegister));
 	setReg(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
-	setReg(R_DISABLE_MULTI_MASTER_MODE, _ep->read(++eepromRegister));
+	setReg(R_MULTI_MASTER_MODE, _ep->read(++eepromRegister));
 #endif
 	setDefaultRequestTemp();
 }
@@ -123,9 +123,7 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp(bool programmerConnected) { // C
 	auto retry = 5;
 	auto ts_status = _OK;
 	auto sensorTemp = 0;
-	if (programmerConnected && getReg(R_DISABLE_MULTI_MASTER_MODE)) {
-		sensorTemp = getReg(R_FLOW_TEMP);
-	} else {
+	if (programmerConnected && getReg(R_MULTI_MASTER_MODE)) {
 		do {
 			ts_status = _temp_sensr.readTemperature();
 			if (ts_status == _disabledDevice) {
@@ -139,7 +137,9 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp(bool programmerConnected) { // C
 			<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
 
 		setReg(R_FLOW_TEMP, sensorTemp);
-	}
+	} else {
+		sensorTemp = getReg(R_FLOW_TEMP);
+	} 
 	checkForNewReqTemp();
 
 	// lambdas

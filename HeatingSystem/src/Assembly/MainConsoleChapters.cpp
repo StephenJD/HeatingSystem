@@ -78,7 +78,7 @@ namespace Assembly {
 		, _towelRailsLbl { "Room Temp OnFor ToGo" }
 		, _mixValveLbl   { "MixV  Pos Is Req St" }
 		, _autoSettingLbl{ "Aut Rat Tc  Del Qy" }
-		, _consoleLbl{"Console  Options"}
+		, _consoleLbl{"Console Options"}
 
 		// Pages & sub-pages - Collections of UI handles
 		, _page_currTime_c{ makeCollection( _contrastCmd, _backlightCmd, _currTimeUI_c, _currDateUI_c, _dst, _dstUI_c, _SDCardUI_c) }
@@ -134,62 +134,62 @@ namespace Assembly {
 		_backlightCmd.setDisplay(hs.mainDisplay, Contrast_Brightness_Cmd::e_backlight);
 #ifdef ZPSIM
 		auto tt_Field_Interface_perittedVals = _timeTempUI_c.getStreamingTool().f_interface().editItem().get();
-		ui_Objects()[(long)tt_Field_Interface_perittedVals] = "tt_PerittedVals";
+		ui_Objects()[tt_Field_Interface_perittedVals] = "tt_PerittedVals";
 		auto& tt_Field_Interface = _timeTempUI_c.getStreamingTool().f_interface();
-		ui_Objects()[(long)&tt_Field_Interface] = "tt_Field_Interface";
+		ui_Objects()[&tt_Field_Interface] = "tt_Field_Interface";
 		auto& zone_Field_Interface = _dwZoneAbbrevUI_c.getStreamingTool().f_interface();
-		ui_Objects()[(long)&zone_Field_Interface] = "string_Interface";
+		ui_Objects()[&zone_Field_Interface] = "string_Interface";
 		auto& profileDays_Field_Interface = _profileDaysUI_c.getStreamingTool().f_interface();
-		ui_Objects()[(long)&profileDays_Field_Interface] = "profileDays_Field_Interface";
+		ui_Objects()[&profileDays_Field_Interface] = "profileDays_Field_Interface";
 
-		ui_Objects()[(long)&_dstUI_c] = "_dstUI_c";
-		ui_Objects()[(long)&_dwellNameUI_c] = "_dwellNameUI_c";
-		ui_Objects()[(long)&_dwZoneAbbrevUI_c] = "_dwZoneAbbrevUI_c";
-		ui_Objects()[(long)&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
-		ui_Objects()[(long)&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
-		ui_Objects()[(long)&_allZoneAbbrevUI_c] = "_allZoneAbbrevUI_c";
-		//ui_Objects()[(long)&_zoneQuality_c] = "_zoneQuality_c";
-		ui_Objects()[(long)&_zoneRatio_c] = "_zoneRatio_c";
-		ui_Objects()[(long)&_zoneTimeConst_c] = "_zoneTimeConst_c";
+		ui_Objects()[&_dstUI_c] = "_dstUI_c";
+		ui_Objects()[&_dwellNameUI_c] = "_dwellNameUI_c";
+		ui_Objects()[&_dwZoneAbbrevUI_c] = "_dwZoneAbbrevUI_c";
+		ui_Objects()[&_allZoneNames_UI_c] = "_allZoneNames_UI_c";
+		ui_Objects()[&_allZoneReqTemp_UI_c] = "_allZoneReqTemp_UI_c";
+		ui_Objects()[&_allZoneAbbrevUI_c] = "_allZoneAbbrevUI_c";
+		//ui_Objects()[&_zoneQuality_c] = "_zoneQuality_c";
+		ui_Objects()[&_zoneRatio_c] = "_zoneRatio_c";
+		ui_Objects()[&_zoneTimeConst_c] = "_zoneTimeConst_c";
 
-		ui_Objects()[(long)&_progNameUI_c] = "_progNameUI_c";
-		ui_Objects()[(long)&_profileDaysUI_c] = "_profileDaysUI_c";
-		ui_Objects()[(long)&_calendar_subpage_c] = "_calendar_subpage_c";
-		ui_Objects()[(long)&_prog_subpage_c] = "_prog_subpage_c";
-		ui_Objects()[(long)&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
-		ui_Objects()[(long)&_page_dwellingMembers_subpage_c] = "_page_dwellingMembers_subpage_c";
-		ui_Objects()[(long)&_zone_subpage_c] = "_zone_subpage_c";
-		ui_Objects()[(long)&_iterated_prog_name_c] = "_iterated_prog_name_c";
-		ui_Objects()[(long)&_iterated_zone_name_c] = "_iterated_zone_name_c";
-		ui_Objects()[(long)&_dwZoneNameUI_c] = "_dwZoneNameUI_c";
-		ui_Objects()[(long)&_insert] = "_insert";
-		ui_Objects()[(long)&_fromCmd] = "_fromCmd";
-		ui_Objects()[(long)&_dwellSpellUI_c] = "_dwellSpellUI_c";
-		ui_Objects()[(long)&_spellProgUI_c] = "_spellProgUI_c";
+		ui_Objects()[&_progNameUI_c] = "_progNameUI_c";
+		ui_Objects()[&_profileDaysUI_c] = "_profileDaysUI_c";
+		ui_Objects()[&_calendar_subpage_c] = "_calendar_subpage_c";
+		ui_Objects()[&_prog_subpage_c] = "_prog_subpage_c";
+		ui_Objects()[&_dwellingCalendarCmd] = "_dwellingCalendarCmd";
+		ui_Objects()[&_page_dwellingMembers_subpage_c] = "_page_dwellingMembers_subpage_c";
+		ui_Objects()[&_zone_subpage_c] = "_zone_subpage_c";
+		ui_Objects()[&_iterated_prog_name_c] = "_iterated_prog_name_c";
+		ui_Objects()[&_iterated_zone_name_c] = "_iterated_zone_name_c";
+		ui_Objects()[&_dwZoneNameUI_c] = "_dwZoneNameUI_c";
+		ui_Objects()[&_insert] = "_insert";
+		ui_Objects()[&_fromCmd] = "_fromCmd";
+		ui_Objects()[&_dwellSpellUI_c] = "_dwellSpellUI_c";
+		ui_Objects()[&_spellProgUI_c] = "_spellProgUI_c";
 
-		ui_Objects()[(long)&_timeTempUI_c] = "_timeTempUI_c";
-		ui_Objects()[(long)&_towelRailsLbl] = "_towelRailsLbl";
-		ui_Objects()[(long)&_towelRailNameUI_c] = "_towelRailNameUI_c";
-		ui_Objects()[(long)&_towelRailTempUI_c] = "_towelRailTempUI_c";
-		ui_Objects()[(long)&_towelRailOnTimeUI_c] = "_towelRailOnTimeUI_c";
-		ui_Objects()[(long)&_towelRailStatus_c] = "_towelRailStatus_c";
-		ui_Objects()[(long)&_relayStateUI_c] = "_relayStateUI_c";
-		ui_Objects()[(long)&_relayNameUI_c] = "_relayNameUI_c";
+		ui_Objects()[&_timeTempUI_c] = "_timeTempUI_c";
+		ui_Objects()[&_towelRailsLbl] = "_towelRailsLbl";
+		ui_Objects()[&_towelRailNameUI_c] = "_towelRailNameUI_c";
+		ui_Objects()[&_towelRailTempUI_c] = "_towelRailTempUI_c";
+		ui_Objects()[&_towelRailOnTimeUI_c] = "_towelRailOnTimeUI_c";
+		ui_Objects()[&_towelRailStatus_c] = "_towelRailStatus_c";
+		ui_Objects()[&_relayStateUI_c] = "_relayStateUI_c";
+		ui_Objects()[&_relayNameUI_c] = "_relayNameUI_c";
 
-		ui_Objects()[(long)&_page_currTime_c] = "_page_currTime_c";
-		ui_Objects()[(long)&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
-		ui_Objects()[(long)&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
-		ui_Objects()[(long)&_iterated_timeTempUI] = "_iterated_timeTempUI";
-		ui_Objects()[(long)&_page_profile_c] = "_page_profile_c";
-		ui_Objects()[(long)&_tt_SubPage_c] = "_tt_SubPage_c";
+		ui_Objects()[&_page_currTime_c] = "_page_currTime_c";
+		ui_Objects()[&_iterated_zoneReqTemp_c] = "_iterated_zoneReqTemp_c";
+		ui_Objects()[&_page_dwellingMembers_c] = "_page_dwellingMembers_c";
+		ui_Objects()[&_iterated_timeTempUI] = "_iterated_timeTempUI";
+		ui_Objects()[&_page_profile_c] = "_page_profile_c";
+		ui_Objects()[&_tt_SubPage_c] = "_tt_SubPage_c";
 
-		ui_Objects()[(long)&_iterated_towelRails_info_c] = "_iterated_towelRails_info_c";
-		ui_Objects()[(long)&_iterated_zoneSettings_info_c] = "_iterated_zoneSettings_info_c";
-		ui_Objects()[(long)&_page_towelRails_c] = "_page_towelRails_c";
+		ui_Objects()[&_iterated_towelRails_info_c] = "_iterated_towelRails_info_c";
+		ui_Objects()[&_iterated_zoneSettings_info_c] = "_iterated_zoneSettings_info_c";
+		ui_Objects()[&_page_towelRails_c] = "_page_towelRails_c";
 
-		ui_Objects()[(long)&_user_chapter_c] = "_user_chapter_c";
-		ui_Objects()[(long)&_user_chapter_h] = "_user_chapter_h";
-		ui_Objects()[(long)&_info_chapter_c] = "_info_chapter_c";
+		ui_Objects()[&_user_chapter_c] = "_user_chapter_c";
+		ui_Objects()[&_user_chapter_h] = "_user_chapter_h";
+		ui_Objects()[&_info_chapter_c] = "_info_chapter_c";
 #endif
 
 	}

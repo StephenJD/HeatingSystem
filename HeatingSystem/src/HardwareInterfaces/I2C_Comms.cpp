@@ -3,7 +3,7 @@
 #include "A__Constants.h"
 #include <I2C_Recover.h>
 #include <Mix_Valve.h>
-#include <OLED_Master_Display.h>
+#include <OLED_Thick_Display.h>
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;

@@ -85,7 +85,7 @@ namespace LCD_UI {
 	public:
 		OneVal(I_SafeCollection * parent) : Collection_Hndl((const UI_Object*)this), _parent(parent) {
 #ifdef ZPSIM
-			ui_Objects()[(long)(UI_Object*)this] = "OneVal";
+			ui_Objects()[this] = "OneVal";
 #endif
 		};
 		void setParent(I_SafeCollection * parent) { _parent = parent; }
@@ -106,7 +106,7 @@ namespace LCD_UI {
 	public:
 		Permitted_Vals() :I_SafeCollection(0, Behaviour{V+S+V1+R+UD_A}), _oneVal(this) {
 #ifdef ZPSIM
-			ui_Objects()[(long)this] = "Permitted_Vals";
+			ui_Objects()[this] = "Permitted_Vals";
 #endif
 		}
 		Collection_Hndl * select(Collection_Hndl * from) override;
@@ -177,7 +177,7 @@ namespace LCD_UI {
 	class Int_Interface : public I_Streaming_Tool { // Shared stateless UI interface
 	public:
 #ifdef ZPSIM
-		Int_Interface() { ui_Objects()[(long)this] = "Int_Interface"; }
+		Int_Interface() { ui_Objects()[this] = "Int_Interface"; }
 #endif
 		using I_Streaming_Tool::editItem;
 		void haveMovedTo(int currFocus) override;
@@ -197,7 +197,7 @@ namespace LCD_UI {
 	class Option_Interface : public I_Streaming_Tool { // Shared stateless UI interface
 	public:
 #ifdef ZPSIM
-		Option_Interface() { ui_Objects()[(long)this] = "Option_Interfacet_Interface"; }
+		Option_Interface() { ui_Objects()[this] = "Option_Interfacet_Interface"; }
 #endif
 		using I_Streaming_Tool::editItem;
 
@@ -216,7 +216,7 @@ namespace LCD_UI {
 	class Decimal_Interface : public Int_Interface {
 	public:
 #ifdef ZPSIM
-		Decimal_Interface() { ui_Objects()[(long)this] = "Decimal_Interface"; }
+		Decimal_Interface() { ui_Objects()[this] = "Decimal_Interface"; }
 #endif
 		const char * streamData(bool isActiveElement) const override;
 	};
@@ -230,7 +230,7 @@ namespace LCD_UI {
 	class String_Interface : public I_Streaming_Tool {
 	public:
 #ifdef ZPSIM
-		String_Interface() { ui_Objects()[(long)this] = "String_Interface"; }
+		String_Interface() { ui_Objects()[this] = "String_Interface"; }
 #endif
 		using I_Streaming_Tool::editItem;
 		const char * streamData(bool isActiveElement) const override;

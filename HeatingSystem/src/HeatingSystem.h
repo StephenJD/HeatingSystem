@@ -4,30 +4,26 @@
 #include <RDB.h>
 #include <MultiCrystal.h>
 #include "HardwareInterfaces\LocalDisplay.h"
-#include "HardwareInterfaces\RemoteConsole.h"
+#include "HardwareInterfaces\ConsoleController_Thick.h"
 #include <LocalKeypad.h>
 #include <RemoteKeypad.h>
 #include <RemoteDisplay.h>
-#include "HardwareInterfaces\Console.h"
+#include "HardwareInterfaces\Console_Thin.h"
 #include "HardwareInterfaces\I2C_Comms.h"
 #include <Mix_Valve.h>
-#include <OLED_Master_Display.h>
+#include <OLED_Thick_Display.h>
 #include "Assembly\Initialiser.h"
 #include "Assembly\TemperatureController.h"
 #include "Assembly\HeatingSystem_Queries.h"
 #include "Assembly\Datasets.h"
 #include "Assembly\HeatingSystemEnums.h"
 #include "Assembly\MainConsoleChapters.h"
-#include "Assembly\RemoteConsoleChapters.h"
+#include "Assembly\ThinConsole_Chapters.h"
 #include "Assembly/Sequencer.h"
 
 //////////////////////////////////////////////////////////
 //    Single Responsibility is to connect the parts     //
 //////////////////////////////////////////////////////////
-
-constexpr bool OLED_DS = false;
-constexpr bool ENABLE_LCD_REMOTES = true;
-constexpr bool ENABLE_OLED_REMOTES = false;
 
 namespace HeatingSystemSupport {
 	void initialise_virtualROM();
@@ -65,23 +61,20 @@ private: // data-member ordering matters!
 	Assembly::Sequencer _sequencer;
 	Assembly::TemperatureController _tempController;
 public:	
-	// Temporary Remote TS
-	HardwareInterfaces::UI_TempSensor temporary_remoteTSArr[Assembly::NO_OF_REMOTE_DISPLAYS];
-	//HardwareInterfaces::UI_TempSensor temporary_mix_valve_TSArr[Assembly::NO_OF_MIX_VALVES];
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;
 	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
 	HardwareInterfaces::RemoteKeypad remoteKeypadArr[Assembly::NO_OF_REMOTE_DISPLAYS];
-	HardwareInterfaces::RemoteConsole remOLED_ConsoleArr[Assembly::NO_OF_REMOTE_DISPLAYS];
+	HardwareInterfaces::ConsoleController_Thick thickConsole_Arr[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;
 
 	// Run-time data arrays
 	Assembly::MainConsoleChapters _mainConsoleChapters;
-	Assembly::RemoteConsoleChapters _remoteConsoleChapters;
-	HardwareInterfaces::Console _mainConsole;
-	HardwareInterfaces::Console _remoteLCDConsole[Assembly::NO_OF_REMOTE_DISPLAYS];
+	Assembly::ThinConsole_Chapters _thinConsole_Chapters;
+	HardwareInterfaces::Console_Thin _mainConsole;
+	HardwareInterfaces::Console_Thin _thinConsole_Arr[Assembly::NO_OF_REMOTE_DISPLAYS];
 	bool _dataHasChanged = true;
 };

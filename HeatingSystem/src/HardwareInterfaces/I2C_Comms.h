@@ -5,7 +5,7 @@
 #include <I2C_Registers.h>
 #include <I2C_RecoverRetest.h>
 #include <LocalKeypad.h>
-#include <OLED_Master_Display.h>
+#include <OLED_Thick_Display.h>
 #include <Mix_Valve.h>
 
 namespace HardwareInterfaces {
@@ -53,9 +53,9 @@ namespace HardwareInterfaces {
 		, MV_REG_SLAVE_0_OFFSET = 0
 		, MV_REG_SLAVE_1_OFFSET = MV_REG_SLAVE_0_OFFSET + Mix_Valve::MV_ALL_REG_SIZE
 		, RC_REG_MASTER_US_OFFSET = MV_REG_MASTER_0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE * NO_OF_MIXERS
-		, RC_REG_MASTER_DS_OFFSET = RC_REG_MASTER_US_OFFSET + OLED_Master_Display::R_DISPL_REG_SIZE
-		, RC_REG_MASTER_F_OFFSET = RC_REG_MASTER_DS_OFFSET + OLED_Master_Display::R_DISPL_REG_SIZE
-		, SIZE_OF_ALL_REGISTERS = RC_REG_MASTER_F_OFFSET + OLED_Master_Display::R_DISPL_REG_SIZE
+		, RC_REG_MASTER_DS_OFFSET = RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_DISPL_REG_SIZE
+		, RC_REG_MASTER_F_OFFSET = RC_REG_MASTER_DS_OFFSET + OLED_Thick_Display::R_DISPL_REG_SIZE
+		, SIZE_OF_ALL_REGISTERS = RC_REG_MASTER_F_OFFSET + OLED_Thick_Display::R_DISPL_REG_SIZE
 	};
 
 	enum SlaveRequestIni {

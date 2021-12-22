@@ -72,7 +72,7 @@ Error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes,
 }
 
 Error_codes I2C_Talk::readEP(int deviceAddr, int pageAddress, int numberBytes, uint8_t *dataBuffer) {
-	//Serial.print("\treadEP Wire:"); Serial.print((long)&_wire_port); Serial.print(", addr:"); Serial.print(deviceAddr); Serial.print(", page:"); Serial.print(pageAddress);
+	//Serial.print("\treadEP Wire:"); Serial.print(reinterpret_cast<uintptr_t>(&_wire_port)); Serial.print(", addr:"); Serial.print(deviceAddr); Serial.print(", page:"); Serial.print(pageAddress);
 	//Serial.print(", NoOfBytes:"); Serial.println(numberBytes);
 	auto returnStatus = _OK;
 	// NOTE: this puts it in slave mode. Must re-begin to send more data.

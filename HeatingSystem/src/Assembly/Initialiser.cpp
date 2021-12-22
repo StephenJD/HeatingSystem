@@ -53,10 +53,10 @@ namespace Assembly {
 		logger() << F("  Initialiser Constructed") << L_endl;
 	}
 
-	void Initialiser::initializeRemoteConsoles() {
+	void Initialiser::initialize_Thick_Consoles() {
 		_hs._prog_register_set.setRegister(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
-		for (auto& rc : _hs.remOLED_ConsoleArr) {
+		for (auto& rc : _hs.thickConsole_Arr) {
 			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex], hs().tempController().towelRailArr[consoleIndex], hs().tempController().zoneArr[Z_DHW], hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS);
 			++consoleIndex;
 		}
@@ -72,7 +72,8 @@ namespace Assembly {
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		_resetI2C.hardReset.initialisationRequired = false;
 		uint8_t status = relayPort().initialiseDevice();
-		temporary_initialiseRemoteDisplays(); // Non-critical
+		initialize_Thin_Consoles(); // Non-critical
+		status |= initialise_slaveConsole_TempSensors();
 		for (auto& mixValve : hs().tempController().mixValveControllerArr) { 
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
 			status |= mixValve.sendSlaveIniData(requestINI_flag);
@@ -82,12 +83,23 @@ namespace Assembly {
 		return status;
 	}
 
-	uint8_t Initialiser::temporary_initialiseRemoteDisplays() {
+	uint8_t Initialiser::initialise_slaveConsole_TempSensors() {
 		uint8_t failed = 0;
-		logger() << L_time << F("temporary_initialiseRemoteDisplays()") << L_endl;
+		auto id = 0;
+		for (auto& ts : hs().tempController().slaveConsole_TSArr) {
+			if (hs()._thinConsole_Arr[id].consoleMode() >= SLAVE_CONSOLE_MODE) {
+				failed |= ts.setHighRes();
+			}
+			++id;
+		}
+		return failed;
+	}
+
+	uint8_t Initialiser::initialize_Thin_Consoles() {
+		uint8_t failed = 0;
+		logger() << L_time << F("initialize_Thin_Consoles()") << L_endl;
 		auto index = 0;
 		for (auto& kb : _hs.remoteKeypadArr) {
-			auto console_mode = kb.consoleOption();
 			logger() << L_time << F("console query[] ") << index+1 << L_endl;
 			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index+1];
 			logger() << L_time << F("setWakeTime ") << L_endl;
@@ -96,14 +108,12 @@ namespace Assembly {
 			kb.popKey();
 			logger() << L_time << F("clearKeys ") << L_endl;
 			kb.clearKeys();
-			if (console_mode < 2) { ++index; continue; }
 			logger() << L_time << F("initialise remDispl[] ") << index << L_endl;
 			failed |= _hs.remDispl[index].initialiseDevice();
-			failed |= _hs.temporary_remoteTSArr[index].setHighRes();
 			++index;
 		}		
 		
-		logger() << F("\tinitialiseRemoteDisplays() done") << L_endl;
+		logger() << F("\initialize_Thin_Consoles() done") << L_endl;
 		return failed;
 	}
 
@@ -111,7 +121,7 @@ namespace Assembly {
 		if (deviceAddr == IO8_PORT_OptCoupl) return relayPort();
 		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs().tempController().mixValveControllerArr[0];
 		else if (deviceAddr >= US_CONSOLE_I2C_ADDR && deviceAddr <= FL_CONSOLE_I2C_ADDR) {
-			return hs().remOLED_ConsoleArr[deviceAddr- US_CONSOLE_I2C_ADDR];
+			return hs().thickConsole_Arr[deviceAddr- US_CONSOLE_I2C_ADDR];
 		} 
 		else if (deviceAddr >= US_REMOTE_ADDRESS && deviceAddr <= DS_REMOTE_ADDRESS) {
 			return hs().remDispl[deviceAddr- US_REMOTE_ADDRESS];

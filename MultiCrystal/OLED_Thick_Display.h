@@ -7,7 +7,7 @@
 
 namespace I2C_Recovery { class I2C_Recover; }
 
-namespace OLED_Master_Display {
+namespace OLED_Thick_Display {
 	constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 	constexpr uint8_t US_CONSOLE_I2C_ADDR = 0x12;
 	constexpr uint8_t DS_CONSOLE_I2C_ADDR = 0x13;
@@ -31,8 +31,9 @@ namespace OLED_Master_Display {
 		, NoOfDisplayModes
 	};
 
-	enum RemoteRegisterName {
+	enum RemoteRegisterName {	// In Slave-Mode, all are received
 		  R_DISPL_REG_OFFSET	// ini
+		, R_IS_MASTER			// ini
 		, R_ROOM_TS_ADDR		// ini
 		, R_ROOM_TEMP			// send
 		, R_ROOM_TEMP_FRACTION	// send
@@ -47,14 +48,16 @@ namespace OLED_Master_Display {
 
 	enum { e_Auto, e_On, e_Off, e_ModeIsSet };
 
-	// Room temp and requests are sent by the console to the Programmer.
-	// The programmer does not read them from the console.
-	// New request temps initiated by the programmer are sent by the programmer and not read by the console.
-	// Warmup-times are read by the console from the programmer.
+	// New request temps initiated by the programmer are sent by the programmer.
+	// In Multi-Master Mode: 
+	//		Room temp and requests are sent by the console to the Programmer.
+	//		Warmup-times are read by the console from the programmer.
+	// In Slave-Mode: 
+	//		Requests are read from the console by the Programmer.
+	//		Room Temp and Warmup-times are sent to the console by the programmer.
 
 	void setRemoteI2CAddress();
 	void sendDataToProgrammer(int reg);
-	void requestDataFromProgrammer();
 	void readTempSensor();
 	void begin();
 	void displayPage();

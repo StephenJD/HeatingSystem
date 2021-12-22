@@ -89,7 +89,7 @@ namespace HardwareInterfaces {
 
 	int8_t Zone::getCurrTemp() const { 
 		if (isDHWzone()) return _thermalStore->currDeliverTemp();
-		else return *_callTS_register;
+		else return (getFractionalCallSensTemp() + 128) >> 8;
 	}
 
 	int16_t Zone::getFractionalCallSensTemp() const {

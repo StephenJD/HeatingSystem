@@ -37,8 +37,10 @@ public:
 		// Registers provided by MixValve_Slave
 		// Copies of the VOLATILE set provided in Programmer reg-set
 		// All registers are single-byte.
-		// The valve is a multi-master, so it reads its own temp sensors.
-		// All I2C transfers are initiated by Programmer: Reading status and temps, sending new requests.
+		// If the valve is set as a multi-master it reads its own temp sensors.
+		// If the valve is set as a slave it obtains the temprrature from its registers.
+		// All I2C transfers are initiated by Programmer: Reading status & sending new requests.
+		// In multi-master mode, Programmer reads temps from the registers, in slave mode it writes temps to the registers.
 
 		// Receive
 		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
@@ -64,7 +66,7 @@ public:
 		, R_FULL_TRAVERSE_TIME
 		, R_SETTLE_TIME
 		, R_DEFAULT_FLOW_TEMP
-		, R_DISABLE_MULTI_MASTER_MODE
+		, R_MULTI_MASTER_MODE
 		, R_VERSION_MONTH
 		, R_VERSION_DAY
 		, MV_ALL_REG_SIZE // = 18

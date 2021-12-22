@@ -58,7 +58,7 @@ namespace client_data_structures {
 	public:
 		using  I_Streaming_Tool::editItem;
 #ifdef ZPSIM
-		CurrentTime_Interface() { ui_Objects()[(long)this] = "CurrentTime_Interface"; }
+		CurrentTime_Interface() { ui_Objects()[this] = "CurrentTime_Interface"; }
 #endif
 		// Queries
 
@@ -119,7 +119,7 @@ namespace client_data_structures {
 	public:
 		using  I_Streaming_Tool::editItem;
 #ifdef ZPSIM
-		CurrentDate_Interface() { ui_Objects()[(long)this] = "CurrentDate_Interface"; }
+		CurrentDate_Interface() { ui_Objects()[this] = "CurrentDate_Interface"; }
 #endif
 		// Queries
 		const char * streamData(bool isActiveElement) const override;

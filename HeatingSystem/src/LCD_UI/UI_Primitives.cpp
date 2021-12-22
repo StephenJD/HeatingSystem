@@ -42,7 +42,7 @@ namespace LCD_UI {
 
 	Edit_Int_h::Edit_Int_h() : I_Edit_Hndl(&editVal) {
 #ifdef ZPSIM
-		ui_Objects()[(long)&editVal] = "Permitted_Ints";
+		ui_Objects()[&editVal] = "Permitted_Ints";
 #endif
 	}
 
@@ -144,7 +144,7 @@ namespace LCD_UI {
 
 	const char* Option_Interface::streamData(bool isActiveElement) const {
 		if (_data_formatter == 0) return 0;
-		int8_t data = getData(isActiveElement);
+		auto data = static_cast<int>(getData(isActiveElement));
 		const OptionsWrapper* optionsWrapper(static_cast<const OptionsWrapper*>(_data_formatter));
 		return optionsWrapper->option(data);
 	}
@@ -160,7 +160,7 @@ namespace LCD_UI {
 
 	Edit_Char_h::Edit_Char_h() : I_Edit_Hndl(&editChar) {
 #ifdef ZPSIM
-		ui_Objects()[(long)&editChar] = "Permitted_Chars";
+		ui_Objects()[&editChar] = "Permitted_Chars";
 #endif
 	}
 
@@ -312,7 +312,7 @@ namespace LCD_UI {
 		}
 		_str[valRangeArg.editablePlaces] = 0;
 #ifdef ZPSIM
-		ui_Objects()[(long)this] = "StrWrapper";
+		ui_Objects()[this] = "StrWrapper";
 #endif
 	}
 

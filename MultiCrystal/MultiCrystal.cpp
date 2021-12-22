@@ -704,7 +704,7 @@ uint16_t MultiCrystal::readI2C_keypad() {
 					} else if (keyPressed & 0x8100) {
 						/* Non-existant keys often come in two-s or threes, indicating this is a software problem, rather than coincidental bad reception.
 						*/
-						//if (_i2C_device->runSpeed() > 10000) _i2C_device->set_runSpeed(long(_i2C_device->runSpeed() * 0.8));
+						//if (_i2C_device->runSpeed() > 10000) _i2C_device->set_runSpeed(static_cast<long>(_i2C_device->runSpeed() * 0.8));
 						//logger() << L_time << L_tabs << "readI2C_keypad nonexistant Key" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed /*<< " Slowed to: "*/ << L_dec << _i2C_device->runSpeed() << L_endl;
 						keyPressed = 0;
 					}

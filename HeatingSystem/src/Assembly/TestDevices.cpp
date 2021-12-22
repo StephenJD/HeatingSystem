@@ -73,25 +73,20 @@ namespace HardwareInterfaces {
 		}
 
 		logger() << F("\tTry Remotes") << L_endl;
-		if (showSpeedTestFailed(0,hs().remDispl[D_Bedroom], "US Rem")) {
-			returnVal = ERR_I2C_READ_FAILED;
+		auto id = 0;
+		for (auto& thinConsole : hs()._thinConsole_Arr) {
+			if (thinConsole.consoleMode() < LCD_CONSOLE_MODE) {
+				returnVal |= showSpeedTestFailed(0, hs().thickConsole_Arr[id], "OLED");
+			}
+			else {
+				returnVal |= showSpeedTestFailed(0, hs().remDispl[id], "LCD");
+			}
+			++id;
 		}
-
-		if (OLED_DS && showSpeedTestFailed(0, hs().remOLED_ConsoleArr[D_Hall], "DS OLED")) {
-			returnVal = ERR_I2C_READ_FAILED;
-		}
-
-		 	
-		if (!OLED_DS && showSpeedTestFailed(0,hs().remDispl[D_Hall], "DS Rem")) {
-			returnVal = ERR_I2C_READ_FAILED;
-		}		
-		
-		if (showSpeedTestFailed(0,hs().remDispl[D_Flat], "FL Rem")) {
-			returnVal = ERR_I2C_READ_FAILED;
-		}
+		if (returnVal) returnVal = ERR_I2C_READ_FAILED;
 
 		for (auto & ts : hs()._tempController.tempSensorArr) {
-			auto status = showSpeedTestFailed(1,ts, "TS");
+			showSpeedTestFailed(1,ts, "TS");
 		}
 
 		logger() << F("\tTry Mix Valve") << L_endl;
