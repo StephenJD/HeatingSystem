@@ -5,23 +5,28 @@
 #include <I2C_Recover.h>
 #include <I2C_RecoverRetest.h>
 #include <I2C_Registers.h>
-#include <TempSensor.h>
 #include <Conversions.h>
-#include <U8x8lib.h>
 #ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
 #endif
+
+// Declaration for SSD1306 display connected using software SPI (default case):
+constexpr uint8_t OLED_MOSI = 11;  // DIn
+constexpr uint8_t OLED_CLK = 13;
+constexpr uint8_t OLED_DC = 9;
+constexpr uint8_t OLED_CS = 8;
+constexpr uint8_t OLED_RESET = 10;
+
+constexpr int SLEEP_MOVE_PERIOD_mS = 500;
+constexpr int SCREEN_WIDTH = 128;  // OLED display width, in pixels
+constexpr int SCREEN_HEIGHT = 32; // OLED display height, in pixels
+constexpr int FONT_WIDTH = 8;
 
 using namespace I2C_Talk_ErrorCodes;
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
 using namespace GP_LIB;
 
-I2C_Talk i2C;
-I2C_Recover i2c_recover(i2C);
-//I2C_Recover_Retest i2c_recover(i2C());
-
-auto tempSensor = TempSensor{ i2c_recover };
 constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
 enum SlaveRequestIni {
     NO_INI_REQUESTS
@@ -34,294 +39,294 @@ enum SlaveRequestIni {
 }; 
 auto REQUESTING_INI = RC_US_REQUESTING_INI;
 
-namespace OLED_Thick_Display {
+OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int address, int regOffset, unsigned long* timeOfReset_mS)
+    :I2C_To_MicroController(recover, my_registers, address, regOffset, timeOfReset_mS)
+    , _tempSensor{ recover }
+    , _display(OLED_CS, OLED_DC, OLED_RESET)
+    {}
 
-    // Free functions
-    int8_t _sleepRow = -1;
-    int8_t _sleepCol = 0;
-    bool dataChanged;
+void OLED_Thick_Display::begin() { // all registers start as zero.
+    i2C().begin();
+    setMyI2CAddress();
+    auto speedTest = I2C_SpeedTest{ *this };
+    speedTest.fastest();
+    _tempSensor.initialise(getReg(R_ROOM_TS_ADDR));
+    setReg(R_I2C_MODE, e_SLAVE);
+    setReg(R_DISPL_REG_OFFSET, NO_REG_OFFSET_SET);
+    _display.begin();
+    sleepPage();
+}
+    
+void OLED_Thick_Display::setMyI2CAddress() {
+    pinMode(5, INPUT_PULLUP);
+    pinMode(6, INPUT_PULLUP);
+    pinMode(7, INPUT_PULLUP);
+    if (!digitalRead(5)) {
+        i2C().setAsMaster(DS_CONSOLE_I2C_ADDR);
+        REQUESTING_INI = RC_DS_REQUESTING_INI;
+        setReg(R_ROOM_TS_ADDR, DS_ROOM_TEMPSENS_ADDR);
+        Serial.print(F("DS_CONSOLE 0x"));
+    } else if (!digitalRead(6)) {
+        i2C().setAsMaster(US_CONSOLE_I2C_ADDR);
+        REQUESTING_INI = RC_US_REQUESTING_INI;
+        setReg(R_ROOM_TS_ADDR, US_ROOM_TEMPSENS_ADDR);
+        Serial.print(F("US_CONSOLE 0x"));
+    } else if (!digitalRead(7)) {
+        i2C().setAsMaster(FL_CONSOLE_I2C_ADDR);
+        REQUESTING_INI = RC_F_REQUESTING_INI;
+        setReg(R_ROOM_TS_ADDR, FL_ROOM_TEMPSENS_ADDR);
+        Serial.print(F("FL_CONSOLE 0x"));
+    } else Serial.println(F("Err: None of Pins 5-7 selected."));
+    Serial.println(i2C().address(), HEX);
+}
 
-    RemoteKeypadMaster _remoteKeypad{ 50,10 };
-    U8X8_SSD1305_128X32_ADAFRUIT_4W_HW_SPI _display(OLED_CS, OLED_DC, OLED_RESET);
-    Display_Mode _display_mode = RoomTemp;
+void OLED_Thick_Display::sendDataToProgrammer(int reg) {
+    // New request temps initiated by the programmer are sent by the programmer.
+    // In Multi-Master Mode: 
+    //		Room temp and requests are sent by the console to the Programmer.
+    //		Warmup-times are read by the console from the programmer.
+    // In Slave-Mode: 
+    //		Requests are read from the console by the Programmer.
+    //		Room Temp and Warmup-times are sent to the console by the programmer.
+
 #ifdef ZPSIM
-    auto rem_registers = i2c_registers::Registers<R_DISPL_REG_SIZE, US_CONSOLE_I2C_ADDR>{i2C};
-#else
-    auto rem_registers = i2c_registers::Registers<R_DISPL_REG_SIZE>{i2C};
+    uint8_t(&debug)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(*regPtr(0));
+    uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
 #endif
-    void setRemoteI2CAddress() {
-        pinMode(5, INPUT_PULLUP);
-        pinMode(6, INPUT_PULLUP);
-        pinMode(7, INPUT_PULLUP);
-        if (!digitalRead(5)) {
-            i2C.setAsMaster(DS_CONSOLE_I2C_ADDR);
-            REQUESTING_INI = RC_DS_REQUESTING_INI;
-            Serial.println(F("DS_CONSOLE"));
-        } else if (!digitalRead(6)) {
-            i2C.setAsMaster(US_CONSOLE_I2C_ADDR);
-            REQUESTING_INI = RC_US_REQUESTING_INI;
-            Serial.println(F("US_CONSOLE"));
-        } else if (!digitalRead(7)) {
-            i2C.setAsMaster(FL_CONSOLE_I2C_ADDR);
-            REQUESTING_INI = RC_F_REQUESTING_INI;
-            Serial.println(F("FL_CONSOLE"));
-        } else Serial.println(F("Err: None of Pins 5-7 selected."));
+    if (getReg(R_I2C_MODE) == e_MASTER && getReg(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
+        //Serial.print(F("Send to Offs ")); Serial.println(getReg(R_DISPL_REG_OFFSET));
+        write(getReg(R_DISPL_REG_OFFSET) + reg, 1, regPtr(reg));
     }
+}
 
-    void sendDataToProgrammer(int reg) {
-        // New request temps initiated by the programmer are sent by the programmer.
-        // In Multi-Master Mode: 
-        //		Room temp and requests are sent by the console to the Programmer.
-        //		Warmup-times are read by the console from the programmer.
-        // In Slave-Mode: 
-        //		Requests are read from the console by the Programmer.
-        //		Room Temp and Warmup-times are sent to the console by the programmer.
-
-#ifdef ZPSIM
-        uint8_t(&debug)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(*rem_registers.reg_ptr(0));
-        uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(Wire.i2CArr[US_CONSOLE_I2C_ADDR][0]);
-#endif
-        if (rem_registers.getRegister(R_IS_MASTER) && rem_registers.getRegister(R_DISPL_REG_OFFSET) != 0) {
-            //Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
-            i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + reg, 1, rem_registers.reg_ptr(reg));
+void OLED_Thick_Display::refreshRegisters() {
+    if (getReg(R_I2C_MODE) == e_MASTER && getReg(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
+        _tempSensor.readTemperature();
+        auto fractional_temp = _tempSensor.get_fractional_temp();
+        auto roomTempDeg = fractional_temp >> 8;
+        auto roomTempFract = static_cast<uint8_t>(fractional_temp);
+        if (roomTempDeg != getReg(R_ROOM_TEMP)) {
+            setReg(R_ROOM_TEMP, roomTempDeg);
+            sendDataToProgrammer(R_ROOM_TEMP);
+        }        
+        if (roomTempFract != getReg(R_ROOM_TEMP_FRACTION)) {
+            setReg(R_ROOM_TEMP_FRACTION, roomTempFract);
+            sendDataToProgrammer(R_ROOM_TEMP_FRACTION);
         }
-    }
+        read(getReg(R_DISPL_REG_OFFSET) + R_WARM_UP_ROOM_M10, R_DISPL_REG_SIZE - R_WARM_UP_ROOM_M10, regPtr(R_WARM_UP_ROOM_M10));
 
-    void readDataFromProgrammer() {
-        if (rem_registers.getRegister(R_IS_MASTER) && rem_registers.getRegister(R_DISPL_REG_OFFSET) != 0) {
-            i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_WARM_UP_ROOM_M10, R_DISPL_REG_SIZE - R_WARM_UP_ROOM_M10, rem_registers.reg_ptr(R_WARM_UP_ROOM_M10));
+    }
+    auto reqTemp = getReg(R_REQUESTING_ROOM_TEMP);
+    if (reqTemp && _tempRequest != reqTemp) { // new request sent by programmer
+        _tempRequest = reqTemp;
+        setReg(R_REQUESTING_ROOM_TEMP, 0);
+    }
+    bool towelRailNowOff = getReg(R_ON_TIME_T_RAIL) == 0;
+    if (towelRailNowOff) {
+        if (getReg(R_REQUESTING_T_RAIL) == e_On) setReg(R_REQUESTING_T_RAIL, e_Auto);
+    } else if (getReg(R_REQUESTING_T_RAIL) == e_Off) sendDataToProgrammer(R_REQUESTING_T_RAIL);
+}
+
+uint8_t OLED_Thick_Display::requestRegisterOffsetFromProgrammer() {
+    auto status = _OK;
+    if (getReg(R_I2C_MODE) == e_MASTER) {
+        uint8_t requestsRegisteredWithMaster = 0;
+        status = read(R_SLAVE_REQUESTING_INITIALISATION, 1, &requestsRegisteredWithMaster);
+        Serial.print(F("Ini Requests registered 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
+        requestsRegisteredWithMaster |= REQUESTING_INI;
+
+        if (status != _OK) status = _I2C_ReadDataWrong;
+        else {
+            Serial.print(F("Ini Requests sent 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
+            status = write(R_SLAVE_REQUESTING_INITIALISATION, requestsRegisteredWithMaster);
+            if (status != _OK) status = _NACK_during_data_send;
         }
-        bool towelRailNowOff = rem_registers.getRegister(R_ON_TIME_T_RAIL) == 0;
-        if (towelRailNowOff) {
-            if (rem_registers.getRegister(R_REQUESTING_T_RAIL) == e_On) rem_registers.setRegister(R_REQUESTING_T_RAIL, e_Auto);
-        } else if (rem_registers.getRegister(R_REQUESTING_T_RAIL) == e_Off) sendDataToProgrammer(R_REQUESTING_T_RAIL);
+        _tempSensor.setHighRes();
     }
+    return status;
+}
 
-    void requestRegisterOffsetFromProgrammer() {
-        uint8_t registerOffsetReqStillLodged = 0;
-        i2C.read(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, 1, &registerOffsetReqStillLodged);
-        registerOffsetReqStillLodged |= REQUESTING_INI;
-//#ifndef ZPSIM
-//        while (i2C.write(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, registerOffsetReqStillLodged) != _OK);
-//        do {
-//            Serial.flush();
-//            Serial.println(F("wait for offset..."));
-//            delay(100);
-//            i2C.read(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, 1, &registerOffsetReqStillLodged);
-//        } while (registerOffsetReqStillLodged | REQUESTING_INI);
-//#endif
-        i2C.write(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, registerOffsetReqStillLodged);
+void OLED_Thick_Display::startDisplaySleep() {
+    _sleepRow = 0; _sleepCol = 0;
+    MsTimer2::set(SLEEP_MOVE_PERIOD_mS, ::moveDisplay);
+    MsTimer2::start();
+}
+
+void OLED_Thick_Display::stopDisplaySleep() {
+    MsTimer2::stop();
+    _sleepRow = -1;
+    Serial.println("Wake...");
+}
+
+void OLED_Thick_Display::moveDisplay() {
+    ++_sleepCol;
+    if (_sleepCol > SCREEN_WIDTH / FONT_WIDTH - 2) {
+        _sleepCol = 0;
+        ++_sleepRow;
+        if (_sleepRow > 3) _sleepRow = 0;
     }
+    sleepPage();
+}
 
-    void begin() {
-        i2C.begin();
-        setRemoteI2CAddress();
-        i2C.onReceive(rem_registers.receiveI2C);
-        i2C.onRequest(rem_registers.requestI2C);
-        //auto speedTest = I2C_SpeedTest{ programmer };
-        //speedTest.fastest();
-        rem_registers.setRegister(R_DISPL_REG_OFFSET, 0);
-        requestRegisterOffsetFromProgrammer();
-        tempSensor.initialise(rem_registers.getRegister(R_ROOM_TS_ADDR));
-        tempSensor.setHighRes();
-        readDataFromProgrammer();
-        _display.begin();
-        displayPage();
-    }
+const uint8_t* OLED_Thick_Display::getFont(bool bold) {
+    if (bold) return 	u8x8_font_pxplusibmcga_f; // 5,444 bold
+    else return 	u8x8_font_pxplusibmcgathin_f; // 5,444 v nice
+}
 
-    void startDisplaySleep();
-    void stopDisplaySleep();
-    static void moveDisplay();
-    const uint8_t* getFont(bool bold = false);
-    void changeMode(int keyCode);
-    void changeValue(int keyCode);
+void OLED_Thick_Display::changeMode(int keyCode) {
+    auto newMode = NoOfDisplayModes + _display_mode + (keyCode == I_Keypad::KEY_LEFT ? -1 : 1);
+    _display_mode = Display_Mode(newMode % NoOfDisplayModes);
+    _dataChanged = true;
+}
 
-    void startDisplaySleep() {
-        _sleepRow = 0; _sleepCol = 0;
-        MsTimer2::set(SLEEP_MOVE_PERIOD_mS, moveDisplay);
-        MsTimer2::start();
-    }
-
-    void stopDisplaySleep() {
-        MsTimer2::stop();
-        _sleepRow = -1;
-        Serial.println("Wake...");
-    }
-
-    void moveDisplay() {
-        ++_sleepCol;
-        if (_sleepCol > SCREEN_WIDTH / FONT_WIDTH - 2) {
-            _sleepCol = 0;
-            ++_sleepRow;
-            if (_sleepRow > 3) _sleepRow = 0;
+void OLED_Thick_Display::changeValue(int keyCode) {
+    auto increment = keyCode == I_Keypad::KEY_UP ? 1 : -1;
+    switch (_display_mode) {
+    case RoomTemp:
+        _tempRequest += increment;
+        setReg(R_REQUESTING_ROOM_TEMP, _tempRequest);
+        sendDataToProgrammer(R_REQUESTING_ROOM_TEMP);
+        Serial.print(F("Rr ")); Serial.println(_tempRequest);
+        break;
+    case TowelRail: 
+    {
+        auto mode = nextIndex(0, getReg(R_REQUESTING_T_RAIL), e_ModeIsSet-1, increment);
+        setReg(R_REQUESTING_T_RAIL, mode);
+        if (mode == e_On) {
+            setReg(R_ON_TIME_T_RAIL, 60);
+            sendDataToProgrammer(R_ON_TIME_T_RAIL);
         }
-        sleepPage();
+        sendDataToProgrammer(R_REQUESTING_T_RAIL);
     }
-
-    const uint8_t* getFont(bool bold) {
-        if (bold) return 	u8x8_font_pxplusibmcga_f; // 5,444 bold
-        else return 	u8x8_font_pxplusibmcgathin_f; // 5,444 v nice
+        break;
+    case HotWater: 
+    {
+        auto mode = nextIndex(0, getReg(R_REQUESTING_DHW), e_ModeIsSet - 1, increment);
+        setReg(R_REQUESTING_DHW, mode);
+        sendDataToProgrammer(R_REQUESTING_DHW);
     }
-
-    void changeMode(int keyCode) {
-        auto newMode = NoOfDisplayModes + _display_mode + (keyCode == I_Keypad::KEY_LEFT ? -1 : 1);
-        _display_mode = Display_Mode(newMode % NoOfDisplayModes);
-        dataChanged = true;
+        break;
     }
+    _dataChanged = true;
+}
 
-    void changeValue(int keyCode) {
-        auto increment = keyCode == I_Keypad::KEY_UP ? 1 : -1;
-        switch (_display_mode) {
-        case RoomTemp:
-            rem_registers.addToRegister(R_REQUESTED_ROOM_TEMP, increment);
-            sendDataToProgrammer(R_REQUESTED_ROOM_TEMP);
-            Serial.print(F("Rr ")); Serial.println(rem_registers.getRegister(R_REQUESTED_ROOM_TEMP));
-            break;
-        case TowelRail: 
-        {
-            auto mode = nextIndex(0, rem_registers.getRegister(R_REQUESTING_T_RAIL), e_ModeIsSet-1, increment);
-            rem_registers.setRegister(R_REQUESTING_T_RAIL, mode);
-            if (mode == e_On) {
-                rem_registers.setRegister(R_ON_TIME_T_RAIL, 60);
-                sendDataToProgrammer(R_ON_TIME_T_RAIL);
-            }
-            sendDataToProgrammer(R_REQUESTING_T_RAIL);
-        }
-            break;
-        case HotWater: 
-        {
-            auto mode = nextIndex(0, rem_registers.getRegister(R_REQUESTING_DHW), e_ModeIsSet - 1, increment);
-            rem_registers.setRegister(R_REQUESTING_DHW, mode);
-            sendDataToProgrammer(R_REQUESTING_DHW);
-        }
-            break;
-        }
-        dataChanged = true;
-        //readDataFromProgrammer();
-    }
-
-    void displayPage() {
-        stopDisplaySleep();
-        _display.clear();
+void OLED_Thick_Display::displayPage() {
+    stopDisplaySleep();
+    _display.clear();
+    _display.setFont(getFont());
+    _display.setCursor(0, 0);
+    switch (_display_mode) {
+    case RoomTemp:
+        _display.print(F("Room Temp"));
+        _display.setCursor(0, 1);
+        _display.print(F("Ask "));
+        _display.setFont(getFont(true));
+        _display.print(_tempRequest);
         _display.setFont(getFont());
-        _display.setCursor(0, 0);
-        switch (_display_mode) {
-        case RoomTemp:
-            _display.print(F("Room Temp"));
-            _display.setCursor(0, 1);
-            _display.print(F("Ask "));
-            _display.setFont(getFont(true));
-            _display.print(rem_registers.getRegister(R_REQUESTED_ROOM_TEMP));
-            _display.setFont(getFont());
-            _display.print(F(" Is "));
-            _display.print(rem_registers.getRegister(R_ROOM_TEMP));
-            _display.setCursor(0, 2);
-            _display.print(F("Warmup in "));
-            _display.print(rem_registers.getRegister(R_WARM_UP_ROOM_M10) / 6.);
-            _display.print(F("h"));
-            break;
-        case TowelRail:
-            {
-                _display.print(F("Towel Rail"));
-                _display.setCursor(0, 1);
-                _display.setFont(getFont(true));
-                auto request = rem_registers.getRegister(R_REQUESTING_T_RAIL);
-                _display.print(request == e_Auto ? F("Auto ") : (request == e_Off ? F("Manual Off ") : F("Manual On ")));
-                _display.setFont(getFont());
-                auto onTime = rem_registers.getRegister(R_ON_TIME_T_RAIL);           
-                if (onTime) {
-                    _display.setCursor(0, 2);
-                    _display.print(F("Off in "));
-                    _display.print(onTime);
-                    _display.print(F("m"));
-                } else if (request == e_Auto) _display.print(F("(Is Off)"));
-            }
-            break;
-        case HotWater:
-            _display.print(F("Hot Water"));
+        _display.print(F(" Is "));
+        _display.print(getReg(R_ROOM_TEMP));
+        _display.setCursor(0, 2);
+        _display.print(F("Warmup in "));
+        _display.print(getReg(R_WARM_UP_ROOM_M10) / 6.);
+        _display.print(F("h"));
+        break;
+    case TowelRail:
+        {
+            _display.print(F("Towel Rail"));
             _display.setCursor(0, 1);
             _display.setFont(getFont(true));
-            {
-                auto request = rem_registers.getRegister(R_REQUESTING_DHW);
-                _display.print(request == e_Auto ? F("Auto ") : (request == e_Off ? F("Manual Off ") : F("Manual On ")));
-            }
+            auto request = getReg(R_REQUESTING_T_RAIL);
+            _display.print(request == e_Auto ? F("Auto ") : (request == e_Off ? F("Manual Off ") : F("Manual On ")));
             _display.setFont(getFont());
-            _display.setCursor(0, 2);
-            _display.print(F("Warm in "));
-            int8_t dhw_warmupTime = rem_registers.getRegister(R_WARM_UP_DHW_M10);
-            if (dhw_warmupTime  < 0 && dhw_warmupTime > -60) {
-                _display.print(-dhw_warmupTime);
+            auto onTime = getReg(R_ON_TIME_T_RAIL);           
+            if (onTime) {
+                _display.setCursor(0, 2);
+                _display.print(F("Off in "));
+                _display.print(onTime);
                 _display.print(F("m"));
-            } else {
-                _display.print((uint8_t)dhw_warmupTime / 6.);
-                _display.print(F("h"));
-            }
+            } else if (request == e_Auto) _display.print(F("(Is Off)"));
         }
-        dataChanged = false;
-    }
-
-    void sleepPage() {
-        _display.clear();
+        break;
+    case HotWater:
+        _display.print(F("Hot Water"));
+        _display.setCursor(0, 1);
+        _display.setFont(getFont(true));
+        {
+            auto request = getReg(R_REQUESTING_DHW);
+            _display.print(request == e_Auto ? F("Auto ") : (request == e_Off ? F("Manual Off ") : F("Manual On ")));
+        }
         _display.setFont(getFont());
-        _display.setCursor(_sleepCol, _sleepRow);
-        _display.print(rem_registers.getRegister(R_ROOM_TEMP));
-    }
-
-    void processKeys() {
-#ifdef ZPSIM
-        uint8_t(&debug)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(*rem_registers.reg_ptr(0));
-        uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(Wire.i2CArr[US_CONSOLE_I2C_ADDR][0]);
-#endif
-        if (rem_registers.getRegister(R_DISPL_REG_OFFSET) == 0) {
-            requestRegisterOffsetFromProgrammer();
-            _display.setCursor(0, 0);
-            _display.print(F("Wait for Master"));
+        _display.setCursor(0, 2);
+        _display.print(F("Warm in "));
+        int8_t dhw_warmupTime = getReg(R_WARM_UP_DHW_M10);
+        if (dhw_warmupTime  < 0 && dhw_warmupTime > -60) {
+            _display.print(-dhw_warmupTime);
+            _display.print(F("m"));
         } else {
-            _remoteKeypad.readKey();
-            if (_remoteKeypad.oneSecondElapsed()) {
-                readTempSensor();
-                readDataFromProgrammer();
-            }
-            auto key = _remoteKeypad.popKey();
-            if (key > I_Keypad::NO_KEY) Serial.println(key);
-            if (key > I_Keypad::NO_KEY) {
-                if (key == I_Keypad::KEY_WAKEUP) {
-                    displayPage();
+            _display.print((uint8_t)dhw_warmupTime / 6.);
+            _display.print(F("h"));
+        }
+    }
+    _dataChanged = false;
+}
+
+void OLED_Thick_Display::sleepPage() {
+    _display.clear();
+    _display.setFont(getFont());
+    _display.setCursor(_sleepCol, _sleepRow);
+    _display.print(getReg(R_ROOM_TEMP));
+}
+
+void OLED_Thick_Display::processKeys() { // called by loop()
+#ifdef ZPSIM
+    uint8_t(&debug)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(*regPtr(0));
+    uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
+#endif
+    if (getReg(R_DISPL_REG_OFFSET) == NO_REG_OFFSET_SET) {
+        auto status = requestRegisterOffsetFromProgrammer();
+        _display.setCursor(0, 0);
+        _display.print(F("Wait for Master"));
+        if (status == _I2C_ReadDataWrong) {
+            _display.setCursor(0, 1);
+            _display.print(F("...unresponsive"));
+        } else if (status == _NACK_during_data_send) {
+            _display.setCursor(0, 1);
+            _display.print(F("Sending request"));
+        }
+        delay(1000);
+    } else {
+        _remoteKeypad.readKey();
+        if (_remoteKeypad.oneSecondElapsed()) {
+            refreshRegisters();
+        }
+        auto key = _remoteKeypad.popKey();
+        if (key > I_Keypad::NO_KEY) Serial.println(key);
+        if (key > I_Keypad::NO_KEY) {
+            if (key == I_Keypad::KEY_WAKEUP) {
+                displayPage();
+            } else {
+                if (key / 2 == I_Keypad::MODE_LEFT_RIGHT) {
+                    changeMode(key);
                 } else {
-                    if (key / 2 == I_Keypad::MODE_LEFT_RIGHT) {
-                        changeMode(key);
-                    } else {
-                        changeValue(key);
-                    }
+                    changeValue(key);
                 }
             }
-            dataChanged = true;
-            if (dataChanged) displayPage();
-            else if (!_remoteKeypad.displayIsAwake() && _sleepRow == -1) {
-                Serial.println("Sleep...");
-                startDisplaySleep();
-            }
+        }
+        _dataChanged = true;
+        if (_dataChanged) displayPage();
+        else if (!_remoteKeypad.displayIsAwake() && _sleepRow == -1) {
+            Serial.println("Sleep...");
+            startDisplaySleep();
         }
     }
-
-    void readTempSensor() {
-        auto fractional_temp = tempSensor.get_fractional_temp();
-        rem_registers.setRegister(R_ROOM_TEMP, fractional_temp >> 8);
-        uint8_t fraction = uint8_t(fractional_temp);
-        //if (fraction != rem_registers.getRegister(R_ROOM_TEMP_FRACTION)) {
-            rem_registers.setRegister(R_ROOM_TEMP_FRACTION, fraction);
-            sendDataToProgrammer(R_ROOM_TEMP);
-            sendDataToProgrammer(R_ROOM_TEMP_FRACTION);
-        //}
-    }
+}
 
 #ifdef ZPSIM
-    void setKey(I_Keypad::KeyOperation key) {
+    void OLED_Thick_Display::setKey(I_Keypad::KeyOperation key) {
         _remoteKeypad.putKey(key);
     }
 
-    char* oledDisplay() {
+    char* OLED_Thick_Display::oledDisplay() {
         return _display.displayBuffer;
     }
 #endif
-}

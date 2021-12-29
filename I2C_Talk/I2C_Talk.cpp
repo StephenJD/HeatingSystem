@@ -259,6 +259,7 @@ const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 	case _I2C_Device_Not_Found: return F(" I2C Device not found");
 	case _I2C_ReadDataWrong: return F(" I2C Read Data Wrong");
 	case _I2C_AddressOutOfRange: return F(" I2C Address Out of Range");
+	case _I2C_NotBegun: return F(" I2C NotBegun");
 	case 0xFF: return F(" Need modified Wire.cpp/twi.c");
 	default: return F(" Not known");
 	}
@@ -294,7 +295,7 @@ Error_codes I2C_Talk::status(int deviceAddr) const // Returns in slave mode.
 Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false to inhibit access
 	//auto _exec_time = micros();
 	//logger() << "beginTrans _lastWrite: " << _exec_time - _lastWrite << L_endl;
-	auto status = validAddressStatus(deviceAddr);
+	auto status = _wire_port == 0 ? _I2C_NotBegun  : validAddressStatus(deviceAddr);
 	if (status == _OK) {
 #ifndef ZPSIM
 		if (isMultiMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));

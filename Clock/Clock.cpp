@@ -80,7 +80,10 @@ using namespace Date_Time;
 
 	bool Clock::isNewSecond(uint8_t& oldSecond) {
 		refresh();
-		bool isNewSec = oldSecond != seconds(); 
+		bool isNewSec = oldSecond != seconds();
+#ifdef ZPSIM
+		isNewSec = true;
+#endif
 		if (isNewSec) oldSecond = seconds(); 
 		return isNewSec; 
 	}

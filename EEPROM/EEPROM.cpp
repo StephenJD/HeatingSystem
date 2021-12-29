@@ -48,14 +48,6 @@ using namespace I2C_Talk_ErrorCodes;
 			myfile.close();
 		}
 		else cout << "Unable to open file\n";
-		myfile = ifstream("I2C.dat", ios::binary);	// Input file stream
-		if (myfile.is_open()) {
-			//myfile.read((char*)Wire1.i2CArr, sizeof(Wire1.i2CArr));
-			myfile.read((char*)Wire.i2CArr, sizeof(Wire.i2CArr));
-			cout << myfile.gcount() << " bytes read from I2C.dat\n";
-			myfile.close();
-		}
-		else cout << "Unable to open I2C file\n";
 #endif	
 	}
 
@@ -70,7 +62,7 @@ using namespace I2C_Talk_ErrorCodes;
 		myfile = ofstream("I2C.dat", ios::binary);
 		if (myfile) {
 			//myfile.write((char*)Wire1.i2CArr, sizeof(Wire1.i2CArr));
-			myfile.write((char*)Wire.i2CArr, sizeof(Wire.i2CArr));
+			myfile.write((char*)TwoWire::i2CArr, sizeof(TwoWire::i2CArr));
 			cout << "I2C.dat Saved\n";
 		}
 		else cout << "Unable to open I2C file";

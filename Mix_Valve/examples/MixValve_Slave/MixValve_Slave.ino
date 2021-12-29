@@ -33,11 +33,6 @@
 // Otherwise, depending on how cleanly the Arduino shuts down, it may time-out before it is reset.
 // ********************************
 
-// ********** NOTE: ***************
-// To open two serial monitors
-// You must start a second Arduino session from the desktop icon
-// NOT from within an existing Arduino session.
-// ********************************
 
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
@@ -185,7 +180,7 @@ void roleChanged(Role newRole) {
 	if (e_Slave == newRole) {
 		psu_enable.clear();
 		for (int i = 0; i < 10; ++i) {
-			if (i2C().write(PROGRAMMER_I2C_ADDR, R_SLAVE_REQUESTING_INITIALISATION, MV_REQUESTING_INI) == _OK) break;
+			if (programmer.write(R_SLAVE_REQUESTING_INITIALISATION, MV_REQUESTING_INI) == _OK) break;
 		} 
 		logger() << F("Set to Slave") << L_endl;
 	}

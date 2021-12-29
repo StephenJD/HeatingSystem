@@ -2,27 +2,31 @@
 #include <Arduino.h>
 #include <I2C_Talk.h>
 
-#if defined(__SAM3X8E__)
-#else
-	#ifndef ZPSIM
-	#include <MsTimer2.h>
-
-	inline void stopTimer() { MsTimer2::stop(); digitalWrite(LED_BUILTIN, LOW); }
-	inline void flashLED(int period) {
-		pinMode(LED_BUILTIN, OUTPUT);
-		digitalWrite(LED_BUILTIN, HIGH);
-		MsTimer2::set(period, stopTimer);
-		MsTimer2::start();
-	}
-	#endif
-#endif
+//#if defined(__SAM3X8E__)
+//#else
+//	#ifndef ZPSIM
+//	#include <MsTimer2.h>
+//
+//	inline void stopTimer() { MsTimer2::stop(); digitalWrite(LED_BUILTIN, LOW); }
+//	inline void flashLED(int period) {
+//		pinMode(LED_BUILTIN, OUTPUT);
+//		digitalWrite(LED_BUILTIN, HIGH);
+//		MsTimer2::set(period, stopTimer);
+//		MsTimer2::start();
+//	}
+//	#endif
+//#endif
 
 namespace i2c_registers {
 	struct Defaut_Tag_None {};
-
+	/// <summary>
+	/// Registers are in static-storage and thus initialised to zero
+	/// </summary>
 	class I_Registers {
 	public:
-		uint8_t getRegister(int reg) const { return const_cast<I_Registers*>(this)->regArr()[reg]; }
+		uint8_t getRegister(int reg) const { 
+			return const_cast<I_Registers*>(this)->regArr()[reg]; 
+		}
 		void setRegister(int reg, uint8_t value) { regArr()[reg] = value; }
 		void addToRegister(int reg, uint8_t increment) { regArr()[reg] += increment; }
 		uint8_t* reg_ptr(int reg) { return regArr() + reg; }
@@ -80,14 +84,14 @@ namespace i2c_registers {
 		static uint8_t _regAddr; // the register address sent in the request
 	};
 
-
+// Static Definitions
 #ifdef ZPSIM
 #include "Wire.h"
 	template<int register_size, int i2C_addr>
 	I2C_Talk* Registers<register_size, i2C_addr>::_i2C;
 
 	template<int register_size, int i2C_addr>
-	uint8_t* Registers<register_size, i2C_addr>::_regArr = (uint8_t*)&Wire.i2CArr[i2C_addr];
+	uint8_t* Registers<register_size, i2C_addr>::_regArr = & TwoWire::i2CArr[i2C_addr][0]; // 2-D Array
 
 	template<int register_size, int i2C_addr>
 	uint8_t Registers<register_size, i2C_addr>::_regAddr;

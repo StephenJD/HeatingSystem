@@ -11,7 +11,6 @@ namespace arduino_logger {
 	Logger& profileLogger();
 }
 using namespace arduino_logger;
-using namespace OLED_Thick_Display; // for Mode e_Off/On
 
 namespace HardwareInterfaces {
 
@@ -167,8 +166,8 @@ namespace HardwareInterfaces {
 
 	bool ThermalStore::dhwNeedsHeat(int callTemp, int nextRequest) {
 		auto requestTempWhenCalling = nextRequest > callTemp ? nextRequest : callTemp;
-		if (_mode == e_Off) callTemp = 30;
-		else if (_mode == e_On) callTemp = requestTempWhenCalling;
+		if (_mode == OLED_Thick_Display::e_Off) callTemp = 30;
+		else if (_mode == OLED_Thick_Display::e_On) callTemp = requestTempWhenCalling;
 
 		_theoreticalDeliveryTemp = calcCurrDeliverTemp(requestTempWhenCalling, _groundT, getTopTemp(), _tempSensorArr[_thermStoreData.MidDhwTS].get_temp(), _tempSensorArr[_thermStoreData.LowerDhwTS].get_temp());
 		if (_tempSensorError) {

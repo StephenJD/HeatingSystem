@@ -3,7 +3,7 @@
 #include "..\LCD_UI\UI_Primitives.h"
 #include "..\LCD_UI\I_Data_Formatter.h"
 #include <RemoteKeypad.h>
-#include <ConsoleController_Thick.h>
+#include "..\HardwareInterfaces\ConsoleController_Thick.h"
 
 namespace client_data_structures {
 	using namespace LCD_UI;

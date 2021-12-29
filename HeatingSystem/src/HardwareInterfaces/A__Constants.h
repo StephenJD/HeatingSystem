@@ -1,5 +1,4 @@
-#if !defined (CONSTANTS__INCLUDED_)
-#define CONSTANTS__INCLUDED_
+#pragma once
 
 #include <I2C_RecoverStrategy.h>
 
@@ -97,8 +96,8 @@ namespace HardwareInterfaces {
 	constexpr uint8_t DS_FLOW_TEMPSENS_ADDR = 0x4f;
 	constexpr uint8_t US_ROOM_TEMPSENS_ADDR = 0x36;
 	constexpr uint8_t DS_ROOM_TEMPSENS_ADDR = 0x74;
-	constexpr uint8_t F_ROOM_TEMPSENS_ADDR = 0x70;
-	constexpr uint8_t REMOTE_ROOM_TS_ADDR[] = { US_ROOM_TEMPSENS_ADDR, DS_ROOM_TEMPSENS_ADDR, F_ROOM_TEMPSENS_ADDR };
+	constexpr uint8_t FL_ROOM_TEMPSENS_ADDR = 0x70;
+	constexpr uint8_t REMOTE_ROOM_TS_ADDR[] = { US_ROOM_TEMPSENS_ADDR, DS_ROOM_TEMPSENS_ADDR, FL_ROOM_TEMPSENS_ADDR };
 
 	constexpr uint8_t US_REMOTE_ADDRESS = 0x24;
 	constexpr uint8_t FL_REMOTE_ADDRESS = 0x25;
@@ -233,14 +232,3 @@ f		factoryObjects							D_Factory			createFactObject()
 //
 
 }
-
-
-
-
-
-
-
-
-
-
-#endif

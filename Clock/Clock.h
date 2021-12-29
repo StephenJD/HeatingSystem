@@ -36,7 +36,7 @@
 		const Date_Time::DateTime now() const { return  _dateTime(); }
 		const Date_Time::DateOnly date() const { return _dateTime(); }
 		const Date_Time::TimeOnly time() const { return _dateTime(); }
-		const uint32_t asInt() const { return _dateTime().asInt(); }
+		uint32_t asInt() const { return _dateTime().asInt(); }
 
 		// Modifiers
 		void refresh() const { _dateTime(); }

@@ -11,7 +11,7 @@ using namespace Date_Time;
 
 Clock_EEPROM::Clock_EEPROM(unsigned int addr) : Clock{ true }, _addr(addr) { /*loadTime();*/ } // loadtime crashes!
 
-Error_codes Clock_EEPROM::writer(uint16_t& address, const void* data, int noOfBytes) {
+Error_codes Clock_EEPROM::writer(uint16_t& address, const void* data, unsigned int noOfBytes) {
 	const unsigned char* byteData = static_cast<const unsigned char*>(data);
 	auto status = _OK;
 	for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
@@ -24,7 +24,7 @@ Error_codes Clock_EEPROM::writer(uint16_t& address, const void* data, int noOfBy
 	return status;
 }
 
-Error_codes Clock_EEPROM::reader(uint16_t& address, void* result, int noOfBytes) {
+Error_codes Clock_EEPROM::reader(uint16_t& address, void* result, unsigned int noOfBytes) {
 	uint8_t* byteData = static_cast<uint8_t*>(result);
 	for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
 		*byteData = eeprom().read(address);

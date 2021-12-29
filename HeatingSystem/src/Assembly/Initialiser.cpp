@@ -54,10 +54,17 @@ namespace Assembly {
 	}
 
 	void Initialiser::initialize_Thick_Consoles() {
+		initialize_Thin_Consoles();
 		_hs._prog_register_set.setRegister(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
 		for (auto& rc : _hs.thickConsole_Arr) {
-			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex], hs().tempController().towelRailArr[consoleIndex], hs().tempController().zoneArr[Z_DHW], hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS);
+			auto i2cMode = hs().remoteKeypadArr[consoleIndex].consoleMode();
+			// { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
+			i2cMode = i2cMode < 2 ? 1 : (i2cMode < 4 ? 2 : 0);	// { e_INACTIVE, e_MASTER, e_SLAVE };
+			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex]
+				, hs().tempController().towelRailArr[consoleIndex], hs().tempController().zoneArr[Z_DHW]
+				, hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS
+				, i2cMode);
 			++consoleIndex;
 		}
 	}
@@ -73,6 +80,7 @@ namespace Assembly {
 		_resetI2C.hardReset.initialisationRequired = false;
 		uint8_t status = relayPort().initialiseDevice();
 		initialize_Thin_Consoles(); // Non-critical
+		initialize_Thick_Consoles();
 		status |= initialise_slaveConsole_TempSensors();
 		for (auto& mixValve : hs().tempController().mixValveControllerArr) { 
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
@@ -100,10 +108,12 @@ namespace Assembly {
 		logger() << L_time << F("initialize_Thin_Consoles()") << L_endl;
 		auto index = 0;
 		for (auto& kb : _hs.remoteKeypadArr) {
-			logger() << L_time << F("console query[] ") << index+1 << L_endl;
+			logger() << L_time << F("RemConsole query[] ") << index << L_endl;
 			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index+1];
-			logger() << L_time << F("setWakeTime ") << L_endl;
-			kb.setWakeTime(display.rec().timeout);
+			auto timeout = display.rec().timeout;
+			if (timeout >= LAST_CONSOLE_MODE) timeout = 30;
+			logger() << L_time << F("setWakeTime :") << timeout << L_endl;
+			kb.setWakeTime(timeout);  // { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
 			logger() << L_time << F("popKey ") << L_endl;
 			kb.popKey();
 			logger() << L_time << F("clearKeys ") << L_endl;
@@ -113,7 +123,7 @@ namespace Assembly {
 			++index;
 		}		
 		
-		logger() << F("\initialize_Thin_Consoles() done") << L_endl;
+		logger() << F("\ninitialize_Thin_Consoles() done") << L_endl;
 		return failed;
 	}
 

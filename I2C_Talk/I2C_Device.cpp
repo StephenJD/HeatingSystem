@@ -3,11 +3,11 @@
 #include <I2C_Device.h>
 #include <I2C_Recover.h>
 #include <I2C_Talk.h>
-#include <Logging.h>
+//#include <Logging.h>
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
-using namespace arduino_logger;
+//using namespace arduino_logger;
 
 auto I_I2Cdevice::read_verify_2bytes(int registerAddress, int16_t & data, int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
 	// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].
@@ -121,7 +121,7 @@ Error_codes I_I2Cdevice_Recovery::reEnable() {
 	if (isEnabled()) return _OK;
 	else if (millis() - getFailedTime() > DISABLE_PERIOD_ON_FAILURE) {
 		reset();
-		logger() << L_time << F("Re-enabling disabled device 0x") << L_hex << getAddress() << L_endl;
+		//logger() << L_time << F("Re-enabling disabled device 0x") << L_hex << getAddress() << L_endl;
 		return _OK;
 	} else 
 	return _disabledDevice;

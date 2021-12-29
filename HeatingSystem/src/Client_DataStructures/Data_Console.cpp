@@ -54,11 +54,12 @@ namespace client_data_structures {
 		case e_console_options:
 			auto id = answer().id() - 1;
 			if (id >= 0) {
-				auto timeout = newValue->val > LAST_CONSOLE_MODE ? 30 : newValue->val;
-				answer().rec().timeout = static_cast<uint8_t>(timeout);
+				auto timeout = static_cast<uint8_t>(newValue->val >= LAST_CONSOLE_MODE ? 30 : newValue->val);
+				answer().rec().timeout = timeout;
 				answer().update();
-				_remoteKeypadArr[id].setWakeTime(static_cast<uint8_t>(timeout));
-				_thickConsole_Arr[id].setMasterMode(static_cast<uint8_t>(timeout));
+				_remoteKeypadArr[id].setWakeTime(timeout);	// { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
+				auto consoleMode = timeout < 2 ? 1 : (timeout < 4 ? 2 : 0);	// { e_INACTIVE, e_MASTER, e_SLAVE };
+				_thickConsole_Arr[id].set_i2c_mode(consoleMode);
 			}
 			break;
 		}

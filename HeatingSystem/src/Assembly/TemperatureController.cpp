@@ -121,13 +121,18 @@ namespace Assembly {
 			ui_yield();
 		}
 
-		auto zoneIndex = 0;
-		for (auto& zone : zoneArr) {
-			auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + (OLED_Thick_Display::R_DISPL_REG_SIZE * zoneIndex);
-			slaveConsole_TSArr[zoneIndex].readTemperature();
-			auto roomTemp = slaveConsole_TSArr[zoneIndex].get_fractional_temp();
-			_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
-			_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
+		auto displIndex = 0;
+		for (auto& ts : slaveConsole_TSArr) {
+			auto consoleMode = _prog_registers.getRegister(RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_I2C_MODE) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
+			if (consoleMode != 1 /*e_MASTER*/) {
+				auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
+				ts.readTemperature();
+				auto roomTemp = ts.get_fractional_temp();
+				_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
+				_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
+			}
+			//logger() << L_time << "TC::slaveConsole_TSArr[" << displIndex << "] Mode: " << consoleMode << " Temp: " << ts.get_temp() << L_endl;
+			++displIndex;
 		}
 
 		if (newMinute) {

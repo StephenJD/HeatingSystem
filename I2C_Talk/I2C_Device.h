@@ -107,8 +107,8 @@ public:
 	int32_t getFailedTime() const override { return _lastFailedTime; }
 	bool isUnrecoverable() const;
 	I2C_Recovery::I2C_Recover & recovery() const { return *_recover; }
-	
 	auto getStatus() const ->I2C_Talk_ErrorCodes::Error_codes override;
+	// Modifiers
 	void disable() override { _lastFailedTime = millis(); _i2c_speed = 0; }
 	auto reEnable()->I2C_Talk_ErrorCodes::Error_codes override;
 	void reset() override { _i2c_speed = START_SPEED_AFTER_FAILURE;	}

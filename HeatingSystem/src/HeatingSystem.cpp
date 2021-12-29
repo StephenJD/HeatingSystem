@@ -113,7 +113,7 @@ HeatingSystem::HeatingSystem()
 
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
 	if (_mainConsoleChapters.chapter() == 0) {
-		if (_tempController.checkAndAdjust()) {
+		if (_tempController.checkAndAdjust()) { // true and checked once-per-second
 			for (auto& remote : thickConsole_Arr) {
 				remote.refreshRegisters();
 			}
@@ -124,17 +124,23 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 	//Serial.println("HS.serviceConsoles");
 	ui_yield();
-	if (_mainConsole.processKeys()) _mainConsole.refreshDisplay();
-	auto zoneIndex = 0;
+	bool displayHasChanged = _mainConsole.processKeys();
+	auto consoleIndex = 0;
 	auto activeField = _thinConsole_Chapters.remotePage_c.activeUI();
 	for (auto & remote : _thinConsole_Arr) {
-		if (remote.consoleMode() < LCD_CONSOLE_MODE) { ++zoneIndex; continue; }
-		activeField->setFocusIndex(zoneIndex);
-		if (remote.processKeys()) {
-			remote.refreshDisplay();
+		if (remote.consoleMode() < LCD_CONSOLE_MODE) {
+			displayHasChanged |= thickConsole_Arr[consoleIndex].hasChanged();
 		}
-		++zoneIndex;
+		else {
+			activeField->setFocusIndex(consoleIndex);
+			if (remote.processKeys() || displayHasChanged) {
+				remote.refreshDisplay();
+				displayHasChanged = true;
+			}
+		}
+		++consoleIndex;
 	}
+	if (displayHasChanged) _mainConsole.refreshDisplay();
 }
 
 void HeatingSystem::updateChangedData() {

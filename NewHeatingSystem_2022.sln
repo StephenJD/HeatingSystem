@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30523.141
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Arduino", "..\..\VS_Projects\NewHeatingSystem\Arduino\Arduino.vcxproj", "{638772E8-0D64-4264-AE4B-AE75E36A1DE9}"
 EndProject
@@ -23,9 +23,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics with DB", ".
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I2C_TestAndLog", "I2C_Talk\examples\I2C_TestAndLog\I2C_TestAndLog.vcxproj", "{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SJD_NewHeatingSystem", "..\SJD_NewHeatingSystem\SJD_NewHeatingSystem.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E620AD9-804F-4C1E-90EE-1AC002A26043}"
+	ProjectSection(SolutionItems) = preProject
+		Mix_Valve\examples\MixValve_Master\MixValve_Master.ino = Mix_Valve\examples\MixValve_Master\MixValve_Master.ino
+		Mix_Valve\examples\MixValve_Slave\MixValve_Slave.ino = Mix_Valve\examples\MixValve_Slave\MixValve_Slave.ino
+		Keypad\examples\OLED_Thick_Display\OLED_Thick_Display.ino = Keypad\examples\OLED_Thick_Display\OLED_Thick_Display.ino
+		HeatingSystem\examples\SJD_NewHeatingSystem\SJD_NewHeatingSystem.ino = HeatingSystem\examples\SJD_NewHeatingSystem\SJD_NewHeatingSystem.ino
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_SJD_Watchdog_Timer", "..\..\Sketches\A_SJD_Watchdog_Timer\A_SJD_Watchdog_Timer.vcxproj", "{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}"
 EndProject
@@ -45,11 +49,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Due", "Due", "{04A9DCA5-DA0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AVR", "AVR", "{3A89E558-0F5D-451B-8200-DC46494A3C90}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.c
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\utility\twi.h
-		..\..\..\Arduino_Install\hardware\tools\avr\avr\include\avr\wdt.h = ..\..\..\Arduino_Install\hardware\tools\avr\avr\include\avr\wdt.h
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\Wire.cpp
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.2\libraries\Wire\src\Wire.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.c
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "read_i2c_tempSensors", "TempSensor\examples\read_i2c_tempSensors\read_i2c_tempSensors.vcxproj", "{309FC63E-4927-46C4-AF2A-DEE543E0C89B}"
@@ -82,15 +85,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Zone Preheat", "..\..\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "remoteKeypad", "Keypad\examples\remoteKeypad\remoteKeypad.vcxproj", "{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_MixerValve_Slave", "Mix_Valve\examples\MixValve_Control\MixerValve_Control.vcxproj", "{382F173C-7C35-4969-AA6F-03E687A74608}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_MixerValve_Master", "Mix_Valve\examples\MixValve_Master\MixValve_Master.vcxproj", "{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EEPROM_Example", "EEPROM\examples\EEPROM_rtc_Example\EEPROM_rtc_Example.vcxproj", "{6CDFC510-4775-4459-8938-9931F8DA1C51}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StdLogger", "..\..\VS_Projects\Std_Logger\StdLogger.vcxproj", "{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_RemoteConsoleMaster", "Keypad\examples\RemoteConsoleMaster\RemoteConsoleMaster.vcxproj", "{75C16EE9-643B-40FE-AF58-BEF13C9650D1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MiniCore", "MiniCore", "{A3470CF9-2D34-49DF-94B6-933400C72FCE}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.c
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MiniCore\hardware\avr\2.0.9\libraries\Wire\src\utility\twi.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SJD Modified", "SJD Modified", "{7452347B-7166-4353-B604-5735B16AC9E5}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c = ..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -234,16 +242,6 @@ Global
 		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x64.ActiveCfg = Release|Win32
 		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x86.ActiveCfg = Release|Win32
 		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x86.Build.0 = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|ARM.ActiveCfg = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x64.ActiveCfg = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.ActiveCfg = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.Build.0 = Debug|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|ARM.ActiveCfg = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|ARM64.ActiveCfg = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x64.ActiveCfg = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.ActiveCfg = Release|Win32
-		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.Build.0 = Release|Win32
 		{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}.Debug|ARM.ActiveCfg = Debug|Win32
 		{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{9C5E17CB-228B-49CC-9CA3-321B1000C2FF}.Debug|x64.ActiveCfg = Debug|Win32
@@ -426,26 +424,6 @@ Global
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x64.ActiveCfg = Release|Win32
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.ActiveCfg = Release|Win32
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.Build.0 = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|ARM.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x64.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.ActiveCfg = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Debug|x86.Build.0 = Debug|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|ARM.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|ARM64.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x64.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.ActiveCfg = Release|Win32
-		{382F173C-7C35-4969-AA6F-03E687A74608}.Release|x86.Build.0 = Release|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|ARM.ActiveCfg = Debug|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|x64.ActiveCfg = Debug|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|x86.ActiveCfg = Debug|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Debug|x86.Build.0 = Debug|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|ARM.ActiveCfg = Release|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|ARM64.ActiveCfg = Release|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|x64.ActiveCfg = Release|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|x86.ActiveCfg = Release|Win32
-		{ECF5BBA3-03F5-48A7-9CF5-C6C49D332ECC}.Release|x86.Build.0 = Release|Win32
 		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|ARM.ActiveCfg = Debug|Win32
 		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|x64.ActiveCfg = Debug|Win32
@@ -468,16 +446,6 @@ Global
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Release|x64.Build.0 = Release|x64
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Release|x86.ActiveCfg = Release|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Release|x86.Build.0 = Release|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Debug|ARM.ActiveCfg = Debug|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Debug|x64.ActiveCfg = Debug|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Debug|x86.ActiveCfg = Debug|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Debug|x86.Build.0 = Debug|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Release|ARM.ActiveCfg = Release|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Release|ARM64.ActiveCfg = Release|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Release|x64.ActiveCfg = Release|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Release|x86.ActiveCfg = Release|Win32
-		{75C16EE9-643B-40FE-AF58-BEF13C9650D1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -485,6 +453,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{04A9DCA5-DA0B-42F7-900E-9DF92C531E80} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
 		{3A89E558-0F5D-451B-8200-DC46494A3C90} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
+		{A3470CF9-2D34-49DF-94B6-933400C72FCE} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
+		{7452347B-7166-4353-B604-5735B16AC9E5} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8A631AB6-168B-497B-81AB-6570250D9D62}
