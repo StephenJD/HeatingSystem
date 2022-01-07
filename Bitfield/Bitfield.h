@@ -85,6 +85,4 @@ namespace BitFields {
 		IntType base; // must not initialise because only one member of a union is allowed to be initialised
 	};
 
-
-
 }

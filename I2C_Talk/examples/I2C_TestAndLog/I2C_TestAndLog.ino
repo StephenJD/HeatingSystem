@@ -42,7 +42,7 @@ const uint8_t RESET_LEDP_PIN = 16;  // high supply
 const uint8_t RESET_LEDN_PIN = 19;  // low for on.
 const uint8_t RTC_ADDR = 0x68;
 const uint8_t EEPROM_CLOCK_SIZE = 0x8;
-const uint8_t EEPROM_ADDRESS = 0x50;
+const uint8_t EEPROM_I2C_ADDR = 0x50;
 const int EEPROM_CLOCK_ADDR = 0;
 const int STRATEGY_EPPROM_ADDR = EEPROM_CLOCK_ADDR + EEPROM_CLOCK_SIZE;
 const int EEPROM_LOG_START = STRATEGY_EPPROM_ADDR + S_NoOfStrategies + 1;
@@ -68,8 +68,8 @@ uint8_t PHOTO_ANALOGUE = A0;
 	const uint8_t KEYPAD_REF_PIN = A3;
 	I2C_Talk rtc{ Wire1 }; // not initialised until this translation unit initialised.
 
-	EEPROMClass & eeprom() {
-		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000), EEPROM_ADDRESS) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
+	EEPROMClassRE & eeprom() {
+		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000), EEPROM_I2C_ADDR) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
 		return _eeprom_obj;
 	}
 
@@ -102,7 +102,7 @@ uint8_t PHOTO_ANALOGUE = A0;
 	const uint8_t KEY_ANALOGUE = 0;
 	const uint8_t KEYPAD_REF_PIN = A2;
 
-	EEPROMClass & eeprom() {
+	EEPROMClassRE & eeprom() {
 		return EEPROM;
 	}
 	const float megaFactor = 3.3 / 5;
@@ -275,7 +275,7 @@ void setup() {
 	keypad.begin();
 
 #if defined(__SAM3X8E__)
-	uint8_t status = rtc.status(0x50);
+	uint8_t status = rtc.status(EEPROM_I2C_ADDR);
 	logger() << "\nEEPROM Status " << status << rtc.getStatusMsg(status);
 
 	status = rtc.status(0x68);

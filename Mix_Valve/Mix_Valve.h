@@ -18,8 +18,8 @@
 #include <TempSensor.h>
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 #include <Arduino.h>
-
-class EEPROMClass;
+#include <EEPROM_RE.h>
+//class EEPROMClass;
 
 namespace HardwareInterfaces {
 	class Pin_Wag;

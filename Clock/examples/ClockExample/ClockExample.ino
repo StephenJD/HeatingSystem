@@ -6,7 +6,7 @@
 
 #define SERIAL_RATE 115200
 #define RTC_ADDRESS 0x68
-#define EEPROM_ADDR 0x50
+#define EEPROM_I2C_ADDR 0x50
 #define EEPROM_CLOCK_ADDR 0
 #define RTC_RESET 4
 
@@ -19,8 +19,8 @@
 	I2C_Talk rtc(Wire1);
 	I2C_Scan scanner{ rtc };
 
-	EEPROMClass & eeprom() {
-		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1), 0x50) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
+	EEPROMClassRE & eeprom() {
+		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1), EEPROM_I2C_ADDR) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
 		return _eeprom_obj;
 	}
 
@@ -33,7 +33,7 @@
 	#define EEPROM_CLOCK EEPROM_CLOCK_ADDR
 	#include <Clock_EP.h>
 
-	EEPROMClass & eeprom() {
+	EEPROMClassRE & eeprom() {
 		return EEPROM;
 	}
 #endif

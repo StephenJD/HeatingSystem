@@ -1,5 +1,5 @@
 #include <Clock_EP.h>
-#include <EEPROM.h>
+#include <EEPROM_RE.h>
 #include <Date_Time.h>
 
 ///////////////////////////////////////////////////////////////

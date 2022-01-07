@@ -13,7 +13,7 @@ namespace RelationalDatabase {
 		_dbMaxAddr(dbMaxAddr)
 	{
 		savePW_OK(password);
-		setDB_Header();
+		setDB_Header_OK();
 		logger() << F("Construct RDB_B. Create new") << L_endl;
 	}
 
@@ -22,8 +22,8 @@ namespace RelationalDatabase {
 		_readByte(r),
 		_dbStartAddr(dbStartAddr)
 	{
-		if (checkPW(password)) {
-			loadDB_Header();
+		if (passWord_OK(password)) {
+			loadDB_Header_OK();
 			logger() << F("Construct RDB_B. Load Header. DBSize: ") << _dbEndAddr << L_endl;
 		}
 		else {
@@ -33,21 +33,23 @@ namespace RelationalDatabase {
 
 	bool RDB_B::reset_OK(size_t password, uint16_t dbMaxAddr) {
 		auto status = savePW_OK(password);
-		_dbEndAddr = _dbStartAddr + DB_HeaderSize;
-		_dbMaxAddr = dbMaxAddr;
-		setDB_Header();
+		if (status) {
+			_dbEndAddr = _dbStartAddr + DB_HeaderSize;
+			_dbMaxAddr = dbMaxAddr;
+			status = setDB_Header_OK();
+		}
 		return status;
 	}
 
 	bool RDB_B::savePW_OK(size_t password) {
-		return _writeByte(_dbStartAddr, &password, SIZE_OF_PASSWORD) >= 0;
+		return _writeByte(_dbStartAddr, &password, SIZE_OF_PASSWORD);
 	}
 
-	bool RDB_B::checkPW(size_t password) const {
+	bool RDB_B::passWord_OK(size_t password) const {
 		size_t pw = 0;
-		_readByte(_dbStartAddr, &pw, SIZE_OF_PASSWORD);
+		auto status = _readByte(_dbStartAddr, &pw, SIZE_OF_PASSWORD);
 		logger() << F("PW was ") << pw << F(" Should be ") << password << L_endl;
-		if (pw == password) {
+		if (status && pw == password) {
 			const_cast<RDB_B *>(this)->_dbEndAddr = _dbStartAddr + DB_HeaderSize; // _dbEndAddr != 0 indicates PW was correct.
 			return true;
 		} else {
@@ -56,15 +58,17 @@ namespace RelationalDatabase {
 		}
 	}
 
-	void RDB_B::setDB_Header() {
+	bool RDB_B::setDB_Header_OK() {
 		auto addr = _writeByte(_dbStartAddr + SIZE_OF_PASSWORD, &_dbEndAddr, sizeof(DB_Size_t)); // _dbEndAddr is next address available for a new table-header
-		_writeByte(addr, &_dbMaxAddr, sizeof(DB_Size_t));
+		if(addr) addr = _writeByte(addr, &_dbMaxAddr, sizeof(DB_Size_t));
+		return addr > 0;
 	}
 
-	void RDB_B::loadDB_Header() {
+	bool RDB_B::loadDB_Header_OK() {
 		DB_Size_t addr = _dbStartAddr + SIZE_OF_PASSWORD;
 		addr = _readByte(addr, &_dbEndAddr, sizeof(DB_Size_t));
-		addr = _readByte(addr, &_dbMaxAddr, sizeof(DB_Size_t));
+		if (addr) addr = _readByte(addr, &_dbMaxAddr, sizeof(DB_Size_t));
+		return addr > 0;
 	}
 
 	Table RDB_B::createTable(size_t recsize, int initialNoOfRecords, InsertionStrategy strategy) {
@@ -84,11 +88,8 @@ namespace RelationalDatabase {
 			th.insertionStrategy(strategy);
 			th.validRecords(unvacantRecords(initialNoOfRecords));	// set all bits to "Used"
 			addr = _writeByte(addr, &th, Table::HeaderSize);
-			if (addr < 0) {
-				logger() << F("RDB_B::createTable() Failed to write") << L_endl;
-				return { *this, 0, th };
-			}
 			for (int i = 0; i < extraValidRecordBytes; ++i) {
+				if (addr == 0) break;
 				// unset bits up to initialNoOfRecords
 				initialNoOfRecords = initialNoOfRecords - (sizeof(ValidRecord_t) << 3);
 				ValidRecord_t usedRecords = unvacantRecords(initialNoOfRecords);
@@ -99,6 +100,10 @@ namespace RelationalDatabase {
 			//logger() << F("RDB_B::createTable() ExtraVR's: ") << extraValidRecordBytes << L_endl;
 			//logger() << F("RDB_B::createTable() IsFinalChunk: ") << th.isFinalChunk() << L_endl;
 			//logger() << F("RDB_B::createTable() NextChunk(not valid if final): ") << th.nextChunk() << L_endl;
+			if (addr == 0) {
+				logger() << F("RDB_B::createTable() Failed to write") << L_endl;
+				return { *this, 0, th };
+			}
 		}
 		return { *this, tableID, th };
 	}
@@ -140,16 +145,18 @@ namespace RelationalDatabase {
 		return i;
 	}
 
-	int RDB_B::moveRecords(int fromAddress, int toAddress, int noOfBytes) {
+	bool RDB_B::moveRecords_OK(int fromAddress, int toAddress, int noOfBytes) {
 		while (noOfBytes > 0) {
 			uint8_t readValue;
-			_readByte(fromAddress, &readValue, 1);
-			_writeByte(toAddress, &readValue, 1);
-			++fromAddress;
-			++toAddress;
+			fromAddress = _readByte(fromAddress, &readValue, 1);
+			toAddress = _writeByte(toAddress, &readValue, 1);
+			if (fromAddress == 0 || toAddress == 0) {
+				fromAddress = 0;
+				break;
+			}
 			--noOfBytes;
 		}
-		return fromAddress;
+		return fromAddress > 0;
 	}
 
 }

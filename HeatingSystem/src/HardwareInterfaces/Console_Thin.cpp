@@ -17,7 +17,7 @@ namespace HardwareInterfaces {
 		, _lcd_UI(lcd_display)
 		, _chapterGenerator(chapterGenerator) {}
 
-	int Console_Thin::consoleMode() const { return _keyPad.consoleMode(); }
+	uint8_t& Console_Thin::consoleMode() { return _keyPad.consoleMode(); }
 
 	bool Console_Thin::processKeys() {
 		bool doRefresh;

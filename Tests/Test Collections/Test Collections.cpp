@@ -15,6 +15,7 @@
 //#define ZPSIM
 #define BASIC_TESTS
 #define UI_ELEMENT_TESTS
+constexpr uint8_t EEPROM_I2C_ADDR = 0x50;
 
 using namespace LCD_UI;
 using namespace std;
@@ -26,8 +27,8 @@ Logger & logger() {
 
 I2C_Talk rtc{ Wire1, 100000 };
 
-EEPROMClass & eeprom() {
-	static EEPROMClass_T<rtc> _eeprom_obj{ 0x50 };
+EEPROMClassRE & eeprom() {
+	static EEPROMClass_T<rtc> _eeprom_obj{ EEPROM_I2C_ADDR };
 	return _eeprom_obj;
 }
 

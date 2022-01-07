@@ -32,8 +32,8 @@ Logger & logger() {
 
 I2C_Talk rtc{ Wire1, 100000 };
 
-EEPROMClass & eeprom() {
-	static EEPROMClass_T<rtc> _eeprom_obj{ 0x50 };
+EEPROMClassRE & eeprom() {
+	static EEPROMClass_T<rtc> _eeprom_obj{ EEPROM_I2C_ADDR };
 	return _eeprom_obj;
 }
 

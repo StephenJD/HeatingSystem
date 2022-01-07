@@ -37,13 +37,13 @@ void ui_yield() {}
 
 #if defined(__SAM3X8E__)
 	#include <Clock_I2C.h>
-	const uint8_t EEPROM_ADDRESS = 0x50;
+	const uint8_t EEPROM_I2C_ADDR = 0x50;
 	const uint8_t RTC_ADDRESS = 0x68;
 
 	I2C_Talk rtc(Wire1);
 
-	EEPROMClass& eeprom() {
-		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000), EEPROM_ADDRESS) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
+	EEPROMClassRE& eeprom() {
+		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000), EEPROM_I2C_ADDR) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
 		return _eeprom_obj;
 	}
 
@@ -55,7 +55,7 @@ void ui_yield() {}
 	#define EEPROM_CLOCK_ADDR 0
 	#define EEPROM_CLOCK EEPROM_CLOCK_ADDR
 	#include <Clock_EP.h>
-	EEPROMClass & eeprom() {
+	EEPROMClassRE & eeprom() {
 	   return EEPROM;
 	}
 #endif

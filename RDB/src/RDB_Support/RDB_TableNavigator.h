@@ -154,7 +154,7 @@ namespace RelationalDatabase {
 		RecordID reserveUnusedRecordID();
 		void saveHeader();
 		void extendChunkTo(TableID nextChunk);
-		void shuffleRecordsBack(RecordID start, RecordID end);
+		bool shuffleRecordsBack_OK(RecordID start, RecordID end);
 		void shuffleValidRecordsByte(int vrByteNo, bool shiftIn_UsedRecord);
 
 	private:

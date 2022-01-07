@@ -24,17 +24,17 @@ namespace arduino_logger {
 using namespace arduino_logger;
 
 #if defined(__SAM3X8E__)
-	constexpr uint8_t EEPROM_ADDRESS = 0x50;
+	constexpr uint8_t EEPROM_I2C_ADDR = 0x50;
 
 	I2C_Talk rtc{ Wire1 };
 
-	EEPROMClass& eeprom() {
-		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000),EEPROM_ADDRESS) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
+	EEPROMClassRE& eeprom() {
+		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000),EEPROM_I2C_ADDR) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
 		return _eeprom_obj;
 	}
-	EEPROMClass& EEPROM = eeprom();
+	EEPROMClassRE& EEPROM = eeprom();
 #else
-	EEPROMClass& eeprom() {
+	EEPROMClassRE& eeprom() {
 		return EEPROM;
 	}
 #endif

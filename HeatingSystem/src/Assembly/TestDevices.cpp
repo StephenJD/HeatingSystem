@@ -75,11 +75,11 @@ namespace HardwareInterfaces {
 		logger() << F("\tTry Remotes") << L_endl;
 		auto id = 0;
 		for (auto& thinConsole : hs()._thinConsole_Arr) {
-			if (thinConsole.consoleMode() < LCD_CONSOLE_MODE) {
-				returnVal |= showSpeedTestFailed(0, hs().thickConsole_Arr[id], "OLED");
+			if (OLED_Thick_Display::ModeFlags(thinConsole.consoleMode()).is(OLED_Thick_Display::e_LCD)) {
+				returnVal |= showSpeedTestFailed(0, hs().remDispl[id], "LCD");
 			}
 			else {
-				returnVal |= showSpeedTestFailed(0, hs().remDispl[id], "LCD");
+				returnVal |= showSpeedTestFailed(0, hs().thickConsole_Arr[id], "OLED");
 			}
 			++id;
 		}
@@ -91,8 +91,8 @@ namespace HardwareInterfaces {
 
 		id = 0;
 		for (auto & ts : hs()._tempController.slaveConsole_TSArr) {
-			auto consoleMode = hs()._thinConsole_Arr[id].consoleMode();
-			if (consoleMode >= SLAVE_CONSOLE_MODE) {
+			auto consoleMode = OLED_Thick_Display::ModeFlags(hs()._thinConsole_Arr[id].consoleMode());
+			if (!consoleMode.is(OLED_Thick_Display::e_MASTER)) {
 				showSpeedTestFailed(1, ts, "TS-Sl");
 			}
 			++id;

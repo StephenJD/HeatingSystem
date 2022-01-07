@@ -176,12 +176,12 @@ I2C_Recovery::I2C_Recover_Retest recover{ i2C };
 
 I2C_Talk rtc{ Wire1, 100000 };
 
-EEPROMClass & eeprom() {
-	static EEPROMClass_T<rtc> _eeprom_obj{ 0x50 };
+EEPROMClassRE & eeprom() {
+	static EEPROMClass_T<rtc> _eeprom_obj{ EEPROM_I2C_ADDR };
 	return _eeprom_obj;
 }
 
-EEPROMClass & EEPROM = eeprom();
+EEPROMClassRE & EEPROM = eeprom();
 
 namespace HardwareInterfaces {
 	Bitwise_RelayController & relayController() {

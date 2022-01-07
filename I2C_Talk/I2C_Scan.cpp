@@ -1,10 +1,7 @@
 #include "I2C_Scan.h"
 #include <I2C_Recover.h>
-//#include <Logging.h>
-#include <..\Logging\Logging.h>
 
 using namespace I2C_Talk_ErrorCodes;
-using namespace arduino_logger;
 
 I2C_Recovery::I2C_Recover I2C_Scan::nullRecovery;
 

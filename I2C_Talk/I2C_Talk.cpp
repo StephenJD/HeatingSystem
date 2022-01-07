@@ -78,12 +78,12 @@ Error_codes I2C_Talk::readEP(int deviceAddr, int pageAddress, int numberBytes, u
 	// NOTE: this puts it in slave mode. Must re-begin to send more data.
 	while (numberBytes > 0) {
 		uint8_t bytesOnThisPage = min(numberBytes, TWI_BUFFER_SIZE);
-		beginTransmission(deviceAddr);
+		returnStatus |= beginTransmission(deviceAddr);
 		if (returnStatus == _OK) {
 			_wire().write(pageAddress >> 8);   // Address MSB
 			_wire().write(pageAddress & 0xff); // Address LSB
 			returnStatus = endTransmission();
-			returnStatus = getData(returnStatus, deviceAddr, bytesOnThisPage, dataBuffer);
+			returnStatus |= getData(returnStatus, deviceAddr, bytesOnThisPage, dataBuffer);
 			//Serial.print("ReadEP: status"); Serial.print(getStatusMsg(returnStatus)); Serial.print(" Bytes to read: "); Serial.println(bytesOnThisPage);
 		}
 		else return returnStatus;

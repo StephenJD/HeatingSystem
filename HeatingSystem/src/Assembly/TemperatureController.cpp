@@ -123,7 +123,7 @@ namespace Assembly {
 
 		auto displIndex = 0;
 		for (auto& ts : slaveConsole_TSArr) {
-			auto consoleMode = _prog_registers.getRegister(RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_I2C_MODE) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
+			auto consoleMode = _prog_registers.getRegister(RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_MODE) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
 			if (consoleMode != 1 /*e_MASTER*/) {
 				auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
 				ts.readTemperature();

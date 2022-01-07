@@ -501,8 +501,9 @@ namespace HardwareInterfaces {
 			profileLogger() << "\tStart Preheat " << zoneRec.name << L_endl;
 			_startCallTemp = currTemp_fractional;
 			if (_minsCooling == DELAY_COOLING_TIME) _minsCooling = MEASURING_DELAY;
-			_minsInPreHeat = 0;
 		} 
+		_minsToPreheat = calculatePreheatTime(currTemp_fractional, currTempRequest());
+
 		_preheatCallTemp = newPreheatTemp;
 		//executionTime[7] = millis();
 		//logger() << "preHeatForNextTT() Lambdas: " << int(executionTime[1] - executionTime[0]) << "\t" << L_endl;

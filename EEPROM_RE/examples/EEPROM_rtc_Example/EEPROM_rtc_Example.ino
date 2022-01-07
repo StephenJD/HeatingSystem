@@ -9,6 +9,8 @@
 #include <Logging.h>
 
 #define RTC_RESET 4
+#define EEPROM_I2C_ADDR 0x50
+
 using namespace I2C_Recovery;
 
 void ui_yield() {};
@@ -31,8 +33,8 @@ Logger & logger() {
 	return _log;
 }
 
-EEPROMClass & eeprom() {
-	static EEPROMClass_T<rtc> _eeprom_obj{0x50 };
+EEPROMClassRE & eeprom() {
+	static EEPROMClass_T<rtc> _eeprom_obj{EEPROM_I2C_ADDR };
 	return _eeprom_obj;
 }
 
@@ -45,7 +47,7 @@ uint8_t resetRTC(I2C_Talk & i2c, int) {
 	return I2C_Talk_ErrorCodes::_OK;
 }
 
-EEPROMClass & EEPROM = eeprom();
+EEPROMClassRE & EEPROM = eeprom();
 
 char poem[] = {
 "Twas brillig, and the slithy toves \nDid gyre and gimble in the wabe;\nAll mimsy were the borogoves,\
@@ -61,14 +63,14 @@ void setup() {
 	Serial.println("Serial Begun");
 	pinMode(RTC_RESET, OUTPUT);
 	digitalWrite(RTC_RESET, LOW); // reset pin
-	resetRTC(rtc, 0x50);
+	resetRTC(rtc, EEPROM_I2C_ADDR);
 	Serial.print("Wire addr   "); Serial.println(reinterpret_cast<uintptr_t>(&Wire));
 	Serial.print("Wire 1 addr "); Serial.println(reinterpret_cast<uintptr_t>(&Wire1));
 
 	//scan.show_all();
 	//speed.showAll_fastest();
 
-	uint8_t status = rtc.status(0x50);
+	uint8_t status = rtc.status(EEPROM_I2C_ADDR);
 	Serial.print("EEPROM Status"); Serial.println(rtc.getStatusMsg(status));
 	
 	status = rtc.status(0x68);
@@ -77,7 +79,7 @@ void setup() {
 	uint8_t dataBuffa[20] = { 0 };
 	Serial.println("\nRead I2C_EEPROM :");
 	//uint8_t status = EEPROM.readEP(0, sizeof(dataBuffa), dataBuffa);
-	status = rtc.readEP(0x50, 0, sizeof(dataBuffa), dataBuffa);
+	status = rtc.readEP(EEPROM_I2C_ADDR, 0, sizeof(dataBuffa), dataBuffa);
 	if (status) {
 		Serial.print("EEPROM.readEP failed with"); Serial.println(rtc.getStatusMsg(status));
 	}	
@@ -90,7 +92,7 @@ void setup() {
 	
 	//status = EEPROM.writeEP(30, sizeof(poem), poem);
 	Serial.println("Start writing...");
-	status = rtc.writeEP(0x50, 30, sizeof(poem), poem);
+	status = rtc.writeEP(EEPROM_I2C_ADDR, 30, sizeof(poem), poem);
 	if (status) {
 		Serial.print("writeEP failed with"); Serial.println(rtc.getStatusMsg(status));
 	}
@@ -98,7 +100,7 @@ void setup() {
 
 	Serial.println("\nRead I2C_EEPROM :");
 	//status = EEPROM.readEP(30, sizeof(poem), poem);
-	status = rtc.readEP(0x50, 30, sizeof(poem), poem);
+	status = rtc.readEP(EEPROM_I2C_ADDR, 30, sizeof(poem), poem);
 	if (status) {
 		Serial.print("readEP failed with"); Serial.println(rtc.getStatusMsg(status));
 		rtc.begin();	
@@ -114,7 +116,7 @@ void loop() {
 
 	Serial.println("\nRead I2C_EEPROM :");
 	//status = EEPROM.readEP(30, sizeof(poem), poem);
-	auto status = rtc.readEP(0x50, 30, sizeof(poem), poem);
+	auto status = rtc.readEP(EEPROM_I2C_ADDR, 30, sizeof(poem), poem);
 	if (status) {
 		Serial.print("readEP failed with"); Serial.println(rtc.getStatusMsg(status));
 		rtc.begin();

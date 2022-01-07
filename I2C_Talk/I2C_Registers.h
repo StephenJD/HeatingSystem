@@ -28,6 +28,11 @@ namespace i2c_registers {
 			return const_cast<I_Registers*>(this)->regArr()[reg]; 
 		}
 		void setRegister(int reg, uint8_t value) { regArr()[reg] = value; }
+		bool updateRegister(int reg, uint8_t value) { 
+			bool hasChanged = regArr()[reg] != value; 
+			if(hasChanged) regArr()[reg] = value;
+			return hasChanged;
+		}
 		void addToRegister(int reg, uint8_t increment) { regArr()[reg] += increment; }
 		uint8_t* reg_ptr(int reg) { return regArr() + reg; }
 	protected:

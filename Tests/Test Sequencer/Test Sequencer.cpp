@@ -110,12 +110,12 @@ Logger& profileLogger() {
 
 I2C_Talk rtc{ Wire1, 100000 };
 
-EEPROMClass & eeprom() {
+EEPROMClassRE & eeprom() {
 	static EEPROMClass_T<rtc> _eeprom_obj{ 0x50 };
 	return _eeprom_obj;
 }
 
-EEPROMClass & EEPROM = eeprom();
+EEPROMClassRE & EEPROM = eeprom();
 
 constexpr TimeTemp makeTT(int hrs, int mins, int temp) {
 	return { TimeOnly{ hrs, mins }, int8_t(temp) };

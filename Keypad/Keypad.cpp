@@ -1,6 +1,7 @@
 #include "Keypad.h"
 #include <Timer_mS_uS.h>
 #include <Clock.h>
+#include <Flag_Enum.h>
 
 #if defined(__SAM3X8E__)
 	#include <DueTimer.h>
@@ -24,9 +25,8 @@
 #endif
 
 namespace HardwareInterfaces {
-	//enum { L_ReadTime, L_ReadAgain, L_Key, L_NoOfFields, L_NoOfLogs = 100 };
-	//unsigned char keyLog[L_NoOfFields][L_NoOfLogs] = { 0 };
-	//int logIndex = 0;
+	
+	enum DisplayModes { e_LCD, e_MASTER, e_ENABLE_KEYBOARD, e_NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
 
 	namespace { volatile bool keyQueueLocked = false; }
 	I_Keypad* I_Keypad::_currentKeypad;
@@ -35,8 +35,10 @@ namespace HardwareInterfaces {
 
 	I_Keypad::I_Keypad(int re_read_interval_mS, int wakeTime_S)
 		: _timeToRead{ re_read_interval_mS }
-		, _wakeTime{ uint8_t(wakeTime_S)}
-		{}
+		, _wakeTime{ uint8_t(wakeTime_S / 4)}
+		{ 
+			flag_enum::FE<DisplayModes, 4>(_wakeTime).set(e_ENABLE_KEYBOARD).set(e_LCD);
+		}
 
 	bool I_Keypad::oneSecondElapsed() {
 		bool isNewSecond = clock_().isNewSecond(_lastSecond);
@@ -44,6 +46,11 @@ namespace HardwareInterfaces {
 			--_secsToKeepAwake; // timeSince set to _wakeTime whenever a key is pressed
 		}
 		return isNewSecond;
+	}
+
+	void I_Keypad::wakeDisplay() {
+		auto consoleMode = flag_enum::FE<DisplayModes,4>(_wakeTime);
+		_secsToKeepAwake = consoleMode.is(e_ENABLE_KEYBOARD) ? consoleMode.value()*4 : 0;
 	}
 
 	void I_Keypad::startRead() {

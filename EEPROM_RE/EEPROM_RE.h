@@ -33,18 +33,20 @@
 
 class I2C_Talk;
 
-class EEPROMClass : public I_I2Cdevice {
+class EEPROMClassRE : public I_I2Cdevice_Recovery {
 #if defined (ZPSIM)
 public:
-	//EEPROMClass();
+	//EEPROMClassRE();
 	static uint8_t myEEProm[HardwareInterfaces::EEPROM_SIZE]; // EEPROM object may not get created until after it is used! So ensure array exists by making it static
-	~EEPROMClass();
+	~EEPROMClassRE();
+	void loadFile();
 	void saveEEPROM();
 #endif
 
 public:
 	// Rated at 100kHz/3v, 400kHz/5v, 0.7*Vdd HI = 3.5v
-	EEPROMClass(int addr);
+	EEPROMClassRE(int addr);
+	EEPROMClassRE(I2C_Recovery::I2C_Recover& recover, int addr);
 	uint8_t read(int iAddr);
 	auto write(int iAddr, uint8_t iVal)->I2C_Talk_ErrorCodes::Error_codes;
 	auto update(int iAddr, uint8_t iVal)->I2C_Talk_ErrorCodes::Error_codes;
@@ -61,23 +63,37 @@ public:
 		for (int endStop = iAddr + sizeof(T); iAddr < endStop; ++iAddr, ++ptr)  update(iAddr, *ptr);
 		return t;
 	}
+
+	uint8_t readErr() { return _read_error; }
 private:
+	uint8_t _read_error = 0;
 };
 
 template<I2C_Talk & i2c>
-class EEPROMClass_T : public EEPROMClass {
+class EEPROMClass_T : public EEPROMClassRE {
 public:
-	EEPROMClass_T(int addr) : EEPROMClass(addr) { 
+	EEPROMClass_T(I2C_Recovery::I2C_Recover& recover, int addr) : EEPROMClassRE(recover, addr) {
+		i2c.setMax_i2cFreq(100000);
+		i2c.extendTimeouts(5000, 5, 1000);
+	}	
+	
+	EEPROMClass_T(int addr) : EEPROMClassRE(addr) { 
 		i2c.setMax_i2cFreq(100000);
 		i2c.extendTimeouts(5000, 5, 1000);
 	}
 private:
-	using EEPROMClass::i2C;
+	using EEPROMClassRE::i2C;
 	 I2C_Talk & i2C() override { return i2c; }
 };
 
-EEPROMClass & eeprom();
-
+EEPROMClassRE& eeprom();
+using EEPROMClass = EEPROMClassRE;
 #else
+#include <EEPROM.h>
+class EEPROMClassRE : public EEPROMClass{
+public:
+	using EEPROMClass::EEPROMClass;
+	uint8_t readErr() { return 0; }
+};
 //#pragma message( "__SAM3X8E__ not defined" )
 #endif

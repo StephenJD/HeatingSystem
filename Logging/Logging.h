@@ -11,8 +11,8 @@
 #define OCT 8
 #define BIN 2
 */
-class EEPROMClass;
-EEPROMClass & eeprom();
+class EEPROMClassRE;
+EEPROMClassRE & eeprom();
 class Clock;
 
 namespace arduino_logger {

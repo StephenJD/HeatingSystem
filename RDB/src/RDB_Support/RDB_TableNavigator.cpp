@@ -61,10 +61,11 @@ namespace RelationalDatabase {
 		if (_currRecord.status() == TB_BEFORE_BEGIN) _currRecord.setID(0);
 		auto targetRecordID = _currRecord.id();
 		auto unusedRecordID = reserveUnusedRecordID();
+		auto status_OK = true;
 		//logger() << "Insert: " << *reinterpret_cast<const uint32_t*>(newRecord) << L_endl;
 		if (isSorted(_t->insertionStrategy()) && unusedRecordID < targetRecordID) {			
 			//logger() << F(" shuffle back into: ") << (int)unusedRecordID << L_endl;
-			shuffleRecordsBack(unusedRecordID, targetRecordID);
+			status_OK = shuffleRecordsBack_OK(unusedRecordID, targetRecordID);
 			targetRecordID = unusedRecordID;
 			unusedRecordID = reserveUnusedRecordID();
 			//logger() << F(" unusedRecordID: ") << (int)unusedRecordID << L_endl;
@@ -81,13 +82,15 @@ namespace RelationalDatabase {
 			}
 		}
 		//logger() << "Save Record[" << _currRecord.id() << "] at " << recordAddress() << L_endl;
-		_t->db()._writeByte(recordAddress(), newRecord, _t->recordSize());
-		_currRecord.setStatus(TB_OK);
-		_lastReadVRversionNo = _t->dataIsChanged();
+		if (status_OK) {
+			status_OK = _t->db()._writeByte(recordAddress(), newRecord, _t->recordSize());
+			_currRecord.setStatus(TB_OK);
+			_lastReadVRversionNo = _t->dataIsChanged();
+		}
 		return targetRecordID;
 	}
 
-	void TableNavigator::shuffleRecordsBack(RecordID start, RecordID end) {
+	bool TableNavigator::shuffleRecordsBack_OK(RecordID start, RecordID end) {
 		--end;
 		moveToThisRecord(start);
 		while (start < end) {
@@ -97,10 +100,11 @@ namespace RelationalDatabase {
 				++start;
 				moveToThisRecord(start); // move to possibly unused record
 				auto readAddress = recordAddress();
-				db().moveRecords(readAddress, writeAddress, recordSize());
+				if (!db().moveRecords_OK(readAddress, writeAddress, recordSize())) return false;
 			}
 			shuffleValidRecordsByte(currVRbyteNo, start==end || status() == TB_RECORD_UNUSED);
 		}
+		return true;
 	}
 
 	NoOf_Recs_t TableNavigator::thisVRcapacity() const { // 1-8

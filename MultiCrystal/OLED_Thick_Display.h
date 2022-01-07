@@ -1,9 +1,10 @@
 #pragma once
 #include "Arduino.h"
 #include <TempSensor.h>
+#include <Flag_Enum.h>
 #include "RemoteKeypadMaster.h"
 #include <I2C_To_MicroController.h>
-#include <HeatingSystem/src/HardwareInterfaces/A__Constants.h>
+#include "..\HeatingSystem\src\HardwareInterfaces\A__Constants.h"
 #include <U8x8lib.h>
 
 static constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
@@ -21,7 +22,7 @@ public:
 
 	enum RemoteRegisterName {	// In Slave-Mode, all are received
 		R_DISPL_REG_OFFSET		// ini
-		, R_I2C_MODE			// ini { e_INACTIVE, e_MASTER, e_SLAVE };
+		, R_MODE			// ini { e_LCD, e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS };
 		, R_ROOM_TS_ADDR		// ini
 		, R_ROOM_TEMP			// send
 		, R_ROOM_TEMP_FRACTION	// send
@@ -35,8 +36,8 @@ public:
 	};
 
 	enum { e_Auto, e_On, e_Off, e_ModeIsSet };
-	enum { e_INACTIVE, e_MASTER, e_SLAVE, NO_REG_OFFSET_SET = 255 };
-
+	enum DisplayModes { e_LCD, e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
+	using ModeFlags = flag_enum::FE< DisplayModes, e_NO_OF_FLAGS>;
 	// New request temps initiated by the programmer are sent by the programmer.
 	// In Multi-Master Mode: 
 	//		Room temp and requests are sent by the console to the Programmer.
@@ -60,6 +61,7 @@ public:
 	char* oledDisplay();
 #endif
 private:
+	void clearDisplay();
 	void startDisplaySleep();
 	void stopDisplaySleep();
 	const uint8_t* getFont(bool bold = false);
@@ -72,7 +74,7 @@ private:
 	int8_t _sleepCol = 0;
 	int8_t _tempRequest = 0;
 	bool _dataChanged = false;
-	HardwareInterfaces::RemoteKeypadMaster _remoteKeypad{ 50,10 };
+	HardwareInterfaces::RemoteKeypadMaster _remoteKeypad{ 50,30 };
 	U8X8_SSD1305_128X32_ADAFRUIT_4W_HW_SPI _display;
 	Display_Mode _display_mode = RoomTemp;
 

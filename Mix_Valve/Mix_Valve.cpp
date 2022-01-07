@@ -3,7 +3,6 @@
 #include <Mix_Valve.h>
 #include <TempSensor.h>
 #include "PinObject.h"
-#include <EEPROM.h>
 #include <I2C_Talk.h>
 #include <I2C_SpeedTest.h>
 #include <I2C_Recover.h>

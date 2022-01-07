@@ -40,8 +40,8 @@ namespace RelationalDatabase {
 
 		template <typename Record_T> class Table_T;
 
-		typedef int WriteByte_Handler(int address, const void * data, int noOfBytes);
-		typedef int ReadByte_Handler(int address, void * result, int noOfBytes);
+		typedef int WriteByte_Handler(int address, const void * data, int noOfBytes); // return next address, or 0 for failure
+		typedef int ReadByte_Handler(int address, void * result, int noOfBytes); // return next address, 0 for failure
 
 		RDB_B(uint16_t dbStartAddr, uint16_t dbMaxAddr, WriteByte_Handler *, ReadByte_Handler *, size_t password);
 		RDB_B(uint16_t dbStartAddr, WriteByte_Handler *, ReadByte_Handler *, size_t password);
@@ -52,7 +52,7 @@ namespace RelationalDatabase {
 		// Modifiers
 		virtual bool reset_OK(size_t password, uint16_t dbMaxAddr);
 		int getTables(Table * table, int maxNoOfTables);
-		int moveRecords(int fromAddress, int toAddress, int noOfBytes);
+		bool moveRecords_OK(int fromAddress, int toAddress, int noOfBytes);
 
 		Table createTable(size_t recsize, int initialNoOfRecords, InsertionStrategy strategy);
 		bool extendTable(TableNavigator & rec_sel);
@@ -63,11 +63,11 @@ namespace RelationalDatabase {
 		//template <typename Record_T> friend class RecordSelector_T;
 		// Queries
 		static ValidRecord_t unvacantRecords(int noOfRecords);
-		bool checkPW(size_t password) const;
+		bool passWord_OK(size_t password) const;
 		// Modifiers
-		void setDB_Header();
-		void updateDB_Header() { _writeByte(_dbStartAddr+ SIZE_OF_PASSWORD, &_dbEndAddr, sizeof(DB_Size_t)); }
-		void loadDB_Header();
+		bool setDB_Header_OK();
+		bool updateDB_Header() { return _writeByte(_dbStartAddr+ SIZE_OF_PASSWORD, &_dbEndAddr, sizeof(DB_Size_t)); }
+		bool loadDB_Header_OK();
 		bool savePW_OK(size_t password);
 
 		// Data

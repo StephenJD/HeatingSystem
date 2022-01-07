@@ -6,7 +6,7 @@
 #include <Watchdog_Timer.h>
 
 #define RTC_ADDRESS 0x68
-#define EEPROM_ADDR 0x50
+constexpr uint8_t EEPROM_I2C_ADDR = 0x50;
 #define EEPROM_CLOCK_ADDR 0
 #define SERIAL_RATE 115200
 #define RTC_RESET 4
@@ -28,11 +28,11 @@ EP  to SD/KB :	660mS		230mS
 	#include <Clock_I2C.h>
 	I2C_Talk rtc(Wire1);
 
-	EEPROMClass & eeprom() {
+	EEPROMClassRE & eeprom() {
 		static EEPROMClass_T<rtc> _eeprom_obj{ EEPROM_ADDR };
 		return _eeprom_obj;
 	}
-	EEPROMClass & EEPROM = eeprom();
+	EEPROMClassRE & EEPROM = eeprom();
 
 	Clock & clock_() {
 		static Clock_I2C<rtc> _clock(RTC_ADDRESS);
@@ -56,7 +56,7 @@ EP  to SD/KB :	660mS		230mS
 		return;
 	}
 
-	EEPROMClass & eeprom() {
+	EEPROMClassRE & eeprom() {
 		return EEPROM;
 	}
 

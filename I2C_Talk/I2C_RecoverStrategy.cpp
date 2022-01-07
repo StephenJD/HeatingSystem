@@ -1,13 +1,17 @@
 #include "I2C_RecoverStrategy.h"
+#include <I2C_Talk.h> // for debug #defines
 #include <I2C_Talk_ErrorCodes.h>
-#include <EEPROM.h>
-#include <Logging.h>
+#include <EEPROM_RE.h>
 #include <FlashStrings.h>
 
-EEPROMClass & eeprom();
+EEPROMClassRE & eeprom();
+
+#ifdef DEBUG_RECOVER
+#include <Logging.h>
+using namespace arduino_logger;
+#endif
 
 using namespace I2C_Talk_ErrorCodes;
-using namespace arduino_logger;
 
 namespace I2C_Recovery {
 
@@ -18,7 +22,9 @@ namespace I2C_Recovery {
 	void I2C_RecoverStrategy::initialise() {
 		if (_strategyEEPROMaddr >= 0 && score(0) != STRATEGY_VERSION) {
 			//checkEEPROM("I2C_RecoverStrategy::initialise()");
-			 logger() << F("\tI2C_RecoverStrategy::initialise() from ") << _strategyEEPROMaddr << L_endl;
+#ifdef DEBUG_RECOVER
+			logger() << F("\tI2C_RecoverStrategy::initialise() from ") << _strategyEEPROMaddr << L_endl;
+#endif
 			for (int s = 1; s < S_NoOfStrategies; ++s) score(s, 0);
 			score(0, STRATEGY_VERSION);
 		}
@@ -56,7 +62,9 @@ namespace I2C_Recovery {
 		//		}
 		//	}
 		//}
+#ifdef DEBUG_RECOVER
 		 logger() << F("\tNext Strategy is ") << nextStrategy << F(" Score: ") << score(nextStrategy) << L_endl;
+#endif
 		_strategy = static_cast<Strategy>(nextStrategy);
 	}
 
@@ -65,6 +73,7 @@ namespace I2C_Recovery {
 			for (int s = 1; s < S_NoOfStrategies; ++s) score(s, score(s) / 2);
 		}
 		score(_strategy, score(_strategy) + 1);
+#ifdef DEBUG_RECOVER
 		if (strategy() >= S_Disable) {
 			 logger() << F("\t*** Failed & Disabled with strategy ") << strategy() << F(" Score: ") << score(_strategy) << F(" *** \n\n");
 		}
@@ -72,6 +81,7 @@ namespace I2C_Recovery {
 			 logger() << F("\tSucceeded with strategy ") << strategy() << F(" Score: ") << score(_strategy) << L_endl;
 		}
 		logger();
+#endif
 		reset();
 	}
 

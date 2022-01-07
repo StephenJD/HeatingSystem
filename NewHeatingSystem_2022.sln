@@ -49,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Due", "Due", "{04A9DCA5-DA0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AVR", "AVR", "{3A89E558-0F5D-451B-8200-DC46494A3C90}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\EEPROM\src\EEPROM.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\EEPROM\src\EEPROM.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.c
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp

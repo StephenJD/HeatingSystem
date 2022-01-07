@@ -24,6 +24,7 @@ namespace HardwareInterfaces {
 		void initialise(int address, int regOffset, unsigned long& timeOfReset_mS);
 		void setRawReg(int reg, uint8_t value) { _localRegisters->setRegister( reg, value); }
 		void setReg(int reg, uint8_t value) { setRawReg(_regOffset + reg, value); }
+		bool updateReg(int reg, uint8_t value) { return _localRegisters->updateRegister(_regOffset + reg, value); }
 		uint8_t* regPtr(int reg) { return _localRegisters->reg_ptr(_regOffset + reg); }
 
 	protected:
@@ -32,5 +33,6 @@ namespace HardwareInterfaces {
 	private:
 		i2c_registers::I_Registers* _localRegisters;
 		mutable unsigned long* _timeOfReset_mS = 0;
+		static constexpr int STOP_MARGIN_TIMEOUT = 15;
 	};
 }

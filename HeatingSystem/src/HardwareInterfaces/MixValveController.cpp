@@ -50,24 +50,26 @@ namespace HardwareInterfaces {
 		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(TwoWire::i2CArr[getAddress()][0]);
 		writeToValve(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 #endif
-		uint8_t errCode;
-		errCode = writeToValve(Mix_Valve::R_MV_REG_OFFSET, _regOffset);
-		errCode |= writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
-		errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
-		errCode |= writeToValve(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
-		errCode |= writeToValve(Mix_Valve::R_MULTI_MASTER_MODE, _is_multimaster);
-		setReg(Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
-		setReg(Mix_Valve::R_RATIO, 30);
-		setReg(Mix_Valve::R_FROM_TEMP, 55);
-		setReg(Mix_Valve::R_FLOW_TEMP, 55);
-		setReg(Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
-		write(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_STATUS, regPtr(Mix_Valve::R_STATUS));
+		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
-			auto newIniStatus = getRawReg(R_SLAVE_REQUESTING_INITIALISATION);
-			newIniStatus &= ~requestINI_flag;
-			setRawReg(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
+			errCode = writeToValve(Mix_Valve::R_MV_REG_OFFSET, _regOffset);
+			errCode |= writeToValve(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
+			errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
+			errCode |= writeToValve(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
+			errCode |= writeToValve(Mix_Valve::R_MULTI_MASTER_MODE, _is_multimaster);
+			setReg(Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
+			setReg(Mix_Valve::R_RATIO, 30);
+			setReg(Mix_Valve::R_FROM_TEMP, 55);
+			setReg(Mix_Valve::R_FLOW_TEMP, 55);
+			setReg(Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
+			write(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_STATUS, regPtr(Mix_Valve::R_STATUS));
+			if (errCode == _OK) {
+				auto newIniStatus = getRawReg(R_SLAVE_REQUESTING_INITIALISATION);
+				newIniStatus &= ~requestINI_flag;
+				setRawReg(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
+			}
+			readRegistersFromValve();
 		}
-		readRegistersFromValve();
 		logger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << L_endl;
 		return errCode;
 	}
@@ -283,8 +285,6 @@ namespace HardwareInterfaces {
 		uint8_t value = 0;
 		auto status = reEnable(); // see if is disabled
 		waitForWarmUp();
-		constexpr int CONSECUTIVE_COUNT = 1;
-		constexpr int MAX_TRIES = 1;
 		if (status == _OK) {
 			//profileLogger() << "Read :" << Mix_Valve::MV_NO_TO_READ << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE << " to : " << _regOffset + Mix_Valve::R_MODE << L_endl;
 			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE, Mix_Valve::MV_NO_TO_READ, regPtr(Mix_Valve::R_MODE));

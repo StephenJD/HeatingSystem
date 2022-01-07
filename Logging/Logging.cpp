@@ -5,7 +5,7 @@
 #include <MemoryFree.h>
 
 //#if defined(__SAM3X8E__)
-#include <EEPROM.h>
+#include <EEPROM_RE.h>
 //#endif
 
 #ifdef ZPSIM

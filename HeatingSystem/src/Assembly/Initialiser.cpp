@@ -4,11 +4,13 @@
 #include "..\HardwareInterfaces\I2C_Comms.h"
 #include "..\HardwareInterfaces\A__Constants.h"
 #include "..\Client_DataStructures\Data_Relay.h"
+#include <OLED_Thick_Display.h>
 #include <Logging.h>
 #include <RDB.h>
-#include <../Clock/Clock.h>
-#include <EEPROM.h>
+#include <Clock.h>
+#include <EEPROM_RE.h>
 #include <MemoryFree.h>
+#include <Flag_Enum.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
@@ -58,13 +60,11 @@ namespace Assembly {
 		_hs._prog_register_set.setRegister(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
 		for (auto& rc : _hs.thickConsole_Arr) {
-			auto i2cMode = hs().remoteKeypadArr[consoleIndex].consoleMode();
-			// { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
-			i2cMode = i2cMode < 2 ? 1 : (i2cMode < 4 ? 2 : 0);	// { e_INACTIVE, e_MASTER, e_SLAVE };
+			auto modeFlags = hs().remoteKeypadArr[consoleIndex].consoleMode();
 			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex]
 				, hs().tempController().towelRailArr[consoleIndex], hs().tempController().zoneArr[Z_DHW]
 				, hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS
-				, i2cMode);
+				, modeFlags);
 			++consoleIndex;
 		}
 	}
@@ -95,7 +95,8 @@ namespace Assembly {
 		uint8_t failed = 0;
 		auto id = 0;
 		for (auto& ts : hs().tempController().slaveConsole_TSArr) {
-			if (hs()._thinConsole_Arr[id].consoleMode() >= SLAVE_CONSOLE_MODE) {
+			auto console_mode = OLED_Thick_Display::ModeFlags(hs()._thinConsole_Arr[id].consoleMode());
+			if (console_mode.is(OLED_Thick_Display::e_LCD)) {
 				failed |= ts.setHighRes();
 			}
 			++id;
@@ -111,9 +112,8 @@ namespace Assembly {
 			logger() << L_time << F("RemConsole query[] ") << index << L_endl;
 			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index+1];
 			auto timeout = display.rec().timeout;
-			if (timeout >= LAST_CONSOLE_MODE) timeout = 30;
-			logger() << L_time << F("setWakeTime :") << timeout << L_endl;
-			kb.setWakeTime(timeout);  // { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
+			logger() << L_time << F("set_console_mode :") << timeout << L_endl;
+			kb.set_console_mode(timeout);  // { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
 			logger() << L_time << F("popKey ") << L_endl;
 			kb.popKey();
 			logger() << L_time << F("clearKeys ") << L_endl;

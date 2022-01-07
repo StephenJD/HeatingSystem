@@ -17,7 +17,7 @@ namespace HardwareInterfaces {
 		I_I2Cdevice_Recovery::setAddress(address);
 		_regOffset = regOffset;
 		_timeOfReset_mS = &timeOfReset_mS;
-		i2C().extendTimeouts(15000, 6, 1000);
+		i2C().extendTimeouts(15000, STOP_MARGIN_TIMEOUT, 1000);
 	}
 
 	void I2C_To_MicroController::waitForWarmUp() const {

@@ -23,7 +23,7 @@ namespace arduino_logger {
 }
 using namespace arduino_logger;
 
-//EEPROMClass& eeprom() {
+//EEPROMClassRE& eeprom() {
 //	return EEPROM;
 //}
 

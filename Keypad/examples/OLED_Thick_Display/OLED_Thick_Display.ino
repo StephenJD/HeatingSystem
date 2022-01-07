@@ -3,9 +3,9 @@
 //#include <Logging.h>
 #include "OLED_Thick_Display.h"
 #include <Clock.h>
-#include <HeatingSystem/src/HardwareInterfaces/A__Constants.h>
+#include "..\HeatingSystem\src\HardwareInterfaces\A__Constants.h"
 
-//#include <EEPROM.h>
+#include <EEPROM_RE.h>
 
 #define SERIAL_RATE 115200
 
@@ -14,27 +14,28 @@ Clock& clock_() {
   return _clock;
 }
 
-//namespace arduino_logger {
-//	Logger& logger() {
-//		static Serial_Logger _log(SERIAL_RATE, L_flush);
-//		return _log;
-//	}
-//}
-//using namespace arduino_logger;
+// namespace arduino_logger {
+// 	Logger& logger() {
+// 		static Serial_Logger _log(SERIAL_RATE, L_flush);
+// 		return _log;
+// 	}
+// }
+// using namespace arduino_logger;
 
 I2C_Talk& i2C() {
     static I2C_Talk _i2C{};
     return _i2C;
 }
 
-//EEPROMClass& eeprom() {
-//	return EEPROM;
-//}
+EEPROMClassRE& eeprom() {
+  static EEPROMClassRE _eeprom;
+	return _eeprom;
+}
 
 void ui_yield() {}
 
-I2C_Recovery::I2C_Recover i2c_recover(i2C());
-//I2C_Recovery::I2C_Recover_Retest i2c_recover(i2C());
+//I2C_Recovery::I2C_Recover i2c_recover(i2C());
+I2C_Recovery::I2C_Recover_Retest i2c_recover(i2C());
 unsigned long timeOfReset_mS;
 
 #ifdef ZPSIM

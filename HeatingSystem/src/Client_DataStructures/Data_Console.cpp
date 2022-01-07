@@ -1,23 +1,24 @@
 #include "Data_Console.h"
+#include <Flag_Enum.h>
 
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace HardwareInterfaces;
 
-	const char RecInt_Console::_OLM_D[7] = "OLM-D";
-	const char RecInt_Console::_OLM_DK[7] = "OLM-DK";
 	const char RecInt_Console::_OLS_D[7] = "OLS-D";
 	const char RecInt_Console::_OLS_DK[7] = "OLS-DK";
+	const char RecInt_Console::_OLM_D[7] = "OLM-D";
+	const char RecInt_Console::_OLM_DK[7] = "OLM-DK";
 	const char RecInt_Console::_LCD_D[7] = "LCD-D";
 	const char RecInt_Console::_LCD_DK[7] = "LCD-DK";
-	const char* RecInt_Console::_options[LAST_CONSOLE_MODE + 1] = { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK };
+	const char* RecInt_Console::_options[NO_OF_CONSOLE_MODES] = { _OLS_D, _OLS_DK, _OLM_D, _OLM_DK, _LCD_D, _LCD_DK };
 
 
 	RecInt_Console::RecInt_Console(RemoteKeypad* remoteKeypadArr, ConsoleController_Thick* thickConsole_Arr)
 		: _remoteKeypadArr{ remoteKeypadArr }
 		, _thickConsole_Arr{ thickConsole_Arr }
 		, _name("", 6)
-		, _console_options(0, ValRange(e_edOneShort, 0, LAST_CONSOLE_MODE), _options)
+		, _console_options(0, ValRange(e_edOneShort, 0, NO_OF_CONSOLE_MODES - 1), _options)
 		{}
 
 	I_Data_Formatter* RecInt_Console::getField(int fieldID) {
@@ -33,8 +34,8 @@ namespace client_data_structures {
 			return &_name;
 		case e_console_options:
 			if (canDo) {
-				int8_t timeout = answer().rec().timeout;
-				_console_options.val = timeout > LAST_CONSOLE_MODE ? LAST_CONSOLE_MODE : timeout;
+				uint8_t console_mode = answer().rec().timeout >> 5;
+				_console_options.val = console_mode;
 			}
 			return &_console_options;
 		default: return 0;
@@ -54,13 +55,15 @@ namespace client_data_structures {
 		case e_console_options:
 			auto id = answer().id() - 1;
 			if (id >= 0) {
-				auto timeout = static_cast<uint8_t>(newValue->val >= LAST_CONSOLE_MODE ? 30 : newValue->val);
+				auto console_mode = static_cast<uint8_t>(newValue->val) << 5;
+				auto timeout = answer().rec().timeout;
+				timeout = 5;
+				timeout |= console_mode;
 				answer().rec().timeout = timeout;
-				answer().update();
-				_remoteKeypadArr[id].setWakeTime(timeout);	// { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
-				auto consoleMode = timeout < 2 ? 1 : (timeout < 4 ? 2 : 0);	// { e_INACTIVE, e_MASTER, e_SLAVE };
-				_thickConsole_Arr[id].set_i2c_mode(consoleMode);
-			}
+				_remoteKeypadArr[id].set_console_mode(timeout);	// { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
+				_thickConsole_Arr[id].set_console_mode(timeout);
+			} else answer().rec().timeout = (answer().rec().timeout & 0x0F) | 0xA0;
+			answer().update();
 			break;
 		}
 		return false;

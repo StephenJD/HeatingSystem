@@ -4,10 +4,6 @@
 
 namespace HardwareInterfaces {
 	constexpr uint8_t KEY_QUEUE_LENGTH = 3;
-	constexpr int LAST_CONSOLE_MODE = 5; // { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
-	constexpr int LCD_CONSOLE_MODE = LAST_CONSOLE_MODE - 1;
-	constexpr int SLAVE_CONSOLE_MODE = 2;
-
 
 	/// <summary>
 	/// Debounced with EMI protection with multiple re-reads.
@@ -25,7 +21,6 @@ namespace HardwareInterfaces {
 		// Queries
 		bool displayIsAwake() const { return _secsToKeepAwake > 0; }
 		bool keyIsWaiting() const { return keyQueEnd > -1; }
-		int consoleMode() const { return _wakeTime > LAST_CONSOLE_MODE ? LAST_CONSOLE_MODE : _wakeTime; }
 
 		// Modifiers
 		virtual void startRead(); // for interrupt driven keypads
@@ -33,10 +28,11 @@ namespace HardwareInterfaces {
 		KeyOperation popKey();
 		virtual KeyOperation getKeyCode() = 0;
 		bool oneSecondElapsed();
-		void wakeDisplay() { _secsToKeepAwake = _wakeTime > LAST_CONSOLE_MODE ? _wakeTime : 0; }
+		void wakeDisplay();
 		void clearKeys() { keyQueEnd = -1; }
 		void putKey(KeyOperation myKey);
-		void setWakeTime(uint8_t wakeTime) { _wakeTime = wakeTime; }
+		void set_console_mode(uint8_t mode) { _wakeTime = mode; }
+		uint8_t& consoleMode() { return _wakeTime; }
 
 #if defined (ZPSIM)
 		KeyOperation simKey = NO_KEY;
@@ -55,7 +51,7 @@ namespace HardwareInterfaces {
 		int8_t	_secsToKeepAwake = 30;
 		uint8_t	_lastSecond = 0;
 		Timer_mS _timeToRead;
-		uint8_t _wakeTime = 30; // 0 - LAST_CONSOLE_MODE for remotes
+		uint8_t _wakeTime; // First 4 bits (MSB) are flag-enums for console-mode, last 4 is wake-time/4
 	};
 }
 

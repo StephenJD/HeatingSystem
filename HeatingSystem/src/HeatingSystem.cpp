@@ -3,7 +3,7 @@
 #include "HardwareInterfaces\I2C_Comms.h"
 #include "HardwareInterfaces\A__Constants.h"
 #include "LCD_UI\A_Top_UI.h"
-#include <EEPROM.h>
+#include <EEPROM_RE.h>
 #include <Clock.h>
 #include <MemoryFree.h>
 
@@ -34,14 +34,14 @@ namespace HeatingSystemSupport {
 #endif
 	}
 
-	int writer(int address, const void * data, int noOfBytes) {
+	int writer(int address, const void * data, int noOfBytes) { // return next address, or 0 for failure
 		//if (address == 495) {
 		//	auto debug = false;
 		//}
 		uint8_t status = 0;
 		if (address < RDB_START_ADDR || address + noOfBytes > RDB_START_ADDR + RDB_MAX_SIZE) {
 			logger() << F("Illegal RDB write address: ") << int(address) << L_endl;
-			return -1;
+			return status;
 		}
 		const unsigned char * byteData = static_cast<const unsigned char *>(data);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
@@ -51,13 +51,13 @@ namespace HeatingSystemSupport {
 #endif
 			status |= eeprom().update(address, *byteData);
 		}
-		return status ? -1 : address;
+		return status ? 0 : address;
 	}
 
-	int reader(int address, void * result, int noOfBytes) {
+	int reader(int address, void * result, int noOfBytes) { // return next address, or 0 for failure
 		if (address < RDB_START_ADDR || address + noOfBytes > RDB_START_ADDR + RDB_MAX_SIZE) {
 			logger() << F("Illegal RDB read address: ") << int(address) << L_endl;
-			return -1;
+			return 0;
 		}		
 		uint8_t * byteData = static_cast<uint8_t *>(result);
 		for (noOfBytes += address; address < noOfBytes; ++byteData, ++address) {
@@ -71,6 +71,7 @@ namespace HeatingSystemSupport {
 			*byteData = virtualProm[address];
 #else
 			* byteData = eeprom().read(address);
+			if (eeprom().readErr()) return 0;
 #endif
 		}
 		return address;
@@ -128,15 +129,16 @@ void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 	auto consoleIndex = 0;
 	auto activeField = _thinConsole_Chapters.remotePage_c.activeUI();
 	for (auto & remote : _thinConsole_Arr) {
-		if (remote.consoleMode() < LCD_CONSOLE_MODE) {
-			displayHasChanged |= thickConsole_Arr[consoleIndex].hasChanged();
-		}
-		else {
+		auto consoleMode = OLED_Thick_Display::ModeFlags(remote.consoleMode());
+		if (consoleMode.is(OLED_Thick_Display::e_LCD)) {
 			activeField->setFocusIndex(consoleIndex);
 			if (remote.processKeys() || displayHasChanged) {
 				remote.refreshDisplay();
 				displayHasChanged = true;
 			}
+		}
+		else {
+			displayHasChanged |= thickConsole_Arr[consoleIndex].hasChanged();
 		}
 		++consoleIndex;
 	}

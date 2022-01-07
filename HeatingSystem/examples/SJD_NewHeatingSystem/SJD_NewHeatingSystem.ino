@@ -5,6 +5,7 @@
 #include <Clock_I2C.h>
 #include <Logging_SD.h>
 #include <I2C_Talk.h>
+#include <I2C_RecoverRetest.h>
 #include <EEPROM.h>
 #include <Wire.h>
 #include <MemoryFree.h>
@@ -19,7 +20,6 @@ constexpr int WATCHDOG_TIMOUT = 8000; // max for Mega.
 
 constexpr uint8_t RTC_RESET_PIN = 4;
 constexpr uint8_t RTC_ADDRESS = 0x68;
-constexpr uint8_t EEPROM_ADDRESS = 0x50;
 constexpr uint8_t  dsBacklight = 14;
 constexpr uint8_t  dsContrast = 60;
 constexpr uint8_t  dsBLoffset = 14;
@@ -32,12 +32,13 @@ uint8_t  CONTRAST_PWM = 6;
 	#define DIM_LCD 200
 
 	I2C_Talk rtc{ Wire1 };
+	I2C_Recovery::I2C_Recover_Retest r2c_recover(rtc);
 
-	EEPROMClass & eeprom() {
-		static EEPROMClass_T<rtc> _eeprom_obj{ (rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000),EEPROM_ADDRESS) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
+	EEPROMClassRE & eeprom() {
+		static EEPROMClass_T<rtc> _eeprom_obj{ r2c_recover, ( rtc.ini(Wire1,100000),rtc.extendTimeouts(5000, 5, 1000),EEPROM_I2C_ADDR) }; // rtc will be referenced by the compiler, but rtc may not be constructed yet.
 		return _eeprom_obj;
 	}
-	EEPROMClass & EEPROM = eeprom();
+	EEPROMClassRE & EEPROM = eeprom();
 
 	Clock & clock_() {
 		static Clock_I2C<rtc> _clock((rtc.ini(Wire1, 100000), rtc.extendTimeouts(5000, 5, 1000), RTC_ADDRESS));
@@ -62,7 +63,7 @@ uint8_t  CONTRAST_PWM = 6;
 	#define DIM_LCD 135
 	#define NO_RTC
 
-	EEPROMClass & eeprom() {
+	EEPROMClassRE & eeprom() {
 		return EEPROM;
 	}
 

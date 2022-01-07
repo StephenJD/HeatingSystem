@@ -28,7 +28,7 @@ public:
 	}
 	virtual int32_t set_runSpeed(int32_t i2cFreq) { return i2C().setI2CFrequency(i2cFreq); }
 	virtual void disable() {};
-	virtual auto reEnable()->I2C_Talk_ErrorCodes::Error_codes { return I2C_Talk_ErrorCodes::_OK; }
+	virtual auto reEnable(bool immediatly = false)->I2C_Talk_ErrorCodes::Error_codes { return I2C_Talk_ErrorCodes::_OK; }
 	virtual void reset() {};
 
 	virtual auto read(int registerAddress, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {
@@ -110,7 +110,7 @@ public:
 	auto getStatus() const ->I2C_Talk_ErrorCodes::Error_codes override;
 	// Modifiers
 	void disable() override { _lastFailedTime = millis(); _i2c_speed = 0; }
-	auto reEnable()->I2C_Talk_ErrorCodes::Error_codes override;
+	auto reEnable(bool immediatly = false)->I2C_Talk_ErrorCodes::Error_codes override;
 	void reset() override { _i2c_speed = START_SPEED_AFTER_FAILURE;	}
 
 	using I_I2Cdevice::write;

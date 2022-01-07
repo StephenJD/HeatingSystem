@@ -11,7 +11,7 @@
 #include "..\Client_DataStructures\Data_Zone.h"
 #include <LCD_Display.h>
 #include <Logging.h>
-#include <EEPROM.h>
+#include <EEPROM_RE.h>
 
 using namespace arduino_logger;
 
