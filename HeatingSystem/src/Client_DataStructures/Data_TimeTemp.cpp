@@ -6,6 +6,11 @@
 	#include <ostream>
 #endif
 
+namespace arduino_logger {
+	Logger& profileLogger();
+}
+using namespace arduino_logger;
+
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace Date_Time;
@@ -113,8 +118,10 @@ namespace client_data_structures {
 		// Every Profile needs at least one TT
 		switch (fieldID) {
 		case e_TimeTemp: {
+			profileLogger() << L_time << " Save edited TT from: " << answer().rec();
 			answer().rec().time_temp = (uint16_t)newValue->val;
 			auto newRecordID = answer().update();
+			profileLogger() << " to: " << answer().rec() << L_endl;
 			if (newRecordID != recordID()) {
 				return true;
 			}

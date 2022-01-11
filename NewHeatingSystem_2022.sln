@@ -35,12 +35,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "A_SJD_Watchdog_Timer", "..\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Due", "Due", "{04A9DCA5-DA0B-42F7-900E-9DF92C531E80}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\chip.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\chip.h
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\pio.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\pio.c
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\pio.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\pio.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.cpp
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\SD\src\SD.h
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\spi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\spi.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\source\twi.c
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\system\libsam\include\twi.h
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\libraries\Wire\src\Wire.cpp
@@ -99,6 +95,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SJD Modified", "SJD Modified", "{7452347B-7166-4353-B604-5735B16AC9E5}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c = ..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c
+		..\..\SJD Modified Core Librarys\Wire_SAM\Wire.cpp = ..\..\SJD Modified Core Librarys\Wire_SAM\Wire.cpp
 	EndProjectSection
 EndProject
 Global

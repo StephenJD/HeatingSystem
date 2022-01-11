@@ -100,7 +100,7 @@ namespace client_data_structures {
 			if (z.isDHWzone()) return false;
 			auto reqTemp = uint8_t(newValue->val);
 			z.changeCurrTempRequest(reqTemp);
-			profileLogger() << answer().rec().name << " Save req temp to: " << reqTemp << " Max: " << _requestTemp.valRange.maxVal << L_endl;
+			profileLogger() << L_time << answer().rec().name << " Save req temp to: " << reqTemp << " Max: " << _requestTemp.valRange.maxVal << L_endl;
 			break;
 		}
 		case e_ratio:

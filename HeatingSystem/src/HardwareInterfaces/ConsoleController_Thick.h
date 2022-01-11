@@ -27,6 +27,7 @@ namespace HardwareInterfaces {
 		}
 	private:
 		I2C_Talk_ErrorCodes::Error_codes writeRegisterToConsole(int reg);
+		void logRemoteRegisters();
 		bool _hasChanged = false;
 		TowelRail* _towelRail = 0;
 		Zone* _dhw = 0;

@@ -107,8 +107,10 @@ namespace HardwareInterfaces {
 	}
 
 	int8_t Zone::maxUserRequestTemp(bool setLimit) const {
+		//auto limitRequest = _currProfileTempRequest;
+		auto limitRequest = _currProfileTempRequest < 19 ? 19 : _currProfileTempRequest;
 		if (!setLimit) return 90;
-		else if (getCurrTemp() < _currProfileTempRequest) return _currProfileTempRequest;
+		else if (getCurrTemp() < limitRequest) return limitRequest;
 		else return getCurrTemp() + 1;
 	}
 

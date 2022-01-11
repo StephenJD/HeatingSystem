@@ -114,12 +114,14 @@ namespace Assembly {
 			auto timeout = display.rec().timeout;
 			logger() << L_time << F("set_console_mode :") << timeout << L_endl;
 			kb.set_console_mode(timeout);  // { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
-			logger() << L_time << F("popKey ") << L_endl;
-			kb.popKey();
-			logger() << L_time << F("clearKeys ") << L_endl;
-			kb.clearKeys();
-			logger() << L_time << F("initialise remDispl[] ") << index << L_endl;
-			failed |= _hs.remDispl[index].initialiseDevice();
+			if (OLED_Thick_Display::ModeFlags(timeout).is(OLED_Thick_Display::e_LCD)) {
+				logger() << L_time << F("popKey ") << L_endl;
+				kb.popKey();
+				logger() << L_time << F("clearKeys ") << L_endl;
+				kb.clearKeys();
+				logger() << L_time << F("initialise remDispl[] ") << index << L_endl;
+				failed |= _hs.remDispl[index].initialiseDevice();
+			}
 			++index;
 		}		
 		

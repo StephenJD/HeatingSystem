@@ -6,7 +6,7 @@
 #include <Logging_SD.h>
 #include <I2C_Talk.h>
 #include <I2C_RecoverRetest.h>
-#include <EEPROM.h>
+#include <EEPROM_RE.h>
 #include <Wire.h>
 #include <MemoryFree.h>
 #include <Watchdog_Timer.h>
@@ -81,7 +81,7 @@ namespace arduino_logger {
 		//static Serial_Logger _log(SERIAL_RATE);
 		//static RAM_Logger _log("R", ramFileSize, true, clock_());
 		//static EEPROM_Logger _log("E", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
-		static SD_Logger _log("E", SERIAL_RATE, clock_(), L_allwaysFlush);
+		static SD_Logger _log("E", SERIAL_RATE, clock_());
 		return _log;
 	}
 
