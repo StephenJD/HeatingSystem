@@ -110,14 +110,18 @@ HeatingSystem::HeatingSystem()
 		//_mainConsoleChapters(0).rec_select();
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
+		serviceTemperatureController();
 	}
 
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
-	if (_mainConsoleChapters.chapter() == 0) {
-		if (_tempController.checkAndAdjust()) { // true and checked once-per-second
-			for (auto& remote : thickConsole_Arr) {
-				remote.refreshRegisters();
-			}
+#ifdef ZPSIM
+	{
+#else
+	if (_tempController.isNewSecond()) {
+#endif
+		if (_mainConsoleChapters.chapter() == 0) _tempController.checkAndAdjust();
+		for (auto& remote : thickConsole_Arr) {
+			remote.refreshRegisters();
 		}
 	}
 }

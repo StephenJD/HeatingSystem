@@ -46,7 +46,7 @@ public:
 	Assembly::HeatingSystem_Queries & getQueries() { return _hs_queries; }
 	Assembly::TemperatureController & tempController() { return _tempController; }
 private: // data-member ordering matters!
-	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR };
+	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR, Wire, HardwareInterfaces::I2C_MAX_SPEED };
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
 #ifdef ZPSIM

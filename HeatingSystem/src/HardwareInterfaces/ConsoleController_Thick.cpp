@@ -26,7 +26,7 @@ namespace HardwareInterfaces {
 		setReg(OLED::R_DISPL_REG_OFFSET, 0);
 		uint8_t remoteReqIni = OLED::NO_REG_OFFSET_SET;
 		if (!console_mode_is(OLED::e_LCD)) {
-			write(getReg(OLED::R_DISPL_REG_OFFSET), 1, &remoteReqIni);
+			write_verify(getReg(OLED::R_DISPL_REG_OFFSET), 1, &remoteReqIni);
 		}
 		_towelRail = &towelRail;
 		_dhw = &dhw;
@@ -52,21 +52,18 @@ namespace HardwareInterfaces {
 #endif
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
-			uint8_t errCode = write(getReg(OLED::R_DISPL_REG_OFFSET), 1, &_regOffset);
+			uint8_t errCode = write_verify(getReg(OLED::R_DISPL_REG_OFFSET), 1, &_regOffset);
 			errCode |= writeRegisterToConsole(OLED::R_ROOM_TS_ADDR);
 			errCode |= writeRegisterToConsole(OLED::R_MODE);
 
-			//errCode |= writeRegisterToConsole(R_REQUESTING_ROOM_TEMP);
-			//setReg(OLED::R_REQUESTING_T_RAIL, OLED::e_ModeIsSet);
-			//setReg(OLED::R_REQUESTING_DHW, OLED::e_ModeIsSet);
 			setReg(OLED::R_REQUESTING_ROOM_TEMP, _zone->currTempRequest());
 			setReg(OLED::R_WARM_UP_ROOM_M10, 10);
 			setReg(OLED::R_ON_TIME_T_RAIL, 0);
 			setReg(OLED::R_WARM_UP_DHW_M10, 2);
-			if (console_mode_is(OLED::e_MASTER)) read(OLED::R_ROOM_TEMP, 2, regPtr(OLED::R_ROOM_TEMP));
-			else write(OLED::R_ROOM_TEMP, 2, regPtr(OLED::R_ROOM_TEMP));
+			if (console_mode_is(OLED::e_MASTER)) read_verify_1byte(OLED::R_ROOM_TEMP, *regPtr(OLED::R_ROOM_TEMP), 2, 4);
+			else write_verify(OLED::R_ROOM_TEMP, 2, regPtr(OLED::R_ROOM_TEMP));
 			writeRegisterToConsole(OLED::R_REQUESTING_ROOM_TEMP);
-			write(OLED::R_REQUESTING_T_RAIL, 2, regPtr(OLED::R_REQUESTING_T_RAIL));
+			write_verify(OLED::R_REQUESTING_T_RAIL, 2, regPtr(OLED::R_REQUESTING_T_RAIL));
 			if (errCode == _OK) {
 				auto newIniStatus = getRawReg(R_SLAVE_REQUESTING_INITIALISATION);
 				newIniStatus &= ~requestINI_flag;
@@ -83,7 +80,7 @@ namespace HardwareInterfaces {
 		auto status = reEnable(); // see if is disabled.
 		waitForWarmUp();
 		if (status == _OK) {
-			status = write(reg, 1, regPtr(reg)); // recovery-write
+			status = write_verify(reg, 1, regPtr(reg)); // recovery-write_verify
 			if (status) {
 				logger() << L_time << F("ConsoleController_Thick Write device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}
@@ -94,7 +91,7 @@ namespace HardwareInterfaces {
 		uint8_t regVal;
 		logger() << "OfSt" << L_tabs << "MODE" << "TSad" << "RT" << "Fr" << "TRl?" << "HW?" << "Rm?" << "Rmm" << "TRm" << "HWm" << L_endl;
 		for (int reg = OLED::R_DISPL_REG_OFFSET; reg < OLED::R_DISPL_REG_SIZE; ++reg) {
-			read(reg, 1, &regVal);
+			read_verify_1byte(reg, regVal, 2, 4);
 			logger() << regVal << ", \t";
 		}
 		logger() << L_endl;
@@ -121,13 +118,14 @@ namespace HardwareInterfaces {
 		uint8_t requestINI_flag = RC_US_REQUESTING_INI << index();
 		if (!console_mode_is(OLED::e_MASTER)) {
 			uint8_t remOffset;
-			read(OLED::R_DISPL_REG_OFFSET, 1, &remOffset);
+			read_verify_1byte(OLED::R_DISPL_REG_OFFSET, remOffset, 2, 4);
 			if (remOffset == OLED::NO_REG_OFFSET_SET) {
 				iniStatus |= requestINI_flag;
 			}
 		}
-		uint8_t towelrail_req_changed = 0;
-		uint8_t hotwater_req_changed = 0;
+		int8_t towelrail_req_changed = -1;
+		int8_t hotwater_req_changed = -1;
+		uint8_t regVal;
 
 		//static auto debugStopIni = true;
 		if (iniStatus & requestINI_flag) {
@@ -135,40 +133,38 @@ namespace HardwareInterfaces {
 			sendSlaveIniData(requestINI_flag);
 		} else {
 			if (!console_mode_is(OLED::e_MASTER)) {
-				uint8_t regVal;
-				status = read(OLED::R_REQUESTING_T_RAIL, 1, &regVal);
+				status = read_verify_1byte(OLED::R_REQUESTING_T_RAIL,regVal, 2, 4);
 				if (updateReg(OLED::R_REQUESTING_T_RAIL, regVal)) towelrail_req_changed = regVal;
-				status |= read(OLED::R_REQUESTING_DHW, 1, &regVal);
+				status |= read_verify_1byte(OLED::R_REQUESTING_DHW, regVal, 2, 4);
 				if (updateReg(OLED::R_REQUESTING_DHW, regVal)) hotwater_req_changed = regVal;
-				status |= write(OLED::R_ROOM_TEMP, 2, regPtr(OLED::R_ROOM_TEMP));
+				status |= write_verify(OLED::R_ROOM_TEMP, 2, regPtr(OLED::R_ROOM_TEMP));
 				if (status) {
 					logger() << L_time << F("ConsoleController_Thick refreshRegisters device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 				}
 			}
-			if (towelrail_req_changed) {
+			if (towelrail_req_changed >= 0) {
 				_hasChanged = true;
 				_towelRail->setMode(towelrail_req_changed);
 				_towelRail->check();
-				//setReg(OLED::R_REQUESTING_T_RAIL, OLED::e_ModeIsSet);
-				//writeRegisterToConsole(OLED::R_REQUESTING_T_RAIL);
 			}
-			if (hotwater_req_changed) {
+			if (hotwater_req_changed >= 0) {
 				_hasChanged = true;
-				bool currentProfileIsActive = _dhw->currTempRequest() != _dhw->nextTempRequest();
-				bool currentProfileIsOn = _dhw->currTempRequest() > _dhw->nextTempRequest();
-				if (!currentProfileIsActive && hotwater_req_changed == OLED::e_Auto) _dhw->revertToCurrentProfile();
-				else if (currentProfileIsActive && currentProfileIsOn && hotwater_req_changed == OLED::e_Off) _dhw->startNextProfile();
-				else if (currentProfileIsActive && !currentProfileIsOn && hotwater_req_changed == OLED::e_On)  _dhw->startNextProfile();
-				else if (!currentProfileIsActive && _dhw->currTempRequest() > 30 && hotwater_req_changed == OLED::e_Off) _dhw->revertToCurrentProfile();
-				else if (!currentProfileIsActive && _dhw->currTempRequest() <= 30 && hotwater_req_changed == OLED::e_On) _dhw->revertToCurrentProfile();
-				//setReg(OLED::R_REQUESTING_DHW, OLED::e_ModeIsSet);
-				//writeRegisterToConsole(OLED::R_REQUESTING_DHW);
+				bool scheduledProfileIsActive = !_dhw->advancedToNextProfile();
+				bool otherProfileIsHotter = _dhw->nextTempRequest() > _dhw->currTempRequest();
+				if (hotwater_req_changed == OLED::e_Auto) {
+					if (!scheduledProfileIsActive) _dhw->revertToScheduledProfile();
+				} else if (otherProfileIsHotter) { // OLED::e_ON
+					if (scheduledProfileIsActive)  _dhw->startNextProfile();
+					else _dhw->revertToScheduledProfile();
+				}
 			}
 			auto zoneReqTemp = _zone->currTempRequest();
 			auto localReqTemp = getReg(OLED::R_REQUESTING_ROOM_TEMP);
 			uint8_t remReqTemp;
-			status = read(OLED::R_REQUESTING_ROOM_TEMP, 1, &remReqTemp);
-			if (status != _OK) logger() << L_time << F("Bad Read Req Temp sent by Remote: ") << remReqTemp << I2C_Talk::getStatusMsg(status) << L_endl;
+			status = read_verify_1byte(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp, 2, 4);
+			if (status != _OK) {
+				logger() << L_time << F("Bad Read Req Temp sent by Remote: ") << remReqTemp << I2C_Talk::getStatusMsg(status) << L_endl;
+			}
 			else if (remReqTemp && remReqTemp != zoneReqTemp) { // Req_Temp register written to by remote console
 				if (abs(remReqTemp - zoneReqTemp) > 1) {
 					logger() << L_time << F("Out-of-range Req Temp sent by Remote: ") << remReqTemp << L_endl;
@@ -201,8 +197,12 @@ namespace HardwareInterfaces {
 			haveNewData |= updateReg(OLED::R_WARM_UP_ROOM_M10, _zone->warmUpTime_m10());
 			haveNewData |= updateReg(OLED::R_ON_TIME_T_RAIL, uint8_t(_towelRail->timeToGo()/60));
 			haveNewData |= updateReg(OLED::R_WARM_UP_DHW_M10, _dhw->warmUpTime_m10()); // If -ve, in 0-60 mins, if +ve in min_10
-			if (!console_mode_is(OLED::e_MASTER)) write(OLED::R_WARM_UP_ROOM_M10, 3, regPtr(OLED::R_WARM_UP_ROOM_M10));
-			if (haveNewData) write(OLED::R_MODE, static_cast<uint8_t>(OLED::ModeFlags(getReg(OLED::R_MODE)).set(OLED::e_DATA_CHANGED)));
+			if (!console_mode_is(OLED::e_MASTER)) write_verify(OLED::R_WARM_UP_ROOM_M10, 3, regPtr(OLED::R_WARM_UP_ROOM_M10));
+			if (_hasChanged || haveNewData) {
+				OLED::ModeFlags(*regPtr(OLED::R_MODE)).set(OLED::e_DATA_CHANGED);
+				writeRegisterToConsole(OLED::R_MODE);
+			}
+			if (status != _OK) read(OLED::R_REQUESTING_ROOM_TEMP, 1, &regVal); // recovery
 		}
 	}
 

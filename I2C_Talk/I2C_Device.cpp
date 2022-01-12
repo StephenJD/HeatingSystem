@@ -65,6 +65,31 @@ auto I_I2Cdevice::read_verify_1byte(int registerAddress, uint8_t & dataBuffer, i
 	return errorCode;
 }
 
+auto I_I2Cdevice::read_verify(int registerAddress, int numberBytes, uint8_t* dataBuffer, int requiredConsecutiveReads, int canTryAgain)->Error_codes {
+	i2C().setI2CFrequency(runSpeed());
+	uint8_t newRead;
+	auto status = _OK;
+	for (int byteNo = 0; byteNo < numberBytes; ++byteNo) {
+		Error_codes errorCode; // Non-Recovery
+		dataBuffer[byteNo] = 0xAA; // 1010 1010
+		auto needAnotherGoodReading = requiredConsecutiveReads;
+		do {
+			errorCode = I_I2Cdevice::read(registerAddress, 1, &newRead); // Non-Recovery
+			if (!errorCode) {
+				if (newRead == dataBuffer[byteNo]) --needAnotherGoodReading;
+				else {
+					needAnotherGoodReading = requiredConsecutiveReads;
+					dataBuffer[byteNo] = newRead;
+				}
+			}
+			--canTryAgain;
+		} while (canTryAgain >= needAnotherGoodReading && canTryAgain && needAnotherGoodReading > 1);
+		if (!errorCode) errorCode = needAnotherGoodReading > 1 ? _I2C_ReadDataWrong : _OK;
+		status |= errorCode;
+	}
+	return status;
+}
+
 // ***********************************
 //		I_I2Cdevice_Recovery
 // ***********************************

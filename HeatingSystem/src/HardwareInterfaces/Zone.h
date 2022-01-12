@@ -42,6 +42,8 @@ namespace HardwareInterfaces {
 		int8_t currTempRequest() const { return modifiedCallTemp(_currProfileTempRequest); }
 		int8_t preheatTempRequest() const { return _preheatCallTemp; }
 		int8_t nextTempRequest() const { return modifiedCallTemp(_nextProfileTempRequest); }
+		bool advancedToNextProfile() const;
+
 		int8_t maxUserRequestTemp(bool setLimit) const;
 		int8_t getCurrTemp() const;
 		bool isCallingHeat() const;
@@ -50,13 +52,13 @@ namespace HardwareInterfaces {
 		bool isDHWzone() const;
 		int16_t getFractionalCallSensTemp() const;
 		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
-		Date_Time::DateTime startDateTime() { return _ttStartDateTime; }
-		uint8_t warmUpTime_m10() {return _minsToPreheat < 0 ? _minsToPreheat : (_minsToPreheat + 5) / 10;}
+		Date_Time::DateTime startDateTime() const { return _ttStartDateTime; }
+		uint8_t warmUpTime_m10() const {return _minsToPreheat < 0 ? _minsToPreheat : (_minsToPreheat + 5) / 10;}
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);
 		void setMode(int mode);
 		void startNextProfile();
-		void revertToCurrentProfile();
+		void revertToScheduledProfile();
 		void cancelPreheat();
 		bool changeCurrTempRequest(int8_t val); // true if changed
 		bool setFlowTemp();

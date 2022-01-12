@@ -102,7 +102,7 @@ namespace I2C_Recovery {
 			recoveryTime = 0;
 			if (device().getAddress() == abs(_deviceWaitingOnFailureFor10Mins)) _deviceWaitingOnFailureFor10Mins = 0;
 		} else if (_retries > 0) {
-#ifdef DEBUG_RECOVER
+#ifdef REPORT_RECOVER
 			logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
 #endif
 			--_retries;

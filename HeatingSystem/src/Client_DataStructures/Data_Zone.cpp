@@ -135,7 +135,7 @@ namespace client_data_structures {
 				//}
 			} else {
 				profileLogger() << answer().rec().name << " Restore Current Profile" << L_endl;
-				z.revertToCurrentProfile();
+				z.revertToScheduledProfile();
 			}
 			return true;
 		}

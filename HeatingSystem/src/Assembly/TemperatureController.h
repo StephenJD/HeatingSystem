@@ -18,9 +18,9 @@ namespace Assembly {
 		TemperatureController(I2C_Recovery::I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers, unsigned long * timeOfReset_mS);
 		// Queries
 		int outsideTemp() const { return thermalStore.getOutsideTemp(); }
-
+		bool isNewSecond() const;
 		// Modifiers
-		bool checkAndAdjust(); // true once per second
+		void checkAndAdjust(); // true once per second
 		void checkZones(bool checkPreHeat);
 		void resetZones();
 

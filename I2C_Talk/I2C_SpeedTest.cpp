@@ -65,7 +65,7 @@ uint32_t I2C_SpeedTest::fastest_T<false>() {
 	logger() << F("\tfastest_T Initial test...: ") << L_endl;
 #endif	
 
-	auto status = _i2c_device->recovery().testDevice(2,1); // Unfreeze is only Recovery strategy applied during speed-test
+	auto status = _i2c_device->recovery().testDevice(2,1); // Test at max speed. Unfreeze is only Recovery strategy applied during speed-test
 #ifdef DEBUG_SPEED_TEST
 	logger() << F("\tfastest_T Initial 2 tests at: ") << _i2c_device->i2C().getI2CFrequency() << F(" Result:") << I2C_Talk::getStatusMsg(status) << L_endl;
 #endif

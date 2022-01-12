@@ -35,7 +35,7 @@ public:
 		, R_DISPL_REG_SIZE
 	};
 
-	enum { e_Auto, e_On, e_Off, e_ModeIsSet };
+	enum { e_Auto, e_On, e_Off };
 	enum DisplayModes { e_LCD, e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
 	using ModeFlags = flag_enum::FE< DisplayModes, e_NO_OF_FLAGS>;
 	// New request temps initiated by the programmer are sent by the programmer.

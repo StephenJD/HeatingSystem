@@ -62,7 +62,7 @@ namespace HardwareInterfaces {
 			setReg(Mix_Valve::R_FROM_TEMP, 55);
 			setReg(Mix_Valve::R_FLOW_TEMP, 55);
 			setReg(Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
-			write(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_STATUS, regPtr(Mix_Valve::R_STATUS));
+			write_verify(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_STATUS, regPtr(Mix_Valve::R_STATUS));
 			if (errCode == _OK) {
 				auto newIniStatus = getRawReg(R_SLAVE_REQUESTING_INITIALISATION);
 				newIniStatus &= ~requestINI_flag;
@@ -261,8 +261,8 @@ namespace HardwareInterfaces {
 		waitForWarmUp();
 		auto status = reEnable(); // see if is disabled.
 		if (status == _OK) {
-			//status = write_verify(reg + _regOffset, 1, &value); // recovery-write
-			status = write(getReg(Mix_Valve::R_MV_REG_OFFSET) + reg, 1, &value); // recovery-write
+			//status = write_verify(reg + _regOffset, 1, &value); // recovery-write_verify
+			status = write_verify(getReg(Mix_Valve::R_MV_REG_OFFSET) + reg, 1, &value); // recovery-write_verify
 			if (status) {
 				logger() << L_time << F("MixValve Write device 0x") << L_hex << getAddress() << F(" Reg: ") << reg << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			} //else logger() << L_time << F("MixValve Write OK device 0x") << L_hex << getAddress() << L_endl;
@@ -275,9 +275,10 @@ namespace HardwareInterfaces {
 		//uint8_t (&debug)[58] = reinterpret_cast<uint8_t (&)[58]>(*_localRegisters->reg_ptr(0));
 		//uint8_t (&debugWire)[30] = reinterpret_cast<uint8_t (&)[30]>(TwoWire::i2CArr[getAddress()][0]);
 #endif
+		int8_t flowTemp = 0;
 		if (!_is_multimaster) {
 			_slaveMode_flowTempSensor.readTemperature();
-			auto flowTemp = _slaveMode_flowTempSensor.get_temp();
+			flowTemp = _slaveMode_flowTempSensor.get_temp();
 			writeToValve(Mix_Valve::R_FLOW_TEMP, flowTemp);
 			setReg(Mix_Valve::R_FLOW_TEMP, flowTemp);
 			//logger() << "ReadMixVTempS: " << flowTemp << L_endl;
@@ -287,14 +288,15 @@ namespace HardwareInterfaces {
 		waitForWarmUp();
 		if (status == _OK) {
 			//profileLogger() << "Read :" << Mix_Valve::MV_NO_TO_READ << " MVreg from: " << getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE << " to : " << _regOffset + Mix_Valve::R_MODE << L_endl;
-			status = read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE, Mix_Valve::MV_NO_TO_READ, regPtr(Mix_Valve::R_MODE));
+			status = read_verify(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE, Mix_Valve::MV_NO_TO_READ, regPtr(Mix_Valve::R_MODE), 2, 4); // non recovery
 			if (getReg(Mix_Valve::R_FLOW_TEMP) == 255) {
-				logger() << L_time << F("MixValve Reads Wrong device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
-				auto speedTest = I2C_SpeedTest(*this);
-				speedTest.fastest();
+				logger() << L_time << F("read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status);
+				logger() << F("FlowTemp reads 255 but is: ") << flowTemp << L_endl;
+				setReg(Mix_Valve::R_FLOW_TEMP, flowTemp);
 			}
 			if (status) {
 				logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
+				read(getReg(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_MODE, Mix_Valve::MV_NO_TO_READ, regPtr(Mix_Valve::R_MODE)); // recovery
 			}
 		} else logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
 		

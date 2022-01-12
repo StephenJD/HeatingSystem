@@ -27,8 +27,8 @@ namespace HardwareInterfaces {
 
 	void TowelRail::setMode(int mode) {
 		enum { e_Auto, e_On, e_Off, e_ModeIsSet };
-		if (mode == e_Off) _timer = 0;
 		if (mode == e_On) _timer = _onTime * 60 + TWL_RAD_RISE_TIME;
+		else _timer = 0;
 	}
 
 	bool TowelRail::check() {

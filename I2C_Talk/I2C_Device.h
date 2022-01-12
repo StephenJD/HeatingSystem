@@ -48,12 +48,18 @@ public:
 	/// Mask applied to device-byte order.
 	/// </summary>
 	auto read_verify_2bytes(int registerAddress, int16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask = 0xFFFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
-																																														   /// <summary>
+
+	/// <summary>
 	/// Non-Recovery
 	/// </summary>
 	auto read_verify_1byte(int registerAddress, uint8_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint8_t dataMask = 0xFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+
+	/// <summary>
+	/// Non-Recovery
+	/// </summary>
+	auto read_verify(int registerAddress, int numberBytes, uint8_t* dataBuffer, int requiredConsecutiveReads, int maxNoOfTries)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 	
-		// delegating functions
+	// delegating functions
 	void writeInSync() { i2C().writeInSync(); }
 
 	auto read(int registerAddress, int numberBytes, char *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return read(registerAddress, numberBytes, (uint8_t *)dataBuffer); }
@@ -117,6 +123,9 @@ public:
 	using  I_I2Cdevice::read;
 	auto read(int registerAddress, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override; // Return errCode. dataBuffer may not be written to if read fails.
 	auto write(int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;  // Return errCode.
+	/// <summary>
+	/// Recovery
+	/// </summary>
 	auto write_verify(int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;
 
 	using I_I2Cdevice::i2C;

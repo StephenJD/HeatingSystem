@@ -127,12 +127,16 @@ void OLED_Thick_Display::refreshRegisters() {
     if (reqTemp && _tempRequest != reqTemp) { // new request sent by programmer
         _tempRequest = reqTemp;
         setReg(R_REQUESTING_ROOM_TEMP, 0);
-        _dataChanged = true;
+        _dataChanged |= true;
     }
     bool towelRailNowOff = getReg(R_ON_TIME_T_RAIL) == 0;
     if (towelRailNowOff) {
-        if (getReg(R_REQUESTING_T_RAIL) == e_On) setReg(R_REQUESTING_T_RAIL, e_Auto);
-    } else if (getReg(R_REQUESTING_T_RAIL) == e_Off) sendDataToProgrammer(R_REQUESTING_T_RAIL);
+        _dataChanged |= updateReg(R_REQUESTING_T_RAIL, e_Auto);
+    }   
+    bool dhwOK = getReg(R_WARM_UP_DHW_M10) == 0;
+    if (dhwOK) {
+        _dataChanged |= updateReg(R_REQUESTING_DHW, e_Auto);
+    }
 }
 
 uint8_t OLED_Thick_Display::requestRegisterOffsetFromProgrammer() {
@@ -201,19 +205,17 @@ void OLED_Thick_Display::changeValue(int keyCode) {
         break;
     case TowelRail: 
     {
-        auto mode = nextIndex(0, getReg(R_REQUESTING_T_RAIL), e_ModeIsSet-1, increment);
+        auto mode = nextIndex(0, getReg(R_REQUESTING_T_RAIL), e_On, increment);
         setReg(R_REQUESTING_T_RAIL, mode);
-        if (mode == e_On) {
-            setReg(R_ON_TIME_T_RAIL, 60);
-            sendDataToProgrammer(R_ON_TIME_T_RAIL);
-        }
+        if (mode == e_On) setReg(R_ON_TIME_T_RAIL, 1); // to stop it resetting itself
         sendDataToProgrammer(R_REQUESTING_T_RAIL);
     }
         break;
     case HotWater: 
     {
-        auto mode = nextIndex(0, getReg(R_REQUESTING_DHW), e_ModeIsSet - 1, increment);
+        auto mode = nextIndex(0, getReg(R_REQUESTING_DHW), e_On, increment);
         setReg(R_REQUESTING_DHW, mode);
+        if (mode == e_On) setReg(R_WARM_UP_DHW_M10, -1); // to stop it resetting itself
         sendDataToProgrammer(R_REQUESTING_DHW);
     }
         break;

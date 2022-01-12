@@ -38,9 +38,8 @@ namespace I2C_Recovery {
 		constexpr int NO_OF_TESTS = 6;
 		if (device().getStatus() == _disabledDevice) return _disabledDevice;
 		auto addr = device().getAddress();
-		// Must test MAX_I2C_FREQ as this is skipped in later tests
-		constexpr uint32_t tryFreq[] = { 52000,8200,330000,3200,21000,2000,5100,13000,33000,83000,210000 };
-		i2C().setI2CFrequency(i2C().max_i2cFreq());
+		constexpr uint32_t tryFreq[] = { 52000,23000,78000,15000,118000,10000,177000,7000,266000,5000 };
+		i2C().setI2CFrequency(35000); // Already tested at max speed
 		auto testResult = i2C().status(addr);
 #ifdef DEBUG_SPEED_TEST
 		logger() << F("\nfindAworkingSpeed 0x") << L_hex << addr << F(" Exists ? At : ") << L_dec << i2C().getI2CFrequency() << I2C_Talk::getStatusMsg(testResult) << L_endl;
@@ -56,6 +55,7 @@ namespace I2C_Recovery {
 		if (testResult != _OK) {
 #endif
 			for (auto freq : tryFreq) {
+				if (freq > i2C().max_i2cFreq()) continue;
 				auto originalMargin = i2C().stopMargin();
 				i2C().setI2CFrequency(freq);
 				testResult = i2C().status(addr);

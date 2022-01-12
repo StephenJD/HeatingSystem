@@ -63,7 +63,7 @@ namespace HardwareInterfaces {
 	bool Zone::changeCurrTempRequest(int8_t val) {
 		if (val != _currProfileTempRequest) {
 			// Adjust current TT.
-			bool doingCurrentProfile = _ttStartDateTime <= clock_().now();
+			bool doingCurrentProfile = startDateTime() <= clock_().now();
 			auto profileDate = doingCurrentProfile ? clock_().now() : nextEventTime();
 			auto profileInfo = _sequencer->getProfileInfo(id(), profileDate);
 			auto currTT = profileInfo.currTT;
@@ -124,18 +124,23 @@ namespace HardwareInterfaces {
 	}
 
 	void Zone::startNextProfile() {
-		setProfileTempRequest(nextTempRequest());
-		setTTStartTime(nextEventTime());
-		cancelPreheat();
-		preHeatForNextTT();
-		setFlowTemp();
+		if (!advancedToNextProfile()) {
+			setProfileTempRequest(nextTempRequest());
+			setTTStartTime(nextEventTime());
+			cancelPreheat();
+			preHeatForNextTT();
+			setFlowTemp();
+		}
 	}
 
-	void Zone::revertToCurrentProfile() {
-		refreshProfile();
-		preHeatForNextTT();
-		setFlowTemp();
+	void Zone::revertToScheduledProfile() {
+		if (advancedToNextProfile()) {
+			refreshProfile();
+			preHeatForNextTT();
+			setFlowTemp();
+		}
 	}
+	bool Zone::advancedToNextProfile() const { return startDateTime() > clock_().now(); };
 
 
 	bool Zone::setFlowTemp() { // Called every minute. Sets flow temps. Returns true if needs heat.
@@ -147,7 +152,7 @@ namespace HardwareInterfaces {
 		auto outsideTemp = isDHW ? int8_t(20) : _thermalStore->getOutsideTemp();
 		bool backBoilerIsOn = _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
 		bool towelRadOn = _thermalStore->demandZone() == R_FlTR || _thermalStore->demandZone() == R_HsTR;
-		bool giveDHW_priority = !isDHW && _thermalStore->tooCoolRequestOrigin() == NO_OF_MIX_VALVES;
+		bool giveDHW_priority = !isDHW && towelRadOn && _thermalStore->tooCoolRequestOrigin() == NO_OF_MIX_VALVES;
 #ifdef ZPSIM
 		giveDHW_priority = false;
 #endif
@@ -312,8 +317,8 @@ namespace HardwareInterfaces {
 
 	ProfileInfo Zone::refreshProfile(bool reset) { // resets to original profile for UI.
 		// Lambdas
-		auto isTimeForNextEvent = [this]() -> bool { return clock_().now() >= _ttEndDateTime; };
-		auto advancedToNextProfile = [this, reset]() -> bool { return _ttStartDateTime > clock_().now(); };
+		auto isTimeForNextEvent = [this]() -> bool { return clock_().now() >= nextEventTime(); };
+		auto advancedToNextProfile = [this]() -> bool { return startDateTime() > clock_().now(); };
 		auto doReset = [reset, this](int currTemp, bool doingCurrent)-> bool {
 			bool doReset = reset || (doingCurrent && currTemp != _currProfileTempRequest);
 			if (doReset) cancelPreheat();
@@ -411,6 +416,7 @@ namespace HardwareInterfaces {
 			bool gotDifferentProfileTemp = false;
 			auto info = refreshProfile(false);
 			auto preheatCallTemp = info.currTT.temp();
+
 			if (preheatCallTemp * 256 > currTemp_fractional) {
 				_minsToPreheat = calculatePreheatTime(currTemp_fractional, preheatCallTemp);// is already heating. Don't need to check for pre-heat
 				if (isDHWzone()) {
@@ -462,7 +468,7 @@ namespace HardwareInterfaces {
 		*/
 		//executionTime[1] = millis();
 		//logger() << L_time << "\tLambdas_OK" << L_endl;
-		profileLogger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << _ttStartDateTime << L_endl;
+		profileLogger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << startDateTime() << L_endl;
 		//executionTime[2] = millis();
 		//executionTime[3] = millis()-1;
 		//executionTime[4] = millis()-2;
@@ -483,7 +489,7 @@ namespace HardwareInterfaces {
 			//executionTime[3] = millis();
 			bool amLate = _preheatCallTemp == currTempRequest() ? true : false;
 			DateTime targetTime;
-			if (amLate) targetTime = _ttStartDateTime; else targetTime = _ttEndDateTime;
+			if (amLate) targetTime = startDateTime(); else targetTime = nextEventTime();
 			auto missedTargetTime = targetTime.minsTo(clock_().now());
 			if (missedTargetTime) {
 				profileLogger() << "\tMissed Target Time by " << missedTargetTime << " Aiming for " << targetTime << L_endl;
@@ -505,7 +511,10 @@ namespace HardwareInterfaces {
 			if (_minsCooling == DELAY_COOLING_TIME) _minsCooling = MEASURING_DELAY;
 		} 
 		_minsToPreheat = calculatePreheatTime(currTemp_fractional, currTempRequest());
-
+		if (isDHWzone()) {
+			if (currTempRequest() < nextTempRequest()) _minsToPreheat = static_cast<int16_t>(clock_().now().minsTo(nextEventTime()));
+			if (_minsToPreheat < 60) _minsToPreheat = -_minsToPreheat;
+		}
 		_preheatCallTemp = newPreheatTemp;
 		//executionTime[7] = millis();
 		//logger() << "preHeatForNextTT() Lambdas: " << int(executionTime[1] - executionTime[0]) << "\t" << L_endl;

@@ -98,17 +98,20 @@ namespace Assembly {
 		logger() << F("loadTowelRails Completed") << L_endl;
 	}
 
-	bool TemperatureController::checkAndAdjust() { // Called every Arduino loop, enter/returns true once per second
+	bool TemperatureController::isNewSecond() const {
 		static uint8_t lastSeconds = clock_().seconds()-1;
+		return clock_().isNewSecond(lastSeconds);
+	}
+
+	void TemperatureController::checkAndAdjust() { // Called once per second
 		static uint8_t lastMins = clock_().minUnits()-1;
-		bool isNewSecond = clock_().isNewSecond(lastSeconds);
-#ifndef ZPSIM
-		if (!isNewSecond) { return false; } // Wait for next second.
-#endif		
 		// Entered once per second
 		bool newMinute = clock_().isNewMinute(lastMins);
 		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
-
+#ifdef ZPSIM
+		newMinute = true;
+		checkPreHeat = true;
+#endif
 		logger().flush();
 		zTempLogger().flush();
 		profileLogger().flush();
@@ -161,7 +164,6 @@ namespace Assembly {
 		relayController().updateRelays();
 		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
-		return true;
 	}
 
 	void TemperatureController::checkZones(bool checkForPreHeat) {

@@ -86,6 +86,7 @@ namespace HardwareInterfaces {
 	//  Mine are at 010 0000 and 010 0111
 	// IO Device Addresses
 
+	constexpr int32_t I2C_MAX_SPEED = 100000;
 	constexpr uint8_t EEPROM_I2C_ADDR = 0x50;
 	constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 	constexpr uint8_t MIX_VALVE_I2C_ADDR = 0x10;
