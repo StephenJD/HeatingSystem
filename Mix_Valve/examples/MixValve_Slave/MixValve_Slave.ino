@@ -10,7 +10,7 @@
 #include <TempSensor.h>
 #include <PinObject.h>
 #include <Logging.h>
-#include <EEPROM.h>
+#include <EEPROM_RE.h>
 #include <Watchdog_Timer.h>
 #include <Timer_mS_uS.h>
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
@@ -50,8 +50,9 @@ namespace arduino_logger {
 }
 using namespace arduino_logger;
 
-EEPROMClassRE & eeprom() {
-	return EEPROM;
+EEPROMClassRE& eeprom() {
+  static EEPROMClassRE _eeprom;
+  return _eeprom;
 }
 
 extern const uint8_t version_month;
@@ -147,7 +148,7 @@ void loop() {
 		auto currMultiMode = mixV_registers.getRegister(Mix_Valve::R_MULTI_MASTER_MODE);
 		if (currMultiMode != multimaster_mode) {
 			multimaster_mode = currMultiMode;
-			logger() << F("New Mode: ") << (currMultiMode ? F(MultiMaster") : F("SingleMaster")) << L_endl;
+			logger() << F("New Mode: ") << (currMultiMode ? F("MultiMaster") : F("SingleMaster")) << L_endl;
 		}
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
@@ -235,14 +236,14 @@ const __FlashStringHelper * showErr(Mix_Valve::MV_Status err) { // 1-4 errors, 5
 		us_heatRelay.clear();
 		us_coolRelay.clear();
 		return F("US TS Failed");	
-  case Mix_Valve::MV_DS_TS_FAILED:
+	case Mix_Valve::MV_DS_TS_FAILED:
 		ds_heatRelay.clear();
 		ds_coolRelay.clear();
 		return F("DS TS Failed");
 	case Mix_Valve::MV_TS_FAILED:
 		us_heatRelay.clear();
 		us_coolRelay.clear();		
-    ds_heatRelay.clear();
+		ds_heatRelay.clear();
 		ds_coolRelay.clear();
 		return F("US/DS TS Failed");
 	default:

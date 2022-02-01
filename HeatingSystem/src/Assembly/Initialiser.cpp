@@ -57,7 +57,7 @@ namespace Assembly {
 
 	void Initialiser::initialize_Thick_Consoles() {
 		initialize_Thin_Consoles();
-		_hs._prog_register_set.setRegister(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
+		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
 		for (auto& rc : _hs.thickConsole_Arr) {
 			auto modeFlags = hs().remoteKeypadArr[consoleIndex].consoleMode();
@@ -96,7 +96,7 @@ namespace Assembly {
 		auto id = 0;
 		for (auto& ts : hs().tempController().slaveConsole_TSArr) {
 			auto console_mode = OLED_Thick_Display::ModeFlags(hs()._thinConsole_Arr[id].consoleMode());
-			if (console_mode.is(OLED_Thick_Display::e_LCD)) {
+			if (console_mode.is(OLED_Thick_Display::e_LCD) || !console_mode.is(OLED_Thick_Display::e_MASTER)) {
 				failed |= ts.setHighRes();
 			}
 			++id;

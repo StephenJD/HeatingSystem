@@ -119,6 +119,7 @@ void sendSlaveIniData() {
 }
 
 void sendDataToRemotes() {
+  auto lock = all_registers.getLock();
   i2C.write(DS_CONSOLE_I2C_ADDR, R_REQUESTING_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_REQUESTING_ROOM_TEMP));
   i2C.write(US_CONSOLE_I2C_ADDR, R_REQUESTING_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_REQUESTING_ROOM_TEMP));
   i2C.write(FL_CONSOLE_I2C_ADDR, R_REQUESTING_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_REQUESTING_ROOM_TEMP));
@@ -126,16 +127,19 @@ void sendDataToRemotes() {
 
 void sendDataToProgrammer() {
   Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
+  auto lock = all_registers.getLock();
   i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_ROOM_TEMP, 5, rem_registers.reg_ptr(R_ROOM_TEMP));
 }
 
 void requestDataFromRemotes() {
+  auto lock = all_registers.getLock();
   i2C.read(DS_CONSOLE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_ROOM_TEMP));
   i2C.read(US_CONSOLE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + R_DISPL_REG_SIZE + R_ROOM_TEMP));
   i2C.read(FL_CONSOLE_I2C_ADDR, R_ROOM_TEMP, 5, all_registers.reg_ptr(remRegStart + 2 * R_DISPL_REG_SIZE + R_ROOM_TEMP));
 }
 
 void requestDataFromProgrammer() {
+  auto lock = all_registers.getLock();
   i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_REQUESTING_ROOM_TEMP, 5, rem_registers.reg_ptr(R_REQUESTING_ROOM_TEMP));
 }
 

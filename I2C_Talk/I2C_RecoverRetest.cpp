@@ -88,9 +88,13 @@ namespace I2C_Recovery {
 			logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
 #endif
 			if (recoveryWasAttempted()) {
-#ifdef DEBUG_RECOVER
-				if (I_I2Cdevice_Recovery::I2C_RETRIES - _retries > 2) logger() << L_time << L_tabs << F("Max Strategy") << maxStrategyUsed << I_I2Cdevice_Recovery::I2C_RETRIES - _retries << recoveryTime
-					 << device().runSpeed() << L_hex << device().getAddress() << L_flush;
+#ifdef REPORT_RECOVER
+				if (I_I2Cdevice_Recovery::I2C_RETRIES - _retries > 0) {
+					logger() << L_time << L_hex << F("Recovered 0x") << device().getAddress() << L_dec << F(" Max Strategy: ") << maxStrategyUsed 
+						<< F(" Retries: ") << I_I2Cdevice_Recovery::I2C_RETRIES - _retries
+						<< F(" took(us): ") << recoveryTime
+						<< F(" Freq: ") << device().runSpeed()  << L_endl;
+				}
 #endif
 				auto thisMaxStrategy = maxStrategyUsed;
 				if (_timeoutFunctor) (*_timeoutFunctor).postResetInitialisation();
@@ -103,10 +107,13 @@ namespace I2C_Recovery {
 			if (device().getAddress() == abs(_deviceWaitingOnFailureFor10Mins)) _deviceWaitingOnFailureFor10Mins = 0;
 		} else if (_retries > 0) {
 #ifdef REPORT_RECOVER
-			logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
+			logger() << L_time << F("tryReadWriteAgain(") << I_I2Cdevice_Recovery::I2C_RETRIES - _retries << F(") : device 0x") << L_hex << device().getAddress() << L_dec << I2C_Talk::getStatusMsg(status) << F(" Delay: ") << device().i2C().getAddressDelay() << " at freq : " << device().runSpeed() << L_endl;
+			//status = device().testDevice();
+			//logger() << L_time << F("\t test") << I2C_Talk::getStatusMsg(status) << L_endl;
 #endif
-			--_retries;
 			strategyStartTime = micros();
+			--_retries;
+			//if (status <= _StopMarginTimeout) slowdown(); // never fixes the problem!
 			restart("");
 			recoveryTime += micros() - strategyStartTime;
 			return true;

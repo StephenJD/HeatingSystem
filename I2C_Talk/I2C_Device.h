@@ -98,7 +98,7 @@ public:
 class I_I2Cdevice_Recovery : public I_I2Cdevice { // cannot be constexpr because of use of non-const class static in constructors
 public:
 	static constexpr decltype(millis()) DISABLE_PERIOD_ON_FAILURE = 60000; // 60 secs
-	static constexpr auto I2C_RETRIES = 20;
+	static constexpr auto I2C_RETRIES = 5; // Rarely more than 3, never more than 5.
 
 	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice(addr), _recover(&recover) { set_recover = _recover; 
 	//logger() << F("I_I2Cdevice_Recovery done for 0x") << L_hex << addr << L_endl;

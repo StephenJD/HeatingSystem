@@ -35,11 +35,12 @@ namespace client_data_structures {
 			return &_name_mode;
 		case e_pos:
 			if (canDo) {
-				auto mode = runTimeData().getReg(Mix_Valve::R_MODE);
+				auto reg = runTimeData().registers();
+				auto mode = reg.get(Mix_Valve::R_MODE);
 				if (mode == Mix_Valve::e_NewReq || mode == Mix_Valve::e_Wait)
-					_pos.val = runTimeData().getReg(Mix_Valve::R_COUNT);
+					_pos.val = reg.get(Mix_Valve::R_COUNT);
 				else
-					_pos.val = runTimeData().getReg(Mix_Valve::R_VALVE_POS);
+					_pos.val = reg.get(Mix_Valve::R_VALVE_POS);
 			}
 			return &_pos;
 		case e_flowTemp:

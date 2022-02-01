@@ -74,7 +74,7 @@ namespace Assembly {
 			auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + OLED_Thick_Display::R_DISPL_REG_SIZE * index;
 			zoneArr[index].initialise(
 				zone
-				, *_prog_registers.reg_ptr(remoteTS_register)
+				, *i2c_registers::RegAccess(_prog_registers).ptr(remoteTS_register)
 				, relayArr[zone.rec().callRelay]
 				, thermalStore
 				, mixValveControllerArr[zone.rec().mixValve]
@@ -126,13 +126,14 @@ namespace Assembly {
 
 		auto displIndex = 0;
 		for (auto& ts : slaveConsole_TSArr) {
-			auto consoleMode = _prog_registers.getRegister(RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_MODE) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
+			auto reg = i2c_registers::RegAccess(_prog_registers);
+			auto consoleMode = reg.get(RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_MODE) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
 			if (consoleMode != 1 /*e_MASTER*/) {
 				auto remoteTS_register = (RC_REG_MASTER_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
 				ts.readTemperature();
 				auto roomTemp = ts.get_fractional_temp();
-				_prog_registers.setRegister(remoteTS_register, roomTemp >> 8);
-				_prog_registers.setRegister(remoteTS_register + 1, uint8_t(roomTemp));
+				reg.set(remoteTS_register, roomTemp >> 8);
+				reg.set(remoteTS_register + 1, uint8_t(roomTemp));
 			}
 			//logger() << L_time << "TC::slaveConsole_TSArr[" << displIndex << "] Mode: " << consoleMode << " Temp: " << ts.get_temp() << L_endl;
 			++displIndex;
@@ -142,6 +143,8 @@ namespace Assembly {
 			//logger() << L_time << "Check BB" << L_endl;
 			backBoiler.check();
 			checkZones(checkPreHeat);
+			//auto& i2c = tempSensorArr[0].i2C();
+			//if (i2c.getAddressDelay() < 1000) i2c.setAddressDelay(i2c.getAddressDelay() + 10);
 		}
 
 		for (auto & mixValveControl : mixValveControllerArr) {

@@ -63,7 +63,7 @@ public:
 private:
 	void clearDisplay();
 	void startDisplaySleep();
-	void stopDisplaySleep();
+	void wakeDisplay();
 	const uint8_t* getFont(bool bold = false);
 	void changeMode(int keyCode);
 	void changeValue(int keyCode);

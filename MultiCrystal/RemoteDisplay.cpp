@@ -34,11 +34,20 @@ namespace HardwareInterfaces {
 	}
 
 	void RemoteDisplay::sendToDisplay() {
-		//logger() << L_time << F("Write Remote Display device 0x") << L_hex << getAddress() << L_endl;
-		auto rem_error = displ().checkI2C_Failed();
-		//auto rem_error = _OK;
+		//logger() << L_endl << L_time << F("Write Remote Display device 0x") << L_hex << getAddress() << L_endl;
+		//auto rem_error = displ().checkI2C_Failed();
+		
+		//auto rem_error = testDevice();
+
+		auto rem_error = _OK;
 		if (rem_error != _disabledDevice) {
+			i2C().setI2CFrequency(runSpeed());
+			i2C().begin();
+			uint8_t clearInt[] = { 0,0 };
+			I_I2Cdevice::write(0x04, 2, clearInt);
+
 			if (rem_error) {
+				logger() << L_time << F("Restarting RemoteDisplay device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(rem_error) << L_endl;
 				rem_error = initialiseDevice();
 				logger() << L_time << F("Restarted RemoteDisplay device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(rem_error) << L_endl;
 			}
@@ -46,6 +55,7 @@ namespace HardwareInterfaces {
 			displ().setCursor(0, 0);
 			//displ().clear();
 			displ().print(buff());
+			//I_I2Cdevice::write(0x04, 2, I2C_Talk::toBigEndian(_key_mask_16)());
 			//logger() << L_time << F("Write Remote Done device 0x") << L_hex << getAddress() << L_endl;
 		}
 	}

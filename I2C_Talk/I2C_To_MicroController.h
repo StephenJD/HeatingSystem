@@ -15,17 +15,13 @@ namespace HardwareInterfaces {
 		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers) : I2C_To_MicroController(recover, prog_registers, 0, 0, 0) {}
 		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers, int address, int regOffset, unsigned long* timeOfReset_mS);
 		// Queries
-		uint8_t getRawReg(int reg) const { return _localRegisters->getRegister(reg); }
-		uint8_t getReg(int reg) const { return getRawReg(_regOffset + reg); }
 		void waitForWarmUp() const;
 
 		// Modifiers
 		I2C_Talk_ErrorCodes::Error_codes testDevice() override;
 		void initialise(int address, int regOffset, unsigned long& timeOfReset_mS);
-		void setRawReg(int reg, uint8_t value) { _localRegisters->setRegister( reg, value); }
-		void setReg(int reg, uint8_t value) { setRawReg(_regOffset + reg, value); }
-		bool updateReg(int reg, uint8_t value) { return _localRegisters->updateRegister(_regOffset + reg, value); }
-		uint8_t* regPtr(int reg) { return _localRegisters->reg_ptr(_regOffset + reg); }
+		i2c_registers::RegAccess registers() const { return { *_localRegisters,_regOffset }; }
+		i2c_registers::RegAccess rawRegisters() const { return { *_localRegisters,0 }; }
 
 	protected:
 		uint8_t _regOffset = 0;

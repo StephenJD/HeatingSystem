@@ -28,6 +28,7 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 //#define DEBUG_TALK
 //#define DEBUG_SPEED_TEST
 //#define DEBUG_RECOVER
+#define DEBUG_REGISTERS
 #define REPORT_RECOVER
 //#define SHOW_TWI_DEBUG
 //#define SHOW_TWI_TIMINGS
@@ -39,6 +40,7 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 #define I2C_EEPROM_PAGESIZE 32
 constexpr uint32_t I2C_EEPROM_WRITE_DELAY_uS = 5000;
 constexpr uint32_t I2C_MULTI_MASTER_DELAY_uS = 500;
+constexpr uint32_t I2C_SINGLE_MASTER_DELAY_uS = 10;
 
 namespace I2C_Recovery {
 	class I2C_Recover;
@@ -49,7 +51,7 @@ public:
 	// Basic Usage //
 	enum {_single_master = 255, _no_address = 255};
 	static int constexpr SPEED_TEST_INITIAL_STOP_TIMEOUT = 2;
-	static int constexpr WORKING_STOP_TIMEOUT = 50;
+	static int constexpr WORKING_STOP_TIMEOUT = 200;
 
 	// No point in being constexpr as that implies an immutable object for which wire_port cannot be set.
 	I2C_Talk(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000 ) : I2C_Talk(_single_master, wire_port, max_I2Cfreq) {}
@@ -82,6 +84,10 @@ public:
 	uint8_t stopMargin() const {return _stopMargin_uS;}
 	uint32_t slaveByteProcess() const {return _slaveByteProcess_uS;}
 	void setStopMargin(uint8_t margin);
+
+	uint16_t getAddressDelay() const { return _addressDelay; }
+	void setAddressDelay(uint16_t delay) {  _addressDelay = delay; }
+
 	static auto getStatusMsg(int errorCode) -> const __FlashStringHelper *;
 	static uint16_t fromBigEndian(const uint8_t* byteArr) { return (byteArr[0] << 8) + byteArr[1]; }
 	typedef const uint8_t Bytes[2];
@@ -161,12 +167,13 @@ private:
 	virtual void setProcessTime() {}
 	virtual void synchroniseWrite() {}
 
-	uint32_t _lastWrite = 0;
+	mutable uint32_t _lastWrite = 0;
 	int32_t _max_i2cFreq = (VARIANT_MCK / 36);
 	int32_t _i2cFreq = 100000;
 	uint32_t _slaveByteProcess_uS = 5000; // timeouts saved here, so they can be set before Wire has been initialised.
 	uint32_t _busRelease_uS = 1000;
 	TwoWire * _wire_port = 0;
+	mutable uint16_t _addressDelay = 0;
 	bool _isMaster = true;
 	uint8_t _stopMargin_uS = 3;
 	uint8_t _myAddress = _single_master;

@@ -136,6 +136,7 @@ void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
 		auto consoleMode = OLED_Thick_Display::ModeFlags(remote.consoleMode());
 		if (consoleMode.is(OLED_Thick_Display::e_LCD)) {
 			activeField->setFocusIndex(consoleIndex);
+			//logger() << L_endl << L_time << "Read Remote Keybd" << L_endl;
 			if (remote.processKeys() || displayHasChanged) {
 				remote.refreshDisplay();
 				displayHasChanged = true;

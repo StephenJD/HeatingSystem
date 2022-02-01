@@ -82,8 +82,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Zone Preheat", "..\..\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "remoteKeypad", "Keypad\examples\remoteKeypad\remoteKeypad.vcxproj", "{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EEPROM_Example", "EEPROM\examples\EEPROM_rtc_Example\EEPROM_rtc_Example.vcxproj", "{6CDFC510-4775-4459-8938-9931F8DA1C51}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StdLogger", "..\..\VS_Projects\Std_Logger\StdLogger.vcxproj", "{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MiniCore", "MiniCore", "{A3470CF9-2D34-49DF-94B6-933400C72FCE}"
@@ -94,6 +92,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MiniCore", "MiniCore", "{A3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SJD Modified", "SJD Modified", "{7452347B-7166-4353-B604-5735B16AC9E5}"
 	ProjectSection(SolutionItems) = preProject
+		Logging\examples\SD_Test\SD_Test.ino = Logging\examples\SD_Test\SD_Test.ino
 		..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c = ..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c
 		..\..\SJD Modified Core Librarys\Wire_SAM\Wire.cpp = ..\..\SJD Modified Core Librarys\Wire_SAM\Wire.cpp
 	EndProjectSection
@@ -422,16 +421,6 @@ Global
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x64.ActiveCfg = Release|Win32
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.ActiveCfg = Release|Win32
 		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.Build.0 = Release|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|ARM.ActiveCfg = Debug|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|x64.ActiveCfg = Debug|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|x86.ActiveCfg = Debug|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Debug|x86.Build.0 = Debug|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Release|ARM.ActiveCfg = Release|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Release|ARM64.ActiveCfg = Release|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Release|x64.ActiveCfg = Release|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Release|x86.ActiveCfg = Release|Win32
-		{6CDFC510-4775-4459-8938-9931F8DA1C51}.Release|x86.Build.0 = Release|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Debug|ARM.ActiveCfg = Debug|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Debug|x64.ActiveCfg = Debug|x64

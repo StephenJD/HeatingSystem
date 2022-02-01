@@ -235,7 +235,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 
 		// Algorithm
 
-		//Serial.print("Multi-Crystal Begin() Remote at 0x"); Serial.println(_address,HEX);
+		logger() << F("Multi-Crystal Begin() Remote at 0x") << L_hex << _address << L_endl;
 		_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed()); // non-recovery read/writes
 		_errorCode = 1;
 		hasFailed = setIOCON() // 2
@@ -581,6 +581,14 @@ uint8_t MultiCrystal::pulseEnable(void) { // this function sends the data to the
 		//if (_data[0] & 0x81) {
 		//	logger() << "Bad Data: " << _data[0] << " Masked with" << ~_key_mask[0] << L_endl;
 		//}
+		//error = _i2C_device->testDevice();
+		//if (error) {
+			//logger() << L_time << "MultiCrystal::pulseEnable test device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << L_endl;
+		//}
+		//delayMicroseconds(10);
+		//uint8_t clearInt[] = { 0,0 };
+		//_i2C_device->write(GPINTEN,2, clearInt);
+
 		if (isBport) { // enable after data written
 			error = _i2C_device->write(GPIOA,2,_data); // 0 = success
 		} else {
@@ -588,12 +596,16 @@ uint8_t MultiCrystal::pulseEnable(void) { // this function sends the data to the
 			if (error == _OK) error = _i2C_device->write(GPIOA,1,&_data[0]);
 		}
 		setControl(_enable_pin, LOW); // disable
+		//delayMicroseconds(10);
 		if (isBport) {
 			if (error == _OK) error = _i2C_device->write(GPIOB,1,&_data[1]);
 		} else {
 			if (error == _OK) error = _i2C_device->write(GPIOA,1,&_data[0]);
 		}
-		if (error) logger() << L_time << "MultiCrystal::pulseEnable device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << " at freq: " << L_dec << _i2C_device->i2C().getI2CFrequency() << L_endl;
+		//_i2C_device->write(GPINTEN, 2, I2C_Talk::toBigEndian(_key_mask_16)());
+		//delayMicroseconds(10);
+		//if (error) 
+			//logger() << "\t\tMultiCrystal::pulseEnable DONE device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << " at freq: " << L_dec << _i2C_device->i2C().getI2CFrequency() << L_endl;
 	}
 	return error;
 }
@@ -642,7 +654,7 @@ void MultiCrystal::setDataBit(uint8_t data_channel, uint8_t value) {
 
 uint8_t MultiCrystal::checkI2C_Failed() {
 	if (_i2C_device->reEnable() == _OK) {
-		//logger() << "checkI2C_Failed? ..." << L_endl;
+		logger() << L_time << "checkI2C_Failed? ..." << L_endl;
 		uint8_t error = _i2C_device->read(GPINTEN, 2, _data); // recovery-Check GPINTEN is correct
 		uint16_t thisData = I2C_Talk::fromBigEndian(_data);
 		if (error == _OK) {
@@ -650,8 +662,9 @@ uint8_t MultiCrystal::checkI2C_Failed() {
 				logger() << L_time << F("Remote Display checkI2C device 0x") << L_hex << _i2C_device->getAddress() << " Wrong GPINTEN: 0x" << thisData << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
 				error = _I2C_ReadDataWrong;
 			} else {
-				//logger() << L_time << F("Remote Display Read OK.") << L_endl;
+				logger() << L_time << F("Remote Display Read GPINTEN(0x4) OK.") << L_endl;
 				error = _i2C_device->write(IODIR, 2, _key_mask); // recovery
+				logger() << L_time << F("Remote Display write IODIR(0x0) done:") << I2C_Talk::getStatusMsg(error) << L_endl;
 			}
 		} else logger() << L_time << F("Remote Display checkI2C device 0x") << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(error) << L_endl;
 		return error;
@@ -682,34 +695,37 @@ uint16_t MultiCrystal::readI2C_keypad() {
 	int16_t gpio = 0;
 	if (_i2C_device->isEnabled()) {
 		//logger() << "readI2C_keypad" << L_endl;
+		//_i2C_device->I_I2Cdevice::write(GPINTEN, 2, I2C_Talk::toBigEndian(_key_mask_16)()); // non-recovery.
 		auto gpioErr = _i2C_device->read_verify_2bytes(GPIOA, gpio, CONSECUTIVE_COUNT, MAX_TRIES, IOPIN_CONNECTED_TO_INTA); // non-recovery.
 		//auto gpioErr = _i2C_device->read(GPIOA, 2, _data); // recovery.
 		if (gpioErr) {
-			//logger() << L_time << "readI2C_keypad Error Reading GPIO device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
+			logger() << L_time << "readI2C_keypad Error Reading GPIO device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(gpioErr) << " at " << L_dec << _i2C_device->runSpeed() << L_endl;
 			checkI2C_Failed(); // Recovery
 		} else {
 			if (gpio) { 
-				//logger() << L_time << "readI2C_keypad Got gpio" << L_endl;
+				logger() << L_time << "readI2C_keypad Got gpio" << L_endl;
 				//_i2C_device->i2C().setI2CFrequency(_i2C_device->runSpeed());
 				//_errorCode = _i2C_device->read(INTCAP, 2, _data); // recoverY. Reading INTCAP clears INT, but INTCAP retains last INT state.
 				_errorCode = _i2C_device->read_verify_2bytes(INTCAP, keyPressed, CONSECUTIVE_COUNT, MAX_TRIES, _key_mask_16); // non-recovery to reduce frequency of error msgs. Reading INTCAP clears INT, but INTCAP retains last INT state.
 				if (_errorCode) { 
-					//logger() << L_time << "readI2C_keypad Error Reading INTCAP device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
+					logger() << L_time << "readI2C_keypad Error Reading INTCAP device 0x" << L_hex << _i2C_device->getAddress() << I2C_Talk::getStatusMsg(_errorCode) << L_endl;
 					keyPressed = 0;
 				} else { // KeyPressed is masked with 0xE100 (RUD0 000L 0000 0000)
 					if (keyPressed == _key_mask_16) return 0;
 					if (keyPressed && checkI2C_Failed()) { // Recovery
-						//logger() << L_time << "r eadI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed << L_endl;
+						logger() << L_time << "readI2C_keypad Check Failed device 0x" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed << L_endl;
 						keyPressed = 0;
 					} else if (keyPressed & 0x8100) {
 						/* Non-existant keys often come in two-s or threes, indicating this is a software problem, rather than coincidental bad reception.
 						*/
 						//if (_i2C_device->runSpeed() > 10000) _i2C_device->set_runSpeed(static_cast<long>(_i2C_device->runSpeed() * 0.8));
-						//logger() << L_time << L_tabs << "readI2C_keypad nonexistant Key" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed /*<< " Slowed to: "*/ << L_dec << _i2C_device->runSpeed() << L_endl;
+						logger() << L_time << L_tabs << "readI2C_keypad nonexistant Key" << L_hex << _i2C_device->getAddress() << " Key: 0x" << (uint16_t)keyPressed /*<< " Slowed to: "*/ << L_dec << _i2C_device->runSpeed() << L_endl;
 						keyPressed = 0;
 					}
 				}
 			}
+			//else logger() << F("readI2C_keypad, No Key") << L_endl;
+
 		}
 	}
 	return keyPressed;

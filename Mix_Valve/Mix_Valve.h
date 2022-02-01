@@ -19,7 +19,10 @@
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 #include <Arduino.h>
 #include <EEPROM_RE.h>
+#include <I2C_Registers.h>
 //class EEPROMClass;
+
+extern i2c_registers::I_Registers& mixV_registers;
 
 namespace HardwareInterfaces {
 	class Pin_Wag;
@@ -78,13 +81,13 @@ public:
 
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
 	void begin(int defaultFlowTemp);
-	uint8_t getReg(int reg) const;
 	const __FlashStringHelper* name();
 	MV_Status check_flow_temp(bool programmerConnected);
 	void setDefaultRequestTemp();
 private:
 	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
-	void setReg(int reg, uint8_t value);
+	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
+
 	//friend void testMixer();
 	//friend void testSlave();
 	//friend void printModes();

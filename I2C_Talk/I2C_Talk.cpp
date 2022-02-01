@@ -298,14 +298,16 @@ Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false 
 	auto status = _wire_port == 0 ? _I2C_NotBegun  : validAddressStatus(deviceAddr);
 	if (status == _OK) {
 #ifndef ZPSIM
-		if (isMultiMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
+		if (isMultiMaster()) {
+			while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
+		}
 #endif
 		//logger() << "beginTrans expir: " << micros() - _exec_time << L_endl; _exec_time = micros();
 		while (!hasExpired(_lastWrite + I2C_EEPROM_WRITE_DELAY_uS)) {
 			//logger() << "beginTrans WRITE_DELAY: " << micros() - _exec_time << L_endl; _exec_time = micros();
 			_wire().beginTransmission((uint8_t)deviceAddr);
 			// NOTE: this puts it in slave mode. Must re-begin to send more data.
-			status = endTransmission();
+			status = static_cast<I2C_Talk_ErrorCodes::Error_codes>(_wire().endTransmission());
 			if (status == _OK) break;
 			yield(); // may be defined for co-routines
 		}
@@ -318,7 +320,12 @@ Error_codes I2C_Talk::endTransmission() const {
 	//auto _exec_time = micros();
 	//if (isMultiMaster()) while (!hasExpired(_lastWrite + I2C_MULTI_MASTER_DELAY_uS));
 	//logger() << "endTrans wait: " << micros() - _exec_time << L_endl; _exec_time = micros();
+#ifndef ZPSIM
+	while (!hasExpired(_lastWrite + _addressDelay));
+#endif
 	auto status = static_cast<I2C_Talk_ErrorCodes::Error_codes>(_wire().endTransmission());
+	_lastWrite = micros();
+
 #ifdef DEBUG_TALK
 	if (status >= _Timeout) {
 		logger() << F("_wire().endTransmission() returned ") << status << getStatusMsg(status) << L_endl;
