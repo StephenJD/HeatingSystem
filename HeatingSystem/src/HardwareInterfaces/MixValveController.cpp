@@ -56,17 +56,21 @@ namespace HardwareInterfaces {
 			errCode |= writeToValve(Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
 			errCode |= writeToValve(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
 			errCode |= writeToValve(Mix_Valve::R_MULTI_MASTER_MODE, _is_multimaster);
+			if (errCode) return errCode;
+
 			auto reg = registers();
 			reg.set(Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
 			reg.set(Mix_Valve::R_RATIO, 30);
 			reg.set(Mix_Valve::R_FROM_TEMP, 55);
 			reg.set(Mix_Valve::R_FLOW_TEMP, 55);
 			reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
-			write_verify(reg.get(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_STATUS, reg.ptr(Mix_Valve::R_STATUS));
+			errCode = write_verify(reg.get(Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_STATUS, reg.ptr(Mix_Valve::R_STATUS));
 			if (errCode == _OK) {
 				auto rawReg = rawRegisters();
 				auto newIniStatus = rawReg.get(R_SLAVE_REQUESTING_INITIALISATION);
+				//logger() << L_time << "SendMixIni. IniStatus was:" << newIniStatus;
 				newIniStatus &= ~requestINI_flag;
+				//logger() << " New IniStatus:" << newIniStatus << L_endl;
 				rawReg.set(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
 			}
 			readRegistersFromValve();
@@ -87,6 +91,11 @@ namespace HardwareInterfaces {
 	bool MixValveController::check() { // called once per second
 		if (reEnable() == _OK) {
 			auto mixIniStatus = rawRegisters().get(R_SLAVE_REQUESTING_INITIALISATION);
+			if (mixIniStatus > ALL_REQUESTING) {
+				logger() << L_time << "Bad Mix IniStatus : " << mixIniStatus << L_endl;
+				mixIniStatus = ALL_REQUESTING;
+				rawRegisters().set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
+			}
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
 			if (mixIniStatus & requestINI_flag) sendSlaveIniData(requestINI_flag);
 			readRegistersFromValve();

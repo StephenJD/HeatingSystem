@@ -3,20 +3,28 @@
 #include <I2C_Device.h>
 #include <I2C_Recover.h>
 #include <I2C_Talk.h>
-//#include <Logging.h>
+
+#define DEBUG_DEVICE
+#ifdef DEBUG_DEVICE
+#include <Logging.h>
+namespace arduino_logger {
+	Logger& logger();
+}
+using namespace arduino_logger;
+#endif
 
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
 //using namespace arduino_logger;
 
-auto I_I2Cdevice::read_verify_2bytes(int registerAddress, int16_t & data, int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
+auto I_I2Cdevice::read_verify_2bytes(int registerAddress, uint16_t & data, int requiredConsecutiveReads, int canTryAgain, uint16_t dataMask)->Error_codes {
 	// I2C devices use big-endianness: MSB at the smallest address: So a two-byte read is [MSB, LSB].
 	// But Arduino uses little endianness: LSB at the smallest address: So a uint16_t is [LSB, MSB].
 	// A two-byte read must reverse the byte-order.
 	i2C().setI2CFrequency(runSpeed());
 	uint8_t dataBuffer[2];
 	Error_codes errorCode; // Non-Recovery
-	int16_t newRead;
+	uint16_t newRead;
 	data = int16_t(0xAAAA); // 1010 1010 1010 1010
 	auto needAnotherGoodReading = requiredConsecutiveReads;
 	do {
@@ -51,14 +59,18 @@ auto I_I2Cdevice::read_verify_1byte(int registerAddress, uint8_t & dataBuffer, i
 		errorCode = I_I2Cdevice::read(registerAddress, 1, &newRead);
 		newRead &= dataMask;
 		if (!errorCode) {
+#ifdef DEBUG_DEVICE
+			if (getAddress() == 0x13) logger() << "read_verify_1byte Reg: " << registerAddress << " :" << newRead << L_endl;
+#endif
 			if (newRead == dataBuffer) --needAnotherGoodReading;
 			else {
 				needAnotherGoodReading = requiredConsecutiveReads;
-				//logger() << "read_verify_1byte 0x" << L_hex << newRead << L_endl;
 				dataBuffer = newRead;
 			}
 		} 
-		//else logger() << "read_verify_1byte" << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+#ifdef DEBUG_DEVICE
+		else if (getAddress() == 0x13) logger() << "read_verify_1byteReg: " << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+#endif
 		--canTryAgain;
 	} while (canTryAgain >= needAnotherGoodReading && canTryAgain && needAnotherGoodReading > 1);
 	if (!errorCode) errorCode = needAnotherGoodReading > 1 ? _I2C_ReadDataWrong : _OK;

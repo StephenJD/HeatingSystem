@@ -10,6 +10,12 @@
 #include <SPI.h>
 #endif
 
+#include <Logging.h>
+namespace arduino_logger {
+    Logger& logger();
+}
+using namespace arduino_logger;
+
 // Declaration for SSD1306 display connected using software SPI (default case):
 constexpr uint8_t OLED_MOSI = 11;  // DIn
 constexpr uint8_t OLED_CLK = 13;
@@ -34,13 +40,13 @@ enum SlaveRequestIni {
     , MV_DS_REQUESTING_INI = 2
     , RC_US_REQUESTING_INI = 4
     , RC_DS_REQUESTING_INI = 8
-    , RC_F_REQUESTING_INI = 16
-    , ALL_REQUESTING = (RC_F_REQUESTING_INI * 2) - 1
+    , RC_FL_REQUESTING_INI = 16
+    , ALL_REQUESTING = (RC_FL_REQUESTING_INI * 2) - 1
 }; 
 auto REQUESTING_INI = RC_US_REQUESTING_INI;
 
-OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int address, int regOffset, unsigned long* timeOfReset_mS)
-    :I2C_To_MicroController(recover, my_registers, address, regOffset, timeOfReset_mS)
+OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int regOffset, unsigned long* timeOfReset_mS)
+    :I2C_To_MicroController(recover, my_registers, other_microcontroller_address, regOffset, timeOfReset_mS)
     , _tempSensor{ recover }
     , _display(OLED_CS, OLED_DC, OLED_RESET)
     {}
@@ -52,11 +58,8 @@ void OLED_Thick_Display::begin() { // all registers start as zero.
     speedTest.fastest();
     auto reg = registers();
     _tempSensor.initialise(reg.get(R_ROOM_TS_ADDR));
-    //auto lock = getLock();
     reg.set(R_DISPL_REG_OFFSET, NO_REG_OFFSET_SET);
-    auto mode = ModeFlags(reg.get(R_MODE));
-    mode.set(e_ENABLE_KEYBOARD).setValue(5);
-    reg.set(R_MODE, uint8_t(mode));
+    ModeFlagsRef(*reg.ptr(R_MODE)).set(e_ENABLE_KEYBOARD).setValue(5); // wake-time
     _remoteKeypad.set_console_mode(*reg.ptr(R_MODE));
     _display.begin();
     clearDisplay();
@@ -71,19 +74,16 @@ void OLED_Thick_Display::setMyI2CAddress() {
         i2C().setAsMaster(DS_CONSOLE_I2C_ADDR);
         REQUESTING_INI = RC_DS_REQUESTING_INI;
         reg.set(R_ROOM_TS_ADDR, DS_ROOM_TEMPSENS_ADDR);
-        Serial.print(F("DS_CONSOLE 0x"));
     } else if (!digitalRead(6)) {
         i2C().setAsMaster(US_CONSOLE_I2C_ADDR);
         REQUESTING_INI = RC_US_REQUESTING_INI;
         reg.set(R_ROOM_TS_ADDR, US_ROOM_TEMPSENS_ADDR);
-        Serial.print(F("US_CONSOLE 0x"));
     } else if (!digitalRead(7)) {
         i2C().setAsMaster(FL_CONSOLE_I2C_ADDR);
-        REQUESTING_INI = RC_F_REQUESTING_INI;
+        REQUESTING_INI = RC_FL_REQUESTING_INI;
         reg.set(R_ROOM_TS_ADDR, FL_ROOM_TEMPSENS_ADDR);
-        Serial.print(F("FL_CONSOLE 0x"));
-    } else Serial.println(F("Err: None of Pins 5-7 selected."));
-    Serial.println(i2C().address(), HEX);
+    } //else Serial.println(F("Err: None of Pins 5-7 selected."));
+    //Serial.println(i2C().address(), HEX);
 }
 
 void OLED_Thick_Display::sendDataToProgrammer(int regNo) {
@@ -99,17 +99,15 @@ void OLED_Thick_Display::sendDataToProgrammer(int regNo) {
     uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
 #endif
     auto reg = registers();
-    if (ModeFlags(reg.get(R_MODE)).is(e_MASTER) && reg.get(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
-        //auto lock = getLock();
+    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER) && reg.get(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
         //Serial.print(F("Send to Offs ")); Serial.println(reg.get(R_DISPL_REG_OFFSET));
         write(reg.get(R_DISPL_REG_OFFSET) + regNo, 1, reg.ptr(regNo));
     }
 }
 
 void OLED_Thick_Display::refreshRegisters() {
-    //auto lock = getLock();
     auto reg = registers();
-    if (ModeFlags(reg.get(R_MODE)).is(e_MASTER) && reg.get(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
+    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER) && reg.get(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
         _tempSensor.readTemperature();
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;
@@ -129,10 +127,11 @@ void OLED_Thick_Display::refreshRegisters() {
             _dataChanged |= reg.update(R_WARM_UP_ROOM_M10 + i, regVal);
         }
     }
-    else _dataChanged |= ModeFlags(reg.get(R_MODE)).is(e_DATA_CHANGED);
-    ModeFlags(*reg.ptr(R_MODE)).clear(e_DATA_CHANGED);
-    auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP);
-    if (reqTemp && _tempRequest != reqTemp) { // new request sent by programmer
+    else _dataChanged |= ModeFlagsObj(reg.get(R_MODE)).is(e_DATA_CHANGED); // written by programmer
+    ModeFlagsRef(*reg.ptr(R_MODE)).clear(e_DATA_CHANGED);
+    auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP); // might have been set by console. When Prog has read it, it gets set to zero, so might not yet be zero.
+    if (_dataChanged && reqTemp && _tempRequest != reqTemp) { // new request sent by programmer
+        logger() << F("PT") << L_endl;
         _tempRequest = reqTemp;
         reg.set(R_REQUESTING_ROOM_TEMP, 0);
         _dataChanged |= true;
@@ -148,18 +147,17 @@ void OLED_Thick_Display::refreshRegisters() {
 }
 
 uint8_t OLED_Thick_Display::requestRegisterOffsetFromProgrammer() {
-    //auto lock = getLock();
     auto status = _OK;
     auto reg = registers();
-    if (ModeFlags(reg.get(R_MODE)).is(e_MASTER)) {
+    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER)) {
         uint8_t requestsRegisteredWithMaster = 0;
         status = read(R_SLAVE_REQUESTING_INITIALISATION, 1, &requestsRegisteredWithMaster);
-        Serial.print(F("Ini Requests registered 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
+        //Serial.print(F("Ini Requests registered 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
         requestsRegisteredWithMaster |= REQUESTING_INI;
 
         if (status != _OK) status = _I2C_ReadDataWrong;
         else {
-            Serial.print(F("Ini Requests sent 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
+            //Serial.print(F("Ini Requests sent 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
             status = write(R_SLAVE_REQUESTING_INITIALISATION, requestsRegisteredWithMaster);
             if (status != _OK) status = _NACK_during_data_send;
         }
@@ -178,7 +176,6 @@ void OLED_Thick_Display::startDisplaySleep() {
 void OLED_Thick_Display::wakeDisplay() {
     MsTimer2::stop();
     _sleepRow = -1;
-    Serial.println("Wake...");
 }
 
 void OLED_Thick_Display::moveDisplay() {
@@ -205,14 +202,16 @@ void OLED_Thick_Display::changeMode(int keyCode) {
 void OLED_Thick_Display::changeValue(int keyCode) {
     auto increment = keyCode == I_Keypad::KEY_UP ? 1 : -1;
     auto reg = registers();
+    //logger() << F("Key") << L_endl;
     switch (_display_mode) {
     case RoomTemp:
-        if (ModeFlags(reg.get(R_MODE)).is(e_ENABLE_KEYBOARD)) {
+        if (ModeFlagsObj(reg.get(R_MODE)).is(e_ENABLE_KEYBOARD)) {
             _tempRequest += increment;
             reg.set(R_REQUESTING_ROOM_TEMP, _tempRequest);
             sendDataToProgrammer(R_REQUESTING_ROOM_TEMP);
-            Serial.print(F("Rr ")); Serial.println(_tempRequest);
-        }
+            logger() << F("CT") << L_endl;
+        } 
+        else logger() << F("KD") << L_endl;
         break;
     case TowelRail: 
     {
@@ -315,7 +314,7 @@ void OLED_Thick_Display::processKeys() { // called by loop()
 #ifdef ZPSIM
     uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
 #endif
-    if (registers().get(R_DISPL_REG_OFFSET) == NO_REG_OFFSET_SET) {
+    if ( registers().get(R_DISPL_REG_OFFSET) == NO_REG_OFFSET_SET) {
         auto status = requestRegisterOffsetFromProgrammer();
         _display.setCursor(0, 0);
         _display.print(F("Wait for Master"));
@@ -334,7 +333,6 @@ void OLED_Thick_Display::processKeys() { // called by loop()
             refreshRegisters();
         }
         auto key = _remoteKeypad.popKey();
-        if (key > I_Keypad::NO_KEY) Serial.println(key);
         if (key > I_Keypad::NO_KEY) {
             if (key == I_Keypad::KEY_WAKEUP) {
                 wakeDisplay();
@@ -349,7 +347,6 @@ void OLED_Thick_Display::processKeys() { // called by loop()
         }
         if (_dataChanged) displayPage();
         else if (!_remoteKeypad.displayIsAwake() && _sleepRow == -1) {
-            Serial.println("Sleep...");
             startDisplaySleep();
         }
     }

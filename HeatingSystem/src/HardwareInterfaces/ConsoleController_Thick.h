@@ -22,6 +22,7 @@ namespace HardwareInterfaces {
 		void refreshRegisters();
 		bool console_mode_is(int) const;
 		void set_console_mode(uint8_t mode);
+		uint8_t get_console_mode() const;
 		bool hasChanged() {
 			bool changed = _hasChanged; _hasChanged = false; return changed;
 		}

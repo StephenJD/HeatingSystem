@@ -32,15 +32,15 @@ Logger& Logger::operator <<(Flags flag) {
 	case L_time:	logTime(); break;
 	case L_flush:
 		_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
-		*this << " |F|\n";
+		*this << F(" |F|\n");
 		flush();
 		break;
 	case L_endl:
 	{
-		if (_flags & L_allwaysFlush) { *this << " |F|"; } else if ((_flags & L_startWithFlushing) == L_startWithFlushing) { *this << " |SF|"; }
+		if (_flags & L_allwaysFlush) { *this << F(" |F|"); } else if ((_flags & L_startWithFlushing) == L_startWithFlushing) { *this << F(" |SF|"); }
 		auto streamPtr = &stream();
 		do {
-			streamPtr->print("\n");
+			streamPtr->print(F("\n"));
 		} while (mirror_stream(streamPtr));
 		if (_flags & L_allwaysFlush || ((_flags & L_startWithFlushing) == L_startWithFlushing)) flush();
 	}
@@ -95,7 +95,7 @@ Serial_Logger::Serial_Logger(uint32_t baudRate, Flags initFlags) : Logger(initFl
 	Serial.flush();
 	Serial.begin(baudRate);
 	auto freeRam = freeMemory();
-	Serial.print(F("\n\n\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
+	Serial.print(F("\nRAM: ")); Serial.println(freeRam); Serial.flush();
 	if (freeRam < 10) { while (true); }
 #ifdef DEBUG_TALK
 	_flags = L_allwaysFlush;
@@ -106,7 +106,7 @@ Serial_Logger::Serial_Logger(uint32_t baudRate, Clock& clock, Flags initFlags) :
 	Serial.flush();
 	Serial.begin(baudRate);
 	auto freeRam = freeMemory();
-	Serial.print(F("\nSerial_Logger RAM: ")); Serial.println(freeRam); Serial.flush();
+	Serial.print(F("\nRAM: ")); Serial.println(freeRam); Serial.flush();
 	if (freeRam < 10) { while (true); }
 #ifdef DEBUG_TALK
 	_flags = L_allwaysFlush;
@@ -114,10 +114,10 @@ Serial_Logger::Serial_Logger(uint32_t baudRate, Clock& clock, Flags initFlags) :
 }
 
 void Serial_Logger::begin(uint32_t baudRate) { 
-	if (baudRate == 0) Serial.println(F("Baud Rate must be provided"));
+	if (baudRate == 0) Serial.println(F("Baud Rate required"));
 	else {
 		Serial.begin(baudRate);
-		Serial.print(F("Baud Rate: ")); Serial.println(baudRate);
+		//Serial.print(F("Baud Rate: ")); Serial.println(baudRate);
 	}
 }
 

@@ -43,7 +43,8 @@ namespace HardwareInterfaces {
 		keyReading /= keyPadRefV;
 
 		int key = 0;
-		for (; key < sizeof(adc_LocalKey_val) / sizeof(adc_LocalKey_val[0]); ++key) {
+		auto arrSize = int(sizeof(adc_LocalKey_val) / sizeof(adc_LocalKey_val[0]));
+		for (; key < arrSize; ++key) {
 			if (keyReading > adc_LocalKey_val[key]) break;
 		}
 

@@ -47,7 +47,7 @@ public:
 	/// Returns data in Native-endianness, i.e. for Arduino LSB at lowest address.
 	/// Mask applied to device-byte order.
 	/// </summary>
-	auto read_verify_2bytes(int registerAddress, int16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask = 0xFFFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+	auto read_verify_2bytes(int registerAddress, uint16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask = 0xFFFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 
 	/// <summary>
 	/// Non-Recovery

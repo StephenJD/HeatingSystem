@@ -101,9 +101,9 @@ namespace HardwareInterfaces {
 	constexpr uint8_t FL_ROOM_TEMPSENS_ADDR = 0x70;
 	constexpr uint8_t REMOTE_ROOM_TS_ADDR[] = { US_ROOM_TEMPSENS_ADDR, DS_ROOM_TEMPSENS_ADDR, FL_ROOM_TEMPSENS_ADDR };
 
-	constexpr uint8_t US_REMOTE_ADDRESS = 0x24;
-	constexpr uint8_t FL_REMOTE_ADDRESS = 0x25;
-	constexpr uint8_t DS_REMOTE_ADDRESS = 0x26;
+	//constexpr uint8_t US_REMOTE_ADDRESS = 0x24;
+	//constexpr uint8_t FL_REMOTE_ADDRESS = 0x25;
+	//constexpr uint8_t DS_REMOTE_ADDRESS = 0x26;
 	constexpr uint8_t IO8_PORT_OptCoupl = 0x20;
 	constexpr uint8_t IO8_PORT_MixValves = 0x27;
 	constexpr uint8_t IO8_PORT_OptCouplActive = 0;

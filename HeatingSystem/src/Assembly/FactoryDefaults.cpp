@@ -38,9 +38,9 @@ namespace Assembly {
 
 	constexpr R_Display displays_f[] = {
 		{"Main", 0, 16, 20, 16, 250, 70, 3}
-		,{"US", US_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 3}
-		,{"DS", DS_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 3}
-		,{"Flat", FL_REMOTE_ADDRESS, 0, 0, 0, 0, 0, 3}
+		,{"US", US_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, 3}
+		,{"DS", DS_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, 3}
+		,{"Flat", FL_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, 3}
 	};
 
 	constexpr R_Relay relays_f[] = {

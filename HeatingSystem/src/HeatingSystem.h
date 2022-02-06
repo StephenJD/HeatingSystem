@@ -6,8 +6,6 @@
 #include "HardwareInterfaces\LocalDisplay.h"
 #include "HardwareInterfaces\ConsoleController_Thick.h"
 #include <LocalKeypad.h>
-#include <RemoteKeypad.h>
-#include <RemoteDisplay.h>
 #include "HardwareInterfaces\Console_Thin.h"
 #include "HardwareInterfaces\I2C_Comms.h"
 #include <Mix_Valve.h>
@@ -18,7 +16,6 @@
 #include "Assembly\Datasets.h"
 #include "Assembly\HeatingSystemEnums.h"
 #include "Assembly\MainConsoleChapters.h"
-#include "Assembly\ThinConsole_Chapters.h"
 #include "Assembly/Sequencer.h"
 
 //////////////////////////////////////////////////////////
@@ -35,6 +32,7 @@ public:
 	HeatingSystem();
 	void serviceConsoles();
 	void serviceTemperatureController();
+
 	/// <summary>
 	/// Checks Zone Temps, then sets each zone.nextEvent to now.
 	/// </summary>
@@ -64,8 +62,6 @@ public:
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;
-	HardwareInterfaces::RemoteDisplay remDispl[Assembly::NO_OF_REMOTE_DISPLAYS];
-	HardwareInterfaces::RemoteKeypad remoteKeypadArr[Assembly::NO_OF_REMOTE_DISPLAYS];
 	HardwareInterfaces::ConsoleController_Thick thickConsole_Arr[Assembly::NO_OF_REMOTE_DISPLAYS];
 private: 
 	friend Assembly::Initialiser;
@@ -73,8 +69,6 @@ private:
 
 	// Run-time data arrays
 	Assembly::MainConsoleChapters _mainConsoleChapters;
-	Assembly::ThinConsole_Chapters _thinConsole_Chapters;
 	HardwareInterfaces::Console_Thin _mainConsole;
-	HardwareInterfaces::Console_Thin _thinConsole_Arr[Assembly::NO_OF_REMOTE_DISPLAYS];
 	bool _dataHasChanged = true;
 };

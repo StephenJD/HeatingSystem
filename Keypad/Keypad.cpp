@@ -1,7 +1,14 @@
 #include "Keypad.h"
 #include <Timer_mS_uS.h>
-#include <Clock.h>
 #include <Flag_Enum.h>
+
+#include <Logging.h>
+namespace arduino_logger {
+	Logger& logger();
+}
+using namespace arduino_logger;
+
+using namespace flag_enum;
 
 #if defined(__SAM3X8E__)
 	#include <DueTimer.h>
@@ -26,7 +33,7 @@
 
 namespace HardwareInterfaces {
 	
-	enum DisplayModes { e_LCD, e_MASTER, e_ENABLE_KEYBOARD, e_NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
+	enum DisplayModes { e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
 
 	namespace { volatile bool keyQueueLocked = false; }
 	I_Keypad* I_Keypad::_currentKeypad;
@@ -34,23 +41,39 @@ namespace HardwareInterfaces {
 	uint8_t I_Keypad::_readAgain = IDENTICAL_READ_COUNT;
 
 	I_Keypad::I_Keypad(int re_read_interval_mS, int wakeTime_S)
-		: _timeToRead{ re_read_interval_mS }
-		, _wakeTime{ uint8_t(wakeTime_S / 4)}
+		: _keepAwake_mS{ wakeTime_S * 1000UL }
+		, _wakeTime{uint8_t(wakeTime_S / 4)}
 		{ 
-			flag_enum::FE<DisplayModes, 4>(_wakeTime).set(e_ENABLE_KEYBOARD).set(e_LCD);
+			FE<DisplayModes, 4>(_wakeTime).set(e_ENABLE_KEYBOARD);
+			_lapFlags.setValue(re_read_interval_mS);
 		}
 
-	bool I_Keypad::oneSecondElapsed() {
-		bool isNewSecond = clock_().isNewSecond(_lastSecond);
-		if (isNewSecond && _secsToKeepAwake > 0) {
-			--_secsToKeepAwake; // timeSince set to _wakeTime whenever a key is pressed
+	bool I_Keypad::oneSecondElapsed() { // for refreshing display / registers.
+		//logger() << (long)this << L_tabs  << "oneSecondElapsed..." << "Millis:" << millis()<< L_endl;
+		bool prevLapFlag = _lapFlags.is(LAP_EVEN_SECOND);
+		bool isNewSecond = hasLapped(1000, prevLapFlag);
+		if (isNewSecond) {
+			//logger() << L_tabs << "oneSecondElapsed_Now:" << !prevLapFlag << L_endl;
+			_lapFlags.set(LAP_EVEN_SECOND,!prevLapFlag); // alternate even-flag to detect new second
 		}
 		return isNewSecond;
 	}
 
+	void I_Keypad::readKey() {
+		//logger() << (long) this << L_tabs  << F(" readKey...\tMillis:") << millis() << L_endl;
+		bool prevLapFlag = _lapFlags.is(LAP_READ_KEY);
+		bool isTimeToRead = hasLapped(_lapFlags.value(), prevLapFlag); // _lapFlags.value() is the key-read interval
+		if (isTimeToRead) {
+			//logger() << L_tabs << F("readKey_Now: ") << !prevLapFlag << L_endl;
+			_lapFlags.set(LAP_READ_KEY, !prevLapFlag); // timeSince set to _wakeTime whenever a key is pressed
+			startRead();
+		}
+	}
+
 	void I_Keypad::wakeDisplay() {
-		auto consoleMode = flag_enum::FE<DisplayModes,4>(_wakeTime);
-		_secsToKeepAwake = consoleMode.is(e_ENABLE_KEYBOARD) ? consoleMode.value()*4 : 0;
+		auto consoleMode = FE<DisplayModes,4>(_wakeTime);
+		_keepAwake_mS = consoleMode.is(e_ENABLE_KEYBOARD) ? consoleMode.value()*4000 : 0;
+		//logger() << (long)this << L_tabs << "wakeDisplay_Millis:" << millis() << L_endl;
 	}
 
 	void I_Keypad::startRead() {
@@ -110,12 +133,7 @@ namespace HardwareInterfaces {
 		//logIndex = -1;
 	}
 
-	void I_Keypad::readKey() {
-		if (_timeToRead) {
-			startRead();
-			_timeToRead.repeat();
-		}
-	}
+
 
 	I_Keypad::KeyOperation I_Keypad::popKey() { // could be interrupted by a putKey
 		// Lambda

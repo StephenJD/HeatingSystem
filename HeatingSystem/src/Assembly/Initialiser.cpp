@@ -56,11 +56,13 @@ namespace Assembly {
 	}
 
 	void Initialiser::initialize_Thick_Consoles() {
-		initialize_Thin_Consoles();
 		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
 		for (auto& rc : _hs.thickConsole_Arr) {
-			auto modeFlags = hs().remoteKeypadArr[consoleIndex].consoleMode();
+			logger() << L_time << F("RemConsole query[] ") << consoleIndex << L_endl;
+			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[consoleIndex + 1];
+			auto modeFlags = display.rec().timeout;
+			logger() << L_time << F("set_console_mode :") << modeFlags << L_endl;
 			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex]
 				, hs().tempController().towelRailArr[consoleIndex], hs().tempController().zoneArr[Z_DHW]
 				, hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS
@@ -79,7 +81,6 @@ namespace Assembly {
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		_resetI2C.hardReset.initialisationRequired = false;
 		uint8_t status = relayPort().initialiseDevice();
-		initialize_Thin_Consoles(); // Non-critical
 		initialize_Thick_Consoles();
 		status |= initialise_slaveConsole_TempSensors();
 		for (auto& mixValve : hs().tempController().mixValveControllerArr) { 
@@ -95,37 +96,11 @@ namespace Assembly {
 		uint8_t failed = 0;
 		auto id = 0;
 		for (auto& ts : hs().tempController().slaveConsole_TSArr) {
-			auto console_mode = OLED_Thick_Display::ModeFlags(hs()._thinConsole_Arr[id].consoleMode());
-			if (console_mode.is(OLED_Thick_Display::e_LCD) || !console_mode.is(OLED_Thick_Display::e_MASTER)) {
+			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::e_MASTER)) {
 				failed |= ts.setHighRes();
 			}
 			++id;
 		}
-		return failed;
-	}
-
-	uint8_t Initialiser::initialize_Thin_Consoles() {
-		uint8_t failed = 0;
-		logger() << L_time << F("initialize_Thin_Consoles()") << L_endl;
-		auto index = 0;
-		for (auto& kb : _hs.remoteKeypadArr) {
-			logger() << L_time << F("RemConsole query[] ") << index << L_endl;
-			Answer_R<R_Display> display = _hs._hs_queries.q_Consoles[index+1];
-			auto timeout = display.rec().timeout;
-			logger() << L_time << F("set_console_mode :") << timeout << L_endl;
-			kb.set_console_mode(timeout);  // { _OLM_D, _OLM_DK, _OLS_D, _OLS_DK, _LCD_D, _LCD_DK }
-			if (OLED_Thick_Display::ModeFlags(timeout).is(OLED_Thick_Display::e_LCD)) {
-				logger() << L_time << F("popKey ") << L_endl;
-				kb.popKey();
-				logger() << L_time << F("clearKeys ") << L_endl;
-				kb.clearKeys();
-				logger() << L_time << F("initialise remDispl[] ") << index << L_endl;
-				failed |= _hs.remDispl[index].initialiseDevice();
-			}
-			++index;
-		}		
-		
-		logger() << F("\ninitialize_Thin_Consoles() done") << L_endl;
 		return failed;
 	}
 
@@ -135,9 +110,6 @@ namespace Assembly {
 		else if (deviceAddr >= US_CONSOLE_I2C_ADDR && deviceAddr <= FL_CONSOLE_I2C_ADDR) {
 			return hs().thickConsole_Arr[deviceAddr- US_CONSOLE_I2C_ADDR];
 		} 
-		else if (deviceAddr >= US_REMOTE_ADDRESS && deviceAddr <= DS_REMOTE_ADDRESS) {
-			return hs().remDispl[deviceAddr- US_REMOTE_ADDRESS];
-		}
 		else {
 			for (auto & ts : hs().tempController().tempSensorArr) {
 				if (ts.getAddress() == deviceAddr) return ts;

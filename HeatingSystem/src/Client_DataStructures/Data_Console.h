@@ -42,8 +42,8 @@ namespace client_data_structures {
 	/// </summary>
 	class RecInt_Console : public Record_Interface<R_Display> {
 	public:
-		enum streamable { e_name, e_console_options, NO_OF_CONSOLE_MODES = 6};
-		RecInt_Console(RemoteKeypad* remoteKeypadArr, ConsoleController_Thick* thickConsole_Arr);
+		enum streamable { e_name, e_console_options, NO_OF_CONSOLE_MODES = 4};
+		RecInt_Console(ConsoleController_Thick* thickConsole_Arr);
 		I_Data_Formatter* getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter* val) override;
 	private:
@@ -51,10 +51,7 @@ namespace client_data_structures {
 		static const char _OLS_DK[7];
 		static const char _OLM_D[7];
 		static const char _OLM_DK[7];
-		static const char _LCD_D[7];
-		static const char _LCD_DK[7];
 		static const char* _options[NO_OF_CONSOLE_MODES];
-		HardwareInterfaces::RemoteKeypad* _remoteKeypadArr;
 		HardwareInterfaces::ConsoleController_Thick* _thickConsole_Arr;
 		StrWrapper _name;
 		OptionsWrapper _console_options;

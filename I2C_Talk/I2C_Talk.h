@@ -28,8 +28,8 @@ This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByte
 //#define DEBUG_TALK
 //#define DEBUG_SPEED_TEST
 //#define DEBUG_RECOVER
-#define DEBUG_REGISTERS
-#define REPORT_RECOVER
+//#define DEBUG_REGISTERS
+//#define REPORT_RECOVER
 //#define SHOW_TWI_DEBUG
 //#define SHOW_TWI_TIMINGS
 //#define DEBUG_TRY_ALL_SPEEDS

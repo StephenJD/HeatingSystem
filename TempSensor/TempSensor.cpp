@@ -46,7 +46,7 @@ namespace HardwareInterfaces {
 		if (reEnable() == _disabledDevice) return _disabledDevice;
 		constexpr int CONSECUTIVE_COUNT = 2;
 		constexpr int MAX_TRIES = 6;
-		int16_t newTemp; // MSB = units, LSB = fraction
+		uint16_t newTemp; // MSB = units, LSB = fraction
 		_error = read_verify_2bytes(DS75LX_Temp, newTemp, CONSECUTIVE_COUNT, MAX_TRIES); // Non-Recovery
 		checkTemp(newTemp);
 
@@ -71,18 +71,18 @@ namespace HardwareInterfaces {
 		return _error;
 	}
 
-	auto TempSensor::checkTemp(int16_t newTemp)->I2C_Talk_ErrorCodes::Error_codes {
+	auto TempSensor::checkTemp(uint16_t newTemp)->I2C_Talk_ErrorCodes::Error_codes {
 		if (_error == _OK) {
 			auto lsNibble = newTemp & 0x000F;
 			if (lsNibble) {
 				//logger() << L_time << F("Temp LSNibble Error device 0x") << L_hex << getAddress() << " Was: 0x" << lsNibble << L_endl;
 				_error = _I2C_ReadDataWrong;
 			} else {
-				if (_lastGood != 0 && abs(_lastGood - newTemp) > 1280) {
+				if (_lastGood != 0 && abs(_lastGood - int32_t(newTemp)) > 1280) {
 					_error = _I2C_ReadDataWrong;
 					//logger() << L_time << F("Temp Jump Error device 0x") << L_hex << getAddress() << " Was: " << L_dec << _lastGood << F(" Now: ") << newTemp << L_endl;
 				}
-				_lastGood = newTemp;
+				_lastGood = int32_t(newTemp);
 			}
 		}
 		return _error;
@@ -91,7 +91,7 @@ namespace HardwareInterfaces {
 	Error_codes TempSensor::testDevice() { // non-recovery test
 		constexpr int CONSECUTIVE_COUNT = 2;
 		constexpr int MAX_TRIES = 2;
-		int16_t newTemp; // MSB = units, LSB = fraction
+		uint16_t newTemp; // MSB = units, LSB = fraction
 		_error = read_verify_2bytes(DS75LX_Temp, newTemp, CONSECUTIVE_COUNT, MAX_TRIES); // Non-Recovery
 		checkTemp(newTemp);
 		return _error;

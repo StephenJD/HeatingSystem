@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <Timer_mS_uS.h>
+#include <Flag_Enum.h>
 
 namespace HardwareInterfaces {
 	constexpr uint8_t KEY_QUEUE_LENGTH = 3;
@@ -19,14 +20,14 @@ namespace HardwareInterfaces {
 		static constexpr int RE_READ_PERIOD_mS = 5;
 		
 		// Queries
-		bool displayIsAwake() const { return _secsToKeepAwake > 0; }
 		bool keyIsWaiting() const { return keyQueEnd > -1; }
 
 		// Modifiers
 		virtual void startRead(); // for interrupt driven keypads
+		virtual KeyOperation getKeyCode() = 0;
 		void readKey(); // for non-interrupt driven keypads
 		KeyOperation popKey();
-		virtual KeyOperation getKeyCode() = 0;
+		bool displayIsAwake() { return _keepAwake_mS.timeLeft() > 0; }
 		bool oneSecondElapsed();
 		void wakeDisplay();
 		void clearKeys() { keyQueEnd = -1; }
@@ -47,10 +48,9 @@ namespace HardwareInterfaces {
 		static I_Keypad* _currentKeypad;
 		static KeyOperation _prevKey;
 		static uint8_t _readAgain;
-
-		int8_t	_secsToKeepAwake = 30;
-		uint8_t	_lastSecond = 0;
-		Timer_mS _timeToRead;
+		enum LapFlags {LAP_READ_KEY, LAP_EVEN_SECOND};
+		LapTimer_mS _keepAwake_mS;
+		flag_enum::FE_Obj<LapFlags, 2> _lapFlags;
 		uint8_t _wakeTime; // First 4 bits (MSB) are flag-enums for console-mode, last 4 is wake-time/4
 	};
 }

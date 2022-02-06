@@ -38,7 +38,7 @@ namespace I2C_Recovery {
 		constexpr int NO_OF_TESTS = 6;
 		if (device().getStatus() == _disabledDevice) return _disabledDevice;
 		auto addr = device().getAddress();
-		constexpr uint32_t tryFreq[] = { 52000,23000,78000,15000,118000,10000,177000,7000,266000,5000 };
+		constexpr int32_t tryFreq[] = { 52000,23000,78000,15000,118000,10000,177000,7000,266000,5000 };
 		i2C().setI2CFrequency(35000); // Already tested at max speed
 		auto testResult = i2C().status(addr);
 #ifdef DEBUG_SPEED_TEST

@@ -146,7 +146,7 @@ uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 	} else {  
 		pinMode(_rs_pin, OUTPUT);
 		// we can save 1 pin by not using RW. Indicate by passing -1 instead of pin#
-		if (_rw_pin != -1) {pinMode(_rw_pin, OUTPUT);}
+		if (_rw_pin != uint8_t(-1)) { pinMode(_rw_pin, OUTPUT); }
 		pinMode(_enable_pin, OUTPUT);
 	}
 
@@ -197,7 +197,7 @@ uint8_t MultiCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) { // I
 	if (_i2C_device == 0 ) {
 		digitalWrite(_rs_pin, LOW);
 		digitalWrite(_enable_pin, LOW);
-		if (_rw_pin != -1) digitalWrite(_rw_pin, LOW);
+		if (_rw_pin != uint8_t(- 1)) digitalWrite(_rw_pin, LOW);
 	} else {
 		// Lambdas
 		// We use interrupt on GPIO change to record which key has been pressed, ready for retrieval when the keyboard is scanned.
@@ -547,7 +547,7 @@ uint8_t MultiCrystal::send(uint8_t value, uint8_t mode) { // 0 = success
 		digitalWrite(_rs_pin, mode);
 		//logger() << F(" MultiCrystal::send RS: ") << mode << L_endl;
 		// if there is a RW pin indicated, set it low to Write
-		if (_rw_pin != -1) {
+		if (_rw_pin != uint8_t(-1)) {
 			digitalWrite(_rw_pin, LOW);
 			//logger() << F(" MultiCrystal::send RW to pin ") << _rw_pin << L_endl;
 		}
@@ -689,10 +689,10 @@ uint16_t MultiCrystal::readI2C_keypad() {
 
 	constexpr int CONSECUTIVE_COUNT = 2;
 	constexpr int MAX_TRIES = 6;
-	int16_t keyPressed = 0;
+	uint16_t keyPressed = 0;
 	// Read Int-pin on GPIO
 // **********  May be Disabled in int RemoteKeypad::readKey()
-	int16_t gpio = 0;
+	uint16_t gpio = 0;
 	if (_i2C_device->isEnabled()) {
 		//logger() << "readI2C_keypad" << L_endl;
 		//_i2C_device->I_I2Cdevice::write(GPINTEN, 2, I2C_Talk::toBigEndian(_key_mask_16)()); // non-recovery.

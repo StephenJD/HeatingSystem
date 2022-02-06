@@ -74,13 +74,8 @@ namespace HardwareInterfaces {
 
 		logger() << F("\tTry Remotes") << L_endl;
 		auto id = 0;
-		for (auto& thinConsole : hs()._thinConsole_Arr) {
-			if (OLED_Thick_Display::ModeFlags(thinConsole.consoleMode()).is(OLED_Thick_Display::e_LCD)) {
-				returnVal |= showSpeedTestFailed(0, hs().remDispl[id], "LCD");
-			}
-			else {
-				returnVal |= showSpeedTestFailed(0, hs().thickConsole_Arr[id], "OLED");
-			}
+		for (auto& thinConsole : hs().thickConsole_Arr) {
+			returnVal |= showSpeedTestFailed(0, hs().thickConsole_Arr[id], "OLED");
 			++id;
 		}
 		if (returnVal) returnVal = ERR_I2C_READ_FAILED;
@@ -91,8 +86,7 @@ namespace HardwareInterfaces {
 
 		id = 0;
 		for (auto & ts : hs()._tempController.slaveConsole_TSArr) {
-			auto consoleMode = OLED_Thick_Display::ModeFlags(hs()._thinConsole_Arr[id].consoleMode());
-			if (!consoleMode.is(OLED_Thick_Display::e_MASTER)) {
+			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::e_MASTER)) {
 				showSpeedTestFailed(1, ts, "TS-Sl");
 			}
 			++id;

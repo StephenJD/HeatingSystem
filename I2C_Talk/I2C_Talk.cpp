@@ -64,7 +64,10 @@ Error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes,
 	auto returnStatus = _OK;
 	returnStatus = beginTransmission(deviceAddr);
 	if (returnStatus == _OK) {
-		_wire().write(registerAddress);
+		_wire().write(registerAddress); // just adds reg to send-buffer
+#ifdef DEBUG_TALK
+		if (deviceAddr == 0x13) logger() << L_time << "Read 0x" << L_hex << deviceAddr << L_dec << " Send RA:" << registerAddress << L_endl;
+#endif
 		returnStatus = endTransmission();
 		returnStatus = getData(returnStatus, deviceAddr, numberBytes, dataBuffer);
 	}

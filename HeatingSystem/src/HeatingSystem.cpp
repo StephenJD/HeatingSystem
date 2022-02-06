@@ -17,9 +17,6 @@ using namespace RelationalDatabase;
 using namespace HardwareInterfaces;
 using namespace arduino_logger;
 
-//extern Remote_display * hall_display;
-//extern Remote_display * flat_display;
-//extern Remote_display * us_display;
 void ui_yield();
 
 namespace HeatingSystemSupport {
@@ -92,12 +89,8 @@ HeatingSystem::HeatingSystem()
 	, _tempController(_recover, _hs_queries, _sequencer, _prog_registers, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
 	, mainDisplay(&_hs_queries.q_Displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
-	, remDispl{ {_recover, US_REMOTE_ADDRESS}, DS_REMOTE_ADDRESS, FL_REMOTE_ADDRESS } // must be same order as zones
-	, remoteKeypadArr{ {remDispl[0].displ()},{remDispl[1].displ()},{remDispl[2].displ()} }
 	, _mainConsoleChapters{ _hs_datasets, _tempController, *this}
-	, _thinConsole_Chapters{ _hs_datasets }
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
-	, _thinConsole_Arr{ {remoteKeypadArr[0], remDispl[0], _thinConsole_Chapters},{remoteKeypadArr[1], remDispl[1], _thinConsole_Chapters},{remoteKeypadArr[2], remDispl[2], _thinConsole_Chapters} }
 	, thickConsole_Arr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
 	{
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
@@ -107,47 +100,31 @@ HeatingSystem::HeatingSystem()
 		_initialiser.initialize_Thick_Consoles();
 		_initialiser.i2C_Test();
 		_initialiser.postI2CResetInitialisation();
-		//_mainConsoleChapters(0).rec_select();
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
 		serviceTemperatureController();
 	}
 
+void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
+	//Serial.println("HS.serviceConsoles");
+	ui_yield();
+	bool displayHasChanged = _mainConsole.processKeys();
+	for (auto& remote : thickConsole_Arr) {
+		displayHasChanged |= remote.hasChanged();
+	}
+	if (displayHasChanged) _mainConsole.refreshDisplay();
+}
+
 void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
-#ifdef ZPSIM
+#ifndef ZPSIM
+	if (_tempController.isNewSecond())
+#endif	
 	{
-#else
-	if (_tempController.isNewSecond()) {
-#endif
 		if (_mainConsoleChapters.chapter() == 0) _tempController.checkAndAdjust();
 		for (auto& remote : thickConsole_Arr) {
 			remote.refreshRegisters();
 		}
 	}
-}
-
-void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
-	//Serial.println("HS.serviceConsoles");
-	ui_yield();
-	bool displayHasChanged = _mainConsole.processKeys();
-	auto consoleIndex = 0;
-	auto activeField = _thinConsole_Chapters.remotePage_c.activeUI();
-	for (auto & remote : _thinConsole_Arr) {
-		auto consoleMode = OLED_Thick_Display::ModeFlags(remote.consoleMode());
-		if (consoleMode.is(OLED_Thick_Display::e_LCD)) {
-			activeField->setFocusIndex(consoleIndex);
-			//logger() << L_endl << L_time << "Read Remote Keybd" << L_endl;
-			if (remote.processKeys() || displayHasChanged) {
-				remote.refreshDisplay();
-				displayHasChanged = true;
-			}
-		}
-		else {
-			displayHasChanged |= thickConsole_Arr[consoleIndex].hasChanged();
-		}
-		++consoleIndex;
-	}
-	if (displayHasChanged) _mainConsole.refreshDisplay();
 }
 
 void HeatingSystem::updateChangedData() {

@@ -19,7 +19,7 @@ namespace Assembly {
 		, _recTowelRail(tc.towelRailArr)
 		, _recRelay(tc.relayArr)
 		, _recMixValve(tc.mixValveControllerArr)
-		, _recConsole(hs.remoteKeypadArr, hs.thickConsole_Arr)
+		, _recConsole(hs.thickConsole_Arr)
 
 		// Datasets
 		, _ds_currTime{ _recCurrTime , _recCurrTime.nullQuery }
