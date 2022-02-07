@@ -21,7 +21,7 @@ public:
 	};
 
 	enum RemoteRegisterName {	// In Slave-Mode, all are received
-		R_DISPL_REG_OFFSET		// [0] ini
+		R_DISPL_REG_OFFSET		// [0] ini Always read by programmer to check if it needs ini-sending
 		, R_MODE				// [1] ini { e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS } last 4-bits is wake-time/4;
 		, R_ROOM_TS_ADDR		// [2] ini
 		, R_ROOM_TEMP			// [3] send
@@ -68,7 +68,6 @@ private:
 	const uint8_t* getFont(bool bold = false);
 	void changeMode(int keyCode);
 	void changeValue(int keyCode);
-	uint8_t requestRegisterOffsetFromProgrammer();
 	void refreshRegisters();
 
 	int8_t _sleepRow = -1;

@@ -4,7 +4,7 @@
 #include <I2C_Recover.h>
 #include <I2C_Talk.h>
 
-#define DEBUG_DEVICE
+//#define DEBUG_DEVICE
 #ifdef DEBUG_DEVICE
 #include <Logging.h>
 namespace arduino_logger {

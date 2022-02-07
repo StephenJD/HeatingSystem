@@ -124,7 +124,7 @@ namespace HardwareInterfaces {
 		//	rawRegisters().set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		//}
 		uint8_t requestINI_flag = RC_US_REQUESTING_INI << index();
-		if (!console_mode_is(OLED::e_MASTER)) {
+		//if (!console_mode_is(OLED::e_MASTER)) {
 			uint8_t remOffset;
 			//if (read_verify_1byte(OLED::R_DISPL_REG_OFFSET, remOffset, 2 , 4) != _OK) return;
 			if (read(OLED::R_DISPL_REG_OFFSET, 1, &remOffset) != _OK) return;
@@ -132,7 +132,7 @@ namespace HardwareInterfaces {
 				logger() << L_time << "Rem[" << index() << "] iniReq 255. SetFlagVal: " << requestINI_flag << L_endl;
 				iniStatus |= requestINI_flag;
 			}
-		}
+		//}
 		//logger() << L_time << "IniStatus : " << iniStatus << L_endl;
 		int8_t towelrail_req_changed = -1;
 		int8_t hotwater_req_changed = -1;
@@ -144,15 +144,16 @@ namespace HardwareInterfaces {
 			sendSlaveIniData(requestINI_flag);
 		} else {
 			auto reg = registers();
-			if (!console_mode_is(OLED::e_MASTER)) {
+			//if (!console_mode_is(OLED::e_MASTER)) {
 				status = read_verify_1byte(OLED::R_REQUESTING_T_RAIL,regVal, 2, 4);
 				if (status == _OK && reg.update(OLED::R_REQUESTING_T_RAIL, regVal)) towelrail_req_changed = regVal;
 				status |= read_verify_1byte(OLED::R_REQUESTING_DHW, regVal, 2, 4);
 				if (status == _OK && reg.update(OLED::R_REQUESTING_DHW, regVal)) hotwater_req_changed = regVal;
+			if (!console_mode_is(OLED::e_MASTER)) {
 				status |= write_verify(OLED::R_ROOM_TEMP, 2, reg.ptr(OLED::R_ROOM_TEMP));
-				if (status) {
-					logger() << L_time << F("ConsoleController_Thick refreshRegisters device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
-				}
+			}
+			if (status) {
+				logger() << L_time << F("ConsoleController_Thick refreshRegisters device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 			}
 			if (towelrail_req_changed >= 0) {
 				_hasChanged = true;

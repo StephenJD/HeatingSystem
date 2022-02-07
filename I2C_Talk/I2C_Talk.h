@@ -6,7 +6,7 @@
 #include <I2C_Talk_ErrorCodes.h>
 #include <PinObject.h>
 
-/**
+/*
 Using this library requires a modified wire.h, wire.cpp (AVR & Sam) and twi.h & twi.c (AVR)
 NOTE: Arduino may not use the wire/twi versions in its install folder, so check...
    <Arduino_Install>\hardware\arduino\avr\libraries\Wire\src\   
@@ -18,6 +18,30 @@ Library now un-blocks bus errors.
 Small mods required so that in the event of a time-out Wire.endTransmission() returns error 1
 and requestFrom() returns 0.
 This in turn requires small mods to SAM TWI_WaitTransferComplete(), TWI_WaitByteSent(), TWI_WaitByteReceived().
+*/
+
+/*
+* I2C Operation:
+I2C Read/Write starts with Master sending a start-condition (SDA High->Low with CLK High) followed by the device address.
+Data is read on the Low->High transition of the CLK.
+The last bit of the address byte says to Read/Write.
+Slave sends ACKnowledge - SDA LOW for 1-clock cycle.
+Then either Master or Slave sends 8-bits data. Receiver sends ACK.
+Thus every packet is 9-bits long: sending 8-bits and receiving ACK.
+This is be repeated until Master sends STOP (SDA Low->High with CLK High).
+The response-time for STOP (_stopTimeout) is the best measure of a good device.
+Slave Operation:
+The slave hardware recognises its address and sends the ACK.
+When it receives data, it ACK's and reads each byte into a 32-byte buffer.
+The slave hardware can hold CLK low while it reads each bit.
+When it receives a STOP, it triggers an interrupt which calls onReceive().
+onReceive() must read the data from the buffer.
+The buffer will be reset by the next I2C write operation.
+If the slave is asked to send data, an interrupt calls onRequest().
+onRequest() must write enough data to the transmit-buffer to satisfy the master.
+Slave will hold CLK low until onRequest() returns.
+Slave then sends the data, byte-by-byte until the Master sends STOP.
+Multi-master mode between AVR and DUE produces 20-times as many I2C errors as in single-master mode.
 */
 
 #ifndef VARIANT_MCK

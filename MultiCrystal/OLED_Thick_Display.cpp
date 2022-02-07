@@ -43,7 +43,7 @@ enum SlaveRequestIni {
     , RC_FL_REQUESTING_INI = 16
     , ALL_REQUESTING = (RC_FL_REQUESTING_INI * 2) - 1
 }; 
-auto REQUESTING_INI = RC_US_REQUESTING_INI;
+auto REQUESTING_INI = ALL_REQUESTING;
 
 OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int regOffset, unsigned long* timeOfReset_mS)
     :I2C_To_MicroController(recover, my_registers, other_microcontroller_address, regOffset, timeOfReset_mS)
@@ -107,7 +107,7 @@ void OLED_Thick_Display::sendDataToProgrammer(int regNo) {
 
 void OLED_Thick_Display::refreshRegisters() {
     auto reg = registers();
-    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER) && reg.get(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
+    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER)) {
         _tempSensor.readTemperature();
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;
@@ -119,12 +119,6 @@ void OLED_Thick_Display::refreshRegisters() {
         if (reg.update(R_ROOM_TEMP_FRACTION, roomTempFract)) {
             sendDataToProgrammer(R_ROOM_TEMP_FRACTION);
             _dataChanged = true;
-        }
-        auto startReg = reg.get(R_DISPL_REG_OFFSET) + R_WARM_UP_ROOM_M10;
-        for (int i = 0; i < R_DISPL_REG_SIZE - R_WARM_UP_ROOM_M10; ++i) {
-            uint8_t regVal;
-            read(startReg + i, 1 , &regVal);
-            _dataChanged |= reg.update(R_WARM_UP_ROOM_M10 + i, regVal);
         }
     }
     else _dataChanged |= ModeFlagsObj(reg.get(R_MODE)).is(e_DATA_CHANGED); // written by programmer
@@ -144,27 +138,6 @@ void OLED_Thick_Display::refreshRegisters() {
     if (dhwOK) {
         _dataChanged |= reg.update(R_REQUESTING_DHW, e_Auto);
     }
-}
-
-uint8_t OLED_Thick_Display::requestRegisterOffsetFromProgrammer() {
-    auto status = _OK;
-    auto reg = registers();
-    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER)) {
-        uint8_t requestsRegisteredWithMaster = 0;
-        status = read(R_SLAVE_REQUESTING_INITIALISATION, 1, &requestsRegisteredWithMaster);
-        //Serial.print(F("Ini Requests registered 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
-        requestsRegisteredWithMaster |= REQUESTING_INI;
-
-        if (status != _OK) status = _I2C_ReadDataWrong;
-        else {
-            //Serial.print(F("Ini Requests sent 0x")); Serial.println(requestsRegisteredWithMaster, BIN);
-            status = write(R_SLAVE_REQUESTING_INITIALISATION, requestsRegisteredWithMaster);
-            if (status != _OK) status = _NACK_during_data_send;
-        }
-        _tempSensor.setHighRes();
-        delay(1000);
-    }
-    return status;
 }
 
 void OLED_Thick_Display::startDisplaySleep() {
@@ -218,7 +191,6 @@ void OLED_Thick_Display::changeValue(int keyCode) {
         auto mode = nextIndex(0, reg.get(R_REQUESTING_T_RAIL), e_On, increment);
         reg.set(R_REQUESTING_T_RAIL, mode);
         if (mode == e_On) reg.set(R_ON_TIME_T_RAIL, 1); // to stop it resetting itself
-        sendDataToProgrammer(R_REQUESTING_T_RAIL);
     }
         break;
     case HotWater: 
@@ -226,7 +198,6 @@ void OLED_Thick_Display::changeValue(int keyCode) {
         auto mode = nextIndex(0, reg.get(R_REQUESTING_DHW), e_On, increment);
         reg.set(R_REQUESTING_DHW, mode);
         if (mode == e_On) reg.set(R_WARM_UP_DHW_M10, -1); // to stop it resetting itself
-        sendDataToProgrammer(R_REQUESTING_DHW);
     }
         break;
     }
@@ -297,7 +268,6 @@ void OLED_Thick_Display::displayPage() {
     _dataChanged = false;
 }
 
-
 void OLED_Thick_Display::clearDisplay() {
     _display.clear();
     _display.setFont(getFont());
@@ -315,16 +285,8 @@ void OLED_Thick_Display::processKeys() { // called by loop()
     uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
 #endif
     if ( registers().get(R_DISPL_REG_OFFSET) == NO_REG_OFFSET_SET) {
-        auto status = requestRegisterOffsetFromProgrammer();
         _display.setCursor(0, 0);
         _display.print(F("Wait for Master"));
-        if (status == _I2C_ReadDataWrong) {
-            _display.setCursor(0, 1);
-            _display.print(F("...unresponsive"));
-        } else if (status == _NACK_during_data_send) {
-            _display.setCursor(0, 1);
-            _display.print(F("Sending request"));
-        }
         _dataChanged = true;
         _remoteKeypad.popKey();
     } else {
