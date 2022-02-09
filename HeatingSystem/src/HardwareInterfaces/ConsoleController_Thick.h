@@ -18,7 +18,7 @@ namespace HardwareInterfaces {
 		void initialise(int index, int addr, int roomTS_addr, TowelRail& towelRail, Zone& dhw, Zone& zone, unsigned long& timeOfReset_mS, uint8_t console_mode);
 		
 		uint8_t sendSlaveIniData(uint8_t requestINI_flag);
-		uint8_t index() const { return (_regOffset - RC_REG_MASTER_US_OFFSET) / OLED_Thick_Display::R_DISPL_REG_SIZE; }
+		uint8_t index() const { return (_localRegOffset - PROG_REG_RC_US_OFFSET) / OLED_Thick_Display::R_DISPL_REG_SIZE; }
 		void refreshRegisters();
 		bool console_mode_is(int) const;
 		void set_console_mode(uint8_t mode);
@@ -27,7 +27,6 @@ namespace HardwareInterfaces {
 			bool changed = _hasChanged; _hasChanged = false; return changed;
 		}
 	private:
-		I2C_Talk_ErrorCodes::Error_codes writeRegisterToConsole(int reg);
 		void logRemoteRegisters();
 		bool _hasChanged = false;
 		TowelRail* _towelRail = 0;

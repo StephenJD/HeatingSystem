@@ -21,7 +21,7 @@ namespace i2c_registers {
 	public:
 		//static bool isQueued() { return _howMany; }
 		//static bool isLocked(int howMany);
-	public:
+	private:
 		uint8_t getRegister(int reg) const { return const_cast<I_Registers*>(this)->regArr()[reg]; }
 		void setRegister(int reg, uint8_t value) {regArr()[reg] = value; }
 		bool updateRegister(int reg, uint8_t value) { 
@@ -30,10 +30,10 @@ namespace i2c_registers {
 			return hasChanged;
 		}
 		void addToRegister(int reg, uint8_t increment) { regArr()[reg] += increment; }
-		uint8_t* reg_ptr(int reg) { return regArr() + reg; }
+		volatile uint8_t* reg_ptr(int reg) { return regArr() + reg; }
 	private:
 		friend class RegAccess;
-		virtual uint8_t* regArr() = 0;
+		virtual volatile uint8_t* regArr() = 0;
 		virtual uint8_t& regAddr() = 0;
 		//static int8_t _mutex;
 		//static int8_t _howMany;
@@ -55,7 +55,7 @@ namespace i2c_registers {
 		void set(int reg, uint8_t value) { return _registers.setRegister(_regOffset + reg, value); }
 		bool update(int reg, uint8_t value) { return _registers.updateRegister(_regOffset + reg, value); }
 		void add(int reg, uint8_t increment) { _registers.addToRegister(_regOffset + reg, increment); }
-		uint8_t* ptr(int reg) { return _registers.reg_ptr(_regOffset + reg); }
+		volatile uint8_t* ptr(int reg) { return _registers.reg_ptr(_regOffset + reg); }
 	private:
 		I_Registers& _registers;
 		uint8_t _regOffset = 0;
@@ -118,12 +118,12 @@ namespace i2c_registers {
 			//}
 		}
 	private:
-		uint8_t* regArr() override {return _regArr;}
+		volatile uint8_t* regArr() override {return _regArr;}
 		uint8_t& regAddr() override {return _regAddr;}
 #ifdef ZPSIM
-		static uint8_t* _regArr;
+		volatile static uint8_t* _regArr;
 #else
-		static uint8_t _regArr[register_size];
+		volatile static uint8_t _regArr[register_size];
 #endif
 		static uint8_t _regAddr; // the register address sent in the request
 	};
@@ -132,13 +132,13 @@ namespace i2c_registers {
 #ifdef ZPSIM
 #include "Wire.h"
 	template<int register_size, int i2C_addr>
-	uint8_t* Registers<register_size, i2C_addr>::_regArr = & TwoWire::i2CArr[i2C_addr][0]; // 2-D Array
+	volatile uint8_t* Registers<register_size, i2C_addr>::_regArr = & TwoWire::i2CArr[i2C_addr][0]; // 2-D Array
 
 	template<int register_size, int i2C_addr>
 	uint8_t Registers<register_size, i2C_addr>::_regAddr;
 #else
 	template<int register_size, typename PurposeTag>
-	uint8_t Registers<register_size, PurposeTag>::_regArr[register_size];
+	volatile uint8_t Registers<register_size, PurposeTag>::_regArr[register_size];
 
 	template<int register_size, typename PurposeTag>
 	uint8_t Registers<register_size, PurposeTag>::_regAddr;

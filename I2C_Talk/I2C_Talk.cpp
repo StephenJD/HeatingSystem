@@ -60,7 +60,7 @@ void I2C_Talk::ini(TwoWire & wire_port, int32_t max_I2Cfreq) {
 }
 
 
-Error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes, uint8_t *dataBuffer) {
+Error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes, volatile uint8_t *dataBuffer) {
 	auto returnStatus = _OK;
 	returnStatus = beginTransmission(deviceAddr);
 	if (returnStatus == _OK) {
@@ -97,7 +97,7 @@ Error_codes I2C_Talk::readEP(int deviceAddr, int pageAddress, int numberBytes, u
 	return returnStatus;
 }
 
-Error_codes I2C_Talk::getData(Error_codes status, int deviceAddr, int numberBytes, uint8_t *dataBuffer) {
+Error_codes I2C_Talk::getData(Error_codes status, int deviceAddr, int numberBytes, volatile uint8_t *dataBuffer) {
 	// Register address must be loaded into write buffer before entry...
 	//retuns 0=_OK, 1=_Insufficient_data_returned, 2=_NACK_during_address_send, 3=_NACK_during_data_send, 4=_NACK_during_complete, 5=_NACK_receiving_data, 6=_Timeout, 7=_slave_shouldnt_write, 8=_I2C_not_created
 	//logger() << F(" I2C_Talk::getData start") << L_endl;
@@ -133,13 +133,13 @@ Error_codes I2C_Talk::getData(Error_codes status, int deviceAddr, int numberByte
 	return status;
 }
 
-Error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes, const uint8_t * dataBuffer) {
+Error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes, volatile const uint8_t * dataBuffer) {
 	//logger() << F(" I2C_Talk::write...") << L_endl;
 	auto returnStatus = _OK;
 	returnStatus = beginTransmission(deviceAddr);
 	if (returnStatus == _OK) {
 		_wire().write(registerAddress); // just writes to buffer
-		_wire().write(dataBuffer, uint8_t(numberBytes));
+		_wire().write(const_cast<const uint8_t*>(dataBuffer), uint8_t(numberBytes));
 		synchroniseWrite();
 		//logger() << F(" I2C_Talk::write send data..") << L_endl; 
 		returnStatus = endTransmission(); // returns address-send or data-send error
@@ -155,7 +155,7 @@ Error_codes I2C_Talk::write(int deviceAddr, int registerAddress, int numberBytes
 	return returnStatus;
 }
 
-Error_codes I2C_Talk::write_verify(int deviceAddr, int registerAddress, int numberBytes, const uint8_t *dataBuffer) {
+Error_codes I2C_Talk::write_verify(int deviceAddr, int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer) {
 	uint8_t verifyBuffer[32] = {0xAA,0xAA};
 	auto status = write(deviceAddr, registerAddress, numberBytes, dataBuffer);
 	if (status == _OK) status = read(deviceAddr, registerAddress, numberBytes, verifyBuffer);
@@ -269,13 +269,13 @@ const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 }
 
 // Slave response
-Error_codes I2C_Talk::write(const uint8_t *dataBuffer, int numberBytes) {// Called by slave in response to request from a Master. Return errCode.
+Error_codes I2C_Talk::write(volatile const uint8_t* dataBuffer, int numberBytes) {// Called by slave in response to request from a Master. Return errCode.
 	// Writes from the databuffer to the I2C comms.
 	//logger() << F("Slave-write as ") << (isMaster() ? F("master") : F("slave")) << L_endl;
-	return static_cast<Error_codes>(_wire().write(dataBuffer, uint8_t(numberBytes)));
+	return static_cast<Error_codes>(_wire().write((const uint8_t*)dataBuffer, uint8_t(numberBytes)));
 } 
 
-uint8_t I2C_Talk::receiveFromMaster(int howMany, uint8_t *dataBuffer) {
+uint8_t I2C_Talk::receiveFromMaster(int howMany, volatile uint8_t *dataBuffer) {
 	uint8_t noReceived = 0;
 	while (_wire().available() && noReceived < howMany ) {
 		dataBuffer[noReceived] = _wire().read();

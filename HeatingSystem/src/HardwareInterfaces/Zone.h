@@ -27,7 +27,7 @@ namespace HardwareInterfaces {
 		Zone() = default;
 		void initialise(
 			RelationalDatabase::Answer_R<client_data_structures::R_Zone> zoneRecord
-			, uint8_t & callTS_register
+			, volatile uint8_t & callTS_register
 			, UI_Bitwise_Relay& callRelay
 			, ThermalStore& thermalStore
 			, MixValveController& mixValveController
@@ -90,7 +90,7 @@ namespace HardwareInterfaces {
 		UI_Bitwise_Relay* _relay = 0;
 		ThermalStore* _thermalStore = 0;
 		MixValveController* _mixValveController;
-		uint8_t * _callTS_register = 0;
+		volatile uint8_t * _callTS_register = 0;
 
 		RelationalDatabase::Answer_R<client_data_structures::R_Zone> _zoneRecord;
 		RelationalDatabase::RecordID _recordID = 0;

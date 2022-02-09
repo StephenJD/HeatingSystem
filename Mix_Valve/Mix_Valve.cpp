@@ -15,6 +15,7 @@ using namespace HardwareInterfaces;
 using namespace arduino_logger;
 using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
+using namespace flag_enum;
 
 void enableRelays(bool enable); // this function must be defined elsewhere
 extern bool receivingNewData;
@@ -44,7 +45,6 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		reg.set(R_FULL_TRAVERSE_TIME, 255);
 		reg.set(R_SETTLE_TIME, 40);
 		reg.set(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
-		reg.set(R_MULTI_MASTER_MODE, false);
 		saveToEEPROM();
 		logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
 	} else {
@@ -53,7 +53,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	}
 	reg.set(R_RATIO, 30);
 	reg.set(R_FLOW_TEMP, e_MIN_FLOW_TEMP);
-	reg.set(R_STATUS, MV_OK);
+	reg.set(R_DEVICE_STATE, 0);
 	_cool_relay->set(false);
 	_heat_relay->set(false);
 	enableRelays(false);
@@ -75,7 +75,6 @@ void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
 	_ep->update(++eepromRegister, reg.get(R_FULL_TRAVERSE_TIME));
 	_ep->update(++eepromRegister, reg.get(R_SETTLE_TIME));
 	_ep->update(++eepromRegister, reg.get(R_DEFAULT_FLOW_TEMP));
-	_ep->update(++eepromRegister, reg.get(R_MULTI_MASTER_MODE));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_MONTH));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_DAY));
 	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)reg.get(R_FULL_TRAVERSE_TIME) << (int)reg.get(R_SETTLE_TIME)
@@ -95,7 +94,6 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	reg.set(R_FULL_TRAVERSE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_SETTLE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
-	reg.set(R_MULTI_MASTER_MODE, _ep->read(++eepromRegister));
 #endif
 	setDefaultRequestTemp();
 }
@@ -104,6 +102,7 @@ void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when m
 	auto reg = registers();
 	_currReqTemp = reg.get(R_DEFAULT_FLOW_TEMP);
 	reg.set(R_REQUEST_FLOW_TEMP, _currReqTemp);
+	I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_NO_PROGRAMMER);
 }
 
 Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
@@ -111,7 +110,7 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
 	bool dontWantHeat = _currReqTemp <= e_MIN_FLOW_TEMP;
 	bool valveIsAtLimit = (_valvePos == 0 && dontWantHeat) || (_valvePos == reg.get(R_FULL_TRAVERSE_TIME) && call_flowDiff >= 0);
 
-	if (reg.get(R_STATUS) == MV_NEW_TEMP_REQUEST) return e_NewReq;
+	if (I2C_Flags_Obj{ reg.get(R_DEVICE_STATE) }.is(F_NEW_TEMP_REQUEST)) return e_NewReq;
 	else if (valveIsAtLimit) return e_AtLimit;
 	else if (dontWantHeat) return e_DontWantHeat;
 	else if (_onTime > 0) {
@@ -121,28 +120,35 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int call_flowDiff) const {
 	else return e_Checking;
 }
 
-Mix_Valve::MV_Status Mix_Valve::check_flow_temp(bool programmerConnected) { // Called once every second. maintains mix valve temp.
-	auto retry = 5;
-	auto ts_status = _OK;
-	auto sensorTemp = 0;
+bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) {
 	auto reg = registers();
-	if (programmerConnected && reg.get(R_MULTI_MASTER_MODE)) {
-		do {
-			ts_status = _temp_sensr.readTemperature();
-			if (ts_status == _disabledDevice) {
-				_temp_sensr.reset();
-			}
-			sensorTemp = _temp_sensr.get_temp();
-		} while (ts_status && --retry);
-		//ts_status = _OK;
+	auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
+	uint8_t ts_status = device_State.is(F_DS_TS_FAILED);
+	if (device_State.is(F_NO_PROGRAMMER) && newSecond) device_State.set(F_I2C_NOW);
+
+	if (device_State.is(F_I2C_NOW)) {
+		ts_status = _temp_sensr.readTemperature();
+		if (ts_status == _disabledDevice) {
+			_temp_sensr.reset();
+		}
+
 		if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
 			<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
 			<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
 
-		reg.set(R_FLOW_TEMP, sensorTemp);
-	} else {
-		sensorTemp = reg.get(R_FLOW_TEMP);
-	} 
+		reg.set(R_FLOW_TEMP, _temp_sensr.get_temp());
+		device_State.clear(F_I2C_NOW);
+		device_State.set(F_DS_TS_FAILED, ts_status);
+		uint8_t clearState = 0;
+		programmer.write(R_DEVICE_STATE, 1, &clearState);
+	}
+	return ts_status == _OK;
+}
+
+void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
+	auto reg = registers();
+	auto sensorTemp = reg.get(R_FLOW_TEMP);
+ 
 	checkForNewReqTemp();
 
 	// lambdas
@@ -191,7 +197,7 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp(bool programmerConnected) { // C
 		} /*else if (_valvePos != reg.get(R_FULL_TRAVERSE_TIME)) {
 			adjustValve(_currReqTemp - _moveFrom_Temp);
 		}*/
-		reg.set(R_STATUS, MV_OK);
+		I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_NEW_TEMP_REQUEST);
 		break;
 	case e_AtLimit: // false as soon as it overshoots 
 		if (_currReqTemp > e_MIN_FLOW_TEMP && _onTime == 0) startWaiting();
@@ -239,8 +245,6 @@ Mix_Valve::MV_Status Mix_Valve::check_flow_temp(bool programmerConnected) { // C
 		break;
 	}
 	refreshRegisters();
-	if (ts_status != _OK) return MV_I2C_FAILED;
-	else return MV_OK;
 }
 
 void Mix_Valve::adjustValve(int tempDiff) {
@@ -295,19 +299,20 @@ void Mix_Valve::serviceMotorRequest() {
 			--_onTime;
 			_valvePos += _motorDirection;
 			if (_onTime == 0) {
+				auto i2C_status = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 				if (_valvePos <= 0) {
 					_journey = e_TempOK;
 					_valvePos = 0;
 					stopMotor();
 				} else if (_valvePos >= traverseTime) {
-					reg.set(R_STATUS, MV_STORE_TOO_COOL);
+					i2C_status.set(F_STORE_TOO_COOL);
 					_valvePos = traverseTime;
 					stopMotor();
 				} else {  // Turn motor off and wait
 					if (_journey == e_Moving_Coolest) _onTime = traverseTime / 2;
 					else {
 						startWaiting();
-						if (reg.get(R_STATUS) == MV_STORE_TOO_COOL) reg.set(R_STATUS, MV_OK);
+						i2C_status.clear(F_STORE_TOO_COOL);
 					}
 				}
 			} else if (_onTime % 10 == 0) {
@@ -336,7 +341,7 @@ void Mix_Valve::refreshRegisters() {
 	//logger() << F("Mode:") << mode << L_endl;
 	reg.set(R_MODE, mode); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
 	reg.set(R_COUNT, abs(_onTime));
-	reg.set(R_STATE, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
+	reg.set(R_MOTOR_ACTIVITY, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
 	reg.set(R_VALVE_POS, (uint8_t)_valvePos);
 	reg.set(R_FROM_POS, (uint8_t)_moveFromPos);
 }
@@ -355,9 +360,11 @@ void Mix_Valve::checkForNewReqTemp() {
 			reg.set(R_REQUEST_FLOW_TEMP, 0);
 		} else if (_currReqTemp != newReqTemp) {
 			_currReqTemp = newReqTemp;
+			auto i2c_status = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 			if (newReqTemp > e_MIN_FLOW_TEMP) {
-				reg.set(R_STATUS, MV_NEW_TEMP_REQUEST);
-			} else reg.set(R_STATUS, MV_OK);
+				i2c_status.set(F_NEW_TEMP_REQUEST);
+			} else i2c_status.clear(F_NEW_TEMP_REQUEST);
+
 			saveToEEPROM();
 		}
 	}

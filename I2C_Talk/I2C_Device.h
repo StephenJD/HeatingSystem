@@ -31,13 +31,13 @@ public:
 	virtual auto reEnable(bool immediatly = false)->I2C_Talk_ErrorCodes::Error_codes { return I2C_Talk_ErrorCodes::_OK; }
 	virtual void reset() {};
 
-	virtual auto read(int registerAddress, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {
+	virtual auto read(int registerAddress, int numberBytes, volatile uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {
 		return i2C().read(getAddress(), registerAddress, numberBytes, dataBuffer); 
 	} // Return errCode. dataBuffer may not be written to if read fails.
 	virtual auto readEP(int pageAddress, int numberBytes, uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return i2C().readEP(getAddress(), pageAddress, numberBytes, dataBuffer); }  // Return errCode. dataBuffer may not be written to if read fails.
-	virtual auto write(int registerAddress, int numberBytes, const uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return i2C().write(getAddress(), registerAddress, numberBytes, dataBuffer); }  // Return errCode.
+	virtual auto write(int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return i2C().write(getAddress(), registerAddress, numberBytes, dataBuffer); }  // Return errCode.
 	virtual auto writeEP(int pageAddress, int numberBytes, const uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return i2C().writeEP(getAddress(), pageAddress, numberBytes, dataBuffer); } // Return errCode.
-	virtual auto write_verify(int registerAddress, int numberBytes, const uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return i2C().write_verify(getAddress(), registerAddress, numberBytes, dataBuffer); } // Return errCode.
+	virtual auto write_verify(int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return i2C().write_verify(getAddress(), registerAddress, numberBytes, dataBuffer); } // Return errCode.
 	
 	void setAddress(uint8_t addr) {
 		_address = addr;
@@ -47,22 +47,22 @@ public:
 	/// Returns data in Native-endianness, i.e. for Arduino LSB at lowest address.
 	/// Mask applied to device-byte order.
 	/// </summary>
-	auto read_verify_2bytes(int registerAddress, uint16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask = 0xFFFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+	auto read_verify_2bytes(int registerAddress, volatile uint16_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint16_t dataMask = 0xFFFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 
 	/// <summary>
 	/// Non-Recovery
 	/// </summary>
-	auto read_verify_1byte(int registerAddress, uint8_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint8_t dataMask = 0xFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+	auto read_verify_1byte(int registerAddress, volatile uint8_t & dataBuffer, int requiredConsecutiveReads, int maxNoOfTries, uint8_t dataMask = 0xFF)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 
 	/// <summary>
 	/// Non-Recovery
 	/// </summary>
-	auto read_verify(int registerAddress, int numberBytes, uint8_t* dataBuffer, int requiredConsecutiveReads, int maxNoOfTries)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
+	auto read_verify(int registerAddress, int numberBytes, volatile uint8_t* dataBuffer, int requiredConsecutiveReads, int maxNoOfTries)->I2C_Talk_ErrorCodes::Error_codes;  // Non-Recovery
 	
 	// delegating functions
 	void writeInSync() { i2C().writeInSync(); }
 
-	auto read(int registerAddress, int numberBytes, char *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return read(registerAddress, numberBytes, (uint8_t *)dataBuffer); }
+	auto read(int registerAddress, int numberBytes, volatile char *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return read(registerAddress, numberBytes, (volatile uint8_t *)dataBuffer); }
 	auto readEP(int pageAddress, int numberBytes, char *dataBuffer)-> I2C_Talk_ErrorCodes::Error_codes { return readEP(pageAddress, numberBytes, (uint8_t *)dataBuffer); }
 	auto write(int registerAddress, uint8_t data)-> I2C_Talk_ErrorCodes::Error_codes { return write(registerAddress, 1, &data); } // Return errCode.
 	auto writeEP(int pageAddress, uint8_t data)-> I2C_Talk_ErrorCodes::Error_codes { return writeEP(pageAddress, 1, &data); } // Return errCode. Writes 32-byte pages. #define I2C_EEPROM_PAGESIZE
@@ -121,12 +121,12 @@ public:
 
 	using I_I2Cdevice::write;
 	using  I_I2Cdevice::read;
-	auto read(int registerAddress, int numberBytes, uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override; // Return errCode. dataBuffer may not be written to if read fails.
-	auto write(int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;  // Return errCode.
+	auto read(int registerAddress, int numberBytes, volatile uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override; // Return errCode. dataBuffer may not be written to if read fails.
+	auto write(int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;  // Return errCode.
 	/// <summary>
 	/// Recovery
 	/// </summary>
-	auto write_verify(int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;
+	auto write_verify(int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes override;
 
 	using I_I2Cdevice::i2C;
 	I2C_Talk & i2C() override;

@@ -20,7 +20,7 @@
 #include <Arduino.h>
 #include <EEPROM_RE.h>
 #include <I2C_Registers.h>
-//class EEPROMClass;
+#include <Flag_Enum.h>
 
 extern i2c_registers::I_Registers& mixV_registers;
 
@@ -34,7 +34,8 @@ namespace I2C_Recovery {
 class Mix_Valve
 {
 public:
-	enum MV_Status { MV_OK, MV_DS_TS_FAILED, MV_US_TS_FAILED, MV_TS_FAILED, MV_I2C_FAILED, MV_NEW_TEMP_REQUEST, MV_STORE_TOO_COOL};
+	enum MV_Device_State { F_I2C_NOW, F_MASTER, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, _NO_OF_FLAGS};
+	//enum MV_Device_State { MV_OK, F_DS_TS_FAILED, F_US_TS_FAILED, MV_TS_FAILED, MV_I2C_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL};
 	
 	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
@@ -46,21 +47,21 @@ public:
 		// In multi-master mode, Programmer reads temps from the registers, in slave mode it writes temps to the registers.
 
 		// Receive
-		R_MV_REG_OFFSET // offset in destination reg-set, used my Master
+		R_REMOTE_REG_OFFSET // offset in destination reg-set, used my Master
 		// Send on request
-		, R_MODE
-		, R_STATE
+		, R_DEVICE_STATE	// MV_Device_State FlagEnum	
+		, R_MODE	// Algorithm Mode
+		, R_MOTOR_ACTIVITY	// Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
 		, R_COUNT
 		, R_VALVE_POS
 		, R_FROM_POS
-		, R_STATUS
 		, R_RATIO	
 		, R_FROM_TEMP
-		, R_FLOW_TEMP // Received in DISABLE_MULTI_MASTER_MODE
+		, R_FLOW_TEMP // Received in Slave-Mode
 		// Receive
 		, R_REQUEST_FLOW_TEMP // also sent to confirm
 		, MV_VOLATILE_REG_SIZE // 11
-		, MV_NO_TO_READ = R_REQUEST_FLOW_TEMP
+		, MV_NO_TO_READ = R_REQUEST_FLOW_TEMP - R_DEVICE_STATE
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
@@ -69,24 +70,26 @@ public:
 		, R_FULL_TRAVERSE_TIME
 		, R_SETTLE_TIME
 		, R_DEFAULT_FLOW_TEMP
-		, R_MULTI_MASTER_MODE
 		, R_VERSION_MONTH
 		, R_VERSION_DAY
-		, MV_ALL_REG_SIZE // = 18
+		, MV_ALL_REG_SIZE // = 17
 	};
 
 	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat, e_Error };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
+	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
+	using I2C_Flags_Ref = flag_enum::FE_Ref<MV_Device_State, _NO_OF_FLAGS>;
 
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
 	void begin(int defaultFlowTemp);
 	const __FlashStringHelper* name();
-	MV_Status check_flow_temp(bool programmerConnected);
+	void check_flow_temp();
 	void setDefaultRequestTemp();
+	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
+	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
 private:
 	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
-	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
 
 	//friend void testMixer();
 	//friend void testSlave();

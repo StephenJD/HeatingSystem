@@ -82,11 +82,11 @@ public:
 	void ini(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000);
 	bool begin();
 	
-	auto read(int deviceAddr, int registerAddress, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes; // dataBuffer may not be written to if read fails.
-	auto read(int deviceAddr, int registerAddress, int numberBytes, char *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {return read(deviceAddr, registerAddress, numberBytes, (uint8_t *) dataBuffer);}
-	auto write(int deviceAddr, int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes;
+	auto read(int deviceAddr, int registerAddress, int numberBytes, volatile uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes; // dataBuffer may not be written to if read fails.
+	auto read(int deviceAddr, int registerAddress, int numberBytes, volatile char *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {return read(deviceAddr, registerAddress, numberBytes, (uint8_t *) dataBuffer);}
+	auto write(int deviceAddr, int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes;
 	auto write(int deviceAddr, int registerAddress, uint8_t data)-> I2C_Talk_ErrorCodes::Error_codes { return write(deviceAddr, registerAddress, 1, &data); }
-	auto write_verify(int deviceAddr, int registerAddress, int numberBytes, const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes;
+	auto write_verify(int deviceAddr, int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes;
 	virtual void writeInSync() {}
 	
 	// EEPROM specialised versions
@@ -139,8 +139,8 @@ public:
 	bool isMultiMaster() const { return _myAddress != _single_master && _isMaster; }
 	uint8_t address() const { return _myAddress; }
 	// Slave response
-	auto write(const uint8_t *dataBuffer, int numberBytes)->I2C_Talk_ErrorCodes::Error_codes; // Called by slave in response to request from a Master. 
-	auto write(const char *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes {return write((const uint8_t*)dataBuffer, (uint8_t)strlen(dataBuffer)+1);}// Called by slave in response to request from a Master. 
+	auto write(volatile const uint8_t *dataBuffer, int numberBytes)->I2C_Talk_ErrorCodes::Error_codes; // Called by slave in response to request from a Master. 
+	auto write(volatile const char *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes {return write((const uint8_t*)dataBuffer, (uint8_t)strlen((char*)dataBuffer)+1);}// Called by slave in response to request from a Master. 
 	
 
 	/// <summary>		
@@ -161,8 +161,8 @@ public:
 	/// </summary>	
 	void onRequest(void(*fn)(void)){ _wire().onRequest(fn); }
 
-	uint8_t receiveFromMaster(int howMany, uint8_t *dataBuffer); // Data is written to dataBuffer. Returns how many are written.
-	uint8_t receiveFromMaster(int howMany, char *dataBuffer) {return receiveFromMaster(howMany, (uint8_t *) dataBuffer);}
+	uint8_t receiveFromMaster(int howMany, volatile uint8_t *dataBuffer); // Data is written to dataBuffer. Returns how many are written.
+	uint8_t receiveFromMaster(int howMany, volatile char *dataBuffer) {return receiveFromMaster(howMany, (volatile uint8_t *) dataBuffer);}
 	
 	// required by template, may as well be publicly available
 	static const int32_t MIN_I2C_FREQ = VARIANT_MCK / 65288 * 2;
@@ -184,7 +184,7 @@ private:
 	}
 
 	auto beginTransmission(int deviceAddr) const ->I2C_Talk_ErrorCodes::Error_codes; // return false to inhibit access
-	auto getData(I2C_Talk_ErrorCodes::Error_codes status, int deviceAddr, int numberBytes, uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes;
+	auto getData(I2C_Talk_ErrorCodes::Error_codes status, int deviceAddr, int numberBytes, volatile uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes;
 	uint8_t getTWIbufferSize();
 	auto endTransmission() const ->I2C_Talk_ErrorCodes::Error_codes;
 

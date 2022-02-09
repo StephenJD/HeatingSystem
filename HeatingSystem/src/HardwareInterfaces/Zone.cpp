@@ -38,7 +38,7 @@ namespace HardwareInterfaces {
 	{}
 
 #endif
-	void Zone::initialise(Answer_R<client_data_structures::R_Zone> zoneRecord, uint8_t& callTS_register, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController) {
+	void Zone::initialise(Answer_R<client_data_structures::R_Zone> zoneRecord, volatile uint8_t& callTS_register, UI_Bitwise_Relay & callRelay, ThermalStore & thermalStore, MixValveController & mixValveController) {
 		_relay = &callRelay;
 		_thermalStore = &thermalStore;
 		_mixValveController = &mixValveController;

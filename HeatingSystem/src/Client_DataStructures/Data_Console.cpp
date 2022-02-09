@@ -1,9 +1,11 @@
 #include "Data_Console.h"
 #include <Flag_Enum.h>
+#include <Logging.h>
 
 namespace client_data_structures {
 	using namespace LCD_UI;
 	using namespace HardwareInterfaces;
+	using namespace arduino_logger;
 
 	const char RecInt_Console::_OLS_D[7] = "OLS-D";
 	const char RecInt_Console::_OLS_DK[7] = "OLS-DK";
@@ -54,10 +56,11 @@ namespace client_data_structures {
 			auto id = answer().id() - 1;
 			if (id >= 0) {
 				auto console_mode = static_cast<uint8_t>(newValue->val) << 6;
-				auto timeout = answer().rec().timeout;
-				timeout = 5;
+				auto timeout = answer().rec().timeout & 0x0F;
+				//timeout = 5;
 				timeout |= console_mode;
 				answer().rec().timeout = timeout;
+				logger() << "New ConsoleMode[" << id << "] :" << timeout << L_endl;
 				_thickConsole_Arr[id].set_console_mode(timeout);
 			} else answer().rec().timeout = (answer().rec().timeout & 0x0F) | 0x40;
 			answer().update();

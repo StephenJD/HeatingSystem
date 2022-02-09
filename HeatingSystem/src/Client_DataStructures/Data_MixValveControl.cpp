@@ -30,8 +30,9 @@ namespace client_data_structures {
 				_name1[2] = 0;
 				strcat(_name0, "  ");
 				strcat(_name1, "-M");
+				auto multi_master_mode = Mix_Valve::I2C_Flags_Obj(runTimeData().registers().get(Mix_Valve::F_MASTER)).is(Mix_Valve::F_MASTER);
+				_name_mode.val = multi_master_mode;
 			}
-			_name_mode.val = runTimeData().multi_master_mode();
 			return &_name_mode;
 		case e_pos:
 			if (canDo) {

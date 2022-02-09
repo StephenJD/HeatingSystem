@@ -33,7 +33,7 @@ using namespace flag_enum;
 
 namespace HardwareInterfaces {
 	
-	enum DisplayModes { e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
+	enum I2C_Flags { F_MASTER, F_ENABLE_KEYBOARD, F_DATA_CHANGED, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
 
 	namespace { volatile bool keyQueueLocked = false; }
 	I_Keypad* I_Keypad::_currentKeypad;
@@ -44,7 +44,7 @@ namespace HardwareInterfaces {
 		: _keepAwake_mS{ wakeTime_S * 1000UL }
 		, _wakeTime{uint8_t(wakeTime_S / 4)}
 		{ 
-			FE<DisplayModes, 4>(_wakeTime).set(e_ENABLE_KEYBOARD);
+			FE_Ref<I2C_Flags, 4>(_wakeTime).set(F_ENABLE_KEYBOARD);
 			_lapFlags.setValue(re_read_interval_mS);
 		}
 
@@ -71,8 +71,8 @@ namespace HardwareInterfaces {
 	}
 
 	void I_Keypad::wakeDisplay() {
-		auto consoleMode = FE<DisplayModes,4>(_wakeTime);
-		_keepAwake_mS = consoleMode.is(e_ENABLE_KEYBOARD) ? consoleMode.value()*4000 : 0;
+		auto consoleMode = FE_Ref<I2C_Flags,4>(_wakeTime);
+		_keepAwake_mS = consoleMode.is(F_ENABLE_KEYBOARD) ? consoleMode.value()*4000 : 0;
 		//logger() << (long)this << L_tabs << "wakeDisplay_Millis:" << millis() << L_endl;
 	}
 

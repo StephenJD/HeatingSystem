@@ -21,8 +21,8 @@ public:
 	};
 
 	enum RemoteRegisterName {	// In Slave-Mode, all are received
-		R_DISPL_REG_OFFSET		// [0] ini Always read by programmer to check if it needs ini-sending
-		, R_MODE				// [1] ini { e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS } last 4-bits is wake-time/4;
+		R_REMOTE_REG_OFFSET		// [0] ini Always read by programmer to check if it needs ini-sending
+		, R_DEVICE_STATE		// [1] ini Flag-Enum { F_MASTER, F_ENABLE_KEYBOARD, F_DATA_CHANGED, F_I2C_NOW, _NO_OF_FLAGS } last 4-bits is wake-time/4;
 		, R_ROOM_TS_ADDR		// [2] ini
 		, R_ROOM_TEMP			// [3] send
 		, R_ROOM_TEMP_FRACTION	// [4] send
@@ -36,9 +36,9 @@ public:
 	};
 
 	enum { e_Auto, e_On, e_Off };
-	enum DisplayModes { e_MASTER, e_ENABLE_KEYBOARD, e_DATA_CHANGED, e_NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
-	using ModeFlagsRef = flag_enum::FE< DisplayModes, e_NO_OF_FLAGS>;
-	using ModeFlagsObj = flag_enum::FE_Obj< DisplayModes, e_NO_OF_FLAGS>;
+	enum I2C_Flags { F_MASTER, F_ENABLE_KEYBOARD, F_DATA_CHANGED, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
+	using I2C_Flags_Ref = flag_enum::FE_Ref< I2C_Flags, _NO_OF_FLAGS>;
+	using I2C_Flags_Obj = flag_enum::FE_Obj< I2C_Flags, _NO_OF_FLAGS>;
 	// New request temps initiated by the programmer are sent by the programmer.
 	// In Multi-Master Mode: 
 	//		Room temp and requests are sent by the console to the Programmer.
@@ -46,11 +46,10 @@ public:
 	// In Slave-Mode: 
 	//		Requests are read from the console by the Programmer.
 	//		Room Temp and Warmup-times are sent to the console by the programmer.
-	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers) : OLED_Thick_Display(recover, my_registers, 0, 0, 0) {}
-	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int regOffset, unsigned long* timeOfReset_mS);
+	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers) : OLED_Thick_Display(recover, my_registers, 0, 0, 0, 0) {}
+	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long* timeOfReset_mS);
 
 	void setMyI2CAddress();
-	void sendDataToProgrammer(int reg);
 	void readTempSensor();
 	void begin();
 	void displayPage();
@@ -68,6 +67,7 @@ private:
 	const uint8_t* getFont(bool bold = false);
 	void changeMode(int keyCode);
 	void changeValue(int keyCode);
+	bool doneI2C_Coms(bool newSecond);
 	void refreshRegisters();
 
 	int8_t _sleepRow = -1;

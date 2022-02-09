@@ -86,7 +86,7 @@ namespace HardwareInterfaces {
 
 		id = 0;
 		for (auto & ts : hs()._tempController.slaveConsole_TSArr) {
-			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::e_MASTER)) {
+			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::F_MASTER)) {
 				showSpeedTestFailed(1, ts, "TS-Sl");
 			}
 			++id;

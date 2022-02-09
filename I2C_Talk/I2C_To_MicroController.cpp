@@ -6,16 +6,18 @@ namespace HardwareInterfaces {
 	using namespace I2C_Talk_ErrorCodes;
 
 
-	I2C_To_MicroController::I2C_To_MicroController(I2C_Recover& recover, I_Registers& prog_registers, int other_microcontroller_address, int regOffset, unsigned long* timeOfReset_mS)
+	I2C_To_MicroController::I2C_To_MicroController(I2C_Recover& recover, I_Registers& local_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long* timeOfReset_mS)
 		: I_I2Cdevice_Recovery{ recover, other_microcontroller_address }
-		, _localRegisters(&prog_registers)
-		, _regOffset(regOffset)
+		, _localRegisters(&local_registers)
+		, _localRegOffset(localRegOffset)
+		, _remoteRegOffset(remoteRegOffset)
 		, _timeOfReset_mS(timeOfReset_mS)
 		{}
 
-	void I2C_To_MicroController::initialise(int other_microcontroller_address, int regOffset, unsigned long& timeOfReset_mS) {
+	void I2C_To_MicroController::initialise(int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long& timeOfReset_mS) {
 		I_I2Cdevice_Recovery::setAddress(other_microcontroller_address);
-		_regOffset = regOffset;
+		_localRegOffset = localRegOffset;
+		_remoteRegOffset = remoteRegOffset;
 		_timeOfReset_mS = &timeOfReset_mS;
 		i2C().extendTimeouts(15000, STOP_MARGIN_TIMEOUT, 1000);
 	}
@@ -40,4 +42,31 @@ namespace HardwareInterfaces {
 		return status;
 	}
 
+	Error_codes  I2C_To_MicroController::writeRegValue(int reg, uint8_t value) {
+		return write_verify(_remoteRegOffset + reg, 1, &value); // recovery-write_verify;
+	}
+
+	Error_codes I2C_To_MicroController::writeReg(int reg) {
+		auto regset = registers();
+		return write_verify(_remoteRegOffset + reg, 1, regset.ptr(reg));
+	}
+
+	Error_codes I2C_To_MicroController::writeRegSet(int reg, int noToWrite) {
+		auto regset = registers();
+		return write_verify(_remoteRegOffset + reg, noToWrite, regset.ptr(reg));
+	}
+
+	Error_codes I2C_To_MicroController::readReg(int reg) {
+		auto regset = registers();
+		return read(_remoteRegOffset + reg, 1, regset.ptr(reg)); // recovery
+	}	
+	
+	Error_codes I2C_To_MicroController::readRegSet(int reg, int noToRead) {
+		auto regset = registers();
+		return read(_remoteRegOffset + reg, noToRead, regset.ptr(reg)); // recovery
+	}	
+	
+	Error_codes I2C_To_MicroController::readRegVerifyValue(int reg, uint8_t& value) {
+		return read_verify_1byte(_remoteRegOffset + reg, value, 2, 4); // recovery
+	}
 }

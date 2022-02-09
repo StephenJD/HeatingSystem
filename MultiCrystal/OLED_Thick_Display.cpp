@@ -45,8 +45,8 @@ enum SlaveRequestIni {
 }; 
 auto REQUESTING_INI = ALL_REQUESTING;
 
-OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int regOffset, unsigned long* timeOfReset_mS)
-    :I2C_To_MicroController(recover, my_registers, other_microcontroller_address, regOffset, timeOfReset_mS)
+OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long* timeOfReset_mS)
+    :I2C_To_MicroController(recover, my_registers, other_microcontroller_address, localRegOffset, remoteRegOffset, timeOfReset_mS)
     , _tempSensor{ recover }
     , _display(OLED_CS, OLED_DC, OLED_RESET)
     {}
@@ -58,9 +58,9 @@ void OLED_Thick_Display::begin() { // all registers start as zero.
     speedTest.fastest();
     auto reg = registers();
     _tempSensor.initialise(reg.get(R_ROOM_TS_ADDR));
-    reg.set(R_DISPL_REG_OFFSET, NO_REG_OFFSET_SET);
-    ModeFlagsRef(*reg.ptr(R_MODE)).set(e_ENABLE_KEYBOARD).setValue(5); // wake-time
-    _remoteKeypad.set_console_mode(*reg.ptr(R_MODE));
+    reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
+    I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_ENABLE_KEYBOARD).setValue(5); // wake-time
+    _remoteKeypad.set_console_mode(*reg.ptr(R_DEVICE_STATE));
     _display.begin();
     clearDisplay();
 }
@@ -86,43 +86,34 @@ void OLED_Thick_Display::setMyI2CAddress() {
     //Serial.println(i2C().address(), HEX);
 }
 
-void OLED_Thick_Display::sendDataToProgrammer(int regNo) {
-    // New request temps initiated by the programmer are sent by the programmer.
-    // In Multi-Master Mode: 
-    //		Room temp and requests are sent by the console to the Programmer.
-    //		Warmup-times are read by the console from the programmer.
-    // In Slave-Mode: 
-    //		Requests are read from the console by the Programmer.
-    //		Room Temp and Warmup-times are sent to the console by the programmer.
-
-#ifdef ZPSIM
-    uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
-#endif
+bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
     auto reg = registers();
-    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER) && reg.get(R_DISPL_REG_OFFSET) != NO_REG_OFFSET_SET) {
-        //Serial.print(F("Send to Offs ")); Serial.println(reg.get(R_DISPL_REG_OFFSET));
-        write(reg.get(R_DISPL_REG_OFFSET) + regNo, 1, reg.ptr(regNo));
-    }
-}
-
-void OLED_Thick_Display::refreshRegisters() {
-    auto reg = registers();
-    if (ModeFlagsObj(reg.get(R_MODE)).is(e_MASTER)) {
+    auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
+    if (device_State.is(F_I2C_NOW)) {
+        logger() << F("MT") << L_endl;
         _tempSensor.readTemperature();
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;
         auto roomTempFract = static_cast<uint8_t>(fractional_temp);
         if (reg.update(R_ROOM_TEMP, roomTempDeg)) {
-            sendDataToProgrammer(R_ROOM_TEMP);
-            _dataChanged = true;
-        }        
-        if (reg.update(R_ROOM_TEMP_FRACTION, roomTempFract)) {
-            sendDataToProgrammer(R_ROOM_TEMP_FRACTION);
+            write(reg.get(R_REMOTE_REG_OFFSET) + R_ROOM_TEMP, 1, reg.ptr(R_ROOM_TEMP));
             _dataChanged = true;
         }
+        if (reg.update(R_ROOM_TEMP_FRACTION, roomTempFract)) {
+            write(reg.get(R_REMOTE_REG_OFFSET) + R_ROOM_TEMP_FRACTION, 1, reg.ptr(R_ROOM_TEMP_FRACTION));
+            _dataChanged = true;
+        }
+        device_State.clear(F_I2C_NOW);
+        uint8_t clearState = 0;
+        write(R_DEVICE_STATE, 1, &clearState);
     }
-    else _dataChanged |= ModeFlagsObj(reg.get(R_MODE)).is(e_DATA_CHANGED); // written by programmer
-    ModeFlagsRef(*reg.ptr(R_MODE)).clear(e_DATA_CHANGED);
+    return true;
+}
+
+void OLED_Thick_Display::refreshRegisters() {
+    auto reg = registers();
+    _dataChanged |= I2C_Flags_Obj(reg.get(R_DEVICE_STATE)).is(F_DATA_CHANGED); // written by programmer
+    I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_DATA_CHANGED);
     auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP); // might have been set by console. When Prog has read it, it gets set to zero, so might not yet be zero.
     if (_dataChanged && reqTemp && _tempRequest != reqTemp) { // new request sent by programmer
         logger() << F("PT") << L_endl;
@@ -178,10 +169,9 @@ void OLED_Thick_Display::changeValue(int keyCode) {
     //logger() << F("Key") << L_endl;
     switch (_display_mode) {
     case RoomTemp:
-        if (ModeFlagsObj(reg.get(R_MODE)).is(e_ENABLE_KEYBOARD)) {
+        if (I2C_Flags_Obj(reg.get(R_DEVICE_STATE)).is(F_ENABLE_KEYBOARD)) {
             _tempRequest += increment;
             reg.set(R_REQUESTING_ROOM_TEMP, _tempRequest);
-            sendDataToProgrammer(R_REQUESTING_ROOM_TEMP);
             logger() << F("CT") << L_endl;
         } 
         else logger() << F("KD") << L_endl;
@@ -227,6 +217,10 @@ void OLED_Thick_Display::displayPage() {
         _display.print(F("Warmup in "));
         _display.print(reg.get(R_WARM_UP_ROOM_M10) / 6.,1);
         _display.print(F("h"));
+        if (!I2C_Flags_Obj(reg.get(R_DEVICE_STATE)).is(F_ENABLE_KEYBOARD)) {
+            _display.setCursor(0, 3);
+            _display.print(F("(Keys Disabled)"));
+        }
         break;
     case TowelRail:
         {
@@ -284,14 +278,16 @@ void OLED_Thick_Display::processKeys() { // called by loop()
 #ifdef ZPSIM
     uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
 #endif
-    if ( registers().get(R_DISPL_REG_OFFSET) == NO_REG_OFFSET_SET) {
+    if ( registers().get(R_REMOTE_REG_OFFSET) == NO_REG_OFFSET_SET) {
         _display.setCursor(0, 0);
         _display.print(F("Wait for Master"));
         _dataChanged = true;
         _remoteKeypad.popKey();
     } else {
         _remoteKeypad.readKey();
-        if (_remoteKeypad.oneSecondElapsed()) {
+        auto newSecond = _remoteKeypad.oneSecondElapsed();
+        doneI2C_Coms(newSecond);
+        if (newSecond) {
             refreshRegisters();
         }
         auto key = _remoteKeypad.popKey();

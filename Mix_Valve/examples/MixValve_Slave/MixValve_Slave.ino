@@ -5,6 +5,7 @@
 #include <I2C_Talk.h>
 #include <I2C_Registers.h>
 #include <I2C_Device.h>
+#include <Flag_Enum.h>
 //#include <I2C_Recover.h>
 #include <I2C_RecoverRetest.h>
 #include <TempSensor.h>
@@ -37,6 +38,7 @@
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
+using namespace flag_enum;
 
 constexpr uint32_t SERIAL_RATE = 115200;
 constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
@@ -57,8 +59,8 @@ EEPROMClassRE& eeprom() {
 
 extern const uint8_t version_month;
 extern const uint8_t version_day;
-const uint8_t version_month = 11; // change to force re-application of defaults incl temp-sensor addresses
-const uint8_t version_day = 18;
+const uint8_t version_month = 2; // change to force re-application of defaults incl temp-sensor addresses
+const uint8_t version_day = 9;
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
 enum { us_mix, ds_mix };
@@ -79,7 +81,7 @@ I_I2Cdevice_Recovery programmer = {i2c_recover, PROGRAMMER_I2C_ADDR };
 
 void roleChanged(Role newRole);
 Role getRole();
-const __FlashStringHelper * showErr(Mix_Valve::MV_Status err);
+const __FlashStringHelper * showErr(Mix_Valve::I2C_Flags_Obj status);
 
 auto us_heatRelay = Pin_Wag(e_US_Heat, HIGH);
 auto us_coolRelay = Pin_Wag(e_US_Cool, HIGH);
@@ -139,13 +141,15 @@ void setup() {
 void loop() {
 	// All I2C transfers are initiated by Master
 	static auto nextSecond = Timer_mS(1000);
-	static Mix_Valve::MV_Status err = Mix_Valve::MV_OK;
+	static auto err = Mix_Valve::I2C_Flags_Obj{};
 	static bool multimaster_mode;
+	err.set(Mix_Valve::F_US_TS_FAILED, !mixValve[us_mix].doneI2C_Coms(programmer, nextSecond));
+	err.set(Mix_Valve::F_DS_TS_FAILED, !mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond));
 
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		reset_watchdog();
-		auto currMultiMode = mixV_registers.getRegister(Mix_Valve::R_MULTI_MASTER_MODE);
+		auto currMultiMode = Mix_Valve::I2C_Flags_Obj{ mixValve[us_mix].registers().get(Mix_Valve::R_DEVICE_STATE) }.is(Mix_Valve::F_MASTER);
 		if (currMultiMode != multimaster_mode) {
 			multimaster_mode = currMultiMode;
 			logger() << F("New Mode: ") << (currMultiMode ? F("MultiMaster") : F("SingleMaster")) << L_endl;
@@ -153,15 +157,10 @@ void loop() {
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 
-		err = Mix_Valve::MV_OK;
-		if (mixValve[us_mix].check_flow_temp(role) == Mix_Valve::MV_I2C_FAILED) {
-			err = Mix_Valve::MV_US_TS_FAILED;
-		}		
-		if (mixValve[ds_mix].check_flow_temp(role) == Mix_Valve::MV_I2C_FAILED) {
-      		err = static_cast<Mix_Valve::MV_Status>(err | Mix_Valve::MV_DS_TS_FAILED);
-		}
+		mixValve[us_mix].check_flow_temp();
+		mixValve[ds_mix].check_flow_temp();
 
-		if (err) {
+		if (err.flags()) {
 			logger() << showErr(err) << L_endl;
 		}
 	} else showErr(err);
@@ -194,7 +193,7 @@ void roleChanged(Role newRole) {
 	role = newRole;
 }
 
-const __FlashStringHelper * showErr(Mix_Valve::MV_Status err) { // 1-4 errors, 5-9 status
+const __FlashStringHelper * showErr(Mix_Valve::I2C_Flags_Obj status) { // 1-4 errors, 5-9 status
 	// 5 short flashes == start-up.
 	// 1s on / 1s off == Programmer Action
 	// 3s on / 1s off == Manual Action
@@ -203,13 +202,14 @@ const __FlashStringHelper * showErr(Mix_Valve::MV_Status err) { // 1-4 errors, 5
 	// 3 flash / 1s off == Both TS failed
 	static int lastStatus;
 	static int flashCount = 0;
+	auto err = status.is(Mix_Valve::F_DS_TS_FAILED) + 2 * status.is(Mix_Valve::F_US_TS_FAILED);
 
 	unsigned long statusLed = millis() / 250UL; // quarter-second count
 	int statusOn = statusLed % 2; // changes every 1/4 second
 	if (lastStatus != statusOn) {
 		lastStatus = statusOn;
 
-		if (err == Mix_Valve::MV_OK) {
+		if (!err) {
 			statusLed /= 4; // 1111,2222,3333,4444 changes every second
 			statusOn = (statusLed % 4);// 0-1-2-3, 0-1-2-3 : on three-in-four seconds
 			if (role == e_Slave) {
@@ -232,15 +232,15 @@ const __FlashStringHelper * showErr(Mix_Valve::MV_Status err) { // 1-4 errors, 5
 	}
 
 	switch (err) {
-	case Mix_Valve::MV_US_TS_FAILED:
-		us_heatRelay.clear();
-		us_coolRelay.clear();
-		return F("US TS Failed");	
-	case Mix_Valve::MV_DS_TS_FAILED:
+	case 1:
 		ds_heatRelay.clear();
 		ds_coolRelay.clear();
 		return F("DS TS Failed");
-	case Mix_Valve::MV_TS_FAILED:
+	case 2:
+		us_heatRelay.clear();
+		us_coolRelay.clear();
+		return F("US TS Failed");	
+	case 3:
 		us_heatRelay.clear();
 		us_coolRelay.clear();		
 		ds_heatRelay.clear();

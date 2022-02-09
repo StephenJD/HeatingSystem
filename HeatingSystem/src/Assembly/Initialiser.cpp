@@ -96,7 +96,7 @@ namespace Assembly {
 		uint8_t failed = 0;
 		auto id = 0;
 		for (auto& ts : hs().tempController().slaveConsole_TSArr) {
-			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::e_MASTER)) {
+			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::F_MASTER)) {
 				failed |= ts.setHighRes();
 			}
 			++id;

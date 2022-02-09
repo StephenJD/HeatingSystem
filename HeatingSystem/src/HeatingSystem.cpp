@@ -119,7 +119,7 @@ void HeatingSystem::serviceTemperatureController() { // Called every Arduino loo
 #ifndef ZPSIM
 	if (_tempController.isNewSecond())
 #endif	
-	{
+	{	// Called every second
 		if (_mainConsoleChapters.chapter() == 0) _tempController.checkAndAdjust();
 		for (auto& remote : thickConsole_Arr) {
 			remote.refreshRegisters();

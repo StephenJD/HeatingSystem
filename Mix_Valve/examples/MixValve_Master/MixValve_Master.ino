@@ -32,11 +32,11 @@ I2C_Talk i2C{}; // default 400kHz
 // All Mix-Valve I2C transfers are initiated by this Master
 enum Register_Constants {
 	R_SLAVE_REQUESTING_INITIALISATION = 0
-	, MV_REG_MASTER_0_OFFSET = 1
-	, MV_REG_MASTER_1_OFFSET = MV_REG_MASTER_0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE
-	, MV_REG_SLAVE_0_OFFSET = 0
-	, MV_REG_SLAVE_1_OFFSET = MV_REG_SLAVE_0_OFFSET + Mix_Valve::MV_ALL_REG_SIZE
-	, SIZE_OF_ALL_REGISTERS = MV_REG_MASTER_0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE * NO_OF_MIXERS
+	, PROG_REG_MV0_OFFSET = 1
+	, PROG_REG_MV1_OFFSET = PROG_REG_MV0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE
+	, MV0_REG_OFFSET = 0
+	, MV1_REG_OFFSET = MV0_REG_OFFSET + Mix_Valve::MV_ALL_REG_SIZE
+	, SIZE_OF_ALL_REGISTERS = PROG_REG_MV0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE * NO_OF_MIXERS
 };
 
 enum SlaveRequestIni {
@@ -50,8 +50,8 @@ i2c_registers::Registers<SIZE_OF_ALL_REGISTERS> _prog_registers{ i2C };
 uint8_t previous_valveStatus[NO_OF_MIXERS];
 
 uint8_t _mixCallTemp[] = { 35, 55 };
-uint8_t _regOffset[] = { MV_REG_MASTER_0_OFFSET , MV_REG_MASTER_1_OFFSET };
-uint8_t slaveRegOffset[] = { MV_REG_SLAVE_0_OFFSET, MV_REG_SLAVE_1_OFFSET };
+uint8_t _regOffset[] = { PROG_REG_MV0_OFFSET , PROG_REG_MV1_OFFSET };
+uint8_t slaveRegOffset[] = { MV0_REG_OFFSET, MV1_REG_OFFSET };
 uint8_t _flowTS_addr[] = { US_FLOW_TEMPSENS_ADDR , DS_FLOW_TEMPSENS_ADDR };
 
 void sendSlaveIniData(int i);
@@ -106,8 +106,8 @@ void sendSlaveIniData(int i) {
 	auto errCode = _OK;
 	do {
 		Serial.println(F("Sending INI to Slaves"));
-		setReg(i, Mix_Valve::R_MV_REG_OFFSET, slaveRegOffset[i]);
-		errCode = writeToValve(i, Mix_Valve::R_MV_REG_OFFSET, _regOffset[i]);
+		setReg(i, Mix_Valve::R_PROG_REG_OFFSET, slaveRegOffset[i]);
+		errCode = writeToValve(i, Mix_Valve::R_PROG_REG_OFFSET, _regOffset[i]);
 		errCode |= writeToValve(i, Mix_Valve::R_TS_ADDRESS, _flowTS_addr[i]);
 		errCode |= writeToValve(i, Mix_Valve::R_FULL_TRAVERSE_TIME, VALVE_TRANSIT_TIME);
 		errCode |= writeToValve(i, Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
@@ -124,7 +124,7 @@ void sendSlaveIniData(int i) {
 		setReg(i, Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
 		setReg(i, Mix_Valve::R_MAX_FLOW_TEMP, 55);
 		auto lock = _prog_registers.getLock();
-		i2C.write(MIX_VALVE_I2C_ADDR, getReg(i, Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::R_MAX_FLOW_TEMP, _prog_registers.reg_ptr(_regOffset[i] + Mix_Valve::R_STATUS));
+		i2C.write(MIX_VALVE_I2C_ADDR, getReg(i, Mix_Valve::R_PROG_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::R_MAX_FLOW_TEMP, _prog_registers.reg_ptr(_regOffset[i] + Mix_Valve::R_STATUS));
 	} while (errCode != _OK);
 	_prog_registers.setRegister(R_SLAVE_REQUESTING_INITIALISATION, 0);
 	logger() << F("MixValveController::sendSlaveIniData()") << i2C.getStatusMsg(errCode) << L_endl;
@@ -184,15 +184,15 @@ void setReg(int i, int reg, uint8_t value) {
 
 Error_codes writeToValve(int i, int reg, uint8_t value) {
 	// All writable registers are single-byte
-	auto status = i2C.write(MIX_VALVE_I2C_ADDR, getReg(i, Mix_Valve::R_MV_REG_OFFSET) + reg, 1, &value); // recovery-write
-	logger() << F("Mix_Valve::write reg: ") << getReg(i, Mix_Valve::R_MV_REG_OFFSET) + reg << F(" Val: ") << value << I2C_Talk::getStatusMsg(status) << L_endl;
+	auto status = i2C.write(MIX_VALVE_I2C_ADDR, getReg(i, Mix_Valve::R_PROG_REG_OFFSET) + reg, 1, &value); // recovery-write
+	logger() << F("Mix_Valve::write reg: ") << getReg(i, Mix_Valve::R_PROG_REG_OFFSET) + reg << F(" Val: ") << value << I2C_Talk::getStatusMsg(status) << L_endl;
 	return status;
 }
 
 void readRegistersFromValve(int i) {
-	logger() << F("Read :") << Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS << F(" MVreg from: ") << getReg(i, Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS << F(" to : ") << _regOffset[i] + Mix_Valve::R_STATUS << L_endl;
+	logger() << F("Read :") << Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS << F(" MVreg from: ") << getReg(i, Mix_Valve::R_PROG_REG_OFFSET) + Mix_Valve::R_STATUS << F(" to : ") << _regOffset[i] + Mix_Valve::R_STATUS << L_endl;
 	auto lock = _prog_registers.getLock();
-	i2C.read(MIX_VALVE_I2C_ADDR, getReg(i, Mix_Valve::R_MV_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset[i] + Mix_Valve::R_STATUS));
+	i2C.read(MIX_VALVE_I2C_ADDR, getReg(i, Mix_Valve::R_PROG_REG_OFFSET) + Mix_Valve::R_STATUS, Mix_Valve::R_MAX_FLOW_TEMP - Mix_Valve::R_STATUS, _prog_registers.reg_ptr(_regOffset[i] + Mix_Valve::R_STATUS));
 
 	if (getReg(i, Mix_Valve::R_REQUEST_FLOW_TEMP) != _mixCallTemp[i]) {
 		logger() << F("Mix_Valve::R_REQUEST_FLOW_TEMP :") << getReg(i, Mix_Valve::R_REQUEST_FLOW_TEMP) << F(" Req: ") << _mixCallTemp[i] << L_endl;

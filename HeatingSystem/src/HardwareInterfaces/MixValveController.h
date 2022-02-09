@@ -29,9 +29,8 @@ namespace HardwareInterfaces {
 		uint8_t reqTemp() const {return _mixCallTemp;}
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		int8_t relayInControl() const;
-		uint8_t index() const { return _regOffset == MV_REG_MASTER_0_OFFSET ? 0 : 1; }
+		uint8_t index() const { return _localRegOffset == PROG_REG_MV0_OFFSET ? 0 : 1; }
 		const __FlashStringHelper* showState() const;
-		bool multi_master_mode() const { return _is_multimaster; }
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
@@ -56,11 +55,8 @@ namespace HardwareInterfaces {
 //#endif
 
 	private:
-		I2C_Talk_ErrorCodes::Error_codes writeToValve(int reg, uint8_t value);
-
 		UI_TempSensor * _storeTempSens = 0;
 		UI_Bitwise_Relay * _relayArr = 0;
-		bool _is_multimaster = false; // No local register for this
 
 		UI_TempSensor _slaveMode_flowTempSensor;
 

@@ -14,7 +14,7 @@ I2C_Talk i2C;
   constexpr auto R_SLAVE_REQUESTING_INITIALISATION = 0;
 
 	enum RemoteRegisterName {
-		  R_DISPL_REG_OFFSET // ini
+		  R_PROG_REG_OFFSET // ini
 		, R_ROOM_TS_ADDR	// ini
 		, R_ROOM_TEMP				    // send
 		, R_ROOM_TEMP_FRACTION		// send
@@ -112,9 +112,9 @@ void createMyRegisters() {
 
 void sendSlaveIniData() {
   Serial.println(F("Sending Offs to Rems"));
-  i2C.write(DS_CONSOLE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart);
-  i2C.write(US_CONSOLE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + R_DISPL_REG_SIZE);
-  i2C.write(FL_CONSOLE_I2C_ADDR, R_DISPL_REG_OFFSET, remRegStart + 2 * R_DISPL_REG_SIZE);
+  i2C.write(DS_CONSOLE_I2C_ADDR, R_PROG_REG_OFFSET, remRegStart);
+  i2C.write(US_CONSOLE_I2C_ADDR, R_PROG_REG_OFFSET, remRegStart + R_DISPL_REG_SIZE);
+  i2C.write(FL_CONSOLE_I2C_ADDR, R_PROG_REG_OFFSET, remRegStart + 2 * R_DISPL_REG_SIZE);
   all_registers.setRegister(R_SLAVE_REQUESTING_INITIALISATION,0);
 }
 
@@ -126,9 +126,9 @@ void sendDataToRemotes() {
 }
 
 void sendDataToProgrammer() {
-  Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
+  Serial.print(F("Send to Offs ")); Serial.println(rem_registers.getRegister(R_PROG_REG_OFFSET));
   auto lock = all_registers.getLock();
-  i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_ROOM_TEMP, 5, rem_registers.reg_ptr(R_ROOM_TEMP));
+  i2C.write(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_PROG_REG_OFFSET) + R_ROOM_TEMP, 5, rem_registers.reg_ptr(R_ROOM_TEMP));
 }
 
 void requestDataFromRemotes() {
@@ -140,7 +140,7 @@ void requestDataFromRemotes() {
 
 void requestDataFromProgrammer() {
   auto lock = all_registers.getLock();
-  i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_DISPL_REG_OFFSET) + R_REQUESTING_ROOM_TEMP, 5, rem_registers.reg_ptr(R_REQUESTING_ROOM_TEMP));
+  i2C.read(PROGRAMMER_I2C_ADDR, rem_registers.getRegister(R_PROG_REG_OFFSET) + R_REQUESTING_ROOM_TEMP, 5, rem_registers.reg_ptr(R_REQUESTING_ROOM_TEMP));
 }
 
 void printRegisters() {
@@ -183,7 +183,7 @@ void printRegisters() {
     Serial.print(F("HWm 2 ")); Serial.println(all_registers.getRegister(remRegStart + R_DISPL_REG_SIZE + R_WARM_UP_DHW_M10));
     Serial.print(F("HWm 3 ")); Serial.println(all_registers.getRegister(remRegStart + 2*R_DISPL_REG_SIZE + R_WARM_UP_DHW_M10));
   } else {
-    Serial.print(F("Of ")); Serial.println(rem_registers.getRegister(R_DISPL_REG_OFFSET));
+    Serial.print(F("Of ")); Serial.println(rem_registers.getRegister(R_PROG_REG_OFFSET));
     Serial.print(F("Rr ")); Serial.println(rem_registers.getRegister(R_REQUESTING_ROOM_TEMP));
     Serial.print(F("Rt ")); Serial.println(rem_registers.getRegister(R_ROOM_TEMP));
     Serial.print(F("Rm ")); Serial.println(rem_registers.getRegister(R_WARM_UP_ROOM_M10));

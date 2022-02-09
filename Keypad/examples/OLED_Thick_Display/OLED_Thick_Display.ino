@@ -39,7 +39,7 @@ unsigned long timeOfReset_mS;
     auto my_registers = i2c_registers::Registers<OLED_Thick_Display::R_DISPL_REG_SIZE>{i2C()};
 #endif
 
-OLED_Thick_Display this_OLED_Thick_Display{i2c_recover, my_registers, HardwareInterfaces::PROGRAMMER_I2C_ADDR, 0, &timeOfReset_mS };
+OLED_Thick_Display this_OLED_Thick_Display{i2c_recover, my_registers, HardwareInterfaces::PROGRAMMER_I2C_ADDR, 0, 0, &timeOfReset_mS };
 
 void setup() {
   Serial.begin(SERIAL_RATE);
