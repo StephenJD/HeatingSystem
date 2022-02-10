@@ -39,17 +39,14 @@ inline arduino_logger::Logger & operator << (arduino_logger::Logger & stream, co
 	/// </summary>
 	class RecInt_MixValveController : public Record_Interface<R_MixValveControl> {
 	public:
-		enum streamable { e_multiMode, e_pos, e_flowTemp, e_reqTemp, e_state	};
+		enum streamable { e_name, e_pos, e_flowTemp, e_reqTemp, e_state	};
 		RecInt_MixValveController(MixValveController* mixValveArr);
 		MixValveController& runTimeData() override { return _mixValveArr[answer().id()]; }
 		I_Data_Formatter* getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter* val) override;
 	private:
-		char _name0[5] = { 0 };
-		char _name1[5] = { 0 };
-		const char* _options[2];
 		MixValveController* _mixValveArr;
-		OptionsWrapper _name_mode;
+		StrWrapper _name;
 		IntWrapper _pos;
 		IntWrapper _isTemp;
 		IntWrapper _reqTemp;

@@ -7,11 +7,9 @@ namespace client_data_structures {
 	using namespace HardwareInterfaces;
 	using namespace arduino_logger;
 
-	const char RecInt_Console::_OLS_D[7] = "OLS-D";
-	const char RecInt_Console::_OLS_DK[7] = "OLS-DK";
-	const char RecInt_Console::_OLM_D[7] = "OLM-D";
-	const char RecInt_Console::_OLM_DK[7] = "OLM-DK";
-	const char* RecInt_Console::_options[NO_OF_CONSOLE_MODES] = { _OLS_D, _OLS_DK, _OLM_D, _OLM_DK };
+	const char RecInt_Console::_NO_KEYS[5] = "No-K";
+	const char RecInt_Console::_KEYS[5] = "Keys";
+	const char* RecInt_Console::_options[NO_OF_CONSOLE_MODES] = { _NO_KEYS, _KEYS };
 
 
 	RecInt_Console::RecInt_Console(ConsoleController_Thick* thickConsole_Arr) :
@@ -25,15 +23,12 @@ namespace client_data_structures {
 		switch (fieldID) {
 		case e_name:
 			if (canDo) {
-				//char name[6];
-				//strcpy(name, answer().rec().name);
-				//strcat(name, "~");
 				_name = answer().rec().name;
 			}
 			return &_name;
 		case e_console_options:
 			if (canDo) {
-				uint8_t console_mode = answer().rec().timeout >> 6;
+				uint8_t console_mode = answer().rec().timeout >> 7;
 				if (console_mode >= NO_OF_CONSOLE_MODES) console_mode = 1;
 				_console_options.val = console_mode;
 			}
@@ -55,9 +50,8 @@ namespace client_data_structures {
 		case e_console_options:
 			auto id = answer().id() - 1;
 			if (id >= 0) {
-				auto console_mode = static_cast<uint8_t>(newValue->val) << 6;
+				auto console_mode = static_cast<uint8_t>(newValue->val) << 7;
 				auto timeout = answer().rec().timeout & 0x0F;
-				//timeout = 5;
 				timeout |= console_mode;
 				answer().rec().timeout = timeout;
 				logger() << "New ConsoleMode[" << id << "] :" << timeout << L_endl;

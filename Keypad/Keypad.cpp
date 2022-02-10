@@ -33,7 +33,7 @@ using namespace flag_enum;
 
 namespace HardwareInterfaces {
 	
-	enum I2C_Flags { F_MASTER, F_ENABLE_KEYBOARD, F_DATA_CHANGED, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
+	enum I2C_Flags { F_ENABLE_KEYBOARD, F_DATA_CHANGED, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
 
 	namespace { volatile bool keyQueueLocked = false; }
 	I_Keypad* I_Keypad::_currentKeypad;

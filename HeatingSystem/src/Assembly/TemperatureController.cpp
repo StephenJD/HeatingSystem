@@ -28,7 +28,6 @@ namespace Assembly {
 
 	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers, unsigned long * timeOfReset_mS) :
 		tempSensorArr{ recovery }
-		, slaveConsole_TSArr{ {recovery, 0x36}, {recovery, 0x74}, {recovery, 0x70} }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
 		, mixValveControllerArr{ {recovery, prog_registers}, {recovery, prog_registers} }
@@ -63,7 +62,6 @@ namespace Assembly {
 				, mixValveControl.rec().flowTS_addr
 				, tempSensorArr[mixValveControl.rec().storeTempSens]
 				, *timeOfReset_mS
-				, mixValveControl.rec().name[3] == 'M' ? true : false
 			);
 			++index;
 		}
@@ -122,21 +120,6 @@ namespace Assembly {
 			ts.readTemperature();
 			//if (checkPreHeat) logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
-		}
-
-		auto displIndex = 0;
-		for (auto& ts : slaveConsole_TSArr) {
-			auto reg = i2c_registers::RegAccess(_prog_registers);
-			auto isMaster = OLED_Thick_Display::I2C_Flags_Obj(reg.get(PROG_REG_RC_US_OFFSET + OLED_Thick_Display::R_DEVICE_STATE) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex)).is(OLED_Thick_Display::F_MASTER);
-			if (!isMaster) {
-				auto remoteTS_register = (PROG_REG_RC_US_OFFSET + OLED_Thick_Display::R_ROOM_TEMP) + (OLED_Thick_Display::R_DISPL_REG_SIZE * displIndex);
-				ts.readTemperature();
-				auto roomTemp = ts.get_fractional_temp();
-				reg.set(remoteTS_register, roomTemp >> 8);
-				reg.set(remoteTS_register + 1, uint8_t(roomTemp));
-			}
-			//logger() << L_time << "TC::slaveConsole_TSArr[" << displIndex << "] Mode: " << consoleMode << " Temp: " << ts.get_temp() << L_endl;
-			++displIndex;
 		}
 
 		if (newMinute) {

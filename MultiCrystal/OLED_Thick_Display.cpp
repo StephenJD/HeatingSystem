@@ -2,19 +2,15 @@
 #include <MsTimer2.h>
 
 #include <I2C_Talk.h>
-#include <I2C_Recover.h>
-#include <I2C_RecoverRetest.h>
+//#include <I2C_Recover.h>
+#include <I2C_RecoverRetest.h> // for Speed-test
 #include <I2C_Registers.h>
-#include <Conversions.h>
-#ifdef U8X8_HAVE_HW_SPI
-#include <SPI.h>
-#endif
 
-#include <Logging.h>
-namespace arduino_logger {
-    Logger& logger();
-}
-using namespace arduino_logger;
+//#include <Logging.h>
+//namespace arduino_logger {
+//    Logger& logger();
+//}
+//using namespace arduino_logger;
 
 // Declaration for SSD1306 display connected using software SPI (default case):
 constexpr uint8_t OLED_MOSI = 11;  // DIn
@@ -58,11 +54,15 @@ void OLED_Thick_Display::begin() { // all registers start as zero.
     speedTest.fastest();
     auto reg = registers();
     _tempSensor.initialise(reg.get(R_ROOM_TS_ADDR));
+    speedTest.fastest(_tempSensor);
+    _tempSensor.setHighRes();
     reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
     I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_ENABLE_KEYBOARD).setValue(5); // wake-time
     _remoteKeypad.set_console_mode(*reg.ptr(R_DEVICE_STATE));
     _display.begin();
-    clearDisplay();
+    _display.clear();
+    _display.setFont(getFont());
+    _sleepRow = -1;
 }
     
 void OLED_Thick_Display::setMyI2CAddress() {
@@ -82,15 +82,15 @@ void OLED_Thick_Display::setMyI2CAddress() {
         i2C().setAsMaster(FL_CONSOLE_I2C_ADDR);
         REQUESTING_INI = RC_FL_REQUESTING_INI;
         reg.set(R_ROOM_TS_ADDR, FL_ROOM_TEMPSENS_ADDR);
-    } //else Serial.println(F("Err: None of Pins 5-7 selected."));
-    //Serial.println(i2C().address(), HEX);
+    }
+    // logger() << F("S 0x") << L_hex << i2C().address() << L_endl;
 }
 
 bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
     auto reg = registers();
     auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
     if (device_State.is(F_I2C_NOW)) {
-        logger() << F("MT") << L_endl;
+        // logger() << F("RT") << L_endl;
         _tempSensor.readTemperature();
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;
@@ -112,14 +112,16 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
 
 void OLED_Thick_Display::refreshRegisters() {
     auto reg = registers();
-    _dataChanged |= I2C_Flags_Obj(reg.get(R_DEVICE_STATE)).is(F_DATA_CHANGED); // written by programmer
-    I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_DATA_CHANGED);
+    auto deviceFlags = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
+    auto progDataChanged = deviceFlags.is(F_DATA_CHANGED);
+    //if (progDataChanged) logger() << F("PD") << L_endl;
+    _dataChanged |= progDataChanged; // written by programmer
+    deviceFlags.clear(F_DATA_CHANGED);
     auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP); // might have been set by console. When Prog has read it, it gets set to zero, so might not yet be zero.
     if (_dataChanged && reqTemp && _tempRequest != reqTemp) { // new request sent by programmer
-        logger() << F("PT") << L_endl;
+        // logger() << F("PT") << L_endl;
         _tempRequest = reqTemp;
         reg.set(R_REQUESTING_ROOM_TEMP, 0);
-        _dataChanged |= true;
     }
     bool towelRailNowOff = reg.get(R_ON_TIME_T_RAIL) == 0;
     if (towelRailNowOff) {
@@ -131,8 +133,19 @@ void OLED_Thick_Display::refreshRegisters() {
     }
 }
 
+void OLED_Thick_Display::sleepPage() {
+    _display.clear();
+    _display.setCursor(_sleepCol, _sleepRow);
+    auto reg = registers();
+    float roomTemp = reg.get(R_ROOM_TEMP) + float(reg.get(R_ROOM_TEMP_FRACTION)) / 256;
+    _display.print(roomTemp, 1);
+}
+
 void OLED_Thick_Display::startDisplaySleep() {
     _sleepRow = 0; _sleepCol = 0;
+    _display.setFont(u8x8_font_7x14_1x2_n);
+    //_display.setFont(getFont());
+    sleepPage();
     MsTimer2::set(SLEEP_MOVE_PERIOD_mS, ::moveDisplay);
     MsTimer2::start();
 }
@@ -147,14 +160,14 @@ void OLED_Thick_Display::moveDisplay() {
     if (_sleepCol > SCREEN_WIDTH / FONT_WIDTH - 4) {
         _sleepCol = 0;
         ++_sleepRow;
-        if (_sleepRow > 3) _sleepRow = 0;
+        if (_sleepRow > 2) _sleepRow = 0;
     }
     sleepPage();
 }
 
 const uint8_t* OLED_Thick_Display::getFont(bool bold) {
-    if (bold) return 	u8x8_font_pxplusibmcga_f; // 5,444 bold
-    else return 	u8x8_font_pxplusibmcgathin_f; // 5,444 v nice
+    if (bold) return 	u8x8_font_pxplusibmcga_r; // bold
+    else return 	u8x8_font_pxplusibmcgathin_r; // v nice
 }
 
 void OLED_Thick_Display::changeMode(int keyCode) {
@@ -166,15 +179,13 @@ void OLED_Thick_Display::changeMode(int keyCode) {
 void OLED_Thick_Display::changeValue(int keyCode) {
     auto increment = keyCode == I_Keypad::KEY_UP ? 1 : -1;
     auto reg = registers();
-    //logger() << F("Key") << L_endl;
     switch (_display_mode) {
     case RoomTemp:
         if (I2C_Flags_Obj(reg.get(R_DEVICE_STATE)).is(F_ENABLE_KEYBOARD)) {
             _tempRequest += increment;
             reg.set(R_REQUESTING_ROOM_TEMP, _tempRequest);
-            logger() << F("CT") << L_endl;
+            // logger() << F("CT") << L_endl;
         } 
-        else logger() << F("KD") << L_endl;
         break;
     case TowelRail: 
     {
@@ -262,23 +273,11 @@ void OLED_Thick_Display::displayPage() {
     _dataChanged = false;
 }
 
-void OLED_Thick_Display::clearDisplay() {
-    _display.clear();
-    _display.setFont(getFont());
-    _display.setCursor(_sleepCol, _sleepRow);
-}
-void OLED_Thick_Display::sleepPage() {
-    clearDisplay();
-    auto reg = registers();
-    float roomTemp = reg.get(R_ROOM_TEMP) + float(reg.get(R_ROOM_TEMP_FRACTION)) / 256;
-    _display.print(roomTemp, 1);
-}
-
 void OLED_Thick_Display::processKeys() { // called by loop()
 #ifdef ZPSIM
-    uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR][0]);
+    uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR]);
 #endif
-    if ( registers().get(R_REMOTE_REG_OFFSET) == NO_REG_OFFSET_SET) {
+    if ( /*false*/ registers().get(R_REMOTE_REG_OFFSET) == NO_REG_OFFSET_SET) {
         _display.setCursor(0, 0);
         _display.print(F("Wait for Master"));
         _dataChanged = true;
@@ -288,6 +287,7 @@ void OLED_Thick_Display::processKeys() { // called by loop()
         auto newSecond = _remoteKeypad.oneSecondElapsed();
         doneI2C_Coms(newSecond);
         if (newSecond) {
+            //I2C_Flags_Ref(*registers().ptr(R_DEVICE_STATE)).set(F_I2C_NOW);
             refreshRegisters();
         }
         auto key = _remoteKeypad.popKey();

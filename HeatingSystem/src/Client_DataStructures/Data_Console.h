@@ -42,15 +42,13 @@ namespace client_data_structures {
 	/// </summary>
 	class RecInt_Console : public Record_Interface<R_Display> {
 	public:
-		enum streamable { e_name, e_console_options, NO_OF_CONSOLE_MODES = 4};
+		enum streamable { e_name, e_console_options, NO_OF_CONSOLE_MODES = 2};
 		RecInt_Console(ConsoleController_Thick* thickConsole_Arr);
 		I_Data_Formatter* getField(int _fieldID) override;
 		bool setNewValue(int _fieldID, const I_Data_Formatter* val) override;
 	private:
-		static const char _OLS_D[7];
-		static const char _OLS_DK[7];
-		static const char _OLM_D[7];
-		static const char _OLM_DK[7];
+		static const char _NO_KEYS[5];
+		static const char _KEYS[5];
 		static const char* _options[NO_OF_CONSOLE_MODES];
 		HardwareInterfaces::ConsoleController_Thick* _thickConsole_Arr;
 		StrWrapper _name;

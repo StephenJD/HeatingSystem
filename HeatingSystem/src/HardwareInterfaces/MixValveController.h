@@ -22,7 +22,7 @@ namespace HardwareInterfaces {
 	class MixValveController : public I2C_To_MicroController, public LCD_UI::VolatileData {
 	public:
 		MixValveController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
-		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS, bool multi_master_mode);
+		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS);
 
 		// Queries
 		uint8_t flowTemp() const;
@@ -41,7 +41,6 @@ namespace HardwareInterfaces {
 		void sendRequestFlowTemp(uint8_t callTemp);
 		void logMixValveOperation(bool logThis);
 		void monitorMode();
-		void enable_multi_master_mode(bool enable);
 
 //#if defined (ZPSIM)
 //		int16_t getValvePos() const; // public for simulator

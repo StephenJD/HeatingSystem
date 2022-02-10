@@ -25,7 +25,6 @@ namespace Assembly {
 		void resetZones();
 
 		HardwareInterfaces::UI_TempSensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS];
-		HardwareInterfaces::UI_TempSensor slaveConsole_TSArr[Assembly::NO_OF_REMOTE_DISPLAYS];
 		HardwareInterfaces::TowelRail towelRailArr[Assembly::NO_OF_TOWELRAILS];
 		HardwareInterfaces::BackBoiler backBoiler;
 		HardwareInterfaces::ThermalStore thermalStore;

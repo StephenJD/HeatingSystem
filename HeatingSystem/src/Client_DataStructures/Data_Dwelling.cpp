@@ -26,6 +26,7 @@ namespace client_data_structures {
 			const StrWrapper * strWrapper(static_cast<const StrWrapper *>(val));
 			_name = *strWrapper;
 			strcpy(answer().rec().name, _name.str());
+			answer().update();
 			break;	
 		}
 		}

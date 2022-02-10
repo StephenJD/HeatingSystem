@@ -1,21 +1,11 @@
 #include <Arduino.h>
+//#include <I2C_Recover.h>
 #include <I2C_RecoverRetest.h>
 
 #include "OLED_Thick_Display.h"
 #include "..\HeatingSystem\src\HardwareInterfaces\A__Constants.h"
 
 #include <EEPROM_RE.h>
-
-#define SERIAL_RATE 115200
-
-#include <Logging.h>
- namespace arduino_logger {
- 	Logger& logger() {
- 		static Serial_Logger _log(SERIAL_RATE, L_flush);
- 		return _log;
- 	}
- }
- using namespace arduino_logger;
 
 I2C_Talk& i2C() {
     static I2C_Talk _i2C{};
@@ -29,8 +19,8 @@ EEPROMClassRE& eeprom() {
 
 void ui_yield() {}
 
-I2C_Recovery::I2C_Recover i2c_recover(i2C());
-//I2C_Recovery::I2C_Recover_Retest i2c_recover(i2C());
+//I2C_Recovery::I2C_Recover i2c_recover(i2C());
+I2C_Recovery::I2C_Recover_Retest i2c_recover(i2C());
 unsigned long timeOfReset_mS;
 
 #ifdef ZPSIM
@@ -42,8 +32,6 @@ unsigned long timeOfReset_mS;
 OLED_Thick_Display this_OLED_Thick_Display{i2c_recover, my_registers, HardwareInterfaces::PROGRAMMER_I2C_ADDR, 0, 0, &timeOfReset_mS };
 
 void setup() {
-  Serial.begin(SERIAL_RATE);
-  logger() << F("Start") << L_flush;
   for (int pin = 0; pin < 18; ++pin) pinMode(pin, INPUT_PULLUP);
   i2C().onReceive(my_registers.receiveI2C);
   i2C().onRequest(my_registers.requestI2C);

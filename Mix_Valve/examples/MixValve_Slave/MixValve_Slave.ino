@@ -149,11 +149,6 @@ void loop() {
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		reset_watchdog();
-		auto currMultiMode = Mix_Valve::I2C_Flags_Obj{ mixValve[us_mix].registers().get(Mix_Valve::R_DEVICE_STATE) }.is(Mix_Valve::F_MASTER);
-		if (currMultiMode != multimaster_mode) {
-			multimaster_mode = currMultiMode;
-			logger() << F("New Mode: ") << (currMultiMode ? F("MultiMaster") : F("SingleMaster")) << L_endl;
-		}
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 

@@ -69,8 +69,8 @@ namespace Assembly {
 				, modeFlags);
 			++consoleIndex;
 		}
-	}
-
+	}	
+	
 	uint8_t Initialiser::i2C_Test() {
 		uint8_t status = _OK;
 		status = _testDevices.speedTestDevices();
@@ -82,7 +82,6 @@ namespace Assembly {
 		_resetI2C.hardReset.initialisationRequired = false;
 		uint8_t status = relayPort().initialiseDevice();
 		initialize_Thick_Consoles();
-		status |= initialise_slaveConsole_TempSensors();
 		for (auto& mixValve : hs().tempController().mixValveControllerArr) { 
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
 			status |= mixValve.sendSlaveIniData(requestINI_flag);
@@ -90,18 +89,6 @@ namespace Assembly {
 		if (status != _OK) logger() << L_time << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
 		else logger() << L_time << F("  Initialiser::postI2CResetInitialisation OK\n");
 		return status;
-	}
-
-	uint8_t Initialiser::initialise_slaveConsole_TempSensors() {
-		uint8_t failed = 0;
-		auto id = 0;
-		for (auto& ts : hs().tempController().slaveConsole_TSArr) {
-			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::F_MASTER)) {
-				failed |= ts.setHighRes();
-			}
-			++id;
-		}
-		return failed;
 	}
 
 	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {

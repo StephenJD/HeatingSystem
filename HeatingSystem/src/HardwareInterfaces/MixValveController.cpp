@@ -30,14 +30,15 @@ namespace HardwareInterfaces {
 		, _slaveMode_flowTempSensor{ recover }
 	{}
 
-	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS, bool multi_master_mode) {
-		//profileLogger() << F("MixValveController::ini ") << index << L_endl;
-		auto reg = registers();
+	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS) {
+#ifdef ZPSIM
+		uint8_t(&debugWire)[SIZE_OF_ALL_REGISTERS] = reinterpret_cast<uint8_t(&)[SIZE_OF_ALL_REGISTERS]>(TwoWire::i2CArr[PROGRAMMER_I2C_ADDR]);
+#endif
 		auto localRegOffset = index == M_UpStrs ? PROG_REG_MV0_OFFSET : PROG_REG_MV1_OFFSET;
 		auto remoteRegOffset = index == M_UpStrs ? MV0_REG_OFFSET : MV1_REG_OFFSET;
-		reg.set(Mix_Valve::R_REMOTE_REG_OFFSET, localRegOffset);
 		I2C_To_MicroController::initialise(addr, localRegOffset, remoteRegOffset, timeOfReset_mS);
-		auto i2c_status = Mix_Valve::I2C_Flags_Ref{*reg.ptr(Mix_Valve::R_DEVICE_STATE)}.set(Mix_Valve::F_MASTER, multi_master_mode);
+		auto reg = registers();
+		reg.set(Mix_Valve::R_REMOTE_REG_OFFSET, localRegOffset);
 		_relayArr = relayArr;
 		_flowTS_addr = flowTS_addr;
 		_storeTempSens = &storeTempSens;
@@ -47,11 +48,12 @@ namespace HardwareInterfaces {
 
 	uint8_t MixValveController::sendSlaveIniData(uint8_t requestINI_flag) {
 #ifdef ZPSIM
-		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(TwoWire::i2CArr[getAddress()][0]);
+		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(TwoWire::i2CArr[getAddress()]);
 		writeRegValue(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 #endif
 		waitForWarmUp();
 		uint8_t errCode = reEnable(true);
+		auto reg = registers();
 		if (errCode == _OK) {
 			errCode = writeReg(Mix_Valve::R_DEVICE_STATE);
 			errCode |= writeReg(Mix_Valve::R_REMOTE_REG_OFFSET);
@@ -60,7 +62,6 @@ namespace HardwareInterfaces {
 			errCode |= writeRegValue(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
 			if (errCode) return errCode;
 
-			auto reg = registers();
 			reg.set(Mix_Valve::R_RATIO, 30);
 			reg.set(Mix_Valve::R_FROM_TEMP, 55);
 			reg.set(Mix_Valve::R_FLOW_TEMP, 55);
@@ -76,13 +77,8 @@ namespace HardwareInterfaces {
 			}
 			readRegistersFromValve();
 		}
-		logger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << L_endl;
+		logger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << " State:" << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
 		return errCode;
-	}
-
-	void MixValveController::enable_multi_master_mode(bool enable) {
-		Mix_Valve::I2C_Flags_Ref{ *registers().ptr(Mix_Valve::R_DEVICE_STATE)}.set(Mix_Valve::F_MASTER, enable);
-		writeReg(Mix_Valve::R_DEVICE_STATE);
 	}
 
 	uint8_t MixValveController::flowTemp() const {
@@ -297,13 +293,9 @@ namespace HardwareInterfaces {
 		if (status == _OK) {
 			wait_DevicesToFinish(rawRegisters());
 			auto i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
-			if (i2c_status.is(Mix_Valve::F_MASTER)) {
-				logger() << L_time << "MV-Master[" << index() << "] Req Temp" << L_endl;
-				give_MixV_Bus(i2c_status);
-				wait_DevicesToFinish(rawRegisters());
-			} else {
-				read_flowTempSensors();
-			}
+			//logger() << L_time << "MV-Master[" << index() << "] Req Temp" << L_endl;
+			give_MixV_Bus(i2c_status);
+			wait_DevicesToFinish(rawRegisters());
 			status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
 			auto flowTemp = reg.get(Mix_Valve::R_FLOW_TEMP);
 			if (flowTemp == 255) {

@@ -46,7 +46,7 @@ namespace Assembly {
 		, _relayStateUI_c{ &db._ds_relay, RecInt_Relay::e_state,{V + S + VnLR + UD_S} }
 		, _relayNameUI_c{ &db._ds_relay, RecInt_Relay::e_name, {V + V1} }
 
-		, _mixValveNameUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_multiMode, {V + S + V1} }
+		, _mixValveNameUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_name, {V + S + V1} }
 		, _mixValvePosUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_pos, {V + V1} }
 		, _mixValveFlowTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_flowTemp, {V + V1} }
 		, _mixValveReqTempUI_c{ &db._ds_mixValve, RecInt_MixValveController::e_reqTemp, {V + S + V1} }

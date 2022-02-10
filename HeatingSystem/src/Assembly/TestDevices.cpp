@@ -84,14 +84,6 @@ namespace HardwareInterfaces {
 			showSpeedTestFailed(1,ts, "TS");
 		}
 
-		id = 0;
-		for (auto & ts : hs()._tempController.slaveConsole_TSArr) {
-			if (!hs().thickConsole_Arr[id].console_mode_is(OLED_Thick_Display::F_MASTER)) {
-				showSpeedTestFailed(1, ts, "TS-Sl");
-			}
-			++id;
-		}
-
 		logger() << F("\tTry Mix Valve") << L_endl;
 		if (showSpeedTestFailed(2,hs()._tempController.mixValveControllerArr[0], "Mix V")) {
 			returnVal = ERR_MIX_ARD_FAILED;

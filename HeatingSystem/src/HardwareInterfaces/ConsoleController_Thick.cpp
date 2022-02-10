@@ -46,14 +46,12 @@ namespace HardwareInterfaces {
 
 	uint8_t ConsoleController_Thick::sendSlaveIniData(uint8_t requestINI_flag) {
 #ifdef ZPSIM
-		uint8_t(&debugWire)[OLED::R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[OLED::R_DISPL_REG_SIZE]>(TwoWire::i2CArr[getAddress()][0]);
+		uint8_t(&debugWire)[OLED::R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[OLED::R_DISPL_REG_SIZE]>(TwoWire::i2CArr[getAddress()]);
 #endif
 		waitForWarmUp();
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
-			uint8_t errCode = writeReg(OLED::R_REMOTE_REG_OFFSET);
-			errCode |= writeReg(OLED::R_ROOM_TS_ADDR);
-			errCode |= writeReg(OLED::R_DEVICE_STATE);
+			uint8_t errCode = writeRegSet(OLED::R_REMOTE_REG_OFFSET,3);
 			if (errCode) return errCode;
 
 			auto reg = registers();
@@ -86,16 +84,11 @@ namespace HardwareInterfaces {
 	}
 
 	void ConsoleController_Thick::refreshRegisters() { // Called every second
-		// New request temps initiated by the programmer are sent by the programmer.
-		// In Multi-Master Mode: 
-		//		Room temp and requests are sent by the console to the Programmer.
-		//		Warmup-times are read by the console from the programmer.
-		// In Slave-Mode: 
-		//		Requests are read from the console by the Programmer.
-		//		Room Temp and Warmup-times are sent to the console by the programmer.
+		// Room temp is read and sent by the console to the Programmer.
+		// Requests and Warmup-times are read /sent by the programmer.
 
 #ifdef ZPSIM
-		uint8_t(&debugWire)[OLED::R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[OLED::R_DISPL_REG_SIZE]>(TwoWire::i2CArr[getAddress()][0]);
+		uint8_t(&debugWire)[OLED::R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[OLED::R_DISPL_REG_SIZE]>(TwoWire::i2CArr[getAddress()]);
 #endif	
 		
 		auto reg = registers();
@@ -135,15 +128,10 @@ namespace HardwareInterfaces {
 			sendSlaveIniData(requestINI_flag);
 		} else {
 			auto i2c_status = OLED::I2C_Flags_Obj{ reg.get(OLED::R_DEVICE_STATE) };
-			if (i2c_status.is(OLED::F_MASTER)) {
-				//logger() << L_time << "Req RC Temp[" << index() << "]" << L_endl;
-				give_RC_Bus(i2c_status); // remote reads TS and writes to programmer.
-				wait_DevicesToFinish(rawRegisters());
-			}
-			else {
-				// TemperatureController::checkAndAdjust() reads TS into registers
-				status |= writeRegSet(OLED::R_ROOM_TEMP, 2);
-			}			
+			//logger() << L_time << "Req RC Temp[" << index() << "]" << L_endl;
+			give_RC_Bus(i2c_status); // remote reads TS and writes to programmer.
+			wait_DevicesToFinish(rawRegisters());
+		
 			auto reg = registers();
 			status = readRegVerifyValue(OLED::R_REQUESTING_T_RAIL,regVal);
 			if (status == _OK && reg.update(OLED::R_REQUESTING_T_RAIL, regVal)) towelrail_req_changed = regVal;
@@ -203,15 +191,19 @@ namespace HardwareInterfaces {
 				logger() << L_time << F("New Req Temp sent by Programmer: ") << zoneReqTemp << L_endl;
 				reg.set(OLED::R_REQUESTING_ROOM_TEMP, zoneReqTemp);
 				writeReg(OLED::R_REQUESTING_ROOM_TEMP);
+				_hasChanged = true;
 			} 
 			auto haveNewData = reg.update(OLED::R_REQUESTING_ROOM_TEMP, _zone->currTempRequest());
 			haveNewData |= reg.update(OLED::R_WARM_UP_ROOM_M10, _zone->warmUpTime_m10());
 			haveNewData |= reg.update(OLED::R_ON_TIME_T_RAIL, uint8_t(_towelRail->timeToGo()/60));
 			haveNewData |= reg.update(OLED::R_WARM_UP_DHW_M10, _dhw->warmUpTime_m10()); // If -ve, in 0-60 mins, if +ve in min_10
-			if (!console_mode_is(OLED::F_MASTER)) writeRegSet(OLED::R_WARM_UP_ROOM_M10, 3);
 			if (_hasChanged || haveNewData) {
-				OLED::I2C_Flags_Ref(*reg.ptr(OLED::R_DEVICE_STATE)).set(OLED::F_DATA_CHANGED);
-				writeReg(OLED::R_DEVICE_STATE);
+				writeRegSet(OLED::R_WARM_UP_ROOM_M10, 3);
+				auto devFlags = OLED::I2C_Flags_Obj(reg.get(OLED::R_DEVICE_STATE));
+				devFlags.set(OLED::F_DATA_CHANGED);
+				writeRegValue(OLED::R_DEVICE_STATE, devFlags);
+				logger() << L_time << "Cons[" << index() << "] Data Changed" << L_endl;
+				_hasChanged = false;
 			}
 		}
 	}

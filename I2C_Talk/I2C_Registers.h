@@ -2,26 +2,16 @@
 #include <Arduino.h>
 #include <I2C_Talk.h>
 
-//#define DEBUG_REGISTERS
-//#ifdef DEBUG_REGISTERS
-//#include <Logging.h>
-//namespace arduino_logger {
-//	Logger& logger();
-//}
-//using namespace arduino_logger;
-//#endif
-
 namespace i2c_registers {
 
 	struct Defaut_Tag_None {};
 	/// <summary>
 	/// Registers are in static-storage and thus initialised to zero
+	/// No public access. Must use RegAccess.
 	/// </summary>
 	class I_Registers {
-	public:
-		//static bool isQueued() { return _howMany; }
-		//static bool isLocked(int howMany);
 	private:
+		friend class RegAccess;
 		uint8_t getRegister(int reg) const { return const_cast<I_Registers*>(this)->regArr()[reg]; }
 		void setRegister(int reg, uint8_t value) {regArr()[reg] = value; }
 		bool updateRegister(int reg, uint8_t value) { 
@@ -31,26 +21,23 @@ namespace i2c_registers {
 		}
 		void addToRegister(int reg, uint8_t increment) { regArr()[reg] += increment; }
 		volatile uint8_t* reg_ptr(int reg) { return regArr() + reg; }
-	private:
-		friend class RegAccess;
 		virtual volatile uint8_t* regArr() = 0;
 		virtual uint8_t& regAddr() = 0;
-		//static int8_t _mutex;
-		//static int8_t _howMany;
 	protected:
 		static I2C_Talk* _i2C;
 	};
 
 	/// <summary>
-	/// This was a failed attempt to protect registers from I2C comms during updates
-	/// It requires clock-stretching the I2C which is very tricky and non-portable
-	/// delaying the reading / writing done inside receiveI2C/requestI2C doesn't work, as those functions
-	/// assume that the read/write was already sucessful and so does not produce a clock-stretch.
+	/// Provides public access to registers.
+	/// Constructed with refernce to registers and register-offset.
+	/// It allows multiple remote registers to map to a single local register
+	/// applying any offset required.
+	/// RemoteReg : ...........{I,J,K}
+	/// LocalReg:   {{A,B,C,D},{I,J,K},{V,W,X,Y,Z}} Offset by 4 required.
 	/// </summary>
 	class RegAccess {
 	public:
 		RegAccess(I_Registers& registers, int regOffset = 0);
-		//~RegAccess();
 		uint8_t get(int reg) const { return _registers.getRegister(_regOffset + reg); }
 		void set(int reg, uint8_t value) { return _registers.setRegister(_regOffset + reg, value); }
 		bool update(int reg, uint8_t value) { return _registers.updateRegister(_regOffset + reg, value); }
@@ -77,25 +64,12 @@ namespace i2c_registers {
 		// The bytes have already been sent when this gets called.
 		// Slave can hold CLK low until it is ready to receive data.
 		static void receiveI2C(int howMany) {
-			//if (!isQueued()) { // stops it working!
-			//if (true) {
-				uint8_t regNo;
-				if (_i2C->receiveFromMaster(1, &regNo)) _regAddr = regNo; // first byte is reg-address
-				//logger() << millis() << F(" CR:") << _regAddr << L_endl;				
-			//if (!isQueued()) { // stops it working!
-				if (--howMany) {
-						if (_regAddr + howMany > register_size) howMany = register_size - _regAddr;
-						//if (true) {
-						//if (!isLocked(howMany)) { // doesn't like isLocked()
-							_i2C->receiveFromMaster(howMany, _regArr + _regAddr);
-							//logger() << millis() << F(" C:") << _regAddr << F(" V:") << *(_regArr + _regAddr) << L_endl;
-						//}
-						//else logger() << millis() << F(" LC:") << _regAddr << L_endl;
-				}
-			//} 
-			//else {
-			//	logger() << millis() << F(" XCR:") << L_endl;
-			//}
+			uint8_t regNo;
+			if (_i2C->receiveFromMaster(1, &regNo) > 0) _regAddr = regNo; // first byte is reg-address
+			if (--howMany) {
+				if (_regAddr + howMany > register_size) howMany = register_size - _regAddr;
+				_i2C->receiveFromMaster(howMany, _regArr + _regAddr);
+			}
 		}
 
 		// Called when data is requested by a Master from this slave, reading from the last register address sent.
@@ -103,19 +77,9 @@ namespace i2c_registers {
 		// Writes bytes to the transmit buffer. When it returns the bytes are sent.
 		static void requestI2C() { 
 			// The Master will send a NACK when it has received the requested number of bytes, so we should offer as many as could be requested.
-			//if (!isQueued()) { // OK
-				int bytesAvaiable = register_size - _regAddr;
-				if (bytesAvaiable > 32) bytesAvaiable = 32;
-				//if (!isLocked(-bytesAvaiable)) { // OK
-				//if (true) {
-					_i2C->write(_regArr + _regAddr, bytesAvaiable);
-					//logger() << millis() << F(" Q:") << _regAddr << F(" V:") << *(_regArr + _regAddr) << L_endl;
-				//}
-				//else logger() << millis() << F(" LQ:") << _regAddr << L_endl;
-			//} 
-			//else {
-			//	logger() << millis() << F(" XQ:") << L_endl;
-			//}
+			int bytesAvaiable = register_size - _regAddr;
+			if (bytesAvaiable > 32) bytesAvaiable = 32;
+			_i2C->write(_regArr + _regAddr, bytesAvaiable);
 		}
 	private:
 		volatile uint8_t* regArr() override {return _regArr;}
