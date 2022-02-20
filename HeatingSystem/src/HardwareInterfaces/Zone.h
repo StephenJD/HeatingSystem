@@ -86,6 +86,7 @@ namespace HardwareInterfaces {
 	private:
 		int8_t modifiedCallTemp(int8_t callTemp) const;
 		void saveThermalRatio();
+		void logCur_next_profileTT(const char* msg) const;
 
 		UI_Bitwise_Relay* _relay = 0;
 		ThermalStore* _thermalStore = 0;

@@ -11,6 +11,7 @@ using namespace std;
 
 namespace arduino_logger {
 	Logger& profileLogger();
+	//Logger& zTempLogger();
 }
 using namespace arduino_logger;
 
@@ -211,6 +212,7 @@ namespace Assembly {
 	}
 
 	void Sequencer::updateTT(int id, client_data_structures::R_TimeTemp tt) {
+		profileLogger() << L_time << "updateTT" << L_endl;
 		Answer_R<R_TimeTemp> timeTemp = _queries->q_TimeTemps[id];
 		timeTemp.rec() = tt;
 		timeTemp.update();

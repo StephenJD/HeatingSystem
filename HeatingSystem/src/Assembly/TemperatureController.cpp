@@ -114,6 +114,28 @@ namespace Assembly {
 		zTempLogger().flush();
 		profileLogger().flush();
 
+		if (checkPreHeat && newMinute && clock_().time().asInt() == 0) {
+			zTempLogger() 
+				<< F("Time") << L_tabs << F("Zone")
+				<< F("PreReq")
+				<< F("PreIs")
+				<< F("FlowReq")
+				<< F("FlowIs")
+				<< F("UsedRatio")
+				<< F("Is")
+				<< F("Ave")
+				<< F("AvePer")
+				<< F("CoolPer")
+				<< F("Error16ths")
+				<< F("Outside")
+				<< F("PreheatMins")
+				<< F("ControlledBy")
+				<< F("IsOn")
+				<< L_endl;
+			profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
+
+		}
+
 		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 		//logger() << L_time << "Check TS's" << L_endl;
 		for (auto & ts : tempSensorArr) {

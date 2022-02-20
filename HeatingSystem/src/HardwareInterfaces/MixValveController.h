@@ -57,8 +57,6 @@ namespace HardwareInterfaces {
 		UI_TempSensor * _storeTempSens = 0;
 		UI_Bitwise_Relay * _relayArr = 0;
 
-		UI_TempSensor _slaveMode_flowTempSensor;
-
 		Mix_Valve::Mode _previous_valveStatus[NO_OF_MIXERS];
 		uint8_t _error = 0;
 		uint8_t _limitTemp = 100;

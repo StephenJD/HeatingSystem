@@ -131,6 +131,9 @@ void HeatingSystem::updateChangedData() {
 	if (dataHasChanged && _mainConsoleChapters.chapter() == 0) {
 		logger() << L_time << F("updateChangedData\n");
 		_tempController.checkZones(true);
+		for (auto& remote : thickConsole_Arr) {
+			remote.refreshRegisters();
+		}
 		dataHasChanged = false;
 	}
 #if defined ZPSIM

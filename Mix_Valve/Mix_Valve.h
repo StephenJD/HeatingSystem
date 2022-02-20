@@ -35,7 +35,6 @@ class Mix_Valve
 {
 public:
 	enum MV_Device_State { F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, _NO_OF_FLAGS};
-	//enum MV_Device_State { MV_OK, F_DS_TS_FAILED, F_US_TS_FAILED, MV_TS_FAILED, MV_I2C_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL};
 	
 	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
@@ -61,7 +60,7 @@ public:
 		// Receive
 		, R_REQUEST_FLOW_TEMP // also sent to confirm
 		, MV_VOLATILE_REG_SIZE // 11
-		, MV_NO_TO_READ = R_REQUEST_FLOW_TEMP - R_DEVICE_STATE
+		, MV_NO_TO_READ = R_REQUEST_FLOW_TEMP - R_REMOTE_REG_OFFSET
 	};
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
@@ -75,7 +74,7 @@ public:
 		, MV_ALL_REG_SIZE // = 17
 	};
 
-	enum Mode {e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat, e_Error };
+	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
@@ -83,7 +82,7 @@ public:
 
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
 	void begin(int defaultFlowTemp);
-	const __FlashStringHelper* name();
+	const __FlashStringHelper* name() const;
 	void check_flow_temp();
 	void setDefaultRequestTemp();
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
@@ -95,7 +94,8 @@ private:
 	//friend void testSlave();
 	//friend void printModes();
 
-	Mode algorithmMode(int call_flowDiff) const;
+	Mode algorithmMode(int needIncreaseBy_deg) const;
+	bool valveIsAtLimit();
 	void saveToEEPROM();
 	void checkForNewReqTemp();
 	void refreshRegisters();
@@ -107,6 +107,7 @@ private:
 	void serviceMotorRequest();
 	void checkPumpIsOn();
 	void loadFromEEPROM();
+	void turnValveOff();
 
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;
@@ -118,7 +119,7 @@ private:
 	EEPROMClass * _ep;
 
 	// Temporary Data
-	int16_t _onTime = 0;
+	int16_t _onTime = 0; // +ve to move, -ve to wait.
 	int16_t _valvePos = 0;
 	int16_t _moveFromPos = 0;
 	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
@@ -127,7 +128,9 @@ private:
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
-	
+	mutable bool _findOffPos = true;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
+	static uint16_t _motorsOffV;
+	static constexpr uint16_t _MOTORS_ON_DIFF_V = 40;
 };
 

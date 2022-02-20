@@ -46,7 +46,7 @@ constexpr auto MV_REQUESTING_INI = 1;
 
 namespace arduino_logger {
 	Logger& logger() {
-		static Serial_Logger _log(SERIAL_RATE, L_startWithFlushing);
+		static Serial_Logger _log(SERIAL_RATE, L_allwaysFlush);
 		return _log;
 	}
 }
@@ -60,7 +60,7 @@ EEPROMClassRE& eeprom() {
 extern const uint8_t version_month;
 extern const uint8_t version_day;
 const uint8_t version_month = 2; // change to force re-application of defaults incl temp-sensor addresses
-const uint8_t version_day = 9;
+const uint8_t version_day = 20;
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
 enum { us_mix, ds_mix };
@@ -116,8 +116,6 @@ void setup() {
 	i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
 	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	i2C().setMax_i2cFreq(100000);
-	i2C().onReceive(mixV_register_set.receiveI2C);
-	i2C().onRequest(mixV_register_set.requestI2C);
 	i2C().begin();
 
 	pinMode(e_Slave_Sense, INPUT);
@@ -129,13 +127,16 @@ void setup() {
 		delay(50);
 	}
 
-	mixValve[0].begin(55); // does speed-test
+	mixValve[0].begin(55); // does speed-test for TS
 	mixValve[1].begin(55);
-	logger() << F("Setup complete") << L_flush;
 	auto speedTest = I2C_SpeedTest{ programmer };
 	speedTest.fastest();
 	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	delay(500);
+	roleChanged(getRole());
+	i2C().onReceive(mixV_register_set.receiveI2C);
+	i2C().onRequest(mixV_register_set.requestI2C);
+	logger() << F("Setup complete.") << L_flush;
 }
 
 void loop() {
@@ -159,6 +160,10 @@ void loop() {
 			logger() << showErr(err) << L_endl;
 		}
 	} else showErr(err);
+}
+
+bool relaysOn() {
+	return psu_enable.logicalState();
 }
 
 void enableRelays(bool enable) { // called by MixValve.cpp

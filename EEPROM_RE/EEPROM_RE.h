@@ -36,7 +36,7 @@ class I2C_Talk;
 class EEPROMClassRE : public I_I2Cdevice_Recovery {
 #if defined (ZPSIM)
 public:
-	//EEPROMClassRE();
+	//EEPROMClassRE(); // Provide I2C address on ZPSIM.
 	static uint8_t myEEProm[HardwareInterfaces::EEPROM_SIZE]; // EEPROM object may not get created until after it is used! So ensure array exists by making it static
 	~EEPROMClassRE();
 	void loadFile();

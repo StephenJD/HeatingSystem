@@ -39,7 +39,7 @@ namespace client_data_structures {
 			if (canDo) {
 				runTimeData().check();
 				_secondsToGo.val = runTimeData().timeToGo();
-				if (_secondsToGo.val) logger() << L_time << "TowelRail " << recordID() << " timeToGo: " << _secondsToGo.val << L_endl;
+				//if (_secondsToGo.val) logger() << L_time << "TowelRail " << recordID() << " timeToGo: " << _secondsToGo.val << L_endl;
 			}
 			return &_secondsToGo;
 		}

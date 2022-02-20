@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 
 namespace flag_enum {
 	template <bool B, typename T, typename F>
@@ -28,12 +29,12 @@ namespace flag_enum {
 	/// <typeparam name="EnumType"></typeparam>
 	template <typename EnumType, int noOfFlags = 8>
 	class FE_Obj {
-		using Base = typename SmallestType<1 + noOfFlags/8>::type;
+		using Base = typename SmallestType<1 + (noOfFlags-1)/8>::type;
 		static constexpr Base TOP_BIT = 1 << ((sizeof(Base) * 8) - 1);
 	public:		
 		using type = EnumType;
 		FE_Obj() = default;
-		FE_Obj(Base val) : _base(val) {}
+		FE_Obj(Base val) : _base(val) {	static_assert(1+(noOfFlags - 1) / 8 <= sizeof(Base),"Type too small" );}
 		FE_Obj(EnumType val) : _base(val) {}
 		operator EnumType() const { return EnumType(_base); }
 		//bool get(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }
@@ -57,17 +58,18 @@ namespace flag_enum {
 		//FlagEnum& operator += (int pos) { return (*this) += (EnumType(pos)); }
 		FE_Obj& operator -= (EnumType pos) { clear(pos); return *this; }
 		//FlagEnum& operator -= (int pos) { return (*this) -= (EnumType(pos)); }
-		FE_Obj& operator = (Base val) { setValue(val); return *this; }
+		FE_Obj& operator = (Base val) { _base = val; return *this; }
+		FE_Obj& operator = (EnumType val) { _base = val; return *this; }
 		void setValue(Base val) { _base |= (val & MAX_VALUE); }
 		static constexpr Base MAX_VALUE = (TOP_BIT >> (noOfFlags - 1)) - Base(1);
-#ifdef ZPSIM
-		void printFlags() {
-			for (unsigned int i = 0; i < sizeof(Base) * 8; ++i) {
-				logger() << is(i) << ", ";
-			}
-			logger() << endl;
-		}
-#endif
+//#ifdef ZPSIM
+//		void printFlags() {
+//			for (unsigned int i = 0; i < sizeof(Base) * 8; ++i) {
+//				logger() << is(i) << ", ";
+//			}
+//			logger() << endl;
+//		}
+//#endif
 	private:
 		Base _base = 0;
 	};
@@ -82,12 +84,18 @@ namespace flag_enum {
 	/// <typeparam name="EnumType"></typeparam>
 	template <typename EnumType, int noOfFlags = 8>
 	class FE_Ref {
-		using Base = typename SmallestType<1 + noOfFlags/8>::type;
+		using Base = typename SmallestType<1 + (noOfFlags-1)/8>::type;
 		static constexpr Base TOP_BIT = 1 << ((sizeof(Base) * 8) - 1);
 	public:		
 		using type = EnumType;
-		FE_Ref(volatile EnumType& val) : _base_ptr(static_cast<Base*>(&val)) {}
+		FE_Ref(volatile EnumType& val) : _base_ptr(static_cast<volatile Base*>(&val)) {}
 		FE_Ref(volatile Base& val) : _base_ptr(&val) {}
+		/*template<typename T>
+		FE_Ref(T& val) { 
+			static_assert(1 + (noOfFlags - 1) / 8 <= sizeof(T), "Type used for flag-enum is too small"); 
+			_base_ptr = static_cast<volatile Base*>(&val);
+		}*/
+		//FE_Ref(Base& val) : _base_ptr(&val) {}
 		operator EnumType() const { return  EnumType(* _base_ptr); }
 
 		bool is(EnumType pos) const { return *_base_ptr & (TOP_BIT >> int(pos)); }
@@ -103,17 +111,18 @@ namespace flag_enum {
 		FE_Ref& clear(EnumType pos) { *_base_ptr &= ~(TOP_BIT >> int(pos)); return *this; }
 		FE_Ref& operator += (EnumType pos) { set(pos); return *this; }
 		FE_Ref& operator -= (EnumType pos) { clear(pos); return *this; }
-		FE_Ref& operator = (Base val) { setValue(val); return *this; }
+		FE_Ref& operator = (volatile EnumType& val) = delete;
+		FE_Ref& operator = (volatile Base& val) = delete;
 		void setValue(Base val) { *_base_ptr |= (val & MAX_VALUE); }
 		static constexpr Base MAX_VALUE = (TOP_BIT >> (noOfFlags - 1)) - Base(1);
-#ifdef ZPSIM
-		void printFlags() {
-			for (unsigned int i = 0; i < sizeof(Base) * 8; ++i) {
-				logger() << is(i) << ", ";
-			}
-			logger() << endl;
-		}
-#endif
+//#ifdef ZPSIM
+//		void printFlags() {
+//			for (unsigned int i = 0; i < sizeof(Base) * 8; ++i) {
+//				logger() << is(i) << ", ";
+//			}
+//			logger() << endl;
+//		}
+//#endif
 	private:
 		volatile Base* _base_ptr;
 	};

@@ -70,8 +70,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics", "..\..\VS_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test RDB", "..\..\VS_Projects\NewHeatingSystem\Test RDB\Test RDB.vcxproj", "{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinuxTests", "LinuxTests\LinuxTests.vcxproj", "{B0D701A7-902B-47E0-A408-277028F1F208}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test CurveMatch", "..\..\VS_Projects\Test Libraries\Test CurveMatch\Test CurveMatch.vcxproj", "{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Clock and DateTime", "..\..\VS_Projects\Test Libraries\Test Clock and DateTime\Test Clock and DateTime.vcxproj", "{3DAA4623-8197-4ECF-8F83-1E1C3DBBC349}"
@@ -96,6 +94,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SJD Modified", "SJD Modifie
 		..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c = ..\..\SJD Modified Core Librarys\Wire_AVR\utility\twi.c
 		..\..\SJD Modified Core Librarys\Wire_SAM\Wire.cpp = ..\..\SJD Modified Core Librarys\Wire_SAM\Wire.cpp
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test FlagEnums", "..\..\VS_Projects\Test Libraries\Test FlagEnums\Test FlagEnums.vcxproj", "{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test MixValve", "..\..\VS_Projects\Test Libraries\Test MixValve\Test MixValve.vcxproj", "{E316DBC0-B99A-4CBB-8096-5587B8740F4C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -347,22 +349,6 @@ Global
 		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x64.Build.0 = Release|x64
 		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x86.ActiveCfg = Release|Win32
 		{98045B43-1BCF-400C-B88B-4EFB0B8C94B8}.Release|x86.Build.0 = Release|Win32
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|ARM.ActiveCfg = Debug|ARM
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|ARM.Build.0 = Debug|ARM
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|ARM64.Build.0 = Debug|ARM64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|x64.ActiveCfg = Debug|x64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|x64.Build.0 = Debug|x64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|x86.ActiveCfg = Debug|x86
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Debug|x86.Build.0 = Debug|x86
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|ARM.ActiveCfg = Release|ARM
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|ARM.Build.0 = Release|ARM
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|ARM64.ActiveCfg = Release|ARM64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|ARM64.Build.0 = Release|ARM64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|x64.ActiveCfg = Release|x64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|x64.Build.0 = Release|x64
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|x86.ActiveCfg = Release|x86
-		{B0D701A7-902B-47E0-A408-277028F1F208}.Release|x86.Build.0 = Release|x86
 		{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}.Debug|ARM.ActiveCfg = Debug|Win32
 		{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{17FA0A00-3183-480B-BE0E-F2C6EFF4CB91}.Debug|x64.ActiveCfg = Debug|x64
@@ -433,6 +419,38 @@ Global
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Release|x64.Build.0 = Release|x64
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Release|x86.ActiveCfg = Release|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Release|x86.Build.0 = Release|Win32
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|ARM.ActiveCfg = Debug|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|ARM.Build.0 = Debug|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|ARM64.ActiveCfg = Debug|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|ARM64.Build.0 = Debug|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|x64.ActiveCfg = Debug|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|x64.Build.0 = Debug|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|x86.ActiveCfg = Debug|Win32
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Debug|x86.Build.0 = Debug|Win32
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|ARM.ActiveCfg = Release|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|ARM.Build.0 = Release|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|ARM64.ActiveCfg = Release|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|ARM64.Build.0 = Release|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|x64.ActiveCfg = Release|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|x64.Build.0 = Release|x64
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|x86.ActiveCfg = Release|Win32
+		{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}.Release|x86.Build.0 = Release|Win32
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|ARM.ActiveCfg = Debug|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|ARM.Build.0 = Debug|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|ARM64.ActiveCfg = Debug|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|ARM64.Build.0 = Debug|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|x64.ActiveCfg = Debug|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|x64.Build.0 = Debug|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|x86.ActiveCfg = Debug|Win32
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Debug|x86.Build.0 = Debug|Win32
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|ARM.ActiveCfg = Release|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|ARM.Build.0 = Release|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|ARM64.ActiveCfg = Release|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|ARM64.Build.0 = Release|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|x64.ActiveCfg = Release|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|x64.Build.0 = Release|x64
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|x86.ActiveCfg = Release|Win32
+		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

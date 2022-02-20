@@ -77,12 +77,13 @@
 
 	inline arduino_logger::Logger & operator<<(arduino_logger::Logger & logger, const Clock & clk) {
 		clk.refresh();
-		GP_LIB::CStr_20 timeStr = GP_LIB::intToString(clk.day(), 2);
-		timeStr += F_SLASH;
-		timeStr += GP_LIB::intToString(clk.month(), 2);
-		timeStr += F_SLASH;
-		timeStr += GP_LIB::intToString(clk.year(), 2);
-		timeStr += F_SPACE;
+		GP_LIB::CStr_20 timeStr;
+		//timeStr += GP_LIB::intToString(clk.day(), 2);
+		//timeStr += F_SLASH;
+		//timeStr += GP_LIB::intToString(clk.month(), 2);
+		//timeStr += F_SLASH;
+		//timeStr += GP_LIB::intToString(clk.year(), 2);
+		//timeStr += F_SPACE;
 		timeStr += GP_LIB::intToString(clk.hrs(), 2);
 		timeStr += F_COLON;
 		timeStr += GP_LIB::intToString(clk.mins10() * 10 + clk.minUnits(),2);

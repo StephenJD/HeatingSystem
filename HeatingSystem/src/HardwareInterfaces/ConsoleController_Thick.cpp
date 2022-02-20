@@ -6,6 +6,7 @@
 void ui_yield();
 namespace arduino_logger {
 	Logger& logger();
+	Logger& profileLogger();
 }
 using namespace arduino_logger;
 
@@ -18,6 +19,7 @@ namespace HardwareInterfaces {
 	{}
 
 	void ConsoleController_Thick::initialise(int index, int addr, int roomTS_addr, TowelRail& towelRail, Zone& dhw, Zone& zone, unsigned long& timeOfReset_mS, uint8_t console_mode) {
+		//TODO: doesn't get temp from remotes after reset!!!
 		logger() << F("ConsoleController_Thick::ini ") << index << " i2cMode: " << console_mode  << L_endl;
 		auto localRegOffset = PROG_REG_RC_US_OFFSET + (OLED::R_DISPL_REG_SIZE * index);
 		I2C_To_MicroController::initialise(addr, localRegOffset, 0, timeOfReset_mS);
@@ -31,6 +33,7 @@ namespace HardwareInterfaces {
 		//logRemoteRegisters();
 		logger() << F("ConsoleController_Thick::ini done.") << L_endl;
 	}
+
 	uint8_t ConsoleController_Thick::get_console_mode() const {
 		return registers().get(OLED::R_DEVICE_STATE);
 	}
@@ -173,10 +176,13 @@ namespace HardwareInterfaces {
 				}
 				else {
 					logger() << L_time << F("New Req Temp sent by Remote[") << index() << "] : " << remReqTemp << L_endl;
+					profileLogger() << L_time << F("_New Req Temp sent by Remote[") << index() << "]:\t" << remReqTemp << L_endl;
 					_hasChanged = true;
 					localReqTemp = remReqTemp;
 					auto limitRequest = _zone->maxUserRequestTemp(true);
-					if (limitRequest < localReqTemp) {
+					auto isOnNextProfile = _zone->advancedToNextProfile();
+					if (isOnNextProfile) limitRequest = _zone->currTempRequest();
+					if (limitRequest < localReqTemp || isOnNextProfile) {
 						localReqTemp = limitRequest;
 						reg.set(OLED::R_REQUESTING_ROOM_TEMP, localReqTemp);
 					}
@@ -189,6 +195,7 @@ namespace HardwareInterfaces {
 			}
 			else if (zoneReqTemp != localReqTemp) { // Zonetemp changed locally
 				logger() << L_time << F("New Req Temp sent by Programmer: ") << zoneReqTemp << L_endl;
+				profileLogger() << L_time << F("_New Req Temp sent by Programmer:\t") << zoneReqTemp << L_endl;
 				reg.set(OLED::R_REQUESTING_ROOM_TEMP, zoneReqTemp);
 				writeReg(OLED::R_REQUESTING_ROOM_TEMP);
 				_hasChanged = true;
@@ -202,7 +209,7 @@ namespace HardwareInterfaces {
 				auto devFlags = OLED::I2C_Flags_Obj(reg.get(OLED::R_DEVICE_STATE));
 				devFlags.set(OLED::F_DATA_CHANGED);
 				writeRegValue(OLED::R_DEVICE_STATE, devFlags);
-				logger() << L_time << "Cons[" << index() << "] Data Changed" << L_endl;
+				//logger() << L_time << "Cons[" << index() << "] Data Changed" << L_endl;
 				_hasChanged = false;
 			}
 		}

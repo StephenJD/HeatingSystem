@@ -58,7 +58,7 @@ namespace HardwareInterfaces {
 
 	Error_codes I2C_To_MicroController::readReg(int reg) {
 		auto regset = registers();
-		return read(_remoteRegOffset + reg, 1, regset.ptr(reg)); // recovery
+		return read_verify_1byte(_remoteRegOffset + reg, *regset.ptr(reg),2,4); // recovery
 	}	
 	
 	Error_codes I2C_To_MicroController::readRegSet(int reg, int noToRead) {

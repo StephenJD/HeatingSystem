@@ -152,6 +152,25 @@ void setup() {
 	logger() << L_time << F(" ****** Arduino Restarted ") << millis() << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT/1000 << F("S\n\n") << L_flush;
 	zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 	profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
+	zTempLogger()
+		<< F("Time") << L_tabs << F("Zone")
+		<< F("PreReq")
+		<< F("PreIs")
+		<< F("FlowReq")
+		<< F("FlowIs")
+		<< F("UsedRatio")
+		<< F("Is")
+		<< F("Ave")
+		<< F("AvePer")
+		<< F("CoolPer")
+		<< F("Error")
+		<< F("Outside")
+		<< F("PreheatMins")
+		<< F("ControlledBy")
+		<< F("IsOn")
+		<< L_endl;
+	profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
+
 	logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
 	pinMode(RESET_LEDP_PIN, OUTPUT);
 	digitalWrite(RESET_LEDP_PIN, HIGH);
@@ -165,6 +184,7 @@ void setup() {
 	heating_system = &hs;
 	logger() << L_time << F("set_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
 	set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
+
 	while (true) {
 		//Serial.println("Loop");
 		hs.updateChangedData();

@@ -118,7 +118,7 @@ void sendSlaveIniData(int i) {
 		setReg(i, Mix_Valve::R_RATIO, 30);
 		setReg(i, Mix_Valve::R_FROM_TEMP, 55);
 		setReg(i, Mix_Valve::R_COUNT, 0);
-		setReg(i, Mix_Valve::R_VALVE_POS, 70);
+		setReg(i, Mix_Valve::R_VALVE_POS, 75);
 		setReg(i, Mix_Valve::R_FROM_POS, 75);
 		setReg(i, Mix_Valve::R_FLOW_TEMP, 55);
 		setReg(i, Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
@@ -149,13 +149,13 @@ void logMixValveOperation(int i, bool logThis) {
 }
 
 const __FlashStringHelper* showState(int i) {
-	switch (getReg(i, Mix_Valve::R_MODE)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_DontWantHeat
+	switch (getReg(i, Mix_Valve::R_MODE)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_StopHeating
 	case Mix_Valve::e_Wait: return F("Wt");
 	case Mix_Valve::e_Checking: return F("Chk");
 	case Mix_Valve::e_Mutex: return F("Mx");
 	case Mix_Valve::e_NewReq: return F("Req");
 	case Mix_Valve::e_AtLimit: return F("Lim");
-	case Mix_Valve::e_DontWantHeat: return F("Min");
+	case Mix_Valve::e_StopHeating: return F("Min");
 	case Mix_Valve::e_Moving:
 		switch (int8_t(getReg(i, Mix_Valve::R_STATE))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
 		case Mix_Valve::e_Moving_Coolest: return F("Min");

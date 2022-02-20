@@ -68,12 +68,16 @@ namespace HardwareInterfaces {
 		if (_timer > 0) {
 			//profileLogger() << L_time << "TowelR " << record() << " tick: " << _timer << " FlowT: " << (int)currFlowTemp << L_endl;
 			--_timer; // called every second
-			if (_timer == TWL_RAD_RISE_TIME) _timer = 0;
+			if (_timer == TWL_RAD_RISE_TIME) {
+				_timer = 0;
+				profileLogger() << L_time << L_tabs << "_TowelR " << record() << " Expired" << L_endl;
+			}
 		}
 		_callFlowTemp = 0;
 		if (_timer > TWL_RAD_RISE_TIME || rapidTempRise(currFlowTemp)) {
 			_prevTemp = currFlowTemp;
 			_callFlowTemp = _onTemp;
+			profileLogger() << L_time << L_tabs << "_TowelR " << record() << " RelayState: " << _relay->logicalState() << L_endl;
 		}
 		return (_callFlowTemp == _onTemp);
 	}
@@ -87,18 +91,18 @@ namespace HardwareInterfaces {
 		auto tempDiff = hotWaterFlowTemp - _prevTemp;
 		// only called if _timer < TWL_RAD_RISE_TIME
 		if (tempDiff < 0) {
-			profileLogger() << L_time << "TowelR " << record() << " Reset Timer. Cooled to " << hotWaterFlowTemp << L_endl;
+			//profileLogger() << L_time << "TowelR " << record() << " Reset Timer. Cooled to " << hotWaterFlowTemp << L_endl;
 			_prevTemp = hotWaterFlowTemp;
 			_timer = 0;
 		} else if (_timer == 0) {
 			if (tempDiff > 1) {
-				profileLogger() << L_time << "TowelR " << record() << " TempDiff. Timer set to TWL_RAD_RISE_TIME. Was: " << _prevTemp << " now: " << hotWaterFlowTemp << L_endl;
+				//profileLogger() << L_time << "TowelR " << record() << " TempDiff. Timer set to TWL_RAD_RISE_TIME. Was: " << _prevTemp << " now: " << hotWaterFlowTemp << L_endl;
 				_timer = TWL_RAD_RISE_TIME;
 				_prevTemp = hotWaterFlowTemp;			
 			}
 		} else if (tempDiff >= TWL_RAD_RISE_TEMP) {
 			_timer = _onTime * 60 + TWL_RAD_RISE_TIME; // stops at TWL_RAD_RISE_TIME.
-			profileLogger() << L_time << "TowelR " << record() << " RapidRise from: " << _prevTemp << " to " << hotWaterFlowTemp << L_endl;
+			profileLogger() << L_time << L_tabs << "_TowelR " << record() << " RapidRise from: " << _prevTemp << " to " << hotWaterFlowTemp << L_endl;
 			return true;
 		}
 

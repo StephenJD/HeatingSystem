@@ -99,8 +99,8 @@ namespace client_data_structures {
 			HardwareInterfaces::Zone & z = runTimeData();
 			if (z.isDHWzone()) return false;
 			auto reqTemp = uint8_t(newValue->val);
+			profileLogger() << L_time << "_MainC Change Profile temp" << L_tabs << answer().rec().name << "to:" << reqTemp << "Max:" << _requestTemp.valRange.maxVal << L_endl;
 			z.changeCurrTempRequest(reqTemp);
-			profileLogger() << L_time << answer().rec().name << " Save req temp to: " << reqTemp << " Max: " << _requestTemp.valRange.maxVal << L_endl;
 			break;
 		}
 		case e_ratio:
@@ -129,12 +129,10 @@ namespace client_data_structures {
 		case e_reqTemp: {
 			HardwareInterfaces::Zone& z = runTimeData();
 			if (moveBy > 0) {
-				profileLogger() << answer().rec().name << " Select Next Profile" <<  L_endl;
-				//if (z.startDateTime() <= clock_().now()) {
-					z.startNextProfile();
-				//}
+				profileLogger() << L_time << "_Select Next Profile\t" << answer().rec().name <<  L_endl;
+				z.startNextProfile();
 			} else {
-				profileLogger() << answer().rec().name << " Restore Current Profile" << L_endl;
+				profileLogger() << L_time << "_Restore Current Profile\t" << answer().rec().name << L_endl;
 				z.revertToScheduledProfile();
 			}
 			return true;

@@ -60,15 +60,14 @@ namespace HardwareInterfaces {
 		_startCallTemp = getFractionalCallSensTemp();
 	}
 
-	bool Zone::changeCurrTempRequest(int8_t val) {
-		if (val != _currProfileTempRequest) {
+	bool Zone::changeCurrTempRequest(int8_t val) { // only allowed on current profile
+		if (val != _currProfileTempRequest && startDateTime() <= clock_().now()) {
 			// Adjust current TT.
-			bool doingCurrentProfile = startDateTime() <= clock_().now();
-			auto profileDate = doingCurrentProfile ? clock_().now() : nextEventTime();
-			auto profileInfo = _sequencer->getProfileInfo(id(), profileDate);
-			auto currTT = profileInfo.currTT;
+			profileLogger() << L_time  << "_changeCurrTempRequest" << L_tabs << zoneRecord().rec().name << val << L_endl;
+			auto currProfile = _sequencer->getProfileInfo(id(), clock_().now());
+			auto currTT = currProfile.currTT;
 			currTT.setTemp(val);
-			_sequencer->updateTT(profileInfo.currTT_ID, currTT);
+			_sequencer->updateTT(currProfile.currTT_ID, currTT);
 			_currProfileTempRequest = val;
 			cancelPreheat();
 			preHeatForNextTT();
@@ -123,27 +122,46 @@ namespace HardwareInterfaces {
 		_averagePeriod = 0;
 	}
 
+	void Zone::logCur_next_profileTT(const char* msg) const {
+		auto currProfile = _sequencer->getProfileInfo(id(), clock_().now());
+		auto currTT = currProfile.currTT;
+		auto nextProfile = _sequencer->getProfileInfo(id(), nextEventTime());
+		auto nextTT = nextProfile.currTT;
+		profileLogger() << L_time << "_Log CurrTT\t" << msg << zoneRecord().rec().name << "\n\t_CurrP:\t" << currTT << "\n\t_NextP TT\t" << nextTT << L_endl;
+	}
+
 	void Zone::startNextProfile() {
 		if (!advancedToNextProfile()) {
+			logCur_next_profileTT("setTemp");
 			setProfileTempRequest(nextTempRequest());
+			//logCur_next_profileTT("SetTime");
 			setTTStartTime(nextEventTime());
+			//logCur_next_profileTT("CancelPreheat");
 			cancelPreheat();
+			//logCur_next_profileTT("CalcPreheat");
 			preHeatForNextTT();
+			//logCur_next_profileTT("SetFlow");
 			setFlowTemp();
+			//logCur_next_profileTT("Done");
 		}
 	}
 
 	void Zone::revertToScheduledProfile() {
 		if (advancedToNextProfile()) {
+			logCur_next_profileTT("R_Refresh");
 			refreshProfile();
+			//logCur_next_profileTT("R_CalcPreheat");
 			preHeatForNextTT();
+			//logCur_next_profileTT("R_SetFlow");
 			setFlowTemp();
+			//logCur_next_profileTT("R_Done");
 		}
 	}
+
 	bool Zone::advancedToNextProfile() const { return startDateTime() > clock_().now(); };
 
-
 	bool Zone::setFlowTemp() { // Called every minute. Sets flow temps. Returns true if needs heat.
+		// TODO: oscillates flow-temp when on margin of +- 0.5 deg error.
 		//decltype(millis()) executionTime[7] = { millis() };
 
 		int16_t fractionalZoneTemp = getFractionalCallSensTemp(); // get fractional temp. msb is temp is degrees;
@@ -213,17 +231,20 @@ namespace HardwareInterfaces {
 			}
 			zTempLogger() << L_time << L_tabs
 				<< zoneRecord().rec().name
-				<< F("PreReq/Is:") << currTempReq << fractionalZoneTemp / 256.
-				<< F("Flow Req/Is:") << reqFlow << flowTemp
-				<< F("Used Ratio:") << ratio
-				<< F("Is:") << measuredThermalRatio(fractionalZoneTemp, flowTemp) / RATIO_DIVIDER
-				<< F("Ave:") << (_rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD) / RATIO_DIVIDER
-				<< F("AvePer:") << _averagePeriod
-				<< F("CoolPer:") << (int)_minsCooling
-				<< F("Error:") << (fractionalZoneTemp - _preheatCallTemp * 256) / 256.
-				<< F("Outside:") << outsideTemp
-				<< F("PreheatMins:") << _minsInPreHeat
+				<< currTempReq 
+				<< fractionalZoneTemp / 256.
+				<< reqFlow 
+				<< flowTemp
+				<< ratio
+				<< measuredThermalRatio(fractionalZoneTemp, flowTemp) / RATIO_DIVIDER
+				<< (_rollingAccumulatedRatio / REQ_ACCUMULATION_PERIOD) / RATIO_DIVIDER
+				<< _averagePeriod
+				<< (int)_minsCooling
+				<< (fractionalZoneTemp - _preheatCallTemp * 256) / 16.
+				<< outsideTemp
+				<< _minsInPreHeat
 				<< controlledBy
+				<< isCallingHeat()
 				<< L_endl;
 		};
 
@@ -353,7 +374,7 @@ namespace HardwareInterfaces {
 		// decltype(millis()) executionTime[8] = { millis() };
 		//logger() << L_time << "preHeatForNextTT" << L_endl;
 		using namespace Date_Time;
-		auto & zoneRec = _zoneRecord.rec();
+		auto& zoneRec = _zoneRecord.rec();
 		auto nextTempReq = nextTempRequest();
 		auto outsideTemp = isDHWzone() ? uint8_t(20) : _thermalStore->getOutsideTemp();
 		auto currTemp_fractional = getFractionalCallSensTemp();
