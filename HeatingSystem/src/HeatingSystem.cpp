@@ -103,6 +103,7 @@ HeatingSystem::HeatingSystem()
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
 		serviceTemperatureController();
+		//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
 	}
 
 void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys

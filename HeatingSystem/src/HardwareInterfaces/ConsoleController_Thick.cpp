@@ -19,7 +19,6 @@ namespace HardwareInterfaces {
 	{}
 
 	void ConsoleController_Thick::initialise(int index, int addr, int roomTS_addr, TowelRail& towelRail, Zone& dhw, Zone& zone, unsigned long& timeOfReset_mS, uint8_t console_mode) {
-		//TODO: doesn't get temp from remotes after reset!!!
 		logger() << F("ConsoleController_Thick::ini ") << index << " i2cMode: " << console_mode  << L_endl;
 		auto localRegOffset = PROG_REG_RC_US_OFFSET + (OLED::R_DISPL_REG_SIZE * index);
 		I2C_To_MicroController::initialise(addr, localRegOffset, 0, timeOfReset_mS);
@@ -134,9 +133,9 @@ namespace HardwareInterfaces {
 			//logger() << L_time << "Req RC Temp[" << index() << "]" << L_endl;
 			give_RC_Bus(i2c_status); // remote reads TS and writes to programmer.
 			wait_DevicesToFinish(rawRegisters());
-		
+			status = readRegSet(OLED::R_ROOM_TEMP,2); // don't rely on console writing to the registers.
+			status |= readRegVerifyValue(OLED::R_REQUESTING_T_RAIL,regVal);
 			auto reg = registers();
-			status = readRegVerifyValue(OLED::R_REQUESTING_T_RAIL,regVal);
 			if (status == _OK && reg.update(OLED::R_REQUESTING_T_RAIL, regVal)) towelrail_req_changed = regVal;
 			status |= readRegVerifyValue(OLED::R_REQUESTING_DHW, regVal);
 			if (status == _OK && reg.update(OLED::R_REQUESTING_DHW, regVal)) hotwater_req_changed = regVal;

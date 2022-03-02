@@ -74,7 +74,7 @@ public:
 		, MV_ALL_REG_SIZE // = 17
 	};
 
-	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error };
+	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
@@ -109,6 +109,8 @@ private:
 	void loadFromEEPROM();
 	void turnValveOff();
 
+	int measurePSUVoltage(int period_mS = 25);
+
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;
 	uint8_t _regOffset;
@@ -128,9 +130,9 @@ private:
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
+	uint8_t _psuV;
 	mutable bool _findOffPos = true;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 	static uint16_t _motorsOffV;
 	static constexpr uint16_t _MOTORS_ON_DIFF_V = 40;
 };
-
