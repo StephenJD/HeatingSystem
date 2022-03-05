@@ -95,7 +95,6 @@ private:
 	//friend void printModes();
 
 	Mode algorithmMode(int needIncreaseBy_deg) const;
-	void stateMachine();
 	bool valveIsAtLimit();
 	void saveToEEPROM();
 	void checkForNewReqTemp();

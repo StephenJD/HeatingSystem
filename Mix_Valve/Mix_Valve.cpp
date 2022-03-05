@@ -149,28 +149,6 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int needIncreaseBy_deg) const {
 	return mode;
 }
 
-void Mix_Valve::stateMachine() {
-	auto reg = registers();
-	auto mode = reg.get(R_MODE);
-	switch (mode) {
-	case e_NewReq:
-		logger() << name() << L_tabs << F("New Temp Req:") << _currReqTemp << L_endl;
-		I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_NEW_TEMP_REQUEST);
-
-	case e_Moving:
-	case e_Wait:
-	case e_Mutex:
-	case e_Checking:
-	case e_HotLimit:
-	case e_WaitToCool:
-	case e_ValveOff:
-	case e_StopHeating:
-	case e_FindOff:
-		;
-	}
-	reg.set(R_MODE, mode);
-}
-
 void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
 	auto reg = registers();
 	if (_findOffPos) {
