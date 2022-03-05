@@ -113,6 +113,7 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	reg.set(R_FULL_TRAVERSE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_SETTLE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
+	if (reg.get(R_FULL_TRAVERSE_TIME) < 120) reg.set(R_FULL_TRAVERSE_TIME, 150);
 #endif
 	setDefaultRequestTemp();
 }
@@ -130,28 +131,44 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int needIncreaseBy_deg) const {
 	bool dontWantHeat = _currReqTemp <= e_MIN_FLOW_TEMP;
 	bool valveIsOff = (_valvePos == 0 && dontWantHeat);
 	auto deviceState = I2C_Flags_Obj{ reg.get(R_DEVICE_STATE) };
+	auto mode = e_NewReq;
 	if (_findOffPos) {
-		return e_FindOff;
+		mode = e_FindOff;
 	}
-	else if (deviceState.is(F_NEW_TEMP_REQUEST)) return e_NewReq;
-	else if (valveIsOff) return e_ValveOff;
-	else if (_valvePos == 0  && needIncreaseBy_deg < 0) return e_WaitToCool;
-	else if (_valvePos >= reg.get(R_FULL_TRAVERSE_TIME) && needIncreaseBy_deg >= 0) return e_HotLimit;
-	else if (dontWantHeat) return e_StopHeating;
+	else if (deviceState.is(F_NEW_TEMP_REQUEST)) mode = e_NewReq;
+	else if (valveIsOff) mode = e_ValveOff;
+	else if (_valvePos == 0  && needIncreaseBy_deg < 0) mode = e_WaitToCool;
+	else if (needIncreaseBy_deg > 0 && deviceState.is(F_STORE_TOO_COOL)) mode = e_HotLimit;
+	else if (dontWantHeat) mode = e_StopHeating;
 	else if (_onTime > 0) {
-		if (motor_mutex && motor_mutex != this) return e_Mutex;
-		else return e_Moving;
-	} else if (_onTime < 0) return e_Wait;
-	else return e_Checking;
+		if (motor_mutex && motor_mutex != this) mode = e_Mutex;
+		else mode = e_Moving;
+	} else if (_onTime < 0) mode = e_Wait;
+	else mode = e_Checking;
+	reg.set(R_MODE, mode); // e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error
+	return mode;
 }
 
-void Mix_Valve::turnValveOff() { // Move valve to cool to prevent gravity circulation
-	_onTime = 160;
-	if (_valvePos == 0) _valvePos = 20;
-	_journey = e_Moving_Coolest;
-	_motorDirection = e_Cooling;
-	_findOffPos = true;
-	logger() << name() << L_tabs << F("Turn Valve OFF:") << _valvePos << L_endl;
+void Mix_Valve::stateMachine() {
+	auto reg = registers();
+	auto mode = reg.get(R_MODE);
+	switch (mode) {
+	case e_NewReq:
+		logger() << name() << L_tabs << F("New Temp Req:") << _currReqTemp << L_endl;
+		I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_NEW_TEMP_REQUEST);
+
+	case e_Moving:
+	case e_Wait:
+	case e_Mutex:
+	case e_Checking:
+	case e_HotLimit:
+	case e_WaitToCool:
+	case e_ValveOff:
+	case e_StopHeating:
+	case e_FindOff:
+		;
+	}
+	reg.set(R_MODE, mode);
 }
 
 void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
@@ -169,7 +186,7 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 	auto calcRatio = [&reg,sensorTemp, this]() {
 		auto tempChange = sensorTemp - reg.get(R_FROM_TEMP);
 		auto posChange = _valvePos - _moveFromPos;
-		bool inMidRange = _valvePos > reg.get(R_FULL_TRAVERSE_TIME) / 4 || _valvePos < int(reg.get(R_FULL_TRAVERSE_TIME)) * 3 / 4;
+		bool inMidRange = _valvePos > reg.get(R_FULL_TRAVERSE_TIME) / 2 || _valvePos < int(reg.get(R_FULL_TRAVERSE_TIME)) * 3 / 2;
 		if (inMidRange && posChange != 0 && tempChange != 0) {
 			auto newRatio = posChange / tempChange;
 			if (newRatio > e_MIN_RATIO) reg.set(R_RATIO, newRatio);
@@ -273,7 +290,7 @@ void Mix_Valve::adjustValve(int tempDiff) {
 	auto tempError = abs(tempDiff);
 
 	_onTime = curr_ratio * tempError;
-	int16_t maxOnTime = reg.get(R_FULL_TRAVERSE_TIME) / 2;
+	int16_t maxOnTime = reg.get(R_FULL_TRAVERSE_TIME) /* / 2*/;
 	if (_onTime > maxOnTime) _onTime = maxOnTime;
 }
 
@@ -312,6 +329,15 @@ bool Mix_Valve::activateMotor() {
 	return isMoving;
 }
 
+void Mix_Valve::turnValveOff() { // Move valve to cool to prevent gravity circulation
+	_onTime = 160;
+	if (_valvePos == 0) _valvePos = 20;
+	_journey = e_Moving_Coolest;
+	_motorDirection = e_Cooling;
+	_findOffPos = true;
+	logger() << name() << L_tabs << F("Turn Valve OFF:") << _valvePos << L_endl;
+}
+
 void Mix_Valve::stopMotor() {
 	_motorDirection = e_Stop;
 	activateMotor();
@@ -336,8 +362,8 @@ void Mix_Valve::serviceMotorRequest() {
 		if (_valvePos < 0) {
 			_valvePos = 0;
 		}
-		else if (_valvePos > 255) {
-			_valvePos = 255;
+		else if (_valvePos > 511) {
+			_valvePos = 511;
 		}
 		auto i2C_status = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 		auto motorIsAtLimit = valveIsAtLimit();
@@ -351,10 +377,10 @@ void Mix_Valve::serviceMotorRequest() {
 			_onTime = 0;
 			stopMotor();
 		} else if (_onTime == 0) { // Newly zero. 
+			i2C_status.clear(F_STORE_TOO_COOL);
 			if (_journey == e_Moving_Coolest) _onTime = 255;
 			else { // Turn motor off and wait
 				startWaiting();
-				i2C_status.clear(F_STORE_TOO_COOL);
 			}
 		}
 	}
@@ -366,7 +392,7 @@ bool Mix_Valve::valveIsAtLimit() {
 	Return true if valvePos is 0 or limit
 	*/
 	auto psuV = measurePSUVoltage();
-
+////////// Non-Measure PSU Version ////////////////
 	//if (_findOffPos) {
 	//	if (_onTime == 0) {
 	//		_findOffPos = false;
@@ -377,31 +403,38 @@ bool Mix_Valve::valveIsAtLimit() {
 	//	return false;
 	//}
 	//else if (_motorDirection == e_Cooling) {
-	//	if (_valvePos > registers().get(R_FULL_TRAVERSE_TIME)) _valvePos = registers().get(R_FULL_TRAVERSE_TIME);
+	//	if (_valvePos > registers().get(R_FULL_TRAVERSE_TIME) * 2) _valvePos = registers().get(R_FULL_TRAVERSE_TIME) * 2;
 	//	return _valvePos == 0;
 	//}
-	//else return _valvePos > registers().get(R_FULL_TRAVERSE_TIME) + 20;
+	//else return _valvePos > (registers().get(R_FULL_TRAVERSE_TIME) * 2) + 20;
 
-	//if (!relaysOn() || (!_cool_relay->logicalState() && !_heat_relay->logicalState())) {
-	//	logger() << name() << F("Lim? AllOff") << L_endl;
-	//	return false;
-	//}
+
+	////////// Measure PSU Version ////////////////
+
+	if (!relaysOn() || (!_cool_relay->logicalState() && !_heat_relay->logicalState())) {
+		logger() << name() << F("Lim? AllOff") << L_endl;
+		return false;
+	}
 
 	bool isOff = psuV > _motorsOffV - _MOTORS_ON_DIFF_V;
-	//if (isOff) {
-		//delay(100);
-		//psuV = measurePSUVoltage();
-		//isOff = psuV > _motorsOffV - _MOTORS_ON_DIFF_V;
-	//}
 	if (isOff) {
-		_motorsOffV = psuV;
+		delay(100);
+		psuV = measurePSUVoltage();
+		isOff = psuV > _motorsOffV - _MOTORS_ON_DIFF_V;
+	}
+	if (isOff) {
 		if (_motorDirection == e_Cooling) {
-			_findOffPos = false;
 			_valvePos = 0;
-			logger() << name() << L_tabs << F("ClearFindOff") << L_endl;
+			if (_findOffPos) {
+				//_motorsOffV = psuV;
+				_findOffPos = false;
+				logger() << name() << L_tabs << F("ClearFindOff") << L_endl;
+			}
 		} else {
-			if (_valvePos > 100) registers().set(R_FULL_TRAVERSE_TIME, uint8_t(_valvePos));
-			_ep->update(_regOffset + R_FULL_TRAVERSE_TIME, uint8_t(_valvePos));
+			if (_valvePos > 100) {
+				registers().set(R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
+				_ep->update(_regOffset + R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
+			}
 		}
 	}
 	return isOff;
@@ -417,11 +450,10 @@ void Mix_Valve::refreshRegisters() {
 	auto reg = registers();
 	auto mode = algorithmMode(_currReqTemp - reg.get(R_FLOW_TEMP));
 	//logger() << F("Mode:") << mode << L_endl;
-	reg.set(R_MODE, mode); // e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error
 	//reg.set(R_COUNT, abs(_onTime));
 	reg.set(R_COUNT, _motorsOffV/4);
 	reg.set(R_MOTOR_ACTIVITY, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
-	reg.set(R_VALVE_POS, (uint8_t)_valvePos);
+	reg.set(R_VALVE_POS, (uint8_t)_valvePos/2);
 	//.set(R_FROM_POS, (uint8_t)_moveFromPos);
 	reg.set(R_FROM_POS, _psuV);
 }
@@ -468,10 +500,11 @@ void Mix_Valve::checkForNewReqTemp() { // called every second
 			_currReqTemp = _newReqTemp;
 			if (_newReqTemp > e_MIN_FLOW_TEMP) {
 				i2c_status.set(F_NEW_TEMP_REQUEST);
+				//reg.set(R_MODE, e_NewReq);
 			}
 			else {
 				i2c_status.clear(F_NEW_TEMP_REQUEST);
-				//if (_valvePos == 0) _valvePos = 1; // make sure valve really is off
+				//reg.set(R_MODE, e_FindOff);
 			}
 			saveToEEPROM();
 		}

@@ -95,7 +95,8 @@ namespace HardwareInterfaces {
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
 			if (mixIniStatus & requestINI_flag) sendSlaveIniData(requestINI_flag);
 			readRegistersFromValve();
-			logMixValveOperation(false);
+			//logMixValveOperation(false);
+			logMixValveOperation(true);
 		}
 		return true;
 	}
@@ -131,7 +132,7 @@ namespace HardwareInterfaces {
 			_previous_valveStatus[valveIndex] = algorithmMode;
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
-				<< showState() << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS) << reg.get(Mix_Valve::R_RATIO)
+				<< showState() << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS)*2 << reg.get(Mix_Valve::R_RATIO)
 				<< reg.get(Mix_Valve::R_FROM_POS) << reg.get(Mix_Valve::R_FROM_TEMP) << L_endl;
 		}
 //#endif
