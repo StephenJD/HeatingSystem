@@ -26,6 +26,7 @@ extern const uint8_t version_day;
 constexpr int PSU_V_PIN = A3;
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 uint16_t Mix_Valve::_motorsOffV = 1024;
+bool Mix_Valve::motor_queued;
 
 int Mix_Valve::measurePSUVoltage(int period_mS) {
 	// 4v ripple. 3.3v when PSU off, 17-19v when motors off, 16v motor-on
@@ -151,24 +152,75 @@ Mix_Valve::Mode Mix_Valve::algorithmMode(int needIncreaseBy_deg) const {
 
 void Mix_Valve::stateMachine() {
 	auto reg = registers();
+	auto sensorTemp = registers().get(R_FLOW_TEMP);
+	bool isTooCool = sensorTemp < _currReqTemp;
 	auto mode = reg.get(R_MODE);
 	switch (mode) {
 	case e_NewReq:
 		logger() << name() << L_tabs << F("New Temp Req:") << _currReqTemp << L_endl;
 		I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_NEW_TEMP_REQUEST);
-
+		mode = newTempMode();
+		break;
 	case e_Moving:
+		if (continueMove()) {
+			if (valveIsAtLimit()) mode = e_ValveOff;
+			else if (motor_queued && _onTime % 10 == 0) mode = e_Mutex;
+		}
+		else {
+			motor_queued = false;
+			mode = e_Wait;
+		}
+		break;
 	case e_Wait:
-	case e_Mutex:
+		logger() << name() << L_tabs << F("WaitSettle:\t") << _onTime << F("\tPos:") << _valvePos << F("\tTemp:") << reg.get(R_FLOW_TEMP) << L_endl;
+		if (!continueWait()) mode = e_Checking;
+		break;
+	case e_Mutex: // try to move
+		if (motor_mutex == 0) {
+			mode = e_Moving;
+		}
+		else {
+			motor_queued = true;
+		}
+		break;
 	case e_Checking:
+		mode = doCheck();
+		break;
 	case e_HotLimit:
+		if (!isTooCool) mode = e_Checking;
+		break;
 	case e_WaitToCool:
 	case e_ValveOff:
-	case e_StopHeating:
+		if (isTooCool) mode = e_Checking;
+		break;
+	case e_StopHeating: // same mode!
 	case e_FindOff:
-		;
 	}
 	reg.set(R_MODE, mode);
+}
+
+Mix_Valve::Mode Mix_Valve::newTempMode() {
+	auto sensorTemp = registers().get(R_FLOW_TEMP);
+	bool isTooWarm = sensorTemp > _currReqTemp;
+	bool isTooCool = sensorTemp < _currReqTemp;
+	auto mode = e_Checking;
+	if (_valvePos == 0 && isTooWarm) {
+		startWaiting(); // Keep waiting whilst the pump cools the temp sensor
+		return e_WaitToCool;
+	}
+	else if (_onTime != 0) { // Re-start waiting and see what happens. 
+		startWaiting();
+		mode = e_Wait;
+	} // is now waiting or checking
+	if (isTooCool) { // allow wait to be interrupted
+		_journey = e_WarmSouth;
+	}
+	else if (isTooWarm) { // allow wait to be interrupted
+		_journey = e_CoolNorth;
+	}
+	else _journey = e_TempOK;
+	_flowTempAtStartOfWait = sensorTemp;
+	return mode;
 }
 
 void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
@@ -350,6 +402,23 @@ void Mix_Valve::startWaiting() {
 	stopMotor();
 }
 
+bool Mix_Valve::continueMove() {
+	--_onTime;
+	_valvePos += _motorDirection;
+	if (_valvePos < 0) {
+		_valvePos = 0;
+	}
+	else if (_valvePos > 511) {
+		_valvePos = 511;
+	}
+	return _onTime > 0;
+}
+
+bool Mix_Valve::continueWait() {
+	++_onTime;
+	if (_onTime < 0) return true;  else return false;
+}
+
 void Mix_Valve::serviceMotorRequest() {
 	auto reg = registers();
 	if (_onTime < 0) { // wait
@@ -500,11 +569,11 @@ void Mix_Valve::checkForNewReqTemp() { // called every second
 			_currReqTemp = _newReqTemp;
 			if (_newReqTemp > e_MIN_FLOW_TEMP) {
 				i2c_status.set(F_NEW_TEMP_REQUEST);
-				//reg.set(R_MODE, e_NewReq);
+				reg.set(R_MODE, e_NewReq);
 			}
 			else {
 				i2c_status.clear(F_NEW_TEMP_REQUEST);
-				//reg.set(R_MODE, e_FindOff);
+				reg.set(R_MODE, e_FindOff);
 			}
 			saveToEEPROM();
 		}

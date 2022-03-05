@@ -100,6 +100,9 @@ private:
 	void saveToEEPROM();
 	void checkForNewReqTemp();
 	void refreshRegisters();
+	Mode newTempMode();
+	bool continueMove();
+	bool continueWait();
 
 	void adjustValve(int tempDiff);
 	bool activateMotor(); // Return true if it owns mutex
@@ -134,6 +137,7 @@ private:
 	uint8_t _psuV;
 	mutable bool _findOffPos = true;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
+	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static uint16_t _motorsOffV;
 	static constexpr uint16_t _MOTORS_ON_DIFF_V = 40;
 };
