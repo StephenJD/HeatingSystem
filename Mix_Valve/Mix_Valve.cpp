@@ -413,6 +413,7 @@ bool Mix_Valve::valveIsAtLimit() {
 				registers().set(R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 				_ep->update(_regOffset + R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 			}
+			else isOff = false;
 		}
 	}
 	return isOff;
