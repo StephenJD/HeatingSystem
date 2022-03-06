@@ -149,7 +149,7 @@ namespace HardwareInterfaces {
 		case Mix_Valve::e_WaitToCool: return F("WtC");
 		case Mix_Valve::e_ValveOff: return F("Off");
 		case Mix_Valve::e_HotLimit: return F("Lim");
-		case Mix_Valve::e_FindOff: return F("Fof");
+		case Mix_Valve::e_FindOff:
 		case Mix_Valve::e_StopHeating:
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating

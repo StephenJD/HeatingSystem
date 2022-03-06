@@ -98,18 +98,18 @@ private:
 	void stateMachine();
 	bool valveIsAtLimit();
 	void saveToEEPROM();
-	void checkForNewReqTemp();
+	bool checkForNewReqTemp();
 	void refreshRegisters();
 	Mode newTempMode();
 	bool continueMove();
 	bool continueWait();
+	bool continueChecking();
 
 	void adjustValve(int tempDiff);
-	bool activateMotor(); // Return true if it owns mutex
+	bool activateMotor_isMoving(); // Return true if is moving
 	void stopMotor();
 	void startWaiting();
 	void serviceMotorRequest();
-	void checkPumpIsOn();
 	void loadFromEEPROM();
 	void turnValveOff();
 
@@ -135,7 +135,6 @@ private:
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
 	uint8_t _psuV;
-	mutable bool _findOffPos = true;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static uint16_t _motorsOffV;
