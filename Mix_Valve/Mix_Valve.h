@@ -88,13 +88,13 @@ public:
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
 	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
 private:
+	friend class TestMixV;
 	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
 
 	//friend void testMixer();
 	//friend void testSlave();
 	//friend void printModes();
 
-	Mode algorithmMode(int needIncreaseBy_deg) const;
 	void stateMachine();
 	bool valveIsAtLimit();
 	void saveToEEPROM();
@@ -109,7 +109,6 @@ private:
 	bool activateMotor_isMoving(); // Return true if is moving
 	void stopMotor();
 	void startWaiting();
-	void serviceMotorRequest();
 	void loadFromEEPROM();
 	void turnValveOff();
 

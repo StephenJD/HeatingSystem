@@ -1,4 +1,5 @@
 // This is the Multi-Master Arduino Mini Controller
+#define TEST_MIXV
 
 #include <Mix_Valve.h>
 #include <TempSensor.h>
@@ -25,7 +26,7 @@ extern const uint8_t version_day;
 
 constexpr int PSU_V_PIN = A3;
 Mix_Valve * Mix_Valve::motor_mutex = 0;
-uint16_t Mix_Valve::_motorsOffV = 1024;
+uint16_t Mix_Valve::_motorsOffV = 980;
 bool Mix_Valve::motor_queued;
 
 int Mix_Valve::measurePSUVoltage(int period_mS) {
@@ -38,8 +39,11 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 		auto thisVoltage = analogRead(PSU_V_PIN);
 		if (thisVoltage > psuMaxV) psuMaxV = thisVoltage;
 	} while (!testComplete);
+#ifdef TEST_MIXV
+	psuMaxV = _valvePos < 5 ? 700 : (_valvePos > 50 ? 700 : 500);
+#endif
 	_psuV = psuMaxV/4;
-	logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
+	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
 	return psuMaxV > 100 ? psuMaxV : 0;
 }
 
@@ -77,7 +81,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	speedTest.fastest();
 
 	auto psuOffV = measurePSUVoltage(200);
-	if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
+	//if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
 	reg.set(R_MODE, e_FindOff);
 	logger() << name() << F(" TS Speed:") << _temp_sensr.runSpeed() << L_endl;
@@ -141,7 +145,7 @@ void Mix_Valve::stateMachine() {
 	bool isTooCool = sensorTemp < _currReqTemp;
 	auto needIncreaseBy_deg = int(_currReqTemp) - int(sensorTemp);
 	auto mode = reg.get(R_MODE);
-	if (checkForNewReqTemp()) {
+	if (_journey != e_Moving_Coolest && checkForNewReqTemp()) {
 		if (_newReqTemp > e_MIN_FLOW_TEMP) {
 			mode = e_NewReq;
 		}
@@ -158,14 +162,13 @@ void Mix_Valve::stateMachine() {
 		logger() << name() << L_tabs << F("ValveMoving") << (_motorDirection == e_Heating ? "H" : (_motorDirection == e_Stop ? "Off" : "C")) << _onTime << F("ValvePos:") << _valvePos << F("Temp:") << reg.get(R_FLOW_TEMP) << F("Call") << _currReqTemp << L_endl;
 		if (_journey != e_Moving_Coolest && needIncreaseBy_deg * _motorDirection <= 0 || !continueMove()) {
 			startWaiting();
-			motor_queued = false;
 			mode = e_Wait;
 		}
 		else {
 			if (valveIsAtLimit()) {
 				_onTime = 0;
 				stopMotor();
-				motor_mutex = 0;
+				motor_mutex = 0; 
 				if (_valvePos == 0) {
 					mode = e_ValveOff;
 					_journey = e_TempOK;
@@ -174,9 +177,12 @@ void Mix_Valve::stateMachine() {
 					mode = e_HotLimit;
 				}
 			}
-			else if (motor_queued && _onTime % 10 == 0) mode = e_Mutex;
+			else if (motor_queued && _onTime % 10 == 0) {
+				mode = e_Mutex;
+				motor_mutex = 0;
+			} else if (!activateMotor_isMoving()) motor_mutex = 0;
 		}
-		if (!activateMotor_isMoving()) motor_mutex = 0;
+		
 		break;
 	case e_Wait: // can interrupt by under/overshoot
 		logger() << name() << L_tabs << F("WaitSettle:\t") << _onTime << F("\tPos:") << _valvePos << F("\tTemp:") << reg.get(R_FLOW_TEMP) << L_endl;
@@ -200,7 +206,6 @@ void Mix_Valve::stateMachine() {
 		if (motor_mutex == 0) {
 			motor_mutex = this;
 			mode = e_Moving;
-			motor_queued = false;
 		}
 		else {
 			logger() << name() << L_tabs << F("Mutex") << L_endl;
@@ -300,6 +305,8 @@ void Mix_Valve::turnValveOff() { // Move valve to cool to prevent gravity circul
 
 void Mix_Valve::stopMotor() {
 	_motorDirection = e_Stop;
+	motor_queued = false;
+	motor_mutex = 0;
 	activateMotor_isMoving();
 }
 
@@ -372,10 +379,11 @@ bool Mix_Valve::continueChecking() {
 
 bool Mix_Valve::valveIsAtLimit() {
 	int isOff = 3;
-	for (; isOff > 1; --isOff) {
+	for (; isOff > 1;) {
 		if (measurePSUVoltage() > _motorsOffV - _MOTORS_ON_DIFF_V) {
-			if (isOff > 1) delay(100);
-		} else isOff = 0;
+			if (--isOff > 1) delay(100);
+		}
+		else isOff = 0;
 	}
 
 	if (isOff) {
@@ -386,7 +394,7 @@ bool Mix_Valve::valveIsAtLimit() {
 			if (_valvePos > 100) {
 				registers().set(R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 				_ep->update(_regOffset + R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
-			}
+			} else isOff = 0;
 		}
 	}
 	return isOff;
