@@ -76,7 +76,8 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	speedTest.fastest();
 
 	auto psuOffV = measurePSUVoltage(200);
-	if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
+	//if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
+	_motorsOffV = 980;
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
 	turnValveOff();
 	logger() << name() << F(" TS Speed:") << _temp_sensr.runSpeed() << L_endl;
@@ -207,6 +208,7 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 	case e_ValveOff:
 	case e_HotLimit:
 	case e_WaitToCool:  // Want heat, but is too warm, and at cool limit.
+		motor_mutex = 0;
 		break;
 	case e_StopHeating:
 	case e_FindOff:
@@ -280,9 +282,9 @@ bool Mix_Valve::activateMotor() {
 			_cool_relay->set(false);
 			_heat_relay->set(false);
 			enableRelays(motorQueued); // disable if no queued motor.
-			motor_mutex = 0;
 		}
 		motorQueued = false;
+		motor_mutex = 0;
 	}
 	else { // wanting to move
 		if (motor_mutex == this && motorQueued && _onTime % 10 == 0) { // Give up ownership every 10 seconds.
@@ -291,7 +293,10 @@ bool Mix_Valve::activateMotor() {
 			_heat_relay->set(false);
 		}
 		else { 
-			if (motor_mutex == 0 ) motor_mutex = this; // try to acquire ownership
+			if (motor_mutex == 0) {
+				motor_mutex = this; // acquire ownership
+				motorQueued = false;
+			}
 			if (motor_mutex == this) { // we have control
 				_cool_relay->set(_motorDirection == e_Cooling); // turn Cool relay on/off
 				_heat_relay->set(_motorDirection == e_Heating); // turn Heat relay on/off
