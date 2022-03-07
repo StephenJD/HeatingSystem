@@ -26,7 +26,7 @@ extern const uint8_t version_day;
 
 constexpr int PSU_V_PIN = A3;
 Mix_Valve * Mix_Valve::motor_mutex = 0;
-uint16_t Mix_Valve::_motorsOffV = 980;
+uint16_t Mix_Valve::_motorsOffV = 1024;
 bool Mix_Valve::motor_queued;
 
 int Mix_Valve::measurePSUVoltage(int period_mS) {
@@ -40,7 +40,7 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 		if (thisVoltage > psuMaxV) psuMaxV = thisVoltage;
 	} while (!testComplete);
 #ifdef TEST_MIXV
-	psuMaxV = _valvePos < 5 ? 700 : (_valvePos > 50 ? 700 : 500);
+	psuMaxV = _valvePos < 5 ? 700 : (_valvePos >= 100 ? 700 : 500);
 #endif
 	_psuV = psuMaxV/4;
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
@@ -82,6 +82,9 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 
 	auto psuOffV = measurePSUVoltage(200);
 	//if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
+#ifdef TEST_MIXV
+	_motorsOffV = 700;
+#endif
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
 	reg.set(R_MODE, e_FindOff);
 	logger() << name() << F(" TS Speed:") << _temp_sensr.runSpeed() << L_endl;

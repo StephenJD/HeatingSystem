@@ -227,22 +227,23 @@ TEST_CASE("MutexRetain", "[MixValve]") {
 
 TEST_CASE("FindOff", "[MixValve]") {
 	TestMixV testMV;
+	testMV.setVPos(0, 60);
 	CHECK(testMV.mode(0) == Mix_Valve::e_FindOff);
-	CHECK(testMV.mode(1) == Mix_Valve::e_FindOff);
 	testMV.checkTemp(0);
-	testMV.checkTemp(1);
 	CHECK(testMV.onTime(0) == 511);
-	CHECK(testMV.onTime(1) == 511);
 	CHECK(testMV.mode(0) == Mix_Valve::e_Mutex);
-	CHECK(testMV.mode(1) == Mix_Valve::e_Mutex);
-	CHECK(testMV.vPos(0) == 2);
-	CHECK(testMV.vPos(1) == 2);
+	CHECK(testMV.vPos(0) == 60);
 	do {
 		testMV.setReqTemp(0,40); // try interrupting findOff
-		testMV.setReqTemp(1,40); // try interrupting findOff
 		testMV.checkTemp(0);
-		testMV.checkTemp(1);
 	} while (testMV.mode(0) != Mix_Valve::e_ValveOff);
+	CHECK(testMV.vPos(0) == 0);
+	CHECK(testMV.onTime(0) == 0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
+
+	// Register new temp
+	testMV.checkTemp(0);
+	//testMV.setReqTemp(0,40); // try interrupting findOff
 
 }
 
