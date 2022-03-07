@@ -394,6 +394,20 @@ bool Mix_Valve::valveIsAtLimit() {
 		}
 		else isOff = 0;
 	}
+	////////// Non-Measure PSU Version ////////////////
+	if (_journey == e_Moving_Coolest) {
+		if (_onTime == 0) {
+			_valvePos = 0;
+			logger() << name() << L_tabs << F("ClearFindOff") << L_endl;
+			return true;
+		}
+		return false;
+	}
+	else if (_motorDirection == e_Cooling) {
+		if (_valvePos > registers().get(R_FULL_TRAVERSE_TIME) * 2) _valvePos = registers().get(R_FULL_TRAVERSE_TIME) * 2;
+		return _valvePos == 0;
+	}
+	else return _valvePos > (registers().get(R_FULL_TRAVERSE_TIME) * 2) + 20;
 
 	if (isOff) {
 		if (_motorDirection == e_Cooling) {
