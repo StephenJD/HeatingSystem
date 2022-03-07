@@ -41,10 +41,27 @@ public:
 	void setReqTemp(int mixInd, int temp) { mixValve[mixInd].registers().set(Mix_Valve::R_REQUEST_FLOW_TEMP, temp); }
 	void setIsTemp(int mixInd, int temp) { mixValve[mixInd].registers().set(Mix_Valve::R_FLOW_TEMP, temp); }
 	void checkTemp(int mixInd) { mixValve[mixInd].check_flow_temp(); }
+	int reqTemp(int mixInd) { return  mixValve[mixInd]._currReqTemp; }
 	int onTime(int mixInd) { return  mixValve[mixInd]._onTime; }
 	int vPos(int mixInd) { return  mixValve[mixInd]._valvePos; }
 	int mode(int mixInd) { return  mixValve[mixInd].registers().get(Mix_Valve::R_MODE); }
 	void off(int index) { mixValve[index].turnValveOff(); }
+
+	void setToCool(int mixV, int pos, int onTime) {
+		setVPos(mixV, pos);
+		setMode(mixV, Mix_Valve::e_Checking);
+		setIsTemp(mixV, 35);
+		setReqTemp(mixV, 30);
+		checkTemp(mixV); // register req temp
+		setReqTemp(mixV, 30);
+		setOnTime(mixV, 0);
+		checkTemp(mixV); // accept new temp
+		// Set to cool
+		checkTemp(mixV);
+		// Reset on-time
+		setOnTime(mixV, onTime);
+	}
+
 private:
 	Mix_Valve mixValve[2]; 
 };
@@ -68,11 +85,7 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	testMV.setVPos(1, 30);
 	testMV.checkTemp(0);
 	testMV.checkTemp(1);
-	CHECK(testMV.mode(0) == Mix_Valve::e_Mutex);
-	CHECK(testMV.mode(1) == Mix_Valve::e_Mutex);
 	// US Starts with Move
-	testMV.checkTemp(0);
-	testMV.checkTemp(1);
 	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Mutex);
 	CHECK(testMV.onTime(0) == 511);
@@ -123,7 +136,6 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	} while (testMV.mode(1) == Mix_Valve::e_Moving);
 
 	testMV.checkTemp(0);
-	testMV.checkTemp(1);
 	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Mutex);
 	CHECK(testMV.onTime(0) == 500);
@@ -144,42 +156,12 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	CHECK(testMV.vPos(1) == 19);
 }
 
-TEST_CASE("MutexRetain", "[MixValve]") {
+TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve]") {
 //	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
 	TestMixV testMV;
-	testMV.setVPos(0, 60);
-	testMV.setVPos(1, 60);
-	testMV.setMode(0, Mix_Valve::e_Checking);
-	testMV.setMode(1, Mix_Valve::e_Checking);
-	testMV.setIsTemp(0, 35);
-	testMV.setIsTemp(1, 35);
-	testMV.setReqTemp(0, 30);
-	testMV.setReqTemp(1, 30); 
-	testMV.checkTemp(0);
-	testMV.checkTemp(1);
-	testMV.setReqTemp(0, 30); 
-	testMV.setReqTemp(1, 30); 
-	testMV.setOnTime(0, 0);
-	testMV.setOnTime(1, 0);
-	testMV.checkTemp(0);
-	testMV.checkTemp(1);
-	CHECK(testMV.mode(0) == Mix_Valve::e_Checking);
-	CHECK(testMV.mode(1) == Mix_Valve::e_Checking);
-	CHECK(testMV.vPos(0) == 60);
-	CHECK(testMV.vPos(1) == 60);
-	// Both set to cool
-	testMV.checkTemp(0);
-	testMV.checkTemp(1);
-	CHECK(testMV.onTime(0) == 150);
-	CHECK(testMV.onTime(1) == 150);
-	// Reset on-times
-	testMV.setOnTime(0, 40);
-	testMV.setOnTime(1, 10);
+	testMV.setToCool(0,60,40);
+	testMV.setToCool(1,60,10);
 
-	CHECK(testMV.mode(0) == Mix_Valve::e_Mutex);
-	CHECK(testMV.mode(1) == Mix_Valve::e_Mutex);
-	testMV.checkTemp(0);
-	testMV.checkTemp(1);
 	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Mutex);
 
@@ -208,7 +190,6 @@ TEST_CASE("MutexRetain", "[MixValve]") {
 	CHECK(testMV.vPos(1) == 50);
 
 	testMV.checkTemp(0);
-	testMV.checkTemp(1);
 	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Wait);
 
@@ -218,7 +199,7 @@ TEST_CASE("MutexRetain", "[MixValve]") {
 	} while (testMV.mode(0) == Mix_Valve::e_Moving);
 
 	CHECK(testMV.onTime(0) == -40);
-	CHECK(testMV.onTime(1) == -9);
+	CHECK(testMV.onTime(1) == -10);
 	CHECK(testMV.mode(0) == Mix_Valve::e_Wait);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Wait);
 	CHECK(testMV.vPos(0) ==	20);
@@ -231,7 +212,7 @@ TEST_CASE("FindOff", "[MixValve]") {
 	CHECK(testMV.mode(0) == Mix_Valve::e_FindOff);
 	testMV.checkTemp(0);
 	CHECK(testMV.onTime(0) == 511);
-	CHECK(testMV.mode(0) == Mix_Valve::e_Mutex);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
 	CHECK(testMV.vPos(0) == 60);
 	do {
 		testMV.setReqTemp(0,40); // try interrupting findOff
@@ -242,9 +223,40 @@ TEST_CASE("FindOff", "[MixValve]") {
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
 
 	// Register new temp
+	CHECK(testMV.reqTemp(0) == 0);
 	testMV.checkTemp(0);
-	//testMV.setReqTemp(0,40); // try interrupting findOff
+	CHECK(testMV.reqTemp(0) == 0);
+	testMV.setReqTemp(0,40);
+	testMV.checkTemp(0);
+	CHECK(testMV.reqTemp(0) == 40);
+}
 
+TEST_CASE("Move-Wait-Check-Move-Off", "[MixValve]") {
+	TestMixV testMV;
+	testMV.setToCool(0, 60, 20);
+
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.vPos(0) == 40);
+	CHECK(testMV.onTime(0) == -40);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Wait);
+	
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) == Mix_Valve::e_Wait);
+	CHECK(testMV.vPos(0) == 40);
+	CHECK(testMV.onTime(0) == 0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Checking);
+	testMV.checkTemp(0);
+	CHECK(testMV.onTime(0) == 150);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.vPos(0) == 0);
+	CHECK(testMV.onTime(0) == 0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
 }
 
 

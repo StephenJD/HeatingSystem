@@ -142,7 +142,22 @@ void Mix_Valve::stateMachine() {
 	* Ratio should not be changed if valve goes to limit or returns from limit.
 	* 1 degree overshoots are good for speed of response.
 	*/
+	// Lambda
+	auto moveMode = [this]() {
+		if (motor_mutex == this) return e_Moving;
+		else if (motor_mutex == 0) {
+			motor_mutex = this;
+			return e_Moving;
+		} else {
+			logger() << name() << L_tabs << F("Mutex") << L_endl;
+			motor_queued = true;
+			_cool_relay->set(false);
+			_heat_relay->set(false);
+			return e_Mutex;
+		}
+	};
 
+	//Algorithm
 	auto reg = registers();
 	auto sensorTemp = registers().get(R_FLOW_TEMP);
 	bool isTooCool = sensorTemp < _currReqTemp;
@@ -206,19 +221,10 @@ void Mix_Valve::stateMachine() {
 		else if (!continueWait()) mode = e_Checking;
 		break;
 	case e_Mutex: // try to move
-		if (motor_mutex == 0) {
-			motor_mutex = this;
-			mode = e_Moving;
-		}
-		else {
-			logger() << name() << L_tabs << F("Mutex") << L_endl;
-			motor_queued = true;
-			_cool_relay->set(false);
-			_heat_relay->set(false);
-		}
+		mode = moveMode();
 		break;
 	case e_Checking:
-		if (!continueChecking()) mode = e_Mutex;
+		if (!continueChecking()) mode = moveMode();
 		break;
 	case e_HotLimit:
 		if (!isTooCool) {
@@ -232,7 +238,7 @@ void Mix_Valve::stateMachine() {
 		break;
 	case e_FindOff: // Momentary mode
 		if (_journey != e_Moving_Coolest) turnValveOff();
-		mode = e_Mutex;
+		mode = moveMode();
 	}
 	reg.set(R_MODE, mode);
 	//logger() << F("Mode:") << mode << L_endl;
