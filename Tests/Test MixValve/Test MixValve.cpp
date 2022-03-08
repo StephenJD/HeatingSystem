@@ -76,7 +76,7 @@ TestMixV::TestMixV() : mixValve{
 	Mix_Valve::motor_queued = false;
 }
 //	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
-
+/*
 TEST_CASE("MutexSwap", "[MixValve]") {
 	TestMixV testMV;
 	testMV.setOnTime(0, 20);
@@ -258,8 +258,17 @@ TEST_CASE("Move-Wait-Check-Move-Off", "[MixValve]") {
 	CHECK(testMV.onTime(0) == 0);
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
 }
-
+*/
 TEST_CASE("Limit on Heat and Recover", "[MixValve]") {
+	TestMixV testMV;
+	testMV.setToCool(0, 60, 20);
+	testMV.setReqTemp(0, 40);
+	testMV.checkTemp(0);
+	testMV.setReqTemp(0, 40);
+	testMV.checkTemp(0);
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) != Mix_Valve::e_HotLimit);
 
 }
 
