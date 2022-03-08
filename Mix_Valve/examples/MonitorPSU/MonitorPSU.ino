@@ -38,7 +38,7 @@ uint8_t msg[SIZE_OF_ARRAY];
 int nextValIndex = 0;
 int eeprom_addr = 0;
 int psu_offV = 0;
-constexpr auto PSU_DIFF = 40;
+constexpr auto PSU_DIFF = 30;
 constexpr auto MAX_TRANSIT = 160;
 
 void setup() {
@@ -54,7 +54,9 @@ void setup() {
 	psu_offV = getMaxPSUVoltage(A3);
 	writeLog(e_PSU_OFF_V, psu_offV / 4);
 	statusLED.set();
-	psu_offV = getMaxPSUVoltage(A3);
+	auto ledDiff = psu_offV - getMaxPSUVoltage(A3);
+	writeLog(e_PSU_OFF_V, (psu_offV- ledDiff) / 4);
+	psu_offV -= ledDiff * 3;
 	writeLog(e_PSU_OFF_V, psu_offV / 4);
 	logResults();
 	if (psu_offV < 500) psu_offV = 998;
