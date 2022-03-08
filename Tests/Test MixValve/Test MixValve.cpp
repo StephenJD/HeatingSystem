@@ -41,11 +41,12 @@ public:
 	void setReqTemp(int mixInd, int temp) { mixValve[mixInd].registers().set(Mix_Valve::R_REQUEST_FLOW_TEMP, temp); }
 	void setIsTemp(int mixInd, int temp) { mixValve[mixInd].registers().set(Mix_Valve::R_FLOW_TEMP, temp); }
 	void checkTemp(int mixInd) { mixValve[mixInd].check_flow_temp(); }
+	void off(int index) { mixValve[index].turnValveOff(); }
 	int reqTemp(int mixInd) { return  mixValve[mixInd]._currReqTemp; }
 	int onTime(int mixInd) { return  mixValve[mixInd]._onTime; }
 	int vPos(int mixInd) { return  mixValve[mixInd]._valvePos; }
 	int mode(int mixInd) { return  mixValve[mixInd].registers().get(Mix_Valve::R_MODE); }
-	void off(int index) { mixValve[index].turnValveOff(); }
+	Mix_Valve::Journey journey(int mixInd) { return  mixValve[mixInd]._journey; }
 
 	void setToCool(int mixV, int pos, int onTime) {
 		setVPos(mixV, pos);
@@ -76,7 +77,7 @@ TestMixV::TestMixV() : mixValve{
 	Mix_Valve::motor_queued = false;
 }
 //	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
-/*
+
 TEST_CASE("MutexSwap", "[MixValve]") {
 	TestMixV testMV;
 	testMV.setOnTime(0, 20);
@@ -155,6 +156,8 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	CHECK(testMV.vPos(0) == 9);
 	CHECK(testMV.vPos(1) == 19);
 }
+
+/*
 
 TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve]") {
 //	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
@@ -258,7 +261,7 @@ TEST_CASE("Move-Wait-Check-Move-Off", "[MixValve]") {
 	CHECK(testMV.onTime(0) == 0);
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
 }
-*/
+
 TEST_CASE("Limit on Heat and Recover", "[MixValve]") {
 	TestMixV testMV;
 	testMV.setToCool(0, 60, 20);
@@ -269,19 +272,95 @@ TEST_CASE("Limit on Heat and Recover", "[MixValve]") {
 	do {
 		testMV.checkTemp(0);
 	} while (testMV.mode(0) != Mix_Valve::e_HotLimit);
+	CHECK(testMV.mode(0) == Mix_Valve::e_HotLimit);
+	CHECK(testMV.vPos(0) == VALVE_TRANSIT_TIME);
+	for (int i = 0; i < 10; ++i) {
+		testMV.checkTemp(0);
+		CHECK(testMV.mode(0) == Mix_Valve::e_HotLimit);
+	}
+	testMV.setIsTemp(0, 40);
+	for (int i = 0; i < 10; ++i) {
+		testMV.checkTemp(0);
+		CHECK(testMV.mode(0) == Mix_Valve::e_Checking);
+	}
+	testMV.setIsTemp(0, 45);
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) != Mix_Valve::e_Checking);
 
 }
+
 
 TEST_CASE("Off on Cool and Recover", "[MixValve]") {
-
+	TestMixV testMV;
+	testMV.setToCool(0, 60, 20);
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) != Mix_Valve::e_ValveOff);
+	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
+	CHECK(testMV.vPos(0) == 0);
+	for (int i = 0; i < 10; ++i) {
+		testMV.checkTemp(0);
+		CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
+	}
+	testMV.setIsTemp(0, 30);
+	for (int i = 0; i < 10; ++i) {
+		testMV.checkTemp(0);
+		CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
+	}
+	testMV.setIsTemp(0, 29);
+	testMV.checkTemp(0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Checking);
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) != Mix_Valve::e_Checking);
+	testMV.checkTemp(0);
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) != Mix_Valve::e_Checking);
+	testMV.setIsTemp(0, 30);
+	for (int i = 0; i < 10; ++i) {
+		testMV.checkTemp(0);
+		CHECK(testMV.mode(0) == Mix_Valve::e_Checking);
+	}
 }
+*/
 
-TEST_CASE("Cool-OK-Heat", "[MixValve]") {
+TEST_CASE("Cool-Heat-Cool", "[MixValve]") {
+	TestMixV testMV;
+	testMV.setToCool(0, 60, 20);
+	auto flowtemp = 32.0;
+	testMV.setIsTemp(0, flowtemp);
+	testMV.checkTemp(0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.journey(0) == Mix_Valve::e_CoolNorth);
+	do {
+		flowtemp -= 0.1;
+		testMV.setIsTemp(0, flowtemp);
+		testMV.checkTemp(0);
+	} while (testMV.journey(0) == Mix_Valve::e_CoolNorth);
+	CHECK(testMV.journey(0) == Mix_Valve::e_WarmSouth);
+	
+	flowtemp = 27.0;
+	testMV.setIsTemp(0, flowtemp);
+	testMV.checkTemp(0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	do {
+		flowtemp += 0.1;
+		testMV.setIsTemp(0, flowtemp);
+		testMV.checkTemp(0);
+	} while (testMV.journey(0) == Mix_Valve::e_WarmSouth);
+	CHECK(testMV.journey(0) == Mix_Valve::e_CoolNorth);
 
+	flowtemp = 32.0;
+	testMV.setIsTemp(0, flowtemp);
+	testMV.checkTemp(0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.journey(0) == Mix_Valve::e_CoolNorth);
+	do {
+		flowtemp -= 0.1;
+		testMV.setIsTemp(0, flowtemp);
+		testMV.checkTemp(0);
+	} while (testMV.journey(0) == Mix_Valve::e_CoolNorth);
+	CHECK(testMV.journey(0) == Mix_Valve::e_WarmSouth);
 }
-
-TEST_CASE("Heat-OK-Cool", "[MixValve]") {
-
-}
-
-

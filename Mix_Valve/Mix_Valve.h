@@ -66,7 +66,7 @@ public:
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
 		// Receive
 		  R_TS_ADDRESS = MV_VOLATILE_REG_SIZE
-		, R_FULL_TRAVERSE_TIME
+		, R_HALF_TRAVERSE_TIME
 		, R_SETTLE_TIME
 		, R_DEFAULT_FLOW_TEMP
 		, R_VERSION_MONTH

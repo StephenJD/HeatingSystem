@@ -40,7 +40,7 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 		if (thisVoltage > psuMaxV) psuMaxV = thisVoltage;
 	} while (!testComplete);
 #ifdef TEST_MIXV
-	psuMaxV = _valvePos < 5 ? 700 : (_valvePos >= 100 ? 700 : 500);
+	psuMaxV = _valvePos < 5 ? 700 : (_valvePos >= VALVE_TRANSIT_TIME ? 700 : 500);
 #endif
 	_psuV = psuMaxV/4;
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
@@ -65,7 +65,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		reg.set(R_VERSION_MONTH, version_month);
 		reg.set(R_VERSION_DAY, version_day);
 		reg.set(R_TS_ADDRESS, _temp_sensr.getAddress());
-		reg.set(R_FULL_TRAVERSE_TIME, 150);
+		reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME/2);
 		reg.set(R_SETTLE_TIME, 40);
 		reg.set(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
 		saveToEEPROM();
@@ -100,12 +100,12 @@ void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
 	auto reg = registers();
 	_temp_sensr.setAddress(reg.get(R_TS_ADDRESS));
 	_ep->update(  eepromRegister, reg.get(R_TS_ADDRESS));
-	_ep->update(++eepromRegister, reg.get(R_FULL_TRAVERSE_TIME));
+	_ep->update(++eepromRegister, reg.get(R_HALF_TRAVERSE_TIME));
 	_ep->update(++eepromRegister, reg.get(R_SETTLE_TIME));
 	_ep->update(++eepromRegister, reg.get(R_DEFAULT_FLOW_TEMP));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_MONTH));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_DAY));
-	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)reg.get(R_FULL_TRAVERSE_TIME) << (int)reg.get(R_SETTLE_TIME)
+	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)reg.get(R_HALF_TRAVERSE_TIME) << (int)reg.get(R_SETTLE_TIME)
 		<< (int)reg.get(R_DEFAULT_FLOW_TEMP) << (int)reg.get(R_VERSION_MONTH) << (int)reg.get(R_VERSION_DAY) << L_endl;
 }
 
@@ -113,16 +113,16 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	auto eepromRegister = _regOffset + R_TS_ADDRESS;
 	auto reg = registers();
 #ifdef TEST_MIX_VALVE_CONTROLLER
-	reg.set(R_FULL_TRAVERSE_TIME, 140);
+	reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME /2);
 	reg.set(R_SETTLE_TIME, 10);
 	reg.set(R_DEFAULT_FLOW_TEMP, 55);
 #else	
 	_temp_sensr.setAddress(_ep->read(eepromRegister));
 	reg.set(R_TS_ADDRESS, _temp_sensr.getAddress());
-	reg.set(R_FULL_TRAVERSE_TIME, _ep->read(++eepromRegister));
+	reg.set(R_HALF_TRAVERSE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_SETTLE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
-	if (reg.get(R_FULL_TRAVERSE_TIME) < 120) reg.set(R_FULL_TRAVERSE_TIME, 150);
+	if (reg.get(R_HALF_TRAVERSE_TIME) < (VALVE_TRANSIT_TIME /2) - 20) reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME/2);
 #endif
 	setDefaultRequestTemp();
 }
@@ -284,12 +284,12 @@ void Mix_Valve::adjustValve(int tempDiff) {
 	const auto curr_ratio = reg.get(R_RATIO);
 	if (curr_ratio < e_MIN_RATIO) reg.set(R_RATIO, e_MIN_RATIO);
 	else if (curr_ratio > e_MAX_RATIO) reg.set(R_RATIO, e_MAX_RATIO);
-	logger() << name() << L_tabs << F("Move") << tempDiff << F("\tRatio:") << (int)curr_ratio << L_endl;
 	auto tempError = abs(tempDiff);
 
 	_onTime = curr_ratio * tempError;
-	int16_t maxOnTime = reg.get(R_FULL_TRAVERSE_TIME) /* / 2*/;
+	int16_t maxOnTime = reg.get(R_HALF_TRAVERSE_TIME) /* / 2*/;
 	if (_onTime > maxOnTime) _onTime = maxOnTime;
+	logger() << name() << L_tabs << F("Move(deg)") << tempDiff << F("\tRatio:") << (int)curr_ratio << F("Time:") << _onTime << L_endl;
 }
 
 bool Mix_Valve::activateMotor_isMoving() {
@@ -351,7 +351,7 @@ bool Mix_Valve::continueChecking() {
 	auto calcRatio = [&reg, sensorTemp, this]() {
 		auto tempChange = sensorTemp - reg.get(R_FROM_TEMP);
 		auto posChange = _valvePos - _moveFromPos;
-		bool inMidRange = _valvePos > reg.get(R_FULL_TRAVERSE_TIME) / 2 || _valvePos < int(reg.get(R_FULL_TRAVERSE_TIME)) * 3 / 2;
+		bool inMidRange = _valvePos > reg.get(R_HALF_TRAVERSE_TIME) / 2 || _valvePos < int(reg.get(R_HALF_TRAVERSE_TIME)) * 3 / 2;
 		if (inMidRange && posChange != 0 && tempChange != 0) {
 			auto newRatio = posChange / tempChange;
 			if (newRatio > e_MIN_RATIO) reg.set(R_RATIO, newRatio);
@@ -367,6 +367,7 @@ bool Mix_Valve::continueChecking() {
 			_journey = e_TempOK;
 			calcRatio();
 		}
+		logger() << name() << L_tabs << F("OK:") << sensorTemp << L_endl;
 		return true;
 	}
 	else {
@@ -396,19 +397,19 @@ bool Mix_Valve::valveIsAtLimit() {
 		else isOff = 0;
 	}
 	////////// Non-Measure PSU Version ////////////////
-	if (_journey == e_Moving_Coolest) {
-		if (_onTime == 0) {
-			_valvePos = 0;
-			logger() << name() << L_tabs << F("ClearFindOff") << L_endl;
-			return true;
-		}
-		return false;
-	}
-	else if (_motorDirection == e_Cooling) {
-		if (_valvePos > registers().get(R_FULL_TRAVERSE_TIME) * 2) _valvePos = registers().get(R_FULL_TRAVERSE_TIME) * 2;
-		return _valvePos == 0;
-	}
-	else return _valvePos > (registers().get(R_FULL_TRAVERSE_TIME) * 2) + 20;
+	//if (_journey == e_Moving_Coolest) {
+	//	if (_onTime == 0) {
+	//		_valvePos = 0;
+	//		logger() << name() << L_tabs << F("ClearFindOff") << L_endl;
+	//		return true;
+	//	}
+	//	return false;
+	//}
+	//else if (_motorDirection == e_Cooling) {
+	//	if (_valvePos > registers().get(R_HALF_TRAVERSE_TIME) * 2) _valvePos = registers().get(R_HALF_TRAVERSE_TIME) * 2;
+	//	return _valvePos == 0;
+	//}
+	//else return _valvePos > (registers().get(R_HALF_TRAVERSE_TIME) * 2) + 20;
 
 	if (isOff) {
 		if (_motorDirection == e_Cooling) {
@@ -416,8 +417,8 @@ bool Mix_Valve::valveIsAtLimit() {
 			//_motorsOffV = psuV;
 		} else {
 			if (_valvePos > 100) {
-				registers().set(R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
-				_ep->update(_regOffset + R_FULL_TRAVERSE_TIME, uint8_t(_valvePos / 2));
+				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
+				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 			} else isOff = 0;
 		}
 	}
