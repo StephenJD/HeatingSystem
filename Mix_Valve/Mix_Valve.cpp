@@ -82,6 +82,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 
 	auto psuOffV = measurePSUVoltage(200);
 	//if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
+	_motorsOffV = 980;
 #ifdef TEST_MIXV
 	_motorsOffV = 700;
 #endif

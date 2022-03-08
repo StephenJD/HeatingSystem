@@ -259,4 +259,20 @@ TEST_CASE("Move-Wait-Check-Move-Off", "[MixValve]") {
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
 }
 
+TEST_CASE("Limit on Heat and Recover", "[MixValve]") {
+
+}
+
+TEST_CASE("Off on Cool and Recover", "[MixValve]") {
+
+}
+
+TEST_CASE("Cool-OK-Heat", "[MixValve]") {
+
+}
+
+TEST_CASE("Heat-OK-Cool", "[MixValve]") {
+
+}
+
 
