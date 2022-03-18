@@ -229,7 +229,7 @@ void Mix_Valve::stateMachine() {
 		break;
 	case e_HotLimit:
 		if (!isTooCool) {
-			I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL);
+			I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL); // when flow temp increases due to gas boiler on.
 			mode = e_Checking;
 		}
 		break;
@@ -276,7 +276,10 @@ void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix v
 
 void Mix_Valve::adjustValve(int tempDiff) {
 	// Get required direction.
-	if (tempDiff < 0) _motorDirection = e_Cooling;  // cool valve 
+	if (tempDiff < 0) {
+		_motorDirection = e_Cooling;  // cool valve
+		I2C_Flags_Ref(*registers().ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL);
+	}
 	else _motorDirection = e_Heating;  // heat valve
 	
 	_journey = Journey(_motorDirection);
@@ -310,6 +313,7 @@ void Mix_Valve::turnValveOff() { // Move valve to cool to prevent gravity circul
 	if (_valvePos == 0) _valvePos = 2;
 	_journey = e_Moving_Coolest;
 	_motorDirection = e_Cooling;
+	I2C_Flags_Ref(*registers().ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL);
 	logger() << name() << L_tabs << F("Turn Valve OFF:") << _valvePos << L_endl;
 }
 
@@ -468,7 +472,7 @@ bool Mix_Valve::checkForNewReqTemp() { // called every second
 	auto reg = registers();
 	const auto thisReqTemp = reg.get(R_REQUEST_FLOW_TEMP);
 	//logger() << millis() << L_tabs << name() << F("This-req:") << thisReqTemp << F("Curr:") << _currReqTemp << L_endl;
-	auto i2c_status = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
+	//auto i2c_status = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 	if (thisReqTemp != 0 && thisReqTemp != _currReqTemp) {
 		logger() << name() << L_tabs;
 		if (_newReqTemp != thisReqTemp) {
