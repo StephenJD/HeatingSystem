@@ -64,7 +64,9 @@ public:
 	}
 
 private:
-	Mix_Valve mixValve[2]; 
+	Mix_Valve mixValve[2];
+	//int simFlowT(int mixV) { return tankTemp * vPos(mixV) / 150; }
+	//int tankTemp;
 };
 
 TestMixV::TestMixV() : mixValve{
