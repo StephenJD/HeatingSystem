@@ -1,5 +1,4 @@
 // This is the Multi-Master Arduino Mini Controller
-#define TEST_MIXV
 
 #include <Mix_Valve.h>
 #include <TempSensor.h>
@@ -39,8 +38,8 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 		auto thisVoltage = analogRead(PSU_V_PIN);
 		if (thisVoltage > psuMaxV) psuMaxV = thisVoltage;
 	} while (!testComplete);
-#ifdef TEST_MIXV
-	psuMaxV = _valvePos < 5 ? 700 : (_valvePos >= VALVE_TRANSIT_TIME ? 700 : 500);
+#ifdef ZPSIM
+	psuMaxV = _valvePos < 5 ? 980 : (_valvePos >= VALVE_TRANSIT_TIME ? 980 : 860);
 #endif
 	_psuV = psuMaxV/4;
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
@@ -83,9 +82,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	auto psuOffV = measurePSUVoltage(200);
 	//if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
 	_motorsOffV = 980;
-#ifdef TEST_MIXV
-	_motorsOffV = 700;
-#endif
+
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
 	reg.set(R_MODE, e_FindOff);
 	logger() << name() << F(" TS Speed:") << _temp_sensr.runSpeed() << L_endl;

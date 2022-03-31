@@ -80,6 +80,16 @@ TestMixV::TestMixV() : mixValve{
 	Mix_Valve::motor_queued = false;
 }
 //	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
+TEST_CASE("Find Off", "[MixValve]") {
+	TestMixV testMV;
+	testMV.setVPos(0, 30);
+	do {
+		testMV.checkTemp(0);
+	} while (testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.vPos(0) == 0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
+}
+
 /*
 TEST_CASE("MutexSwap", "[MixValve]") {
 	TestMixV testMV;
@@ -265,7 +275,8 @@ TEST_CASE("Move-Wait-Check-Move-Off", "[MixValve]") {
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
 }
 */
-TEST_CASE("Limit on Heat and Recover", "[MixValve]") {
+
+TEST_CASE("Limit on Heat then OK then too hot", "[MixValve]") {
 	TestMixV testMV;
 	testMV.setToCool_30Deg(0, 60, 20);
 	testMV.setReqTemp(0, 40);
@@ -289,13 +300,16 @@ TEST_CASE("Limit on Heat and Recover", "[MixValve]") {
 		CHECK(testMV.mode(0) == Mix_Valve::e_Checking);
 	}
 	CHECK(Mix_Valve::I2C_Flags_Obj(testMV.status(0)).is(Mix_Valve::F_STORE_TOO_COOL) == false);
+
 	testMV.setIsTemp(0, 45);
 	do {
 		testMV.checkTemp(0);
 	} while (testMV.mode(0) != Mix_Valve::e_Checking);
 	CHECK(Mix_Valve::I2C_Flags_Obj(testMV.status(0)).is(Mix_Valve::F_STORE_TOO_COOL) == false);
 
+
 }
+
 
 TEST_CASE("Limit on Heat then ReduceRequest", "[MixValve]") {
 	TestMixV testMV;

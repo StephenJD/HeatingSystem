@@ -31,7 +31,7 @@ namespace HardwareInterfaces {
 
 	I_Keypad::KeyOperation LocalKeypad::getKeyCode() {
 #if defined (ZPSIM)
-		Serial.println("SimKey");
+		//Serial.println("SimKey");
 		putKey(simKey);
 		simKey = NO_KEY;
 		return simKey;

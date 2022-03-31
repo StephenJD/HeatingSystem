@@ -125,7 +125,7 @@ private:
 
 	// Temporary Data
 	int16_t _onTime = 0; // +ve to move, -ve to wait.
-	int16_t _valvePos = 0;
+	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME;
 	int16_t _moveFromPos = 0;
 	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
 	MotorDirection _motorDirection = e_Stop;

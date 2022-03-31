@@ -69,6 +69,7 @@ namespace HardwareInterfaces {
 				newIniStatus &= ~requestINI_flag;
 				logger() << " IniStatus now:" << newIniStatus << " sent Offset:" << _localRegOffset << L_endl;
 				rawReg.set(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
+				refreshRegisters(); // let remote read its TS's
 			}
 		}
 		logger() << F("ConsoleController_Thick::sendSlaveIniData()[") << index() << F("] i2CMode: ") << registers().get(OLED::R_DEVICE_STATE) << i2C().getStatusMsg(errCode) << L_endl;
@@ -134,6 +135,10 @@ namespace HardwareInterfaces {
 			give_RC_Bus(i2c_status); // remote reads TS and writes to programmer.
 			wait_DevicesToFinish(rawRegisters());
 			status = readRegSet(OLED::R_ROOM_TEMP,2); // don't rely on console writing to the registers.
+			if (reg.get(OLED::R_ROOM_TEMP) == 0) {
+				logger() << L_time << "RC Room Temp[" << index() << "] = 0!" << L_endl;
+				//recovery().resetI2C();
+			}
 			status |= readRegVerifyValue(OLED::R_REQUESTING_T_RAIL,regVal);
 			auto reg = registers();
 			if (status == _OK && reg.update(OLED::R_REQUESTING_T_RAIL, regVal)) towelrail_req_changed = regVal;
