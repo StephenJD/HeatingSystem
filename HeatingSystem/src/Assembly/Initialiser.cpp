@@ -56,7 +56,7 @@ namespace Assembly {
 	}
 
 	void Initialiser::initialize_Thick_Consoles() {
-		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
+		//i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
 		for (auto& rc : _hs.thickConsole_Arr) {
 			logger() << L_time << F("RemConsole query[] ") << consoleIndex << L_endl;
@@ -71,6 +71,26 @@ namespace Assembly {
 		}
 	}	
 	
+	uint8_t Initialiser::post_initialize_Thick_Consoles() {
+		uint8_t status = 0;
+		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
+		for (auto& remote : _hs.thickConsole_Arr) {
+			auto mixIniStatus = remote.rawRegisters().get(R_SLAVE_REQUESTING_INITIALISATION);
+			uint8_t requestINI_flag = MV_US_REQUESTING_INI << remote.index();
+			status |= remote.sendSlaveIniData(requestINI_flag);
+		}
+		return status;
+	}	
+	
+	uint8_t Initialiser::post_initialize_MixV() {
+		uint8_t status = 0;
+		for (auto& mixValve : hs().tempController().mixValveControllerArr) {
+			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
+			status |= mixValve.sendSlaveIniData(requestINI_flag);
+		}
+		return status;
+	}
+
 	uint8_t Initialiser::i2C_Test() {
 		uint8_t status = _OK;
 		status = _testDevices.speedTestDevices();
@@ -81,11 +101,8 @@ namespace Assembly {
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		_resetI2C.hardReset.initialisationRequired = false;
 		uint8_t status = relayPort().initialiseDevice();
-		initialize_Thick_Consoles();
-		for (auto& mixValve : hs().tempController().mixValveControllerArr) { 
-			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
-			status |= mixValve.sendSlaveIniData(requestINI_flag);
-		}
+		status |= post_initialize_Thick_Consoles();
+		status |= post_initialize_MixV();
 		if (status != _OK) logger() << L_time << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
 		else logger() << L_time << F("  Initialiser::postI2CResetInitialisation OK\n");
 		return status;

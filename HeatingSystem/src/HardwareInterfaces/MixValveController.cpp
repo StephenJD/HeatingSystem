@@ -74,7 +74,6 @@ namespace HardwareInterfaces {
 				//logger() << " New IniStatus:" << newIniStatus << L_endl;
 				rawReg.set(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
 			}
-			readRegistersFromValve();
 		}
 		logger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << " State:" << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
 		return errCode;
@@ -85,27 +84,31 @@ namespace HardwareInterfaces {
 	}
 
 	bool MixValveController::check() { // called once per second
+		bool mixV_OK = true;
 		if (reEnable() == _OK) {
 			auto mixIniStatus = rawRegisters().get(R_SLAVE_REQUESTING_INITIALISATION);
 			if (mixIniStatus > ALL_REQUESTING) {
 				logger() << L_time << "Bad Mix IniStatus : " << mixIniStatus << L_endl;
 				mixIniStatus = ALL_REQUESTING;
 				rawRegisters().set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
+				mixV_OK = false;
 			}
-			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
-			if (mixIniStatus & requestINI_flag) sendSlaveIniData(requestINI_flag);
-			readRegistersFromValve();
-			//logMixValveOperation(false);
-			logMixValveOperation(true);
+			//uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
+			if (mixIniStatus /*& requestINI_flag*/) mixV_OK = false; // (sendSlaveIniData(requestINI_flag) == _OK);
+			else {
+				mixV_OK &= readRegistersFromValve_OK();
+				//logMixValveOperation(false);
+				logMixValveOperation(true);
+			}
 		}
-		return true;
+		return mixV_OK;
 	}
 
 	void MixValveController::monitorMode() {
 		if (reEnable() == _OK) {
 			_relayArr[_controlZoneRelay].set(); // turn call relay ON
 			relayController().updateRelays();
-			readRegistersFromValve();
+			readRegistersFromValve_OK();
 			logMixValveOperation(true);
 		}
 	}
@@ -263,7 +266,7 @@ namespace HardwareInterfaces {
 		profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tSend new Request:\t" << _mixCallTemp << L_endl;
 	}
 
-	void MixValveController::readRegistersFromValve() { // called once per second
+	bool MixValveController::readRegistersFromValve_OK() { // called once per second
 #ifdef ZPSIM
 		//uint8_t (&debugWire)[30] = reinterpret_cast<uint8_t (&)[30]>(TwoWire::i2CArr[getAddress()]);
 #endif
@@ -282,7 +285,7 @@ namespace HardwareInterfaces {
 			status = readReg(Mix_Valve::R_DEVICE_STATE); // recovery
 			if (status) {
 				logger() << L_time << F("read R_DEVICE_STATE 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status);
-				return;
+				return false;
 			}
 			auto reg = registers();
 			auto i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
@@ -312,5 +315,6 @@ namespace HardwareInterfaces {
 				//I_I2Cdevice::write(Mix_Valve::R_REQUEST_FLOW_TEMP + _remoteRegOffset, 1, &_mixCallTemp);
 			}
 		} else logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;
+		return status == _OK;
 	}
 }

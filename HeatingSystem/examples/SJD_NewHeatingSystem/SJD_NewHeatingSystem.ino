@@ -110,8 +110,6 @@ namespace HeatingSystemSupport {
 namespace LCD_UI {
 	void notifyDataIsEdited() { // global function for notifying anyone who needs to know
 		HeatingSystemSupport::dataHasChanged = true;
-		// Checks Zone Temps, then sets each zone.nextEvent to now.
-		//if (heating_system) heating_system->updateChangedData();
 	}
 }
 
@@ -135,7 +133,7 @@ namespace LCD_UI {
  		inYield = true;
  		//if (millis()%1000 == 0) logger() << F("ui_yield call") << L_endl;
  		//Serial.println("Start ui_yield");
- 		if (heating_system) heating_system->serviceConsoles();
+ 		if (heating_system) heating_system->serviceConsolesOK();
  		//Serial.println("End ui_yield");
  		inYield = false;
  	}
@@ -186,11 +184,7 @@ void setup() {
 	set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
 
 	while (true) {
-		//Serial.println("Loop");
-		hs.updateChangedData();
-		hs.serviceTemperatureController();
-		hs.serviceConsoles();
-		//logger().flush();
+		hs.run_stateMachine();
 	}
 }
 

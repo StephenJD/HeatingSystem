@@ -25,6 +25,8 @@ namespace Assembly {
 		HeatingSystem & hs() { return _hs; }
 		I_I2Cdevice_Recovery & getDevice(uint8_t deviceAddr);
 		void initialize_Thick_Consoles();
+		uint8_t post_initialize_Thick_Consoles();
+		uint8_t post_initialize_MixV();
 		HardwareInterfaces::ResetI2C _resetI2C;
 		HardwareInterfaces::RelaysPort & relayPort() { return static_cast<HardwareInterfaces::RelaysPort &>(HardwareInterfaces::relayController()); }
 	private:

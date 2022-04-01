@@ -30,20 +30,24 @@ namespace HeatingSystemSupport {
 class HeatingSystem {
 public:
 	HeatingSystem();
-	void serviceConsoles();
-	void serviceTemperatureController();
+	void run_stateMachine();
+	bool serviceConsolesOK();
+	Assembly::Status serviceTemperatureController();
 
 	/// <summary>
 	/// Checks Zone Temps, then sets each zone.nextEvent to now.
 	/// </summary>
-	void updateChangedData();
 	auto recoverObject() -> I2C_Recovery::I2C_Recover_Retest & { return _recover; }
 	// For testing:...
 	Assembly::MainConsoleChapters & mainConsoleChapters() { return _mainConsoleChapters; }
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> & getDB();
 	Assembly::HeatingSystem_Queries & getQueries() { return _hs_queries; }
 	Assembly::TemperatureController & tempController() { return _tempController; }
+	enum State {ESTABLISH_TS_COMS, ESTABLISH_MIXV_COMMS, ESTABLISH_REMOTE_CONSOLE_COMS, ESTABLISH_RELAY_COMS, INI_MV, INI_RC, SERVICE_CONSOLES, SERVICE_TEMP_CONTROLLER };
 private: // data-member ordering matters!
+	State _state = ESTABLISH_TS_COMS;
+	void updateChangedData();
+	bool consoleDataHasChanged();
 	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR, Wire, HardwareInterfaces::I2C_MAX_SPEED };
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;
@@ -58,7 +62,10 @@ private: // data-member ordering matters!
 	Assembly::HeatingSystem_Datasets _hs_datasets;
 	Assembly::Sequencer _sequencer;
 	Assembly::TemperatureController _tempController;
-public:	
+public:
+#ifdef ZPSIM
+	State state() { return _state; }
+#endif
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;
 	HardwareInterfaces::LocalKeypad localKeypad;
@@ -66,7 +73,6 @@ public:
 private: 
 	friend Assembly::Initialiser;
 	friend class HardwareInterfaces::TestDevices;
-
 	// Run-time data arrays
 	Assembly::MainConsoleChapters _mainConsoleChapters;
 	HardwareInterfaces::Console_Thin _mainConsole;

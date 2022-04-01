@@ -19,7 +19,7 @@ namespace HardwareInterfaces {
 		
 		uint8_t sendSlaveIniData(uint8_t requestINI_flag);
 		uint8_t index() const { return (_localRegOffset - PROG_REG_RC_US_OFFSET) / OLED_Thick_Display::R_DISPL_REG_SIZE; }
-		void refreshRegisters();
+		bool refreshRegistersOK();
 		bool console_mode_is(int) const;
 		void set_console_mode(uint8_t mode);
 		uint8_t get_console_mode() const;

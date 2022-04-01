@@ -19,6 +19,7 @@ namespace arduino_logger {
 }
 
 using namespace arduino_logger;
+using namespace I2C_Talk_ErrorCodes;
 
 namespace Assembly {
 	using namespace RelationalDatabase;
@@ -101,7 +102,7 @@ namespace Assembly {
 		return clock_().isNewSecond(lastSeconds);
 	}
 
-	void TemperatureController::checkAndAdjust() { // Called once per second
+	Status TemperatureController::checkAndAdjust() { // Called once per second
 		static uint8_t lastMins = clock_().minUnits()-1;
 		// Entered once per second
 		bool newMinute = clock_().isNewMinute(lastMins);
@@ -113,7 +114,7 @@ namespace Assembly {
 		logger().flush();
 		zTempLogger().flush();
 		profileLogger().flush();
-
+		auto status = ALL_OK;
 		if (checkPreHeat && newMinute && clock_().time().asInt() == 0) {
 			zTempLogger() 
 				<< F("Time") << L_tabs << F("Zone")
@@ -138,27 +139,24 @@ namespace Assembly {
 
 		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 		//logger() << L_time << "Check TS's" << L_endl;
-		for (auto & ts : tempSensorArr) {
-			ts.readTemperature();
-			//if (checkPreHeat) logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
-			ui_yield();
-		}
+		if (!readTemperaturesOK()) status = TS_FAILED;
 
 		if (newMinute) {
 			//logger() << L_time << "Check BB" << L_endl;
 			backBoiler.check();
-			checkZones(checkPreHeat);
+			checkZoneRequests(checkPreHeat);
 			//auto& i2c = tempSensorArr[0].i2C();
 			//if (i2c.getAddressDelay() < 1000) i2c.setAddressDelay(i2c.getAddressDelay() + 10);
 		}
-
+		
+		auto mixV_OK = true;
 		for (auto & mixValveControl : mixValveControllerArr) {
 			//logger() << L_time << "Check mixValveControl" << L_endl;
-			mixValveControl.check();
+			mixV_OK &= mixValveControl.check();
 			if (newMinute && checkPreHeat) mixValveControl.logMixValveOperation(true);
-			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController"); 
 			ui_yield(); 
 		}
+		if (!mixV_OK) status = MV_FAILED;
 
 		//logger() << L_time << "Check TRd's" << L_endl;
 		for (auto & towelRail : towelRailArr) {
@@ -169,12 +167,12 @@ namespace Assembly {
 		for ( auto & relay : relayArr) {
 			relay.checkControllerStateCorrect();
 		}
-		relayController().updateRelays();
-		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
+		if (relayController().updateRelays() != _OK) status = RELAYS_FAILED;
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
+		return status;
 	}
 
-	void TemperatureController::checkZones(bool checkForPreHeat) {
+	void TemperatureController::checkZoneRequests(bool checkForPreHeat) {
 		for (auto& zone : zoneArr) { 
 			if (checkForPreHeat) zone.preHeatForNextTT();
 			zone.setFlowTemp();
@@ -186,4 +184,15 @@ namespace Assembly {
 			zone.refreshProfile(true);
 		}
 	}
+
+	bool TemperatureController::readTemperaturesOK() {
+		auto ts_OK = true;
+		for (auto& ts : tempSensorArr) {
+			ts_OK &= (ts.readTemperature() == _OK);
+			//if (checkPreHeat) logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
+			ui_yield();
+		}
+		return ts_OK;
+	}
+
 }

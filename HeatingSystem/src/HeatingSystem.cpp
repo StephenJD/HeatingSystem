@@ -16,6 +16,7 @@ using namespace client_data_structures;
 using namespace RelationalDatabase;
 using namespace HardwareInterfaces;
 using namespace arduino_logger;
+using namespace I2C_Talk_ErrorCodes;
 
 void ui_yield();
 
@@ -99,47 +100,118 @@ HeatingSystem::HeatingSystem()
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 		_initialiser.initialize_Thick_Consoles();
 		_initialiser.i2C_Test();
-		_initialiser.postI2CResetInitialisation();
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
-		serviceTemperatureController();
-		//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
 	}
 
-void HeatingSystem::serviceConsoles() { // called every 50mS to respond to keys
-	//Serial.println("HS.serviceConsoles");
-	ui_yield();
+void HeatingSystem::run_stateMachine() {
+	//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
+	switch (_state) {
+	case ESTABLISH_TS_COMS:
+		if (_tempController.readTemperaturesOK()) {
+			_state = State(_state + 1);
+		}
+		break;
+	case ESTABLISH_RELAY_COMS:
+		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
+		_state = State(_state + 1);
+	case ESTABLISH_MIXV_COMMS:
+		for (auto& mixValveControl : _tempController.mixValveControllerArr) {
+			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController");
+		}
+		_state = State(_state + 1);
+		break;
+	case ESTABLISH_REMOTE_CONSOLE_COMS:
+		for (auto& remote : thickConsole_Arr) {
+			if (remote.isUnrecoverable()) HardReset::arduinoReset("RemoteConsoles");
+		}
+		_state = State(_state + 1);
+		break;
+	case INI_MV:
+		_state = State(_state + 1);
+		break;
+	case INI_RC:
+		_initialiser.postI2CResetInitialisation();
+		_state = State(_state + 1);
+		break;
+	case SERVICE_CONSOLES:
+		if (!serviceConsolesOK()) {
+			_state = ESTABLISH_REMOTE_CONSOLE_COMS;
+		}
+		else {
+			if (dataHasChanged) {
+				updateChangedData();
+				dataHasChanged = false;
+				_state = SERVICE_TEMP_CONTROLLER;
+			}
+#ifndef ZPSIM
+			if (_tempController.isNewSecond())
+#endif	
+			{
+				_state = SERVICE_TEMP_CONTROLLER;
+			}
+		}
+		break;
+	case SERVICE_TEMP_CONTROLLER:
+		switch (serviceTemperatureController()) {
+		case TS_FAILED:
+			_state = ESTABLISH_TS_COMS;
+			break;
+		case MV_FAILED:
+			_initialiser._resetI2C(i2C, MIX_VALVE_I2C_ADDR);
+			_state = ESTABLISH_MIXV_COMMS;
+			break;
+		case RC_FAILED:
+			_initialiser._resetI2C(i2C, US_CONSOLE_I2C_ADDR);
+			_state = ESTABLISH_REMOTE_CONSOLE_COMS;
+			break;
+		case RELAYS_FAILED:
+			_initialiser._resetI2C(i2C, IO8_PORT_OptCoupl);
+			_state = ESTABLISH_RELAY_COMS;
+			break;
+		default:
+			_state = SERVICE_CONSOLES;
+		}
+		break;
+	}
+	logger() << "State: " << _state << L_endl;
+}
+
+bool HeatingSystem::serviceConsolesOK() {
+	auto rc_OK = true;
+	if (consoleDataHasChanged()) {
+		_mainConsole.refreshDisplay();
+		for (auto& remote : thickConsole_Arr) {
+			rc_OK &= remote.refreshRegistersOK();
+		}
+	}
+	return rc_OK;
+}
+
+bool HeatingSystem::consoleDataHasChanged() { // called every 50mS to respond to keys
+	//Serial.println("HS.consoleDataHasChanged");
+	//ui_yield();
 	bool displayHasChanged = _mainConsole.processKeys();
 	for (auto& remote : thickConsole_Arr) {
 		displayHasChanged |= remote.hasChanged();
 	}
-	if (displayHasChanged) _mainConsole.refreshDisplay();
+	return displayHasChanged;
 }
 
-void HeatingSystem::serviceTemperatureController() { // Called every Arduino loop
-#ifndef ZPSIM
-	if (_tempController.isNewSecond())
-#endif	
-	{	// Called every second
-		if (_mainConsoleChapters.chapter() == 0) _tempController.checkAndAdjust();
-		for (auto& remote : thickConsole_Arr) {
-			remote.refreshRegisters();
-		}
+Status HeatingSystem::serviceTemperatureController() { // Called every second
+	auto status = ALL_OK;
+	if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
+	for (auto& remote : thickConsole_Arr) {
+		if (!remote.refreshRegistersOK()) status = RC_FAILED;
 	}
+	return status;
 }
 
 void HeatingSystem::updateChangedData() {
-	if (dataHasChanged && _mainConsoleChapters.chapter() == 0) {
+	if (_mainConsoleChapters.chapter() == 0) {
 		logger() << L_time << F("updateChangedData\n");
-		_tempController.checkZones(true);
-		for (auto& remote : thickConsole_Arr) {
-			remote.refreshRegisters();
-		}
-		dataHasChanged = false;
+		_tempController.checkZoneRequests(true);
 	}
-#if defined ZPSIM
-	else logger() << L_time << F("No ChangedData\n");
-#endif
 }
 
 RelationalDatabase::RDB<Assembly::TB_NoOfTables> & HeatingSystem::getDB() { return db; }

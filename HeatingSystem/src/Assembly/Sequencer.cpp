@@ -35,7 +35,7 @@ namespace Assembly {
 			getCurrentSpell(dwelling.id(), dwellInfo);
 			getCurrentProfileID(zoneID, dwellInfo);
 //#ifdef ZPSIM
-			profileLogger() << "\t" << dwelling.rec() << " " << timeOfInterest << L_endl;
+			profileLogger() << L_time << dwelling.rec() << " " << timeOfInterest << L_endl;
 			profileLogger() << F("\t\tThis ") << dwellInfo.currTT
 				<< F("\n\t\tNext ") << dwellInfo.nextTT << L_endl;
 //#endif

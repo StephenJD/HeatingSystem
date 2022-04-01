@@ -20,9 +20,10 @@ namespace Assembly {
 		int outsideTemp() const { return thermalStore.getOutsideTemp(); }
 		bool isNewSecond() const;
 		// Modifiers
-		void checkAndAdjust(); // true once per second
-		void checkZones(bool checkPreHeat);
+		Status checkAndAdjust();
+		void checkZoneRequests(bool checkPreHeat);
 		void resetZones();
+		bool readTemperaturesOK();
 
 		HardwareInterfaces::UI_TempSensor tempSensorArr[Assembly::NO_OF_TEMP_SENSORS];
 		HardwareInterfaces::TowelRail towelRailArr[Assembly::NO_OF_TOWELRAILS];

@@ -78,13 +78,13 @@ public:
 	void setHS(HeatingSystem & hs) {
 		logger() << L_time << "Start setHS for ServiceConsoles...\n";
 		heating_system = &hs;
-		heating_system->serviceConsoles();
+		heating_system->serviceConsolesOK();
 		clock_().setSeconds(0);
 		heating_system->serviceTemperatureController();
 		logger() << L_time << "Done setHS for ServiceConsoles...\n";
 	}
 	void operator()() {
-		if (heating_system) heating_system->serviceConsoles();
+		if (heating_system) heating_system->serviceConsolesOK();
 	}
 private:
 } serviceConsoles;
@@ -103,7 +103,7 @@ void ui_yield() {
 namespace LCD_UI {
 	void notifyDataIsEdited() { // global function for notifying anyone who needs to know
 		// Checks Zone Temps, then sets each zone.nextEvent to now.
-		if (heating_system) heating_system->updateChangedData();
+		HeatingSystemSupport::dataHasChanged = true;
 	}
 }
 
@@ -3607,7 +3607,7 @@ TEST_CASE("HeatingSystem Test Relays & TS", "[HeatingSystem]") {
 		thisTempSensor = q_tempSensors.next(1);
 	}
 
-	hs. serviceConsoles();
+	hs.serviceConsolesOK();
 }
 #endif
 
