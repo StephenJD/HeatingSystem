@@ -59,6 +59,7 @@ public:
 #ifdef ZPSIM
 	void setKey(HardwareInterfaces::I_Keypad::KeyOperation key);
 	char* oledDisplay();
+	void setTSaddr(int addr);
 #endif
 private:
 	void clearDisplay();

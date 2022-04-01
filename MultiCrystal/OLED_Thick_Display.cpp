@@ -318,4 +318,9 @@ void OLED_Thick_Display::processKeys() { // called by loop()
     char* OLED_Thick_Display::oledDisplay() {
         return _display.displayBuffer;
     }
+
+    void OLED_Thick_Display::setTSaddr(int addr) {
+        _tempSensor.setAddress(addr);
+    }
+
 #endif
