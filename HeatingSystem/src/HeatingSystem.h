@@ -45,7 +45,7 @@ public:
 	enum State {ESTABLISH_TS_COMS, ESTABLISH_MIXV_COMMS, ESTABLISH_REMOTE_CONSOLE_COMS, ESTABLISH_RELAY_COMS, INI_MV, INI_RC
 		, START_NEW_DAY, SERVICE_SEQUENCER, SERVICE_BACK_BOILER, SERVICE_TEMP_CONTROLLER, SERVICE_CONSOLES};
 private: // data-member ordering matters!
-	State _state = ESTABLISH_TS_COMS;
+	State _state = START_NEW_DAY;
 	void updateChangedData();
 	bool consoleDataHasChanged();
 	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR, Wire, HardwareInterfaces::I2C_MAX_SPEED };

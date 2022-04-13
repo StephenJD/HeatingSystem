@@ -140,36 +140,50 @@ void HeatingSystem::run_stateMachine() {
 
 	switch (_state) {
 	case ESTABLISH_TS_COMS:
+		logger() << L_time << "ESTABLISH_TS_COMS" << L_endl;
 		if (!_tempController.readTemperaturesOK()) break;
-		[[fallthrough]];
+		_state = SERVICE_TEMP_CONTROLLER;
+		break;
 	case ESTABLISH_RELAY_COMS:
+		logger() << L_time << "ESTABLISH_RELAY_COMS" << L_endl;
 		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
-		[[fallthrough]];
+		_state = SERVICE_TEMP_CONTROLLER;
+		break;
 	case ESTABLISH_MIXV_COMMS:
+		logger() << L_time << "ESTABLISH_MIXV_COMMS" << L_endl;
 		for (auto& mixValveControl : _tempController.mixValveControllerArr) {
 			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController");
 		}
-		[[fallthrough]];
+		_state = SERVICE_TEMP_CONTROLLER;
+		break;
 	case ESTABLISH_REMOTE_CONSOLE_COMS:
+		logger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS" << L_endl;
 		for (auto& remote : thickConsole_Arr) {
 			if (remote.isUnrecoverable()) HardReset::arduinoReset("RemoteConsoles");
 		}
-		[[fallthrough]];
+		_state = SERVICE_TEMP_CONTROLLER;
+		break;
 	case INI_MV:
 		[[fallthrough]];
 	case INI_RC:
+		logger() << L_time << "INI_RC" << L_endl;
 		_initialiser.postI2CResetInitialisation();
-		[[fallthrough]];
+		_state = SERVICE_TEMP_CONTROLLER;
+		break;
 	case START_NEW_DAY:
+		logger() << L_time << "START_NEW_DAY" << L_endl;
 		printFileHeadings();
 		[[fallthrough]];
 	case SERVICE_SEQUENCER:
+		logger() << L_time << "SERVICE_SEQUENCER" << L_endl;
 		_tempController.checkZoneRequests(true);
 		[[fallthrough]];
 	case SERVICE_BACK_BOILER:
+		logger() << L_time << "SERVICE_BACK_BOILER" << L_endl;
 		_tempController.backBoiler.check();
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
+			logger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
 			for (auto& remote : thickConsole_Arr) {
