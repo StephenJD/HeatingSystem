@@ -14,6 +14,7 @@
 		//Clock(const char* date, const char* time);
 		Clock() { loadTime(); }
 		Clock(bool delayLoad) {}
+		enum NewPeriod {NOT_NEW, NEW_SEC, NEW_SEC10, NEW_MIN, NEW_MIN10, NEW_HR, NEW_DAY};
 		// Queries
 		uint8_t minUnits() const { return _mins1; }
 		uint8_t seconds() const { return _secs; }
@@ -27,6 +28,9 @@
 		bool isNewSecond(uint8_t& oldSecond);
 		bool isNewMinute(uint8_t& oldMin);
 		bool isNew10Min(uint8_t& oldMin);
+		//NewPeriod isNewPeriod(uint32_t& lastCheck);
+		NewPeriod isNewPeriod(uint8_t& lastCheck_S);
+
 		// Conceptually, these are queries, although reading the time triggers an update-check which might modify the time
 		explicit operator Date_Time::DateTime() const { return _dateTime(); }
 		

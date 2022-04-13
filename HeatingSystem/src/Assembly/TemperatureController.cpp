@@ -105,55 +105,19 @@ namespace Assembly {
 	Status TemperatureController::checkAndAdjust() { // Called once per second
 		static uint8_t lastMins = clock_().minUnits()-1;
 		// Entered once per second
-		bool newMinute = clock_().isNewMinute(lastMins);
-		bool checkPreHeat = clock_().minUnits() == 0; // each 10 minutes
-#ifdef ZPSIM
-		newMinute = true;
-		checkPreHeat = true;
-#endif
+
 		logger().flush();
 		zTempLogger().flush();
 		profileLogger().flush();
 		auto status = ALL_OK;
-		if (checkPreHeat && newMinute && clock_().time().asInt() == 0) {
-			zTempLogger() 
-				<< F("Time") << L_tabs << F("Zone")
-				<< F("PreReq")
-				<< F("PreIs")
-				<< F("FlowReq")
-				<< F("FlowIs")
-				<< F("UsedRatio")
-				<< F("Is")
-				<< F("Ave")
-				<< F("AvePer")
-				<< F("CoolPer")
-				<< F("Error16ths")
-				<< F("Outside")
-				<< F("PreheatMins")
-				<< F("ControlledBy")
-				<< F("IsOn")
-				<< L_endl;
-			profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
 
-		}
-
-		//logger() << L_time << "TC::checkAndAdjust" << (checkPreHeat ? " with Preheat" : " without Preheat") << L_endl;
 		//logger() << L_time << "Check TS's" << L_endl;
 		if (!readTemperaturesOK()) status = TS_FAILED;
 
-		if (newMinute) {
-			//logger() << L_time << "Check BB" << L_endl;
-			backBoiler.check();
-			checkZoneRequests(checkPreHeat);
-			//auto& i2c = tempSensorArr[0].i2C();
-			//if (i2c.getAddressDelay() < 1000) i2c.setAddressDelay(i2c.getAddressDelay() + 10);
-		}
-		
 		auto mixV_OK = true;
 		for (auto & mixValveControl : mixValveControllerArr) {
 			//logger() << L_time << "Check mixValveControl" << L_endl;
 			mixV_OK &= mixValveControl.check();
-			if (newMinute && checkPreHeat) mixValveControl.logMixValveOperation(true);
 			ui_yield(); 
 		}
 		if (!mixV_OK) status = MV_FAILED;
@@ -189,7 +153,6 @@ namespace Assembly {
 		auto ts_OK = true;
 		for (auto& ts : tempSensorArr) {
 			ts_OK &= (ts.readTemperature() == _OK);
-			//if (checkPreHeat) logger() << L_time << F("TS:device 0x") << L_hex << ts.getAddress() << F_COLON << L_dec << ts.get_temp() << F(" Error? ") << ts.hasError() << L_endl;
 			ui_yield();
 		}
 		return ts_OK;

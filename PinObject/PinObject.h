@@ -91,7 +91,7 @@ namespace HardwareInterfaces {
 		/// <summary>
 		/// Reads pin.
 		/// </summary>
-		bool logicalState();
+		bool logicalState() const;
 	};	
 	
 	// *******  Digital Debounced In-Pin  *******

@@ -28,7 +28,7 @@ namespace HardwareInterfaces {
 		begin();
 	}
 
-	bool Pin_Watch::logicalState() {
+	bool Pin_Watch::logicalState() const {
 		return (digitalRead(port()) == activeState());
 	}
 

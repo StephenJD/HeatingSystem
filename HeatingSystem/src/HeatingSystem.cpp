@@ -78,6 +78,31 @@ namespace HeatingSystemSupport {
 
 using namespace	HeatingSystemSupport;
 using namespace	Assembly;
+namespace arduino_logger {
+	Logger& zTempLogger();
+	Logger& profileLogger();
+}
+
+void printFileHeadings() {
+	zTempLogger()
+		<< F("Time") << L_tabs << F("Zone")
+		<< F("PreReq")
+		<< F("PreIs")
+		<< F("FlowReq")
+		<< F("FlowIs")
+		<< F("UsedRatio")
+		<< F("Is")
+		<< F("Ave")
+		<< F("AvePer")
+		<< F("CoolPer")
+		<< F("Error16ths")
+		<< F("Outside")
+		<< F("PreheatMins")
+		<< F("ControlledBy")
+		<< F("IsOn")
+		<< L_endl;
+	profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
+}
 
 HeatingSystem::HeatingSystem()
 	: 
@@ -106,33 +131,64 @@ HeatingSystem::HeatingSystem()
 
 void HeatingSystem::run_stateMachine() {
 	//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
+
 	switch (_state) {
 	case ESTABLISH_TS_COMS:
-		if (_tempController.readTemperaturesOK()) {
-			_state = State(_state + 1);
-		}
-		break;
+		if (!_tempController.readTemperaturesOK()) break;
+		[[fallthrough]];
 	case ESTABLISH_RELAY_COMS:
 		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
-		_state = State(_state + 1);
+		[[fallthrough]];
 	case ESTABLISH_MIXV_COMMS:
 		for (auto& mixValveControl : _tempController.mixValveControllerArr) {
 			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController");
 		}
-		_state = State(_state + 1);
-		break;
+		[[fallthrough]];
 	case ESTABLISH_REMOTE_CONSOLE_COMS:
 		for (auto& remote : thickConsole_Arr) {
 			if (remote.isUnrecoverable()) HardReset::arduinoReset("RemoteConsoles");
 		}
-		_state = State(_state + 1);
-		break;
+		[[fallthrough]];
 	case INI_MV:
-		_state = State(_state + 1);
-		break;
+		[[fallthrough]];
 	case INI_RC:
 		_initialiser.postI2CResetInitialisation();
-		_state = State(_state + 1);
+		[[fallthrough]];
+	case START_NEW_DAY:
+		printFileHeadings();
+		[[fallthrough]];
+	case SERVICE_SEQUENCER:
+		_tempController.checkZoneRequests(true);
+		[[fallthrough]];
+	case SERVICE_BACK_BOILER:
+		_tempController.backBoiler.check();
+		[[fallthrough]];
+	case SERVICE_TEMP_CONTROLLER: {
+			auto status = ALL_OK;
+			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
+			for (auto& remote : thickConsole_Arr) {
+				if (!remote.refreshRegistersOK()) status = RC_FAILED;
+			}
+			switch (status) {
+			case TS_FAILED:
+				_state = ESTABLISH_TS_COMS;
+				break;
+			case MV_FAILED:
+				_initialiser._resetI2C(i2C, MIX_VALVE_I2C_ADDR);
+				_state = ESTABLISH_MIXV_COMMS;
+				break;
+			case RC_FAILED:
+				_initialiser._resetI2C(i2C, US_CONSOLE_I2C_ADDR);
+				_state = ESTABLISH_REMOTE_CONSOLE_COMS;
+				break;
+			case RELAYS_FAILED:
+				_initialiser._resetI2C(i2C, IO8_PORT_OptCoupl);
+				_state = ESTABLISH_RELAY_COMS;
+				break;
+			default:
+				_state = SERVICE_CONSOLES;
+			}
+		}	
 		break;
 	case SERVICE_CONSOLES:
 		if (!serviceConsolesOK()) {
@@ -144,33 +200,27 @@ void HeatingSystem::run_stateMachine() {
 				dataHasChanged = false;
 				_state = SERVICE_TEMP_CONTROLLER;
 			}
-#ifndef ZPSIM
-			if (_tempController.isNewSecond())
+			else {
+				static auto lastSec = clock_().seconds();
+				switch (clock_().isNewPeriod(lastSec)) {
+				case Clock::NEW_DAY:
+					_state = START_NEW_DAY;
+					break;
+				case Clock::NEW_MIN10:
+					_state = SERVICE_SEQUENCER;
+					break;
+				case Clock::NEW_MIN:
+					_state = SERVICE_BACK_BOILER;
+					break;
+				case Clock::NEW_SEC:
+					_state = SERVICE_TEMP_CONTROLLER;
+					break;
+#ifdef ZPSIM
+				default:
+					_state = SERVICE_TEMP_CONTROLLER;
 #endif	
-			{
-				_state = SERVICE_TEMP_CONTROLLER;
+				}
 			}
-		}
-		break;
-	case SERVICE_TEMP_CONTROLLER:
-		switch (serviceTemperatureController()) {
-		case TS_FAILED:
-			_state = ESTABLISH_TS_COMS;
-			break;
-		case MV_FAILED:
-			_initialiser._resetI2C(i2C, MIX_VALVE_I2C_ADDR);
-			_state = ESTABLISH_MIXV_COMMS;
-			break;
-		case RC_FAILED:
-			_initialiser._resetI2C(i2C, US_CONSOLE_I2C_ADDR);
-			_state = ESTABLISH_REMOTE_CONSOLE_COMS;
-			break;
-		case RELAYS_FAILED:
-			_initialiser._resetI2C(i2C, IO8_PORT_OptCoupl);
-			_state = ESTABLISH_RELAY_COMS;
-			break;
-		default:
-			_state = SERVICE_CONSOLES;
 		}
 		break;
 	}
@@ -196,15 +246,6 @@ bool HeatingSystem::consoleDataHasChanged() { // called every 50mS to respond to
 		displayHasChanged |= remote.hasChanged();
 	}
 	return displayHasChanged;
-}
-
-Status HeatingSystem::serviceTemperatureController() { // Called every second
-	auto status = ALL_OK;
-	if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
-	for (auto& remote : thickConsole_Arr) {
-		if (!remote.refreshRegistersOK()) status = RC_FAILED;
-	}
-	return status;
 }
 
 void HeatingSystem::updateChangedData() {

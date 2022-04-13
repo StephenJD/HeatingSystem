@@ -22,6 +22,7 @@ using namespace Date_Time;
 	DateTime Clock::_dateTime() const { 
 		// called on every request for time/date.
 		// Only needs to check anything every 10 minutes
+		// Updates _lastCheck_mS to last second
 		static uint8_t oldHr = _now.hrs() + 1; // force check first time through
 		int newSecs = _secs + secondsSinceLastCheck(_lastCheck_mS);
 		_secs = newSecs % 60;
@@ -100,6 +101,52 @@ using namespace Date_Time;
 		bool isNewMin = oldMin != mins10();
 		if (isNewMin) oldMin = mins10();
 		return isNewMin;
+	}	
+	
+	//Clock::NewPeriod Clock::isNewPeriod(uint32_t& lastCheck_mS) {
+	//	refresh();
+	//	NewPeriod newPeriod = NOT_NEW;
+	//	if (lastCheck_mS / 1000 != _lastCheck_mS / 1000) {
+	//		newPeriod = NEW_SEC;
+	//		if (lastCheck_mS / 10000 != _lastCheck_mS / 10000) {
+	//			newPeriod = NEW_SEC10;
+	//			if (lastCheck_mS / 60000 != _lastCheck_mS / 60000) {
+	//				newPeriod = NEW_MIN;
+	//				if (lastCheck_mS / 600000 != _lastCheck_mS / 600000) {
+	//					newPeriod = NEW_MIN10;
+	//					if (lastCheck_mS / 3600000 != _lastCheck_mS / 3600000) {
+	//						newPeriod = NEW_HR;
+	//						if (time().asInt() == 0) newPeriod = NEW_DAY;
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//	lastCheck_mS = _lastCheck_mS;
+	//	return newPeriod;
+	//}
+	
+	Clock::NewPeriod Clock::isNewPeriod(uint8_t& lastCheck_S) {
+		refresh();
+		NewPeriod newPeriod = NOT_NEW;
+		if (lastCheck_S != seconds()) {
+			newPeriod = NEW_SEC;
+			if (seconds() / 10 != lastCheck_S / 10) {
+				newPeriod = NEW_SEC10;
+				if (seconds() < lastCheck_S) {
+					newPeriod = NEW_MIN;
+					if (minUnits() % 10 == 0) {
+						newPeriod = NEW_MIN10;
+						if (minUnits() == 0) {
+							newPeriod = NEW_HR;
+							if (time().asInt() == 0) newPeriod = NEW_DAY;
+						}
+					}
+				}
+			}
+			lastCheck_S = seconds();
+		}
+		return newPeriod;
 	}
 
 	uint8_t Clock::loadTime() {
