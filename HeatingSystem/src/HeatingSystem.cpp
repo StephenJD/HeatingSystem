@@ -104,6 +104,12 @@ void printFileHeadings() {
 	profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
 }
 
+void flushLogs() {
+	logger().flush();
+	zTempLogger().flush();
+	profileLogger().flush();
+}
+
 HeatingSystem::HeatingSystem()
 	: 
 	_recover(i2C, STRATEGY_EPPROM_ADDR)
@@ -188,6 +194,7 @@ void HeatingSystem::run_stateMachine() {
 			default:
 				_state = SERVICE_CONSOLES;
 			}
+			flushLogs();
 		}	
 		break;
 	case SERVICE_CONSOLES:
@@ -224,10 +231,10 @@ void HeatingSystem::run_stateMachine() {
 		}
 		break;
 	}
-	logger() << "State: " << _state << L_endl;
+	//logger() << "State: " << _state << L_endl;
 }
 
-bool HeatingSystem::serviceConsolesOK() {
+bool HeatingSystem::serviceConsolesOK() {  // called every 50mS to respond to keys, also called by yield()
 	auto rc_OK = true;
 	if (consoleDataHasChanged()) {
 		_mainConsole.refreshDisplay();
@@ -238,9 +245,7 @@ bool HeatingSystem::serviceConsolesOK() {
 	return rc_OK;
 }
 
-bool HeatingSystem::consoleDataHasChanged() { // called every 50mS to respond to keys
-	//Serial.println("HS.consoleDataHasChanged");
-	//ui_yield();
+bool HeatingSystem::consoleDataHasChanged() {
 	bool displayHasChanged = _mainConsole.processKeys();
 	for (auto& remote : thickConsole_Arr) {
 		displayHasChanged |= remote.hasChanged();

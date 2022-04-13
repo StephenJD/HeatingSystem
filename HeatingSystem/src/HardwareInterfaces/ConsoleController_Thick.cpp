@@ -138,7 +138,9 @@ namespace HardwareInterfaces {
 			status = readRegSet(OLED::R_ROOM_TEMP,2); // don't rely on console writing to the registers.
 			if (reg.get(OLED::R_ROOM_TEMP) == 0) {
 				logger() << L_time << "RC Room Temp[" << index() << "] = 0!" << L_endl;
-				//rc_OK = false;
+#ifndef ZPSIM
+				rc_OK = false;
+#endif
 			}
 			status |= readRegVerifyValue(OLED::R_REQUESTING_T_RAIL,regVal);
 			auto reg = registers();

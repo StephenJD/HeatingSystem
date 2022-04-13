@@ -150,24 +150,24 @@ void setup() {
 	logger() << L_time << F(" ****** Arduino Restarted ") << millis() << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT/1000 << F("S\n\n") << L_flush;
 	zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 	profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-	zTempLogger()
-		<< F("Time") << L_tabs << F("Zone")
-		<< F("PreReq")
-		<< F("PreIs")
-		<< F("FlowReq")
-		<< F("FlowIs")
-		<< F("UsedRatio")
-		<< F("Is")
-		<< F("Ave")
-		<< F("AvePer")
-		<< F("CoolPer")
-		<< F("Error")
-		<< F("Outside")
-		<< F("PreheatMins")
-		<< F("ControlledBy")
-		<< F("IsOn")
-		<< L_endl;
-	profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
+	//zTempLogger()
+	//	<< F("Time") << L_tabs << F("Zone")
+	//	<< F("PreReq")
+	//	<< F("PreIs")
+	//	<< F("FlowReq")
+	//	<< F("FlowIs")
+	//	<< F("UsedRatio")
+	//	<< F("Is")
+	//	<< F("Ave")
+	//	<< F("AvePer")
+	//	<< F("CoolPer")
+	//	<< F("Error")
+	//	<< F("Outside")
+	//	<< F("PreheatMins")
+	//	<< F("ControlledBy")
+	//	<< F("IsOn")
+	//	<< L_endl;
+	//profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
 
 	logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
 	pinMode(RESET_LEDP_PIN, OUTPUT);

@@ -104,11 +104,6 @@ namespace Assembly {
 
 	Status TemperatureController::checkAndAdjust() { // Called once per second
 		static uint8_t lastMins = clock_().minUnits()-1;
-		// Entered once per second
-
-		logger().flush();
-		zTempLogger().flush();
-		profileLogger().flush();
 		auto status = ALL_OK;
 
 		//logger() << L_time << "Check TS's" << L_endl;
