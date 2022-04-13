@@ -133,7 +133,8 @@ HeatingSystem::HeatingSystem()
 		_initialiser.i2C_Test();
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
-	}
+		_initialiser.postI2CResetInitialisation();
+}
 
 void HeatingSystem::run_stateMachine() {
 	//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
@@ -176,14 +177,14 @@ void HeatingSystem::run_stateMachine() {
 		[[fallthrough]];
 	case SERVICE_SEQUENCER:
 		logger() << L_time << "SERVICE_SEQUENCER" << L_endl;
-		_tempController.checkZoneRequests(true);
 		[[fallthrough]];
-	case SERVICE_BACK_BOILER:
-		logger() << L_time << "SERVICE_BACK_BOILER" << L_endl;
+	case SERVICE_ZONES:
+		logger() << L_time << "SERVICE_ZONES" << L_endl;
+		_tempController.checkZoneRequests(_state == SERVICE_SEQUENCER);
 		_tempController.backBoiler.check();
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
-			logger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
+			//logger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
 			for (auto& remote : thickConsole_Arr) {
@@ -222,7 +223,7 @@ void HeatingSystem::run_stateMachine() {
 				_state = SERVICE_TEMP_CONTROLLER;
 			}
 			else {
-				static auto lastSec = clock_().seconds();
+				static uint8_t lastSec = clock_().seconds() - 1;
 				switch (clock_().isNewPeriod(lastSec)) {
 				case Clock::NEW_DAY:
 					_state = START_NEW_DAY;
@@ -231,7 +232,7 @@ void HeatingSystem::run_stateMachine() {
 					_state = SERVICE_SEQUENCER;
 					break;
 				case Clock::NEW_MIN:
-					_state = SERVICE_BACK_BOILER;
+					_state = SERVICE_ZONES;
 					break;
 				case Clock::NEW_SEC:
 					_state = SERVICE_TEMP_CONTROLLER;

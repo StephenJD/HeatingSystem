@@ -43,7 +43,7 @@ public:
 	Assembly::HeatingSystem_Queries & getQueries() { return _hs_queries; }
 	Assembly::TemperatureController & tempController() { return _tempController; }
 	enum State {ESTABLISH_TS_COMS, ESTABLISH_MIXV_COMMS, ESTABLISH_REMOTE_CONSOLE_COMS, ESTABLISH_RELAY_COMS, INI_MV, INI_RC
-		, START_NEW_DAY, SERVICE_SEQUENCER, SERVICE_BACK_BOILER, SERVICE_TEMP_CONTROLLER, SERVICE_CONSOLES};
+		, START_NEW_DAY, SERVICE_SEQUENCER, SERVICE_ZONES, SERVICE_TEMP_CONTROLLER, SERVICE_CONSOLES};
 private: // data-member ordering matters!
 	State _state = START_NEW_DAY;
 	void updateChangedData();
