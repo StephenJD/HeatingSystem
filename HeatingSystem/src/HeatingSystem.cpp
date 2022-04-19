@@ -81,6 +81,7 @@ using namespace	Assembly;
 namespace arduino_logger {
 	Logger& zTempLogger();
 	Logger& profileLogger();
+	Logger& loopLogger();
 }
 
 void printFileHeadings() {
@@ -138,72 +139,79 @@ HeatingSystem::HeatingSystem()
 
 void HeatingSystem::run_stateMachine() {
 	//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
-
+	loopLogger().begin();
 	switch (_state) {
 	case ESTABLISH_TS_COMS:
-		logger() << L_time << "ESTABLISH_TS_COMS" << L_endl;
+		loopLogger() << L_time << "ESTABLISH_TS_COMS" << L_endl;
 		if (!_tempController.readTemperaturesOK()) break;
-		_state = SERVICE_TEMP_CONTROLLER;
+		_state = POST_RESET;
 		break;
 	case ESTABLISH_RELAY_COMS:
-		logger() << L_time << "ESTABLISH_RELAY_COMS" << L_endl;
+		loopLogger() << L_time << "ESTABLISH_RELAY_COMS" << L_endl;
 		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
-		_state = SERVICE_TEMP_CONTROLLER;
+		_state = POST_RESET;
 		break;
 	case ESTABLISH_MIXV_COMMS:
-		logger() << L_time << "ESTABLISH_MIXV_COMMS" << L_endl;
+		loopLogger() << L_time << "ESTABLISH_MIXV_COMMS" << L_endl;
 		for (auto& mixValveControl : _tempController.mixValveControllerArr) {
 			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController");
 		}
-		_state = SERVICE_TEMP_CONTROLLER;
+		_state = POST_RESET;
 		break;
 	case ESTABLISH_REMOTE_CONSOLE_COMS:
-		logger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS" << L_endl;
+		loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS" << L_endl;
 		for (auto& remote : thickConsole_Arr) {
 			if (remote.isUnrecoverable()) HardReset::arduinoReset("RemoteConsoles");
 		}
-		_state = SERVICE_TEMP_CONTROLLER;
+		_state = POST_RESET;
 		break;
-	case INI_MV:
-		[[fallthrough]];
-	case INI_RC:
-		logger() << L_time << "INI_RC" << L_endl;
+	case POST_RESET:
+		loopLogger() << L_time << "POST_RESET" << L_endl;
 		_initialiser.postI2CResetInitialisation();
 		_state = SERVICE_TEMP_CONTROLLER;
 		break;
 	case START_NEW_DAY:
-		logger() << L_time << "START_NEW_DAY" << L_endl;
+		loopLogger() << L_time << "START_NEW_DAY" << L_endl;
 		printFileHeadings();
 		[[fallthrough]];
 	case SERVICE_SEQUENCER:
-		logger() << L_time << "SERVICE_SEQUENCER" << L_endl;
+		loopLogger() << L_time << "SERVICE_SEQUENCER" << L_endl;
 		[[fallthrough]];
 	case SERVICE_ZONES:
-		logger() << L_time << "SERVICE_ZONES" << L_endl;
+		loopLogger() << L_time << "SERVICE_ZONES" << L_endl;
 		_tempController.checkZoneRequests(_state == SERVICE_SEQUENCER);
 		_tempController.backBoiler.check();
+		loopLogger() << L_time << "SERVICE_ZONES_Done" << L_endl;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
-			//logger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
+			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
+			loopLogger() << L_time << "...checkAndAdjust done" << L_endl;
 			for (auto& remote : thickConsole_Arr) {
 				if (!remote.refreshRegistersOK()) status = RC_FAILED;
 			}
+			loopLogger() << "...refreshRegistersOK done" << L_endl;
 			switch (status) {
 			case TS_FAILED:
 				_state = ESTABLISH_TS_COMS;
 				break;
 			case MV_FAILED:
+				loopLogger() << L_time << "_resetI2C-MixV" << L_endl;
 				_initialiser._resetI2C(i2C, MIX_VALVE_I2C_ADDR);
+				loopLogger() << L_time << "..._resetI2C-MixV done" << L_endl;
 				_state = ESTABLISH_MIXV_COMMS;
 				break;
 			case RC_FAILED:
+				loopLogger() << L_time << "_resetI2C-RC" << L_endl;
 				_initialiser._resetI2C(i2C, US_CONSOLE_I2C_ADDR);
+				loopLogger() << L_time << "..._resetI2C-RC done" << L_endl;
 				_state = ESTABLISH_REMOTE_CONSOLE_COMS;
 				break;
 			case RELAYS_FAILED:
+				loopLogger() << L_time << "_resetI2C-Relays" << L_endl;
 				_initialiser._resetI2C(i2C, IO8_PORT_OptCoupl);
+				loopLogger() << L_time << "..._resetI2C-Relays done" << L_endl;
 				_state = ESTABLISH_RELAY_COMS;
 				break;
 			default:
@@ -218,7 +226,9 @@ void HeatingSystem::run_stateMachine() {
 		}
 		else {
 			if (dataHasChanged) {
+				loopLogger() << L_time << "...updateChangedData" << L_endl;
 				updateChangedData();
+				loopLogger() << L_time << "Done updateChangedData" << L_endl;
 				dataHasChanged = false;
 				_state = SERVICE_TEMP_CONTROLLER;
 			}
@@ -228,12 +238,14 @@ void HeatingSystem::run_stateMachine() {
 				case Clock::NEW_DAY:
 					_state = START_NEW_DAY;
 					break;
+				case Clock::NEW_HR:
 				case Clock::NEW_MIN10:
 					_state = SERVICE_SEQUENCER;
 					break;
 				case Clock::NEW_MIN:
 					_state = SERVICE_ZONES;
 					break;
+				case Clock::NEW_SEC10:
 				case Clock::NEW_SEC:
 					_state = SERVICE_TEMP_CONTROLLER;
 					break;
@@ -253,9 +265,11 @@ bool HeatingSystem::serviceConsolesOK() {  // called every 50mS to respond to ke
 	auto rc_OK = true;
 	if (consoleDataHasChanged()) {
 		_mainConsole.refreshDisplay();
+		//loopLogger() << L_time << "Done refresh_mainConsole" << L_endl;
 		for (auto& remote : thickConsole_Arr) {
 			rc_OK &= remote.refreshRegistersOK();
 		}
+		loopLogger() << L_time << "Done refreshRegistersOK" << L_endl;
 	}
 	return rc_OK;
 }
@@ -270,7 +284,7 @@ bool HeatingSystem::consoleDataHasChanged() {
 
 void HeatingSystem::updateChangedData() {
 	if (_mainConsoleChapters.chapter() == 0) {
-		logger() << L_time << F("updateChangedData\n");
+		loopLogger() << L_time << F("updateChangedData\n");
 		_tempController.checkZoneRequests(true);
 	}
 }

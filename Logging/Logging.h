@@ -31,7 +31,7 @@ namespace arduino_logger {
 			bool isStartWithFlushing = (_flags & L_startWithFlushing) == L_startWithFlushing;
 			_flags -= flag;
 			if (isStartWithFlushing) _flags += L_startWithFlushing;
-			return _flags; 
+			return _flags;
 		}
 		virtual bool open() { return false; }
 		virtual void flush() {} // must not clear L_startWithFlushing.
@@ -40,7 +40,6 @@ namespace arduino_logger {
 		template<typename T>
 		Logger& log(T value);
 
-		virtual void readAll() {}
 		virtual void begin(uint32_t baudRate = 0) {
 			//Serial.print(F("Root_Baud Rate: ")); Serial.println(baudRate);
 		}
@@ -73,6 +72,7 @@ namespace arduino_logger {
 		Logger(const char* fileNameStem, uint32_t baudRate, Clock& clock, Flags initFlag = L_null) : _flags{ initFlag } {}
 
 		virtual Logger& logTime();
+		virtual void endl(Print& stream) { stream.print(F("\n")); }
 
 		size_t write(uint8_t) override { return 1; }
 		size_t write(const uint8_t* buffer, size_t size) override { return size; }
@@ -140,38 +140,13 @@ namespace arduino_logger {
 	//	RAM_Logger(const char* fileNameStem, uint16_t ramFile_size, bool keepSaving);
 	//	size_t write(uint8_t) override;
 	//	size_t write(const uint8_t* buffer, size_t size) override;
-	//	void readAll() override;
+	//	void flush() override;
 	//private:
 	//	Logger& logTime() override;
 	//	uint8_t* _ramFile = 0;
 	//	char _fileNameStem[5];
 	//	uint16_t _ramFile_size;
 	//	uint16_t _filePos = 0;
-	//	bool _keepSaving;
-	//};
-
-	///// <summary>
-	///// Per msg: 115mS Due/ 170mS Mega
-	///// Save 1KB to SD: 660mS Due / 230mS Mega
-	///// </summary>
-	//class EEPROM_Logger : public Logger {
-	//public:
-	//	EEPROM_Logger(const char* fileNameStem, uint16_t startAddr, uint16_t endAddr, bool keepSaving, Clock& clock);
-	//	EEPROM_Logger(const char* fileNameStem, uint16_t startAddr, uint16_t endAddr, bool keepSaving);
-	//	size_t write(uint8_t) override;
-	//	size_t write(const uint8_t* buffer, size_t size) override;
-	//	void readAll() override;
-	//	void begin(uint32_t = 0) override;
-	//private:
-	//	Logger& logTime() override;
-	//	void saveOnFirstCall();
-	//	void findStart();
-	//	char _fileNameStem[5];
-	//	uint16_t _startAddr;
-	//	uint16_t _endAddr;
-	//	uint16_t _currentAddress = 0;
-	//	bool _hasWrittenToSD = false;
-	//	bool _hasRecycled = false;
 	//	bool _keepSaving;
 	//};
 

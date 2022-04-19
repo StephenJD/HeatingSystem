@@ -43,9 +43,9 @@ namespace HardwareInterfaces {
 		HardReset hardReset;
 	private:
 
-		I_IniFunctor * _postI2CResetInitialisation;
-		I_TestDevices * _testDevices;
-		I2C_Recovery::I2C_Recover_Retest * _recover;
+		I_IniFunctor * _postI2CResetInitialisation = 0;
+		I_TestDevices * _testDevices = 0;
+		I2C_Recovery::I2C_Recover_Retest * _recover = 0;
 	};
 
 	enum Register_Constants {

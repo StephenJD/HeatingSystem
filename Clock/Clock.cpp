@@ -135,9 +135,9 @@ using namespace Date_Time;
 				newPeriod = NEW_SEC10;
 				if (seconds() < lastCheck_S) {
 					newPeriod = NEW_MIN;
-					if (minUnits() % 10 == 0) {
+					if (minUnits() == 0) {
 						newPeriod = NEW_MIN10;
-						if (minUnits() == 0) {
+						if (mins10() == 0) {
 							newPeriod = NEW_HR;
 							if (time().asInt() == 0) newPeriod = NEW_DAY;
 						}

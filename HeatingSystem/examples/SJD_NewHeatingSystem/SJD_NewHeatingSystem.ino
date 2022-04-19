@@ -4,6 +4,7 @@
 #include <Relay_Bitwise.h>
 #include <Clock_I2C.h>
 #include <Logging_SD.h>
+#include <Logging_Loop.h>
 #include <I2C_Talk.h>
 #include <I2C_RecoverRetest.h>
 #include <EEPROM_RE.h>
@@ -93,6 +94,12 @@ namespace arduino_logger {
 	Logger& profileLogger() {
 		static SD_Logger _log("P", SERIAL_RATE, clock_()/*, L_null*/);
 		return _log;
+	}	
+	
+	Logger& loopLogger() {
+		static Loop_Logger _log("F", SERIAL_RATE, clock_()/*, L_null*/);
+		//static EEPROM_Logger _log("F", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
+		return _log;
 	}
 }
 using namespace arduino_logger;
@@ -150,24 +157,7 @@ void setup() {
 	logger() << L_time << F(" ****** Arduino Restarted ") << millis() << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT/1000 << F("S\n\n") << L_flush;
 	zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 	profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-	//zTempLogger()
-	//	<< F("Time") << L_tabs << F("Zone")
-	//	<< F("PreReq")
-	//	<< F("PreIs")
-	//	<< F("FlowReq")
-	//	<< F("FlowIs")
-	//	<< F("UsedRatio")
-	//	<< F("Is")
-	//	<< F("Ave")
-	//	<< F("AvePer")
-	//	<< F("CoolPer")
-	//	<< F("Error")
-	//	<< F("Outside")
-	//	<< F("PreheatMins")
-	//	<< F("ControlledBy")
-	//	<< F("IsOn")
-	//	<< L_endl;
-	//profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
+	loopLogger() << L_flush;
 
 	logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
 	pinMode(RESET_LEDP_PIN, OUTPUT);
@@ -184,6 +174,7 @@ void setup() {
 	set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
 
 	while (true) {
+		reset_watchdog();	
 		hs.run_stateMachine();
 	}
 }

@@ -97,8 +97,8 @@ namespace HardwareInterfaces {
 			if (mixIniStatus /*& requestINI_flag*/) mixV_OK = false; // (sendSlaveIniData(requestINI_flag) == _OK);
 			else {
 				mixV_OK &= readRegistersFromValve_OK();
-				//logMixValveOperation(false);
-				logMixValveOperation(true);
+				//mixV_OK &= logMixValveOperation(false);
+				mixV_OK &= logMixValveOperation(true);
 			}
 		}
 		return mixV_OK;
@@ -113,21 +113,14 @@ namespace HardwareInterfaces {
 		}
 	}
 
-	void MixValveController::logMixValveOperation(bool logThis) {
+	bool MixValveController::logMixValveOperation(bool logThis) {
 //#ifndef ZPSIM
 		auto reg = registers();
 		// {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error }
 		auto algorithmMode = Mix_Valve::Mix_Valve::Mode(reg.get(Mix_Valve::R_MODE));
 		if (algorithmMode >= Mix_Valve::e_Error) {
 			logger() << "MixValve Mode Error: " << algorithmMode << L_endl;
-			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
-			sendSlaveIniData(requestINI_flag);
-			if (reg.get(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
-				recovery().resetI2C();
-				if (reg.get(Mix_Valve::R_MODE) >= Mix_Valve::e_Error) {
-					HardReset::arduinoReset("MixValveController InvalidMode");
-				}
-			}
+			return false;
 		}
 
 		auto valveIndex = index();
@@ -139,6 +132,7 @@ namespace HardwareInterfaces {
 				<< reg.get(Mix_Valve::R_FROM_POS) << reg.get(Mix_Valve::R_FROM_TEMP) << L_endl;
 		}
 //#endif
+		return true;
 	}
 
 	const __FlashStringHelper* MixValveController::showState() const {

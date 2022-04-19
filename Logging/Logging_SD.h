@@ -17,6 +17,8 @@ SD.h/.cpp modified to provide sd_exists();
 */
 
 namespace arduino_logger {
+	// Chip select is usually connected to pin 53 and is active LOW.
+	constexpr int chipSelect = 53;
 
 	class FileNameGenerator {
 	public:

@@ -39,7 +39,7 @@ namespace HardwareInterfaces {
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
 		bool check();
 		void sendRequestFlowTemp(uint8_t callTemp);
-		void logMixValveOperation(bool logThis);
+		bool logMixValveOperation(bool logThis);
 		void monitorMode();
 
 //#if defined (ZPSIM)

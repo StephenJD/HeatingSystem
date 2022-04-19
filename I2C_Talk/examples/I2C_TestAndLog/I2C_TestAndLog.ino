@@ -258,7 +258,6 @@ void setup() {
 	resetRTC(rtc);
 #endif	
 	logger() << L_allwaysFlush << F(" \n\n********** Logging Begun ***********") << L_endl;
-	//logger().readAll();
 
 	pinMode(RESET_LEDP_PIN, OUTPUT);
 	digitalWrite(RESET_LEDP_PIN, HIGH);

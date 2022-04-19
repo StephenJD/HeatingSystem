@@ -43,6 +43,10 @@ namespace HardwareInterfaces {
 			logger() << F("\nTest: Recursive Reset... for 0x") << L_hex << addr << L_endl;
 			return _OK;
 		}
+		if (_recover == 0) {
+			logger() << F("\nReset _recover is NULL for 0x") << L_hex << addr << L_endl;
+			return _OK;
+		}
 
 		isInReset = true;
 		Error_codes status = _OK;
@@ -71,7 +75,7 @@ namespace HardwareInterfaces {
 	};
 
 	void HardReset::arduinoReset(const char * msg) {
-		logger() << L_flush << F("\n *** HardReset::arduinoReset called by ") << msg << L_endl << L_flush;
+		logger() << L_time << F("\n *** HardReset::arduinoReset called by ") << msg << L_endl << L_flush;
 		pinMode(RESET_5vREF_PIN, OUTPUT);
 		digitalWrite(RESET_5vREF_PIN, LOW);
 	}

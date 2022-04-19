@@ -7,6 +7,7 @@ void ui_yield();
 namespace arduino_logger {
 	Logger& logger();
 	Logger& profileLogger();
+	Logger& loopLogger();
 }
 using namespace arduino_logger;
 
@@ -103,10 +104,14 @@ namespace HardwareInterfaces {
 			writeRegValue(OLED::R_DEVICE_STATE, i2c_status);
 		};
 
+		loopLogger() << L_time << "refreshRegistersOK" << L_endl;
 		auto status = reEnable(true); // see if is disabled.
 		//if (status) return;
+		loopLogger() << __LINE__ << L_endl;
 		waitForWarmUp();
+		loopLogger() << __LINE__ << L_endl;
 		auto iniStatus = rawRegisters().get(R_SLAVE_REQUESTING_INITIALISATION);
+		loopLogger() << __LINE__ << L_endl;
 		//if (iniStatus > ALL_REQUESTING) {
 		//	logger() << L_time << "Bad Console IniStatus : " << iniStatus << L_endl;
 		//	iniStatus = ALL_REQUESTING;
@@ -114,10 +119,14 @@ namespace HardwareInterfaces {
 		//}
 		uint8_t requestINI_flag = RC_US_REQUESTING_INI << index();
 		uint8_t remOffset;
+		loopLogger() << __LINE__ << L_endl;
 		wait_DevicesToFinish(rawRegisters());
 
+		loopLogger() << __LINE__ << L_endl;
 		if (readRegVerifyValue(OLED::R_REMOTE_REG_OFFSET, remOffset) != _OK) return false;
+		loopLogger() << __LINE__ << L_endl;
 		if (remOffset == OLED::NO_REG_OFFSET_SET) {
+			loopLogger() << __LINE__ << L_endl;
 			logger() << L_time << "Rem[" << index() << "] iniReq 255. SetFlagVal: " << requestINI_flag << L_endl;
 			iniStatus |= requestINI_flag;
 		}
@@ -129,12 +138,16 @@ namespace HardwareInterfaces {
 		//static auto debugStopIni = true;
 		if (iniStatus & requestINI_flag) {
 			//if (debugStopIni) return;
+			loopLogger() << __LINE__ << L_endl;
 			sendSlaveIniData(requestINI_flag);
 		} else {
 			auto i2c_status = OLED::I2C_Flags_Obj{ reg.get(OLED::R_DEVICE_STATE) };
 			//logger() << L_time << "Req RC Temp[" << index() << "]" << L_endl;
+			loopLogger() << __LINE__ << L_endl;
 			give_RC_Bus(i2c_status); // remote reads TS and writes to programmer.
+			loopLogger() << __LINE__ << L_endl;
 			wait_DevicesToFinish(rawRegisters());
+			loopLogger() << __LINE__ << L_endl;
 			status = readRegSet(OLED::R_ROOM_TEMP,2); // don't rely on console writing to the registers.
 			if (reg.get(OLED::R_ROOM_TEMP) == 0) {
 				logger() << L_time << "RC Room Temp[" << index() << "] = 0!" << L_endl;
@@ -142,22 +155,28 @@ namespace HardwareInterfaces {
 				rc_OK = false;
 #endif
 			}
+			loopLogger() << __LINE__ << L_endl;
 			status |= readRegVerifyValue(OLED::R_REQUESTING_T_RAIL,regVal);
-			auto reg = registers();
+			loopLogger() << __LINE__ << L_endl;
 			if (status == _OK && reg.update(OLED::R_REQUESTING_T_RAIL, regVal)) towelrail_req_changed = regVal;
+			loopLogger() << __LINE__ << L_endl;
 			status |= readRegVerifyValue(OLED::R_REQUESTING_DHW, regVal);
+			loopLogger() << __LINE__ << L_endl;
 			if (status == _OK && reg.update(OLED::R_REQUESTING_DHW, regVal)) hotwater_req_changed = regVal;
+			loopLogger() << __LINE__ << L_endl;
 
 			if (status) {
 				logger() << L_time << F("ConsoleController_Thick refreshRegistersOK device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
 				rc_OK = false;
 			}
 			if (towelrail_req_changed >= 0) {
+				loopLogger() << __LINE__ << L_endl;
 				_hasChanged = true;
 				_towelRail->setMode(towelrail_req_changed);
 				_towelRail->check();
 			}
 			if (hotwater_req_changed >= 0) {
+				loopLogger() << __LINE__ << L_endl;
 				_hasChanged = true;
 				bool scheduledProfileIsActive = !_dhw->advancedToNextProfile();
 				bool otherProfileIsHotter = _dhw->nextTempRequest() > _dhw->currTempRequest();
@@ -168,19 +187,25 @@ namespace HardwareInterfaces {
 					else _dhw->revertToScheduledProfile();
 				}
 			}
+			loopLogger() << __LINE__ << L_endl;
 			auto zoneReqTemp = _zone->currTempRequest();
+			loopLogger() << __LINE__ << L_endl;
 			auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP);
 			uint8_t remReqTemp;
 			status = readRegVerifyValue(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp);
+			loopLogger() << __LINE__ << L_endl;
 			if (status != _OK) {
 				logger() << L_time << F("Bad Read Req Temp sent by Remote[") << index() << "] : " << remReqTemp << I2C_Talk::getStatusMsg(status) << L_endl;
 			}
 			else if (remReqTemp && remReqTemp != zoneReqTemp) { // Req_Temp register written to by remote console
 				if (abs(remReqTemp - zoneReqTemp) > 10) {
 					logger() << L_time << F("Out-of-range Req Temp sent by Remote: ") << remReqTemp << L_endl;
+					loopLogger() << __LINE__ << L_endl;
 					logRemoteRegisters();
+					loopLogger() << __LINE__ << L_endl;
 					reg.set(OLED::R_REQUESTING_ROOM_TEMP, 0);
 					writeReg(OLED::R_REQUESTING_ROOM_TEMP);
+					loopLogger() << __LINE__ << L_endl;
 				}
 				else {
 					logger() << L_time << F("New Req Temp sent by Remote[") << index() << "] : " << remReqTemp << L_endl;
@@ -204,24 +229,31 @@ namespace HardwareInterfaces {
 			else if (zoneReqTemp != localReqTemp) { // Zonetemp changed locally
 				logger() << L_time << F("New Req Temp sent by Programmer: ") << zoneReqTemp << L_endl;
 				profileLogger() << L_time << F("_New Req Temp sent by Programmer:\t") << zoneReqTemp << L_endl;
+				loopLogger() << __LINE__ << L_endl;
 				reg.set(OLED::R_REQUESTING_ROOM_TEMP, zoneReqTemp);
 				status = writeReg(OLED::R_REQUESTING_ROOM_TEMP);
+				loopLogger() << __LINE__ << L_endl;
 				_hasChanged = true;
 			} 
+			loopLogger() << __LINE__ << L_endl;
 			auto haveNewData = reg.update(OLED::R_REQUESTING_ROOM_TEMP, _zone->currTempRequest());
 			haveNewData |= reg.update(OLED::R_WARM_UP_ROOM_M10, _zone->warmUpTime_m10());
 			haveNewData |= reg.update(OLED::R_ON_TIME_T_RAIL, uint8_t(_towelRail->timeToGo()/60));
 			haveNewData |= reg.update(OLED::R_WARM_UP_DHW_M10, _dhw->warmUpTime_m10()); // If -ve, in 0-60 mins, if +ve in min_10
+			loopLogger() << __LINE__ << L_endl;
 			if (_hasChanged || haveNewData) {
+				loopLogger() << __LINE__ << L_endl;
 				status |= writeRegSet(OLED::R_WARM_UP_ROOM_M10, 3);
+				loopLogger() << __LINE__ << L_endl;
 				auto devFlags = OLED::I2C_Flags_Obj(reg.get(OLED::R_DEVICE_STATE));
 				devFlags.set(OLED::F_DATA_CHANGED);
 				status |= writeRegValue(OLED::R_DEVICE_STATE, devFlags);
-				//logger() << L_time << "Cons[" << index() << "] Data Changed" << L_endl;
+				loopLogger() << __LINE__ << L_endl;
 				_hasChanged = false;
 			}
 			rc_OK &= (status == _OK);
 		}
+		loopLogger() << __LINE__ << L_endl;
 		return rc_OK;
 	}
 

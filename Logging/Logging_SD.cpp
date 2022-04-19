@@ -43,8 +43,6 @@ bool FileNameGenerator::isNewDay(Clock* clock) {
 
 // On Mega, MISO is internally connected to digital pin 50, MOSI is 51, SCK is 52
 // Due SPI header does not use digital pins.
-// Chip select is usually connected to pin 53 and is active LOW.
-constexpr int chipSelect = 53;
 
 SD_Logger::SD_Logger(const char * fileNameStem, uint32_t baudRate, Flags initFlags) 
 	: Serial_Logger(baudRate, initFlags)
