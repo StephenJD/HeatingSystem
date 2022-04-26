@@ -365,7 +365,6 @@ TEST_CASE("Calculate Ratio", "[Preheat]") {
 	zTempLogger() << L_flush << "Room TC: " << roomTimeConst << " RoomRatio: " << actualRatio << " FlowTC: " << flowTimeConst << L_endl ;
 	zTempLogger() << " ERROR_DIVIDER: " << Zone::ERROR_DIVIDER << L_endl << L_endl;
 
-	unsigned long timeOfReset_mS = 0;
 	tempSensorArr[OS_TS].setTestTemp(OSTemp);
 	mixValveControllerArr[0].initialise(0, 0, relayArr, tempSensorArr, FLOW_TS, 0);
 	mixValveControllerArr[0].setResetTimePtr(&timeOfReset_mS);
@@ -444,7 +443,6 @@ TEST_CASE("Calculate DHW TC", "[Preheat]") {
 	zTempLogger() << L_flush << "Room TC: " << roomTimeConst << " RoomRatio: " << actualRatio << " FlowTC: " << flowTimeConst << L_endl ;
 	zTempLogger() << "RATIO_DIVIDER: " << Zone::RATIO_DIVIDER << " ACCUMULATION_PERIOD_DIVIDER: " << Zone::ACCUMULATION_PERIOD_DIVIDER << " ERROR_DIVIDER: " << Zone::ERROR_DIVIDER << L_endl << L_endl;
 
-	unsigned long timeOfReset_mS = 0;
 	tempSensorArr[OS_TS].setTestTemp(OSTemp);
 	mixValveControllerArr[0].initialise(0,0,relayArr,tempSensorArr, FLOW_TS,0);
 	mixValveControllerArr[0].setResetTimePtr(&timeOfReset_mS);

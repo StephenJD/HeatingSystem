@@ -24,7 +24,7 @@ namespace flag_enum {
 	/// Each flag refers to a different bit in the underlying value.
 	/// The underlying value is the smallest size having noOfFlags-bits.
 	/// The remaining bits, in excess of noOfFlags may be used as ordinary unsigned data.
-	/// If the FE_Obj contains the flag-enum value.
+	/// The FE_Obj contains the flag-enum value.
 	/// </summary>
 	/// <typeparam name="EnumType"></typeparam>
 	template <typename EnumType, int noOfFlags = 8>
@@ -40,6 +40,13 @@ namespace flag_enum {
 		//bool get(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }
 		bool is(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }
 		bool is(int pos) const { return _base & (TOP_BIT >> pos); }
+		bool is_not(EnumType pos) const { return !is(pos); }
+		bool is_not(int pos) const { return !is(pos); }
+		bool all() const { return flags() == Base(~MAX_VALUE); }
+		bool any() const { return flags() != 0; }
+		bool none() const {	return flags() == 0; }
+		EnumType firstSet() const { uint16_t pos = 0; while (pos < noOfFlags && not(pos)) ++pos; return EnumType(pos); }
+		EnumType firstNotSet() const { uint16_t pos = 0; while (pos < noOfFlags && is(pos)) ++pos; return EnumType(pos); }
 		Base flags() const { return _base & ~MAX_VALUE; }
 		//bool get(int pos) const { return get(EnumType(pos)); }
 		Base value() const { return _base & MAX_VALUE; }
@@ -79,7 +86,7 @@ namespace flag_enum {
 	/// Each flag refers to a different bit in the underlying value.
 	/// The underlying value is the smallest size having noOfFlags-bits.
 	/// The remaining bits, in excess of noOfFlags may be used as ordinary unsigned data.
-	/// Operations modify the reference passed into the constructor.
+	/// Operations modify the reference value passed into the constructor.
 	/// </summary>
 	/// <typeparam name="EnumType"></typeparam>
 	template <typename EnumType, int noOfFlags = 8>

@@ -5,6 +5,7 @@
 #include <Clock_I2C.h>
 #include <Logging_SD.h>
 #include <Logging_Loop.h>
+#include <Logging_Ram.h>
 #include <I2C_Talk.h>
 #include <I2C_RecoverRetest.h>
 #include <EEPROM_RE.h>
@@ -17,7 +18,7 @@
 using namespace HardwareInterfaces;
 
 constexpr uint32_t SERIAL_RATE = 115200;
-constexpr int WATCHDOG_TIMOUT = 8000; // max for Mega.
+constexpr int WATCHDOG_TIMOUT = 16000; // 8000 max for Mega.
 
 constexpr uint8_t RTC_RESET_PIN = 4;
 constexpr uint8_t RTC_ADDRESS = 0x68;
@@ -97,7 +98,8 @@ namespace arduino_logger {
 	}	
 	
 	Logger& loopLogger() {
-		static Loop_Logger _log("F", SERIAL_RATE, clock_()/*, L_null*/);
+		//static RAM_Logger _log("F", 2000, false, clock_());
+		static Loop_Logger _log("F", SERIAL_RATE, clock_());
 		//static EEPROM_Logger _log("F", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
 		return _log;
 	}
@@ -145,19 +147,35 @@ namespace LCD_UI {
  		inYield = false;
  	}
  }
+ 
+void WDT_Handler(void) {
+	reset_watchdog();
+	//Serial.println(strlen(static_cast<RAM_Logger&>(loopLogger()).c_str()));
+	// disable interrupt.
+	//NVIC_DisableIRQ(WDT_IRQn);
+	loopLogger().flush();
+	// save mem addresses in gen backup registers.
+	pinMode(RESET_5vREF_PIN, OUTPUT);
+	digitalWrite(RESET_5vREF_PIN, LOW);
+
+	//HardReset::arduinoReset("Watchdog Timer");
+}
 
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
 	Serial.begin(SERIAL_RATE); // NOTE! Serial.begin must be called before i2c_clock is constructed.
 	Serial.println("Start...");
-	set_watchdog_timeout_mS(60000);
 	resetRTC(rtc, rtc_reset_wag); // Before logging to avoid no-date SD logs.
-	//logger().begin(SERIAL_RATE);
 	logger() << L_flush;
 	logger() << L_time << F(" ****** Arduino Restarted ") << millis() << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT/1000 << F("S\n\n") << L_flush;
+	logger() << F("set_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
+	set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
+	//set_watchdog_interrupt_mS(WATCHDOG_TIMOUT);
+	//logger().begin(SERIAL_RATE);
 	zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 	profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-	loopLogger() << L_flush;
+	loopLogger().flush();
+	//logger() << F("RamFileAddr: ") << (unsigned long)static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
 
 	logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
 	pinMode(RESET_LEDP_PIN, OUTPUT);
@@ -170,8 +188,6 @@ void setup() {
 	logger() << F("Construct HeatingSystem") << L_endl;
 	HeatingSystem hs{};
 	heating_system = &hs;
-	logger() << L_time << F("set_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
-	set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
 
 	while (true) {
 		reset_watchdog();	

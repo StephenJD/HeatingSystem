@@ -21,7 +21,6 @@ void ui_yield() {}
 
 //I2C_Recovery::I2C_Recover i2c_recover(i2C());
 I2C_Recovery::I2C_Recover_Retest i2c_recover(i2C());
-unsigned long timeOfReset_mS;
 
 #ifdef ZPSIM
     auto my_registers = i2c_registers::Registers<OLED_Thick_Display::R_DISPL_REG_SIZE, HardwareInterfaces::US_CONSOLE_I2C_ADDR>{i2C()};
@@ -29,7 +28,7 @@ unsigned long timeOfReset_mS;
     auto my_registers = i2c_registers::Registers<OLED_Thick_Display::R_DISPL_REG_SIZE>{i2C()};
 #endif
 
-OLED_Thick_Display this_OLED_Thick_Display{i2c_recover, my_registers, HardwareInterfaces::PROGRAMMER_I2C_ADDR, 0, 0, &timeOfReset_mS };
+OLED_Thick_Display this_OLED_Thick_Display{i2c_recover, my_registers, HardwareInterfaces::PROGRAMMER_I2C_ADDR, 0, 0 };
 
 void setup() {
   for (int pin = 0; pin < 18; ++pin) pinMode(pin, INPUT_PULLUP);

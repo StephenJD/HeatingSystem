@@ -21,9 +21,9 @@ namespace HardwareInterfaces {
 	constexpr uint8_t VERSION = 71;
 
 	/////////////////// Pin assignments & misc. ///////////////////
-	constexpr uint8_t RESET_OUT_PIN = 14;  // active low.
-	constexpr uint8_t RESET_LEDP_PIN = 16;
-	constexpr uint8_t RESET_LEDN_PIN = 19;
+	constexpr uint8_t RESET_I2C_PIN = 14;  // active low.
+	constexpr uint8_t RESET_LEDP_PIN = 16; // Supply (High)
+	constexpr uint8_t RESET_LEDN_PIN = 19; // Low for ON
 
 	constexpr uint8_t KEYPAD_INT_PIN = 18;
 	constexpr uint8_t KEYPAD_ANALOGUE_PIN = A1;

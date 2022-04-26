@@ -1,27 +1,9 @@
 #pragma once
 #include <Logging_SD.h>
 #include <Arduino.h>
-#include <Type_Traits.h>
-
-#ifdef ZPSIM
-#include <fstream>
-#endif
-/*
-#define DEC 10
-#define HEX 16
-#define OCT 8
-#define BIN 2
-*/
-class EEPROMClassRE;
-EEPROMClassRE & eeprom();
-class Clock;
 
 namespace arduino_logger {
 
-	/// <summary>
-	/// Per msg: 115mS Due/ 170mS Mega
-	/// Save 1KB to SD: 660mS Due / 230mS Mega
-	/// </summary>
 	class Loop_Logger : public Serial_Logger {
 	public:
 		Loop_Logger(const char* fileNameStem, uint32_t baudRate, Clock& clock);
@@ -34,7 +16,7 @@ namespace arduino_logger {
 	private:
 		Logger& logTime() override;
 		void endl(Print& stream) override {
-			stream.print(F("\n")); _loopFile.flush();
+			stream.print(F("\n")); if (_loopFile) _loopFile.flush();
 		}
 
 		bool open();

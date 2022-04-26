@@ -1,7 +1,6 @@
 #include "Initialiser.h"
 #include "FactoryDefaults.h"
 #include "..\HeatingSystem.h"
-#include "..\HardwareInterfaces\I2C_Comms.h"
 #include "..\HardwareInterfaces\A__Constants.h"
 #include "..\Client_DataStructures\Data_Relay.h"
 #include <OLED_Thick_Display.h>
@@ -10,12 +9,16 @@
 #include <Clock.h>
 #include <EEPROM_RE.h>
 #include <MemoryFree.h>
+#include <I2C_Reset.h>
 #include <Flag_Enum.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
 using namespace I2C_Talk_ErrorCodes;
 using namespace HardwareInterfaces;
+namespace arduino_logger {
+	Logger& loopLogger();
+}
 using namespace arduino_logger;
 
 namespace Assembly {
@@ -23,7 +26,7 @@ namespace Assembly {
 
 	Initialiser::Initialiser(HeatingSystem & hs) 
 		: 
-		_resetI2C(hs._recover, _iniFunctor, _testDevices, { RESET_OUT_PIN , LOW})
+		_resetI2C(hs._recover, _iniFunctor, _testDevices, { RESET_I2C_PIN , LOW }, { RESET_5vREF_PIN, LOW }, { RESET_LEDN_PIN , LOW})
 		, _hs(hs)
 		, _iniFunctor(*this)
 		, _testDevices(*this)
@@ -34,10 +37,55 @@ namespace Assembly {
 		//clock_().setTime(Date_Time::DateOnly{ 3,10,19 }, Date_Time::TimeOnly{ 10,0 }, 5);
 #endif
 		relayPort().setRecovery(hs._recover);
+		ini_DB();
+	}
 
-		logger() << F("Initialiser Construction") << L_endl;
+	bool Initialiser::state_machine_OK() {
+		auto iniOK = false;
+		switch (_iniState.firstNotSet()) {
+		case I2C_RESET:
+			_resetI2C(_hs.i2C, 0);
+			_iniState.clear();
+			_iniState.set(I2C_RESET);
+			break;
+		case TS:
+			loopLogger() << L_time << "ESTABLISH_TS_COMS" << L_endl;
+			if (ini_TS() == _OK) {
+				_iniState.set(TS);
+			}
+			else { _iniState.clear(I2C_RESET); }
+			break;
+		case POST_RESET_WARMUP:
+			_iniState.set(POST_RESET_WARMUP, I2C_Recovery::HardReset::hasWarmedUp());
+			break;
+		case RELAYS:
+			loopLogger() << L_time << "ESTABLISH_RELAY_COMS" << L_endl;
+			if (ini_relays() == _OK) {
+				_iniState.set(RELAYS);
+			} else { _iniState.clear(I2C_RESET); }
+			break;
+		case MIX_V:
+			loopLogger() << L_time << "ESTABLISH_MIXV_COMMS" << L_endl;
+			if (post_initialize_MixV() == _OK) {
+				_iniState.set(MIX_V);
+			} else { _iniState.clear(I2C_RESET); }
+			break;
+		case REMOTE_CONSOLES:
+			loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS" << L_endl;
+			if (post_initialize_Thick_Consoles() == _OK) {
+				_iniState.set(REMOTE_CONSOLES);
+			} else { _iniState.clear(I2C_RESET); }
+			break;
+		}
+
+		return _iniState.all();
+	}
+
+	bool Initialiser::ini_DB() {
+		logger() << F("ini_DB") << L_endl;
+
 		if (!_hs.db.passwordOK()) {
-			logger() << F("  Initialiser PW Failed") << L_endl;
+			logger() << F("  DB PW Failed") << L_endl;
 			setFactoryDefaults(_hs.db, VERSION);
 		}
 		auto dbFailed = false;
@@ -49,10 +97,27 @@ namespace Assembly {
 			}
 		}
 		if (dbFailed) {
-			logger() << F("  dbFailed") << L_endl;
+			logger() << F("  DB Failed") << L_endl;
 			setFactoryDefaults(_hs.db, VERSION);
 		}
-		logger() << F("  Initialiser Constructed") << L_endl;
+		return dbFailed == false;
+	}
+
+	uint8_t Initialiser::ini_TS() {
+		auto status = _OK;
+		for (auto& ts : _hs._tempController.tempSensorArr) {
+			if (ts.testDevice() != _OK) {
+				auto speedTest = I2C_SpeedTest{ ts };
+				speedTest.fastest();
+				status |= speedTest.error();
+			}
+		}	
+		return status;
+	}
+
+	uint8_t Initialiser::ini_relays() {
+		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("RelayController");
+		return relayPort().initialiseDevice();
 	}
 
 	void Initialiser::initialize_Thick_Consoles() {
@@ -65,42 +130,45 @@ namespace Assembly {
 			logger() << L_time << F("set_console_mode :") << modeFlags << L_endl;
 			rc.initialise(consoleIndex, REMOTE_CONSOLE_ADDR[consoleIndex], REMOTE_ROOM_TS_ADDR[consoleIndex]
 				, hs().tempController().towelRailArr[consoleIndex], hs().tempController().zoneArr[Z_DHW]
-				, hs().tempController().zoneArr[consoleIndex], _resetI2C.hardReset.timeOfReset_mS
+				, hs().tempController().zoneArr[consoleIndex]
 				, modeFlags);
 			++consoleIndex;
 		}
-	}	
+	}
+
+	uint8_t Initialiser::post_initialize_MixV() {
+		uint8_t status = 0;
+		for (auto& mixValveControl : hs().tempController().mixValveControllerArr) {
+			if (mixValveControl.isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("MixValveController");
+			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValveControl.index();
+			status |= mixValveControl.sendSlaveIniData(requestINI_flag);
+		}
+		return status;
+	}
 	
 	uint8_t Initialiser::post_initialize_Thick_Consoles() {
 		uint8_t status = 0;
 		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		for (auto& remote : _hs.thickConsole_Arr) {
-			auto mixIniStatus = remote.rawRegisters().get(R_SLAVE_REQUESTING_INITIALISATION);
-			uint8_t requestINI_flag = MV_US_REQUESTING_INI << remote.index();
+			if (remote.isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("RemoteConsoles");
+			uint8_t requestINI_flag = RC_US_REQUESTING_INI << remote.index();
 			status |= remote.sendSlaveIniData(requestINI_flag);
 		}
-		return status;
-	}	
-	
-	uint8_t Initialiser::post_initialize_MixV() {
-		uint8_t status = 0;
-		for (auto& mixValve : hs().tempController().mixValveControllerArr) {
-			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValve.index();
-			status |= mixValve.sendSlaveIniData(requestINI_flag);
+		for (auto& remote : _hs.thickConsole_Arr) {
+			remote.refreshRegistersOK();
 		}
 		return status;
-	}
+	}		
 
 	uint8_t Initialiser::i2C_Test() {
-		uint8_t status = _OK;
-		status = _testDevices.speedTestDevices();
-		_testDevices.testRelays();
+		uint8_t status = _testDevices.speedTestDevices();
+		status |= _testDevices.testRelays();
 		return status;
 	}
 
 	uint8_t Initialiser::postI2CResetInitialisation() {
 		_resetI2C.hardReset.initialisationRequired = false;
-		uint8_t status = relayPort().initialiseDevice();
+		uint8_t status = ini_relays();
 		status |= post_initialize_Thick_Consoles();
 		status |= post_initialize_MixV();
 		if (status != _OK) logger() << L_time << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
@@ -112,7 +180,7 @@ namespace Assembly {
 		if (deviceAddr == IO8_PORT_OptCoupl) return relayPort();
 		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs().tempController().mixValveControllerArr[0];
 		else if (deviceAddr >= US_CONSOLE_I2C_ADDR && deviceAddr <= FL_CONSOLE_I2C_ADDR) {
-			return hs().thickConsole_Arr[deviceAddr- US_CONSOLE_I2C_ADDR];
+			return hs().thickConsole_Arr[deviceAddr - US_CONSOLE_I2C_ADDR];
 		} 
 		else {
 			for (auto & ts : hs().tempController().tempSensorArr) {

@@ -128,7 +128,6 @@ delay(1000);
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, LOW);
 	findOtherMasters();
-	//set_watchdog_timeout_mS(16000); // max 16S
 	logger() << F("\nSetup Done") << L_flush;
 }
 

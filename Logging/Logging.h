@@ -130,25 +130,5 @@ namespace arduino_logger {
 		size_t write(const uint8_t* buffer, size_t size) override;
 	};
 
-	///// <summary>
-	///// Per msg: 100uS Due/ 700uS Mega
-	///// Save 1KB to SD: 250mS Due / 150mS Mega
-	///// </summary>
-	//class RAM_Logger : public Logger {
-	//public:
-	//	RAM_Logger(const char* fileNameStem, uint16_t ramFile_size, bool keepSaving, Clock& clock);
-	//	RAM_Logger(const char* fileNameStem, uint16_t ramFile_size, bool keepSaving);
-	//	size_t write(uint8_t) override;
-	//	size_t write(const uint8_t* buffer, size_t size) override;
-	//	void flush() override;
-	//private:
-	//	Logger& logTime() override;
-	//	uint8_t* _ramFile = 0;
-	//	char _fileNameStem[5];
-	//	uint16_t _ramFile_size;
-	//	uint16_t _filePos = 0;
-	//	bool _keepSaving;
-	//};
-
 	Logger& logger(); // to be defined by the client
 }

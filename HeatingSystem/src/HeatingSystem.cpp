@@ -1,10 +1,11 @@
 #include "HeatingSystem.h"
 #include "Assembly\FactoryDefaults.h"
-#include "HardwareInterfaces\I2C_Comms.h"
 #include "HardwareInterfaces\A__Constants.h"
 #include "LCD_UI\A_Top_UI.h"
+#include <I2C_Reset.h>
 #include <EEPROM_RE.h>
 #include <Clock.h>
+#include <Logging_Ram.h>
 #include <MemoryFree.h>
 
 #ifdef ZPSIM
@@ -119,7 +120,7 @@ HeatingSystem::HeatingSystem()
 	, _hs_queries(db)
 	, _hs_datasets(*this, _hs_queries, _tempController)
 	, _sequencer(_hs_queries)
-	, _tempController(_recover, _hs_queries, _sequencer, _prog_registers, &_initialiser._resetI2C.hardReset.timeOfReset_mS)
+	, _tempController(_recover, _hs_queries, _sequencer, _prog_registers)
 	, mainDisplay(&_hs_queries.q_Displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
 	, _mainConsoleChapters{ _hs_datasets, _tempController, *this}
@@ -131,44 +132,22 @@ HeatingSystem::HeatingSystem()
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 		_initialiser.initialize_Thick_Consoles();
-		_initialiser.i2C_Test();
+		_initialiser.resetDone(_initialiser.i2C_Test() == _OK);
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
-		_initialiser.postI2CResetInitialisation();
-}
+		_state = ESTABLISH_I2C_COMS;
+	}
 
 void HeatingSystem::run_stateMachine() {
 	//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
+	//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
+	//logger() << L_cout << "Ram End" << L_endl;
 	loopLogger().begin();
+
 	switch (_state) {
-	case ESTABLISH_TS_COMS:
-		loopLogger() << L_time << "ESTABLISH_TS_COMS" << L_endl;
-		if (!_tempController.readTemperaturesOK()) break;
-		_state = POST_RESET;
-		break;
-	case ESTABLISH_RELAY_COMS:
-		loopLogger() << L_time << "ESTABLISH_RELAY_COMS" << L_endl;
-		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) HardReset::arduinoReset("RelayController");
-		_state = POST_RESET;
-		break;
-	case ESTABLISH_MIXV_COMMS:
-		loopLogger() << L_time << "ESTABLISH_MIXV_COMMS" << L_endl;
-		for (auto& mixValveControl : _tempController.mixValveControllerArr) {
-			if (mixValveControl.isUnrecoverable()) HardReset::arduinoReset("MixValveController");
-		}
-		_state = POST_RESET;
-		break;
-	case ESTABLISH_REMOTE_CONSOLE_COMS:
-		loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS" << L_endl;
-		for (auto& remote : thickConsole_Arr) {
-			if (remote.isUnrecoverable()) HardReset::arduinoReset("RemoteConsoles");
-		}
-		_state = POST_RESET;
-		break;
-	case POST_RESET:
-		loopLogger() << L_time << "POST_RESET" << L_endl;
-		_initialiser.postI2CResetInitialisation();
-		_state = SERVICE_TEMP_CONTROLLER;
+	case ESTABLISH_I2C_COMS:
+		if (_initialiser.state_machine_OK()) _state = SERVICE_TEMP_CONTROLLER;
+		else _mainConsole.refreshDisplay();
 		break;
 	case START_NEW_DAY:
 		loopLogger() << L_time << "START_NEW_DAY" << L_endl;
@@ -184,6 +163,10 @@ void HeatingSystem::run_stateMachine() {
 		loopLogger() << L_time << "SERVICE_ZONES_Done" << L_endl;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
+			//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
+			//logger() << L_cout << "Ram End" << L_endl;
+			//loopLogger().begin();
+
 			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
@@ -191,28 +174,23 @@ void HeatingSystem::run_stateMachine() {
 			for (auto& remote : thickConsole_Arr) {
 				if (!remote.refreshRegistersOK()) status = RC_FAILED;
 			}
-			loopLogger() << "...refreshRegistersOK done" << L_endl;
+			loopLogger() << "...refresh all Registers done" << L_endl;
+			_state = ESTABLISH_I2C_COMS;
 			switch (status) {
 			case TS_FAILED:
-				_state = ESTABLISH_TS_COMS;
+				_initialiser.requiresINI(Initialiser::TS);
 				break;
 			case MV_FAILED:
 				loopLogger() << L_time << "_resetI2C-MixV" << L_endl;
-				_initialiser._resetI2C(i2C, MIX_VALVE_I2C_ADDR);
-				loopLogger() << L_time << "..._resetI2C-MixV done" << L_endl;
-				_state = ESTABLISH_MIXV_COMMS;
+				_initialiser.requiresINI(Initialiser::MIX_V);
 				break;
 			case RC_FAILED:
 				loopLogger() << L_time << "_resetI2C-RC" << L_endl;
-				_initialiser._resetI2C(i2C, US_CONSOLE_I2C_ADDR);
-				loopLogger() << L_time << "..._resetI2C-RC done" << L_endl;
-				_state = ESTABLISH_REMOTE_CONSOLE_COMS;
+				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 				break;
 			case RELAYS_FAILED:
 				loopLogger() << L_time << "_resetI2C-Relays" << L_endl;
-				_initialiser._resetI2C(i2C, IO8_PORT_OptCoupl);
-				loopLogger() << L_time << "..._resetI2C-Relays done" << L_endl;
-				_state = ESTABLISH_RELAY_COMS;
+				_initialiser.requiresINI(Initialiser::RELAYS);
 				break;
 			default:
 				_state = SERVICE_CONSOLES;
@@ -221,44 +199,41 @@ void HeatingSystem::run_stateMachine() {
 		}	
 		break;
 	case SERVICE_CONSOLES:
-		if (!serviceConsolesOK()) {
-			_state = ESTABLISH_REMOTE_CONSOLE_COMS;
+		static uint8_t lastSec = clock_().seconds() - 1;
+		switch (clock_().isNewPeriod(lastSec)) {
+		case Clock::NEW_DAY:
+			_state = START_NEW_DAY;
+			return;
+		case Clock::NEW_HR:
+			//loopLogger().activate(clock_().hrs() % 2 ? true : false);
+		case Clock::NEW_MIN10:
+			_state = SERVICE_SEQUENCER;
+			return;
+		case Clock::NEW_MIN:
+			_state = SERVICE_ZONES;
+			return;
+		case Clock::NEW_SEC10:
+		case Clock::NEW_SEC:
+			_state = SERVICE_TEMP_CONTROLLER;
+			return;
+#ifdef ZPSIM
+		default:
+			_state = SERVICE_TEMP_CONTROLLER;
+#endif	
 		}
-		else {
+		if (serviceConsolesOK()) {
 			if (dataHasChanged) {
 				loopLogger() << L_time << "...updateChangedData" << L_endl;
 				updateChangedData();
 				loopLogger() << L_time << "Done updateChangedData" << L_endl;
 				dataHasChanged = false;
-				_state = SERVICE_TEMP_CONTROLLER;
 			}
-			else {
-				static uint8_t lastSec = clock_().seconds() - 1;
-				switch (clock_().isNewPeriod(lastSec)) {
-				case Clock::NEW_DAY:
-					_state = START_NEW_DAY;
-					break;
-				case Clock::NEW_HR:
-				case Clock::NEW_MIN10:
-					_state = SERVICE_SEQUENCER;
-					break;
-				case Clock::NEW_MIN:
-					_state = SERVICE_ZONES;
-					break;
-				case Clock::NEW_SEC10:
-				case Clock::NEW_SEC:
-					_state = SERVICE_TEMP_CONTROLLER;
-					break;
-#ifdef ZPSIM
-				default:
-					_state = SERVICE_TEMP_CONTROLLER;
-#endif	
-				}
-			}
+		} else {
+			_state = ESTABLISH_REMOTE_CONSOLE_COMS;
 		}
 		break;
 	}
-	//logger() << "State: " << _state << L_endl;
+	//loopLogger().flush();
 }
 
 bool HeatingSystem::serviceConsolesOK() {  // called every 50mS to respond to keys, also called by yield()

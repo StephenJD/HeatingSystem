@@ -3,6 +3,7 @@
 #include "..\LCD_UI\\I_Record_Interface.h"
 #include "..\HardwareInterfaces\LocalDisplay.h"
 #include "..\HeatingSystem.h"
+#include <I2C_Reset.h>
 #include <Watchdog_Timer.h>
 
 #ifdef ZPSIM
@@ -202,12 +203,14 @@ namespace client_data_structures {
 
 	Collection_Hndl* FactoryReset_Cmd::select(Collection_Hndl* from) {
 		heating_system->getDB().reset_OK(0,0);
-		HardReset::arduinoReset("Factory Rest");
+		I2C_Recovery::HardReset::arduinoReset("Factory Rest");
 		return 0;
 	}
 
 	Collection_Hndl* TestWatchdog_Cmd::select(Collection_Hndl* from) {
-		logger() << L_time << "\n\n*** Manual Watchdog Start ***" << L_endl;
+		//logger() << L_time << "\n\n*** Manual Watchdog Handler ***" << L_flush;
+		//WDT_Handler();
+		logger() << "\n" << L_time << "*** Manual Watchdog Start ***" << L_flush;
 		reset_watchdog();
 		while (true);
 	};

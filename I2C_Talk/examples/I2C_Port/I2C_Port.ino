@@ -3,7 +3,7 @@
 #include <Logging.h>
 
 const uint32_t SERIAL_RATE = 9600;
-const uint8_t RESET_OUT_PIN = 14;  // active LOW.
+const uint8_t RESET_I2C_PIN = 14;  // active LOW.
 const uint8_t RELAY_PORT_ADDRESS = 0x20;
 constexpr uint8_t REG_8PORT_IODIR = 0x00; // default all 1's = input
 constexpr uint8_t REG_8PORT_PullUp = 0x06;
@@ -23,8 +23,8 @@ uint8_t relays[] = { 1,0,2,3,4,5,6};
 
 void setup() {
 	Serial.begin(SERIAL_RATE); // required for test-all.
-	pinMode(RESET_OUT_PIN, OUTPUT);
-	digitalWrite(RESET_OUT_PIN, HIGH);
+	pinMode(RESET_I2C_PIN, OUTPUT);
+	digitalWrite(RESET_I2C_PIN, HIGH);
 	logger() << L_allwaysFlush << "Start" << L_endl;
 	//I2C_Talk i2C;
 	//I2C_Helper i2C;

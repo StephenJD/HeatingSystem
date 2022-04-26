@@ -84,7 +84,8 @@ namespace HardwareInterfaces {
 
 	Error_codes RelaysPort::initialiseDevice() {
 		uint8_t pullUp_out[] = { 0 };
-		auto status = _OK;
+		auto status = _OK; 
+		_relayRegister = 0xFF;
 		//logger() << F("\n RelaysPort::initialiseDevice start") << L_endl;
 		status = write_verify(REG_8PORT_PullUp, 1, pullUp_out); // clear all pull-up resistors
 		if (status) {

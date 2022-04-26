@@ -1,25 +1,6 @@
 #include "Logging_Loop.h"
-#include "Logging_SD.h"
-#include <Date_Time.h>
-#include <Clock.h>
-#include <Conversions.h>
-#include <MemoryFree.h>
-
-//#if defined(__SAM3X8E__)
-#include <EEPROM_RE.h>
-//#endif
-
-#ifdef ZPSIM
-#include <iostream>
-using namespace std;
-#endif
-using namespace GP_LIB;
 
 namespace arduino_logger {
-
-////////////////////////////////////
-//            Loop_Logger       //
-////////////////////////////////////
 
 	Loop_Logger::Loop_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock)
 		: Serial_Logger(baudRate, clock, L_clearFlags)
@@ -36,7 +17,10 @@ namespace arduino_logger {
 	}
 
 	void Loop_Logger::begin(uint32_t) {
+		if (is_null()) return;
+		close();
 		SD.remove(_fileNameGenerator(0));
+		*this << L_time << "Begin Loop-File" << L_endl;
 	}
 
 	Print& Loop_Logger::stream() {
@@ -78,14 +62,18 @@ namespace arduino_logger {
 			auto dataFile = SD.open(_fileNameGenerator(_clock), FILE_WRITE); // appends to file
 			_loopFile = SD.open(_fileNameGenerator(0), FILE_READ);
 			if (dataFile && _loopFile) {
-				while (_loopFile.available()) {
-					dataFile.write(_loopFile.read());
+				*this << L_cout << "Loop-File good" << L_endl;
+				uint8_t line[100];
+				size_t n;
+				while ((n = _loopFile.read(line, sizeof(line))) > 0) {
+					dataFile.write(line,n);
 				}
 				close();
 				dataFile.close();
-				SD.remove(_fileNameGenerator(0));
+				begin();
 			}
 		}
+		Serial_Logger::flush();
 	}
 
 	Logger & Loop_Logger::logTime() {

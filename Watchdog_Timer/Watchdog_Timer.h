@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 /*
 
  ******** NOTE select Arduino Pro Mini 328P 3.3v 8MHz **********
@@ -52,7 +53,7 @@ megao.upload.tool=avrdude
 
 // ********** NOTE: ***************
 // If watchdog is being used, set_watchdog_timeout_mS() must be set at the begining of startup, before any calls to delay()
-// Otherwise, depending on how cleanly the Arduino sht down, it may time-out before it is reset.
+// Otherwise, depending on how cleanly the Arduino shut down, it may time-out before it is reset.
 // ********************************
 
 void watchdogSetup();
@@ -61,12 +62,18 @@ void reset_watchdog();
 
 /// <summary>
 /// Max priod is 16000mS
+/// This can only be done ONCE. Subsequent calls are ignored.
 /// </summary>
 void set_watchdog_timeout_mS(int period_mS);
+void set_watchdog_interrupt_mS(uint32_t timeout_mS);
+void WDT_Handler(); // { WDT->WDT_SR; // Clear status register; }  // implement in client code.
 
 void disable_watchdog();
 
 #if defined(__SAM3X8E__)
+// Due is AT91SAM3X8E
+// WDFIEN may be set in WDT_MR (Watchdog Timer Mode Register) to trigger interrupt rather than reset.
+// This allows saving of data before a  reset.
 
 #else
 	// Function Pototype must be in header

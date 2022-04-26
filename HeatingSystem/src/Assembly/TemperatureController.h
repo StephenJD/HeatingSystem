@@ -15,7 +15,7 @@ namespace Assembly {
 	class TemperatureController
 	{
 	public:
-		TemperatureController(I2C_Recovery::I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers, unsigned long * timeOfReset_mS);
+		TemperatureController(I2C_Recovery::I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers);
 		// Queries
 		int outsideTemp() const { return thermalStore.getOutsideTemp(); }
 		bool isNewSecond() const;

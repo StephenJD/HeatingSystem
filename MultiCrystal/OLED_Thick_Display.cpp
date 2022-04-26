@@ -41,8 +41,8 @@ enum SlaveRequestIni {
 }; 
 auto REQUESTING_INI = ALL_REQUESTING;
 
-OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long* timeOfReset_mS)
-    :I2C_To_MicroController(recover, my_registers, other_microcontroller_address, localRegOffset, remoteRegOffset, timeOfReset_mS)
+OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset)
+    :I2C_To_MicroController(recover, my_registers, other_microcontroller_address, localRegOffset, remoteRegOffset)
     , _tempSensor{ recover }
     , _display(OLED_CS, OLED_DC, OLED_RESET)
     {}

@@ -1,6 +1,6 @@
 #pragma once
-#include "..\..\..\I2C_Talk\I2C_Talk.h"
-#include "..\HardwareInterfaces\I2C_Comms.h"
+#include <I2C_Talk.h>
+#include <I2C_Reset.h>
 
 namespace Assembly {
 	class Initialiser;
@@ -9,7 +9,7 @@ namespace Assembly {
 class HeatingSystem;
 namespace HardwareInterfaces {
 
-	class TestDevices : public I_TestDevices {
+	class TestDevices : public I2C_Recovery::I_TestDevices {
 	public:
 		TestDevices(Assembly::Initialiser & ini);
 		uint8_t speedTestDevices();

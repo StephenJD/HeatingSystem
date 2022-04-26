@@ -2,6 +2,7 @@
 #include "A__Constants.h"
 #include "..\Assembly\HeatingSystemEnums.h"
 #include <I2C_Talk_ErrorCodes.h>
+#include <I2C_Reset.h>
 #include <Logging.h>
 //#include "..\Client_DataStructures\Data_TempSensor.h"
 #include "..\Client_DataStructures\Data_Relay.h"
@@ -29,13 +30,13 @@ namespace HardwareInterfaces {
 		: I2C_To_MicroController{recover, local_registers}
 	{}
 
-	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS) {
+	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens) {
 #ifdef ZPSIM
 		uint8_t(&debugWire)[SIZE_OF_ALL_REGISTERS] = reinterpret_cast<uint8_t(&)[SIZE_OF_ALL_REGISTERS]>(TwoWire::i2CArr[PROGRAMMER_I2C_ADDR]);
 #endif
 		auto localRegOffset = index == M_UpStrs ? PROG_REG_MV0_OFFSET : PROG_REG_MV1_OFFSET;
 		auto remoteRegOffset = index == M_UpStrs ? MV0_REG_OFFSET : MV1_REG_OFFSET;
-		I2C_To_MicroController::initialise(addr, localRegOffset, remoteRegOffset, timeOfReset_mS);
+		I2C_To_MicroController::initialise(addr, localRegOffset, remoteRegOffset);
 		auto reg = registers();
 		reg.set(Mix_Valve::R_REMOTE_REG_OFFSET, localRegOffset);
 		_relayArr = relayArr;
@@ -49,7 +50,6 @@ namespace HardwareInterfaces {
 		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(TwoWire::i2CArr[getAddress()]);
 		writeRegValue(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 #endif
-		waitForWarmUp();
 		uint8_t errCode = reEnable(true);
 		auto reg = registers();
 		Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
@@ -273,7 +273,6 @@ namespace HardwareInterfaces {
 
 		// Algorithm
 		auto status = reEnable(); // see if is disabled
-		waitForWarmUp();
 		if (status == _OK) {
 			wait_DevicesToFinish(rawRegisters());
 			status = readReg(Mix_Valve::R_DEVICE_STATE); // recovery

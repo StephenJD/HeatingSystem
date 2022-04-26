@@ -1,4 +1,10 @@
 #include "I2C_To_MicroController.h"
+#include <Logging_Loop.h>
+#include <I2C_Reset.h>
+namespace arduino_logger {
+	Logger& loopLogger();
+}
+using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace I2C_Recovery;
@@ -6,39 +12,33 @@ namespace HardwareInterfaces {
 	using namespace I2C_Talk_ErrorCodes;
 
 
-	I2C_To_MicroController::I2C_To_MicroController(I2C_Recover& recover, I_Registers& local_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long* timeOfReset_mS)
+	I2C_To_MicroController::I2C_To_MicroController(I2C_Recover& recover, I_Registers& local_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset)
 		: I_I2Cdevice_Recovery{ recover, other_microcontroller_address }
 		, _localRegisters(&local_registers)
 		, _localRegOffset(localRegOffset)
 		, _remoteRegOffset(remoteRegOffset)
-		, _timeOfReset_mS(timeOfReset_mS)
 		{}
 
-	void I2C_To_MicroController::initialise(int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long& timeOfReset_mS) {
+	void I2C_To_MicroController::initialise(int other_microcontroller_address, int localRegOffset, int remoteRegOffset) {
 		I_I2Cdevice_Recovery::setAddress(other_microcontroller_address);
 		_localRegOffset = localRegOffset;
 		_remoteRegOffset = remoteRegOffset;
-		_timeOfReset_mS = &timeOfReset_mS;
 		i2C().extendTimeouts(15000, STOP_MARGIN_TIMEOUT, 1000);
 	}
 
-	void I2C_To_MicroController::waitForWarmUp() const {
-		if (*_timeOfReset_mS != 0) {
-			auto timeOut = Timer_mS(*_timeOfReset_mS + 3000UL - millis());
-			while (!timeOut) {
-				ui_yield();
-			}
-			*_timeOfReset_mS = 0;
-		}
-	}
-
 	Error_codes I2C_To_MicroController::testDevice() { // non-recovery test
-		if (runSpeed() > 100000) set_runSpeed(100000);
+		if (runSpeed() > 100000) {
+			loopLogger() << "set_runSpeed..." << L_endl;
+			set_runSpeed(100000);
+		}
 		Error_codes status = _OK;
 		uint8_t reg0;
-		waitForWarmUp();
+		I2C_Recovery::HardReset::waitForWarmUp();
+		loopLogger() << "testDevice-read..." << L_endl;
 		status = I_I2Cdevice::read(0, 1, &reg0); // non-recovery 		
+		loopLogger() << "testDevice-write..." << L_endl;
 		if (status == _OK) status = I_I2Cdevice::write(0, 1, &reg0); // non-recovery
+		loopLogger() << "testDevice_OK" << L_endl;
 		return status;
 	}
 

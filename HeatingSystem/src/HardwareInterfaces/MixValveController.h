@@ -22,7 +22,7 @@ namespace HardwareInterfaces {
 	class MixValveController : public I2C_To_MicroController, public LCD_UI::VolatileData {
 	public:
 		MixValveController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
-		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens, unsigned long& timeOfReset_mS);
+		void initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens);
 
 		// Queries
 		uint8_t flowTemp() const;

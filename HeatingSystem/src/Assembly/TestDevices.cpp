@@ -59,7 +59,6 @@ namespace HardwareInterfaces {
 	I_I2Cdevice_Recovery & TestDevices::getDevice(uint8_t deviceAddr) { return _ini.getDevice(deviceAddr); }
 
 	uint8_t TestDevices::speedTestDevices() {// returns 0 for success or returns ERR_PORTS_FAILED / ERR_I2C_SPEED_FAIL
-		enum { e_allPassed, e_mixValve, e_relays = 2, e_US_Remote = 4, e_FL_Remote = 8, e_DS_Remote = 16, e_TempSensors = 32 };
 		hs()._recover.setTimeoutFn(&_ini._resetI2C.hardReset);
 		int8_t returnVal = 0;
 		hs().mainDisplay.setCursor(0, 0);

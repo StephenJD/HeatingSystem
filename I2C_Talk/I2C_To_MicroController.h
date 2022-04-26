@@ -12,14 +12,13 @@ namespace HardwareInterfaces {
 	/// </summary>
 	class I2C_To_MicroController : public I_I2Cdevice_Recovery {
 	public:
-		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers) : I2C_To_MicroController(recover, local_registers, 0, 0, 0, 0) {}
-		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers, int address, int localRegOffset, int remoteRegOffset, unsigned long* timeOfReset_mS);
+		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers) : I2C_To_MicroController(recover, local_registers, 0, 0, 0) {}
+		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers, int address, int localRegOffset, int remoteRegOffset);
 		// Queries
-		void waitForWarmUp() const;
 
 		// Modifiers
 		I2C_Talk_ErrorCodes::Error_codes testDevice() override;
-		void initialise(int address, int localRegOffset, int remoteRegOffset, unsigned long& timeOfReset_mS);
+		void initialise(int address, int localRegOffset, int remoteRegOffset);
 		i2c_registers::RegAccess registers() const { return { *_localRegisters,_localRegOffset }; }
 		i2c_registers::RegAccess rawRegisters() const { return { *_localRegisters,0 }; }
 		I2C_Talk_ErrorCodes::Error_codes writeRegValue(int reg, uint8_t value);
@@ -34,7 +33,6 @@ namespace HardwareInterfaces {
 		uint8_t _remoteRegOffset = 0;
 	private:
 		i2c_registers::I_Registers* _localRegisters;
-		mutable unsigned long* _timeOfReset_mS = 0;
 		static constexpr int STOP_MARGIN_TIMEOUT = 15;
 	};
 }

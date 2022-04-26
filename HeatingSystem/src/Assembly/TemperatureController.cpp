@@ -27,7 +27,7 @@ namespace Assembly {
 	using namespace client_data_structures;
 	using namespace I2C_Recovery;
 
-	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers, unsigned long * timeOfReset_mS) :
+	TemperatureController::TemperatureController(I2C_Recover & recovery, HeatingSystem_Queries& queries, Sequencer& sequencer, i2c_registers::I_Registers& prog_registers) :
 		tempSensorArr{ recovery }
 		, backBoiler(tempSensorArr[T_MfF], tempSensorArr[T_Sol], relayArr[R_MFS])
 		, thermalStore(tempSensorArr, mixValveControllerArr, backBoiler)
@@ -62,7 +62,6 @@ namespace Assembly {
 				, relayArr
 				, mixValveControl.rec().flowTS_addr
 				, tempSensorArr[mixValveControl.rec().storeTempSens]
-				, *timeOfReset_mS
 			);
 			++index;
 		}

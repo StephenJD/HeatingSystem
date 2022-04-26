@@ -1,15 +1,16 @@
 #pragma once
 #include <Arduino.h>
 #include "TestDevices.h"
-#include "..\HardwareInterfaces\I2C_Comms.h"
+#include <I2C_Reset.h>
 #include <Relay_Bitwise.h>
+#include <Flag_Enum.h>
 
 class HeatingSystem;
 
 namespace Assembly {
 	class Initialiser;
 
-	class IniFunctor : public HardwareInterfaces::I_IniFunctor {
+	class IniFunctor : public I2C_Recovery::I_IniFunctor {
 	public:
 		IniFunctor(Initialiser & ini) : _ini(&ini) {}
 		uint8_t operator()() override; // performs post-reset initialisation  
@@ -19,7 +20,11 @@ namespace Assembly {
 
 	class Initialiser {
 	public:
+		enum IniState {I2C_RESET, TS, POST_RESET_WARMUP, RELAYS, MIX_V, REMOTE_CONSOLES, NO_OF_INI_FLAGS};
 		Initialiser(HeatingSystem & hs);
+		bool state_machine_OK();
+		void requiresINI(IniState ini) { _iniState.clear(ini); }
+		void resetDone(bool ok) { _iniState.set(I2C_RESET, ok); }
 		uint8_t i2C_Test();
 		uint8_t postI2CResetInitialisation(); // return 0 for OK
 		HeatingSystem & hs() { return _hs; }
@@ -27,12 +32,16 @@ namespace Assembly {
 		void initialize_Thick_Consoles();
 		uint8_t post_initialize_Thick_Consoles();
 		uint8_t post_initialize_MixV();
-		HardwareInterfaces::ResetI2C _resetI2C;
+		I2C_Recovery::ResetI2C _resetI2C;
 		HardwareInterfaces::RelaysPort & relayPort() { return static_cast<HardwareInterfaces::RelaysPort &>(HardwareInterfaces::relayController()); }
 	private:
+		bool ini_DB();
+		uint8_t ini_TS();
+		uint8_t ini_relays();
 		HeatingSystem & _hs;
 		IniFunctor _iniFunctor;
 		HardwareInterfaces::TestDevices _testDevices;
+		flag_enum::FE_Obj<IniState, NO_OF_INI_FLAGS> _iniState;
 	};
 
 }

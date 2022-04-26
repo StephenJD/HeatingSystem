@@ -6,6 +6,7 @@
 #include <I2C_To_MicroController.h>
 #include "I2C_Comms.h"
 #include "OLED_Thick_Display.h"
+#include <tuple>
 
 namespace HardwareInterfaces {
 	class TowelRail;
@@ -15,7 +16,7 @@ namespace HardwareInterfaces {
 	class ConsoleController_Thick : public I2C_To_MicroController {
 	public:
 		ConsoleController_Thick(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
-		void initialise(int index, int addr, int roomTS_addr, TowelRail& towelRail, Zone& dhw, Zone& zone, unsigned long& timeOfReset_mS, uint8_t console_mode);
+		void initialise(int index, int addr, int roomTS_addr, TowelRail& towelRail, Zone& dhw, Zone& zone, uint8_t console_mode);
 		
 		uint8_t sendSlaveIniData(uint8_t requestINI_flag);
 		uint8_t index() const { return (_localRegOffset - PROG_REG_RC_US_OFFSET) / OLED_Thick_Display::R_DISPL_REG_SIZE; }
@@ -27,6 +28,8 @@ namespace HardwareInterfaces {
 			bool changed = _hasChanged; _hasChanged = false; return changed;
 		}
 	private:
+		bool remoteOffset_OK();
+		std::tuple<uint8_t, int8_t, int8_t, uint8_t> readRemoteRegisters_OK();
 		void logRemoteRegisters();
 		bool _hasChanged = false;
 		TowelRail* _towelRail = 0;

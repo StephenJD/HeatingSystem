@@ -3198,7 +3198,6 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 
 	LCD_Display_Buffer<20, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
-	unsigned long timeOfReset_mS = 0;
 
 	heating_system = 0;
 	clock_().setTime({ 31,7,19 }, { 16,10 }, 0);
@@ -3433,7 +3432,6 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 	LCD_Display_Buffer<20, 4> lcd;
 	UI_DisplayBuffer tb(lcd);
 	clock_().setTime({ 31,7,17 }, { 8,10 }, 0);
-	unsigned long timeOfReset_mS = 0;
 
 	heating_system = 0;
 	HeatingSystem hs{};

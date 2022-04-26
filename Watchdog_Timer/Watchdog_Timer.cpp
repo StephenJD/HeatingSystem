@@ -3,9 +3,14 @@
 #if defined(__SAM3X8E__)
 	#include <Watchdog.h>
 	// functions must be in cpp.
-	void watchdogSetup() { watchdogEnable(16000);}
+	
+	void watchdogSetup() {
+	/*This function is called from init(). If the user does not provide
+	  this function, then the default action is to disable watchdog.
+	  This function has to be overriden, otherwise watchdog won't work !! */
+	}
 
-	void reset_watchdog() {watchdogReset(); }
+	void reset_watchdog() { WDT->WDT_SR; watchdogReset(); }
 
 	/// <summary>
 	/// Max priod is 16000mS
@@ -14,6 +19,17 @@
 		watchdogEnable(period_mS);
 		reset_watchdog();
 	}
+
+	void set_watchdog_interrupt_mS(uint32_t timeout_mS) {
+		timeout_mS = timeout_mS * 256 / 1000;
+		if (timeout_mS == 0)
+			timeout_mS = 1;
+		else if (timeout_mS > 0xFFF)
+			timeout_mS = 0xFFF;
+		timeout_mS = WDT_MR_WDFIEN | WDT_MR_WDV(timeout_mS) | WDT_MR_WDD(timeout_mS);
+		WDT_Enable(WDT, timeout_mS);
+		NVIC_EnableIRQ(WDT_IRQn);
+}
 
 	void disable_watchdog() { watchdogDisable(); }
 
@@ -61,6 +77,10 @@
 	void set_watchdog_timeout_mS(int period) {
 		wdt_enable(toWD_Time(period));
 		reset_watchdog();
+	}
+
+	void set_watchdog_interrupt_mS(uint32_t timeout_mS) {
+		set_watchdog_timeout_mS(timeout_mS);
 	}
 
 	void disable_watchdog() { wdt_disable(); }

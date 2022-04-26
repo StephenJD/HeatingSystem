@@ -18,7 +18,7 @@ const uint8_t KEYPAD_REF_PIN = A3;
 const uint8_t RESET_LEDP_PIN = 16;  // high supply
 const uint8_t RESET_LEDN_PIN = 19;  // low for on.
 const uint8_t REMOTE_ADDRESS = 0x26;
-const uint8_t RESET_OUT_PIN = 14;  // active LOW.
+const uint8_t RESET_I2C_PIN = 14;  // active LOW.
 
 uint8_t reg = 0;
 uint8_t data = -1;
@@ -92,8 +92,8 @@ void setup()
 
 	pinMode(RESET_LEDP_PIN, OUTPUT);
 	digitalWrite(RESET_LEDP_PIN, HIGH);
-	pinMode(RESET_OUT_PIN, OUTPUT);
-	digitalWrite(RESET_OUT_PIN, HIGH);
+	pinMode(RESET_I2C_PIN, OUTPUT);
+	digitalWrite(RESET_I2C_PIN, HIGH);
 	logger() << L_allwaysFlush << L_time << F(" \n\n********** Logging Begun ***********") << L_endl;
 	turnOffRelays();
 	rem_displ.initialiseDevice();

@@ -37,7 +37,7 @@ void ui_yield() {}
 
 constexpr uint8_t ZERO_CROSS_PIN = 15; // active falling edge.
 constexpr uint16_t ZERO_CROSS_DELAY = 690;
-const uint8_t RESET_OUT_PIN = 14;  // active LOW.
+const uint8_t RESET_I2C_PIN = 14;  // active LOW.
 const uint8_t RESET_LEDP_PIN = 16;  // high supply
 const uint8_t RESET_LEDN_PIN = 19;  // low for on.
 const uint8_t RTC_ADDR = 0x68;
@@ -199,7 +199,6 @@ public:
 	uint8_t getPos(uint8_t & pos);
 	Error_codes testDevice() override;
 private:
-	unsigned long * _timeOfReset_mS = 0;
 	int _error = 0;
 };
 
@@ -211,7 +210,7 @@ RemoteDisplay rem_lcd[] = { {i2c_recover, 0x24},  0x25, 0x26 };
 RemoteKeypad rem_keypad[] = { rem_lcd[0].displ(),  rem_lcd[1].displ(), rem_lcd[2].displ() };
 
 LocalKeypad keypad{ KEYINT, KEY_ANALOGUE, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW } };
-auto resetPin = Pin_Wag{ RESET_OUT_PIN , LOW};
+auto resetPin = Pin_Wag{ RESET_I2C_PIN , LOW};
 
 Error_codes resetI2C_(I2C_Talk & i2c, int addr) { // addr == 0 forces hard reset
 	static bool isInReset = false;

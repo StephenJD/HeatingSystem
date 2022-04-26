@@ -46,8 +46,8 @@ public:
 	// In Slave-Mode: 
 	//		Requests are read from the console by the Programmer.
 	//		Room Temp and Warmup-times are sent to the console by the programmer.
-	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers) : OLED_Thick_Display(recover, my_registers, 0, 0, 0, 0) {}
-	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset, unsigned long* timeOfReset_mS);
+	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers) : OLED_Thick_Display(recover, my_registers, 0, 0, 0) {}
+	OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& my_registers, int other_microcontroller_address, int localRegOffset, int remoteRegOffset);
 
 	void setMyI2CAddress();
 	void readTempSensor();
