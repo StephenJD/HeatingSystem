@@ -49,18 +49,19 @@ namespace HardwareInterfaces {
 		}
 
 	bool I_Keypad::oneSecondElapsed() { // for refreshing display / registers.
-		//logger() << (long)this << L_tabs  << "oneSecondElapsed..." << "Millis:" << millis()<< L_endl;
 		bool prevLapFlag = _lapFlags.is(LAP_EVEN_SECOND);
+		//logger() << "oneSecondElapsed..." << "Millis:" << micros()/1000 << L_endl;
 		bool isNewSecond = hasLapped(1000, prevLapFlag);
+		//logger() << micros() / 1000 << " oneSecondElapsed was:" << prevLapFlag  << L_flush;
 		if (isNewSecond) {
-			//logger() << L_tabs << "oneSecondElapsed_Now:" << !prevLapFlag << L_endl;
+			//logger() << "oneSecondElapsed_Now:" << micros() / 1000000 << L_endl;
 			_lapFlags.set(LAP_EVEN_SECOND,!prevLapFlag); // alternate even-flag to detect new second
 		}
 		return isNewSecond;
 	}
 
 	void I_Keypad::readKey() {
-		//logger() << (long) this << L_tabs  << F(" readKey...\tMillis:") << millis() << L_endl;
+		//logger() << (long) this << L_tabs  << F(" readKey...\tMillis:") << micros()/1000 << L_endl;
 		bool prevLapFlag = _lapFlags.is(LAP_READ_KEY);
 		bool isTimeToRead = hasLapped(_lapFlags.value(), prevLapFlag); // _lapFlags.value() is the key-read interval
 		if (isTimeToRead) {
@@ -73,7 +74,7 @@ namespace HardwareInterfaces {
 	void I_Keypad::wakeDisplay() {
 		auto consoleMode = FE_Ref<I2C_Flags,4>(_wakeTime);
 		_keepAwake_mS = consoleMode.is(F_ENABLE_KEYBOARD) ? consoleMode.value()*4000 : 0;
-		//logger() << (long)this << L_tabs << "wakeDisplay_Millis:" << millis() << L_endl;
+		//logger() << (long)this << L_tabs << "wakeDisplay_Millis:" << micros()/1000 << L_endl;
 	}
 
 	void I_Keypad::startRead() {
@@ -90,7 +91,7 @@ namespace HardwareInterfaces {
 		--_readAgain;
 		auto key = _currentKeypad->getKeyCode();
 		//if (logIndex < L_NoOfLogs - 1) ++logIndex;
-		//keyLog[L_ReadTime][logIndex] = (unsigned char)millis();
+		//keyLog[L_ReadTime][logIndex] = (unsigned char)micros()/1000;
 		//keyLog[L_ReadAgain][logIndex] = _readAgain;
 		//keyLog[L_Key][logIndex] = key;
 		if (key != _prevKey) {

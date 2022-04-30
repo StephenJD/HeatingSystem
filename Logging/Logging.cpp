@@ -31,9 +31,10 @@ namespace arduino_logger {
 		switch (flag) {
 		case L_time:	logTime(); break;
 		case L_flush:
-			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
 			*this << F(" |F|\n");
-			flush();
+			if (is_cout()) Serial.flush();
+			else flush();
+			_flags = static_cast<Flags>(_flags & L_allwaysFlush); // all zero's except L_allwaysFlush if set.
 			break;
 		case L_endl:
 		{

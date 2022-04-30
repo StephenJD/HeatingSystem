@@ -111,14 +111,14 @@ namespace Assembly {
 		for (auto & mixValveControl : mixValveControllerArr) {
 			//logger() << L_time << "Check mixValveControl" << L_endl;
 			mixV_OK &= mixValveControl.check();
-			ui_yield(); 
+			//ui_yield(); 
 		}
 		if (!mixV_OK) status = MV_FAILED;
 
 		//logger() << L_time << "Check TRd's" << L_endl;
 		for (auto & towelRail : towelRailArr) {
 			towelRail.check();
-			ui_yield(); 
+			//ui_yield(); 
 		}
 
 		for ( auto & relay : relayArr) {
@@ -129,7 +129,7 @@ namespace Assembly {
 		return status;
 	}
 
-	void TemperatureController::checkZoneRequests(bool checkForPreHeat) {
+	void TemperatureController::checkZoneRequests(bool checkForPreHeat) { // must be called once every 10 mins
 		for (auto& zone : zoneArr) { 
 			if (checkForPreHeat) zone.preHeatForNextTT();
 			zone.setFlowTemp();
@@ -146,7 +146,7 @@ namespace Assembly {
 		auto ts_OK = true;
 		for (auto& ts : tempSensorArr) {
 			ts_OK &= (ts.readTemperature() == _OK);
-			ui_yield();
+			//ui_yield();
 		}
 		return ts_OK;
 	}

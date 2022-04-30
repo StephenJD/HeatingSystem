@@ -123,9 +123,9 @@ HeatingSystem::HeatingSystem()
 	, _tempController(_recover, _hs_queries, _sequencer, _prog_registers)
 	, mainDisplay(&_hs_queries.q_Displays)
 	, localKeypad(KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW })
+	, thickConsole_Arr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
 	, _mainConsoleChapters{ _hs_datasets, _tempController, *this}
 	, _mainConsole(localKeypad, mainDisplay, _mainConsoleChapters)
-	, thickConsole_Arr{ {_recover, _prog_register_set},{_recover, _prog_register_set},{_recover, _prog_register_set} }
 	{
 		i2C.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
@@ -135,7 +135,7 @@ HeatingSystem::HeatingSystem()
 		_initialiser.resetDone(_initialiser.i2C_Test() == _OK);
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
-		_state = ESTABLISH_I2C_COMS;
+		_state = CHECK_I2C_COMS;
 	}
 
 void HeatingSystem::run_stateMachine() {
@@ -143,11 +143,11 @@ void HeatingSystem::run_stateMachine() {
 	//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
 	//logger() << L_cout << "Ram End" << L_endl;
 	loopLogger().begin();
-
+	loopLogger() << "State: " << _state << L_endl;
 	switch (_state) {
-	case ESTABLISH_I2C_COMS:
-		if (_initialiser.state_machine_OK()) _state = SERVICE_TEMP_CONTROLLER;
-		else _mainConsole.refreshDisplay();
+	case CHECK_I2C_COMS: // once per second
+		if (_initialiser.state_machine_OK()) _state = SERVICE_CONSOLES;
+		serviceConsoles_OK();
 		break;
 	case START_NEW_DAY:
 		loopLogger() << L_time << "START_NEW_DAY" << L_endl;
@@ -155,12 +155,12 @@ void HeatingSystem::run_stateMachine() {
 		[[fallthrough]];
 	case SERVICE_SEQUENCER:
 		loopLogger() << L_time << "SERVICE_SEQUENCER" << L_endl;
+		_tempController.checkZoneRequests(true); // must be called once every 10 mins and when data changes
 		[[fallthrough]];
-	case SERVICE_ZONES:
-		loopLogger() << L_time << "SERVICE_ZONES" << L_endl;
-		_tempController.checkZoneRequests(_state == SERVICE_SEQUENCER);
+	case SERVICE_BACKBOILER:
+		loopLogger() << L_time << "SERVICE_BACKBOILER" << L_endl;
 		_tempController.backBoiler.check();
-		loopLogger() << L_time << "SERVICE_ZONES_Done" << L_endl;
+		loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
 			//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
@@ -170,32 +170,38 @@ void HeatingSystem::run_stateMachine() {
 			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
-			loopLogger() << L_time << "...checkAndAdjust done" << L_endl;
-			for (auto& remote : thickConsole_Arr) {
-				if (!remote.refreshRegistersOK()) status = RC_FAILED;
+			//loopLogger() << L_time << "...checkAndAdjust done: " << status << L_endl;
+			if (status == ALL_OK) {
+				for (auto& remote : thickConsole_Arr) {
+					if (!remote.refreshRegistersOK()) status = RC_FAILED;
+				}
 			}
-			loopLogger() << "...refresh all Registers done" << L_endl;
-			_state = ESTABLISH_I2C_COMS;
+			//loopLogger() << "...refresh all Registers done: " << status << L_endl;
 			switch (status) {
 			case TS_FAILED:
+				loopLogger() << L_time << "TS-Failed" << L_endl;
+				logger() << L_time << "TS-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::TS);
 				break;
 			case MV_FAILED:
-				loopLogger() << L_time << "_resetI2C-MixV" << L_endl;
+				loopLogger() << L_time << "MV-Failed" << L_endl;
+				logger() << L_time << "MV-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::MIX_V);
 				break;
 			case RC_FAILED:
-				loopLogger() << L_time << "_resetI2C-RC" << L_endl;
+				loopLogger() << L_time << "RC-Failed" << L_endl;
+				logger() << L_time << "RC-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 				break;
 			case RELAYS_FAILED:
-				loopLogger() << L_time << "_resetI2C-Relays" << L_endl;
+				loopLogger() << L_time << "Relay-Failed" << L_endl;
+				logger() << L_time << "Relay-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::RELAYS);
 				break;
-			default:
-				_state = SERVICE_CONSOLES;
 			}
+			if (serviceConsoles_OK()) _initialiser.isOK(Initialiser::REMOTE_CONSOLES);
 			flushLogs();
+			_state = CHECK_I2C_COMS;
 		}	
 		break;
 	case SERVICE_CONSOLES:
@@ -210,7 +216,7 @@ void HeatingSystem::run_stateMachine() {
 			_state = SERVICE_SEQUENCER;
 			return;
 		case Clock::NEW_MIN:
-			_state = SERVICE_ZONES;
+			_state = SERVICE_BACKBOILER;
 			return;
 		case Clock::NEW_SEC10:
 		case Clock::NEW_SEC:
@@ -221,30 +227,29 @@ void HeatingSystem::run_stateMachine() {
 			_state = SERVICE_TEMP_CONTROLLER;
 #endif	
 		}
-		if (serviceConsolesOK()) {
-			if (dataHasChanged) {
-				loopLogger() << L_time << "...updateChangedData" << L_endl;
-				updateChangedData();
-				loopLogger() << L_time << "Done updateChangedData" << L_endl;
-				dataHasChanged = false;
-			}
-		} else {
-			_state = ESTABLISH_REMOTE_CONSOLE_COMS;
-		}
+		serviceConsoles_OK();
 		break;
 	}
 	//loopLogger().flush();
 }
 
-bool HeatingSystem::serviceConsolesOK() {  // called every 50mS to respond to keys, also called by yield()
-	auto rc_OK = true;
+bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to keys, also called by yield()
+	bool rc_OK = false;
+	//loopLogger() << L_time << "serviceConsoles?" << L_endl;
 	if (consoleDataHasChanged()) {
+		rc_OK = true;
+		loopLogger() << L_time << "refreshDisplay: " << (micros() / 1000000)%10 << L_endl;
 		_mainConsole.refreshDisplay();
-		//loopLogger() << L_time << "Done refresh_mainConsole" << L_endl;
 		for (auto& remote : thickConsole_Arr) {
 			rc_OK &= remote.refreshRegistersOK();
 		}
-		loopLogger() << L_time << "Done refreshRegistersOK" << L_endl;
+		//loopLogger() << L_time << "Done Service RC's" << L_endl;
+	}
+	if (dataHasChanged) {
+		loopLogger() << L_time << "...updateChangedData" << L_endl;
+		updateChangedData();
+		loopLogger() << L_time << "Done updateChangedData" << L_endl;
+		dataHasChanged = false;
 	}
 	return rc_OK;
 }

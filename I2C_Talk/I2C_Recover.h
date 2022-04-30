@@ -19,6 +19,7 @@ namespace I2C_Recovery {
 		void set_I2C_Talk(I2C_Talk & i2C) { _i2C = &i2C; }
 		void registerDevice(I_I2Cdevice_Recovery & device) { _device = &device; }
 		I2C_Talk & i2C() { return *_i2C; }
+		bool isRegistered(int addr) { return _device != 0 && _device->getAddress() == addr; }
 		I_I2Cdevice_Recovery & device() { return *_device; }
 		auto findAworkingSpeed()->I2C_Talk_ErrorCodes::Error_codes;
 		

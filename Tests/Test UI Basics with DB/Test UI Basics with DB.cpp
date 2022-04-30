@@ -78,16 +78,16 @@ public:
 	void setHS(HeatingSystem & hs) {
 		logger() << L_time << "Start setHS for ServiceConsoles...\n";
 		heating_system = &hs;
-		heating_system->serviceConsolesOK();
+		heating_system->serviceConsoles_OK();
 		clock_().setSeconds(0);
 		heating_system->serviceTemperatureController();
 		logger() << L_time << "Done setHS for ServiceConsoles...\n";
 	}
 	void operator()() {
-		if (heating_system) heating_system->serviceConsolesOK();
+		if (heating_system) heating_system->serviceConsoles_OK();
 	}
 private:
-} serviceConsoles;
+} serviceConsoles_OK;
 
 void ui_yield() {
 	static bool inYield = false;
@@ -96,7 +96,7 @@ void ui_yield() {
 		return;
 	}
 	inYield = true;
-	serviceConsoles();
+	serviceConsoles_OK();
 	inYield = false;
 }
 
@@ -3203,7 +3203,7 @@ TEST_CASE("MainConsoleChapters", "[Display]") {
 	clock_().setTime({ 31,7,19 }, { 16,10 }, 0);
 	HeatingSystem hs{};
 	setFactoryDefaults(hs.getDB(), 2);
-	serviceConsoles.setHS(hs);
+	serviceConsoles_OK.setHS(hs);
 
 
 	//auto q_Profiles = hs.getDB().tableQuery(TB_Profile);
@@ -3436,7 +3436,7 @@ SCENARIO("InfoConsoleChapters", "[Display]") {
 	heating_system = 0;
 	HeatingSystem hs{};
 	setFactoryDefaults(hs.getDB(), 1);
-	serviceConsoles.setHS(hs);
+	serviceConsoles_OK.setHS(hs);
 
 	auto showActive = [](auto & ui) {
 		for (auto & obj : *ui->get()->collection()) {
@@ -3605,7 +3605,7 @@ TEST_CASE("HeatingSystem Test Relays & TS", "[HeatingSystem]") {
 		thisTempSensor = q_tempSensors.next(1);
 	}
 
-	hs.serviceConsolesOK();
+	hs.serviceConsoles_OK();
 }
 #endif
 

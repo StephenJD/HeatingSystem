@@ -32,12 +32,12 @@ public:
 		// Rated at 5v/100kHz - NO 3.3v operation, min 2.2v HI.
 		i2c.setMax_i2cFreq(100000); // Max freq supported by DS1307
 		i2c.extendTimeouts(5000, 5, 1000); // process time to read clock. Potential freeze if Wire not constructed
-		Clock::_lastCheck_mS = millis() - (60ul * 1000ul * 11ul);
+		Clock::_lastCheck_uS = micros() - (60ul * 1000000ul * 11ul);
 		//Serial.println(F("Clock_I2C Constructor"));
 	}
 
 	bool ok() const override {
-		for (uint32_t t = millis() + 5; millis() < t; ) {
+		for (uint32_t t = micros() + 5000; micros() < t; ) {
 			if (i2c.status(I2Cdevice<i2c>::getAddress()) == I2C_Talk_ErrorCodes::_OK) return true;
 		}
 		return false;

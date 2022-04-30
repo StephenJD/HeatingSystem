@@ -66,22 +66,22 @@ namespace HardwareInterfaces {
 		hs().mainDisplay.setCursor(0, 2);
 		hs().mainDisplay.print("Test ");
 		logger() << L_endl << L_time << F("TestDevices::speedTestDevices has been called\n");
+		for (auto & ts : hs()._tempController.tempSensorArr) {
+			showSpeedTestFailed(0,ts, "TS");
+		}
+
 		logger() << F("\n\tTry Relay Port\n");
-		if (showSpeedTestFailed(0,_ini.relayPort(), "Relay")) {
+		if (showSpeedTestFailed(1,_ini.relayPort(), "Relay")) {
 			returnVal = ERR_PORTS_FAILED;
 		}
 
 		logger() << F("\tTry Remotes") << L_endl;
 		auto id = 0;
 		for (auto& thinConsole : hs().thickConsole_Arr) {
-			returnVal |= showSpeedTestFailed(0, hs().thickConsole_Arr[id], "OLED");
+			returnVal |= showSpeedTestFailed(1, hs().thickConsole_Arr[id], "OLED");
 			++id;
 		}
 		if (returnVal) returnVal = ERR_I2C_READ_FAILED;
-
-		for (auto & ts : hs()._tempController.tempSensorArr) {
-			showSpeedTestFailed(1,ts, "TS");
-		}
 
 		logger() << F("\tTry Mix Valve") << L_endl;
 		if (showSpeedTestFailed(2,hs()._tempController.mixValveControllerArr[0], "Mix V")) {

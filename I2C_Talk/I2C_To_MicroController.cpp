@@ -33,12 +33,12 @@ namespace HardwareInterfaces {
 		}
 		Error_codes status = _OK;
 		uint8_t reg0;
-		I2C_Recovery::HardReset::waitForWarmUp();
-		loopLogger() << "testDevice-read..." << L_endl;
+		I2C_Recovery::HardReset::hasWarmedUp(true);
+		loopLogger() << L_time << "testDevice-read 0x" << L_hex << getAddress() << L_endl;
 		status = I_I2Cdevice::read(0, 1, &reg0); // non-recovery 		
-		loopLogger() << "testDevice-write..." << L_endl;
+		loopLogger() << "testDevice-write: " << status << L_endl;
 		if (status == _OK) status = I_I2Cdevice::write(0, 1, &reg0); // non-recovery
-		loopLogger() << "testDevice_OK" << L_endl;
+		loopLogger() << "testDevice_OK: " << status << L_endl;
 		return status;
 	}
 

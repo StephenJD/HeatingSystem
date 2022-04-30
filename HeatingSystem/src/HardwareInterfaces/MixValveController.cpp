@@ -28,12 +28,15 @@ namespace HardwareInterfaces {
 //#endif
 	MixValveController::MixValveController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers) 
 		: I2C_To_MicroController{recover, local_registers}
-	{}
+	{
+		disable(); // prevent use until sendSlaveIniData
+	}
 
 	void MixValveController::initialise(int index, int addr, UI_Bitwise_Relay * relayArr, int flowTS_addr, UI_TempSensor & storeTempSens) {
 #ifdef ZPSIM
 		uint8_t(&debugWire)[SIZE_OF_ALL_REGISTERS] = reinterpret_cast<uint8_t(&)[SIZE_OF_ALL_REGISTERS]>(TwoWire::i2CArr[PROGRAMMER_I2C_ADDR]);
 #endif
+		logger() << F("MixValveController::ini ") << index << L_endl;
 		auto localRegOffset = index == M_UpStrs ? PROG_REG_MV0_OFFSET : PROG_REG_MV1_OFFSET;
 		auto remoteRegOffset = index == M_UpStrs ? MV0_REG_OFFSET : MV1_REG_OFFSET;
 		I2C_To_MicroController::initialise(addr, localRegOffset, remoteRegOffset);
@@ -93,8 +96,8 @@ namespace HardwareInterfaces {
 				rawRegisters().set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 				mixV_OK = false;
 			}
-			//uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
-			if (mixIniStatus /*& requestINI_flag*/) mixV_OK = false; // (sendSlaveIniData(requestINI_flag) == _OK);
+			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
+			if (mixIniStatus & requestINI_flag) mixV_OK = false; // (sendSlaveIniData(requestINI_flag) == _OK);
 			else {
 				mixV_OK &= readRegistersFromValve_OK();
 				//mixV_OK &= logMixValveOperation(false);

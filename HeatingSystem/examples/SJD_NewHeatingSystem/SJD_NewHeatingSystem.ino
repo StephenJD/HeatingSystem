@@ -83,7 +83,7 @@ namespace arduino_logger {
 		//static Serial_Logger _log(SERIAL_RATE);
 		//static RAM_Logger _log("R", ramFileSize, true, clock_());
 		//static EEPROM_Logger _log("E", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
-		static SD_Logger _log("E", SERIAL_RATE, clock_());
+		static SD_Logger _log("E", SERIAL_RATE, clock_()/*, L_allwaysFlush*/);
 		return _log;
 	}
 
@@ -102,6 +102,7 @@ namespace arduino_logger {
 		static Loop_Logger _log("F", SERIAL_RATE, clock_());
 		//static EEPROM_Logger _log("F", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
 		return _log;
+		//return logger();
 	}
 }
 using namespace arduino_logger;
@@ -140,9 +141,8 @@ namespace LCD_UI {
  			return;
  		}
  		inYield = true;
- 		//if (millis()%1000 == 0) logger() << F("ui_yield call") << L_endl;
  		//Serial.println("Start ui_yield");
- 		if (heating_system) heating_system->serviceConsolesOK();
+ 		if (heating_system) heating_system->serviceConsoles_OK();
  		//Serial.println("End ui_yield");
  		inYield = false;
  	}
@@ -163,32 +163,40 @@ void WDT_Handler(void) {
 
 //////////////////////////////// Start execution here ///////////////////////////////
 void setup() {
-	Serial.begin(SERIAL_RATE); // NOTE! Serial.begin must be called before i2c_clock is constructed.
-	Serial.println("Start...");
-	resetRTC(rtc, rtc_reset_wag); // Before logging to avoid no-date SD logs.
-	logger() << L_flush;
-	logger() << L_time << F(" ****** Arduino Restarted ") << millis() << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT/1000 << F("S\n\n") << L_flush;
-	logger() << F("set_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
-	set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
-	//set_watchdog_interrupt_mS(WATCHDOG_TIMOUT);
-	//logger().begin(SERIAL_RATE);
-	zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-	profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-	loopLogger().flush();
-	//logger() << F("RamFileAddr: ") << (unsigned long)static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
-
-	logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
-	pinMode(RESET_LEDP_PIN, OUTPUT);
-	digitalWrite(RESET_LEDP_PIN, HIGH);
-	auto supplyVcorrection = 2.5 * 1024. / 3.3 / analogRead(RESET_5vREF_PIN);
-	logger() << "supplyVcorrection: " << supplyVcorrection << " dsContrast: " << dsContrast << " corrected:" << dsContrast * supplyVcorrection << L_endl;
-	analogWrite(BRIGHNESS_PWM, 255);  // Brightness analogRead values go from 0 to 1023, analogWrite values from 0 to 255
-	analogWrite(CONTRAST_PWM, dsContrast * supplyVcorrection);  // Contrast analogRead values go from 0 to 1023, analogWrite values from 0 to 255
-	HeatingSystemSupport::initialise_virtualROM();
-	logger() << F("Construct HeatingSystem") << L_endl;
+	{
+		set_watchdog_timeout_mS(WATCHDOG_TIMOUT);
+		Serial.begin(SERIAL_RATE); // NOTE! Serial.begin must be called before i2c_clock is constructed.
+		Serial.println("Start...");
+		Serial.flush();
+		resetRTC(rtc, rtc_reset_wag); // Before logging to avoid no-date SD logs.
+		logger() << L_flush;
+		logger() << L_time << F(" ****** Arduino Restarted ") << micros()/1000 << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT / 1000 << F("S\n\n") << L_flush;
+		logger() << F("set_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
+		LocalDisplay tempDisplay{};
+		tempDisplay.setCursor(0, 0);
+		tempDisplay.print("Start ");
+		tempDisplay.print(clock_().c_str());
+		tempDisplay.clearFromEnd();
+		//set_watchdog_interrupt_mS(WATCHDOG_TIMOUT);
+		//logger().begin(SERIAL_RATE);
+		zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
+		profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
+		//logger() << F("RamFileAddr: ") << (unsigned long)static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
+		reset_watchdog();
+		logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
+		loopLogger().flush();
+		pinMode(RESET_LEDP_PIN, OUTPUT);
+		digitalWrite(RESET_LEDP_PIN, HIGH);
+		auto supplyVcorrection = 2.5 * 1024. / 3.3 / analogRead(RESET_5vREF_PIN);
+		logger() << "supplyVcorrection: " << supplyVcorrection << " dsContrast: " << dsContrast << " corrected:" << dsContrast * supplyVcorrection << L_endl;
+		analogWrite(BRIGHNESS_PWM, 255);  // Brightness analogRead values go from 0 to 1023, analogWrite values from 0 to 255
+		analogWrite(CONTRAST_PWM, dsContrast * supplyVcorrection);  // Contrast analogRead values go from 0 to 1023, analogWrite values from 0 to 255
+		HeatingSystemSupport::initialise_virtualROM();
+		logger() << F("Construct HeatingSystem") << L_endl;
+		reset_watchdog();
+	}
 	HeatingSystem hs{};
 	heating_system = &hs;
-
 	while (true) {
 		reset_watchdog();	
 		hs.run_stateMachine();

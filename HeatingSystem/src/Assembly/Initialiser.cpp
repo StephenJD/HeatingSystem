@@ -42,7 +42,11 @@ namespace Assembly {
 
 	bool Initialiser::state_machine_OK() {
 		auto iniOK = false;
-		switch (_iniState.firstNotSet()) {
+		auto needs_ini = _iniState.firstNotSet();
+		if (needs_ini <= REMOTE_CONSOLES) {
+			loopLogger() << L_time << "needs_ini: " << needs_ini << " State: " << _iniState.flags() << L_endl;
+		}
+		switch (needs_ini) {
 		case I2C_RESET:
 			_resetI2C(_hs.i2C, 0);
 			_iniState.clear();
@@ -56,6 +60,8 @@ namespace Assembly {
 			else { _iniState.clear(I2C_RESET); }
 			break;
 		case POST_RESET_WARMUP:
+			loopLogger() << L_time << "POST_RESET_WARMUP..." << L_endl;
+			delay(100);
 			_iniState.set(POST_RESET_WARMUP, I2C_Recovery::HardReset::hasWarmedUp());
 			break;
 		case RELAYS:
@@ -105,6 +111,7 @@ namespace Assembly {
 
 	uint8_t Initialiser::ini_TS() {
 		auto status = _OK;
+		logger() << L_time << F("ini_TS...") << L_flush;
 		for (auto& ts : _hs._tempController.tempSensorArr) {
 			if (ts.testDevice() != _OK) {
 				auto speedTest = I2C_SpeedTest{ ts };
@@ -112,10 +119,12 @@ namespace Assembly {
 				status |= speedTest.error();
 			}
 		}	
+		logger() << L_time << F("ini_TS-OK") << L_flush;
 		return status;
 	}
 
 	uint8_t Initialiser::ini_relays() {
+		logger() << L_time << F("ini_relays") << L_flush;
 		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("RelayController");
 		return relayPort().initialiseDevice();
 	}
@@ -139,6 +148,7 @@ namespace Assembly {
 	uint8_t Initialiser::post_initialize_MixV() {
 		uint8_t status = 0;
 		for (auto& mixValveControl : hs().tempController().mixValveControllerArr) {
+			logger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_flush;
 			if (mixValveControl.isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("MixValveController");
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValveControl.index();
 			status |= mixValveControl.sendSlaveIniData(requestINI_flag);
@@ -150,6 +160,7 @@ namespace Assembly {
 		uint8_t status = 0;
 		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		for (auto& remote : _hs.thickConsole_Arr) {
+			logger() << L_time << F("post_ini_RC :") << remote.index() << L_flush;
 			if (remote.isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("RemoteConsoles");
 			uint8_t requestINI_flag = RC_US_REQUESTING_INI << remote.index();
 			status |= remote.sendSlaveIniData(requestINI_flag);
@@ -166,14 +177,10 @@ namespace Assembly {
 		return status;
 	}
 
-	uint8_t Initialiser::postI2CResetInitialisation() {
-		_resetI2C.hardReset.initialisationRequired = false;
-		uint8_t status = ini_relays();
-		status |= post_initialize_Thick_Consoles();
-		status |= post_initialize_MixV();
-		if (status != _OK) logger() << L_time << F("  Initialiser::i2C_Test postI2CResetInitialisation failed") << L_endl;
-		else logger() << L_time << F("  Initialiser::postI2CResetInitialisation OK\n");
-		return status;
+	uint8_t Initialiser::notify_reset() {
+		_iniState.clear();
+		_iniState.set(I2C_RESET);
+		return _OK;
 	}
 
 	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {
@@ -191,7 +198,7 @@ namespace Assembly {
 	}
 
 	uint8_t IniFunctor:: operator()() { // inlining creates circular dependancy
-		return _ini->postI2CResetInitialisation();
+		return _ini->notify_reset();
 	}
 }
 

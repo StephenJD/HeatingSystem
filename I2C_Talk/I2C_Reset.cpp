@@ -2,6 +2,7 @@
 #include <Logging.h>
 #include <Logging_Loop.h>
 #include <I2C_Recover.h>
+#include <Watchdog_Timer.h>
 
 namespace arduino_logger {
 	Logger& loopLogger();
@@ -19,11 +20,11 @@ namespace I2C_Recovery {
 	Pin_Wag HardReset::_arduino_resetPin{ 0,false,false };
 	Pin_Wag HardReset::_led_indicatorPin{ 0,false,false };
 
-	ResetI2C::ResetI2C(I2C_Recover_Retest & recover, I_IniFunctor & resetFn, I_TestDevices & testDevices, Pin_Wag i2c_resetPinWag, Pin_Wag arduino_resetPin, Pin_Wag led_indicatorPin)
+	ResetI2C::ResetI2C(I2C_Recover_Retest & recover, I_IniFunctor & notify_reset_fn, I_TestDevices & testDevices, Pin_Wag i2c_resetPinWag, Pin_Wag arduino_resetPin, Pin_Wag led_indicatorPin)
 		:
 		_recover(&recover)
 		, hardReset(i2c_resetPinWag, arduino_resetPin, led_indicatorPin)
-		, _postI2CResetInitialisation(&resetFn)
+		, _notify_reset_fn(&notify_reset_fn)
 		, _testDevices(&testDevices)
 		{
 			_recover->setTimeoutFn(this);
@@ -49,9 +50,10 @@ namespace I2C_Recovery {
 		Error_codes status = _OK;
 		auto origFn = _recover->getTimeoutFn();
 		_recover->setTimeoutFn(&hardReset);
-		loopLogger() << F("setTimeout_OK") << L_endl;
+		loopLogger() << F("R_setTimeout_OK") << L_endl;
 
 		hardReset(i2c, addr);
+		notify_reset();
 		loopLogger() << F("hardReset_OK") << L_endl;
 		if (addr && !_recover->isRecovering()) {
 			if (_testDevices == 0) {
@@ -59,17 +61,16 @@ namespace I2C_Recovery {
 				loopLogger() << F("_testDevices is NULL") << L_endl;
 			} else {
 				logger() << "\tResetI2C Doing retest" << L_flush;
-				loopLogger() << F("_getDevice...") << L_endl;
+				loopLogger() << F("R_getDevice...") << L_endl;
 				I_I2Cdevice_Recovery& device = _testDevices->getDevice(addr);
-				logger() << "\ttestDevices..." << L_flush;
-				loopLogger() << F("_testDevices...") << L_endl;
+				logger() << "\tR_testDevices..." << L_flush;
+				loopLogger() << F("R_testDevices...") << L_endl;
 				status = device.testDevice();
-				logger() << "\ttestDevices_OK" << L_flush;
-				loopLogger() << F("_testDevices_OK") << L_endl;
+				logger() << "\tR_testDevices_OK" << L_flush;
+				loopLogger() << F("R_testDevices_OK") << L_endl;
 			}
-			if (status == _OK) postResetInitialisation();
-			logger() << "\tpostI2CResetInitialisation_OK" << L_flush;
-			loopLogger() << F("_postI2CResetInitialisation_OK") << L_endl;
+			logger() << "\tR_postI2CReset-Req_OK" << L_flush;
+			loopLogger() << F("R_postI2CReset-Req_OK") << L_endl;
 		}
 
 		_recover->setTimeoutFn(origFn);
@@ -79,20 +80,16 @@ namespace I2C_Recovery {
 		return status;
 	}
 
-	void ResetI2C::postResetInitialisation() { 
-		if (hardReset.initialisationRequired) {
-			if (_postI2CResetInitialisation == 0) {
-				logger() << F("ResetI2C _postI2CResetInitialisation is NULL") << L_flush;
-				loopLogger() << F("_postI2CResetInitialisation is NULL") << L_endl;
-			} else {
-				logger() << F("\t\tResetI2C... _postI2CResetInitialisation") << L_flush;
-				loopLogger() << F("_postI2CResetInitialisation...") << L_endl;
-				if ((*_postI2CResetInitialisation)() != 0) return; // return 0 for OK. Resets hardReset.initialisationRequired to false.
-			}
+	void ResetI2C::notify_reset() { 
+		if (_notify_reset_fn == 0) {
+			logger() << F("ResetI2C _notify_reset_fn is NULL") << L_flush;
+			loopLogger() << F("_notify_reset_fn is NULL") << L_endl;
+		} else {
+			(*_notify_reset_fn)();
 		}
 	};
 
-	unsigned long HardReset::_timeOfReset_mS = 1; // must be non-zero at startup
+	unsigned long HardReset::_timeOfReset_uS = 1; // must be non-zero at startup
 
 	void HardReset::arduinoReset(const char * msg) {
 		logger() << L_time << F("\n *** HardReset::arduinoReset called by ") << msg << L_endl << L_flush;
@@ -109,35 +106,31 @@ namespace I2C_Recovery {
 		delay(128); 
 		_i2c_resetPin.clear();
 		i2c.begin();
-		_timeOfReset_mS = millis();
-		if (_timeOfReset_mS == 0) _timeOfReset_mS = 1;
+		_timeOfReset_uS = micros();
+		if (_timeOfReset_uS == 0) _timeOfReset_uS = 1;
 		logger() << L_time << F("Done Hard Reset for 0x") << L_hex << addr << L_flush;
 		_led_indicatorPin.clear();
 		if (digitalRead(20) == LOW)
 			logger() << "\tData stuck after reset" << L_flush;
-		initialisationRequired = true;
 		return _OK;
 	}
 
-	void HardReset::waitForWarmUp() {
-		if (_timeOfReset_mS != 0) {
-			auto waitTime = _timeOfReset_mS + WARMUP_mS - millis();
-			loopLogger() << L_time << "waitForWarmUp for mS " << waitTime << L_endl;
-			delay(waitTime);
-			//auto timeOut = Timer_mS(waitTime);
-			//while (!timeOut) {
-			//	loopLogger() << timeOut.timeLeft() << L_endl;
-			//	delay(1000);
-			//	loopLogger() << "del:1 " << timeOut.timeLeft() << L_endl;
-			//}
-			_timeOfReset_mS = 0;
-		}
-	}
-	bool HardReset::hasWarmedUp() {
-		if (_timeOfReset_mS != 0) {
-			auto waitTime = _timeOfReset_mS + WARMUP_mS - millis();
-			if (waitTime <= 0) _timeOfReset_mS = 0;
-		}
-		return _timeOfReset_mS == 0;
+	bool HardReset::hasWarmedUp(bool wait) {
+		if (_timeOfReset_uS != 0) {
+			int32_t waitTime = _timeOfReset_uS + WARMUP_uS - micros();
+			if (waitTime <= 0) _timeOfReset_uS = 0;
+			else if (wait) {
+				do {
+					loopLogger() << L_time << "waitForWarmUp for mS " << waitTime/1000 << L_endl;
+					reset_watchdog();
+					delay(100);
+					waitTime = _timeOfReset_uS + WARMUP_uS - micros();
+				} while (waitTime > 0);
+				loopLogger() << L_time << "waitForWarmUp_OK" << L_endl;
+				_timeOfReset_uS = 0;
+			}
+			else return false;
+		} 
+		return true;
 	}
 }

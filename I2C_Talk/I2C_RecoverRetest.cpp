@@ -45,7 +45,8 @@ namespace I2C_Recovery {
 	} // Timeout function pointer
 
 	Error_codes I2C_Recover_Retest::newReadWrite(I_I2Cdevice_Recovery & i2Cdevice, int retries) {
-		if (_isRecovering) return i2Cdevice.isEnabled() ? _OK : _disabledDevice;
+		_retries = retries;
+		if (isRegistered(i2Cdevice.getAddress()) || _isRecovering) return i2Cdevice.isEnabled() ? _OK : _disabledDevice;
 #ifdef DEBUG_RECOVER
 		logger() << F("newReadWrite Register device 0x") << L_hex << i2Cdevice.getAddress() << L_endl;
 #endif
@@ -53,7 +54,6 @@ namespace I2C_Recovery {
 			return _disabledDevice;
 		}
 		registerDevice(i2Cdevice);
-		_retries = retries;
 #ifdef DEBUG_RECOVER
 		logger() << F("newReadWrite setspeed to: ") << i2Cdevice.runSpeed() << L_endl;
 #endif
@@ -97,7 +97,7 @@ namespace I2C_Recovery {
 				}
 #endif
 				auto thisMaxStrategy = maxStrategyUsed;
-				if (_timeoutFunctor) (*_timeoutFunctor).postResetInitialisation();
+				if (_timeoutFunctor) (*_timeoutFunctor).notify_reset();
 				maxStrategyUsed = thisMaxStrategy;
 				getFinalStrategyRecorded();
 				resetRecoveryStrategy();
@@ -228,7 +228,7 @@ namespace I2C_Recovery {
 
 	bool I2C_Recover_Retest::slowdown() { // called by failure strategy
 		bool canReduce = false;
-		//if (millis() - device().getFailedTime() < REPEAT_FAILURE_PERIOD) { // within 10secs try reducing speed.
+		//if (micros() - device().getFailedTime() < REPEAT_FAILURE_PERIOD) { // within 10secs try reducing speed.
 			auto thisFreq = device().runSpeed();
 			canReduce = thisFreq > I2C_Talk::MIN_I2C_FREQ;
 			if (canReduce) {

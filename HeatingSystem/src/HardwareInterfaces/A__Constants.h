@@ -105,7 +105,6 @@ namespace HardwareInterfaces {
 	//constexpr uint8_t FL_REMOTE_ADDRESS = 0x25;
 	//constexpr uint8_t DS_REMOTE_ADDRESS = 0x26;
 	constexpr uint8_t IO8_PORT_OptCoupl = 0x20;
-	constexpr uint8_t IO8_PORT_MixValves = 0x27;
 	constexpr uint8_t IO8_PORT_OptCouplActive = 0;
 	constexpr uint8_t IO8_PORT_MixValvesActive = 0;
 	constexpr uint8_t MIX_VALVE_USED = 128 | 8 | 2 | 1;

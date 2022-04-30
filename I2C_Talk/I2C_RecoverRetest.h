@@ -12,8 +12,8 @@ namespace I2C_Recovery {
 	public:
 		using I2C_Recover::I2C_Recover;
 		I2C_Recover_Retest(I2C_Talk & i2C, int strategyEEPROMaddr) : I2C_Recover(i2C), _strategy(strategyEEPROMaddr) {}
-		static constexpr decltype(millis()) REPEAT_FAILURE_PERIOD = 10000;
-		static constexpr decltype(micros()) TIMEOUT = 20000;
+		static constexpr uint32_t REPEAT_FAILURE_PERIOD = 10000;
+		static constexpr uint32_t TIMEOUT = 20000;
 
 		// Definitions for custom reset functions
 		//using TestFnPtr = (*)(I2C_Talk &, int)->uint8_t;
@@ -21,7 +21,7 @@ namespace I2C_Recovery {
 		class I_I2CresetFunctor {
 		public:
 			virtual I2C_Talk_ErrorCodes::Error_codes operator()(I2C_Talk & i2c, int addr) = 0;
-			virtual void postResetInitialisation() {};
+			virtual void notify_reset() {};
 		};
 
 		class I2Creset_Functor : public I_I2CresetFunctor {

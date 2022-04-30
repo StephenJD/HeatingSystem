@@ -10,7 +10,7 @@
 	  This function has to be overriden, otherwise watchdog won't work !! */
 	}
 
-	void reset_watchdog() { WDT->WDT_SR; watchdogReset(); }
+	void reset_watchdog() { /*WDT->WDT_SR;*/ watchdogReset(); }
 
 	/// <summary>
 	/// Max priod is 16000mS

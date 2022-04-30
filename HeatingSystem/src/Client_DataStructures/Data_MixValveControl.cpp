@@ -43,7 +43,7 @@ namespace client_data_structures {
 			if (canDo) _reqTemp.val = runTimeData().reqTemp();
 			return &_reqTemp;
 		case e_state:
-			if (canDo) {
+			if (canDo && runTimeData().isEnabled()) {
 				runTimeData().monitorMode();
 				_state = (const char*)runTimeData().showState();
 			}

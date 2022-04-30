@@ -72,36 +72,36 @@
 	/// timeLeft() reports remaining mS, or zeros period if expired.
 	/// hasLapped() divides the remaining period by the lap-period and compares its evenness with the supplied evenness
 	/// If the evenness has changed, a lap has occurred (assuming checks are made more frequently than the lap period!)
-	/// Roll-over safe.
+	/// Roll-over safe. Uses micros() because millis() is unreliable.
 	/// </summary>
 	class LapTimer_mS {
 	public:
-		LapTimer_mS(uint32_t period_mS) : _endTime(millis() + period_mS) {}
-		LapTimer_mS& operator=(uint32_t end_mS) { _endTime = millis() + end_mS; return *this; }
+		LapTimer_mS(uint32_t period_mS) : _endTime_uS(micros() + period_mS * 1000) {}
+		LapTimer_mS& operator=(uint32_t end_mS) { _endTime_uS = micros() + end_mS * 1000; return *this; }
 		int32_t timeLeft() {
-			int32_t diff = _endTime - millis();
+			int32_t diff = (_endTime_uS - micros())/1000;
 			if (diff < 0) {
-				_endTime = millis();
+				_endTime_uS = micros();
 #ifdef DEBUG_TIMER
-				//logger() << L_tabs << "Lap_ended:" << _endTime << L_endl;
+				//logger() << L_tabs << "Lap_ended:" << _endTime_uS << L_endl;
 #endif
 			}
 			return diff;
 		}
-		bool hasLapped(uint32_t lapPeriod, bool lastLapWasEven) {
+		bool hasLapped(uint32_t lapPeriod_mS, bool lastLapWasEven) {
 			auto remaining = timeLeft();
 #ifdef DEBUG_TIMER
-			//logger() << L_tabs << "End:" << _endTime << L_endl;
-			//logger() << L_tabs << "NoOfLaps:" << remaining / lapPeriod << (lastLapWasEven ? "WasEven" : "WasOdd") << L_endl;
+			//logger() << L_tabs << "End:" << _endTime_uS << L_endl;
+			//logger() << L_tabs << "NoOfLaps:" << remaining / lapPeriod_mS << (lastLapWasEven ? "WasEven" : "WasOdd") << L_endl;
 #endif
-			return (remaining / lapPeriod) % 2 != lastLapWasEven;
+			return (remaining / lapPeriod_mS) % 2 != lastLapWasEven;
 		}
 	private:
-		uint32_t _endTime;
+		uint32_t _endTime_uS;
 	};
 
-	inline bool hasLapped(uint32_t lapPeriod, bool lastLapWasEven) {
-		return (millis() / lapPeriod) % 2 != lastLapWasEven;
+	inline bool hasLapped(uint32_t lapPeriod_mS, bool lastLapWasEven) {
+		return (micros() / 1000 / lapPeriod_mS ) % 2 != lastLapWasEven;
 	}
-	int secondsSinceLastCheck(uint32_t & lastCheck_mS);
-	inline uint32_t millisSince(uint32_t lastCheck_mS) { return millis() - lastCheck_mS; } // Since unsigned ints are used, rollover just works.
+	int secondsSinceLastCheck(uint32_t & lastCheck_uS);
+	inline uint32_t microsSince(uint32_t lastCheck_uS) { return micros() - lastCheck_uS; } // Since unsigned ints are used, rollover just works.

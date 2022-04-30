@@ -97,7 +97,7 @@ public:
 /// </summary>
 class I_I2Cdevice_Recovery : public I_I2Cdevice { // cannot be constexpr because of use of non-const class static in constructors
 public:
-	static constexpr decltype(millis()) DISABLE_PERIOD_ON_FAILURE = 60000; // 60 secs
+	static constexpr uint32_t DISABLE_PERIOD_ON_FAILURE = 60000000; // 60 secs
 	static constexpr auto I2C_RETRIES = 5; // Rarely more than 3, never more than 5.
 
 	I_I2Cdevice_Recovery(I2C_Recovery::I2C_Recover & recover, int addr) : I_I2Cdevice(addr), _recover(&recover) { set_recover = _recover; 
@@ -110,12 +110,12 @@ public:
 	// Queries
 	bool isEnabled() const override { return _i2c_speed != 0; }
 	int32_t runSpeed() const override { return _i2c_speed; }
-	int32_t getFailedTime() const override { return _lastFailedTime; }
+	int32_t getFailedTime() const override { return _lastFailedTime_uS; }
 	bool isUnrecoverable() const;
 	I2C_Recovery::I2C_Recover & recovery() const { return *_recover; }
 	auto getStatus() const ->I2C_Talk_ErrorCodes::Error_codes override;
 	// Modifiers
-	void disable() override { _lastFailedTime = millis(); _i2c_speed = 0; }
+	void disable() override { _lastFailedTime_uS = micros(); _i2c_speed = 0; }
 	auto reEnable(bool immediatly = false)->I2C_Talk_ErrorCodes::Error_codes override;
 	void reset() override { _i2c_speed = START_SPEED_AFTER_FAILURE;	}
 
@@ -137,6 +137,6 @@ public:
 	static I2C_Recovery::I2C_Recover * set_recover;
 private:
 	int32_t _i2c_speed = START_SPEED_AFTER_FAILURE;
-	unsigned long _lastFailedTime = 0;
+	unsigned long _lastFailedTime_uS = 0;
 	I2C_Recovery::I2C_Recover * _recover = 0;
 };

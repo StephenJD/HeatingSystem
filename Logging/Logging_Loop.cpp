@@ -1,4 +1,5 @@
 #include "Logging_Loop.h"
+#include <Watchdog_Timer.h>
 
 namespace arduino_logger {
 
@@ -20,7 +21,7 @@ namespace arduino_logger {
 		if (is_null()) return;
 		close();
 		SD.remove(_fileNameGenerator(0));
-		*this << L_time << "Begin Loop-File" << L_endl;
+		*this << L_time << "Begin Loop-File at " << micros() / 1000 << L_endl;
 	}
 
 	Print& Loop_Logger::stream() {
@@ -62,11 +63,17 @@ namespace arduino_logger {
 			auto dataFile = SD.open(_fileNameGenerator(_clock), FILE_WRITE); // appends to file
 			_loopFile = SD.open(_fileNameGenerator(0), FILE_READ);
 			if (dataFile && _loopFile) {
-				*this << L_cout << "Loop-File good" << L_endl;
-				uint8_t line[100];
+				*this << L_cout << "Loop-File good" << L_flush;
+				uint8_t line[1000];
 				size_t n;
 				while ((n = _loopFile.read(line, sizeof(line))) > 0) {
-					dataFile.write(line,n);
+					if (dataFile.write(line, n) != n) {
+						*this << L_cout << "dataFile bad-write" << L_flush;
+						break;
+					}
+					dataFile.flush();
+					Serial.write(line, 10); Serial.println("");
+					reset_watchdog();
 				}
 				close();
 				dataFile.close();

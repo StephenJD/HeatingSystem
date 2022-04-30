@@ -60,7 +60,7 @@ uint8_t I_Clock_I2C::loadTime() { // called every 10 minutes
 	// lambda
 	auto shouldUseCompilerTime = [](DateTime rtcTime, DateTime compilerTime) -> bool {
 		if (rtcTime == DateTime{}) {
-			if (millis() < 10000) return true; // don't want to reset RTC if this is a temporary glitch
+			if (micros() < 10000000) return true; // don't want to reset RTC if this is a temporary glitch
 		} else if (rtcTime < compilerTime) return true; // got valid rtc time
 		return false;
 	};
@@ -72,7 +72,7 @@ uint8_t I_Clock_I2C::loadTime() { // called every 10 minutes
 	auto compilerTime = _timeFromCompiler(compilerMinUnits, compilerSeconds);
 	//logger() << L_time << F("\t_timeFromCompiler_OK") << L_endl;
 	auto status = _OK;
-	_lastCheck_mS = millis();
+	_lastCheck_uS = micros();
 	if (shouldUseCompilerTime(rtcTime, compilerTime)) {
 		_now = compilerTime;
 		setMinUnits(compilerMinUnits);

@@ -31,7 +31,7 @@ class HeatingSystem {
 public:
 	HeatingSystem();
 	void run_stateMachine();
-	bool serviceConsolesOK();
+	bool serviceConsoles_OK();
 
 	/// <summary>
 	/// Checks Zone Temps, then sets each zone.nextEvent to now.
@@ -42,8 +42,7 @@ public:
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> & getDB();
 	Assembly::HeatingSystem_Queries & getQueries() { return _hs_queries; }
 	Assembly::TemperatureController & tempController() { return _tempController; }
-	enum State {ESTABLISH_I2C_COMS, ESTABLISH_TS_COMS, ESTABLISH_MIXV_COMMS, ESTABLISH_REMOTE_CONSOLE_COMS, ESTABLISH_RELAY_COMS, POST_RESET
-		, START_NEW_DAY, SERVICE_SEQUENCER, SERVICE_ZONES, SERVICE_TEMP_CONTROLLER, SERVICE_CONSOLES};
+	enum State {CHECK_I2C_COMS, START_NEW_DAY, SERVICE_SEQUENCER, SERVICE_BACKBOILER, SERVICE_TEMP_CONTROLLER, SERVICE_CONSOLES};
 private: // data-member ordering matters!
 	State _state = START_NEW_DAY;
 	void updateChangedData();

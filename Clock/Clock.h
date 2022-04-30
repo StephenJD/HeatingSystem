@@ -16,6 +16,22 @@
 		Clock(bool delayLoad) {}
 		enum NewPeriod {NOT_NEW, NEW_SEC, NEW_SEC10, NEW_MIN, NEW_MIN10, NEW_HR, NEW_DAY};
 		// Queries
+		GP_LIB::CStr_20 c_str() const {
+			refresh();
+			GP_LIB::CStr_20 timeStr;
+			//timeStr += GP_LIB::intToString(clk.day(), 2);
+			//timeStr += F_SLASH;
+			//timeStr += GP_LIB::intToString(clk.month(), 2);
+			//timeStr += F_SLASH;
+			//timeStr += GP_LIB::intToString(clk.year(), 2);
+			//timeStr += F_SPACE;
+			timeStr += GP_LIB::intToString(hrs(), 2);
+			timeStr += F_COLON;
+			timeStr += GP_LIB::intToString(mins10() * 10 + minUnits(), 2);
+			timeStr += F_COLON;
+			timeStr += GP_LIB::intToString(seconds(), 2);
+			return timeStr;
+		}
 		uint8_t minUnits() const { return _mins1; }
 		uint8_t seconds() const { return _secs; }
 		uint8_t autoDSThours() const { return _autoDST; }
@@ -72,7 +88,7 @@
 		static uint8_t _autoDST; // hours to add/remove
 		static uint8_t _dstHasBeenSet;
 		static Date_Time::DateTime _now;
-		static uint32_t _lastCheck_mS;
+		static uint32_t _lastCheck_uS;
 
 	private:
 		Date_Time::DateTime _dateTime() const;
@@ -80,20 +96,7 @@
 	};
 
 	inline arduino_logger::Logger & operator<<(arduino_logger::Logger & logger, const Clock & clk) {
-		clk.refresh();
-		GP_LIB::CStr_20 timeStr;
-		//timeStr += GP_LIB::intToString(clk.day(), 2);
-		//timeStr += F_SLASH;
-		//timeStr += GP_LIB::intToString(clk.month(), 2);
-		//timeStr += F_SLASH;
-		//timeStr += GP_LIB::intToString(clk.year(), 2);
-		//timeStr += F_SPACE;
-		timeStr += GP_LIB::intToString(clk.hrs(), 2);
-		timeStr += F_COLON;
-		timeStr += GP_LIB::intToString(clk.mins10() * 10 + clk.minUnits(),2);
-		timeStr += F_COLON;
-		timeStr += GP_LIB::intToString(clk.seconds(), 2);
-		return logger << timeStr;
+		return logger << clk.c_str();
 	}
 
 	Clock& clock_();

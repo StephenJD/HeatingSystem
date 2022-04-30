@@ -97,10 +97,11 @@ namespace HardwareInterfaces {
 		uint8_t(&debugWire)[OLED::R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[OLED::R_DISPL_REG_SIZE]>(TwoWire::i2CArr[getAddress()]);
 #endif	
 
-		loopLogger() << L_time << "refreshRegisters-start" << L_endl;
+		//loopLogger() << L_time << "refreshRegisters-start: " << index() << L_endl;
 		if (reEnable(true) != _OK) return false;
 		if (!remoteOffset_OK()) return false;
 		//auto [status, towelrail_req_changed, hotwater_req_changed, remReqTemp] = readRemoteRegisters_OK();
+		//loopLogger() << L_time << "readRemoteRegisters..." << L_endl;
 		std::tuple<uint8_t, int8_t, int8_t, uint8_t> regStatus{ readRemoteRegisters_OK() };
 		auto status = std::get<0>(regStatus);
 		auto towelrail_req_changed = std::get<1>(regStatus);
@@ -108,7 +109,7 @@ namespace HardwareInterfaces {
 		auto remReqTemp = std::get<3>(regStatus);
 
 		if (status != _OK) {
-			logger() << L_time << F("ConsoleController_Thick refreshRegistersOK device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
+			logger() << L_time << F("ConsoleController_Thick refreshRegistersOK device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_flush;
 			return false;
 		}
 
@@ -175,19 +176,21 @@ namespace HardwareInterfaces {
 			_hasChanged = false;
 		}
 		rc_OK &= (status == _OK);
-		loopLogger() << "refreshRegisters - done" << L_endl;
+		//loopLogger() << "refreshRegisters - done" << L_endl;
 		return rc_OK;
 	}
 
 	bool ConsoleController_Thick::remoteOffset_OK() {
+		//loopLogger() << L_time << "\tremoteOffset_OK..." << L_endl;
 		if (rawRegisters().get(R_SLAVE_REQUESTING_INITIALISATION) & 28) return false;
 
 		uint8_t requestINI_flag = RC_US_REQUESTING_INI << index();
 		uint8_t remOffset;
+		//loopLogger() << L_time << "\twait_DevicesToFinish..." << L_endl;
 		wait_DevicesToFinish(rawRegisters());
 		if (readRegVerifyValue(OLED::R_REMOTE_REG_OFFSET, remOffset) != _OK) return false;
 		if (remOffset == OLED::NO_REG_OFFSET_SET) {
-			logger() << L_time << "Rem[" << index() << "] iniReq 255. SetFlagVal: " << requestINI_flag << L_endl;
+			logger() << L_time << "\tRem[" << index() << "] iniReq 255. SetFlagVal: " << requestINI_flag << L_endl;
 			return false;
 		}
 		return true;
@@ -204,11 +207,12 @@ namespace HardwareInterfaces {
 		auto reg = registers();
 		uint8_t regVal;
 		auto i2c_status = OLED::I2C_Flags_Obj{ reg.get(OLED::R_DEVICE_STATE) };
+		//loopLogger() << L_time << "\twait_Devices..." << L_endl;
 		give_RC_Bus(i2c_status); // remote reads TS and writes to programmer.
 		wait_DevicesToFinish(rawRegisters());
 		uint8_t status = readRegSet(OLED::R_ROOM_TEMP, 2); // don't rely on console writing to the registers.
 		if (reg.get(OLED::R_ROOM_TEMP) == 0) {
-			logger() << L_time << "RC Room Temp[" << index() << "] = 0!" << L_endl;
+			logger() << L_time << "\tRC Room Temp[" << index() << "] = 0!" << L_flush;
 #ifndef ZPSIM
 			status = _I2C_ReadDataWrong;
 #endif
@@ -223,6 +227,7 @@ namespace HardwareInterfaces {
 		status |= readRegVerifyValue(OLED::R_REQUESTING_DHW, regVal);
 		if (status == _OK && reg.update(OLED::R_REQUESTING_DHW, regVal)) hotwater_req_changed = regVal;
 		status |= readRegVerifyValue(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp);
+		//loopLogger() << L_time << "\treadRemoteRegisters_done" << L_endl;
 
 		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(status, towelrail_req_changed, hotwater_req_changed, remReqTemp);
 	}
