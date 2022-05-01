@@ -28,6 +28,7 @@ namespace HardwareInterfaces {
 			bool changed = _hasChanged; _hasChanged = false; return changed;
 		}
 	private:
+		enum State {NO_CHANGE, AWAIT_REM_ACK_TEMP, REM_REQ_TEMP, REM_TR, REM_HW};
 		bool remoteOffset_OK();
 		std::tuple<uint8_t, int8_t, int8_t, uint8_t> readRemoteRegisters_OK();
 		void logRemoteRegisters();
@@ -35,6 +36,7 @@ namespace HardwareInterfaces {
 		TowelRail* _towelRail = 0;
 		Zone* _dhw = 0;
 		Zone* _zone = 0;
+		State _state = NO_CHANGE;
 	};
 }
 

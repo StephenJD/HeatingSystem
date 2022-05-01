@@ -2,7 +2,10 @@
 #include <I2C_Talk.h>
 #include <I2C_Device.h>
 #include <I2C_Talk_ErrorCodes.h>
-
+// add 
+// compiler.warning_flags.default= -Wno-attributes
+// to C:\Users\Stephen\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\platform.txt
+// 
 #if defined DEBUG_RECOVER || defined DEBUG_SPEED_TEST || defined REPORT_RECOVER
 #include <Logging.h>
 using namespace arduino_logger;
@@ -171,7 +174,7 @@ namespace I2C_Recovery {
 						}
 						device().i2C().setStopMargin(I2C_Talk::WORKING_STOP_TIMEOUT);
 						if (device().testDevice() == _OK) break;
-					} // fall-through on error
+					}
 				} //else logger() << F("\t\tTry again S_SpeedTest 0x");
 				[[fallthrough]];
 			case S_PowerDown: // 4
@@ -183,7 +186,7 @@ namespace I2C_Recovery {
 					}
 					//strategy().tryAgain(S_SlowDown); // when incremented will do a speed-test
 					if (device().testDevice() == _OK) break;
-				} // fall-through
+				}
 				[[fallthrough]];
 			case S_Disable: // 5
 				if (haveBumpedUpMaxStrategyUsed(S_Disable)) {
@@ -204,7 +207,7 @@ namespace I2C_Recovery {
 #endif
 						_deviceWaitingOnFailureFor10Mins = device().getAddress();
 					}
-				} // fall-through
+				}
 				[[fallthrough]];
 			case S_Unrecoverable: // 6
 				disable();

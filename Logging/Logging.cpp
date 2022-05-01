@@ -3,7 +3,11 @@
 #include <Clock.h>
 #include <Conversions.h>
 #include <MemoryFree.h>
-
+//
+// add 
+// compiler.warning_flags.default= -Wno-attributes
+// to C:\Users\Stephen\AppData\Local\arduino15\packages\arduino\hardware\sam\1.6.12\platform.txt
+// 
 //#if defined(__SAM3X8E__)
 #include <EEPROM_RE.h>
 //#endif
