@@ -108,8 +108,11 @@ void printFileHeadings() {
 
 void flushLogs() {
 	logger().flush();
+	loopLogger() << "logger flush done" << L_endl;
 	zTempLogger().flush();
+	loopLogger() << "zTempLogger flush done" << L_endl;
 	profileLogger().flush();
+	loopLogger() << "profileLogger flush done" << L_endl;
 }
 
 HeatingSystem::HeatingSystem()
@@ -168,15 +171,14 @@ void HeatingSystem::run_stateMachine() {
 			//loopLogger().begin();
 
 			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
+			logger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
-			//loopLogger() << L_time << "...checkAndAdjust done: " << status << L_endl;
-			if (status == ALL_OK) {
-				for (auto& remote : thickConsole_Arr) {
-					if (!remote.refreshRegistersOK()) status = RC_FAILED;
-				}
-			}
-			//loopLogger() << "...refresh all Registers done: " << status << L_endl;
+			logger() << L_time << "...checkAndAdjust done: " << status << L_endl;
+			auto rcOK = serviceConsoles_OK();
+			if (status == ALL_OK && !rcOK) status = RC_FAILED;
+			logger() << "...refresh all Registers done: " << status << L_endl;
+			loopLogger() << "...refresh all Registers done: " << status << L_endl;
 			switch (status) {
 			case TS_FAILED:
 				loopLogger() << L_time << "TS-Failed" << L_endl;
@@ -199,8 +201,9 @@ void HeatingSystem::run_stateMachine() {
 				_initialiser.requiresINI(Initialiser::RELAYS);
 				break;
 			}
-			if (serviceConsoles_OK()) _initialiser.isOK(Initialiser::REMOTE_CONSOLES);
+			loopLogger() << "flushLogs..." << L_endl;
 			flushLogs();
+			loopLogger() << "flushLogs done" << L_endl;
 			_state = CHECK_I2C_COMS;
 		}	
 		break;
@@ -227,23 +230,22 @@ void HeatingSystem::run_stateMachine() {
 			_state = SERVICE_TEMP_CONTROLLER;
 #endif	
 		}
-		serviceConsoles_OK();
+		if (!serviceConsoles_OK()) _initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 		break;
 	}
 	//loopLogger().flush();
 }
 
 bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to keys, also called by yield()
-	bool rc_OK = false;
+	bool rc_OK = true;
 	//loopLogger() << L_time << "serviceConsoles?" << L_endl;
 	if (consoleDataHasChanged()) {
-		rc_OK = true;
-		loopLogger() << L_time << "refreshDisplay: " << (micros() / 1000000)%10 << L_endl;
+		logger() << L_time << "refreshDisplay: " << (micros() / 1000000)%10 << L_endl;
 		_mainConsole.refreshDisplay();
 		for (auto& remote : thickConsole_Arr) {
 			rc_OK &= remote.refreshRegistersOK();
 		}
-		//loopLogger() << L_time << "Done Service RC's" << L_endl;
+		logger() << "\trefresh RC's: " << rc_OK << L_endl;
 	}
 	if (dataHasChanged) {
 		loopLogger() << L_time << "...updateChangedData" << L_endl;

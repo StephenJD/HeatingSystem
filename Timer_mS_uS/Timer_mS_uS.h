@@ -2,13 +2,12 @@
 #include <Arduino.h>
 
 //#define DEBUG_TIMER
-//#include <Logging.h>
 //#ifdef DEBUG_TIMER
-//#include <Logging.h>
-//namespace arduino_logger {
-//	Logger& logger();
-//}
-//using namespace arduino_logger;
+#include <Logging.h>
+namespace arduino_logger {
+	Logger& logger();
+}
+using namespace arduino_logger;
 //#endif
 
 	/// <summary>
@@ -79,14 +78,15 @@
 		LapTimer_mS(uint32_t period_mS) : _endTime_uS(micros() + period_mS * 1000) {}
 		LapTimer_mS& operator=(uint32_t end_mS) { _endTime_uS = micros() + end_mS * 1000; return *this; }
 		int32_t timeLeft() {
-			int32_t diff = (_endTime_uS - micros())/1000;
+			int32_t diff = _endTime_uS - micros();
 			if (diff < 0) {
 				_endTime_uS = micros();
 #ifdef DEBUG_TIMER
 				//logger() << L_tabs << "Lap_ended:" << _endTime_uS << L_endl;
 #endif
+				//logger() << F("Lap_ended:") << diff << L_endl;
 			}
-			return diff;
+			return diff/1000;
 		}
 		bool hasLapped(uint32_t lapPeriod_mS, bool lastLapWasEven) {
 			auto remaining = timeLeft();

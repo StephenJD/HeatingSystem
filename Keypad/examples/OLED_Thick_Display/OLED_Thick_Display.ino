@@ -1,11 +1,19 @@
 #include <Arduino.h>
 //#include <I2C_Recover.h>
 #include <I2C_RecoverRetest.h>
-
+// Select board: MiniCore->ATmega328, External 8Mhz clock, BOD 2.7v, LTO enabled, Variant 328P, UART0.
 #include "OLED_Thick_Display.h"
 #include "..\HeatingSystem\src\HardwareInterfaces\A__Constants.h"
 
 #include <EEPROM_RE.h>
+#include <Logging.h>
+namespace arduino_logger {
+    constexpr uint32_t SERIAL_RATE = 115200;
+    Logger& logger() {
+        static Serial_Logger _log(SERIAL_RATE);
+        return _log;
+    }
+}
 
 I2C_Talk& i2C() {
     static I2C_Talk _i2C{};

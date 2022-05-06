@@ -14,6 +14,7 @@ void ui_yield();
 
 namespace arduino_logger {
 	Logger& profileLogger();
+	Logger& loopLogger();
 }
 using namespace arduino_logger;
 
@@ -58,6 +59,7 @@ namespace HardwareInterfaces {
 		Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 
 		if (errCode == _OK) {
+			loopLogger() << index() <<  F("] MixValveController::sendSlaveIniData - WriteReg...") << L_endl;
 			errCode = writeReg(Mix_Valve::R_DEVICE_STATE);
 			errCode |= writeReg(Mix_Valve::R_REMOTE_REG_OFFSET);
 			errCode |= writeRegValue(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
@@ -68,17 +70,18 @@ namespace HardwareInterfaces {
 			reg.set(Mix_Valve::R_FROM_TEMP, 55);
 			reg.set(Mix_Valve::R_FLOW_TEMP, 55);
 			reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
+			loopLogger() <<  F("MixValveController::sendSlaveIniData - WriteRegSet...") << L_endl;
 			errCode = writeRegSet(Mix_Valve::R_RATIO, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_RATIO);
 			if (errCode == _OK) {
 				auto rawReg = rawRegisters();
 				auto newIniStatus = rawReg.get(R_SLAVE_REQUESTING_INITIALISATION);
 				//logger() << L_time << "SendMixIni. IniStatus was:" << newIniStatus;
 				newIniStatus &= ~requestINI_flag;
-				//logger() << " New IniStatus:" << newIniStatus << L_endl;
+				loopLogger() << " New IniStatus:" << newIniStatus << L_endl;
 				rawReg.set(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
 			}
 		}
-		logger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << " State:" << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
+		loopLogger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << " State:" << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
 		return errCode;
 	}
 
@@ -269,7 +272,7 @@ namespace HardwareInterfaces {
 #endif
 		// Lambdas
 		auto give_MixV_Bus = [this](Mix_Valve::I2C_Flags_Obj i2c_status) {
-			rawRegisters().set(R_PROG_STATE, 1);
+			rawRegisters().set(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1);
 			i2c_status.set(Mix_Valve::F_I2C_NOW);
 			writeRegValue(Mix_Valve::R_DEVICE_STATE, i2c_status);
 		};

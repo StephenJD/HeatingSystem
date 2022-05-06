@@ -9,7 +9,7 @@ namespace HardwareInterfaces {
 
 	enum Register_Constants {
 		R_SLAVE_REQUESTING_INITIALISATION
-		, R_PROG_STATE
+		, R_PROG_WAITING_FOR_REMOTE_I2C_COMS // cleared by remote arduinos after mastering I2C coms.
 		, PROG_REG_MV0_OFFSET
 		, PROG_REG_MV1_OFFSET = PROG_REG_MV0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE
 		, PROG_REG_RC_US_OFFSET = PROG_REG_MV0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE * NO_OF_MIXERS

@@ -6,11 +6,7 @@
 #include <I2C_RecoverRetest.h> // for Speed-test
 #include <I2C_Registers.h>
 
-//#include <Logging.h>
-//namespace arduino_logger {
-//    Logger& logger();
-//}
-//using namespace arduino_logger;
+using namespace arduino_logger;
 
 // Declaration for SSD1306 display connected using software SPI (default case):
 constexpr uint8_t OLED_MOSI = 11;  // DIn
@@ -87,25 +83,23 @@ void OLED_Thick_Display::setMyI2CAddress() {
 }
 
 bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
+    // Only reads TS's and clears I2C-Comms flag on programmer.
     auto reg = registers();
     auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
     if (device_State.is(F_I2C_NOW)) {
-        // logger() << F("RT") << L_endl;
         _tempSensor.readTemperature();
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;
         auto roomTempFract = static_cast<uint8_t>(fractional_temp);
         if (reg.update(R_ROOM_TEMP, roomTempDeg)) {
-            write(reg.get(R_REMOTE_REG_OFFSET) + R_ROOM_TEMP, 1, reg.ptr(R_ROOM_TEMP));
             _dataChanged = true;
         }
         if (reg.update(R_ROOM_TEMP_FRACTION, roomTempFract)) {
-            write(reg.get(R_REMOTE_REG_OFFSET) + R_ROOM_TEMP_FRACTION, 1, reg.ptr(R_ROOM_TEMP_FRACTION));
             _dataChanged = true;
         }
-        device_State.clear(F_I2C_NOW);
+        device_State.clear(F_I2C_NOW); // clears local register.
         uint8_t clearState = 0;
-        write(R_DEVICE_STATE, 1, &clearState);
+        write(R_DEVICE_STATE, 1, &clearState); // writes '0' to Programmer Raw-Reg 1 == R_PROG_WAITING_FOR_REMOTE_I2C_COMS
     }
     return true;
 }
@@ -113,16 +107,19 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
 void OLED_Thick_Display::refreshRegisters() {
     auto reg = registers();
     auto deviceFlags = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
-    auto progDataChanged = deviceFlags.is(F_DATA_CHANGED);
+    auto progDataChanged = deviceFlags.is(F_PROGRAMMER_CHANGED_DATA);
     //if (progDataChanged) logger() << F("PD") << L_endl;
     _dataChanged |= progDataChanged; // written by programmer
-    deviceFlags.clear(F_DATA_CHANGED);
+    deviceFlags.clear(F_PROGRAMMER_CHANGED_DATA);
     auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP); // might have been set by console. When Prog has read it, it gets set to zero, so might not yet be zero.
-    if (_dataChanged && reqTemp && _tempRequest != reqTemp) { // new request sent by programmer
-        // logger() << F("PT") << L_endl;
+    if (progDataChanged && reqTemp) { // request sent by programmer
+        logger() << millis()%10000 << F(" PT ") << reqTemp << L_endl;
         _tempRequest = reqTemp;
         reg.set(R_REQUESTING_ROOM_TEMP, 0);
-    }
+    } else if (_tempRequest == 0) {
+        logger() << millis() % 10000 << F(" RT") << L_endl;
+        reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
+    }  
     bool towelRailNowOff = reg.get(R_ON_TIME_T_RAIL) == 0;
     if (towelRailNowOff) {
         _dataChanged |= reg.update(R_REQUESTING_T_RAIL, e_Auto);
@@ -151,6 +148,7 @@ void OLED_Thick_Display::startDisplaySleep() {
 }
 
 void OLED_Thick_Display::wakeDisplay() {
+    logger() << F("Wake") << L_endl;
     MsTimer2::stop();
     _sleepRow = -1;
 }
@@ -184,7 +182,7 @@ void OLED_Thick_Display::changeValue(int keyCode) {
         if (I2C_Flags_Obj(reg.get(R_DEVICE_STATE)).is(F_ENABLE_KEYBOARD)) {
             _tempRequest += increment;
             reg.set(R_REQUESTING_ROOM_TEMP, _tempRequest);
-            // logger() << F("CT") << L_endl;
+            logger() << millis() % 10000 << F(" CT ") << _tempRequest << L_endl;
         } 
         break;
     case TowelRail: 
@@ -277,21 +275,26 @@ void OLED_Thick_Display::processKeys() { // called by loop()
 #ifdef ZPSIM
     uint8_t(&debugWire)[R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[R_DISPL_REG_SIZE]>(TwoWire::i2CArr[US_CONSOLE_I2C_ADDR]);
 #endif
-    if ( /*false*/ registers().get(R_REMOTE_REG_OFFSET) == NO_REG_OFFSET_SET) {
-        _display.setCursor(0, 0);
-        _display.print(F("Wait for Master"));
-        _dataChanged = true;
-        _remoteKeypad.popKey();
-    } else {
-        _remoteKeypad.readKey();
-        auto newSecond = _remoteKeypad.oneSecondElapsed();
-        doneI2C_Coms(newSecond);
+    auto newSecond = _remoteKeypad.oneSecondElapsed();
+    if (registers().get(R_REMOTE_REG_OFFSET) == NO_REG_OFFSET_SET) {
         if (newSecond) {
-            //I2C_Flags_Ref(*registers().ptr(R_DEVICE_STATE)).set(F_I2C_NOW);
+            logger() << F("WFM") << L_endl;
+            _display.setCursor(0, 0);
+            _display.print(F("Wait for Master"));
+            _dataChanged = true;
+            _remoteKeypad.popKey();
+            wakeDisplay();
+        }
+    } else {
+        if (newSecond) {
             refreshRegisters();
         }
+        _remoteKeypad.readKey();
+        doneI2C_Coms(newSecond);
+
         auto key = _remoteKeypad.popKey();
         if (key > I_Keypad::NO_KEY) {
+            logger() << F("Key:") << key << L_endl;
             if (key == I_Keypad::KEY_WAKEUP) {
                 wakeDisplay();
                 displayPage();

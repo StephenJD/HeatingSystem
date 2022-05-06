@@ -1,4 +1,5 @@
 #pragma once
+#ifndef __AVR_ATmega328P__
 #include <Logging_SD.h>
 #include <Arduino.h>
 #include <Type_Traits.h>
@@ -45,3 +46,4 @@ namespace arduino_logger {
 
 	Logger& logger(); // to be defined by the client
 }
+#endif

@@ -1,10 +1,10 @@
 #include "I2C_To_MicroController.h"
-#include <Logging_Loop.h>
 #include <I2C_Reset.h>
-namespace arduino_logger {
-	Logger& loopLogger();
-}
-using namespace arduino_logger;
+//#include <Logging_Loop.h>
+//namespace arduino_logger {
+//	Logger& loopLogger();
+//}
+//using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace I2C_Recovery;
@@ -28,17 +28,17 @@ namespace HardwareInterfaces {
 
 	Error_codes I2C_To_MicroController::testDevice() { // non-recovery test
 		if (runSpeed() > 100000) {
-			loopLogger() << "set_runSpeed..." << L_endl;
+			//loopLogger() << "set_runSpeed..." << L_endl;
 			set_runSpeed(100000);
 		}
 		Error_codes status = _OK;
 		uint8_t reg0;
 		I2C_Recovery::HardReset::hasWarmedUp(true);
-		loopLogger() << L_time << "testDevice-read 0x" << L_hex << getAddress() << L_endl;
+		//loopLogger() << L_time << "testDevice-read 0x" << L_hex << getAddress() << L_endl;
 		status = I_I2Cdevice::read(0, 1, &reg0); // non-recovery 		
-		loopLogger() << "testDevice-write: " << status << L_endl;
+		//loopLogger() << "testDevice-write: " << status << L_endl;
 		if (status == _OK) status = I_I2Cdevice::write(0, 1, &reg0); // non-recovery
-		loopLogger() << "testDevice_OK: " << status << L_endl;
+		//loopLogger() << "testDevice_OK: " << status << L_endl;
 		return status;
 	}
 

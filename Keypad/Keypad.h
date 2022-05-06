@@ -29,7 +29,7 @@ namespace HardwareInterfaces {
 		KeyOperation popKey();
 		bool displayIsAwake() { return _keepAwake_mS.timeLeft() > 0; }
 		bool oneSecondElapsed();
-		void wakeDisplay();
+		void setWakeTimer();
 		void clearKeys() { keyQueEnd = -1; }
 		void putKey(KeyOperation myKey);
 		void set_console_mode(uint8_t mode) { _wakeTime = mode; }

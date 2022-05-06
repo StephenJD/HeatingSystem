@@ -1,4 +1,6 @@
 #include "Logging_EP.h"
+#ifndef __AVR_ATmega328P__
+
 #include "Logging_SD.h"
 #include <Date_Time.h>
 #include <Clock.h>
@@ -153,3 +155,4 @@ namespace arduino_logger {
 	}
 
 }
+#endif

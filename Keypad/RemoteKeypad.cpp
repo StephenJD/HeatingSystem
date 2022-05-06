@@ -7,7 +7,7 @@ namespace HardwareInterfaces {
 
 #if defined (ZPSIM)
 	I_Keypad::KeyOperation RemoteKeypad::getKeyCode() {
-		wakeDisplay();
+		setWakeTimer();
 		if (displayIsAwake()) {
 			putKey(simKey);
 		}
@@ -39,7 +39,7 @@ namespace HardwareInterfaces {
 		};
 
 		// Algorithm
-		wakeDisplay();
+		setWakeTimer();
 		auto port = _lcd->readI2C_keypad();
 		KeyOperation myKey;
 		switch (port) {

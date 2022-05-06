@@ -67,7 +67,7 @@ namespace HardwareInterfaces {
 		case I_Keypad::KEY_WAKEUP:
 			// Set backlight to bright.
 			logger() << L_time << F("Wake Key\n");
-			_keyPad.wakeDisplay();
+			_keyPad.setWakeTimer();
 			break;
 		default:
 			doRefresh = _keyPad.oneSecondElapsed();

@@ -1,4 +1,6 @@
 #include "Logging_Loop.h"
+#ifndef __AVR_ATmega328P__
+
 #include <Watchdog_Timer.h>
 
 namespace arduino_logger {
@@ -93,3 +95,4 @@ namespace arduino_logger {
 	}
 
 }
+#endif

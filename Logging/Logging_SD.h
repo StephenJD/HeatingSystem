@@ -23,7 +23,7 @@ namespace arduino_logger {
 	class FileNameGenerator {
 	public:
 		FileNameGenerator(const char* fileNameStem);
-		GP_LIB::CStr_20 operator()(Clock * clock);
+		GP_LIB::CStr_20 operator()(Clock* clock);
 		const char* stem() { return _fileNameStem; }
 		bool isNewDay(Clock* clock);
 		int dayNo() { return _fileDayNo; }
@@ -43,7 +43,7 @@ namespace arduino_logger {
 		Print& stream() override;
 		void flush() override { close(); Serial_Logger::flush(); }
 		bool mirror_stream(Logger::ostreamPtr& mirrorStream) override { return Serial_Logger::mirror_stream(mirrorStream); }
-		
+
 		bool open() override;
 		void close() { _dataFile.close(); _dataFile = File{}; }
 	private:
@@ -53,8 +53,11 @@ namespace arduino_logger {
 		FileNameGenerator _fileNameGenerator;
 		File _dataFile;
 	};
+}
+#endif
 
 #ifdef ZPSIM
+namespace arduino_logger {
 	template<typename MirrorBase = Serial_Logger>
 	class File_Logger : public MirrorBase {
 	public:
@@ -137,6 +140,5 @@ namespace arduino_logger {
 		MirrorBase::logTime();
 		return *this;
 	}
-#endif
 }
 #endif

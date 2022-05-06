@@ -110,6 +110,13 @@ I2C_Recovery::I2C_Recover * I_I2Cdevice_Recovery::set_recover;
 
 I2C_Talk & I_I2Cdevice_Recovery::i2C() { return recovery().i2C(); }
 
+I2C_Recovery::I2C_Recover& I_I2Cdevice_Recovery::recovery() const {
+#ifdef DEBUG_DEVICE
+	if (_recover == 0) logger() << "*** _recover ==  null ***" << L_flush;
+#endif
+	return *_recover;
+}
+
 Error_codes I_I2Cdevice_Recovery::getStatus() const {
 	if (!isEnabled()) return _disabledDevice;
 	else {

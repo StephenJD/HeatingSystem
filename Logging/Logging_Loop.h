@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __AVR_ATmega328P__
+
 #include <Logging_SD.h>
 #include <Arduino.h>
 
@@ -27,3 +29,4 @@ namespace arduino_logger {
 		File _loopFile;
 	};
 }
+#endif

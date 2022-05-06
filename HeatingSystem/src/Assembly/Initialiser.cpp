@@ -148,8 +148,12 @@ namespace Assembly {
 	uint8_t Initialiser::post_initialize_MixV() {
 		uint8_t status = 0;
 		for (auto& mixValveControl : hs().tempController().mixValveControllerArr) {
-			logger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_flush;
-			if (mixValveControl.isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("MixValveController");
+			loopLogger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_endl;
+			logger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_endl;
+			if (mixValveControl.isUnrecoverable()) {
+				loopLogger() << "isUnrecoverable" << L_endl;
+				I2C_Recovery::HardReset::arduinoReset("MixValveController");
+			}
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValveControl.index();
 			status |= mixValveControl.sendSlaveIniData(requestINI_flag);
 		}

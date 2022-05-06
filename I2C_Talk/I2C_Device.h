@@ -112,7 +112,7 @@ public:
 	int32_t runSpeed() const override { return _i2c_speed; }
 	int32_t getFailedTime() const override { return _lastFailedTime_uS; }
 	bool isUnrecoverable() const;
-	I2C_Recovery::I2C_Recover & recovery() const { return *_recover; }
+	I2C_Recovery::I2C_Recover& recovery() const;
 	auto getStatus() const ->I2C_Talk_ErrorCodes::Error_codes override;
 	// Modifiers
 	void disable() override { _lastFailedTime_uS = micros(); _i2c_speed = 0; }

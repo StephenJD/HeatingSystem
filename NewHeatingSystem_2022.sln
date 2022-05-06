@@ -88,8 +88,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Sequencer", "..\..\VS_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test Zone Preheat", "..\..\VS_Projects\NewHeatingSystem\Test Zone Preheat\Test Zone Preheat.vcxproj", "{2E10EC00-156C-4F57-A4FC-5E138136D6FA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "remoteKeypad", "Keypad\examples\remoteKeypad\remoteKeypad.vcxproj", "{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StdLogger", "..\..\VS_Projects\Std_Logger\StdLogger.vcxproj", "{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MiniCore", "MiniCore", "{A3470CF9-2D34-49DF-94B6-933400C72FCE}"
@@ -397,16 +395,6 @@ Global
 		{2E10EC00-156C-4F57-A4FC-5E138136D6FA}.Release|x64.Build.0 = Release|x64
 		{2E10EC00-156C-4F57-A4FC-5E138136D6FA}.Release|x86.ActiveCfg = Release|Win32
 		{2E10EC00-156C-4F57-A4FC-5E138136D6FA}.Release|x86.Build.0 = Release|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|ARM.ActiveCfg = Debug|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x64.ActiveCfg = Debug|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x86.ActiveCfg = Debug|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Debug|x86.Build.0 = Debug|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|ARM.ActiveCfg = Release|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|ARM64.ActiveCfg = Release|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x64.ActiveCfg = Release|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.ActiveCfg = Release|Win32
-		{6BBD2F5D-5840-4EFD-A497-7F983EBC68DD}.Release|x86.Build.0 = Release|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Debug|ARM.ActiveCfg = Debug|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{4CEE2C5A-65D2-462A-81FC-AD5183AB3843}.Debug|x64.ActiveCfg = Debug|x64

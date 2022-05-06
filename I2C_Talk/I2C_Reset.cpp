@@ -4,10 +4,12 @@
 #include <I2C_Recover.h>
 #include <Watchdog_Timer.h>
 
+#ifndef __AVR_ATmega328P__
 namespace arduino_logger {
 	Logger& loopLogger();
 }
 using namespace arduino_logger;
+#endif
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
 
@@ -16,6 +18,7 @@ namespace I2C_Recovery {
 	/////////////////////////////////////////////////////
 	//              I2C Reset Support                  //
 	/////////////////////////////////////////////////////
+#ifndef __AVR_ATmega328P__
 	Pin_Wag HardReset::_i2c_resetPin{0,false,false };
 	Pin_Wag HardReset::_arduino_resetPin{ 0,false,false };
 	Pin_Wag HardReset::_led_indicatorPin{ 0,false,false };
@@ -88,9 +91,11 @@ namespace I2C_Recovery {
 			(*_notify_reset_fn)();
 		}
 	};
+#endif
 
 	unsigned long HardReset::_timeOfReset_uS = 1; // must be non-zero at startup
 
+#ifndef __AVR_ATmega328P__
 	void HardReset::arduinoReset(const char * msg) {
 		logger() << L_time << F("\n *** HardReset::arduinoReset called by ") << msg << L_endl << L_flush;
 		_arduino_resetPin.begin();
@@ -114,6 +119,7 @@ namespace I2C_Recovery {
 			logger() << "\tData stuck after reset" << L_flush;
 		return _OK;
 	}
+#endif
 
 	bool HardReset::hasWarmedUp(bool wait) {
 		if (_timeOfReset_uS != 0) {
@@ -121,12 +127,16 @@ namespace I2C_Recovery {
 			if (waitTime <= 0) _timeOfReset_uS = 0;
 			else if (wait) {
 				do {
+#ifndef __AVR_ATmega328P__
 					loopLogger() << L_time << "waitForWarmUp for mS " << waitTime/1000 << L_endl;
+#endif
 					reset_watchdog();
-					delay(100);
+					delayMicroseconds(100000UL); // docs say delayMicroseconds cannot be relied upon > 16383uS.
 					waitTime = _timeOfReset_uS + WARMUP_uS - micros();
 				} while (waitTime > 0);
+#ifndef __AVR_ATmega328P__
 				loopLogger() << L_time << "waitForWarmUp_OK" << L_endl;
+#endif
 				_timeOfReset_uS = 0;
 			}
 			else return false;

@@ -33,7 +33,7 @@ using namespace flag_enum;
 
 namespace HardwareInterfaces {
 	
-	enum I2C_Flags { F_ENABLE_KEYBOARD, F_DATA_CHANGED, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
+	enum I2C_Flags { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
 
 	namespace { volatile bool keyQueueLocked = false; }
 	I_Keypad* I_Keypad::_currentKeypad;
@@ -71,7 +71,7 @@ namespace HardwareInterfaces {
 		}
 	}
 
-	void I_Keypad::wakeDisplay() {
+	void I_Keypad::setWakeTimer() {
 		auto consoleMode = FE_Ref<I2C_Flags,4>(_wakeTime);
 		_keepAwake_mS = consoleMode.is(F_ENABLE_KEYBOARD) ? consoleMode.value()*4000 : 0;
 		//logger() << (long)this << L_tabs << "wakeDisplay_Millis:" << micros()/1000 << L_endl;
@@ -162,7 +162,7 @@ namespace HardwareInterfaces {
 		if (retKey > NO_KEY) {
 			//Serial.print("Popped: "); Serial.println((int)retKey);
 			if (!displayIsAwake()) retKey = KEY_WAKEUP;
-			wakeDisplay();
+			setWakeTimer();
 		}
 		return retKey;
 	}

@@ -1,4 +1,5 @@
 #include "Logging_Ram.h"
+#ifndef __AVR_ATmega328P__
 
 namespace arduino_logger {
 
@@ -81,3 +82,4 @@ namespace arduino_logger {
 	}
 
 }
+#endif
