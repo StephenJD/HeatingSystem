@@ -12,11 +12,14 @@ namespace arduino_logger {
 using namespace arduino_logger;
 
 namespace LCD_UI {
+	void notifyDataIsEdited(); // global function prototype for notifying anyone who needs to know
 
 	void Chapter_Generator::backKey() {
 		auto & currentChapter = operator()();
-		if (currentChapter.backUI() == &currentChapter)
+		if (currentChapter.backUI() == &currentChapter) {
 			setChapterNo(0);
+			notifyDataIsEdited();
+		}
 		else
 			currentChapter.rec_prevUI();
 	}
