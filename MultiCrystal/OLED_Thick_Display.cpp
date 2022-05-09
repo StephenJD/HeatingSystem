@@ -91,12 +91,13 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;
         auto roomTempFract = static_cast<uint8_t>(fractional_temp);
-        if (reg.update(R_ROOM_TEMP, roomTempDeg)) {
-            _dataChanged = true;
+        if (reg.update(R_ROOM_TEMP, roomTempDeg) && _state == NO_CHANGE) {
+            _state = REFRESH_DISPLAY;
         }
-        if (reg.update(R_ROOM_TEMP_FRACTION, roomTempFract)) {
-            _dataChanged = true;
-        }
+        if (abs(roomTempFract - reg.get(R_ROOM_TEMP_FRACTION)) >= 32 && _state == NO_CHANGE) {
+            _state = REFRESH_DISPLAY;
+        } 
+        reg.set(R_ROOM_TEMP_FRACTION, roomTempFract);
         device_State.clear(F_I2C_NOW); // clears local register.
         uint8_t clearState = 0;
         write(R_DEVICE_STATE, 1, &clearState); // writes '0' to Programmer Raw-Reg 1 == R_PROG_WAITING_FOR_REMOTE_I2C_COMS
@@ -108,26 +109,39 @@ void OLED_Thick_Display::refreshRegisters() {
     auto reg = registers();
     auto deviceFlags = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
     auto progDataChanged = deviceFlags.is(F_PROGRAMMER_CHANGED_DATA);
-    //if (progDataChanged) logger() << F("PD") << L_endl;
-    _dataChanged |= progDataChanged; // written by programmer
     deviceFlags.clear(F_PROGRAMMER_CHANGED_DATA);
     auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP); // might have been set by console. When Prog has read it, it gets set to zero, so might not yet be zero.
-    if (progDataChanged && reqTemp) { // request sent by programmer
-        logger() << millis()%10000 << F(" PT ") << reqTemp << L_endl;
+    if (_state == WAIT_PROG_ACK) {
+        logger() << millis() % 10000 << F(" WPA") << L_endl;
+        if (reqTemp == 0 || reqTemp != _tempRequest) {
+            logger() << millis() % 10000 << F(" PA") << L_endl;
+            _state = REFRESH_DISPLAY;
+        }
+    } else if (progDataChanged) {
+        _state = REFRESH_DISPLAY;
+        logger() << millis() % 10000 << F(" PD ") << reqTemp << L_endl;
+    }
+    
+    if (_state != WAIT_PROG_ACK && reqTemp && reqTemp != _tempRequest) { // request sent by programmer
+        logger() << millis() % 10000 << F(" PT ") << reqTemp << L_endl;
         _tempRequest = reqTemp;
         reg.set(R_REQUESTING_ROOM_TEMP, 0);
+        _state = REFRESH_DISPLAY;
     } else if (_tempRequest == 0) {
         logger() << millis() % 10000 << F(" RT") << L_endl;
         reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
-    }  
+        _state = WAIT_PROG_ACK;
+    }
+
     bool towelRailNowOff = reg.get(R_ON_TIME_T_RAIL) == 0;
     if (towelRailNowOff) {
-        _dataChanged |= reg.update(R_REQUESTING_T_RAIL, e_Auto);
+        if (reg.update(R_REQUESTING_T_RAIL, e_Auto) && _state == NO_CHANGE) _state = REFRESH_DISPLAY;
     }   
     bool dhwOK = reg.get(R_WARM_UP_DHW_M10) == 0;
     if (dhwOK) {
-        _dataChanged |= reg.update(R_REQUESTING_DHW, e_Auto);
+        if (reg.update(R_REQUESTING_DHW, e_Auto) && _state == NO_CHANGE) _state = REFRESH_DISPLAY;
     }
+    //if (_state == REFRESH_DISPLAY) logger() << millis() % 10000 << F(" RD") << L_endl;
 }
 
 void OLED_Thick_Display::sleepPage() {
@@ -171,36 +185,40 @@ const uint8_t* OLED_Thick_Display::getFont(bool bold) {
 void OLED_Thick_Display::changeMode(int keyCode) {
     auto newMode = NoOfDisplayModes + _display_mode + (keyCode == I_Keypad::KEY_LEFT ? -1 : 1);
     _display_mode = Display_Mode(newMode % NoOfDisplayModes);
-    _dataChanged = true;
+    if (_state == NO_CHANGE) _state = REFRESH_DISPLAY;
 }
 
 void OLED_Thick_Display::changeValue(int keyCode) {
     auto increment = keyCode == I_Keypad::KEY_UP ? 1 : -1;
     auto reg = registers();
+    //if (_state != NO_CHANGE) return;
+    auto deviceFlags = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
     switch (_display_mode) {
     case RoomTemp:
-        if (I2C_Flags_Obj(reg.get(R_DEVICE_STATE)).is(F_ENABLE_KEYBOARD)) {
+        if (deviceFlags.is(F_ENABLE_KEYBOARD)) {
             _tempRequest += increment;
             reg.set(R_REQUESTING_ROOM_TEMP, _tempRequest);
+            _state = NEW_T_REQUEST;
             logger() << millis() % 10000 << F(" CT ") << _tempRequest << L_endl;
         } 
         break;
     case TowelRail: 
-    {
-        auto mode = nextIndex(0, reg.get(R_REQUESTING_T_RAIL), e_On, increment);
-        reg.set(R_REQUESTING_T_RAIL, mode);
-        if (mode == e_On) reg.set(R_ON_TIME_T_RAIL, 1); // to stop it resetting itself
-    }
+        {
+            auto mode = nextIndex(0, reg.get(R_REQUESTING_T_RAIL), e_On, increment);
+            reg.set(R_REQUESTING_T_RAIL, mode);
+            if (mode == e_On) reg.set(R_ON_TIME_T_RAIL, 1); // to stop it resetting itself
+            _state = REFRESH_DISPLAY;
+        }
         break;
     case HotWater: 
-    {
-        auto mode = nextIndex(0, reg.get(R_REQUESTING_DHW), e_On, increment);
-        reg.set(R_REQUESTING_DHW, mode);
-        if (mode == e_On) reg.set(R_WARM_UP_DHW_M10, -1); // to stop it resetting itself
-    }
+        {
+            auto mode = nextIndex(0, reg.get(R_REQUESTING_DHW), e_On, increment);
+            reg.set(R_REQUESTING_DHW, mode);
+            if (mode == e_On) reg.set(R_WARM_UP_DHW_M10, -1); // to stop it resetting itself
+            _state = REFRESH_DISPLAY;
+        }
         break;
     }
-    _dataChanged = true;
 }
 
 void OLED_Thick_Display::displayPage() {
@@ -211,6 +229,7 @@ void OLED_Thick_Display::displayPage() {
     auto reg = registers();
     switch (_display_mode) {
     case RoomTemp:
+        if (_state == NEW_T_REQUEST) _state = WAIT_PROG_ACK;
         _display.print(F("Room Temp"));
         _display.setCursor(0, 1);
         _display.print(F("Ask "));
@@ -268,7 +287,7 @@ void OLED_Thick_Display::displayPage() {
             _display.print(F("h"));
         }
     }
-    _dataChanged = false;
+    if (_state == REFRESH_DISPLAY) _state = NO_CHANGE;
 }
 
 void OLED_Thick_Display::processKeys() { // called by loop()
@@ -281,9 +300,7 @@ void OLED_Thick_Display::processKeys() { // called by loop()
             logger() << F("WFM") << L_endl;
             _display.setCursor(0, 0);
             _display.print(F("Wait for Master"));
-            _dataChanged = true;
             _remoteKeypad.popKey();
-            wakeDisplay();
         }
     } else {
         if (newSecond) {
@@ -306,10 +323,11 @@ void OLED_Thick_Display::processKeys() { // called by loop()
                 }
             }
         }
-        if (_dataChanged) displayPage();
-        else if (!_remoteKeypad.displayIsAwake() && _sleepRow == -1) {
-            startDisplaySleep();
-        }
+        if (_state == NO_CHANGE) {
+            if (!_remoteKeypad.displayIsAwake() && _sleepRow == -1) {
+                startDisplaySleep();
+            }
+        } else if (_state != WAIT_PROG_ACK) displayPage();
     }
 }
 

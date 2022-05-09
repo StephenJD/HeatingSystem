@@ -122,6 +122,7 @@ namespace HardwareInterfaces {
 		auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP); // is zoneReqTemp normally.
 		// times-out before this line
 		loopLogger() << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
+		logger() << millis() % 10000 << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
 
 		switch (_state) {
 		case REM_TR:
@@ -161,7 +162,6 @@ namespace HardwareInterfaces {
 				logRemoteRegisters();
 				writeRegValue(OLED::R_REQUESTING_ROOM_TEMP, zoneReqTemp); // Send remote valid request
 				_hasChanged = true;
-				//writeReg(OLED::R_REQUESTING_ROOM_TEMP);
 				_state = AWAIT_REM_ACK_TEMP;
 			} else {
 				logger() << L_time << millis() % 10000 << F("\tNew Req Temp sent by Remote[") << index() << "] : " << remReqTemp << L_endl;
@@ -201,7 +201,7 @@ namespace HardwareInterfaces {
 		haveNewData |= reg.update(OLED::R_ON_TIME_T_RAIL, uint8_t(_towelRail->timeToGo()/60));
 		haveNewData |= reg.update(OLED::R_WARM_UP_DHW_M10, _dhw->warmUpTime_m10()); // If -ve, in 0-60 mins, if +ve in min_10
 		if (_hasChanged || haveNewData) {
-			logger() << millis() % 10000 << "\tSet F_PROGRAMMER_CHANGED_DATA: changed:" << _hasChanged << " : warmChange" << haveNewData << L_endl;
+			logger() << "\t" << millis() % 10000 << "\tSet F_PROGRAMMER_CHANGED_DATA: changed:" << _hasChanged << " : warmChange" << haveNewData << L_endl;
 			status |= writeRegSet(OLED::R_WARM_UP_ROOM_M10, 3);
 			auto devFlags = OLED::I2C_Flags_Obj(reg.get(OLED::R_DEVICE_STATE));
 			devFlags.set(OLED::F_PROGRAMMER_CHANGED_DATA);
@@ -235,6 +235,7 @@ namespace HardwareInterfaces {
 		// Lambdas
 		auto give_RC_Bus = [this](OLED::I2C_Flags_Obj i2c_status) {
 			rawRegisters().set(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1);
+			i2c_status.clear(OLED::F_PROGRAMMER_CHANGED_DATA);
 			i2c_status.set(OLED::F_I2C_NOW);
 			writeRegValue(OLED::R_DEVICE_STATE, i2c_status);
 		};
@@ -265,7 +266,7 @@ namespace HardwareInterfaces {
 			|| (status = readRegVerifyValue(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp))
 			|| (_state = remReqTemp != 0 ? REM_REQ_TEMP : _state);
 
-		loopLogger() << "\treadRemoteRegisters_done" << L_endl;
+		loopLogger() << "\treadRemoteRegisters_done: " << status << L_endl;
 
 		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(status, towelrail_req_changed, hotwater_req_changed, remReqTemp);
 	}

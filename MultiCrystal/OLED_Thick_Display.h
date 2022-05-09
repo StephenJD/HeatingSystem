@@ -22,7 +22,7 @@ public:
 
 	enum RemoteRegisterName {	// In Slave-Mode, all are received
 		R_REMOTE_REG_OFFSET		// [0] ini Always read by programmer to check if it needs ini-sending
-		, R_DEVICE_STATE		// [1] ini Flag-Enum { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS } last 4-bits is wake-time/4;
+		, R_DEVICE_STATE		// [1] ini Flag-Enum { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, F_WAIT_PROG_ACK, _NO_OF_FLAGS } last 4-bits is wake-time/4;
 		, R_ROOM_TS_ADDR		// [2] ini
 		, R_ROOM_TEMP			// [3] send
 		, R_ROOM_TEMP_FRACTION	// [4] send
@@ -36,7 +36,7 @@ public:
 	};
 
 	enum { e_Auto, e_On, e_Off };
-	enum I2C_Flags { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 };
+	enum I2C_Flags { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 }; // last 4 - bits is wake - time / 4;
 	using I2C_Flags_Ref = flag_enum::FE_Ref< I2C_Flags, _NO_OF_FLAGS>;
 	using I2C_Flags_Obj = flag_enum::FE_Obj< I2C_Flags, _NO_OF_FLAGS>;
 	// New request temps initiated by the programmer are sent by the programmer.
@@ -74,7 +74,8 @@ private:
 	int8_t _sleepRow = 0;
 	int8_t _sleepCol = 0;
 	int8_t _tempRequest = 0;
-	bool _dataChanged = false;
+	enum State { NO_CHANGE, NEW_T_REQUEST, REFRESH_DISPLAY, WAIT_PROG_ACK };
+	State _state = REFRESH_DISPLAY;
 	HardwareInterfaces::RemoteKeypadMaster _remoteKeypad{ 50,30 };
 	U8X8_SSD1305_128X32_ADAFRUIT_4W_HW_SPI _display;
 	Display_Mode _display_mode = RoomTemp;

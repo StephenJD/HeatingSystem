@@ -107,6 +107,8 @@ namespace flag_enum {
 
 		bool is(EnumType pos) const { return *_base_ptr & (TOP_BIT >> int(pos)); }
 		bool is(int pos) const { return *_base_ptr & (TOP_BIT >> pos); }
+		bool is_not(EnumType pos) const { return !is(pos); }
+		bool is_not(int pos) const { return !is(pos); }
 		Base flags() const { return *_base_ptr & ~MAX_VALUE; }
 		Base value() const { return *_base_ptr & MAX_VALUE; }
 		explicit operator Base() const { return *_base_ptr; }

@@ -137,6 +137,6 @@ private:
 	uint8_t _psuV;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
-	static uint16_t _motorsOffV;
-	static constexpr uint16_t _MOTORS_ON_DIFF_V = 40;
+	static int16_t _motorsOffV;
+	static int16_t _motors_off_diff_V;
 };

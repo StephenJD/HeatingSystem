@@ -25,7 +25,9 @@ extern const uint8_t version_day;
 
 constexpr int PSU_V_PIN = A3;
 Mix_Valve * Mix_Valve::motor_mutex = 0;
-uint16_t Mix_Valve::_motorsOffV = 1024;
+int16_t Mix_Valve::_motorsOffV = 1024;
+int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.03);
+
 bool Mix_Valve::motor_queued;
 
 int Mix_Valve::measurePSUVoltage(int period_mS) {
@@ -44,7 +46,7 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 #endif
 	_psuV = psuMaxV/PSUV_DIVISOR;
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
-	return psuMaxV > 800 ? psuMaxV : 0;
+	return psuMaxV > 500 ? psuMaxV : 0;
 }
 
 Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset)
@@ -82,7 +84,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 
 	auto psuOffV = measurePSUVoltage(200);
 	//reg.set(R_FROM_POS, psuOffV / PSUV_DIVISOR);
-	if (psuOffV < _motorsOffV) _motorsOffV = psuOffV;
+	if (psuOffV) _motorsOffV = psuOffV;
 	//_motorsOffV = 990;
 
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
@@ -178,7 +180,7 @@ void Mix_Valve::stateMachine() {
 		mode = newTempMode();
 		break;
 	case e_Moving: // if not (_journey == e_Moving_Coolest) can interrupt by under/overshoot
-		logger() << name() << L_tabs << F("ValveMoving") << (_motorDirection == e_Heating ? "H" : (_motorDirection == e_Stop ? "Off" : "C")) << _onTime << F("ValvePos:") << _valvePos << F("Temp:") << reg.get(R_FLOW_TEMP) << F("Call") << _currReqTemp << L_endl;
+		logger() << name() << L_tabs << F("ValveMoving") << (_motorDirection == e_Heating ? "H" : (_motorDirection == e_Stop ? "Off" : "C")) << _onTime << F("ValvePos:") << _valvePos << F("Temp:") << reg.get(R_FLOW_TEMP) << F("Call") << _currReqTemp /*<< F("V:") << measurePSUVoltage()*/ << L_endl;
 		if (_journey != e_Moving_Coolest && needIncreaseBy_deg * _motorDirection <= 0 || !continueMove()) {
 			startWaiting();
 			mode = e_Wait;
@@ -201,7 +203,6 @@ void Mix_Valve::stateMachine() {
 				motor_mutex = 0;
 			} else if (!activateMotor_isMoving()) motor_mutex = 0;
 		}
-		
 		break;
 	case e_Wait: // can interrupt by under/overshoot
 		logger() << name() << L_tabs << F("WaitSettle:\t") << _onTime << F("\tPos:") << _valvePos << F("\tTemp:") << reg.get(R_FLOW_TEMP) << L_endl;
@@ -296,10 +297,21 @@ void Mix_Valve::adjustValve(int tempDiff) {
 }
 
 bool Mix_Valve::activateMotor_isMoving() {
+	auto getPSU_Off_V = [this]() {		
+		enableRelays(true);
+		auto newOffV = measurePSUVoltage(100);
+		if (newOffV) {
+			_motorsOffV = newOffV;
+			_motors_off_diff_V = uint16_t(_motorsOffV * 0.03);
+			logger() << F("New OFF-V: ") << _motorsOffV << L_endl;
+		}
+	};
+
 	auto isMoving = true;
 	_cool_relay->set(_motorDirection == e_Cooling); // turn Cool relay on/off
 	_heat_relay->set(_motorDirection == e_Heating); // turn Heat relay on/off
-	if (_motorDirection == e_Stop) { 
+	if (_motorDirection == e_Stop) {
+		getPSU_Off_V();
 		enableRelays(motor_queued); // disable if no queued motor.
 		isMoving = false;
 	} else {
@@ -396,17 +408,20 @@ bool Mix_Valve::valveIsAtLimit() {
 	if (!_heat_relay->logicalState() && !_cool_relay->logicalState())
 		return false;
 
-	auto psuV = 0;
-	int offCount = 5;
-	do {
-		psuV = measurePSUVoltage();
-		if (psuV > _motorsOffV - _MOTORS_ON_DIFF_V) {
-			--offCount;
-			if (offCount > 1) delay(100);
-		}
-		else offCount = 0;
-	} while (offCount > 1);
-	bool isOff = offCount == 1;
+	auto isOff = [this]() {
+		auto psuV = 0;
+		int offCount = 5;
+		do {
+			psuV = measurePSUVoltage();
+			if (psuV > _motorsOffV - _motors_off_diff_V) {
+				--offCount;
+				if (offCount > 1) delay(100);
+			}
+			else offCount = 0;
+		} while (offCount > 1);
+		return offCount == 1;
+	};
+	
 	////////// Non-Measure PSU Version ////////////////
 	//if (_journey == e_Moving_Coolest) {
 	//	if (_onTime == 0) {
@@ -422,18 +437,18 @@ bool Mix_Valve::valveIsAtLimit() {
 	//}
 	//else return _valvePos > (registers().get(R_HALF_TRAVERSE_TIME) * 2) + 20;
 
-	if (isOff) {
+	if (isOff()) {
 		if (_motorDirection == e_Cooling) {
 			_valvePos = 0;
-			_motorsOffV = psuV;
 		} else {
 			if (_valvePos > 100) {
 				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
-			} else isOff = false;
+			} else return false;
 		}
+		return true;
 	}
-	return isOff;
+	return false;
 }
 
 void Mix_Valve::refreshRegisters() {
