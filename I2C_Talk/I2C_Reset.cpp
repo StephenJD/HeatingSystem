@@ -131,7 +131,7 @@ namespace I2C_Recovery {
 					loopLogger() << L_time << "waitForWarmUp for mS " << waitTime/1000 << L_endl;
 #endif
 					reset_watchdog();
-					delayMicroseconds(100000UL); // docs say delayMicroseconds cannot be relied upon > 16383uS.
+					delayMicroseconds(10000); // docs say delayMicroseconds cannot be relied upon > 16383uS.
 					waitTime = _timeOfReset_uS + WARMUP_uS - micros();
 				} while (waitTime > 0);
 #ifndef __AVR_ATmega328P__

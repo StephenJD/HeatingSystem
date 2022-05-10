@@ -130,7 +130,7 @@ namespace Assembly {
 	}
 
 	void Initialiser::initialize_Thick_Consoles() {
-		//i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
+		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
 		for (auto& rc : _hs.thickConsole_Arr) {
 			logger() << L_time << F("RemConsole query[] ") << consoleIndex << L_endl;
@@ -149,25 +149,20 @@ namespace Assembly {
 		uint8_t status = 0;
 		for (auto& mixValveControl : hs().tempController().mixValveControllerArr) {
 			loopLogger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_endl;
-			logger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_endl;
 			if (mixValveControl.isUnrecoverable()) {
 				loopLogger() << "isUnrecoverable" << L_endl;
 				I2C_Recovery::HardReset::arduinoReset("MixValveController");
 			}
-			uint8_t requestINI_flag = MV_US_REQUESTING_INI << mixValveControl.index();
-			status |= mixValveControl.sendSlaveIniData(requestINI_flag);
+			status |= mixValveControl.sendSlaveIniData(*i2c_registers::RegAccess(_hs._prog_register_set).ptr(R_SLAVE_REQUESTING_INITIALISATION));
 		}
 		return status;
 	}
 	
 	uint8_t Initialiser::post_initialize_Thick_Consoles() {
 		uint8_t status = 0;
-		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		for (auto& remote : _hs.thickConsole_Arr) {
-			logger() << L_time << F("post_ini_RC :") << remote.index() << L_flush;
 			if (remote.isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("RemoteConsoles");
-			uint8_t requestINI_flag = RC_US_REQUESTING_INI << remote.index();
-			status |= remote.sendSlaveIniData(requestINI_flag);
+			status |= remote.sendSlaveIniData(*i2c_registers::RegAccess(_hs._prog_register_set).ptr(R_SLAVE_REQUESTING_INITIALISATION));
 		}
 		for (auto& remote : _hs.thickConsole_Arr) {
 			remote.refreshRegistersOK();

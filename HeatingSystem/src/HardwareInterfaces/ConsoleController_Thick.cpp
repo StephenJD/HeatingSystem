@@ -44,35 +44,37 @@ namespace HardwareInterfaces {
 
 	void ConsoleController_Thick::set_console_mode(uint8_t mode) {
 		registers().set(OLED::R_DEVICE_STATE, mode);
-		sendSlaveIniData(RC_US_REQUESTING_INI << index());
+		auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
+		ini_state |= RC_US_REQUESTING_INI << index();
+		sendSlaveIniData(ini_state);
 	}
 
-	uint8_t ConsoleController_Thick::sendSlaveIniData(uint8_t requestINI_flag) {
+	uint8_t ConsoleController_Thick::sendSlaveIniData(volatile uint8_t& requestINI_flags) {
 #ifdef ZPSIM
 		uint8_t(&debugWire)[OLED::R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[OLED::R_DISPL_REG_SIZE]>(TwoWire::i2CArr[getAddress()]);
 #endif
-		loopLogger() << "Console_sendSlaveIniData..." << L_endl;
+		auto thisIniFlag = RC_US_REQUESTING_INI << index();
+		if (!(thisIniFlag & requestINI_flags)) return _OK;
+		loopLogger() << index() << "] Console_sendSlaveIniData..." << L_endl;
+		logger() << L_time << F("Console_sendSlaveIniData: ") << index() << L_flush;
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
 			auto reg = registers();
 			auto devFlags = OLED::I2C_Flags_Ref(*reg.ptr(OLED::R_DEVICE_STATE));
 			devFlags.set(OLED::F_PROGRAMMER_CHANGED_DATA);
-			uint8_t errCode = writeRegSet(OLED::R_REMOTE_REG_OFFSET,3);
-			if (errCode) return errCode;
 
 			reg.set(OLED::R_REQUESTING_ROOM_TEMP, _zone->currTempRequest());
 			reg.set(OLED::R_WARM_UP_ROOM_M10, 10);
 			reg.set(OLED::R_ON_TIME_T_RAIL, 0);
 			reg.set(OLED::R_WARM_UP_DHW_M10, 2);
+			errCode = writeRegSet(OLED::R_REQUESTING_T_RAIL, OLED::R_DISPL_REG_SIZE - OLED::R_REQUESTING_T_RAIL);
+			errCode |= writeRegSet(OLED::R_REMOTE_REG_OFFSET,3);
 			_state = AWAIT_REM_ACK_TEMP;
-			errCode |= writeRegSet(OLED::R_REQUESTING_T_RAIL, OLED::R_DISPL_REG_SIZE - OLED::R_REQUESTING_T_RAIL);
+
 			if (errCode == _OK) {
-				auto rawReg = rawRegisters();
-				auto newIniStatus = rawReg.get(R_SLAVE_REQUESTING_INITIALISATION);
-				logger() << L_time << "SendConsIni. IniStatus was:" << newIniStatus;
-				newIniStatus &= ~requestINI_flag;
-				logger() << " IniStatus now:" << newIniStatus << " sent Offset:" << _localRegOffset << L_endl;
-				rawReg.set(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
+				logger() << L_time << "SendConsIni. IniStatus was:" << requestINI_flags;
+				requestINI_flags &= ~thisIniFlag;
+				logger() << " IniStatus now:" << requestINI_flags << " sent Offset:" << _localRegOffset << L_endl;
 			}
 		}
 		logger() << F("ConsoleController_Thick::sendSlaveIniData()[") << index() << F("] i2CMode: ") << registers().get(OLED::R_DEVICE_STATE) << i2C().getStatusMsg(errCode) << L_endl;
@@ -223,6 +225,8 @@ namespace HardwareInterfaces {
 		if (readRegVerifyValue(OLED::R_REMOTE_REG_OFFSET, remOffset) != _OK) return false;
 		if (remOffset == OLED::NO_REG_OFFSET_SET) {
 			_state = REM_REQ_OFFSET;
+			auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
+			ini_state |= requestINI_flag;
 			logger() << L_time << "\tRem[" << index() << "] iniReq 255. SetFlagVal: " << requestINI_flag << L_endl;
 			return false;
 		}

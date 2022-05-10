@@ -49,36 +49,32 @@ namespace HardwareInterfaces {
 		_controlZoneRelay = index == M_DownStrs ? R_DnSt : R_UpSt;
 	}
 
-	uint8_t MixValveController::sendSlaveIniData(uint8_t requestINI_flag) {
+	uint8_t MixValveController::sendSlaveIniData(volatile uint8_t& requestINI_flags) {
 #ifdef ZPSIM
 		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(TwoWire::i2CArr[getAddress()]);
 		writeRegValue(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 #endif
+		auto thisIniFlag = MV_US_REQUESTING_INI << index();
+		if (!(thisIniFlag & requestINI_flags)) return _OK;
+
 		uint8_t errCode = reEnable(true);
 		auto reg = registers();
 		Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 
 		if (errCode == _OK) {
-			loopLogger() << index() <<  F("] MixValveController::sendSlaveIniData - WriteReg...") << L_endl;
+			loopLogger() << index() <<  F("] MV_sendSlaveIniData - WriteReg...") << L_endl;
+			logger() << index() <<  F("] MV_sendSlaveIniData") << L_endl;
 			errCode = writeReg(Mix_Valve::R_DEVICE_STATE);
 			errCode |= writeReg(Mix_Valve::R_REMOTE_REG_OFFSET);
 			errCode |= writeRegValue(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
 			errCode |= writeRegValue(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
 			if (errCode) return errCode;
 
-			reg.set(Mix_Valve::R_RATIO, 30);
-			reg.set(Mix_Valve::R_FROM_TEMP, 55);
-			reg.set(Mix_Valve::R_FLOW_TEMP, 55);
-			reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
 			loopLogger() <<  F("MixValveController::sendSlaveIniData - WriteRegSet...") << L_endl;
 			errCode = writeRegSet(Mix_Valve::R_RATIO, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_RATIO);
 			if (errCode == _OK) {
-				auto rawReg = rawRegisters();
-				auto newIniStatus = rawReg.get(R_SLAVE_REQUESTING_INITIALISATION);
-				//logger() << L_time << "SendMixIni. IniStatus was:" << newIniStatus;
-				newIniStatus &= ~requestINI_flag;
-				loopLogger() << " New IniStatus:" << newIniStatus << L_endl;
-				rawReg.set(R_SLAVE_REQUESTING_INITIALISATION, newIniStatus);
+				requestINI_flags &= ~thisIniFlag;
+				loopLogger() << " New IniStatus:" << requestINI_flags << L_endl;
 			}
 		}
 		loopLogger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << " State:" << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
@@ -100,11 +96,15 @@ namespace HardwareInterfaces {
 				mixV_OK = false;
 			}
 			uint8_t requestINI_flag = MV_US_REQUESTING_INI << index();
-			if (mixIniStatus & requestINI_flag) mixV_OK = false; // (sendSlaveIniData(requestINI_flag) == _OK);
+			if (mixIniStatus & requestINI_flag) mixV_OK = false;
 			else {
 				mixV_OK &= readRegistersFromValve_OK();
-				//mixV_OK &= logMixValveOperation(false);
-				mixV_OK &= logMixValveOperation(true);
+				if (!mixV_OK) {
+					auto& iniStatus = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
+					iniStatus |= requestINI_flag;
+				}
+				//logMixValveOperation(false);
+				logMixValveOperation(true);
 			}
 		}
 		return mixV_OK;
@@ -292,25 +292,26 @@ namespace HardwareInterfaces {
 			give_MixV_Bus(i2c_status);
 			wait_DevicesToFinish(rawRegisters());
 			status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
-			//status = I_I2Cdevice::read(Mix_Valve::R_DEVICE_STATE + _remoteRegOffset, Mix_Valve::MV_NO_TO_READ, reg.ptr(Mix_Valve::R_DEVICE_STATE));
 			auto flowTemp = reg.get(Mix_Valve::R_FLOW_TEMP);
-			if (flowTemp == 255) {
-				logger() << L_time << F("read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status);
-				logger() << L_dec << F(". FlowTemp reads 255 at freq: ") << runSpeed();
-			}
+			
 			if (status) {
 				logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_endl;
-				readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ);
+				return false;
+				//status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ);
+			} else if (flowTemp == 255) {
+				logger() << L_time << F("read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status);
+				logger() << L_dec << F(". FlowTemp reads 255 at freq: ") << runSpeed();
+				return false;
 			}
 			if (reg.get(Mix_Valve::R_REQUEST_FLOW_TEMP) == 0) { // Resend to confirm new temp request
 				profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tConfirm new Request:\t" << _mixCallTemp << L_endl;
 				reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
-				writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
+				status != writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
 				//I_I2Cdevice::write(Mix_Valve::R_REQUEST_FLOW_TEMP + _remoteRegOffset, 1, &_mixCallTemp);
 			} else if (reg.get(Mix_Valve::R_REQUEST_FLOW_TEMP) != _mixCallTemp) { // This gets called when R_REQUEST_FLOW_TEMP == 255. -- not sure why!
 				profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tCorrect Request:\t" << _mixCallTemp << L_endl;
 				reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
-				writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
+				status != writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
 				//I_I2Cdevice::write(Mix_Valve::R_REQUEST_FLOW_TEMP + _remoteRegOffset, 1, &_mixCallTemp);
 			}
 		} else logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;

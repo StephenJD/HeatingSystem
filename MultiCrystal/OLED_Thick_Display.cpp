@@ -122,7 +122,7 @@ void OLED_Thick_Display::refreshRegisters() {
         logger() << millis() % 10000 << F(" PD ") << reqTemp << L_endl;
     }
     
-    if (_state != WAIT_PROG_ACK && reqTemp && reqTemp != _tempRequest) { // request sent by programmer
+    if (_state != WAIT_PROG_ACK && reqTemp /*&& reqTemp != _tempRequest*/) { // request sent by programmer
         logger() << millis() % 10000 << F(" PT ") << reqTemp << L_endl;
         _tempRequest = reqTemp;
         reg.set(R_REQUESTING_ROOM_TEMP, 0);
@@ -131,6 +131,7 @@ void OLED_Thick_Display::refreshRegisters() {
         logger() << millis() % 10000 << F(" RT") << L_endl;
         reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
         _state = WAIT_PROG_ACK;
+        wakeDisplay();
     }
 
     bool towelRailNowOff = reg.get(R_ON_TIME_T_RAIL) == 0;

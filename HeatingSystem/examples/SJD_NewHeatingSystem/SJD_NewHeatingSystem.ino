@@ -1,4 +1,3 @@
-
 #include <HeatingSystem.h>
 #include <HardwareInterfaces\A__Constants.h>
 #include <Relay_Bitwise.h>

@@ -169,9 +169,9 @@ void HeatingSystem::run_stateMachine() {
 			//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
 			//logger() << L_cout << "Ram End" << L_endl;
 			//loopLogger().begin();
-
 			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			logger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
+			//thickConsole_Arr[1].sendSlaveIniData(RC_US_REQUESTING_INI << 1);
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
 			logger() << L_time << "...checkAndAdjust done: " << status << L_endl;

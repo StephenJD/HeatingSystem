@@ -20,7 +20,7 @@ namespace HardwareInterfaces {
 		, MV1_REG_OFFSET = MV0_REG_OFFSET + Mix_Valve::MV_ALL_REG_SIZE
 	};
 
-	enum SlaveRequestIni {
+	enum SlaveRequestIni : uint8_t {
 		NO_INI_REQUESTS
 		, MV_US_REQUESTING_INI = 1
 		, MV_DS_REQUESTING_INI = 2
