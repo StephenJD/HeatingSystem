@@ -53,9 +53,9 @@ public:
 		, R_MOTOR_ACTIVITY	// Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
 		, R_COUNT
 		, R_VALVE_POS
-		, R_FROM_POS
+		, R_PSU_V
 		, R_RATIO	
-		, R_FROM_TEMP
+		, R_ADJUST_MODE
 		, R_FLOW_TEMP // Received in Slave-Mode
 		// Receive
 		, R_REQUEST_FLOW_TEMP // also sent to confirm
@@ -77,7 +77,8 @@ public:
 	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
-	enum { PSUV_DIVISOR = 4 };
+	enum { PSUV_DIVISOR = 5 };
+	enum AdjustMode : uint8_t { A_GOOD_RATIO, A_UNDERSHOT, A_OVERSHOT };
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
 	using I2C_Flags_Ref = flag_enum::FE_Ref<MV_Device_State, _NO_OF_FLAGS>;
 
@@ -127,14 +128,12 @@ private:
 	// Temporary Data
 	int16_t _onTime = 0; // +ve to move, -ve to wait.
 	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME;
-	int16_t _moveFromPos = 0;
 	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
 	MotorDirection _motorDirection = e_Stop;
 
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
-	uint8_t _psuV;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static int16_t _motorsOffV;

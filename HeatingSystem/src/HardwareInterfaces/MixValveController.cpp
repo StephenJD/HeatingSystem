@@ -132,10 +132,12 @@ namespace HardwareInterfaces {
 		auto valveIndex = index();
 		if (logThis || _previous_valveStatus[valveIndex] != algorithmMode /*|| algorithmMode < Mix_Valve::e_Checking*/ ) {
 			_previous_valveStatus[valveIndex] = algorithmMode;
+			auto adjustMode = reg.get(Mix_Valve::R_ADJUST_MODE);
+
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
 				<< showState() << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS)*2 << reg.get(Mix_Valve::R_RATIO)
-				<< reg.get(Mix_Valve::R_FROM_POS) << reg.get(Mix_Valve::R_FROM_TEMP) << L_endl;
+				<< reg.get(Mix_Valve::R_PSU_V) * 5 << (adjustMode == Mix_Valve::A_UNDERSHOT ? "U" : (adjustMode == Mix_Valve::A_OVERSHOT ? "O" : "G")) << L_endl;
 		}
 //#endif
 		return true;
@@ -291,6 +293,7 @@ namespace HardwareInterfaces {
 			//logger() << L_time << "MV-Master[" << index() << "] Req Temp" << L_endl;
 			give_MixV_Bus(i2c_status);
 			wait_DevicesToFinish(rawRegisters());
+			auto prev_flowTemp = reg.get(Mix_Valve::R_FLOW_TEMP);
 			status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
 			auto flowTemp = reg.get(Mix_Valve::R_FLOW_TEMP);
 			
@@ -299,19 +302,23 @@ namespace HardwareInterfaces {
 				return false;
 				//status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ);
 			} else if (flowTemp == 255) {
-				logger() << L_time << F("read device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status);
-				logger() << L_dec << F(". FlowTemp reads 255 at freq: ") << runSpeed();
-				return false;
+				logger() << L_time << F("read device 0x") << L_hex << getAddress() << F(" OK. FlowTemp 255! Try again...") << L_endl;
+				status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
+				flowTemp = reg.get(Mix_Valve::R_FLOW_TEMP);
+				if (flowTemp == 255) {
+					reg.set(Mix_Valve::R_FLOW_TEMP, prev_flowTemp);
+					return false;
+				}
 			}
 			if (reg.get(Mix_Valve::R_REQUEST_FLOW_TEMP) == 0) { // Resend to confirm new temp request
 				profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tConfirm new Request:\t" << _mixCallTemp << L_endl;
 				reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
-				status != writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
+				status |= writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
 				//I_I2Cdevice::write(Mix_Valve::R_REQUEST_FLOW_TEMP + _remoteRegOffset, 1, &_mixCallTemp);
 			} else if (reg.get(Mix_Valve::R_REQUEST_FLOW_TEMP) != _mixCallTemp) { // This gets called when R_REQUEST_FLOW_TEMP == 255. -- not sure why!
 				profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tCorrect Request:\t" << _mixCallTemp << L_endl;
 				reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
-				status != writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
+				status |= writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
 				//I_I2Cdevice::write(Mix_Valve::R_REQUEST_FLOW_TEMP + _remoteRegOffset, 1, &_mixCallTemp);
 			}
 		} else logger() << L_time << F("MixValve Read device 0x") << L_hex << getAddress() << F(" disabled") << L_endl;

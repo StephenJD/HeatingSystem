@@ -11,6 +11,7 @@
 #include <MemoryFree.h>
 #include <I2C_Reset.h>
 #include <Flag_Enum.h>
+#include <Timer_mS_uS.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;
@@ -48,12 +49,13 @@ namespace Assembly {
 		}
 		switch (needs_ini) {
 		case I2C_RESET:
+			logger() << L_time << "DO_RESET..." << L_endl;
 			_resetI2C(_hs.i2C, 0);
 			_iniState.clear();
 			_iniState.set(I2C_RESET);
 			break;
 		case TS:
-			loopLogger() << L_time << "ESTABLISH_TS_COMS" << L_endl;
+			loopLogger() << L_time << "ESTABLISH_TS_COMS..." << L_endl;
 			if (ini_TS() == _OK) {
 				_iniState.set(TS);
 			}
@@ -65,19 +67,19 @@ namespace Assembly {
 			_iniState.set(POST_RESET_WARMUP, I2C_Recovery::HardReset::hasWarmedUp());
 			break;
 		case RELAYS:
-			loopLogger() << L_time << "ESTABLISH_RELAY_COMS" << L_endl;
+			loopLogger() << L_time << "ESTABLISH_RELAY_COMS..." << L_endl;
 			if (ini_relays() == _OK) {
 				_iniState.set(RELAYS);
 			} else { _iniState.clear(I2C_RESET); }
 			break;
 		case MIX_V:
-			loopLogger() << L_time << "ESTABLISH_MIXV_COMMS" << L_endl;
+			loopLogger() << L_time << "ESTABLISH_MIXV_COMMS..." << L_endl;
 			if (post_initialize_MixV() == _OK) {
 				_iniState.set(MIX_V);
 			} else { _iniState.clear(I2C_RESET); }
 			break;
 		case REMOTE_CONSOLES:
-			loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS" << L_endl;
+			loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS..." << L_endl;
 			if (post_initialize_Thick_Consoles() == _OK) {
 				_iniState.set(REMOTE_CONSOLES);
 			} else { _iniState.clear(I2C_RESET); }
@@ -166,6 +168,9 @@ namespace Assembly {
 		}
 		for (auto& remote : _hs.thickConsole_Arr) {
 			remote.refreshRegistersOK();
+			auto timeout = Timer_mS(100);
+			while (!timeout && remote.registers().get(OLED_Thick_Display::R_ROOM_TEMP) == 0);
+			if (timeout) requiresINI(I2C_RESET);
 		}
 		return status;
 	}		
@@ -177,6 +182,7 @@ namespace Assembly {
 	}
 
 	uint8_t Initialiser::notify_reset() {
+		logger() << "Set Reset-Flag" << L_endl;
 		_iniState.clear();
 		_iniState.set(I2C_RESET);
 		return _OK;

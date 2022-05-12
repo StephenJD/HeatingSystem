@@ -158,12 +158,12 @@ namespace HardwareInterfaces {
 			readKey(); // trigger read on keyboards not read on interrupts
 			retKey = popKeyFromQueue();
 		}
-
+		auto isAwake = displayIsAwake(); // must refresh timer to keep the keypad asleep. Otherwise roll-over makes it look like it is awake!
 		if (retKey > NO_KEY) {
 			//Serial.print("Popped: "); Serial.println((int)retKey);
-			if (!displayIsAwake()) retKey = KEY_WAKEUP;
+			if (!isAwake) retKey = KEY_WAKEUP;
 			setWakeTimer();
-		}
+		} 
 		return retKey;
 	}
 }

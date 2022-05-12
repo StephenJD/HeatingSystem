@@ -56,7 +56,7 @@ namespace HardwareInterfaces {
 		auto thisIniFlag = RC_US_REQUESTING_INI << index();
 		if (!(thisIniFlag & requestINI_flags)) return _OK;
 		loopLogger() << index() << "] Console_sendSlaveIniData..." << L_endl;
-		logger() << L_time << F("Console_sendSlaveIniData: ") << index() << L_flush;
+		logger() << L_time << F("Console_sendSlaveIniData: [") << index() << L_flush;
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
 			auto reg = registers();
@@ -253,6 +253,8 @@ namespace HardwareInterfaces {
 		uint8_t status = readRegSet(OLED::R_ROOM_TEMP, 2);
 		if (status != _OK || reg.get(OLED::R_ROOM_TEMP) == 0) {
 			logger() << L_time << "\tRC Room Temp[" << index() << "] = 0!" << I2C_Talk::getStatusMsg(status) << L_flush;
+			auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
+			ini_state |= RC_US_REQUESTING_INI << index();
 #ifndef ZPSIM
 			status = _I2C_ReadDataWrong;
 #endif

@@ -22,7 +22,7 @@ public:
 
 	enum RemoteRegisterName {	// In Slave-Mode, all are received
 		R_REMOTE_REG_OFFSET		// [0] ini Always read by programmer to check if it needs ini-sending
-		, R_DEVICE_STATE		// [1] ini Flag-Enum { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, F_WAIT_PROG_ACK, _NO_OF_FLAGS } last 4-bits is wake-time/4;
+		, R_DEVICE_STATE		// [1] ini Flag-Enum { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS } last 4-bits is wake-time/4;
 		, R_ROOM_TS_ADDR		// [2] ini
 		, R_ROOM_TEMP			// [3] send
 		, R_ROOM_TEMP_FRACTION	// [4] send

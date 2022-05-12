@@ -115,10 +115,8 @@ void sendSlaveIniData(int i) {
 		setReg(i, Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 		setReg(i, Mix_Valve::R_STATE, Mix_Valve::e_Stop);
 		setReg(i, Mix_Valve::R_RATIO, 30);
-		setReg(i, Mix_Valve::R_FROM_TEMP, 55);
 		setReg(i, Mix_Valve::R_COUNT, 0);
 		setReg(i, Mix_Valve::R_VALVE_POS, 75);
-		setReg(i, Mix_Valve::R_FROM_POS, 75);
 		setReg(i, Mix_Valve::R_FLOW_TEMP, 55);
 		setReg(i, Mix_Valve::R_REQUEST_FLOW_TEMP, 25);
 		setReg(i, Mix_Valve::R_MAX_FLOW_TEMP, 55);
@@ -143,7 +141,7 @@ void logMixValveOperation(int i, bool logThis) {
 		logger() << L_time << L_tabs
 			<< (i==0 ? F("US_Mix Req: ") : F("DS_Mix Req: ")) << _mixCallTemp[i] << F(" is ") << getReg(i, Mix_Valve::R_FLOW_TEMP)
 			<< showState(i) << getReg(i, Mix_Valve::R_COUNT) << getReg(i, Mix_Valve::R_VALVE_POS) << getReg(i, Mix_Valve::R_RATIO)
-			<< getReg(i, Mix_Valve::R_FROM_POS) << getReg(i, Mix_Valve::R_FROM_TEMP) << L_endl;
+			<< L_endl;
 	}
 }
 

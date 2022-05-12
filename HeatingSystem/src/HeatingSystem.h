@@ -47,6 +47,7 @@ private: // data-member ordering matters!
 	State _state = START_NEW_DAY;
 	void updateChangedData();
 	bool consoleDataHasChanged();
+	bool serviceMainConsole();
 	I2C_Talk_ZX i2C{ HardwareInterfaces::PROGRAMMER_I2C_ADDR, Wire, HardwareInterfaces::I2C_MAX_SPEED };
 	I2C_Recovery::I2C_Recover_Retest _recover;
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> db;

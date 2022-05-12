@@ -99,8 +99,9 @@ namespace I2C_Recovery {
 						<< F(" Freq: ") << device().runSpeed()  << L_endl;
 				}
 #endif
+				//logger() << L_time << L_hex << F("Recovered 0x") << device().getAddress() << L_endl;
 				auto thisMaxStrategy = maxStrategyUsed;
-				if (_timeoutFunctor) (*_timeoutFunctor).notify_reset();
+				//if (_timeoutFunctor) (*_timeoutFunctor).notify_reset();
 				maxStrategyUsed = thisMaxStrategy;
 				getFinalStrategyRecorded();
 				resetRecoveryStrategy();

@@ -20,8 +20,9 @@ namespace Assembly {
 
 	class Initialiser {
 	public:
-		enum IniState {I2C_RESET, TS, POST_RESET_WARMUP, RELAYS, MIX_V, REMOTE_CONSOLES, NO_OF_INI_FLAGS};
+		enum IniState {I2C_RESET, TS, POST_RESET_WARMUP, RELAYS, MIX_V, REMOTE_CONSOLES, NO_OF_INI_FLAGS}; // set flag == INI has been done
 		Initialiser(HeatingSystem & hs);
+		flag_enum::FE_Obj<IniState, NO_OF_INI_FLAGS> iniState() { return _iniState; }
 		bool state_machine_OK();
 		void requiresINI(IniState ini) { _iniState.clear(ini); }
 		void isOK(IniState ini) { _iniState.set(ini); }

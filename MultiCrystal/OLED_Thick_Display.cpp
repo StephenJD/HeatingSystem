@@ -1,5 +1,6 @@
 #include "OLED_Thick_Display.h"
 #include <MsTimer2.h>
+#include <Watchdog_Timer.h>
 
 #include <I2C_Talk.h>
 //#include <I2C_Recover.h>
@@ -46,6 +47,7 @@ OLED_Thick_Display::OLED_Thick_Display(I2C_Recovery::I2C_Recover& recover, i2c_r
 void OLED_Thick_Display::begin() { // all registers start as zero.
     i2C().begin();
     setMyI2CAddress();
+    set_watchdog_timeout_mS(8000);
     auto speedTest = I2C_SpeedTest{ *this };
     speedTest.fastest();
     auto reg = registers();
@@ -305,6 +307,7 @@ void OLED_Thick_Display::processKeys() { // called by loop()
         }
     } else {
         if (newSecond) {
+            reset_watchdog();
             refreshRegisters();
         }
         _remoteKeypad.readKey();

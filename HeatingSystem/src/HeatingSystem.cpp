@@ -103,7 +103,7 @@ void printFileHeadings() {
 		<< F("ControlledBy")
 		<< F("IsOn")
 		<< L_endl;
-	profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tFromP\tFromT\n";
+	profileLogger() << "Time\tZone\tReq\tIs\tState\tTime\tPos\tRatio\tPSU_V\tAdjust\n";
 }
 
 void flushLogs() {
@@ -150,7 +150,7 @@ void HeatingSystem::run_stateMachine() {
 	switch (_state) {
 	case CHECK_I2C_COMS: // once per second
 		if (_initialiser.state_machine_OK()) _state = SERVICE_CONSOLES;
-		serviceConsoles_OK();
+		serviceMainConsole();
 		break;
 	case START_NEW_DAY:
 		loopLogger() << L_time << "START_NEW_DAY" << L_endl;
@@ -170,14 +170,13 @@ void HeatingSystem::run_stateMachine() {
 			//logger() << L_cout << "Ram End" << L_endl;
 			//loopLogger().begin();
 			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
-			logger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
+			logger() << L_time << "SERVICE_TEMP_CONTROLLER state:" << _initialiser.iniState().flags() << L_endl;
 			//thickConsole_Arr[1].sendSlaveIniData(RC_US_REQUESTING_INI << 1);
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
-			logger() << L_time << "...checkAndAdjust done: " << status << L_endl;
-			auto rcOK = serviceConsoles_OK();
-			if (status == ALL_OK && !rcOK) status = RC_FAILED;
-			logger() << "...refresh all Registers done: " << status << L_endl;
+			logger() << L_time << "...checkAndAdjust done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			serviceConsoles_OK();
+			logger() << "...refresh all Registers done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 			loopLogger() << "...refresh all Registers done: " << status << L_endl;
 			switch (status) {
 			case TS_FAILED:
@@ -189,11 +188,6 @@ void HeatingSystem::run_stateMachine() {
 				loopLogger() << L_time << "MV-Failed" << L_endl;
 				logger() << L_time << "MV-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::MIX_V);
-				break;
-			case RC_FAILED:
-				loopLogger() << L_time << "RC-Failed" << L_endl;
-				logger() << L_time << "RC-Failed" << L_flush;
-				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 				break;
 			case RELAYS_FAILED:
 				loopLogger() << L_time << "Relay-Failed" << L_endl;
@@ -230,7 +224,7 @@ void HeatingSystem::run_stateMachine() {
 			_state = SERVICE_TEMP_CONTROLLER;
 #endif	
 		}
-		if (!serviceConsoles_OK()) _initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
+		serviceConsoles_OK();
 		break;
 	}
 	//loopLogger().flush();
@@ -239,21 +233,34 @@ void HeatingSystem::run_stateMachine() {
 bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to keys, also called by yield()
 	bool rc_OK = true;
 	//loopLogger() << L_time << "serviceConsoles?" << L_endl;
-	if (consoleDataHasChanged()) {
-		logger() << L_time << "refreshDisplay: " << (micros() / 1000000)%10 << L_endl;
-		_mainConsole.refreshDisplay();
+	if (serviceMainConsole()) {
 		for (auto& remote : thickConsole_Arr) {
-			rc_OK &= remote.refreshRegistersOK();
+			if (!remote.refreshRegistersOK()) {
+				rc_OK = false;
+				loopLogger() << L_time << "RC-Failed" << L_endl;
+				logger() << L_time << "RC-Failed" << L_flush;
+				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
+			}
+			logger() << "\trefresh RC's " << (rc_OK? "OK":"Bad") /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 		}
-		logger() << "\trefresh RC's: " << rc_OK << L_endl;
 	}
 	if (dataHasChanged) {
 		loopLogger() << L_time << "...updateChangedData" << L_endl;
 		updateChangedData();
 		loopLogger() << L_time << "Done updateChangedData" << L_endl;
 		dataHasChanged = false;
+		//logger() << "\tupdateChangedData iniState: " << _initialiser.iniState().flags() << L_endl;
 	}
 	return rc_OK;
+}
+
+bool HeatingSystem::serviceMainConsole() {
+	if (consoleDataHasChanged()) {
+		logger() << L_time << "refreshDisplay s" << (micros() / 1000000) % 10 << L_endl;
+		_mainConsole.refreshDisplay();
+		return true;
+	}
+	return false;
 }
 
 bool HeatingSystem::consoleDataHasChanged() {

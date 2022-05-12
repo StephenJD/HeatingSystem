@@ -44,7 +44,8 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 	psuMaxV = _valvePos < 5 ? 980 : (_valvePos >= VALVE_TRANSIT_TIME ? 980 : 860);
 	//psuMaxV = 80;
 #endif
-	_psuV = psuMaxV/PSUV_DIVISOR;
+	registers().set(R_PSU_V, psuMaxV / PSUV_DIVISOR);
+
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
 	return psuMaxV > 500 ? psuMaxV : 0;
 }
@@ -83,9 +84,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	speedTest.fastest();
 
 	auto psuOffV = measurePSUVoltage(200);
-	//reg.set(R_FROM_POS, psuOffV / PSUV_DIVISOR);
 	if (psuOffV) _motorsOffV = psuOffV;
-	//_motorsOffV = 990;
 
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
 	reg.set(R_MODE, e_FindOff);
@@ -207,14 +206,14 @@ void Mix_Valve::stateMachine() {
 	case e_Wait: // can interrupt by under/overshoot
 		logger() << name() << L_tabs << F("WaitSettle:\t") << _onTime << F("\tPos:") << _valvePos << F("\tTemp:") << reg.get(R_FLOW_TEMP) << L_endl;
 		if (needIncreaseBy_deg * _journey < 0) { // Overshot during wait
-			reg.set(R_RATIO, (reg.get(R_RATIO) * 2) / 3);
+			if (reg.get(R_ADJUST_MODE) != A_UNDERSHOT) {
+				reg.set(R_RATIO, (reg.get(R_RATIO) * 2) / 3);
+				reg.set(R_ADJUST_MODE, A_OVERSHOT);
+			}
 			adjustValve(needIncreaseBy_deg);
 			mode = e_Mutex;
 		} else if (needIncreaseBy_deg * _journey > 0 && (_flowTempAtStartOfWait - sensorTemp) * _journey > 0) { // Got worse (undershot) during wait
-			//if ((_moveFrom_Temp - sensorTemp) * _journey > 0) { // worse than _moveFrom_Temp
-			//	_moveFrom_Temp = sensorTemp;
-			//	_moveFromPos = _valvePos;
-			//}
+			reg.set(R_ADJUST_MODE, A_UNDERSHOT);
 			adjustValve(needIncreaseBy_deg);
 			mode = e_Mutex;
 			//_onTimeRatio *= 2; // ratio now reflects what has happened so far.
@@ -340,6 +339,7 @@ void Mix_Valve::startWaiting() {
 	auto reg = registers();
 	_onTime = -reg.get(R_SETTLE_TIME);
 	_flowTempAtStartOfWait = reg.get(R_FLOW_TEMP);
+	if (abs(_flowTempAtStartOfWait - _currReqTemp) < 2) _onTime *= 2;
 	stopMotor();
 }
 
@@ -363,40 +363,30 @@ bool Mix_Valve::continueWait() {
 bool Mix_Valve::continueChecking() {
 	auto reg = registers();
 	auto sensorTemp = reg.get(R_FLOW_TEMP);
-	// lambdas
-	auto calcRatio = [&reg, sensorTemp, this]() {
-		auto tempChange = sensorTemp - reg.get(R_FROM_TEMP);
-		auto posChange = _valvePos - _moveFromPos;
-		bool inMidRange = _valvePos > reg.get(R_HALF_TRAVERSE_TIME) / 2 || _valvePos < int(reg.get(R_HALF_TRAVERSE_TIME)) * 3 / 2;
-		if (inMidRange && posChange != 0 && tempChange != 0) {
-			auto newRatio = posChange / tempChange;
-			if (newRatio > e_MIN_RATIO) reg.set(R_RATIO, newRatio);
-		}
-		reg.set(R_FROM_TEMP, sensorTemp);
-		_moveFromPos = _valvePos;
-	};
 
-	// Algorithm
 	auto needIncreaseBy_deg = int(_currReqTemp) - int(sensorTemp);
 	if (needIncreaseBy_deg == 0) {
 		if (_journey != e_TempOK) {
 			_journey = e_TempOK;
-			calcRatio();
+			reg.set(R_ADJUST_MODE, A_GOOD_RATIO);
 		}
 		logger() << name() << L_tabs << F("OK:") << sensorTemp << L_endl;
 		return true;
 	}
 	else {
 		if (_journey == e_TempOK) { // Previously OK temperature has drifted
-			reg.set(R_FROM_TEMP, sensorTemp);
+			_flowTempAtStartOfWait = sensorTemp;
 			adjustValve(needIncreaseBy_deg); // action becomes e_Moving
 		}
 		else { // Undershot after a wait - last adjustment was too small
 			auto oldRatio = reg.get(R_RATIO);
-			if ((reg.get(R_FROM_TEMP) - sensorTemp) * _journey < 0) { // got nearer during last move
+			reg.set(R_ADJUST_MODE, A_UNDERSHOT);
+			if ((_flowTempAtStartOfWait - sensorTemp) * _journey < 0) { // got nearer during last move
 				reg.set(R_RATIO, reg.get(R_RATIO) / 2);
 			}
-			else reg.set(R_FROM_TEMP, sensorTemp); // worse or no better
+			else {
+				_flowTempAtStartOfWait = sensorTemp;
+			}
 			adjustValve(needIncreaseBy_deg);
 			reg.add(R_RATIO, oldRatio);
 		}
@@ -456,12 +446,9 @@ void Mix_Valve::refreshRegisters() {
 	//lambda
 	auto motorActivity = [this]() -> uint8_t {if (_motorDirection == e_Cooling && _journey == e_Moving_Coolest) return e_Moving_Coolest; else return _motorDirection; };
 	auto reg = registers();
-	//reg.set(R_COUNT, abs(_onTime));
-	reg.set(R_COUNT, _psuV);
+	reg.set(R_COUNT, abs(_onTime));
 	reg.set(R_MOTOR_ACTIVITY, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
 	reg.set(R_VALVE_POS, (uint8_t)_valvePos/2);
-	//.set(R_FROM_POS, (uint8_t)_moveFromPos);
-	reg.set(R_FROM_POS, _motorsOffV / PSUV_DIVISOR);
 }
 
 bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // called every loop()
