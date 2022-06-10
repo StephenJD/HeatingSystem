@@ -12,6 +12,7 @@ using namespace arduino_logger;
 
 	/// <summary>
 	/// Construct with signed microsecs period, up to 2147s (35 minutes).
+	/// Negative period timesout immediatly
 	/// Returns true when period has expired.
 	/// Provides time used and time left.
 	/// restart() starts a new period from now.
@@ -105,3 +106,11 @@ using namespace arduino_logger;
 	}
 	int secondsSinceLastCheck(uint32_t & lastCheck_uS);
 	inline uint32_t microsSince(uint32_t lastCheck_uS) { return micros() - lastCheck_uS; } // Since unsigned ints are used, rollover just works.
+
+	inline void delay_mS(int32_t delayPeriod_mS) {
+		// up to 2147s(35 minutes). delay() can freeze with other interrupts!
+#ifndef ZPSIM
+		auto timeout = Timer_mS(delayPeriod_mS);
+		while (!timeout);
+#endif
+	}

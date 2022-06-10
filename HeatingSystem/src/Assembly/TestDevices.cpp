@@ -44,7 +44,7 @@ namespace HardwareInterfaces {
 			device.disable();
 			logger() << F("\tspeedTest ") << deviceName << F(" 0x") << L_hex << device.getAddress() << I2C_Talk::getStatusMsg(speedTest.error()) << L_endl;
 #ifndef ZPSIM
-			delay(2000);
+			delay_mS(2000);
 #endif
 		}
 		else {
@@ -109,7 +109,7 @@ namespace HardwareInterfaces {
 		for (int relayNo = 0; relayNo < NO_OF_RELAYS; ++relayNo) { // 12 relays, but 1 is mix enable.
 			hs()._tempController.relayArr[RELAY_ORDER[relayNo]].set(1);
 			returnVal = _ini.relayPort().updateRelays();
-			delay(200);
+			delay_mS(200);
 			hs()._tempController.relayArr[RELAY_ORDER[relayNo]].set(0);
 			returnVal |= _ini.relayPort().updateRelays();
 			numberFailed = numberFailed + (returnVal != 0);
@@ -123,7 +123,7 @@ namespace HardwareInterfaces {
 				hs().mainDisplay.print(" OK  ");
 			}
 			hs().mainDisplay.sendToDisplay();
-			delay(200);
+			delay_mS(200);
 			returnVal = 0;
 		}
 		hs().mainDisplay.setCursor(12, 3);
@@ -138,7 +138,7 @@ namespace HardwareInterfaces {
 			//I2C_OK = true;
 		}
 		hs().mainDisplay.sendToDisplay();
-		delay(500);
+		delay_mS(500);
 		return numberFailed;
 	}
 

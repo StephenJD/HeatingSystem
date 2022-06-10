@@ -242,6 +242,7 @@ namespace HardwareInterfaces {
 			i2c_status.clear(OLED::F_PROGRAMMER_CHANGED_DATA);
 			i2c_status.set(OLED::F_I2C_NOW);
 			writeRegValue(OLED::R_DEVICE_STATE, i2c_status);
+			loopLogger() << "\tset F_I2C_NOW" << L_endl;
 		};
 
 		auto reg = registers();

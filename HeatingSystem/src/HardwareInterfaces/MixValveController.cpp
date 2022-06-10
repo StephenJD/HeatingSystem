@@ -122,7 +122,7 @@ namespace HardwareInterfaces {
 	bool MixValveController::logMixValveOperation(bool logThis) {
 //#ifndef ZPSIM
 		auto reg = registers();
-		// {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error }
+		// {e_newReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error }
 		auto algorithmMode = Mix_Valve::Mix_Valve::Mode(reg.get(Mix_Valve::R_MODE));
 		if (algorithmMode >= Mix_Valve::e_Error) {
 			logger() << "MixValve Mode Error: " << algorithmMode << L_endl;
@@ -145,16 +145,21 @@ namespace HardwareInterfaces {
 
 	const __FlashStringHelper* MixValveController::showState() const {
 		auto reg = registers();
-		//{e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating,
+		// e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff
+		// /*These are temporary triggers */, e_newReq, e_swapMutex, e_completedMove, e_overshot, e_reachedLimit, e_Error
 		switch (reg.get(Mix_Valve::R_MODE)) {
 		case Mix_Valve::e_Wait: return F("Wt");
+		case Mix_Valve::e_swapMutex: return F("SwM");
 		case Mix_Valve::e_Checking: return F("Ok");
 		case Mix_Valve::e_Mutex: return F("Mx");
-		case Mix_Valve::e_NewReq: return F("Req");
+		case Mix_Valve::e_newReq: return F("Req");
 		case Mix_Valve::e_WaitToCool: return F("WtC");
 		case Mix_Valve::e_ValveOff: return F("Off");
+		case Mix_Valve::e_reachedLimit: return F("RLm");
 		case Mix_Valve::e_HotLimit: return F("Lim");
-		case Mix_Valve::e_FindOff:
+		case Mix_Valve::e_completedMove: return F("Mok");
+		case Mix_Valve::e_overshot: return F("OvS");
+		case Mix_Valve::e_findOff:
 		case Mix_Valve::e_StopHeating:
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating

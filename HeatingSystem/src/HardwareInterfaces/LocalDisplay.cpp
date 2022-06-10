@@ -34,12 +34,9 @@ namespace HardwareInterfaces {
 	}
 
 	void LocalDisplay::sendToDisplay() {
-		//logger() << F(" *** sendToDisplay() *** ") << buff() << L_endl;
-		//_lcd.clear();
+
 		clearFromEnd();
 		_lcd.setCursor(0, 0);
-		//delay(200);
-		//logger() << buff());
 		///0////////9/////////9/////////9/////////9/////////9/////////9///////////////////////////////////
 		// 03:59:50 pm         Sat 12-Jan-2019     DST Hours: 0        Backlight Contrast
 		_lcd.print(buff());

@@ -63,7 +63,7 @@ namespace Assembly {
 			break;
 		case POST_RESET_WARMUP:
 			loopLogger() << L_time << "POST_RESET_WARMUP..." << L_endl;
-			delay(100);
+			delay_mS(100);
 			_iniState.set(POST_RESET_WARMUP, I2C_Recovery::HardReset::hasWarmedUp());
 			break;
 		case RELAYS:

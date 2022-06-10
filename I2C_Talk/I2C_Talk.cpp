@@ -376,7 +376,7 @@ void I2C_Talk_ZX::synchroniseWrite() {
 			while (!hasExpired(zeroCrossSignalTime + fireDelay)) {
 				//logger() << "so far... " << int32_t(micros() - zeroCrossSignalTime) << L_endl; // wait for fireTime.
 			}
-			relayStart = micros(); // time relay delay
+			relayStart = micros(); // time relay-delay
 		}
 		_waitForZeroCross = false;
 	}

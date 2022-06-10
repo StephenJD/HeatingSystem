@@ -105,10 +105,10 @@ namespace I2C_Recovery {
 	Error_codes HardReset::operator()(I2C_Talk & i2c, int addr) {
 		_led_indicatorPin.set();
 		_i2c_resetPin.set();
-		delay(128); // interrupts still serviced
-		delay(128); 
-		delay(128); 
-		delay(128); 
+		delay_mS(128); // interrupts still serviced
+		delay_mS(128); 
+		delay_mS(128); 
+		delay_mS(128); 
 		_i2c_resetPin.clear();
 		i2c.begin();
 		_timeOfReset_uS = micros();
@@ -139,8 +139,11 @@ namespace I2C_Recovery {
 #endif
 				_timeOfReset_uS = 0;
 			}
-			else return false;
-		} 
+			else {
+				loopLogger() << L_time << "not WarmedUp..." << L_endl;
+				return false;
+			}
+		}
 		return true;
 	}
 }

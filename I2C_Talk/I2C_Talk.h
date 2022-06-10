@@ -110,7 +110,7 @@ public:
 	void setStopMargin(uint8_t margin);
 
 	uint16_t getAddressDelay() const { return _addressDelay; }
-	void setAddressDelay(uint16_t delay) {  _addressDelay = delay; }
+	void setAddressDelay(uint16_t addr_delay) {  _addressDelay = addr_delay; }
 
 	static auto getStatusMsg(int errorCode) -> const __FlashStringHelper *;
 	static uint16_t fromBigEndian(const uint8_t* byteArr) { return (byteArr[0] << 8) + byteArr[1]; }
@@ -207,7 +207,7 @@ class I2C_Talk_ZX : public I2C_Talk {
 public:
 	using I2C_Talk::I2C_Talk;
 	void setZeroCross(HardwareInterfaces::Pin_Watch zxPinWatch) { s_zeroCrossPinWatch = zxPinWatch; } // Arduino pin signalling zero-cross detected. 0 = disable, +ve = signal on rising edge, -ve = signal on falling edge
-	void setZeroCrossDelay(uint16_t zxDelay) { s_zxSigToXdelay = zxDelay; } // microseconds delay between signal on zero_cross_pin to next true zero-cross.
+	void setZeroCrossDelay(uint16_t zxDelay) { s_zxSigToXdelay = zxDelay; } // microseconds between signal on zero_cross_pin to next true zero-cross.
 
 	void writeInSync() override { _waitForZeroCross = true; }
 
