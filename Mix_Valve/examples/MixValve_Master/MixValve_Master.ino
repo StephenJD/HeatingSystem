@@ -128,7 +128,7 @@ void sendSlaveIniData(int i) {
 }
 
 void logMixValveOperation(int i, bool logThis) {
-	auto algorithmMode = Mix_Valve::Mix_Valve::Mode(getReg(i, Mix_Valve::R_MODE)); // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq
+	auto algorithmMode = Mix_Valve::Mix_Valve::Mode(getReg(i, Mix_Valve::R_MODE)); // e_Moving, e_Wait, e_Checking, e_Mutex, e_newReq
 	if (algorithmMode >= Mix_Valve::e_Error) {
 		logger() << F("MixValve Error: ") << algorithmMode << L_endl;
 	}
@@ -146,11 +146,11 @@ void logMixValveOperation(int i, bool logThis) {
 }
 
 const __FlashStringHelper* showState(int i) {
-	switch (getReg(i, Mix_Valve::R_MODE)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_NewReq, e_AtLimit, e_StopHeating
+	switch (getReg(i, Mix_Valve::R_MODE)) { // e_Moving, e_Wait, e_Checking, e_Mutex, e_newReq, e_AtLimit, e_StopHeating
 	case Mix_Valve::e_Wait: return F("Wt");
 	case Mix_Valve::e_Checking: return F("Chk");
 	case Mix_Valve::e_Mutex: return F("Mx");
-	case Mix_Valve::e_NewReq: return F("Req");
+	case Mix_Valve::e_newReq: return F("Req");
 	case Mix_Valve::e_AtLimit: return F("Lim");
 	case Mix_Valve::e_StopHeating: return F("Min");
 	case Mix_Valve::e_Moving:

@@ -51,11 +51,11 @@ public:
 		, R_DEVICE_STATE	// MV_Device_State FlagEnum	
 		, R_MODE	// Algorithm Mode
 		, R_MOTOR_ACTIVITY	// Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
-		, R_COUNT
+		, R_FLOW_TEMP_FRACT
 		, R_VALVE_POS
 		, R_PSU_V
 		, R_RATIO	
-		, R_ADJUST_MODE
+		, R_LAUNCH_POS
 		, R_FLOW_TEMP // Received in Slave-Mode
 		// Receive
 		, R_REQUEST_FLOW_TEMP // also sent to confirm
@@ -74,11 +74,12 @@ public:
 		, MV_ALL_REG_SIZE // = 17
 	};
 
-	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
-	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
+	enum Mode {e_Moving, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating
+	/*These are temporary triggers */, e_findOff, e_newReq, e_swapMutex, e_completedMove, e_overshot, e_reachedLimit, e_Error };
+	enum Journey {e_TempOK, e_Launch, e_FindTarget, e_Moving_Coolest, e_NewReqest };
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 	enum { PSUV_DIVISOR = 5 };
-	enum AdjustMode : uint8_t { A_GOOD_RATIO, A_UNDERSHOT, A_OVERSHOT };
+	enum AdjustMode : uint8_t { A_COOL, A_GOOD_RATIO, A_HEAT, A_UNDERSHOT, A_OVERSHOT, A_LIMITED_MOVE };
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
 	using I2C_Flags_Ref = flag_enum::FE_Ref<MV_Device_State, _NO_OF_FLAGS>;
 
@@ -91,31 +92,29 @@ public:
 	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
 private:
 	friend class TestMixV;
-	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
+	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 60};
 
-	//friend void testMixer();
-	//friend void testSlave();
-	//friend void printModes();
-
-	void stateMachine();
+	// Loop Functions
+	bool stateMachine(); // returns true if in transitional-mode
+	// Continuation Functions
+	bool continueMove();
+	bool continueChecking();
+	// Transition Functions
+	void stopMotor();
+	bool activateMotor_isMoving(); // Return true if is moving
+	void turnValveOff();
+	// Adjustment Functions
+	void startJourney(double tempDiff);
+	// New Temp Request Functions
+	bool checkForNewReqTemp();
+	Mode newTempMode();
+	// Non-Algorithmic Functions
 	bool valveIsAtLimit();
 	void saveToEEPROM();
-	bool checkForNewReqTemp();
 	void refreshRegisters();
-	Mode newTempMode();
-	bool continueMove();
-	bool continueWait();
-	bool continueChecking();
-
-	void adjustValve(int tempDiff);
-	bool activateMotor_isMoving(); // Return true if is moving
-	void stopMotor();
-	void startWaiting();
 	void loadFromEEPROM();
-	void turnValveOff();
-
 	int measurePSUVoltage(int period_mS = 25);
-
+	void log();
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;
 	uint8_t _regOffset;
@@ -125,15 +124,21 @@ private:
 	HardwareInterfaces::Pin_Wag * _cool_relay;
 	EEPROMClass * _ep;
 
-	// Temporary Data
-	int16_t _onTime = 0; // +ve to move, -ve to wait.
+	// Algorithm Data
+	int16_t _endPos = 0;
+	int16_t _ave_start_time = 0;
+	int16_t _accumulated_pos = 0;
+	bool _newRequest = true;
+	int16_t _max_overhoot = 0;
+	int8_t _errorDirection = 0;
+	// State data
 	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME;
 	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
 	MotorDirection _motorDirection = e_Stop;
 
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
-	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
+	int16_t _posAtLaunch = 0;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static int16_t _motorsOffV;

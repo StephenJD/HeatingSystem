@@ -30,7 +30,7 @@
 // 8. Then upload your desired sketch to ordinary ProMini board. Tools->Board->Arduino Pro Mini / 328/3.3v/8MHz
 
 // ********** NOTE: ***************
-// If watchdog is being used, set_watchdog_timeout_mS() must be set at the begining of startup, before any calls to delay()
+// If watchdog is being used, set_watchdog_timeout_mS() must be set at the begining of startup, before any delays
 // Otherwise, depending on how cleanly the Arduino shuts down, it may time-out before it is reset.
 // ********************************
 
@@ -122,9 +122,9 @@ void setup() {
 
 	for (int i = 0; i < 10; ++i) { // signal a reset
 		led_Status.set();
-		delay(50);
+		delay_mS(50);
 		led_Status.clear();
-		delay(50);
+		delay_mS(50);
 	}
 
 	mixValve[0].begin(55); // does speed-test for TS
@@ -132,7 +132,7 @@ void setup() {
 	auto speedTest = I2C_SpeedTest{ programmer };
 	speedTest.fastest();
 	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
-	delay(500);
+	delay_mS(500);
 	roleChanged(getRole());
 	i2C().onReceive(mixV_register_set.receiveI2C);
 	i2C().onRequest(mixV_register_set.requestI2C);
