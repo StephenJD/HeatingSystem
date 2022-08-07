@@ -467,7 +467,8 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 			<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
 			<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
 
-		reg.set(R_FLOW_TEMP, _temp_sensr.get_temp());
+		reg.set(R_FLOW_TEMP, _temp_sensr.get_fractional_temp() >> 8);
+		_flowTempFract = _temp_sensr.get_fractional_temp() & 0x00FF;
 		device_State.clear(F_I2C_NOW);
 		device_State.set(F_DS_TS_FAILED, ts_status);
 		uint8_t clearState = 0;
@@ -496,4 +497,76 @@ bool Mix_Valve::checkForNewReqTemp() { // called every second
 		}
 	}
 	return false;
+}
+
+void Mix_Valve::moveValveTo(int pos) {
+	_onTime = abs(pos - _valvePos);
+	_motorDirection = pos > _valvePos ? e_Heating : (pos < _valvePos ? e_Cooling : e_Stop);
+}
+
+void Mix_Valve::getPIDconstants() {// Called once every second. maintains mix valve temp.
+	runPIDstate();
+	refreshRegisters();
+	//log();
+}
+
+void Mix_Valve::runPIDstate() {
+	static enum { init, getBelowSetpoint, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID } pidState;
+	static uint16_t half_period, period;
+	static float min, max;
+	auto reg = registers();
+	float sensorTemp = reg.get(R_FLOW_TEMP) + _flowTempFract / 256.f;
+	float needIncreaseBy_deg = _currReqTemp - sensorTemp;
+	activateMotor_isMoving();
+	continueMove();
+	switch (pidState) {
+	case init:
+		min = 0; max = 0; half_period = 0; period = 0;
+		_currReqTemp = (65 + 25) / 2;
+		if (needIncreaseBy_deg < 1) {
+			moveValveTo(0);
+			pidState = getBelowSetpoint;
+		}
+		else pidState = riseToSetpoint;
+		break;
+	case getBelowSetpoint:
+		if (needIncreaseBy_deg >= 1) {
+			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
+			pidState = riseToSetpoint;
+		}
+		break;
+	case riseToSetpoint:
+		if (needIncreaseBy_deg <= 0) {
+			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5));
+			pidState = findMax;
+		}
+		break;
+	case findMax:
+		++period;
+		if (-needIncreaseBy_deg >= max) max = -needIncreaseBy_deg;
+		else pidState = fallToSetPoint;
+		break;
+	case fallToSetPoint:
+		++period;
+		if (needIncreaseBy_deg <= 0) {
+			half_period = period;
+		}
+		else {
+			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
+			pidState = findMin;
+		}
+		break;
+	case findMin:
+		++period;
+		if (needIncreaseBy_deg <= min) min = needIncreaseBy_deg;
+		else pidState = lastRise;
+		break;
+	case lastRise:
+		++period;
+		if (needIncreaseBy_deg <= 0) pidState = calcPID;
+		break;
+	case calcPID:
+		pidState = init;
+		break;
+	}
 }

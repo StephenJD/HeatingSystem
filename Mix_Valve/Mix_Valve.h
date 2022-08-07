@@ -89,6 +89,8 @@ public:
 	void setDefaultRequestTemp();
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
 	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
+	void getPIDconstants();
+	void runPIDstate();
 private:
 	friend class TestMixV;
 	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
@@ -113,7 +115,7 @@ private:
 	void startWaiting();
 	void loadFromEEPROM();
 	void turnValveOff();
-
+	void moveValveTo(int pos);
 	int measurePSUVoltage(int period_mS = 25);
 
 	// Object state
@@ -134,6 +136,7 @@ private:
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
+	uint8_t _flowTempFract = 0;
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static int16_t _motorsOffV;
