@@ -5,8 +5,8 @@
 
 namespace arduino_logger {
 
-	Loop_Logger::Loop_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock)
-		: Serial_Logger(baudRate, clock, L_clearFlags)
+	Loop_Logger::Loop_Logger(const char * fileNameStem, uint32_t baudRate, Clock & clock, Flags initFlags)
+		: Serial_Logger(baudRate, clock, initFlags)
 		, _fileNameGenerator(fileNameStem)
 	{
 		SD.begin(chipSelect);

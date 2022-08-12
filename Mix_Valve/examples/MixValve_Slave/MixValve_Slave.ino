@@ -34,6 +34,7 @@
 // Otherwise, depending on how cleanly the Arduino shuts down, it may time-out before it is reset.
 // ********************************
 
+#define DO_PID_TEST
 
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
@@ -106,6 +107,8 @@ Mix_Valve  mixValve[] = {
   , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE}
 };
 
+auto nextSecond = Timer_mS(1000);
+
 void setup() {
 	set_watchdog_timeout_mS(8000);
 	logger().begin(SERIAL_RATE);
@@ -136,12 +139,40 @@ void setup() {
 	roleChanged(getRole());
 	i2C().onReceive(mixV_register_set.receiveI2C);
 	i2C().onRequest(mixV_register_set.requestI2C);
+
+#ifdef DO_PID_TEST
+	uint8_t pid_state = 1;
+	psu_enable.set(true);
+	do {
+		while (pid_state > 0 ) {
+			mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
+			mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
+			if (nextSecond) { // once per second
+				nextSecond.repeat();
+				reset_watchdog();
+				pid_state = mixValve[us_mix].getPIDconstants();
+			}
+			if (millis() > 300000) break;
+		}
+		if (millis() > 300000) break;
+		pid_state = 1;
+		while (pid_state > 0) {
+			mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
+			mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
+			if (nextSecond) { // once per second
+				nextSecond.repeat();
+				reset_watchdog();
+				pid_state = mixValve[ds_mix].getPIDconstants();
+			}
+			if (millis() > 600000) break;
+		}	
+	} while (false);
+#endif
 	logger() << F("Setup complete.") << L_flush;
 }
 
 void loop() {
 	// All I2C transfers are initiated by Master
-	static auto nextSecond = Timer_mS(1000);
 	static auto err = Mix_Valve::I2C_Flags_Obj{};
 	static bool multimaster_mode;
 	err.set(Mix_Valve::F_US_TS_FAILED, !mixValve[us_mix].doneI2C_Coms(programmer, nextSecond));

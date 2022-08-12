@@ -30,14 +30,15 @@ namespace HardwareInterfaces {
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		int8_t relayInControl() const;
 		uint8_t index() const { return _localRegOffset == PROG_REG_MV0_OFFSET ? 0 : 1; }
-		const __FlashStringHelper* showState() const;
+		bool tuningMixV();
+		const __FlashStringHelper* showState(uint8_t adjust_mode) const;
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
 		bool readRegistersFromValve_OK();
 		uint8_t sendSlaveIniData(volatile uint8_t& requestINI_flags);
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
-		bool check();
+		bool readReg_and_log(bool alwaysLog = false);
 		void sendRequestFlowTemp(uint8_t callTemp);
 		bool logMixValveOperation(bool logThis);
 		void monitorMode();

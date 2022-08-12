@@ -170,7 +170,10 @@ namespace Assembly {
 			remote.refreshRegistersOK();
 			auto timeout = Timer_mS(100);
 			while (!timeout && remote.registers().get(OLED_Thick_Display::R_ROOM_TEMP) == 0);
-			if (timeout) requiresINI(I2C_RESET);
+#ifndef ZPSIM
+			if (timeout) 
+				requiresINI(I2C_RESET);
+#endif
 		}
 		return status;
 	}		

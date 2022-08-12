@@ -42,7 +42,7 @@ public:
 	RelationalDatabase::RDB<Assembly::TB_NoOfTables> & getDB();
 	Assembly::HeatingSystem_Queries & getQueries() { return _hs_queries; }
 	Assembly::TemperatureController & tempController() { return _tempController; }
-	enum State {CHECK_I2C_COMS, START_NEW_DAY, SERVICE_SEQUENCER, SERVICE_BACKBOILER, SERVICE_TEMP_CONTROLLER, SERVICE_CONSOLES};
+	enum State {CHECK_I2C_COMS, TUNE_MIXV, START_NEW_DAY, SERVICE_SEQUENCER, SERVICE_BACKBOILER, SERVICE_TEMP_CONTROLLER, SERVICE_CONSOLES};
 private: // data-member ordering matters!
 	State _state = START_NEW_DAY;
 	void updateChangedData();

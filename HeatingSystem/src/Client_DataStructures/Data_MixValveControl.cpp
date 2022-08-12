@@ -30,7 +30,7 @@ namespace client_data_structures {
 			if (canDo) {
 				auto reg = runTimeData().registers();
 				auto mode = reg.get(Mix_Valve::R_MODE);
-				if (mode == Mix_Valve::e_newReq || mode == Mix_Valve::e_Wait)
+				if (mode == Mix_Valve::e_NewReq || mode == Mix_Valve::e_Wait)
 					_pos.val = reg.get(Mix_Valve::R_COUNT);
 				else
 					_pos.val = reg.get(Mix_Valve::R_VALVE_POS);
@@ -45,7 +45,7 @@ namespace client_data_structures {
 		case e_state:
 			if (canDo && runTimeData().isEnabled()) {
 				runTimeData().monitorMode();
-				_state = (const char*)runTimeData().showState();
+				_state = (const char*)runTimeData().showState(0);
 			}
 			return &_state;
 		default: return 0;

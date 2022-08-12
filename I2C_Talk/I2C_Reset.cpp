@@ -140,7 +140,9 @@ namespace I2C_Recovery {
 				_timeOfReset_uS = 0;
 			}
 			else {
+#ifndef __AVR_ATmega328P__
 				loopLogger() << L_time << "not WarmedUp..." << L_endl;
+#endif
 				return false;
 			}
 		}

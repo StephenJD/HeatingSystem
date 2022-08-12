@@ -1,5 +1,7 @@
 // Test MixValve.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+
+#define SIM_MIXV
 #include <catch.hpp>
 #include <Arduino.h>
 #include <Mix_Valve.h>
@@ -11,6 +13,9 @@ using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
 using namespace flag_enum;
+
+constexpr uint16_t TS_TIME_CONST = 100;
+constexpr uint16_t TS_DELAY = 20;
 
 I2C_Talk& i2C();
 
@@ -46,22 +51,28 @@ public:
 	int onTime(int mixInd) { return  mixValve[mixInd]._onTime; }
 	int vPos(int mixInd) { return  mixValve[mixInd]._valvePos; }
 	int mode(int mixInd) { return  mixValve[mixInd].registers().get(Mix_Valve::R_MODE); }
+	int adjustMode(int mixInd) { return  mixValve[mixInd].registers().get(Mix_Valve::R_ADJUST_MODE); }
 	uint8_t status(int mixInd) { return  mixValve[mixInd].registers().get(Mix_Valve::R_DEVICE_STATE); }
 	Mix_Valve::Journey journey(int mixInd) { return  mixValve[mixInd]._journey; }
-
+	void getPIDconstants(int mixInd) { mixValve[mixInd].getPIDconstants(); }
+	void simMV_temp(int mixInd) { mixValve[mixInd].simulateFlowTemp(); }
+	void logPID(int mixInd) { mixValve[mixInd].logPID(); }
 	void setToCool_30Deg(int mixV, int pos, int onTime) {
 		setVPos(mixV, pos);
-		setMode(mixV, Mix_Valve::e_Checking);
 		setIsTemp(mixV, 35);
-		setReqTemp(mixV, 30);
-		checkTemp(mixV); // register req temp
-		setReqTemp(mixV, 30);
+		registerReqTemp(mixV, 30);
 		setOnTime(mixV, 0);
-		checkTemp(mixV); // accept new temp
 		// Set to cool
 		checkTemp(mixV);
 		// Reset on-time
 		setOnTime(mixV, onTime);
+	}
+	void registerReqTemp(int mixV, int temp) {
+		setMode(mixV, Mix_Valve::e_Checking);
+		setReqTemp(mixV, temp);
+		checkTemp(mixV); // register req temp
+		setReqTemp(mixV, temp);
+		checkTemp(mixV); // register req temp
 	}
 
 private:
@@ -71,8 +82,8 @@ private:
 };
 
 TestMixV::TestMixV() : mixValve{
-		{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0}
-	  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE}
+		{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0,TS_TIME_CONST, TS_DELAY}
+	  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE, TS_TIME_CONST, TS_DELAY}
 } {
 	mixValve[0].begin(55); // does speed-test for TS
 	mixValve[1].begin(55);
@@ -80,6 +91,22 @@ TestMixV::TestMixV() : mixValve{
 	Mix_Valve::motor_queued = false;
 }
 //	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
+TEST_CASE("Find PID constants", "[MixValve][SIM]") {
+	TestMixV testMV;
+	testMV.setVPos(0, 30);
+	testMV.setIsTemp(0, 25);
+	testMV.getPIDconstants(0);
+	testMV.simMV_temp(0);
+	do {
+		testMV.getPIDconstants(0);
+		testMV.simMV_temp(0);
+	} while (testMV.adjustMode(0) == Mix_Valve::PID_CHECK);
+	//do {
+	//	testMV.getPIDconstants(0);
+	//	testMV.simMV_temp(0);
+	//} while (testMV.mode(0) != 0);
+}
+
 TEST_CASE("Find Off", "[MixValve]") {
 	TestMixV testMV;
 	testMV.setVPos(0, 30);

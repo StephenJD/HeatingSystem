@@ -52,7 +52,9 @@ using namespace arduino_logger;
 	public:
 		Timer_mS(int32_t period_mS) : _timer_uS(period_mS * 1000) {} // negative period timesout immediatly
 		// Queries
-		operator bool() const { return _timer_uS; }
+		operator bool() const { 
+			return _timer_uS; 
+		}
 		int32_t timeLeft() const { return _timer_uS.timeLeft() / 1000; }
 		uint32_t timeUsed() const { return _timer_uS.timeUsed() / 1000; }
 		int32_t period() const { return _timer_uS.period() / 1000; }

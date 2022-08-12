@@ -8,7 +8,7 @@ namespace arduino_logger {
 
 	class Loop_Logger : public Serial_Logger {
 	public:
-		Loop_Logger(const char* fileNameStem, uint32_t baudRate, Clock& clock);
+		Loop_Logger(const char* fileNameStem, uint32_t baudRate, Clock& clock, Flags initFlags = L_clearFlags);
 		Loop_Logger(const char* fileNameStem, uint32_t baudRate);
 		void flush() override; // append loop-file to dated file
 		void begin(uint32_t = 0) override; // delete existing loop-file

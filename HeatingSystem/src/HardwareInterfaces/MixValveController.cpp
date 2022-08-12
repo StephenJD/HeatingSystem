@@ -85,7 +85,7 @@ namespace HardwareInterfaces {
 		return registers().get(Mix_Valve::R_FLOW_TEMP);
 	}
 
-	bool MixValveController::check() { // called once per second
+	bool MixValveController::readReg_and_log(bool alwaysLog) { // called once per second
 		bool mixV_OK = true;
 		if (reEnable() == _OK) {
 			auto mixIniStatus = rawRegisters().get(R_SLAVE_REQUESTING_INITIALISATION);
@@ -103,19 +103,25 @@ namespace HardwareInterfaces {
 					auto& iniStatus = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
 					iniStatus |= requestINI_flag;
 				}
-				//logMixValveOperation(false);
+				//logMixValveOperation(alwaysLog);
 				logMixValveOperation(true);
 			}
 		}
 		return mixV_OK;
 	}
 
+	bool MixValveController::tuningMixV() {
+		if (registers().get(Mix_Valve::R_ADJUST_MODE) == Mix_Valve::PID_CHECK) {
+			monitorMode();
+			return true;
+		} else return false;
+	}	
+	
 	void MixValveController::monitorMode() {
 		if (reEnable() == _OK) {
 			_relayArr[_controlZoneRelay].set(); // turn call relay ON
 			relayController().updateRelays();
-			readRegistersFromValve_OK();
-			logMixValveOperation(true);
+			readReg_and_log(true);
 		}
 	}
 
@@ -123,6 +129,19 @@ namespace HardwareInterfaces {
 //#ifndef ZPSIM
 		auto reg = registers();
 		// {e_newReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error }
+		// 	Tune: {init, findOff, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, restart}
+		auto adjustMode = [](uint8_t adjust_mode, float & psuV) {
+			switch (adjust_mode) {
+			case Mix_Valve::A_GOOD_RATIO: return "G";
+			case Mix_Valve::A_UNDERSHOT: return "U";
+			case Mix_Valve::A_OVERSHOT: return "O";
+			case Mix_Valve::PID_CHECK:
+				psuV = (psuV/5.f/256.f);
+				return "T";
+			default: return "";
+			}
+		};
+
 		auto algorithmMode = Mix_Valve::Mix_Valve::Mode(reg.get(Mix_Valve::R_MODE));
 		if (algorithmMode >= Mix_Valve::e_Error) {
 			logger() << "MixValve Mode Error: " << algorithmMode << L_endl;
@@ -132,34 +151,57 @@ namespace HardwareInterfaces {
 		auto valveIndex = index();
 		if (logThis || _previous_valveStatus[valveIndex] != algorithmMode /*|| algorithmMode < Mix_Valve::e_Checking*/ ) {
 			_previous_valveStatus[valveIndex] = algorithmMode;
-			auto adjustMode = reg.get(Mix_Valve::R_ADJUST_MODE);
-
+			float psuV = reg.get(Mix_Valve::R_PSU_V) * 5.f;
+			auto adjust_mode = reg.get(Mix_Valve::R_ADJUST_MODE);
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
-				<< showState() << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS)*2 << reg.get(Mix_Valve::R_RATIO)
-				<< reg.get(Mix_Valve::R_PSU_V) * 5 << (adjustMode == Mix_Valve::A_UNDERSHOT ? "U" : (adjustMode == Mix_Valve::A_OVERSHOT ? "O" : "G")) << L_endl;
+				<< showState(adjust_mode) << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS)
+				<< adjustMode(adjust_mode, psuV) << reg.get(Mix_Valve::R_RATIO) << psuV  << L_endl;
 		}
 //#endif
 		return true;
 	}
 
-	const __FlashStringHelper* MixValveController::showState() const {
+	const __FlashStringHelper* MixValveController::showState(uint8_t adjust_mode) const {
 		auto reg = registers();
 		// e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff
 		// /*These are temporary triggers */, e_newReq, e_swapMutex, e_completedMove, e_overshot, e_reachedLimit, e_Error
-		switch (reg.get(Mix_Valve::R_MODE)) {
+		auto mv_mode = reg.get(Mix_Valve::R_MODE);
+		if (adjust_mode == Mix_Valve::PID_CHECK) {
+			switch (mv_mode) {
+			case Mix_Valve::init:
+				return F("Ini");
+			case Mix_Valve::findOff:
+				return F("z");
+			case Mix_Valve::riseToSetpoint:
+				return F("^");
+			case Mix_Valve::findMax:
+				return F("^^");
+			case Mix_Valve::fallToSetPoint:
+				return F("v");
+			case Mix_Valve::findMin:
+				return F("vv");
+			case Mix_Valve::lastRise:
+				return F("^");
+			case Mix_Valve::calcPID:
+				return F("?");
+			default:
+				return F("Ini");
+			}
+		}
+		switch (mv_mode) {
 		case Mix_Valve::e_Wait: return F("Wt");
-		case Mix_Valve::e_swapMutex: return F("SwM");
+		//case Mix_Valve::e_swapMutex: return F("SwM");
 		case Mix_Valve::e_Checking: return F("Ok");
 		case Mix_Valve::e_Mutex: return F("Mx");
-		case Mix_Valve::e_newReq: return F("Req");
+		case Mix_Valve::e_NewReq: return F("Req");
 		case Mix_Valve::e_WaitToCool: return F("WtC");
 		case Mix_Valve::e_ValveOff: return F("Off");
-		case Mix_Valve::e_reachedLimit: return F("RLm");
+		//case Mix_Valve::e_reachedLimit: return F("RLm");
 		case Mix_Valve::e_HotLimit: return F("Lim");
-		case Mix_Valve::e_completedMove: return F("Mok");
-		case Mix_Valve::e_overshot: return F("OvS");
-		case Mix_Valve::e_findOff:
+		//case Mix_Valve::e_completedMove: return F("Mok");
+		//case Mix_Valve::e_overshot: return F("OvS");
+		//case Mix_Valve::e_findOff:
 		case Mix_Valve::e_StopHeating:
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
@@ -319,6 +361,8 @@ namespace HardwareInterfaces {
 				profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tConfirm new Request:\t" << _mixCallTemp << L_endl;
 				reg.set(Mix_Valve::R_REQUEST_FLOW_TEMP, _mixCallTemp);
 				status |= writeReg(Mix_Valve::R_REQUEST_FLOW_TEMP);
+				_relayArr[_controlZoneRelay].clear(); // turn call relay OFF to terminate MV-Tune
+				relayController().updateRelays();
 				//I_I2Cdevice::write(Mix_Valve::R_REQUEST_FLOW_TEMP + _remoteRegOffset, 1, &_mixCallTemp);
 			} else if (reg.get(Mix_Valve::R_REQUEST_FLOW_TEMP) != _mixCallTemp) { // This gets called when R_REQUEST_FLOW_TEMP == 255. -- not sure why!
 				profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tCorrect Request:\t" << _mixCallTemp << L_endl;

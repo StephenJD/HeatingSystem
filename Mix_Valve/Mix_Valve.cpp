@@ -41,7 +41,8 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 		if (thisVoltage < 1024 && thisVoltage > psuMaxV) psuMaxV = thisVoltage;
 	} while (!testComplete);
 #ifdef ZPSIM
-	psuMaxV = _valvePos < 5 ? 980 : (_valvePos >= VALVE_TRANSIT_TIME ? 980 : 860);
+	if (_motorDirection == e_Stop || _valvePos < 5 || _valvePos >= VALVE_TRANSIT_TIME) psuMaxV = 980;
+	else psuMaxV =  860;
 	//psuMaxV = 80;
 #endif
 	registers().set(R_PSU_V, psuMaxV / PSUV_DIVISOR);
@@ -57,6 +58,19 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 	_ep(&ep),
 	_regOffset(reg_offset)
 	{}
+
+#ifdef SIM_MIXV
+Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset
+	, uint16_t timeConst, uint16_t delay)
+	: _temp_sensr(i2C_recover, defaultTSaddr, 40)
+	, _heat_relay(&heatRelay)
+	, _cool_relay(&coolRelay)
+	, _ep(&ep)
+	, _regOffset(reg_offset)
+	, _timeConst(timeConst)
+	, _delayTime(delay)
+{};
+#endif	
 
 void Mix_Valve::begin(int defaultFlowTemp) {
 	logger() << name() << F("MixValve begin") << L_endl;
@@ -302,7 +316,7 @@ bool Mix_Valve::activateMotor_isMoving() {
 		if (newOffV) {
 			_motorsOffV = newOffV;
 			_motors_off_diff_V = uint16_t(_motorsOffV * 0.03);
-			logger() << F("New OFF-V: ") << _motorsOffV << L_endl;
+			//logger() << F("New OFF-V: ") << _motorsOffV << L_endl;
 		}
 	};
 
@@ -448,7 +462,7 @@ void Mix_Valve::refreshRegisters() {
 	auto reg = registers();
 	reg.set(R_COUNT, abs(_onTime));
 	reg.set(R_MOTOR_ACTIVITY, motorActivity()); // Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
-	reg.set(R_VALVE_POS, (uint8_t)_valvePos/2);
+	reg.set(R_VALVE_POS, (uint8_t)_valvePos);
 }
 
 bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // called every loop()
@@ -504,69 +518,130 @@ void Mix_Valve::moveValveTo(int pos) {
 	_motorDirection = pos > _valvePos ? e_Heating : (pos < _valvePos ? e_Cooling : e_Stop);
 }
 
-void Mix_Valve::getPIDconstants() {// Called once every second. maintains mix valve temp.
+#ifdef SIM_MIXV // must be called only once per second
+void Mix_Valve::simulateFlowTemp() {
+	_actualFlowTemp = 25 + (70 - 25) * _valvePos / 140;
+	_delayLine[_delayLinePos] = _actualFlowTemp;
+	++_delayLinePos;
+	if (_delayLinePos > _delayTime) _delayLinePos = 0;
+	float delayTemp = 0;
+	for (uint16_t i = 0; i < _delayTime; ++i) delayTemp += _delayLine[i];
+	delayTemp = delayTemp / (_delayTime + 1); // _delayTime 0 for no delay
+	auto reg = registers();
+	_reportedTemp += (delayTemp - _reportedTemp) * (1.f - exp(-(1.f / _timeConst)));
+	reg.set(R_FLOW_TEMP, uint8_t(_reportedTemp));
+	_flowTempFract = uint8_t(_reportedTemp * 256 + 1/32.) & 0xF0;
+}
+#endif
+
+void Mix_Valve::logPID() {
+	switch (_pidState) {
+	case init:
+		logger() << "Ini"; break;
+	case findOff:
+		logger() << "z"; break;
+	case riseToSetpoint:
+		logger() << "^"; break;
+	case findMax:
+		logger() << "^^"; break;
+	case fallToSetPoint:
+		logger() << "v"; break;
+	case findMin:
+		logger() << "vv"; break;
+	case lastRise:
+		logger() << "^"; break;
+	case calcPID:
+		logger() << "?"; break;
+	}
+	float flowTemp = registers().get(R_FLOW_TEMP) + _flowTempFract / 256.f;
+	logger() << L_tabs << _valvePos << flowTemp << _min_temp << _max_temp << _half_period << _period << L_endl;
+}
+
+uint8_t Mix_Valve::getPIDconstants() {// Called once every second. maintains mix valve temp.
 	runPIDstate();
-	refreshRegisters();
-	//log();
+	logPID();
+	return _pidState;
 }
 
 void Mix_Valve::runPIDstate() {
-	static enum { init, getBelowSetpoint, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID } pidState;
-	static uint16_t half_period, period;
-	static float min, max;
 	auto reg = registers();
 	float sensorTemp = reg.get(R_FLOW_TEMP) + _flowTempFract / 256.f;
 	float needIncreaseBy_deg = _currReqTemp - sensorTemp;
-	activateMotor_isMoving();
-	continueMove();
-	switch (pidState) {
+	if (activateMotor_isMoving()) {
+		if (!continueMove()) stopMotor();
+	}
+	reg.set(R_ADJUST_MODE, PID_CHECK);
+	switch (_pidState) {
 	case init:
-		min = 0; max = 0; half_period = 0; period = 0;
-		_currReqTemp = (65 + 25) / 2;
-		if (needIncreaseBy_deg < 1) {
-			moveValveTo(0);
-			pidState = getBelowSetpoint;
-		}
-		else pidState = riseToSetpoint;
+		_currReqTemp = 25 + (65 - 25) / 2;
+		[[fallthrough]];
+	case restart:
+		logger() << "Mode" << L_tabs << "Pos" << "flowT" << "min" << "max" << "halfP" << "P" << L_endl;
+		_min_temp = 0; _max_temp = 0; _half_period = 0; _period = 0;
+		moveValveTo(0);
+		_pidState = findOff;
 		break;
-	case getBelowSetpoint:
-		if (needIncreaseBy_deg >= 1) {
+	case findOff:
+		if (valveIsAtLimit() && needIncreaseBy_deg >= 1) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
-			pidState = riseToSetpoint;
+			_pidState = riseToSetpoint;
 		}
 		break;
 	case riseToSetpoint:
 		if (needIncreaseBy_deg <= 0) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5));
-			pidState = findMax;
+			_pidState = findMax;
 		}
 		break;
 	case findMax:
-		++period;
-		if (-needIncreaseBy_deg >= max) max = -needIncreaseBy_deg;
-		else pidState = fallToSetPoint;
+		++_period;
+		if (-needIncreaseBy_deg >= _max_temp) {
+			_max_temp = -needIncreaseBy_deg;
+			reg.set(R_RATIO, uint8_t(_max_temp));
+			reg.set(R_PSU_V, uint8_t(_max_temp * 256));
+		}
+		else {
+			_pidState = fallToSetPoint;
+		}
 		break;
 	case fallToSetPoint:
-		++period;
+		++_period;
 		if (needIncreaseBy_deg <= 0) {
-			half_period = period;
+			_half_period = _period;
 		}
 		else {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
-			pidState = findMin;
+			_pidState = findMin;
 		}
 		break;
 	case findMin:
-		++period;
-		if (needIncreaseBy_deg <= min) min = needIncreaseBy_deg;
-		else pidState = lastRise;
+		++_period;
+		if (-needIncreaseBy_deg <= _min_temp) {
+			_min_temp = -needIncreaseBy_deg;
+			reg.set(R_RATIO, uint8_t(-_min_temp));
+			reg.set(R_PSU_V, uint8_t(-_min_temp * 256));
+		}
+		else {
+			_pidState = lastRise;
+		}
 		break;
 	case lastRise:
-		++period;
-		if (needIncreaseBy_deg <= 0) pidState = calcPID;
+		++_period;
+		if (needIncreaseBy_deg <= 0) _pidState = calcPID;
 		break;
 	case calcPID:
-		pidState = init;
+		if (_half_period < _period / 2.5 || _half_period > _period / 1.67) {
+			_currReqTemp = 25 + (_currReqTemp - 25) * 2 * _half_period / _period;
+			_pidState = restart;
+		}
+		else {
+			_pidState = init;
+			stopMotor();
+			reg.set(R_ADJUST_MODE, A_GOOD_RATIO);
+		}
 		break;
 	}
+	reg.set(R_MODE, _pidState);
+	reg.set(R_VALVE_POS, (uint8_t)_valvePos);
+	reg.set(R_COUNT, (uint8_t)_period);
 }

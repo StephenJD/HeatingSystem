@@ -21,6 +21,7 @@
 #include <EEPROM_RE.h>
 #include <I2C_Registers.h>
 #include <Flag_Enum.h>
+#define SIM_MIXV
 
 extern i2c_registers::I_Registers& mixV_registers;
 
@@ -75,22 +76,30 @@ public:
 	};
 
 	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
+	enum Tune {init, findOff, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, restart };
 	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
 	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
 	enum { PSUV_DIVISOR = 5 };
-	enum AdjustMode : uint8_t { A_GOOD_RATIO, A_UNDERSHOT, A_OVERSHOT };
+	enum AdjustMode : uint8_t { A_GOOD_RATIO, A_UNDERSHOT, A_OVERSHOT, PID_CHECK };
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
 	using I2C_Flags_Ref = flag_enum::FE_Ref<MV_Device_State, _NO_OF_FLAGS>;
 
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
+#ifdef SIM_MIXV
+	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset
+	, uint16_t timeConst, uint16_t delay);
+#endif
 	void begin(int defaultFlowTemp);
 	const __FlashStringHelper* name() const;
 	void check_flow_temp();
 	void setDefaultRequestTemp();
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
 	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
-	void getPIDconstants();
-	void runPIDstate();
+	uint8_t getPIDconstants();
+	void logPID();
+#ifdef SIM_MIXV
+	void simulateFlowTemp();
+#endif
 private:
 	friend class TestMixV;
 	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
@@ -117,6 +126,7 @@ private:
 	void turnValveOff();
 	void moveValveTo(int pos);
 	int measurePSUVoltage(int period_mS = 25);
+	void runPIDstate();
 
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;
@@ -137,6 +147,21 @@ private:
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
 	uint8_t _flowTempFract = 0;
+
+	// PID Constants
+	Tune _pidState = init;
+	uint16_t _half_period, _period;
+	float _min_temp, _max_temp;
+#ifdef SIM_MIXV
+	int16_t _actualFlowTemp;
+	uint16_t _timeConst = 0;
+	uint16_t _delayTime = 0;
+	int16_t _delayLine[100] = {};
+	uint8_t _delayLinePos = 0;
+	float _reportedTemp = 25;
+#endif
+
+	// Shared Motor Supply
 	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static int16_t _motorsOffV;
