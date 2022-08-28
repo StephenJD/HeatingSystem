@@ -129,7 +129,7 @@ namespace HardwareInterfaces {
 //#ifndef ZPSIM
 		auto reg = registers();
 		// {e_newReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error }
-		// 	Tune: {init, findOff, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, restart}
+		// enum Tune { init, findOff, waitForCool, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, turnOff, restart };
 		auto adjustMode = [](uint8_t adjust_mode, float & psuV) {
 			switch (adjust_mode) {
 			case Mix_Valve::A_GOOD_RATIO: return "G";
@@ -155,23 +155,27 @@ namespace HardwareInterfaces {
 			auto adjust_mode = reg.get(Mix_Valve::R_ADJUST_MODE);
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
-				<< showState(adjust_mode) << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS)
+				<< showState() << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS)
 				<< adjustMode(adjust_mode, psuV) << reg.get(Mix_Valve::R_RATIO) << psuV  << L_endl;
 		}
 //#endif
 		return true;
 	}
 
-	const __FlashStringHelper* MixValveController::showState(uint8_t adjust_mode) const {
+	const __FlashStringHelper* MixValveController::showState() const {
 		auto reg = registers();
 		// e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff
 		// /*These are temporary triggers */, e_newReq, e_swapMutex, e_completedMove, e_overshot, e_reachedLimit, e_Error
+		// enum Tune { init, findOff, waitForCool, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, turnOff, restart };
+
 		auto mv_mode = reg.get(Mix_Valve::R_MODE);
-		if (adjust_mode == Mix_Valve::PID_CHECK) {
+		if (reg.get(Mix_Valve::R_ADJUST_MODE) == Mix_Valve::PID_CHECK) {
 			switch (mv_mode) {
 			case Mix_Valve::init:
 				return F("Ini");
 			case Mix_Valve::findOff:
+			case Mix_Valve::turnOff:
+			case Mix_Valve::waitForCool:
 				return F("z");
 			case Mix_Valve::riseToSetpoint:
 				return F("^");

@@ -45,7 +45,7 @@ namespace client_data_structures {
 		case e_state:
 			if (canDo && runTimeData().isEnabled()) {
 				runTimeData().monitorMode();
-				_state = (const char*)runTimeData().showState(0);
+				_state = (const char*)runTimeData().showState();
 			}
 			return &_state;
 		default: return 0;

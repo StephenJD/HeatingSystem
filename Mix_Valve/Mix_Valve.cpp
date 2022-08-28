@@ -480,7 +480,7 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 		if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
 			<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
 			<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
-
+		_temp_sensr.setHighRes();
 		reg.set(R_FLOW_TEMP, _temp_sensr.get_fractional_temp() >> 8);
 		_flowTempFract = _temp_sensr.get_fractional_temp() & 0x00FF;
 		device_State.clear(F_I2C_NOW);
@@ -564,16 +564,44 @@ uint8_t Mix_Valve::getPIDconstants() {// Called once every second. maintains mix
 }
 
 void Mix_Valve::runPIDstate() {
+	static float lastSensTemp;
+	static uint32_t lastChangeTime;
 	auto reg = registers();
 	float sensorTemp = reg.get(R_FLOW_TEMP) + _flowTempFract / 256.f;
 	float needIncreaseBy_deg = _currReqTemp - sensorTemp;
+
+	// Lambda
+	auto isRising = [sensorTemp, this, &reg]() {
+		reg.set(R_PSU_V, _flowTempFract);
+		if (sensorTemp > lastSensTemp) {
+			lastSensTemp = sensorTemp;
+			lastChangeTime = millis();
+		} else if (_onTime == 0 && millis() - lastChangeTime > 10000) {
+			_currReqTemp = sensorTemp;
+			return false;
+		}
+		return true;
+	};
+
+	auto isCooling = [sensorTemp, this, &reg]() {
+		reg.set(R_PSU_V, _flowTempFract);
+		if (sensorTemp < lastSensTemp) {
+			lastSensTemp = sensorTemp;
+			lastChangeTime = millis();
+		}
+		else if (millis() - lastChangeTime > 10000) {
+			return false;
+		}
+		return true;
+	};
+
 	if (activateMotor_isMoving()) {
 		if (!continueMove()) stopMotor();
 	}
 	reg.set(R_ADJUST_MODE, PID_CHECK);
 	switch (_pidState) {
 	case init:
-		_currReqTemp = 25 + (65 - 25) / 2;
+		_currReqTemp = 25 + (65 - 25) / 2; // = 45
 		[[fallthrough]];
 	case restart:
 		logger() << "Mode" << L_tabs << "Pos" << "flowT" << "min" << "max" << "halfP" << "P" << L_endl;
@@ -582,61 +610,90 @@ void Mix_Valve::runPIDstate() {
 		_pidState = findOff;
 		break;
 	case findOff:
-		if (valveIsAtLimit() && needIncreaseBy_deg >= 1) {
-			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
-			_pidState = riseToSetpoint;
+		if (valveIsAtLimit()) {
+			lastSensTemp = sensorTemp;
+			lastChangeTime = millis();
+			_pidState = waitForCool;
+		}
+		break;
+	case waitForCool:
+		if (needIncreaseBy_deg >= 1) {
+			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5)); // 112
+			lastSensTemp = sensorTemp;
+			lastChangeTime = millis();
+			_pidState = riseToSetpoint;	
+		} else if (!isCooling()) {
+			moveValveTo(0);
+			_pidState = turnOff; // abort
 		}
 		break;
 	case riseToSetpoint:
-		if (needIncreaseBy_deg <= 0) {
-			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5));
+		if (!isRising() || needIncreaseBy_deg <= 0) {
+			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5)); // 37
+			lastSensTemp = sensorTemp;
+			lastChangeTime = millis();
 			_pidState = findMax;
 		}
 		break;
 	case findMax:
 		++_period;
-		if (-needIncreaseBy_deg >= _max_temp) {
+		if (isRising()) {
 			_max_temp = -needIncreaseBy_deg;
 			reg.set(R_RATIO, uint8_t(_max_temp));
 			reg.set(R_PSU_V, uint8_t(_max_temp * 256));
 		}
 		else {
+			lastSensTemp = sensorTemp;
+			lastChangeTime = millis();
 			_pidState = fallToSetPoint;
 		}
 		break;
 	case fallToSetPoint:
 		++_period;
-		if (needIncreaseBy_deg <= 0) {
+		if (!isCooling()) {
+			moveValveTo(0);
+			_pidState = turnOff; // abort
+		} else if (needIncreaseBy_deg <= 0) {
 			_half_period = _period;
-		}
-		else {
+		} else {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
 			_pidState = findMin;
 		}
 		break;
 	case findMin:
 		++_period;
-		if (-needIncreaseBy_deg <= _min_temp) {
+		if (isCooling()) {
 			_min_temp = -needIncreaseBy_deg;
 			reg.set(R_RATIO, uint8_t(-_min_temp));
 			reg.set(R_PSU_V, uint8_t(-_min_temp * 256));
 		}
 		else {
+			lastSensTemp = sensorTemp;
+			lastChangeTime = millis();
 			_pidState = lastRise;
 		}
 		break;
 	case lastRise:
 		++_period;
 		if (needIncreaseBy_deg <= 0) _pidState = calcPID;
+		else if (!isRising()) {
+			moveValveTo(0);
+			_pidState = turnOff; // abort
+		}
 		break;
 	case calcPID:
 		if (_half_period < _period / 2.5 || _half_period > _period / 1.67) {
 			_currReqTemp = 25 + (_currReqTemp - 25) * 2 * _half_period / _period;
 			_pidState = restart;
+		} else {
+			moveValveTo(0);
+			_pidState = turnOff;
 		}
-		else {
+		break;
+	case turnOff:
+		if (_valvePos == 0) {
 			_pidState = init;
-			stopMotor();
+			_period = 0;
 			reg.set(R_ADJUST_MODE, A_GOOD_RATIO);
 		}
 		break;

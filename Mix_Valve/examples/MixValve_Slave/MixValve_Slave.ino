@@ -143,30 +143,27 @@ void setup() {
 #ifdef DO_PID_TEST
 	uint8_t pid_state = 1;
 	psu_enable.set(true);
-	do {
-		while (pid_state > 0 ) {
-			mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
-			mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
-			if (nextSecond) { // once per second
-				nextSecond.repeat();
-				reset_watchdog();
-				pid_state = mixValve[us_mix].getPIDconstants();
-			}
-			if (millis() > 300000) break;
+
+	while (pid_state > 0 ) {
+		mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
+		mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
+		if (nextSecond) { // once per second
+			nextSecond.repeat();
+			reset_watchdog();
+			pid_state = mixValve[us_mix].getPIDconstants();
 		}
-		if (millis() > 300000) break;
-		pid_state = 1;
-		while (pid_state > 0) {
-			mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
-			mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
-			if (nextSecond) { // once per second
-				nextSecond.repeat();
-				reset_watchdog();
-				pid_state = mixValve[ds_mix].getPIDconstants();
-			}
-			if (millis() > 600000) break;
-		}	
-	} while (false);
+	}
+	pid_state = 1;
+	while (pid_state > 0) {
+		mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
+		mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
+		if (nextSecond) { // once per second
+			nextSecond.repeat();
+			reset_watchdog();
+			pid_state = mixValve[ds_mix].getPIDconstants();
+		}
+	}	
+
 #endif
 	logger() << F("Setup complete.") << L_flush;
 }
