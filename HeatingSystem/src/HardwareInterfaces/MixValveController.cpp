@@ -173,10 +173,12 @@ namespace HardwareInterfaces {
 			switch (mv_mode) {
 			case Mix_Valve::init:
 				return F("Ini");
+			case Mix_Valve::restart:
+				return F("S");
 			case Mix_Valve::findOff:
-			case Mix_Valve::turnOff:
+				return F("O");
 			case Mix_Valve::waitForCool:
-				return F("z");
+				return F("C");
 			case Mix_Valve::riseToSetpoint:
 				return F("^");
 			case Mix_Valve::findMax:
@@ -186,9 +188,11 @@ namespace HardwareInterfaces {
 			case Mix_Valve::findMin:
 				return F("vv");
 			case Mix_Valve::lastRise:
-				return F("^");
+				return F(".^");
 			case Mix_Valve::calcPID:
 				return F("?");
+			case Mix_Valve::turnOff:
+				return F("Z");
 			default:
 				return F("Ini");
 			}

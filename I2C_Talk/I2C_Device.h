@@ -10,7 +10,7 @@ public:
 	static constexpr auto START_SPEED_AFTER_FAILURE = 100000;
 	// Queries
 	virtual int32_t runSpeed() const { return i2C().getI2CFrequency(); }
-	virtual int32_t getFailedTime() const { return 0; }
+	virtual bool failWaitHasElapsed() const { return true; }
 	virtual bool isEnabled() const { return true; }
 	virtual auto getStatus() const-> I2C_Talk_ErrorCodes::Error_codes { return i2C().status(getAddress()); }
 	const I2C_Talk& i2C() const { return const_cast<I_I2Cdevice*>(this)->i2C(); }
@@ -110,7 +110,7 @@ public:
 	// Queries
 	bool isEnabled() const override { return _i2c_speed != 0; }
 	int32_t runSpeed() const override { return _i2c_speed; }
-	int32_t getFailedTime() const override { return _lastFailedTime_uS; }
+	bool failWaitHasElapsed() const override { return micros() - _lastFailedTime_uS >= DISABLE_PERIOD_ON_FAILURE; }
 	bool isUnrecoverable() const;
 	I2C_Recovery::I2C_Recover& recovery() const;
 	auto getStatus() const ->I2C_Talk_ErrorCodes::Error_codes override;

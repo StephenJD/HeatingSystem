@@ -141,10 +141,10 @@ void setup() {
 	i2C().onRequest(mixV_register_set.requestI2C);
 
 #ifdef DO_PID_TEST
-	uint8_t pid_state = 1;
+	uint8_t pid_state = Mix_Valve::findOff;
 	psu_enable.set(true);
 
-	while (pid_state > 0 ) {
+	while (pid_state > Mix_Valve::init) {
 		mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
 		mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
 		if (nextSecond) { // once per second
@@ -153,8 +153,8 @@ void setup() {
 			pid_state = mixValve[us_mix].getPIDconstants();
 		}
 	}
-	pid_state = 1;
-	while (pid_state > 0) {
+	pid_state = Mix_Valve::findOff;
+	while (pid_state > Mix_Valve::init) {
 		mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
 		mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
 		if (nextSecond) { // once per second

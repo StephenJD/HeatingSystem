@@ -564,39 +564,64 @@ uint8_t Mix_Valve::getPIDconstants() {// Called once every second. maintains mix
 }
 
 void Mix_Valve::runPIDstate() {
-	static float lastSensTemp;
+	constexpr uint32_t MAX_CHANGE_PERIOD_mS = 5000;
+	static float lastSensTemp, fastestTempChange;
 	static uint32_t lastChangeTime;
 	auto reg = registers();
-	float sensorTemp = reg.get(R_FLOW_TEMP) + _flowTempFract / 256.f;
-	float needIncreaseBy_deg = _currReqTemp - sensorTemp;
 
 	// Lambda
-	auto isRising = [sensorTemp, this, &reg]() {
-		reg.set(R_PSU_V, _flowTempFract);
+	auto setFractReg = [&reg,this]() {reg.set(R_PSU_V, _flowTempFract); };
+
+	auto valveHasReachedWarmPos = [this]() {
+		return (_motorDirection == e_Heating && _onTime == 0) || _motorDirection != e_Heating;
+	};	
+	
+	auto valveHasReachedCoolPos = [this]() {
+		return (_motorDirection == e_Cooling && _onTime == 0) || _motorDirection != e_Cooling;
+	};
+
+	auto isChanging = []() {return millis() - lastChangeTime < MAX_CHANGE_PERIOD_mS; };
+
+	auto changeRate = [](float sensorTemp) {
+		return (sensorTemp - lastSensTemp) / (millis() - lastChangeTime);
+	};
+
+	auto isRising = [this, setFractReg, valveHasReachedWarmPos, isChanging, changeRate](float sensorTemp) {
+		setFractReg();
+		auto change_rate = changeRate(sensorTemp);
 		if (sensorTemp > lastSensTemp) {
+			if (change_rate > fastestTempChange) {
+				fastestTempChange = change_rate;
+			//else if (change_rate < fastestTempChange / 2.) {
+
+			}
 			lastSensTemp = sensorTemp;
 			lastChangeTime = millis();
-		} else if (_onTime == 0 && millis() - lastChangeTime > 10000) {
+		} else if (valveHasReachedWarmPos() && !isChanging()) {
 			_currReqTemp = sensorTemp;
 			return false;
 		}
 		return true;
 	};
 
-	auto isCooling = [sensorTemp, this, &reg]() {
-		reg.set(R_PSU_V, _flowTempFract);
+	auto isCooling = [this, setFractReg, valveHasReachedCoolPos, isChanging](float sensorTemp) {
+		setFractReg();
 		if (sensorTemp < lastSensTemp) {
 			lastSensTemp = sensorTemp;
 			lastChangeTime = millis();
 		}
-		else if (millis() - lastChangeTime > 10000) {
+		else if (valveHasReachedCoolPos() && !isChanging()) {
 			return false;
 		}
 		return true;
 	};
 
+	// Algorithm
+	float sensorTemp = reg.get(R_FLOW_TEMP) + _flowTempFract / 256.f;
+	float needIncreaseBy_deg = _currReqTemp - sensorTemp;
+
 	if (activateMotor_isMoving()) {
-		if (!continueMove()) stopMotor();
+		if (!continueMove()) stopMotor(); // turns PSU off if stopped.
 	}
 	reg.set(R_ADJUST_MODE, PID_CHECK);
 	switch (_pidState) {
@@ -617,18 +642,15 @@ void Mix_Valve::runPIDstate() {
 		}
 		break;
 	case waitForCool:
-		if (needIncreaseBy_deg >= 1) {
+		if (!isCooling(sensorTemp)) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5)); // 112
 			lastSensTemp = sensorTemp;
 			lastChangeTime = millis();
 			_pidState = riseToSetpoint;	
-		} else if (!isCooling()) {
-			moveValveTo(0);
-			_pidState = turnOff; // abort
 		}
 		break;
 	case riseToSetpoint:
-		if (!isRising() || needIncreaseBy_deg <= 0) {
+		if (!isRising(sensorTemp) || needIncreaseBy_deg <= 0) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5)); // 37
 			lastSensTemp = sensorTemp;
 			lastChangeTime = millis();
@@ -637,7 +659,7 @@ void Mix_Valve::runPIDstate() {
 		break;
 	case findMax:
 		++_period;
-		if (isRising()) {
+		if (isRising(sensorTemp)) {
 			_max_temp = -needIncreaseBy_deg;
 			reg.set(R_RATIO, uint8_t(_max_temp));
 			reg.set(R_PSU_V, uint8_t(_max_temp * 256));
@@ -650,7 +672,7 @@ void Mix_Valve::runPIDstate() {
 		break;
 	case fallToSetPoint:
 		++_period;
-		if (!isCooling()) {
+		if (!isCooling(sensorTemp)) {
 			moveValveTo(0);
 			_pidState = turnOff; // abort
 		} else if (needIncreaseBy_deg <= 0) {
@@ -662,7 +684,7 @@ void Mix_Valve::runPIDstate() {
 		break;
 	case findMin:
 		++_period;
-		if (isCooling()) {
+		if (isCooling(sensorTemp)) {
 			_min_temp = -needIncreaseBy_deg;
 			reg.set(R_RATIO, uint8_t(-_min_temp));
 			reg.set(R_PSU_V, uint8_t(-_min_temp * 256));
@@ -676,7 +698,7 @@ void Mix_Valve::runPIDstate() {
 	case lastRise:
 		++_period;
 		if (needIncreaseBy_deg <= 0) _pidState = calcPID;
-		else if (!isRising()) {
+		else if (!isRising(sensorTemp)) {
 			moveValveTo(0);
 			_pidState = turnOff; // abort
 		}
@@ -691,7 +713,7 @@ void Mix_Valve::runPIDstate() {
 		}
 		break;
 	case turnOff:
-		if (_valvePos == 0) {
+		if (_valvePos < 5) {
 			_pidState = init;
 			_period = 0;
 			reg.set(R_ADJUST_MODE, A_GOOD_RATIO);

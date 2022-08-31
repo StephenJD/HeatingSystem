@@ -191,24 +191,24 @@ namespace I2C_Recovery {
 				[[fallthrough]];
 			case S_Disable: // 5
 				if (haveBumpedUpMaxStrategyUsed(S_Disable)) {
+					disable();
 #ifdef REPORT_RECOVER
 					logger() << L_time << F("S_Disable device 0x") << L_hex << device().getAddress() << L_endl;
 #endif
 				}			
-				if (device().getAddress() == _deviceWaitingOnFailureFor10Mins) { // waiting 10 mins didn't fix it, so do full machine reset
+				if (_deviceWaitingOnFailureFor10Mins == 0) {
+#ifdef REPORT_RECOVER
+					logger() << L_time << F("New Disabled device 0x") << L_hex << device().getAddress() << L_endl;
+#endif
+					_deviceWaitingOnFailureFor10Mins = device().getAddress();
+				} else if (device().getAddress() == _deviceWaitingOnFailureFor10Mins && device().failWaitHasElapsed()) {
+					// waiting 10 mins didn't fix it, so do full machine reset
 #ifdef REPORT_RECOVER
 					logger() << L_time << F("S_DeviceUnrecoverable device 0x") << L_hex << device().getAddress() << L_endl;
 #endif
 					haveBumpedUpMaxStrategyUsed(S_Unrecoverable);
 					_deviceWaitingOnFailureFor10Mins = -_deviceWaitingOnFailureFor10Mins; // signals failed on second attempt
-				} else {
-					if (_deviceWaitingOnFailureFor10Mins == 0) {
-#ifdef REPORT_RECOVER
-						logger() << L_time << F("New Disabled device 0x") << L_hex << device().getAddress() << L_endl;
-#endif
-						_deviceWaitingOnFailureFor10Mins = device().getAddress();
-					}
-				}
+				}  
 				[[fallthrough]];
 			case S_Unrecoverable: // 6
 				disable();
@@ -232,7 +232,7 @@ namespace I2C_Recovery {
 
 	bool I2C_Recover_Retest::slowdown() { // called by failure strategy
 		bool canReduce = false;
-		//if (micros() - device().getFailedTime() < REPEAT_FAILURE_PERIOD) { // within 10secs try reducing speed.
+		//if (device().failWaitHasElapsed()) { // after 60secs try reducing speed.
 			auto thisFreq = device().runSpeed();
 			canReduce = thisFreq > I2C_Talk::MIN_I2C_FREQ;
 			if (canReduce) {

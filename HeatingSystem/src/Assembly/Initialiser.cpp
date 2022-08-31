@@ -151,7 +151,7 @@ namespace Assembly {
 		uint8_t status = 0;
 		for (auto& mixValveControl : hs().tempController().mixValveControllerArr) {
 			loopLogger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_endl;
-			if (mixValveControl.isUnrecoverable()) {
+			if (mixValveControl.isUnrecoverable()) { // I2C_Recover_Retest::_deviceWaitingOnFailureFor10Mins set.
 				loopLogger() << "isUnrecoverable" << L_endl;
 				I2C_Recovery::HardReset::arduinoReset("MixValveController");
 			}

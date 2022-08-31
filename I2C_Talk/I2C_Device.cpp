@@ -163,7 +163,7 @@ Error_codes I_I2Cdevice_Recovery::write_verify(int registerAddress, int numberBy
 
 Error_codes I_I2Cdevice_Recovery::reEnable(bool immediatly) {
 	if (isEnabled()) return _OK;
-	else if (immediatly || micros() - getFailedTime() > DISABLE_PERIOD_ON_FAILURE) {
+	else if (immediatly || failWaitHasElapsed()) {
 		reset();
 		//logger() << L_time << F("Re-enabling disabled device 0x") << L_hex << getAddress() << L_endl;
 		return i2C().status(getAddress());
