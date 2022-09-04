@@ -150,6 +150,7 @@ namespace HardwareInterfaces {
 
 		auto valveIndex = index();
 		if (logThis || _previous_valveStatus[valveIndex] != algorithmMode /*|| algorithmMode < Mix_Valve::e_Checking*/ ) {
+			reEnable(true);
 			_previous_valveStatus[valveIndex] = algorithmMode;
 			float psuV = reg.get(Mix_Valve::R_PSU_V) * 5.f;
 			auto adjust_mode = reg.get(Mix_Valve::R_ADJUST_MODE);
