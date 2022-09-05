@@ -61,15 +61,19 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & 
 
 #ifdef SIM_MIXV
 Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset
-	, uint16_t timeConst, uint16_t delay)
+	, uint16_t timeConst, uint16_t delay, uint8_t maxTemp)
 	: _temp_sensr(i2C_recover, defaultTSaddr, 40)
 	, _heat_relay(&heatRelay)
 	, _cool_relay(&coolRelay)
 	, _ep(&ep)
 	, _regOffset(reg_offset)
 	, _timeConst(timeConst)
-	, _delayTime(delay)
-{};
+	, _delayLine(delay)
+	, _maxTemp(maxTemp)
+{
+	_delayLine.prime(40 * 16);
+	_reportedTemp = _delayLine.getAverage() / 16;
+};
 #endif	
 
 void Mix_Valve::begin(int defaultFlowTemp) {
@@ -521,17 +525,14 @@ void Mix_Valve::moveValveTo(int pos) {
 
 #ifdef SIM_MIXV // must be called only once per second
 void Mix_Valve::simulateFlowTemp() {
-	_actualFlowTemp = 25 + (70 - 25) * _valvePos / 140;
-	_delayLine[_delayLinePos] = _actualFlowTemp;
-	++_delayLinePos;
-	if (_delayLinePos > _delayTime) _delayLinePos = 0;
-	float delayTemp = 0;
-	for (uint16_t i = 0; i < _delayTime; ++i) delayTemp += _delayLine[i];
-	delayTemp = delayTemp / (_delayTime + 1); // _delayTime 0 for no delay
+	_actualFlowTemp_16ths = 16 * (25 + (_maxTemp - 25) * _valvePos  / 140);
+	_delayLine.addValue(_actualFlowTemp_16ths);
+	float delayTemp = _delayLine.getAverage() / 16.;
 	auto reg = registers();
 	_reportedTemp += (delayTemp - _reportedTemp) * (1.f - exp(-(1.f / _timeConst)));
-	reg.set(R_FLOW_TEMP, uint8_t(_reportedTemp));
-	_flowTempFract = uint8_t(_reportedTemp * 256 + 1/32.) & 0xF0;
+	uint16_t reported_16t = (_reportedTemp + (1 / 32.)) * 256;
+	reg.set(R_FLOW_TEMP, uint8_t(reported_16t >> 8));
+	_flowTempFract = uint8_t(reported_16t & 0xF0);
 }
 #endif
 
@@ -563,7 +564,7 @@ void Mix_Valve::logPID() {
 		logger() << F("Z"); break;
 	}
 	float flowTemp = registers().get(R_FLOW_TEMP) + _flowTempFract / 256.f;
-	logger() << L_tabs << _valvePos << flowTemp << _min_temp << _max_temp << _half_period << _period << registers().get(R_PSU_V) <<L_endl;
+	logger() << L_tabs << _valvePos << flowTemp << _min_temp_16ths << _max_temp_16ths << _half_period << _period << registers().get(R_PSU_V) <<L_endl;
 }
 
 uint8_t Mix_Valve::getPIDconstants() {// Called once every second. maintains mix valve temp.
@@ -574,8 +575,8 @@ uint8_t Mix_Valve::getPIDconstants() {// Called once every second. maintains mix
 
 void Mix_Valve::runPIDstate() {
 	constexpr uint32_t MAX_CHANGE_PERIOD_S = 5;
-	static float lastSensTemp, fastestTempChange;
-	static int lastChangeTime;
+	static int16_t lastSensTemp;
+	static float fastestTempChange;
 	auto reg = registers();
 
 	// Lambda
@@ -589,66 +590,51 @@ void Mix_Valve::runPIDstate() {
 		return (_motorDirection == e_Cooling && _onTime == 0) || _motorDirection != e_Cooling;
 	};
 
-	auto now = []() {return uint8_t((millis() + 100) / 1000); };
-
-	auto timeSinceLastChange = [now]() {
-		return uint8_t(now() - lastChangeTime);
+	auto changeRate = [=](int16_t sensorTemp_16ths) {
+		logger() << F("Change") << L_tabs << sensorTemp_16ths/16. << (sensorTemp_16ths - lastSensTemp) ;
+		_integrator.addValue(sensorTemp_16ths - lastSensTemp);
+		lastSensTemp = sensorTemp_16ths;
+		auto aveChangeRate = _integrator.getAverage();
+		if (aveChangeRate > fastestTempChange) 
+			fastestTempChange = aveChangeRate;
+		logger() << F("Fastest:") << fastestTempChange << F("Ave:") << aveChangeRate << L_endl;;
+		return aveChangeRate;
 	};
 
-	auto resetChangeTemp = [=](float sensorTemp) {
-		auto timeSince = timeSinceLastChange();
-		if (lastSensTemp == sensorTemp) lastChangeTime = now() - MAX_CHANGE_PERIOD_S;
-		else {
-			if (timeSince > 1) --timeSince;
-			lastChangeTime = now() - timeSince;
-		}
-		lastSensTemp = sensorTemp;
-	};
-
-	auto isChanging = [=]() {return timeSinceLastChange() < MAX_CHANGE_PERIOD_S; };
-
-	auto changeRate = [=](float sensorTemp) {
-		logger() << F("Change") << L_tabs << sensorTemp << (sensorTemp - lastSensTemp)
-			<< now() << lastChangeTime
-			<< timeSinceLastChange() << ((sensorTemp - lastSensTemp) / timeSinceLastChange()) << L_endl;
-
-		return (sensorTemp - lastSensTemp) / timeSinceLastChange();
-	};
-
-	auto isRising = [=](float sensorTemp) {
-		auto change_rate = changeRate(sensorTemp);
-		setFractReg(int8_t(change_rate * 128));
-		if (sensorTemp > lastSensTemp) {
-			if (change_rate > fastestTempChange) fastestTempChange = change_rate; // 1->4/16ths / sec
-			resetChangeTemp(sensorTemp);
-		} else if (valveHasReachedWarmPos()) {
-			if (sensorTemp < 40.f || !isChanging()) _currReqTemp = uint8_t(sensorTemp);
-		}
-		else {
-			resetChangeTemp(sensorTemp);
-			change_rate = fastestTempChange + 1; // temp static, still moving to pos.
+	auto isRising = [=](int16_t sensorTemp_16ths) {
+		auto change_rate = changeRate(sensorTemp_16ths);
+		setFractReg(uint8_t(change_rate));
+		if (fastestTempChange < 2) {
+			if (valveHasReachedWarmPos()) {
+				_currReqTemp = uint8_t((sensorTemp_16ths + 8)/16);
+			}
+			else {
+				change_rate = fastestTempChange; // temp static, still moving to pos.
+			}
 		}
 		return change_rate;
 	};
 
-	auto isRisingFast = [isRising](float sensorTemp) {
-		return (isRising(sensorTemp) > fastestTempChange /2.f);
+	auto isRisingFast = [isRising](int16_t sensorTemp_16ths) {
+		auto debug = fastestTempChange;
+		auto debug2 = isRising(sensorTemp_16ths);
+		return (debug2 >= fastestTempChange - 0.15);
 	};
 
-	auto isCooling = [=](float sensorTemp) {
-		setFractReg(_flowTempFract);
-		if (sensorTemp < lastSensTemp) {
-			resetChangeTemp(sensorTemp);
+	auto isCooling = [=](int16_t sensorTemp_16ths) {
+		auto change_rate = changeRate(sensorTemp_16ths);
+		setFractReg(uint8_t(change_rate));
+		if (sensorTemp_16ths < lastSensTemp) {
 		}
-		else if (valveHasReachedCoolPos() && !isChanging()) {
+		else if (valveHasReachedCoolPos() && change_rate >= 0) {
 			return false;
 		}
 		return true;
 	};
 
 	// Algorithm
-	float sensorTemp = reg.get(R_FLOW_TEMP) + _flowTempFract / 256.f;
-	float needIncreaseBy_deg = _currReqTemp - sensorTemp;
+	int16_t sensorTemp_16ths = reg.get(R_FLOW_TEMP) * 16 + _flowTempFract / 16;
+	int16_t needIncreaseBy_16ths = (_currReqTemp*16) - sensorTemp_16ths;
 
 	if (activateMotor_isMoving()) {
 		if (!continueMove()) stopMotor(); // turns PSU off if stopped.
@@ -656,56 +642,56 @@ void Mix_Valve::runPIDstate() {
 	reg.set(R_ADJUST_MODE, PID_CHECK);
 	switch (_pidState) {
 	case init:
-		//_currReqTemp = 25 + (65 - 25) / 2; // = 45
+		_integrator.setNoOfValues(10);
+		_integrator.clear();
 		[[fallthrough]];
 	case restart:
 		logger() << F("Mode") << L_tabs << F("Pos") << F("flowT") << F("min") << F("max") << F("halfP") << F("P") << F("Change") << L_endl;
-		_min_temp = 0; _max_temp = 0; _half_period = 0; _period = 0;
+		_min_temp_16ths = 0; _max_temp_16ths = 0; _half_period = 0; _period = 0; lastSensTemp = sensorTemp_16ths;
 		moveValveTo(0);
 		_pidState = findOff;
 		break;
 	case findOff:
+		changeRate(sensorTemp_16ths);
 		if (valveIsAtLimit()) {
 			stopMotor();
-			resetChangeTemp(sensorTemp);
 			_pidState = waitForCool;
 		}
 		break;
 	case waitForCool:
-		if (!isCooling(sensorTemp)) {
+		changeRate(sensorTemp_16ths);
+		if (sensorTemp_16ths < 30 * 16) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5)); // 112
-			resetChangeTemp(sensorTemp);
-			fastestTempChange = 0.f;
+			fastestTempChange = .2f;
 			_pidState = riseToSetpoint;	
 		}
 		break;
 	case riseToSetpoint:
-		if (!isRisingFast(sensorTemp) /*|| needIncreaseBy_deg <= 0*/) {
+		if (!isRisingFast(sensorTemp_16ths)) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5)); // 37
-			resetChangeTemp(sensorTemp);
-			_currReqTemp = uint8_t(sensorTemp + 0.5f);
+			_currReqTemp = uint8_t((sensorTemp_16ths + 0.5f)/16);
 			if (_currReqTemp < 40) _pidState = calcPID;
 			else _pidState = findMax;
+			logger() << F("Mode") << L_tabs << F("Pos") << F("flowT") << F("min") << F("max") << F("halfP") << F("P") << F("Change") << L_endl;
 		}
 		break;
 	case findMax:
 		++_period;
-		if (isRising(sensorTemp) > 0.f) {
-			_max_temp = -needIncreaseBy_deg;
-			reg.set(R_RATIO, uint8_t(_max_temp));
-			reg.set(R_PSU_V, uint8_t(_max_temp * 256));
+		if (isRising(sensorTemp_16ths) > 0.f) {
+			_max_temp_16ths = -needIncreaseBy_16ths;
+			reg.set(R_RATIO, uint8_t(_max_temp_16ths/16));
+			reg.set(R_PSU_V, uint8_t(_max_temp_16ths % 16));
 		}
 		else {
-			resetChangeTemp(sensorTemp);
 			_pidState = fallToSetPoint;
 		}
 		break;
 	case fallToSetPoint:
 		++_period;
-		if (!isCooling(sensorTemp)) {
+		if (!isCooling(sensorTemp_16ths)) {
 			moveValveTo(0);
 			_pidState = turnOff; // abort
-		} else if (needIncreaseBy_deg <= 0) {
+		} else if (needIncreaseBy_16ths <= 0) {
 			_half_period = _period;
 		} else {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
@@ -714,29 +700,25 @@ void Mix_Valve::runPIDstate() {
 		break;
 	case findMin:
 		++_period;
-		if (isCooling(sensorTemp)) {
-			_min_temp = -needIncreaseBy_deg;
-			reg.set(R_RATIO, uint8_t(-_min_temp));
-			reg.set(R_PSU_V, uint8_t(-_min_temp * 256));
+		if (isCooling(sensorTemp_16ths)) {
+			_min_temp_16ths = -needIncreaseBy_16ths;
+			reg.set(R_RATIO, uint8_t(-_min_temp_16ths / 16));
+			reg.set(R_PSU_V, uint8_t(-_min_temp_16ths % 16));
 		}
 		else {
-			resetChangeTemp(sensorTemp);
 			_pidState = lastRise;
 		}
 		break;
 	case lastRise:
 		++_period;
-		if (needIncreaseBy_deg <= 0) _pidState = calcPID;
-		else if (isRising(sensorTemp) <= 0.f) {
+		if (needIncreaseBy_16ths <= 0) _pidState = calcPID;
+		else if (isRising(sensorTemp_16ths) <= 0.f) {
 			moveValveTo(0);
 			_pidState = turnOff; // abort
 		}
 		break;
 	case calcPID:
-		//if (_half_period < _period / 2.5 || _half_period > _period / 1.67) {
-		//	_currReqTemp = 25 + (_currReqTemp - 25) * 2 * _half_period / _period;
-		//	_pidState = restart;
-		//} else 
+		logger() << F("Mode") << L_tabs << F("Pos") << F("flowT") << F("min") << F("max") << F("halfP") << F("P") << F("Change") << L_endl;
 		{
 			moveValveTo(0);
 			_pidState = turnOff;

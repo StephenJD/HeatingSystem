@@ -21,7 +21,7 @@
 #include <EEPROM_RE.h>
 #include <I2C_Registers.h>
 #include <Flag_Enum.h>
-#define SIM_MIXV
+//#define SIM_MIXV
 
 extern i2c_registers::I_Registers& mixV_registers;
 
@@ -31,6 +31,59 @@ namespace HardwareInterfaces {
 namespace I2C_Recovery {
 	class I2C_Recover;
 }
+
+template <int length, typename intType = int16_t >
+class Integrator {
+public:
+	Integrator() : _noOfValues(length), _integrator{ 0 } {}
+	Integrator(int noOfValues) : _noOfValues(noOfValues), _integrator{ 0 } {}
+	void setNoOfValues(int noOfValues) { _noOfValues = noOfValues; }
+	void addValue(intType val);
+	void prime(intType val);
+	float getAverage();
+	float getSum();
+	intType getVal(int pos);
+	void clear();
+private:
+	intType _integrator[length];
+	uint8_t _pos = 0;
+	uint8_t _noOfValues;
+};
+
+template <int l, typename intType>
+void Integrator<l, intType>::addValue(intType val) {
+	_integrator[_pos] = val;
+	++_pos;
+	if (_pos >= _noOfValues) _pos = 0;
+}
+
+template <int l, typename intType>
+intType Integrator<l, intType>::getVal(int pos) {
+	return _integrator[pos];
+}
+
+template <int l, typename intType>
+void Integrator<l, intType>::clear() {
+	for (auto &val : _integrator) val = intType(0);
+}
+
+template <int l, typename intType>
+float Integrator<l, intType>::getSum() {
+	float sum = 0;
+	for (int pos = 0; pos < _noOfValues; ++pos) sum += _integrator[pos];
+	return sum;
+}
+
+template <int l, typename intType>
+float Integrator<l, intType>::getAverage() {
+	return getSum() / float(_noOfValues);
+}
+
+template <int l, typename intType>
+void Integrator<l, intType>::prime(intType val) {
+	for (int pos = 0; pos < _noOfValues; ++pos) _integrator[pos] = val;
+}
+
 
 class Mix_Valve
 {
@@ -87,7 +140,7 @@ public:
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
 #ifdef SIM_MIXV
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset
-	, uint16_t timeConst, uint16_t delay);
+	, uint16_t timeConst, uint16_t delay, uint8_t maxTemp);
 #endif
 	void begin(int defaultFlowTemp);
 	const __FlashStringHelper* name() const;
@@ -99,6 +152,7 @@ public:
 	void logPID();
 #ifdef SIM_MIXV
 	void simulateFlowTemp();
+	void set_maxTemp(uint8_t max) { _maxTemp = max; }
 #endif
 private:
 	friend class TestMixV;
@@ -147,18 +201,18 @@ private:
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _flowTempAtStartOfWait = e_MIN_FLOW_TEMP;
 	uint8_t _flowTempFract = 0;
+	Integrator<10> _integrator{};
 
 	// PID Constants
 	Tune _pidState = init;
 	uint16_t _half_period, _period;
-	float _min_temp, _max_temp;
+	int16_t _min_temp_16ths, _max_temp_16ths;
 #ifdef SIM_MIXV
-	int16_t _actualFlowTemp;
+	int16_t _actualFlowTemp_16ths;
 	uint16_t _timeConst = 0;
-	uint16_t _delayTime = 0;
-	int16_t _delayLine[100] = {};
-	uint8_t _delayLinePos = 0;
+	Integrator<100> _delayLine{};
 	float _reportedTemp = 25;
+	uint8_t _maxTemp;
 #endif
 
 	// Shared Motor Supply

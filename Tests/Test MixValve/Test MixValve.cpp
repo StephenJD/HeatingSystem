@@ -14,7 +14,7 @@ using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
 using namespace flag_enum;
 
-constexpr uint16_t TS_TIME_CONST = 100;
+constexpr uint16_t TS_TIME_CONST = 10;
 constexpr uint16_t TS_DELAY = 20;
 
 I2C_Talk& i2C();
@@ -40,6 +40,7 @@ auto ds_coolRelay = Pin_Wag(e_DS_Cool, HIGH);
 class TestMixV {
 public:
 	TestMixV();
+	void setMaxTemp(int mixInd, int max) { mixValve[mixInd].set_maxTemp(max); }
 	void setOnTime(int mixInd, int ontime) { mixValve[mixInd]._onTime = ontime; }
 	void setVPos(int mixInd, int vpos) { mixValve[mixInd]._valvePos = vpos; }
 	void setMode(int mixInd, Mix_Valve::Mode mode) { mixValve[mixInd].registers().set(Mix_Valve::R_MODE, mode); }
@@ -82,8 +83,8 @@ private:
 };
 
 TestMixV::TestMixV() : mixValve{
-		{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0,TS_TIME_CONST, TS_DELAY}
-	  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE, TS_TIME_CONST, TS_DELAY}
+		{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0,TS_TIME_CONST, TS_DELAY, 70}
+	  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE, TS_TIME_CONST, TS_DELAY, 40}
 } {
 	mixValve[0].begin(55); // does speed-test for TS
 	mixValve[1].begin(55);
@@ -91,20 +92,69 @@ TestMixV::TestMixV() : mixValve{
 	Mix_Valve::motor_queued = false;
 }
 //	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
-TEST_CASE("Find PID constants", "[MixValve][SIM]") {
+TEST_CASE("Find PID constants_70", "[MixValve][SIM]") {
 	TestMixV testMV;
+	testMV.setMaxTemp(0,70);
 	testMV.setVPos(0, 30);
-	testMV.setIsTemp(0, 25);
-	testMV.getPIDconstants(0);
+	testMV.setIsTemp(0, 40);
 	testMV.simMV_temp(0);
+	testMV.getPIDconstants(0);
 	do {
-		testMV.getPIDconstants(0);
 		testMV.simMV_temp(0);
+		testMV.getPIDconstants(0);
 	} while (testMV.adjustMode(0) == Mix_Valve::PID_CHECK);
-	//do {
-	//	testMV.getPIDconstants(0);
-	//	testMV.simMV_temp(0);
-	//} while (testMV.mode(0) != 0);
+}
+
+TEST_CASE("Find PID constants_30", "[MixValve][SIM]") {
+	TestMixV testMV;
+	testMV.setMaxTemp(1, 30);
+	testMV.setVPos(1, 30);
+	testMV.setIsTemp(1, 30);
+	testMV.simMV_temp(1);
+	testMV.getPIDconstants(1);
+	do {
+		testMV.simMV_temp(1);
+		testMV.getPIDconstants(1);
+	} while (testMV.adjustMode(1) == Mix_Valve::PID_CHECK);
+}
+
+TEST_CASE("Find PID constants_40", "[MixValve][SIM]") {
+	TestMixV testMV;
+	testMV.setMaxTemp(1, 40);
+	testMV.setVPos(1, 30);
+	testMV.setIsTemp(1, 40);
+	testMV.simMV_temp(1);
+	testMV.getPIDconstants(1);
+	do {
+		testMV.simMV_temp(1);
+		testMV.getPIDconstants(1);
+	} while (testMV.adjustMode(1) == Mix_Valve::PID_CHECK);
+}
+
+TEST_CASE("Find PID constants_50", "[MixValve][SIM]") {
+	TestMixV testMV;
+	testMV.setMaxTemp(1, 50);
+	testMV.setVPos(1, 30);
+	testMV.setIsTemp(1, 40);
+	testMV.simMV_temp(1);
+	testMV.getPIDconstants(1);
+	do {
+		testMV.simMV_temp(1);
+		testMV.getPIDconstants(1);
+	} while (testMV.adjustMode(1) == Mix_Valve::PID_CHECK);
+}
+
+TEST_CASE("Find PID constants_60", "[MixValve][SIM]") {
+	TestMixV testMV;
+	testMV.setMaxTemp(1, 60);
+	testMV.setVPos(1, 30);
+	testMV.setIsTemp(1, 40);
+	testMV.simMV_temp(1);
+	testMV.getPIDconstants(1);
+	do {
+		testMV.simMV_temp(1);
+		testMV.getPIDconstants(1);
+	} while (testMV.adjustMode(1) == Mix_Valve::PID_CHECK);
 }
 
 TEST_CASE("Find Off", "[MixValve]") {
