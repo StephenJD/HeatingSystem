@@ -669,6 +669,8 @@ void Mix_Valve::runPIDstate() {
 	case riseToSetpoint:
 		if (!isRisingFast(sensorTemp_16ths)) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5)); // 37
+			//_period = _integrator.getNoOfValues() / 2;
+			//_currReqTemp = uint8_t((sensorTemp_16ths - (_integrator.getAverage() * _integrator.getNoOfValues() / 2.f) + 0.5f) / 16);
 			_currReqTemp = uint8_t((sensorTemp_16ths + 0.5f)/16);
 			if (_currReqTemp < 40) _pidState = calcPID;
 			else _pidState = findMax;

@@ -34,7 +34,7 @@
 // Otherwise, depending on how cleanly the Arduino shuts down, it may time-out before it is reset.
 // ********************************
 
-#define DO_PID_TEST
+// #define DO_PID_TEST
 
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;

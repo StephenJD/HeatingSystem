@@ -37,12 +37,15 @@ class Integrator {
 public:
 	Integrator() : _noOfValues(length), _integrator{ 0 } {}
 	Integrator(int noOfValues) : _noOfValues(noOfValues), _integrator{ 0 } {}
+	// Queries
+	float getAverage() const;
+	float getSum() const;
+	intType getVal(int pos) const;
+	uint8_t getNoOfValues() const {	return _noOfValues;	};
+	// Modifiers
 	void setNoOfValues(int noOfValues) { _noOfValues = noOfValues; }
 	void addValue(intType val);
 	void prime(intType val);
-	float getAverage();
-	float getSum();
-	intType getVal(int pos);
 	void clear();
 private:
 	intType _integrator[length];
@@ -58,7 +61,7 @@ void Integrator<l, intType>::addValue(intType val) {
 }
 
 template <int l, typename intType>
-intType Integrator<l, intType>::getVal(int pos) {
+intType Integrator<l, intType>::getVal(int pos) const {
 	return _integrator[pos];
 }
 
@@ -68,14 +71,14 @@ void Integrator<l, intType>::clear() {
 }
 
 template <int l, typename intType>
-float Integrator<l, intType>::getSum() {
+float Integrator<l, intType>::getSum() const {
 	float sum = 0;
 	for (int pos = 0; pos < _noOfValues; ++pos) sum += _integrator[pos];
 	return sum;
 }
 
 template <int l, typename intType>
-float Integrator<l, intType>::getAverage() {
+float Integrator<l, intType>::getAverage() const {
 	return getSum() / float(_noOfValues);
 }
 
