@@ -12,6 +12,7 @@
 #include <I2C_Reset.h>
 #include <Flag_Enum.h>
 #include <Timer_mS_uS.h>
+#include <Mega_Due.h>
 
 using namespace client_data_structures;
 using namespace RelationalDatabase;

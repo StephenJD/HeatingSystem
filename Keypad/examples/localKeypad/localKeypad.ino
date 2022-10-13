@@ -1,14 +1,8 @@
+#include <Mega_Due.h>
 #include <LocalKeypad.h>
 #include <Logging.h>
 
 using namespace HardwareInterfaces;
-
-const uint8_t LOCAL_INT_PIN = 18;
-const uint32_t SERIAL_RATE = 115200;
-const uint8_t KEY_ANALOGUE = A1;
-const uint8_t KEYPAD_REF_PIN = A3;
-const uint8_t RESET_LEDP_PIN = 16;  // high supply
-const uint8_t RESET_LEDN_PIN = 19;  // low for on.
 
 namespace arduino_logger {
   Logger & logger() {
@@ -18,12 +12,13 @@ namespace arduino_logger {
 }
 using namespace arduino_logger;
 
-LocalKeypad keypad{ LOCAL_INT_PIN, KEY_ANALOGUE, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW } };
+LocalKeypad keypad{ KEYPAD_INT_PIN, KEYPAD_ANALOGUE_PIN, KEYPAD_REF_PIN, { RESET_LEDN_PIN, LOW } };
 
 void setup()
 {
 	Serial.begin(SERIAL_RATE); // required for test-all.
 	pinMode(RESET_LEDP_PIN, OUTPUT);
+
 	digitalWrite(RESET_LEDP_PIN, HIGH);
 	logger() << L_allwaysFlush << L_time << F(" \n\n********** Logging Begun ***********") << L_endl;
 	keypad.begin();
@@ -32,6 +27,7 @@ void setup()
 void loop()
 {
   auto nextLocalKey = keypad.popKey();
+	//logger() << "AnRef: " << analogRead(KEYPAD_REF_PIN) << " AnRead(0): " << analogRead(A0) << " AnRead(1): " << analogRead(A1) << " AnRead(3): " << analogRead(A3) << L_endl;
 	while (nextLocalKey >= 0) { // only do something if key pressed
 		switch (nextLocalKey) {
 		case I_Keypad::KEY_INFO:

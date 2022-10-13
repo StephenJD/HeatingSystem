@@ -7,6 +7,7 @@
 #include <Clock.h>
 #include <Logging_Ram.h>
 #include <MemoryFree.h>
+#include <Mega_Due.h>
 
 #ifdef ZPSIM
 #include <iostream>
@@ -170,7 +171,7 @@ void HeatingSystem::run_stateMachine() {
 			//logger() << L_cout << "Ram End" << L_endl;
 			//loopLogger().begin();
 			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
-			logger() << L_time << "SERVICE_TEMP_CONTROLLER state:" << _initialiser.iniState().flags() << L_endl;
+			logger() << L_time << "SERVICE_TEMP_CONTROLLER state(252): " << _initialiser.iniState().flags() << L_endl;
 			//thickConsole_Arr[1].sendSlaveIniData(RC_US_REQUESTING_INI << 1);
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();

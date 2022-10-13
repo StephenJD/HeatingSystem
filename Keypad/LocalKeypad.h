@@ -19,7 +19,8 @@ namespace HardwareInterfaces {
 		KeyOperation getKeyCode() override;
 	private:
 		// members need to be static to allow attachment to interrupt handler
-		static constexpr uint16_t adc_LocalKey_val[] = { 874,798,687,612,551,501,440 };
+		static constexpr uint16_t adc_LocalKey_val[] = { 874,798,687,612,551,501,440 }; 
+		// KEY_INFO, KEY_UP_OR_INFO, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_BACK, KEY_SELECT;
 		//static Pin_Wag _indicatorLED; // static UDT's don't get constructed!
 		static uint8_t _indicatorLED;
 		static uint8_t _keyReadPin;

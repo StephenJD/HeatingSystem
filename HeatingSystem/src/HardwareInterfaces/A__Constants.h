@@ -18,18 +18,11 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 71;
+	constexpr uint8_t VERSION = 72;
 
 	/////////////////// Pin assignments & misc. ///////////////////
 	constexpr uint8_t RESET_I2C_PIN = 14;  // active low.
-	constexpr uint8_t RESET_LEDP_PIN = 16; // Supply (High)
-	constexpr uint8_t RESET_LEDN_PIN = 19; // Low for ON
-
-	constexpr uint8_t KEYPAD_INT_PIN = 18;
-	constexpr uint8_t KEYPAD_ANALOGUE_PIN = A1;
 	constexpr uint8_t BATT_ANALOGUE = A2;
-	constexpr uint8_t KEYPAD_REF_PIN = A3;
-	constexpr uint8_t RESET_5vREF_PIN = A4;
 
 	constexpr uint8_t ZERO_CROSS_PIN = 15; // active falling edge.
 	constexpr uint16_t ZERO_CROSS_DELAY = 690;
@@ -87,15 +80,14 @@ namespace HardwareInterfaces {
 	// IO Device Addresses
 
 	constexpr int32_t I2C_MAX_SPEED = 100000;
-	constexpr uint8_t EEPROM_I2C_ADDR = 0x50;
 	constexpr uint8_t PROGRAMMER_I2C_ADDR = 0x11;
 	constexpr uint8_t MIX_VALVE_I2C_ADDR = 0x10;
 	constexpr uint8_t US_CONSOLE_I2C_ADDR = 0x12;
 	constexpr uint8_t DS_CONSOLE_I2C_ADDR = 0x13;
 	constexpr uint8_t FL_CONSOLE_I2C_ADDR = 0x14;
 	constexpr uint8_t REMOTE_CONSOLE_ADDR[] = {US_CONSOLE_I2C_ADDR, DS_CONSOLE_I2C_ADDR, FL_CONSOLE_I2C_ADDR };
-	constexpr uint8_t US_FLOW_TEMPSENS_ADDR = 0x2C;
-	constexpr uint8_t DS_FLOW_TEMPSENS_ADDR = 0x4f;
+	constexpr uint8_t US_FLOW_TEMPSENS_ADDR = 0x29;
+	constexpr uint8_t DS_FLOW_TEMPSENS_ADDR = 0x4F;
 	constexpr uint8_t US_ROOM_TEMPSENS_ADDR = 0x36;
 	constexpr uint8_t DS_ROOM_TEMPSENS_ADDR = 0x74;
 	constexpr uint8_t FL_ROOM_TEMPSENS_ADDR = 0x70;

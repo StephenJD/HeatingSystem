@@ -31,6 +31,7 @@
 #include "HeatingSystem.h"
 #include <iostream>
 #include <iomanip>
+#include <Mega_Due.h>
 
 #define DATABASE
 #define UI_DB_DISPLAY_VIEW_ONE
@@ -63,11 +64,6 @@ using namespace HardwareInterfaces;
 using namespace GP_LIB;
 using namespace Date_Time;
 using namespace std;
-
-uint8_t BRIGHNESS_PWM = 5;
-uint8_t CONTRAST_PWM = 6;
-unsigned char PHOTO_ANALOGUE = A1;
-uint8_t LOCAL_INT_PIN = 18;
 
 //using namespace OiginalQueries;
 

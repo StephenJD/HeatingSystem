@@ -13,11 +13,13 @@
 //////////////////////////////// Start execution here ///////////////////////////////
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;
-
-Logger & logger() {
-	static Serial_Logger _log(SERIAL_RATE);
-	return _log;
+namespace arduino_logger {
+	Logger& logger() {
+		static Serial_Logger _log(SERIAL_RATE);
+		return _log;
+	}
 }
+using namespace arduino_logger;
 
 I2C_Talk i2C;
 auto i2c_recover = I2C_Recover{i2C};

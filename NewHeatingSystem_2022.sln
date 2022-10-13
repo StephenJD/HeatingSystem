@@ -21,15 +21,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RelationalDatabase", "..\..
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics with DB", "..\..\VS_Projects\NewHeatingSystem\Test UI Basics with DB\Test UI Basics with DB.vcxproj", "{5767823B-227A-4F07-8A36-2C6AF30B862E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I2C_TestAndLog", "I2C_Talk\examples\I2C_TestAndLog\I2C_TestAndLog.vcxproj", "{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E620AD9-804F-4C1E-90EE-1AC002A26043}"
 	ProjectSection(SolutionItems) = preProject
 		I2C_Talk\examples\I2C_Registers\I2C_Registers.ino = I2C_Talk\examples\I2C_Registers\I2C_Registers.ino
+		I2C_Talk\examples\I2C_TestAndLog\I2C_TestAndLog.ino = I2C_Talk\examples\I2C_TestAndLog\I2C_TestAndLog.ino
+		Keypad\examples\localKeypad\localKeypad.ino = Keypad\examples\localKeypad\localKeypad.ino
 		Mix_Valve\examples\MixValve_Master\MixValve_Master.ino = Mix_Valve\examples\MixValve_Master\MixValve_Master.ino
 		Mix_Valve\examples\MixValve_Slave\MixValve_Slave.ino = Mix_Valve\examples\MixValve_Slave\MixValve_Slave.ino
 		Mix_Valve\examples\MonitorPSU\MonitorPSU.ino = Mix_Valve\examples\MonitorPSU\MonitorPSU.ino
+		MultiCrystal\examples\MultiCrystalExample\MultiCrystalExample.ino = MultiCrystal\examples\MultiCrystalExample\MultiCrystalExample.ino
 		Keypad\examples\OLED_Thick_Display\OLED_Thick_Display.ino = Keypad\examples\OLED_Thick_Display\OLED_Thick_Display.ino
+		TempSensor\examples\read_i2c_tempSensors\read_i2c_tempSensors.ino = TempSensor\examples\read_i2c_tempSensors\read_i2c_tempSensors.ino
 		HeatingSystem\examples\SJD_NewHeatingSystem\SJD_NewHeatingSystem.ino = HeatingSystem\examples\SJD_NewHeatingSystem\SJD_NewHeatingSystem.ino
 		Watchdog_Timer\examples\watchdog_test\watchdog_test.ino = Watchdog_Timer\examples\watchdog_test\watchdog_test.ino
 	EndProjectSection
@@ -61,8 +63,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AVR", "AVR", "{3A89E558-0F5
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.h
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "read_i2c_tempSensors", "TempSensor\examples\read_i2c_tempSensors\read_i2c_tempSensors.vcxproj", "{309FC63E-4927-46C4-AF2A-DEE543E0C89B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I2C_Port", "I2C_Talk\examples\I2C_Port\I2C_Port.vcxproj", "{318D372E-3D24-4D43-B60C-BDE037753CB4}"
 EndProject
@@ -106,6 +106,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test FlagEnums", "..\..\VS_Projects\Test Libraries\Test FlagEnums\Test FlagEnums.vcxproj", "{9EF6FCB2-C1B7-43FA-8CBF-02A92ECFC165}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test MixValve", "..\..\VS_Projects\Test Libraries\Test MixValve\Test MixValve.vcxproj", "{E316DBC0-B99A-4CBB-8096-5587B8740F4C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MegaCore", "MegaCore", "{2B0C7988-6A4D-46F3-A187-597B451ED32D}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.c
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.h
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -239,26 +247,6 @@ Global
 		{5767823B-227A-4F07-8A36-2C6AF30B862E}.Release|x64.Build.0 = Release|x64
 		{5767823B-227A-4F07-8A36-2C6AF30B862E}.Release|x86.ActiveCfg = Release|Win32
 		{5767823B-227A-4F07-8A36-2C6AF30B862E}.Release|x86.Build.0 = Release|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Debug|ARM.ActiveCfg = Debug|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Debug|x64.ActiveCfg = Debug|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Debug|x86.ActiveCfg = Debug|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Debug|x86.Build.0 = Debug|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|ARM.ActiveCfg = Release|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|ARM64.ActiveCfg = Release|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x64.ActiveCfg = Release|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x86.ActiveCfg = Release|Win32
-		{618D7F4C-D426-43FD-B7C6-3A7C11A1ED4C}.Release|x86.Build.0 = Release|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|ARM.ActiveCfg = Debug|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|x64.ActiveCfg = Debug|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|x86.ActiveCfg = Debug|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Debug|x86.Build.0 = Debug|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|ARM.ActiveCfg = Release|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|ARM64.ActiveCfg = Release|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|x64.ActiveCfg = Release|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|x86.ActiveCfg = Release|Win32
-		{309FC63E-4927-46C4-AF2A-DEE543E0C89B}.Release|x86.Build.0 = Release|Win32
 		{318D372E-3D24-4D43-B60C-BDE037753CB4}.Debug|ARM.ActiveCfg = Debug|Win32
 		{318D372E-3D24-4D43-B60C-BDE037753CB4}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{318D372E-3D24-4D43-B60C-BDE037753CB4}.Debug|x64.ActiveCfg = Debug|Win32
@@ -448,6 +436,7 @@ Global
 		{3A89E558-0F5D-451B-8200-DC46494A3C90} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
 		{A3470CF9-2D34-49DF-94B6-933400C72FCE} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
 		{7452347B-7166-4353-B604-5735B16AC9E5} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
+		{2B0C7988-6A4D-46F3-A187-597B451ED32D} = {1E620AD9-804F-4C1E-90EE-1AC002A26043}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8A631AB6-168B-497B-81AB-6570250D9D62}

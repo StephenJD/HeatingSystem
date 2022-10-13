@@ -26,6 +26,7 @@ namespace HardwareInterfaces {
 	void LocalKeypad::begin() {
 		indicatorLED().begin();
 		pinMode(interruptPin, INPUT_PULLUP); // turn ON pull-up
+		pinMode(_keyReadPin, INPUT); // turn OFF pull-up
 		attachInterrupt(digitalPinToInterrupt(interruptPin), localKeyboardInterrupt, CHANGE);
 	}
 

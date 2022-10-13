@@ -1,16 +1,12 @@
 #include "LocalDisplay.h"
 #include "../HeatingSystem/src/Client_DataStructures/Data_Console.h"
 #include <Logging.h>
-#include "A__Constants.h"
+#include <Mega_Due.h>
 #include <MemoryFree.h>
 
 using namespace RelationalDatabase;
 using namespace arduino_logger;
 using namespace client_data_structures;
-
-extern uint8_t BRIGHNESS_PWM;
-extern uint8_t CONTRAST_PWM;
-extern uint8_t PHOTO_ANALOGUE;
 
 namespace HardwareInterfaces {
 

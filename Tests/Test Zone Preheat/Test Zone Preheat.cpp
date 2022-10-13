@@ -29,6 +29,7 @@
 #include "BackBoiler.h"
 #include <iostream>
 #include <iomanip>
+#include <Mega_Due.h>
 
 #define DATABASE
 //#define PREHEAT
@@ -42,12 +43,6 @@ using namespace Date_Time;
 using namespace client_data_structures;
 using namespace Assembly;
 using namespace std;
-
-
-uint8_t BRIGHNESS_PWM = 5;
-uint8_t CONTRAST_PWM = 6;
-unsigned char PHOTO_ANALOGUE = A1;
-uint8_t LOCAL_INT_PIN = 18;
 
 //enum tableIndex { /*TB_ThermalStore, TB_MixValveContr, TB_Display, TB_Relay, TB_TempSensor, TB_TowelRail,*/ TB_Dwelling, TB_Zone, TB_DwellingZone, TB_Program, TB_Profile, TB_TimeTemp, TB_Spell, TB_NoOfTables };
 
