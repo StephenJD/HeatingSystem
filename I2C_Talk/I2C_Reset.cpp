@@ -46,14 +46,14 @@ namespace I2C_Recovery {
 			loopLogger() << F("ResetI2C _recover is NULL for 0x") << L_hex << addr << L_endl;
 			return _OK;
 		}
-		logger() << F("\t\tResetI2C... for 0x") << L_hex << addr << L_flush;
+		logger() << L_time << F("ResetI2C... for 0x") << L_hex << addr << L_flush;
 		loopLogger() << F("ResetI2C for 0x") << L_hex << addr << L_endl;
 
 		isInReset = true;
 		Error_codes status = _OK;
 		auto origFn = _recover->getTimeoutFn();
 		_recover->setTimeoutFn(&hardReset);
-		loopLogger() << F("R_setTimeout_OK") << L_endl;
+		logger() << F("R_setTimeout_OK") << L_endl;
 
 		hardReset(i2c, addr);
 		notify_reset();

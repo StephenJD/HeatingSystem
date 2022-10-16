@@ -124,7 +124,7 @@ namespace HardwareInterfaces {
 		auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP); // is zoneReqTemp normally.
 		// times-out before this line
 		loopLogger() << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
-		logger() << millis() % 10000 << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
+		logger() << L_time << F("State: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << "\t" << millis() % 10000 << L_endl;
 
 		switch (_state) {
 		case REM_TR:
@@ -203,7 +203,7 @@ namespace HardwareInterfaces {
 		haveNewData |= reg.update(OLED::R_ON_TIME_T_RAIL, uint8_t(_towelRail->timeToGo()/60));
 		haveNewData |= reg.update(OLED::R_WARM_UP_DHW_M10, _dhw->warmUpTime_m10()); // If -ve, in 0-60 mins, if +ve in min_10
 		if (_hasChanged || haveNewData) {
-			logger() << "\t" << millis() % 10000 << "\tSet F_PROGRAMMER_CHANGED_DATA: changed:" << _hasChanged << " : warmChange" << haveNewData << L_endl;
+			logger() << L_time << "Set F_PROGRAMMER_CHANGED_DATA: changed:" << _hasChanged << " : warmChange" << haveNewData << "\t" << millis() % 10000 << L_endl;
 			status |= writeRegSet(OLED::R_WARM_UP_ROOM_M10, 3);
 			auto devFlags = OLED::I2C_Flags_Obj(reg.get(OLED::R_DEVICE_STATE));
 			devFlags.set(OLED::F_PROGRAMMER_CHANGED_DATA);
