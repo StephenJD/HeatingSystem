@@ -32,6 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		MultiCrystal\examples\MultiCrystalExample\MultiCrystalExample.ino = MultiCrystal\examples\MultiCrystalExample\MultiCrystalExample.ino
 		Keypad\examples\OLED_Thick_Display\OLED_Thick_Display.ino = Keypad\examples\OLED_Thick_Display\OLED_Thick_Display.ino
 		TempSensor\examples\read_i2c_tempSensors\read_i2c_tempSensors.ino = TempSensor\examples\read_i2c_tempSensors\read_i2c_tempSensors.ino
+		Relays\examples\Relays_Slave\Relays_Slave.ino = Relays\examples\Relays_Slave\Relays_Slave.ino
 		HeatingSystem\examples\SJD_NewHeatingSystem\SJD_NewHeatingSystem.ino = HeatingSystem\examples\SJD_NewHeatingSystem\SJD_NewHeatingSystem.ino
 		Watchdog_Timer\examples\watchdog_test\watchdog_test.ino = Watchdog_Timer\examples\watchdog_test\watchdog_test.ino
 	EndProjectSection

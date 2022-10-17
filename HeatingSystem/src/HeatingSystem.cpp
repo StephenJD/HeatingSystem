@@ -242,7 +242,7 @@ bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to k
 				logger() << L_time << "RC-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 			}
-			logger() << L_time <<"refresh RC's " << (rc_OK? "OK":"Bad") /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			logger() << L_time << "refresh RC's " << (rc_OK? "OK":"Bad") /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 		}
 	}
 	if (dataHasChanged) {
