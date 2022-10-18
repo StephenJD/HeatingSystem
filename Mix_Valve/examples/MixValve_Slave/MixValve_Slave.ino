@@ -117,7 +117,7 @@ void setup() {
 	role = e_Master; // prevent PSU-Turn-off
 
 	i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
-	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
+	i2C().setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	i2C().setMax_i2cFreq(100000);
 	i2C().begin();
 
@@ -134,7 +134,7 @@ void setup() {
 	mixValve[1].begin(55);
 	auto speedTest = I2C_SpeedTest{ programmer };
 	speedTest.fastest();
-	i2C().setTimeouts(10000, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
+	i2C().setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	delay(500);
 	roleChanged(getRole());
 	i2C().onReceive(mixV_register_set.receiveI2C);

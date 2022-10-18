@@ -23,7 +23,7 @@ namespace HardwareInterfaces {
 		I_I2Cdevice_Recovery::setAddress(other_microcontroller_address);
 		_localRegOffset = localRegOffset;
 		_remoteRegOffset = remoteRegOffset;
-		i2C().extendTimeouts(15000, STOP_MARGIN_TIMEOUT, 1000);
+		i2C().extendTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, STOP_MARGIN_TIMEOUT, 1000);
 	}
 
 	Error_codes I2C_To_MicroController::testDevice() { // non-recovery test

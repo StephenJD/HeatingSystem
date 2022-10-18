@@ -127,4 +127,37 @@ namespace HardwareInterfaces {
 		}
 		else return false;
 	};
+
+	// *******  Pin_OpenCollector  *******
+
+	Pin_OpenCollector::Pin_OpenCollector(int pinNo, bool activeState, bool startSet) : Flag(pinNo, activeState) {
+		begin(startSet);
+	}
+
+	void Pin_OpenCollector::begin(bool startSet) {
+		_logical_state = !startSet;
+		digitalWrite(port(), LOW); // ensure pull-ups are off
+		set(startSet); // Pre-write so that when set to OUTPUT it retains its state, otherwise you get a glitch.
+	};
+
+	void Pin_OpenCollector::initialise(int pinNo, bool activeState, bool startSet) {
+		Flag::initialise(pinNo, activeState);
+		begin(startSet);
+	}
+
+	bool Pin_OpenCollector::set(bool state) { // returns true if state is changed
+		//logger() << "Pin_Wag set. Port: " << int(_port) << " State: " << int(_logical_state) << " NewState: " << state << L_endl;
+		if (Flag::set(state)) {
+			if (controlState()) {
+				pinMode(port(), INPUT);
+			}
+			else {
+				pinMode(port(), OUTPUT);
+			}
+			//logger() << "Pin_Wag PinWrite. Port: " << int(_port) << " to: " << controlState() << L_endl;
+			return true;
+		}
+		else return false;
+	};
+
 }

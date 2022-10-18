@@ -27,8 +27,8 @@ void setup()
 void loop()
 {
   auto nextLocalKey = keypad.popKey();
-	//logger() << "AnRef: " << analogRead(KEYPAD_REF_PIN) << " AnRead(0): " << analogRead(A0) << " AnRead(1): " << analogRead(A1) << " AnRead(3): " << analogRead(A3) << L_endl;
 	while (nextLocalKey >= 0) { // only do something if key pressed
+		logger() << "AnRef: " << analogRead(KEYPAD_REF_PIN) << " AnRead(0): " << analogRead(A0) << " AnRead(1): " << analogRead(A1) << " AnRead(3): " << analogRead(A3) << L_endl;
 		switch (nextLocalKey) {
 		case I_Keypad::KEY_INFO:
 			logger() << "Info" << L_endl;

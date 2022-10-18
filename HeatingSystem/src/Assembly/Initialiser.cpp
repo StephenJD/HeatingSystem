@@ -193,7 +193,7 @@ namespace Assembly {
 	}
 
 	I_I2Cdevice_Recovery & Initialiser::getDevice(uint8_t deviceAddr) {
-		if (deviceAddr == IO8_PORT_OptCoupl) return relayPort();
+		if (deviceAddr == RL_PORT_I2C_ADDR) return relayPort();
 		else if (deviceAddr == MIX_VALVE_I2C_ADDR) return hs().tempController().mixValveControllerArr[0];
 		else if (deviceAddr >= US_CONSOLE_I2C_ADDR && deviceAddr <= FL_CONSOLE_I2C_ADDR) {
 			return hs().thickConsole_Arr[deviceAddr - US_CONSOLE_I2C_ADDR];

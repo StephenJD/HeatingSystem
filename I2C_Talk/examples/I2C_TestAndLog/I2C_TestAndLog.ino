@@ -267,8 +267,9 @@ void setup() {
 	logger() << "\nsetTimeoutFn";
 	//i2c_recover.setTimeoutFn(resetI2C_);
 	resetPin.begin();
+	i2c.setTimeouts(static unsigned long _slaveByteProcess_uS, I2C_Talk::WORKING_STOP_TIMEOUT);
 	i2c.begin();
-	i2c.extendTimeouts(5000, 4); // default 3
+	i2c.extendTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, 4); // default 3
 	i2c.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 	i2c.setZeroCrossDelay(ZERO_CROSS_DELAY);
 
@@ -628,7 +629,7 @@ void fullSpeedTest() {
 		}
 		showTill = millis() + 500L;
 	}
-	i2c.setTimeouts(5000, I2C_Talk::WORKING_STOP_TIMEOUT);
+	i2c.setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT);
 	logger() << "\tTest took mS: " << millis() - startTestTime;
 	mainLCD->setCursor(0, 3);
 	mainLCD->print("Total:");

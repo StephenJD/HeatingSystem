@@ -70,6 +70,8 @@ namespace I2C_Recovery {
 	class I2C_Recover;
 }
 
+constexpr int WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS = 15000;
+
 class I2C_Talk {
 public:
 	// Basic Usage //
@@ -103,8 +105,8 @@ public:
 	int32_t setI2CFrequency(int32_t i2cFreq);
 	int32_t getI2CFrequency() const { return _i2cFreq; }
 	
-	void setTimeouts(uint32_t slaveByteProcess_uS = 5000, int stopMargin_uS = WORKING_STOP_TIMEOUT, uint32_t busRelease_uS = 1000);
-	void extendTimeouts(uint32_t slaveByteProcess_uS = 5000, int stopMargin_uS = 3, uint32_t busRelease_uS = 1000); // make longer but not shorter
+	void setTimeouts(uint32_t slaveByteProcess_uS = WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, int stopMargin_uS = WORKING_STOP_TIMEOUT, uint32_t busRelease_uS = 1000);
+	void extendTimeouts(uint32_t slaveByteProcess_uS = WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, int stopMargin_uS = 3, uint32_t busRelease_uS = 1000); // make longer but not shorter
 	uint8_t stopMargin() const {return _stopMargin_uS;}
 	uint32_t slaveByteProcess() const {return _slaveByteProcess_uS;}
 	void setStopMargin(uint8_t margin);
@@ -194,7 +196,7 @@ private:
 	mutable uint32_t _lastWrite = 0;
 	int32_t _max_i2cFreq = (VARIANT_MCK / 36);
 	int32_t _i2cFreq = 100000;
-	uint32_t _slaveByteProcess_uS = 5000; // timeouts saved here, so they can be set before Wire has been initialised.
+	uint32_t _slaveByteProcess_uS = WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS; // timeouts saved here, so they can be set before Wire has been initialised.
 	uint32_t _busRelease_uS = 1000;
 	TwoWire * _wire_port = 0;
 	mutable uint16_t _addressDelay = 0;

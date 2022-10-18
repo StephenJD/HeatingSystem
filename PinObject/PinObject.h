@@ -146,5 +146,21 @@ namespace HardwareInterfaces {
 		bool set(bool state);
 		bool set() { return set(true); }
 		bool clear() { return set(false); }
+	};	
+	
+	// *******  Digital OpenCollector-Pin  *******
+	/// <summary>
+	/// Digital OpenCollector-Pin constructed with its active state and Pin Number, char-sized.
+	/// When output is HIGH, set as INPUT (simulates open-collector).
+	/// May require begin() in setup to initialise pin-mode.
+	/// </summary>
+	class Pin_OpenCollector : public Flag { // Digital Out-Pin 
+	public:
+		Pin_OpenCollector(int pinNo, bool activeState, bool startSet = false);
+		void initialise(int pinNo, bool activeState, bool startSet = false);
+		void begin(bool startSet = false);
+		bool set(bool state);
+		bool set() { return set(true); }
+		bool clear() { return set(false); }
 	};
 }

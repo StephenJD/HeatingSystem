@@ -181,7 +181,7 @@ EEPROMClassRE & EEPROM = eeprom();
 
 namespace HardwareInterfaces {
 	Bitwise_RelayController & relayController() {
-		static RelaysPort _relaysPort(0x7F, heating_system->recoverObject(), IO8_PORT_OptCoupl);
+		static RelaysPort _relaysPort(0x7F, heating_system->recoverObject(), RL_PORT_I2C_ADDR);
 		return _relaysPort;
 	}
 }

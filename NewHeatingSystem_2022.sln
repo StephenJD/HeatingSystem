@@ -23,6 +23,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test UI Basics with DB", ".
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E620AD9-804F-4C1E-90EE-1AC002A26043}"
 	ProjectSection(SolutionItems) = preProject
+		I2C_Talk\examples\I2C_Port\I2C_Port.ino = I2C_Talk\examples\I2C_Port\I2C_Port.ino
 		I2C_Talk\examples\I2C_Registers\I2C_Registers.ino = I2C_Talk\examples\I2C_Registers\I2C_Registers.ino
 		I2C_Talk\examples\I2C_TestAndLog\I2C_TestAndLog.ino = I2C_Talk\examples\I2C_TestAndLog\I2C_TestAndLog.ino
 		Keypad\examples\localKeypad\localKeypad.ino = Keypad\examples\localKeypad\localKeypad.ino

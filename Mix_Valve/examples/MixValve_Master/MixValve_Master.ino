@@ -69,7 +69,7 @@ void setup()
 	logger() << F("Start") << L_flush;
 	i2C.setAsMaster(PROGRAMMER_I2C_ADDR);
 	i2C.setMax_i2cFreq(100000);
-	i2C.setTimeouts(15000,I2C_Talk::WORKING_STOP_TIMEOUT);
+	i2C.setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS,I2C_Talk::WORKING_STOP_TIMEOUT);
 	i2C.onReceive(_prog_registers.receiveI2C);
 	i2C.onRequest(_prog_registers.requestI2C);
 	i2C.begin();

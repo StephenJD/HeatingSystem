@@ -1,8 +1,8 @@
 #include <I2C_Talk.h>
 //#include <I2C_Helper.h>
 #include <Logging.h>
+#include <Mega_Due.h>
 
-const uint32_t SERIAL_RATE = 9600;
 const uint8_t RESET_I2C_PIN = 14;  // active LOW.
 const uint8_t RELAY_PORT_ADDRESS = 0x20;
 constexpr uint8_t REG_8PORT_IODIR = 0x00; // default all 1's = input
@@ -11,10 +11,14 @@ constexpr uint8_t REG_8PORT_OPORT = 0x09;
 constexpr uint8_t REG_8PORT_OLAT = 0x0A;
 const uint8_t _OK = 0;
 
-Logger & logger() {
-	static Serial_Logger _log(SERIAL_RATE);
-	return _log;
+namespace arduino_logger {
+	Logger& logger() {
+		static Serial_Logger _log(SERIAL_RATE);
+		//static SD_Logger _log(LOG_FILE, SERIAL_RATE);
+		return _log;
+	}
 }
+using namespace arduino_logger;
 
 I2C_Talk i2C;
 //I2C_Helper i2C;
@@ -28,6 +32,7 @@ void setup() {
 	logger() << L_allwaysFlush << "Start" << L_endl;
 	//I2C_Talk i2C;
 	//I2C_Helper i2C;
+	i2C.setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT);
 	i2C.begin();
 	uint8_t allZero = 0;
 	uint8_t allOnes = 0xFF;
@@ -53,10 +58,10 @@ void testRelays(I2C_Talk & i2C) {
 		uint8_t _relayRegister = 0xff & ~(1<<relays[relayNo]);
 		auto status = i2C.write_verify(RELAY_PORT_ADDRESS,REG_8PORT_OLAT, 1, &_relayRegister);
 		logger() << "Set " << _relayRegister << i2C.getStatusMsg(status) << L_endl; // clear all pull-up resistors
-		delay(300);
+		delay(3000);
 		_relayRegister = 0xff;
 		status = i2C.write_verify(RELAY_PORT_ADDRESS, REG_8PORT_OLAT, 1, &_relayRegister);
 		logger() << "Clear " << _relayRegister << i2C.getStatusMsg(status) << L_endl; // clear all pull-up resistors
-		delay(300);
+		delay(3000);
 	}
 }

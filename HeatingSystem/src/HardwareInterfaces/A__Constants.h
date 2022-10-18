@@ -18,7 +18,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 72;
+	constexpr uint8_t VERSION = 73;
 
 	/////////////////// Pin assignments & misc. ///////////////////
 	constexpr uint8_t RESET_I2C_PIN = 14;  // active low.
@@ -96,9 +96,9 @@ namespace HardwareInterfaces {
 	//constexpr uint8_t US_REMOTE_ADDRESS = 0x24;
 	//constexpr uint8_t FL_REMOTE_ADDRESS = 0x25;
 	//constexpr uint8_t DS_REMOTE_ADDRESS = 0x26;
-	constexpr uint8_t IO8_PORT_OptCoupl = 0x20;
-	constexpr uint8_t IO8_PORT_OptCouplActive = 0;
-	constexpr uint8_t IO8_PORT_MixValvesActive = 0;
+	constexpr uint8_t RL_PORT_I2C_ADDR = 0x20;
+	constexpr uint8_t RL_PORT_OptCouplActive = 0;
+	constexpr uint8_t RL_PORT_MixValvesActive = 0;
 	constexpr uint8_t MIX_VALVE_USED = 128 | 8 | 2 | 1;
 
 	// Hardware Registers
