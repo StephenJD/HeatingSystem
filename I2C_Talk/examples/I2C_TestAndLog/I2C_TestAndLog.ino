@@ -267,11 +267,12 @@ void setup() {
 	logger() << "\nsetTimeoutFn";
 	//i2c_recover.setTimeoutFn(resetI2C_);
 	resetPin.begin();
-	i2c.setTimeouts(static unsigned long _slaveByteProcess_uS, I2C_Talk::WORKING_STOP_TIMEOUT);
+	i2c.setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT);
 	i2c.begin();
 	i2c.extendTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, 4); // default 3
 	i2c.setZeroCross({ ZERO_CROSS_PIN , LOW, INPUT_PULLUP });
 	i2c.setZeroCrossDelay(ZERO_CROSS_DELAY);
+	logger() << "StopMargin: " << i2c.stopMargin() << " ByteTimout: " << i2c.slaveByteProcess() << L_endl;
 
 	keypad.begin();
 
@@ -369,32 +370,39 @@ void loop() {
 			nextLocalKey = I_Keypad::NO_KEY;
 		}
 		logger() << "\n KeyPressed:" << nextLocalKey;
+		logger() << " AnRef: " << analogRead(KEYPAD_REF_PIN) << " AnRead(0): " << analogRead(A0) << " AnRead(1): " << analogRead(A1) << " AnRead(3): " << analogRead(A3) << L_endl;
 
 		mainLCD->setCursor(0, 0);
 		mainLCD->print("                    ");
 		switch (nextLocalKey) {
-		case 0:
+		case I_Keypad::KEY_INFO: // 7
+			logger() << "Up+Down : " << loopTimeIndex << L_endl;
 			fullSpeedTest();
 			break;
-		case 1: // Up - Set Frequency
+		case I_Keypad::KEY_UP: // 0 Up - Set Frequency
 			loopTimeIndex = (loopTimeIndex == 0) ? 0 : loopTimeIndex - 1;
 			logger() << "Up : " << loopTimeIndex << L_endl;
 			break;
-		case 2: // Left - Set address
-			i2cAddrIndex = (i2cAddrIndex == 0) ? sizeof(i2cAddr) - 1 : i2cAddrIndex - 1;
-			break;
-		case 3: // Right - Set address
-			i2cAddrIndex = (i2cAddrIndex == sizeof(i2cAddr) - 1) ? 0 : i2cAddrIndex + 1;
-			break;
-		case 4: // Down - Set Frequency
+		case I_Keypad::KEY_DOWN: // 1 Down - Set Frequency
+			logger() << "Down : " << loopTimeIndex << L_endl;
 			loopTimeIndex = (loopTimeIndex == sizeof(loopTime) / sizeof(loopTime[0]) - 1) ? loopTimeIndex : loopTimeIndex + 1;
 			break;
-		case 5: // Back
+		case I_Keypad::KEY_LEFT: // 2 Left - Set address
+			logger() << "Left : " << loopTimeIndex << L_endl;
+			i2cAddrIndex = (i2cAddrIndex == 0) ? sizeof(i2cAddr) - 1 : i2cAddrIndex - 1;
+			break;
+		case I_Keypad::KEY_RIGHT: // 3 Right - Set address
+			logger() << "Right : " << loopTimeIndex << L_endl;
+			i2cAddrIndex = (i2cAddrIndex == sizeof(i2cAddr) - 1) ? 0 : i2cAddrIndex + 1;
+			break;
+		case I_Keypad::KEY_BACK: // 5 Back
+			logger() << "Back : " << loopTimeIndex << L_endl;
 			cycleDevices = !cycleDevices;
 			mainLCD->setCursor(0, 2);
 			if (cycleDevices) mainLCD->print("All"); else mainLCD->print("One");
 			break;
-		case 6: // Select
+		case I_Keypad::KEY_SELECT: // 4 Select
+			logger() << "Select : " << loopTimeIndex << L_endl;
 			++testMode;
 			if (testMode >= NO_OF_MODES) testMode = 0;
 			switch (testMode) {

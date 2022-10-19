@@ -13,10 +13,11 @@
 /// <para>Supports Scanning and Speed-Testing</para>
 /// Usage:
 ///	<para>auto i2C = I2C_Talk{};</para>
-/// <para>auto device = I2C_Device(i2C, 0x41);</para>
-///	<para>auto speedTest = I2C_SpeedTest(i2C);</para>
-///	<para>speedTest.show_fastest(0x41)   // Return max speed for this address using status()</para>
-/// <para>speedTest.fastest(device) // Return max speed for this address using device test function</para>
+/// <para>I2C_Recover i2c_recover{ i2C };</para>
+/// <para>I_I2Cdevice_Recovery my_device{ i2c_recover, addr };</para>
+///	<para>auto speedTest = I2C_SpeedTest(my_device);</para>
+///	<para>speedTest.show_fastest()   // Return max speed for this address using status()</para>
+/// <para>speedTest.fastest(my_device) // Return max speed for this address using device test function</para>
 ///	
 ///	or to LCD ...
 ///	<para>speedTest.prepareNextTest(); // reset to start scanning at 0</para>
