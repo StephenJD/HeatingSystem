@@ -8,6 +8,7 @@
 #include <I2C_RecoverRetest.h>
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 #include <PinObject.h>
+#include <PID_Controller.h>
 
 using namespace I2C_Recovery;
 using namespace HardwareInterfaces;

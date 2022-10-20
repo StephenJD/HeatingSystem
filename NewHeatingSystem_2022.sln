@@ -118,6 +118,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MegaCore", "MegaCore", "{2B
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.h
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_Deque", "..\..\VS_Projects\Test Libraries\Test Deque\Test_Deque\Test_Deque.vcxproj", "{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -430,6 +432,22 @@ Global
 		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|x64.Build.0 = Release|x64
 		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|x86.ActiveCfg = Release|Win32
 		{E316DBC0-B99A-4CBB-8096-5587B8740F4C}.Release|x86.Build.0 = Release|Win32
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|ARM.ActiveCfg = Debug|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|ARM.Build.0 = Debug|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|ARM64.ActiveCfg = Debug|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|ARM64.Build.0 = Debug|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|x64.ActiveCfg = Debug|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|x64.Build.0 = Debug|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|x86.ActiveCfg = Debug|Win32
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Debug|x86.Build.0 = Debug|Win32
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|ARM.ActiveCfg = Release|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|ARM.Build.0 = Release|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|ARM64.ActiveCfg = Release|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|ARM64.Build.0 = Release|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|x64.ActiveCfg = Release|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|x64.Build.0 = Release|x64
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|x86.ActiveCfg = Release|Win32
+		{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
