@@ -83,36 +83,13 @@ namespace HardwareInterfaces {
 	}
 
 	Error_codes RelaysPort::initialiseDevice() {
-		uint8_t pullUp_out[] = { 0 };
-		auto status = _OK; 
-		_relayRegister = 0xFF;
-		//logger() << F("\n RelaysPort::initialiseDevice start") << L_endl;
-		status = write_verify(REG_8PORT_PullUp, 1, pullUp_out); // clear all pull-up resistors
-		if (status) {
-			//logger() << F("\nInitialise RelaysPort() write-verify failed") << I2C_Talk::getStatusMsg(status) << F(" at Freq: ") << i2C().getI2CFrequency() << L_endl;
-		}
-		else {
-			status = write_verify(REG_8PORT_OLAT, 1, &_relayRegister); // set latches
-			writeInSync();
-			status |= write_verify(REG_8PORT_IODIR, 1, pullUp_out); // set all as outputs
-			//if (status) logger() << F("\nInitialise RelaysPort() lat-write failed") << I2C_Talk::getStatusMsg(status) << F(" at Freq: ") << i2C().getI2CFrequency() << L_endl;
-		}
-		//logger() << F("\nInitialise RelaysPort()") << I2C_Talk::getStatusMsg(status) << F(" at Freq: ") << i2C().getI2CFrequency() << L_endl;
-		return status;
+		return _OK;
 	}
 
 	Error_codes RelaysPort::updateRelays() {
-		writeInSync();
+		//writeInSync();
 		//logger() <<  L_time << F("updateRelays") << L_endl;
-		uint8_t io_direction = 0xFF; // 0 == output
-		auto status = read(REG_8PORT_IODIR, 1, &io_direction); 
-		//logger() << "read IODIR done." << L_endl;
-		if (status != _OK || io_direction != 0) {
-			//logger() << "Write IODIR." << L_endl;
-			io_direction = 0;
-			status = write_verify(REG_8PORT_IODIR, 1, &io_direction); // set all as outputs
-			//logger() << F("write_verify IODIR done.") << I2C_Talk::getStatusMsg(status) << L_endl;
-		}
+		auto status = reEnable(true);
 		if (status == _OK) {
 			//logger() << "write_verify OLAT..." << L_endl;
 			status = write_verify(REG_8PORT_OLAT, 1, &_relayRegister);

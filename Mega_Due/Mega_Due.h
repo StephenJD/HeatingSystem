@@ -27,7 +27,7 @@ constexpr uint8_t KEYPAD_INT_PIN = 5;
 constexpr uint8_t KEYPAD_ANALOGUE_PIN = A0;
 constexpr uint8_t KEYPAD_REF_PIN = A2;
 constexpr uint8_t RESET_5vREF_PIN = A2;
-constexpr float megaFactor = 3.3 / 5;
+constexpr float megaFactor = 3.3f / 5.f;
 #endif
 
 inline uint8_t contrast() {  // Contrast analogRead values go from 0 to 1023, analogWrite values from 0 to 255
@@ -35,5 +35,5 @@ inline uint8_t contrast() {  // Contrast analogRead values go from 0 to 1023, an
 	auto supplyVcorrection = (0.667 * analogRead(RESET_5vREF_PIN)) - 624;
 	if (supplyVcorrection < 5) supplyVcorrection = 5;
 	if (supplyVcorrection > 60) supplyVcorrection = 60;
-	return megaFactor * supplyVcorrection;
+	return uint8_t(megaFactor * supplyVcorrection);
 }

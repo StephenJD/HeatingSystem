@@ -26,8 +26,7 @@ namespace Assembly {
 		bool state_machine_OK();
 		void requiresINI(IniState ini) { _iniState.clear(ini); }
 		void isOK(IniState ini) { _iniState.set(ini); }
-		void resetDone(bool ok) { _iniState.set(I2C_RESET, ok); }
-		uint8_t i2C_Test();
+		void i2C_Test();
 		uint8_t notify_reset(); // return 0 for OK
 		HeatingSystem & hs() { return _hs; }
 		I_I2Cdevice_Recovery & getDevice(uint8_t deviceAddr);

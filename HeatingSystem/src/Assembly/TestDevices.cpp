@@ -99,7 +99,7 @@ namespace HardwareInterfaces {
 		uint8_t returnVal = 0;
 		uint8_t numberFailed = 0;
 		logger() << F("Relay_Run::testRelays\n");
-		returnVal = _ini.relayPort().testDevice();
+		returnVal = _ini.relayPort().testDevice(); // non-recovery
 		if (returnVal) {
 			logger() << F("\tNo Relays") << I2C_Talk::getStatusMsg(returnVal) << L_endl;
 			return NO_OF_RELAYS;
@@ -108,7 +108,7 @@ namespace HardwareInterfaces {
 		hs().mainDisplay.print("Relay Test: ");
 		for (int relayNo = 0; relayNo < NO_OF_RELAYS; ++relayNo) { // 12 relays, but 1 is mix enable.
 			hs()._tempController.relayArr[RELAY_ORDER[relayNo]].set(1);
-			returnVal = _ini.relayPort().updateRelays();
+			returnVal = _ini.relayPort().updateRelays(); // recovery
 			delay_mS(200);
 			hs()._tempController.relayArr[RELAY_ORDER[relayNo]].set(0);
 			returnVal |= _ini.relayPort().updateRelays();
@@ -116,7 +116,7 @@ namespace HardwareInterfaces {
 			hs().mainDisplay.setCursor(12, 3);
 			hs().mainDisplay.print(relayNo, DEC);
 			if (returnVal) {
-				 logger() << F("\tRelay Failed\tERR_PORTS_FAILED for Relay ") << relayNo << L_endl;
+				logger() << F("\tRelay Failed\tERR_PORTS_FAILED for Relay ") << relayNo << L_endl;
 				hs().mainDisplay.print(" Fail");
 			}
 			else {

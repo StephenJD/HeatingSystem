@@ -136,7 +136,7 @@ HeatingSystem::HeatingSystem()
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
 		_initialiser.initialize_Thick_Consoles();
-		_initialiser.resetDone(_initialiser.i2C_Test() == _OK);
+		_initialiser.i2C_Test();
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
 		_state = CHECK_I2C_COMS;

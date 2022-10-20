@@ -179,10 +179,11 @@ namespace Assembly {
 		return status;
 	}		
 
-	uint8_t Initialiser::i2C_Test() {
+	void Initialiser::i2C_Test() {
 		uint8_t status = _testDevices.speedTestDevices();
-		status |= _testDevices.testRelays();
-		return status;
+		_iniState.set(I2C_RESET, status);
+		status = _testDevices.testRelays();
+		_iniState.set(RELAYS, status);
 	}
 
 	uint8_t Initialiser::notify_reset() {

@@ -131,7 +131,16 @@ namespace I2C_Recovery {
 
 			switch (_strategy.strategy()) {
 			case S_TryAgain: // 1
-			case S_SlowDown: // 2
+			case S_LongerWait: // 2
+				haveBumpedUpMaxStrategyUsed(S_LongerWait);
+				if (device().i2C().getAddressDelay() < WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS) {
+					device().i2C().setAddressDelay(device().i2C().getAddressDelay() + 1000);
+#ifdef REPORT_RECOVER
+					logger() << F("\t\tS_LongerWait: ") << device().i2C().getAddressDelay() << L_endl;
+#endif
+					strategy().tryAgain(S_TryAgain);
+				}
+			case S_SlowDown: // 3
 				haveBumpedUpMaxStrategyUsed(S_SlowDown);
 #ifdef REPORT_RECOVER
 				logger() << F("\t\tS_Slow-down") << L_endl;
@@ -151,7 +160,7 @@ namespace I2C_Recovery {
 					//}
 				}
 				[[fallthrough]];
-			case S_SpeedTest: // 3
+			case S_SpeedTest: // 4
 				if (haveBumpedUpMaxStrategyUsed(S_SpeedTest)) {
 #ifdef REPORT_RECOVER
 					logger() << F("\t\tS_SpeedTest") << L_endl;
@@ -178,7 +187,7 @@ namespace I2C_Recovery {
 					}
 				} //else logger() << F("\t\tTry again S_SpeedTest 0x");
 				[[fallthrough]];
-			case S_PowerDown: // 4
+			case S_PowerDown: // 5
 				if (haveBumpedUpMaxStrategyUsed(S_PowerDown)) {
 					//logger() << F("\t\tS_Power-Down") << L_endl;
 					if (status == _BusReleaseTimeout) {
