@@ -40,6 +40,7 @@ namespace Assembly {
 #endif
 		relayPort().setRecovery(hs._recover);
 		ini_DB();
+		_iniState.set(I2C_RESET);
 	}
 
 	bool Initialiser::state_machine_OK() {
@@ -128,7 +129,10 @@ namespace Assembly {
 
 	uint8_t Initialiser::ini_relays() {
 		logger() << L_time << F("ini_relays") << L_flush;
-		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("RelayController");
+		if (static_cast<RelaysPort&>(relayController()).isUnrecoverable()) {
+			logger() << L_time << F("arduinoReset(RelayController)") << L_flush;
+			I2C_Recovery::HardReset::arduinoReset("RelayController");
+		}
 		return relayPort().initialiseDevice();
 	}
 
@@ -153,6 +157,7 @@ namespace Assembly {
 		for (auto& mixValveControl : hs().tempController().mixValveControllerArr) {
 			loopLogger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_endl;
 			if (mixValveControl.isUnrecoverable()) { // I2C_Recover_Retest::_deviceWaitingOnFailureFor10Mins set.
+				logger() << L_time << F("arduinoReset(MixValveController)") << L_flush;
 				loopLogger() << "isUnrecoverable" << L_endl;
 				I2C_Recovery::HardReset::arduinoReset("MixValveController");
 			}
@@ -164,16 +169,19 @@ namespace Assembly {
 	uint8_t Initialiser::post_initialize_Thick_Consoles() {
 		uint8_t status = 0;
 		for (auto& remote : _hs.thickConsole_Arr) {
-			if (remote.isUnrecoverable()) I2C_Recovery::HardReset::arduinoReset("RemoteConsoles");
+			if (remote.isUnrecoverable()) {
+				logger() << L_time << F("arduinoReset(RemoteConsoles)") << L_flush;
+				I2C_Recovery::HardReset::arduinoReset("RemoteConsoles");
+			}
 			status |= remote.sendSlaveIniData(*i2c_registers::RegAccess(_hs._prog_register_set).ptr(R_SLAVE_REQUESTING_INITIALISATION));
 		}
 		for (auto& remote : _hs.thickConsole_Arr) {
 			remote.refreshRegistersOK();
-			auto timeout = Timer_mS(100);
-			while (!timeout && remote.registers().get(OLED_Thick_Display::R_ROOM_TEMP) == 0);
+			//auto timeout = Timer_mS(3000);
+			//while (!timeout && remote.registers().get(OLED_Thick_Display::R_ROOM_TEMP) == 0);
 #ifndef ZPSIM
-			if (timeout) 
-				requiresINI(I2C_RESET);
+			//if (timeout) 
+				//requiresINI(I2C_RESET);
 #endif
 		}
 		return status;
