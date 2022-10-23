@@ -67,6 +67,7 @@ namespace HardwareInterfaces {
 			reg.set(OLED::R_WARM_UP_ROOM_M10, 10);
 			reg.set(OLED::R_ON_TIME_T_RAIL, 0);
 			reg.set(OLED::R_WARM_UP_DHW_M10, 2);
+			logger() << L_time << F("writeRegSet") << L_flush;
 			errCode = writeRegSet(OLED::R_REQUESTING_T_RAIL, OLED::R_DISPL_REG_SIZE - OLED::R_REQUESTING_T_RAIL);
 			errCode |= writeRegSet(OLED::R_REMOTE_REG_OFFSET,3);
 			_state = AWAIT_REM_ACK_TEMP;
@@ -251,11 +252,15 @@ namespace HardwareInterfaces {
 		give_RC_Bus(i2c_status); // remote reads TS to its local registers.
 		wait_DevicesToFinish(rawRegisters());
 		loopLogger() << "\treadRegSet..." << L_endl;
-		uint8_t status = readRegSet(OLED::R_ROOM_TEMP, 2);
+		auto roomTemp_was = reg.get(OLED::R_ROOM_TEMP);
+		auto roomTemp_16th_was = reg.get(OLED::R_ROOM_TEMP_FRACTION);
+		uint8_t status = readRegSet(OLED::R_ROOM_TEMP, 2); // copy remote into local reg.
 		if (status != _OK || reg.get(OLED::R_ROOM_TEMP) == 0) {
 			logger() << L_time << "\tRC Room Temp[" << index() << "] = 0!" << I2C_Talk::getStatusMsg(status) << L_flush;
-			auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
-			ini_state |= RC_US_REQUESTING_INI << index();
+			reg.set(OLED::R_ROOM_TEMP, roomTemp_was);
+			reg.set(OLED::R_ROOM_TEMP_FRACTION, roomTemp_16th_was);
+			//auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
+			//ini_state |= RC_US_REQUESTING_INI << index();
 #ifndef ZPSIM
 			status = _I2C_ReadDataWrong;
 #endif
