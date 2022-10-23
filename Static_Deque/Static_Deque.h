@@ -18,6 +18,7 @@ public:
 	intType popFirst();
 	intType popLast();
 	void prime(intType val);
+	void prime_n(intType val, int count);
 	void clear();
 	// Iteration
 	class Iterator {
@@ -91,6 +92,15 @@ void Deque<C, intType>::clear() {
 template <int C, typename intType>
 void Deque<C, intType>::prime(intType val) {
 	for (auto& item : _queue) item = val;
+}
+
+template <int C, typename intType>
+void Deque<C, intType>::prime_n(intType val, int count) {
+	for (auto& item : _queue) {
+		item = val;
+		--count;
+		if (count == 0) break;
+	}
 }
 
 template <int C, typename intType>

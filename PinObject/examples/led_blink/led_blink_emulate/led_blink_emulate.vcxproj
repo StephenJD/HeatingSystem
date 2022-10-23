@@ -108,6 +108,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(SolutionDir)PinObject;$(SolutionDir)Bitfield;C:\Users\Stephen\Documents\MyData\Arduino\Arduino_SJD\VS_Projects\NewHeatingSystem\Arduino;$(SolutionDir)FlashStrings;$(SolutionDir)Timer_mS_uS;$(SolutionDir)Logging;$(SolutionDir)Type_Traits;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,6 +126,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(SolutionDir)PinObject;$(SolutionDir)Bitfield;C:\Users\Stephen\Documents\MyData\Arduino\Arduino_SJD\VS_Projects\NewHeatingSystem\Arduino;$(SolutionDir)FlashStrings;$(SolutionDir)Timer_mS_uS;$(SolutionDir)Logging;$(SolutionDir)Type_Traits;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +146,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(SolutionDir)PinObject;$(SolutionDir)Bitfield;C:\Users\Stephen\Documents\MyData\Arduino\Arduino_SJD\VS_Projects\NewHeatingSystem\Arduino;$(SolutionDir)FlashStrings;$(SolutionDir)Timer_mS_uS;$(SolutionDir)Logging;$(SolutionDir)Type_Traits;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

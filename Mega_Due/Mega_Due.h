@@ -4,12 +4,12 @@
 constexpr uint32_t SERIAL_RATE = 115200;
 constexpr uint8_t RESET_LEDN_PIN = 19;  // low for on.
 constexpr uint8_t RESET_LEDP_PIN = 16;  // high supply
+constexpr uint8_t EEPROM_I2C_ADDR = 0x50;
 
 #if defined(__SAM3X8E__)
 constexpr uint8_t  BRIGHNESS_PWM = 5; // pins 5 & 6 are not best for PWM control.
 constexpr uint8_t  CONTRAST_PWM = 6;
 constexpr uint8_t PHOTO_ANALOGUE = A0;
-constexpr uint8_t EEPROM_I2C_ADDR = 0x50;
 constexpr uint8_t BRIGHTNESS = 220;
 constexpr uint8_t KEYPAD_INT_PIN = 18;
 constexpr uint8_t KEYPAD_ANALOGUE_PIN = A1;

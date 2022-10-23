@@ -130,18 +130,22 @@ namespace I2C_Recovery {
 			_strategy.next();
 
 			switch (_strategy.strategy()) {
+			// A try-once strategy is placed inside an "if (haveBumpedUpMaxStrategyUsed(S_SpeedTest))" block.
+			// Try until exhausted does strategy().tryAgain(S_TryAgain) and a break;
+			// Each case is [[fallthrough]] so that an exhausted try-again can try the next strategy.
 			case S_TryAgain: // 1
+				[[fallthrough]];
 			case S_LongerWait: // 2
-				haveBumpedUpMaxStrategyUsed(S_LongerWait);
 				if (device().i2C().getAddressDelay() < WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS) {
 					device().i2C().setAddressDelay(device().i2C().getAddressDelay() + 1000);
 #ifdef REPORT_RECOVER
 					logger() << F("\t\tS_LongerWait: ") << device().i2C().getAddressDelay() << L_endl;
 #endif
 					strategy().tryAgain(S_TryAgain);
+					break;
 				}
+				[[fallthrough]];
 			case S_SlowDown: // 3
-				haveBumpedUpMaxStrategyUsed(S_SlowDown);
 #ifdef REPORT_RECOVER
 				logger() << F("\t\tS_Slow-down") << L_endl;
 #endif
@@ -153,10 +157,10 @@ namespace I2C_Recovery {
 					//	strategy().tryAgain(S_TryAgain); // keep slowing down until can't.
 					//	break;
 					//} else {
+					if (device().testDevice() == _OK) break;
 #ifdef REPORT_RECOVER
-						logger() << F("\n    Slow-down did nothing...\n");
+					logger() << F("\n    Slow-down did nothing...\n");
 #endif
-						if (device().testDevice() == _OK) break;
 					//}
 				}
 				[[fallthrough]];
@@ -188,12 +192,18 @@ namespace I2C_Recovery {
 				} //else logger() << F("\t\tTry again S_SpeedTest 0x");
 				[[fallthrough]];
 			case S_PowerDown: // 5
+				if (!I2C_Recovery::HardReset::hasWarmedUp()) {
+					logger() << F("\t\tS_Power-Down - wait to warm-up") << L_endl;
+					break;
+				}				
 				if (haveBumpedUpMaxStrategyUsed(S_PowerDown)) {
 					//logger() << F("\t\tS_Power-Down") << L_endl;
 					if (status == _BusReleaseTimeout) {
 						strategyStartTime = micros();
 						call_timeOutFn(device().getAddress());
 					}
+
+
 					//strategy().tryAgain(S_SlowDown); // when incremented will do a speed-test
 					if (device().testDevice() == _OK) break;
 				}

@@ -21,6 +21,7 @@
 #include <EEPROM_RE.h>
 #include <I2C_Registers.h>
 #include <Flag_Enum.h>
+#include <Static_Deque.h>
 
 extern i2c_registers::I_Registers& mixV_registers;
 
@@ -75,38 +76,49 @@ public:
 	};
 
 	enum Mode {
-		e_Moving, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating
-		/*These are temporary triggers */, e_findOff, e_newReq, e_swapMutex, e_completedMove, e_overshot, e_reachedLimit, e_Error
+		e_AtTargetPosition, e_Moving, e_WaitingToMove, e_HotLimit, e_ValveOff, e_FindingOff, e_WaitToCool
+		/*These are temporary triggers */, e_findOff, e_newReq, e_swapMutex, e_completedMove, e_reachedLimit, e_Error
 	};
-	enum Journey { e_TempOK, e_Launch, e_FindTarget, e_Moving_Coolest, e_NewReqest };
 	enum MotorDirection { e_Cooling = -1, e_Stop, e_Heating };
 	enum { PSUV_DIVISOR = 5 };
-	enum AdjustMode : uint8_t { A_COOL, A_GOOD_RATIO, A_HEAT, A_UNDERSHOT, A_OVERSHOT, A_LIMITED_MOVE };
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
 	using I2C_Flags_Ref = flag_enum::FE_Ref<MV_Device_State, _NO_OF_FLAGS>;
 
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay, EEPROMClass& ep, int reg_offset);
+#ifdef SIM_MIXV
+	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay, EEPROMClass& ep, int reg_offset
+		, uint16_t timeConst, uint16_t delay, uint8_t maxTemp);
+#endif
 	void begin(int defaultFlowTemp);
+	// Queries
 	const __FlashStringHelper* name() const;
+	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
+	// Modifiers
+	void requestNewPosition(int new_pos);
+	int16_t update(int newPos);
 	void check_flow_temp();
 	void setDefaultRequestTemp();
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
-	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
+#ifdef SIM_MIXV
+	static constexpr uint8_t ROOM_TEMP = 20;
+	void set_maxTemp(uint8_t max) { _maxTemp = max; }
+	void addTempToDelayIntegral();
+	uint8_t calculatedEndPos() { return uint8_t(0.5 + (_currReqTemp - ROOM_TEMP) * 140 / (_maxTemp - ROOM_TEMP)); }
+	int16_t finalTempForPosition_16ths() { return 16 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / 140); }
+	void setFlowTempReg();
+#endif
 private:
 	friend class TestMixV;
-	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 60 };
 
 	// Loop Functions
 	bool stateMachine(); // returns true if in transitional-mode
 	// Continuation Functions
 	bool continueMove();
-	bool continueChecking();
 	// Transition Functions
 	void stopMotor();
 	bool activateMotor_isMoving(); // Return true if is moving
 	void turnValveOff();
 	// Adjustment Functions
-	void startJourney(double tempDiff);
 	// New Temp Request Functions
 	bool checkForNewReqTemp();
 	Mode newTempMode();
@@ -135,7 +147,6 @@ private:
 	int8_t _errorDirection = 0;
 	// State data
 	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME;
-	Journey _journey = e_TempOK; // the requirement to heat or cool, not the actual motion of the valve.
 	MotorDirection _motorDirection = e_Stop;
 
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
@@ -145,4 +156,12 @@ private:
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static int16_t _motorsOffV;
 	static int16_t _motors_off_diff_V;
+
+#ifdef SIM_MIXV
+	uint16_t _timeConst = 0;
+	uint8_t _delay;
+	Deque<100,int16_t> _delayLine{};
+	float _reportedTemp = 25.f;
+	uint8_t _maxTemp;
+#endif
 };
