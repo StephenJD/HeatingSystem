@@ -60,7 +60,7 @@ I2C_Recover_Retest i2c_recover(i2C());
 //I2C_Recover i2c_recover(i2C());
 I_I2Cdevice_Recovery programmer = {i2c_recover, PROGRAMMER_I2C_ADDR };
 
-//auto led_Status = Pin_Wag(LED_BUILTIN, HIGH);
+auto led_Status = Pin_Wag(LED_BUILTIN, HIGH);
 
 // All I2C transfers are initiated by Master
 auto rl_register_set = i2c_registers::Registers<RelaysSlave::RL_ALL_REG_SIZE>{i2C()};
@@ -80,12 +80,12 @@ void setup() {
 	i2C().setMax_i2cFreq(100000);
 	i2C().begin();
 
-	//for (int i = 0; i < 10; ++i) { // signal a reset
-	//	led_Status.set();
-	//	delay(50);
-	//	led_Status.clear();
-	//	delay(50);
-	//}
+	for (int i = 0; i < 5; ++i) { // signal a reset
+		led_Status.set();
+		delay(50);
+		led_Status.clear();
+		delay(50);
+	}
 
 	delay(500);
 	i2C().onReceive(rl_register_set.receiveI2C);
@@ -96,7 +96,7 @@ void setup() {
 void loop() {
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
-		reset_watchdog();
+		if (relays.verifyConnection()) reset_watchdog();
 		//relays.test();
 		relays.setPorts();
 	}

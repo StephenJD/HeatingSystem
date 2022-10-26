@@ -41,11 +41,11 @@ void RelaysSlave::setPorts() {
 	auto reg = registers();
 	auto& wagState = *reg.ptr(REG_8PORT_WAG_STATE);
 	auto& portState = *reg.ptr(REG_8PORT_OPORT);
-	auto& latState = *reg.ptr(REG_8PORT_OLAT);
+	auto& latchState = *reg.ptr(REG_8PORT_OLAT);
 	auto& reqState = *reg.ptr(REG_8PORT_REQ_STATE);
 	//logger() << "REG_8PORT_WAG_STATE: " << wagState;
 	//logger() << " REG_8PORT_OPORT: " << portState;
-	//logger() << " REG_8PORT_OLAT: " << latState;
+	//logger() << " REG_8PORT_OLAT: " << latchState;
 	//logger() << " REG_8PORT_REQ_STATE: " << reqState << L_endl;
 
 	uint8_t newRequest = 0;
@@ -53,10 +53,10 @@ void RelaysSlave::setPorts() {
 	if (portState != wagState) {
 		pendingRequest = true;
 		newRequest = portState;
-	} else if (latState != wagState) {
-		logger() << "LatChangePending: " << latState << L_endl;
+	} else if (latchState != wagState) {
+		logger() << "LatChangePending: " << latchState << L_endl;
 		pendingRequest = true;
-		newRequest = latState;
+		newRequest = latchState;
 	} else if (reqState != wagState) {
 		logger() << "LatChangeCanceled: " << wagState << L_endl;
 		reqState = wagState; // changed back to the current state!
@@ -71,7 +71,7 @@ void RelaysSlave::setPorts() {
 		_lastChangeTime = millis();
 	} else if (pendingRequestHasEndured) {
 		logger() << "ApplyRequest: " << reqState << " at: " << millis() << L_endl;
-		latState = reqState;
+		latchState = reqState;
 		portState = reqState;
 		wagState = reqState;
 		auto  portIndex = 0;
@@ -85,16 +85,31 @@ void RelaysSlave::setPorts() {
 	}
 }
 
+bool RelaysSlave::verifyConnection() {
+	auto reg = registers();
+	auto& verifyState = *reg.ptr(REG_8PORT_PullUp);
+	if (verifyState == 0xFF) {
+		verifyState = 0;
+		_lastVerifyTime = millis();
+	}
+	else {
+		if (long(millis() - _lastVerifyTime) > 8000L) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void RelaysSlave::test() {
 	// LOW in register = active-state
 	static uint8_t setRelay = 0;
 	auto reg = registers();
-	auto& latState = *reg.ptr(REG_8PORT_OLAT);
+	auto& latchState = *reg.ptr(REG_8PORT_OLAT);
 	auto& wagState = *reg.ptr(REG_8PORT_WAG_STATE);
-	if (wagState == latState) {
+	if (wagState == latchState) {
 		++setRelay;
 		setRelay %= 8;
-		latState = ~(1U << setRelay);
-		logger() << "Set: " << setRelay << " Lat: " << latState << L_endl;
+		latchState = ~(1U << setRelay);
+		logger() << "Set: " << setRelay << " Lat: " << latchState << L_endl;
 	}
 }
