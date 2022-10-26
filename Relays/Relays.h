@@ -54,6 +54,7 @@ public:
 
 	void begin();
 	void setPorts();
+	bool verifyConnection();
 	void test();
 	i2c_registers::RegAccess registers() const {return { rl_registers, 0 };}
 
@@ -62,4 +63,5 @@ private:
 	EEPROMClass * _ep;
 	HardwareInterfaces::Pin_Wag _ports[8];
 	uint32_t _lastChangeTime = 0;
+	uint32_t _lastVerifyTime = 0;
 };
