@@ -87,7 +87,7 @@ public:
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay, EEPROMClass& ep, int reg_offset);
 #ifdef SIM_MIXV
 	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay, EEPROMClass& ep, int reg_offset
-		, uint16_t timeConst, uint16_t delay, uint8_t maxTemp);
+		, uint16_t timeConst, uint8_t delay, uint8_t maxTemp);
 #endif
 	void begin(int defaultFlowTemp);
 	// Queries
@@ -123,6 +123,7 @@ private:
 	bool checkForNewReqTemp();
 	Mode newTempMode();
 	// Non-Algorithmic Functions
+	void setDirection() { _motorDirection = _endPos > _valvePos ? e_Heating : _endPos < _valvePos ? e_Cooling : e_Stop;	}
 	bool valveIsAtLimit();
 	void saveToEEPROM();
 	void refreshRegisters();
@@ -140,18 +141,13 @@ private:
 
 	// Algorithm Data
 	int16_t _endPos = 0;
-	int16_t _ave_start_time = 0;
-	int16_t _accumulated_pos = 0;
-	bool _newRequest = true;
-	int16_t _max_overhoot = 0;
-	int8_t _errorDirection = 0;
+
 	// State data
 	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME;
 	MotorDirection _motorDirection = e_Stop;
 
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
-	int16_t _posAtLaunch = 0;
 	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static int16_t _motorsOffV;

@@ -103,7 +103,7 @@ namespace arduino_logger {
 		Serial.begin(baudRate);
 		auto freeRam = freeMemory();
 		Serial.print(F("\nRAM: ")); Serial.println(freeRam); Serial.flush();
-		if (freeRam < 10) { while (true); }
+		//if (freeRam < 10) { while (true); }
 #ifdef DEBUG_TALK
 		_flags = L_allwaysFlush;
 #endif
