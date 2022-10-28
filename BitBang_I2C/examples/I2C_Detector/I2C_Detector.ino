@@ -38,32 +38,25 @@
 
 // Arbitrary pins I used for testing with an ATmega328p
 // Define as -1, -1 to use the Wire library over the default I2C interface
-//#define SDA_PIN -1
-//#define SCL_PIN -1
+#define SDA_PIN -1
+#define SCL_PIN -1
+#define BITBANG false
 // M5Stack Atom Grove connector pin assignments
 //#define SDA_PIN 32 
 //#define SCL_PIN 26
 // M5Stack Atom internal I2C connected to the IMU
-#define SDA_PIN 25
-#define SCL_PIN 21
+//#define SDA_PIN 25
+//#define SCL_PIN 21
 //
 // If you don't need the explicit device names displayed, disable this code by
 // commenting out the next line
 //
-#define SHOW_NAME
-#ifdef SHOW_NAME
-const char *szNames[]  = {"Unknown","SSD1306","SH1106","VL53L0X","BMP180", "BMP280","BME280",
-                "MPU-60x0", "MPU-9250", "MCP9808","LSM6DS3", "ADXL345", "ADS1115","MAX44009",
-                "MAG3110", "CCS811", "HTS221", "LPS25H", "LSM9DS1","LM8330", "DS3231", "LIS3DH",
-                "LIS3DSH","INA219","SHT3X","HDC1080","MPU6886","BME680"};
-#endif
-
 BBI2C bbi2c;
 
 void setup() {
   Serial.begin(115200);
   memset(&bbi2c, 0, sizeof(bbi2c));
-  bbi2c.bWire = 0; // use bit bang, not wire library
+  bbi2c.bWire = !BITBANG; // use bit bang, not wire library
   bbi2c.iSDA = SDA_PIN;
   bbi2c.iSCL = SCL_PIN;
   I2CInit(&bbi2c, 100000L);
@@ -72,8 +65,10 @@ void setup() {
 
 void loop() {
 uint8_t map[16];
+char szTemp[32];
 uint8_t i;
 int iDevice, iCount;
+uint32_t u32Caps;
 
   Serial.println("Starting I2C Scan");
   I2CScan(&bbi2c, map); // get bitmap of connected I2C devices
@@ -91,13 +86,12 @@ int iDevice, iCount;
         iCount++;
         Serial.print("Device found at 0x");
         Serial.print(i, HEX);
-        iDevice = I2CDiscoverDevice(&bbi2c, i);
+        iDevice = I2CDiscoverDevice(&bbi2c, i, &u32Caps);
         Serial.print(", type = ");
-  #ifdef SHOW_NAME
-        Serial.println(szNames[iDevice]); // show the device name as a string
-  #else
-        Serial.println(iDevice); // show the device name as the enum index
-  #endif
+        I2CGetDeviceName(iDevice, szTemp);
+        Serial.print(szTemp); // show the device name as a string
+        Serial.print(", capability bits = 0x");
+        Serial.println(u32Caps, HEX);
       }
     } // for i
     Serial.print(iCount, DEC);

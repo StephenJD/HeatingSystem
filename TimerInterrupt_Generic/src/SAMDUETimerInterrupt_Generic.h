@@ -19,7 +19,7 @@
   Built by Khoi Hoang https://github.com/khoih-prog/TimerInterrupt_Generic
   Licensed under MIT license
 
-  Version: 1.6.0
+  Version: 1.12.0
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
@@ -31,6 +31,12 @@
   1.4.0   K.Hoang      02/04/2021 Add support to Arduino, Adafruit, Sparkfun AVR 32u4, 328P, 128128RFA1 and Sparkfun SAMD
   1.5.0   K.Hoang      17/04/2021 Add support to Arduino megaAVR ATmega4809-based boards (Nano Every, UNO WiFi Rev2, etc.)
   1.6.0   K.Hoang      15/06/2021 Add T3/T4 support to 32u4. Add support to RP2040, ESP32-S2
+  1.7.0   K.Hoang      13/08/2021 Add support to Adafruit nRF52 core v0.22.0+
+  1.8.0   K.Hoang      24/11/2021 Update to use latest TimerInterrupt Libraries' versions
+  1.9.0   K.Hoang      09/05/2022 Update to use latest TimerInterrupt Libraries' versions
+  1.10.0  K.Hoang      10/08/2022 Update to use latest ESP32_New_TimerInterrupt Library version
+  1.11.0  K.Hoang      12/08/2022 Add support to new ESP32_C3, ESP32_S2 and ESP32_S3 boards
+  1.12.0  K.Hoang      29/09/2022 Update for SAMD, RP2040, MBED_RP2040
 *****************************************************************************************************************************/
 
 #pragma once
@@ -45,11 +51,21 @@
 #include "Arduino.h"
 #include <inttypes.h>
 
-#define SAMDUE_TIMER_INTERRUPT_VERSION      "SAMDUETimerInterrupt v1.2.0"
+#ifndef SAMDUE_TIMER_INTERRUPT_VERSION
+  #define SAMDUE_TIMER_INTERRUPT_VERSION            "SAMDUETimerInterrupt v1.3.0"
+  
+  #define SAMDUE_TIMER_INTERRUPT_VERSION_MAJOR      1
+  #define SAMDUE_TIMER_INTERRUPT_VERSION_MINOR      3
+  #define SAMDUE_TIMER_INTERRUPT_VERSION_PATCH      0
+
+  #define SAMDUE_TIMER_INTERRUPT_VERSION_INT        1003000  
+#endif
 
 #ifndef TIMER_INTERRUPT_DEBUG
   #define TIMER_INTERRUPT_DEBUG       0
 #endif
+
+#include "TimerInterrupt_Generic_Debug.h"
 
 #ifdef BOARD_NAME
   #undef BOARD_NAME
@@ -144,7 +160,7 @@ class DueTimerInterrupt
 
   public:
   
-    DueTimerInterrupt(unsigned short timer) : _timerNumber(timer)
+    DueTimerInterrupt(const unsigned short& timer) : _timerNumber(timer)
     {
       /*
         The constructor of the class DueTimerInterrupt
@@ -172,14 +188,14 @@ class DueTimerInterrupt
       return DueTimerInterrupt(0);
     }
    
-    DueTimerInterrupt& attachInterruptInterval(double microseconds, timerCallback callback) __attribute__((always_inline))
+    DueTimerInterrupt& attachInterruptInterval(const double& microseconds, timerCallback callback) __attribute__((always_inline))
     {
       _callbacks[_timerNumber] = callback;
 
       return startTimer(microseconds);
     }
     
-    DueTimerInterrupt& attachInterrupt(float frequency, timerCallback callback) __attribute__((always_inline))
+    DueTimerInterrupt& attachInterrupt(const float& frequency, timerCallback callback) __attribute__((always_inline))
     {
       return attachInterruptInterval((double) (1000000.0f / frequency), callback);
     }
@@ -208,7 +224,7 @@ class DueTimerInterrupt
       return *this;
     }
    
-    DueTimerInterrupt& startTimer(double microseconds= -1) __attribute__((always_inline))
+    DueTimerInterrupt& startTimer(const double& microseconds= -1) __attribute__((always_inline))
     {
       /*
         Start the timer
@@ -219,6 +235,7 @@ class DueTimerInterrupt
       if (microseconds > 0)
         setPeriod(microseconds);
 
+      // If not yet initialized, set to default 1Hz
       if (_frequency[_timerNumber] <= 0)
         setFrequency(1);
 
@@ -230,14 +247,14 @@ class DueTimerInterrupt
       return *this;
     }
     
-    DueTimerInterrupt& restartTimer(double microseconds= -1) __attribute__((always_inline))
+    DueTimerInterrupt& restartTimer(const double& microseconds= -1) __attribute__((always_inline))
     {
       /*
         Restart the timer
         If a period is set, then sets the period and start the timer
         If not period => default to 1Hz
       */
-      // If not yet initialized, set 1Hz
+      // If not yet initialized, set to default 1Hz
       if (_frequency[_timerNumber] <= 0)
       {
         setFrequency(1);
@@ -279,7 +296,7 @@ class DueTimerInterrupt
     }
 
     // Picks the best clock to lower the error
-    static uint8_t bestClock(double frequency, uint32_t& retRC)
+    static uint8_t bestClock(const double& frequency, uint32_t& retRC)
     {
       /*
         Pick the best Clock, thanks to Ogle Basil Hall!
@@ -328,20 +345,22 @@ class DueTimerInterrupt
     }
 
 
-    DueTimerInterrupt& setFrequency(double frequency)
+    DueTimerInterrupt& setFrequency(const double& frequency = 1)
     {
       /*
         Set the timer frequency (in Hz)
       */
+      
+      double freqToUse = frequency;
 
       // Prevent negative frequencies
-      if (frequency <= 0)
+      if (freqToUse <= 0)
       {
-        frequency = 1;
+        freqToUse = 1;
       }
 
       // Remember the frequency — see below how the exact frequency is reported instead
-      //_frequency[_timerNumber] = frequency;
+      //_frequency[_timerNumber] = freqToUse;
 
       // Get current timer configuration
       DueTimerIRQInfo timerIRQInfo = Timers[_timerNumber];
@@ -357,7 +376,7 @@ class DueTimerInterrupt
       pmc_enable_periph_clk((uint32_t)timerIRQInfo.irq);
 
       // Find the best clock for the wanted frequency
-      clock = bestClock(frequency, rc);
+      clock = bestClock(freqToUse, rc);
 
       switch (clock)
       {
@@ -392,7 +411,7 @@ class DueTimerInterrupt
       return *this;
     }
     
-    DueTimerInterrupt& setPeriod(double microseconds) __attribute__((always_inline))
+    DueTimerInterrupt& setPeriod(const double& microseconds) __attribute__((always_inline))
     {
       /*
         Set the period of the timer (in microseconds)
@@ -406,7 +425,7 @@ class DueTimerInterrupt
       return *this;
     }
     
-    DueTimerInterrupt& setInterval(double microseconds) __attribute__((always_inline))
+    DueTimerInterrupt& setInterval(const double& microseconds) __attribute__((always_inline))
     {
       return setPeriod(microseconds);
     }
@@ -442,7 +461,6 @@ class DueTimerInterrupt
       return _timerNumber != rhs._timerNumber;
     };
 };
-
 
 
 ////////////////////////////////////////////////////////////////////

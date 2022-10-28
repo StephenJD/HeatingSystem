@@ -24,7 +24,7 @@
   Built by Khoi Hoang https://github.com/khoih-prog/TimerInterrupt_Generic
   Licensed under MIT license
 
-  Version: 1.7.0
+  Version: 1.12.0
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
@@ -37,6 +37,11 @@
   1.5.0   K.Hoang      17/04/2021 Add support to Arduino megaAVR ATmega4809-based boards (Nano Every, UNO WiFi Rev2, etc.)
   1.6.0   K.Hoang      15/06/2021 Add T3/T4 support to 32u4. Add support to RP2040, ESP32-S2
   1.7.0   K.Hoang      13/08/2021 Add support to Adafruit nRF52 core v0.22.0+
+  1.8.0   K.Hoang      24/11/2021 Update to use latest TimerInterrupt Libraries' versions
+  1.9.0   K.Hoang      09/05/2022 Update to use latest TimerInterrupt Libraries' versions
+  1.10.0  K.Hoang      10/08/2022 Update to use latest ESP32_New_TimerInterrupt Library version
+  1.11.0  K.Hoang      12/08/2022 Add support to new ESP32_C3, ESP32_S2 and ESP32_S3 boards
+  1.12.0  K.Hoang      29/09/2022 Update for SAMD, RP2040, MBED_RP2040
 *****************************************************************************************************************************/
 
 #pragma once
@@ -44,18 +49,32 @@
 #ifndef ESP8266TIMERINTERRUPT_H
 #define ESP8266TIMERINTERRUPT_H
 
+///////////////////////////////////////////
+
 #if !defined(ESP8266)
   #error This code is designed to run on ESP8266 and ESP8266-based boards! Please check your Tools->Board setting.
 #endif
 
+///////////////////////////////////////////
+
 #ifndef ESP8266_TIMER_INTERRUPT_VERSION
-  #define ESP8266_TIMER_INTERRUPT_VERSION       "ESP8266TimerInterrupt v1.4.0"
+  #define ESP8266_TIMER_INTERRUPT_VERSION         "ESP8266TimerInterrupt v1.6.0"
+
+	#define ESP8266_TIMER_INTERRUPT_VERSION_MAJOR     1
+	#define ESP8266_TIMER_INTERRUPT_VERSION_MINOR     6
+	#define ESP8266_TIMER_INTERRUPT_VERSION_PATCH     0
+
+	#define ESP8266_TIMER_INTERRUPT_VERSION_INT      1006000
+
 #endif
+
+///////////////////////////////////////////
 
 #ifndef TIMER_INTERRUPT_DEBUG
   #define TIMER_INTERRUPT_DEBUG      0
 #endif
 
+#include "TimerInterrupt_Generic_Debug.h"
 
 /* From /arduino-1.8.10/hardware/esp8266com/esp8266/cores/esp8266/esp8266_peri.h
 
@@ -93,8 +112,43 @@ typedef ESP8266TimerInterrupt ESP8266Timer;
 #define MAX_ESP8266_NUM_TIMERS      1
 #define MAX_ESP8266_COUNT           8388607
 
-typedef void (*timer_callback)  (void);
+typedef void (*timer_callback)  ();
 
+#define TIM_DIV1_CLOCK          (80000000UL)          // 80000000 / 1   = 80.0  MHz
+#define TIM_DIV16_CLOCK         (5000000UL)           // 80000000 / 16  = 5.0   MHz
+#define TIM_DIV256_CLOCK        (312500UL)            // 80000000 / 256 = 312.5 KHz
+
+#if ( defined(USING_TIM_DIV1) && USING_TIM_DIV1 )
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using TIM_DIV1_CLOCK for shortest and most accurate timer
+  #endif
+  
+  #define TIM_CLOCK_FREQ        TIM_DIV1_CLOCK
+  #define TIM_DIV               TIM_DIV1
+#elif ( defined(USING_TIM_DIV16) && USING_TIM_DIV16 )
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using TIM_DIV16_CLOCK for medium time and medium accurate timer
+  #endif
+  
+  #define TIM_CLOCK_FREQ        TIM_DIV16_CLOCK
+  #define TIM_DIV               TIM_DIV16
+#elif ( defined(USING_TIM_DIV256) && USING_TIM_DIV256 )
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using TIM_DIV256_CLOCK for longest timer but least accurate
+  #endif
+  
+  #define TIM_CLOCK_FREQ        TIM_DIV256_CLOCK
+  #define TIM_DIV               TIM_DIV256  
+#else
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Default to using TIM_DIV256_CLOCK for longest timer but least accurate
+  #endif
+  
+  #define TIM_CLOCK_FREQ        TIM_DIV256_CLOCK
+  #define TIM_DIV               TIM_DIV256
+#endif  
+
+///////////////////////////////////////////
 
 class ESP8266TimerInterrupt
 {
@@ -112,16 +166,26 @@ class ESP8266TimerInterrupt
       _callback   = NULL;
     };
 
-    // frequency (in hertz) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    // No params and duration now. To be addes in the future by adding similar functions here or to esp32-hal-timer.c
-    bool setFrequency(float frequency, timer_callback callback)
+    ///////////////////////////////////////////
+
+    // frequency (in hertz)
+    bool setFrequency(const float& frequency, const timer_callback& callback)
     {
       bool isOKFlag = true;
+      float minFreq = (float) TIM_CLOCK_FREQ / MAX_ESP8266_COUNT;
 
       // ESP8266 only has one usable timer1, max count is only 8,388,607. So to get longer time, we use max available 256 divider
       // Will use later if very low frequency is needed.
-      _frequency  = 80000000 / 256;
-      _timerCount = (uint32_t) _frequency / frequency;
+      
+      if (frequency < minFreq)
+      {
+        TISR_LOGERROR3(F("ESP8266TimerInterrupt: Too long Timer, smallest frequency ="), minFreq, F(" for TIM_CLOCK_FREQ ="), TIM_CLOCK_FREQ);
+        
+        return false;
+      }    
+      
+      _frequency  = frequency;     
+      _timerCount = (uint32_t) (TIM_CLOCK_FREQ / frequency);
       _callback   = callback;
 
       if ( _timerCount > MAX_ESP8266_COUNT)
@@ -132,7 +196,7 @@ class ESP8266TimerInterrupt
       }
 
       // count up
-      TISR_LOGWARN3(F("ESP8266TimerInterrupt: _fre ="), _frequency, F(", _count ="), _timerCount);
+      TISR_LOGWARN3(F("ESP8266TimerInterrupt: Timer _fre ="), _frequency, F(", _count ="), _timerCount);
 
       // Clock to timer (prescaler) is always 80MHz, even F_CPU is 160 MHz
 
@@ -141,64 +205,82 @@ class ESP8266TimerInterrupt
       timer1_write(_timerCount);
 
       // Interrupt on EGDE, autoloop
-      timer1_enable(TIM_DIV256, TIM_EDGE, TIM_LOOP);
+      //timer1_enable(TIM_DIV256, TIM_EDGE, TIM_LOOP);
+      timer1_enable(TIM_DIV, TIM_EDGE, TIM_LOOP);
 
       return isOKFlag;
     }
 
-    // interval (in microseconds) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    // No params and duration now. To be addes in the future by adding similar functions here or to esp32-hal-timer.c
-    bool setInterval(unsigned long interval, timer_callback callback)
+    ///////////////////////////////////////////
+
+    // interval (in microseconds)
+    bool setInterval(const unsigned long& interval, const timer_callback& callback)
     {
       return setFrequency((float) (1000000.0f / interval), callback);
     }
 
-    bool attachInterrupt(float frequency, timer_callback callback)
+    ///////////////////////////////////////////
+
+    bool attachInterrupt(const float& frequency, const timer_callback& callback)
     {
       return setFrequency(frequency, callback);
     }
 
-    // interval (in microseconds) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    // No params and duration now. To be addes in the future by adding similar functions here or to esp32-hal-timer.c
-    bool attachInterruptInterval(unsigned long interval, timer_callback callback)
+    ///////////////////////////////////////////
+
+    // interval (in microseconds)
+    bool attachInterruptInterval(const unsigned long& interval, const timer_callback& callback)
     {
       return setFrequency( (float) ( 1000000.0f / interval), callback);
     }
+
+    ///////////////////////////////////////////
 
     void detachInterrupt()
     {
       timer1_disable();
     }
 
-    void disableTimer(void)
+    ///////////////////////////////////////////
+
+    void disableTimer()
     {
       timer1_disable();
     }
 
-    // Duration (in milliseconds). Duration = 0 or not specified => run indefinitely
+    ///////////////////////////////////////////
+
     void reattachInterrupt()
     {
-      if ( (_frequency != 0) && (_timerCount != 0) && (_callback != NULL) )
+      if ( (_frequency > 0) && (_timerCount > 0) && (_callback != NULL) )
         setFrequency(_frequency, _callback);
     }
 
-    // Duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    void enableTimer(void)
+    ///////////////////////////////////////////
+
+    void enableTimer()
     {
       reattachInterrupt();
     }
 
+    ///////////////////////////////////////////
+
     // Just stop clock source, clear the count
-    void stopTimer(void)
+    void stopTimer()
     {
       timer1_disable();
     }
 
+    ///////////////////////////////////////////
+
     // Just reconnect clock source, start current count from 0
-    void restartTimer(void)
+    void restartTimer()
     {
       enableTimer();
     }
+
+    ///////////////////////////////////////////
+    
 }; // class ESP8266TimerInterrupt
 
 

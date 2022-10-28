@@ -14,7 +14,7 @@ If you don't find anything, please [open a new issue](https://github.com/khoih-p
 
 Please ensure to specify the following:
 
-* Arduino IDE version (e.g. 1.8.15) or Platform.io version
+* Arduino IDE version (e.g. 1.8.19) or Platform.io version
 * Board Core Version (e.g. Arduino SAMDUE core v1.6.12, ESP8266 core v3.0.2, etc.)
 * Contextual information (e.g. what you were trying to achieve)
 * Simplest possible steps to reproduce
@@ -26,14 +26,14 @@ Please ensure to specify the following:
 ### Example
 
 ```
-Arduino IDE version: 1.8.15
-MBED RP2040 core v2.1.0
+Arduino IDE version: 1.8.19
+MBED RP2040 core v3.3.0
 RASPBERRY_PI_PICO Module
 OS: Ubuntu 20.04 LTS
-Linux xy-Inspiron-3593 5.4.0-80-generic #90-Ubuntu SMP Fri Jul 9 22:49:44 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+Linux xy-Inspiron-3593 5.15.0-48-generic #54~20.04.1-Ubuntu SMP Thu Sep 1 16:17:26 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
 
 Context:
-I encountered a crash while trying to use the Timer Interrupt.
+I encountered a crash while trying to use this library
 
 Steps to reproduce:
 1. ...
@@ -51,3 +51,5 @@ There are usually some outstanding feature requests in the [existing issues list
 ### Sending Pull Requests
 
 Pull Requests with changes and fixes are also welcome!
+
+

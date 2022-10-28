@@ -12,7 +12,7 @@
   Therefore, their executions are not blocked by bad-behaving functions / tasks.
   This important feature is absolutely necessary for mission-critical tasks.
 
-  Version: 1.7.0
+  Version: 1.12.0
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
@@ -25,6 +25,11 @@
   1.5.0   K.Hoang      17/04/2021 Add support to Arduino megaAVR ATmega4809-based boards (Nano Every, UNO WiFi Rev2, etc.)
   1.6.0   K.Hoang      15/06/2021 Add T3/T4 support to 32u4. Add support to RP2040, ESP32-S2
   1.7.0   K.Hoang      13/08/2021 Add support to Adafruit nRF52 core v0.22.0+
+  1.8.0   K.Hoang      24/11/2021 Update to use latest TimerInterrupt Libraries' versions
+  1.9.0   K.Hoang      09/05/2022 Update to use latest TimerInterrupt Libraries' versions
+  1.10.0  K.Hoang      10/08/2022 Update to use latest ESP32_New_TimerInterrupt Library version
+  1.11.0  K.Hoang      12/08/2022 Add support to new ESP32_C3, ESP32_S2 and ESP32_S3 boards
+  1.12.0  K.Hoang      29/09/2022 Update for SAMD, RP2040, MBED_RP2040
 ****************************************************************************************************************************/
 
 #pragma once
@@ -32,28 +37,67 @@
 #ifndef MEGA_AVR_TIMERINTERRUPT_H
 #define MEGA_AVR_TIMERINTERRUPT_H
 
-#if ( defined(__AVR_ATmega4809__) || defined(ARDUINO_AVR_UNO_WIFI_REV2) || defined(ARDUINO_AVR_NANO_EVERY) )
+///////////////////////////////////////////
+
+#if ( defined(__AVR_ATmega4809__) || defined(ARDUINO_AVR_UNO_WIFI_REV2) || defined(ARDUINO_AVR_NANO_EVERY) || \
+      defined(ARDUINO_AVR_ATmega4809) || defined(ARDUINO_AVR_ATmega4808) || defined(ARDUINO_AVR_ATmega3209) || \
+      defined(ARDUINO_AVR_ATmega3208) || defined(ARDUINO_AVR_ATmega1609) || defined(ARDUINO_AVR_ATmega1608) || \
+      defined(ARDUINO_AVR_ATmega809) || defined(ARDUINO_AVR_ATmega808) )
   #if !defined(BOARD_NAME)
     #if (ARDUINO_AVR_UNO_WIFI_REV2)
       #define BOARD_NAME      "megaAVR UNO WiFi Rev2"
+      #define TIMER_INTERRUPT_USING_ARDUINO_CORE        true
     #elif (ARDUINO_AVR_NANO_EVERY)
       #define BOARD_NAME      "megaAVR Nano Every"
+      #define TIMER_INTERRUPT_USING_ARDUINO_CORE        true
     #else
-      #define BOARD_NAME      "megaAVR Unknown"
+      #define TIMER_INTERRUPT_USING_ARDUINO_CORE        false 
+       
+		  #if (ARDUINO_AVR_ATmega4809)
+		    #define BOARD_NAME      "MegaCoreX ATmega4809"
+		  #elif (ARDUINO_AVR_ATmega4808)
+		    #define BOARD_NAME      "MegaCoreX ATmega4808"
+		  #elif (ARDUINO_AVR_ATmega3209)
+		    #define BOARD_NAME      "MegaCoreX ATmega3209"
+		  #elif (ARDUINO_AVR_ATmega3208)
+		    #define BOARD_NAME      "MegaCoreX ATmega3208"
+		  #elif (ARDUINO_AVR_ATmega1609)
+		    #define BOARD_NAME      "MegaCoreX ATmega1609"
+		  #elif (ARDUINO_AVR_ATmega1608)
+		    #define BOARD_NAME      "MegaCoreX ATmega1608"
+		  #elif (ARDUINO_AVR_ATmega809)
+		    #define BOARD_NAME      "MegaCoreX ATmega809"
+		  #elif (ARDUINO_AVR_ATmega808)
+		    #define BOARD_NAME      "MegaCoreX ATmega808"   
+		  #else
+		    #define BOARD_NAME      "megaAVR Unknown"
+		  #endif  
     #endif
   #endif
 #else
-  #error This is designed only for Arduino megaAVR board! Please check your Tools->Board setting.
+  #error This is designed only for Arduino or MegaCoreX megaAVR board! Please check your Tools->Board setting
 #endif
+
+///////////////////////////////////////////
 
 #ifndef TIMER_INTERRUPT_DEBUG
   #define TIMER_INTERRUPT_DEBUG      0
 #endif
 
+///////////////////////////////////////////
+
 #include "TimerInterrupt_Generic_Debug.h"
 
+///////////////////////////////////////////
+
 #ifndef MEGA_AVR_TIMER_INTERRUPT_VERSION
-  #define MEGA_AVR_TIMER_INTERRUPT_VERSION       "megaAVR_TimerInterrupt v1.3.0"
+  #define MEGA_AVR_TIMER_INTERRUPT_VERSION       "megaAVR_TimerInterrupt v1.6.1"
+  
+  #define MEGA_AVR_TIMER_INTERRUPT_VERSION_MAJOR      1
+  #define MEGA_AVR_TIMER_INTERRUPT_VERSION_MINOR      6
+  #define MEGA_AVR_TIMER_INTERRUPT_VERSION_PATCH      1
+
+  #define MEGA_AVR_TIMER_INTERRUPT_VERSION_INT        1006001
 #endif
 
 #include <avr/interrupt.h>
@@ -63,7 +107,7 @@
 
 ///////////////////////////////////////////
 
-#define MAX_COUNT_16BIT           65535
+#define MAX_COUNT_16BIT           65535UL
 
 typedef void (*timer_callback)();
 typedef void (*timer_callback_p)(void *);
@@ -112,9 +156,25 @@ typedef enum TCB_CNTMODE_enum
 
 *****************************************************************************************/
 
-
-TCB_t* TimerTCB[ NUM_HW_TIMERS ] = { &TCB0, &TCB1, &TCB2, &TCB3 };
-
+#if ( defined(__AVR_ATmega4809__) || defined(__AVR_ATmega3209__) || defined(__AVR_ATmega1609__) || defined(__AVR_ATmega809__) )
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using __AVR_ATmegaXX09__ architecture
+  #endif
+  
+  #define TIMER_INTERRUPT_USING_ATMEGA_XX09       true
+  
+  TCB_t* TimerTCB[ NUM_HW_TIMERS ] = { &TCB0, &TCB1, &TCB2, &TCB3 };
+  
+#elif ( defined(__AVR_ATmega4808__) || defined(__AVR_ATmega3208__) || defined(__AVR_ATmega1608__) || defined(__AVR_ATmega808__) )
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using __AVR_ATmegaXX08__ architecture
+  #endif
+  
+  #define TIMER_INTERRUPT_USING_ATMEGA_XX08       true
+  
+  TCB_t* TimerTCB[ NUM_HW_TIMERS ] = { &TCB0, &TCB1, &TCB2 };
+  
+#endif 
 
 ///////////////////////////////////////////
 
@@ -123,23 +183,35 @@ TCB_t* TimerTCB[ NUM_HW_TIMERS ] = { &TCB0, &TCB1, &TCB2, &TCB3 };
 // Clock for UNO WiFi Rev2 and Nano Every is 16MHz
 #if USING_16MHZ  
   // Use no prescaler (prescaler 1) => 16MHz
-  #warning Using no prescaler => 16MHz
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using no prescaler => 16MHz
+  #endif
+  
   #define TCB_CLKSEL_VALUE      TCB_CLKSEL_CLKDIV1_gc
   #define CLOCK_PRESCALER       1
 #elif USING_8MHZ
   // Use prescaler 2 => 8MHz
-  #warning Using prescaler 2 => 8MHz
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using prescaler 2 => 8MHz
+  #endif
+  
   #define TCB_CLKSEL_VALUE      TCB_CLKSEL_CLKDIV2_gc
   #define CLOCK_PRESCALER       2
 #elif USING_250KHZ
   // Optional, but for clarity
   // Use Timer A as clock (prescaler 64) => 250KHz
-  #warning Using prescaler 64 => 250KHz
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using prescaler 64 => 250KHz
+  #endif
+  
   #define TCB_CLKSEL_VALUE      TCB_CLKSEL_CLKTCA_gc 
   #define CLOCK_PRESCALER       64
 #else
   // Use Timer A as clock (prescaler 64) => 250KHz
-  #warning Using prescaler 64 => 250KHz
+  #if (_TIMERINTERRUPT_LOGLEVEL_ > 3)
+    #warning Using prescaler 64 => 250KHz
+  #endif
+  
   #define TCB_CLKSEL_VALUE      TCB_CLKSEL_CLKTCA_gc
   #define CLOCK_PRESCALER       64
 #endif
@@ -181,12 +253,12 @@ class TimerInterrupt
       
       TimerTCB[_timer]->INTCTRL = TCB_CAPT_bm; // Enable the interrupt
       
-      TISR_LOGINFO(F("=================="));
-      TISR_LOGINFO1(F("set_CCMP, Timer ="), _timer);
-      TISR_LOGINFO1(F("CTRLB   ="), TimerTCB[_timer]->CTRLB);
-      TISR_LOGINFO1(F("CCMP    ="), TimerTCB[_timer]->CCMP);
-      TISR_LOGINFO1(F("INTCTRL ="), TimerTCB[_timer]->INTCTRL);
-      TISR_LOGINFO1(F("CTRLA   ="), TimerTCB[_timer]->CTRLA);
+      TISR_LOGDEBUG(F("=================="));
+      TISR_LOGDEBUG1(F("set_CCMP, Timer ="), _timer);
+      TISR_LOGDEBUG1(F("CTRLB   ="), TimerTCB[_timer]->CTRLB);
+      TISR_LOGDEBUG1(F("CCMP    ="), TimerTCB[_timer]->CCMP);
+      TISR_LOGDEBUG1(F("INTCTRL ="), TimerTCB[_timer]->INTCTRL);
+      TISR_LOGDEBUG1(F("CTRLA   ="), TimerTCB[_timer]->CTRLA);
       TISR_LOGDEBUG(F("=================="));
 
       // Flag _CCMPValue == 0 => end of long timer
@@ -240,7 +312,7 @@ class TimerInterrupt
     
     ///////////////////////////////////////////
 
-    void init(int8_t timer)
+    void init(const int8_t& timer)
     {    
       // Set timer specific stuff
       // All timers in CTC mode
@@ -284,7 +356,7 @@ class TimerInterrupt
     //bool setFrequency(float frequency, timer_callback_p callback, /* void* */ uint32_t params, unsigned long duration = 0);
     // frequency (in hertz) and duration (in milliseconds).
     // Return true if frequency is OK with selected timer (CCMPValue is in range)
-    bool setFrequency(float frequency, timer_callback_p callback, uint32_t params, unsigned long duration = 0)
+    bool setFrequency(const float& frequency, timer_callback_p callback, const uint32_t& params, const unsigned long& duration = 0)
     {     
       //frequencyLimit must > 1
       float frequencyLimit = frequency * 17179.840;
@@ -347,7 +419,7 @@ class TimerInterrupt
     ///////////////////////////////////////////
 
     // frequency (in hertz) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    bool setFrequency(float frequency, timer_callback callback, unsigned long duration = 0)
+    bool setFrequency(const float& frequency, timer_callback callback, const unsigned long& duration = 0)
     {
       return setFrequency(frequency, reinterpret_cast<timer_callback_p>(callback), /*NULL*/ 0, duration);
     }
@@ -356,7 +428,7 @@ class TimerInterrupt
 
     // interval (in ms) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
     template<typename TArg>
-    bool setInterval(unsigned long interval, void (*callback)(TArg), TArg params, unsigned long duration = 0)
+    bool setInterval(const unsigned long& interval, void (*callback)(TArg), const TArg& params, const unsigned long& duration = 0)
     {
       static_assert(sizeof(TArg) <= sizeof(uint32_t), "setInterval() callback argument size must be <= 4 bytes");
       return setFrequency((float) (1000.0f / interval), reinterpret_cast<timer_callback_p>(callback), (uint32_t) params, duration);
@@ -365,7 +437,7 @@ class TimerInterrupt
     ///////////////////////////////////////////
 
     // interval (in ms) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    bool setInterval(unsigned long interval, timer_callback callback, unsigned long duration = 0)
+    bool setInterval(const unsigned long& interval, timer_callback callback, const unsigned long& duration = 0)
     {
       return setFrequency((float) (1000.0f / interval), reinterpret_cast<timer_callback_p>(callback), /*NULL*/ 0, duration);
     }
@@ -373,7 +445,7 @@ class TimerInterrupt
     ///////////////////////////////////////////
 
     template<typename TArg>
-    bool attachInterrupt(float frequency, void (*callback)(TArg), TArg params, unsigned long duration = 0)
+    bool attachInterrupt(const float& frequency, void (*callback)(TArg), const TArg& params, const unsigned long& duration = 0)
     {
       static_assert(sizeof(TArg) <= sizeof(uint32_t), "attachInterrupt() callback argument size must be <= 4 bytes");
       return setFrequency(frequency, reinterpret_cast<timer_callback_p>(callback), (uint32_t) params, duration);
@@ -381,7 +453,7 @@ class TimerInterrupt
     
     ///////////////////////////////////////////
 
-    bool attachInterrupt(float frequency, timer_callback callback, unsigned long duration = 0)
+    bool attachInterrupt(const float& frequency, timer_callback callback, const unsigned long& duration = 0)
     {
       return setFrequency(frequency, reinterpret_cast<timer_callback_p>(callback), /*NULL*/ 0, duration);
     }
@@ -390,7 +462,7 @@ class TimerInterrupt
 
     // Interval (in ms) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
     template<typename TArg>
-    bool attachInterruptInterval(unsigned long interval, void (*callback)(TArg), TArg params, unsigned long duration = 0)
+    bool attachInterruptInterval(const unsigned long& interval, void (*callback)(TArg), const TArg& params, const unsigned long& duration = 0)
     {
       static_assert(sizeof(TArg) <= sizeof(uint32_t), "attachInterruptInterval() callback argument size must be <= 4 bytes");
       return setFrequency( (float) ( 1000.0f / interval), reinterpret_cast<timer_callback_p>(callback), (uint32_t) params, duration);
@@ -399,7 +471,7 @@ class TimerInterrupt
     ///////////////////////////////////////////
 
     // Interval (in ms) and duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    bool attachInterruptInterval(unsigned long interval, timer_callback callback, unsigned long duration = 0)
+    bool attachInterruptInterval(const unsigned long& interval, timer_callback callback, const unsigned long& duration = 0)
     {
       return setFrequency( (float) ( 1000.0f / interval), reinterpret_cast<timer_callback_p> (callback), /*NULL*/ 0, duration);
     }
@@ -428,7 +500,7 @@ class TimerInterrupt
     ///////////////////////////////////////////
 
     // Duration (in milliseconds). Duration = 0 or not specified => run indefinitely
-    void reattachInterrupt(unsigned long duration = 0)
+    void reattachInterrupt(const unsigned long& duration = 0)
     {
       noInterrupts();
 
@@ -485,7 +557,7 @@ class TimerInterrupt
     ///////////////////////////////////////////
 
     // Just reconnect clock source, start current count from 0
-    void restartTimer(unsigned long duration = 0)
+    void restartTimer(const unsigned long& duration = 0)
     {
       reattachInterrupt(duration);
     }
@@ -506,7 +578,7 @@ class TimerInterrupt
     
     ///////////////////////////////////////////
 
-    void setCount(long countInput) __attribute__((always_inline))
+    void setCount(const long& countInput) __attribute__((always_inline))
     {
       //noInterrupts();
 
@@ -517,14 +589,14 @@ class TimerInterrupt
     
     ///////////////////////////////////////////
 
-    long get_CCMPValue() __attribute__((always_inline))
+    uint32_t get_CCMPValue() __attribute__((always_inline))
     {
       return _CCMPValue;
     };
     
     ///////////////////////////////////////////
 
-    long get_CCMPValueRemaining() __attribute__((always_inline))
+    uint32_t get_CCMPValueRemaining() __attribute__((always_inline))
     {
       return _CCMPValueRemaining;
     };
@@ -534,20 +606,26 @@ class TimerInterrupt
     void adjust_CCMPValue() //__attribute__((always_inline))
     {
       noInterrupts();
+      
+      if (_CCMPValueRemaining < MAX_COUNT_16BIT)
+      {
+        set_CCMP();
+      }
+        
+      interrupts();  
 
       _CCMPValueRemaining -= min(MAX_COUNT_16BIT, _CCMPValueRemaining);
 
-      if (_CCMPValueRemaining == 0)
+      if (_CCMPValueRemaining <= 0)
       {
         // Reset value for next cycle
         _CCMPValueRemaining = _CCMPValue;
+      
         TISR_LOGDEBUG1(F("adjust_CCMPValue: reset _CCMPValueRemaining = "), _CCMPValue);
         _timerDone = true;
       }
       else
         _timerDone = false;
-
-      interrupts();
     };
     
     ///////////////////////////////////////////
@@ -556,10 +634,10 @@ class TimerInterrupt
     {
       noInterrupts();
 
-      // Reset value for next cycle, have to deduct the value already loaded to CCMP register
-
-      _CCMPValueRemaining -= min(MAX_COUNT_16BIT, _CCMPValueRemaining);
-
+      // Reset value for next cycle, have to deduct the value already loaded to CCMP register 
+      _CCMPValueRemaining = _CCMPValue;
+      set_CCMP();
+      
       _timerDone = false;
 
       interrupts();
@@ -567,7 +645,7 @@ class TimerInterrupt
     
     ///////////////////////////////////////////
 
-    bool checkTimerDone() //__attribute__((always_inline))
+    bool checkTimerDone() __attribute__((always_inline))
     {
       return _timerDone;
     };
@@ -622,7 +700,11 @@ class TimerInterrupt
             ITimer0.callback();
             
             // To reload _CCMPValueRemaining as well as _CCMP register to MAX_COUNT_16BIT
-            ITimer0.reload_CCMPValue();
+            if (ITimer0.get_CCMPValue() > MAX_COUNT_16BIT)            
+            {
+              // To reload _CCMPValueRemaining as well as _CCMP register to MAX_COUNT_16BIT
+              ITimer0.reload_CCMPValue();
+            }
             
             if (countLocal > 0)
               ITimer0.setCount(countLocal - 1);       
@@ -675,7 +757,10 @@ class TimerInterrupt
           ITimer1.callback();
           
           // To reload _CCMPValueRemaining as well as _CCMP register to MAX_COUNT_16BIT if _CCMPValueRemaining > MAX_COUNT_16BIT
-          ITimer1.reload_CCMPValue();
+          if (ITimer1.get_CCMPValue() > MAX_COUNT_16BIT)
+          {
+            ITimer1.reload_CCMPValue();
+          }
                
           if (countLocal > 0)                  
             ITimer1.setCount(countLocal - 1);
@@ -723,8 +808,12 @@ class TimerInterrupt
           TISR_LOGDEBUG3(("T2 callback, _CCMPValueRemaining ="), ITimer2.get_CCMPValueRemaining(), (", millis ="), millis());
            
           ITimer2.callback();
-          // To reload _CCMPValue
-          ITimer2.reload_CCMPValue();
+          
+          // To reload _CCMPValueRemaining as well as _CCMP register to MAX_COUNT_16BIT if _CCMPValueRemaining > MAX_COUNT_16BIT
+          if (ITimer2.get_CCMPValue() > MAX_COUNT_16BIT)
+          {           
+            ITimer2.reload_CCMPValue();
+          }
 
           if (countLocal > 0)
            ITimer2.setCount(countLocal - 1);
@@ -774,8 +863,11 @@ class TimerInterrupt
             
             ITimer3.callback();
             
-            // To reload _CCMPValueRemaining as well as _CCMP register to MAX_COUNT_16BIT
-            ITimer3.reload_CCMPValue();
+            // To reload _CCMPValueRemaining as well as _CCMP register to MAX_COUNT_16BIT if _CCMPValueRemaining > MAX_COUNT_16BIT
+            if (ITimer3.get_CCMPValue() > MAX_COUNT_16BIT)
+            {
+              ITimer3.reload_CCMPValue();
+            }
             
             if (countLocal > 0)
               ITimer3.setCount(countLocal - 1);     

@@ -2,22 +2,15 @@
   ISR_16_Timers_Array.ino
   For SAMD boards
   Written by Khoi Hoang
-  
+
+  Built by Khoi Hoang https://github.com/khoih-prog/SAMD_TimerInterrupt
+  Licensed under MIT license
+
   Now even you use all these new 16 ISR-based timers,with their maximum interval practically unlimited (limited only by
-  unsigned long miliseconds), you just consume only one Hardware timer and avoid conflicting with other cores' tasks.
+  unsigned long miliseconds), you just consume only one SAMD timer and avoid conflicting with other cores' tasks.
   The accuracy is nearly perfect compared to software timers. The most important feature is they're ISR-based timers
   Therefore, their executions are not blocked by bad-behaving functions / tasks.
   This important feature is absolutely necessary for mission-critical tasks.
-  
-  Based on SimpleTimer - A timer library for Arduino.
-  Author: mromani@ottotecnica.com
-  Copyright (c) 2010 OTTOTECNICA Italy
-  
-  Based on BlynkTimer.h
-  Author: Volodymyr Shymanskyy
-  
-  Built by Khoi Hoang https://github.com/khoih-prog/TimerInterrupt_Generic
-  Licensed under MIT license
 *****************************************************************************************************************************/
 /*
    Notes:
@@ -40,12 +33,17 @@
 */
 
 #if !( defined(ARDUINO_SAMD_ZERO) || defined(ARDUINO_SAMD_MKR1000) || defined(ARDUINO_SAMD_MKRWIFI1010) \
-    || defined(ARDUINO_SAMD_NANO_33_IOT) || defined(ARDUINO_SAMD_MKRFox1200) || defined(ARDUINO_SAMD_MKRWAN1300) || defined(ARDUINO_SAMD_MKRWAN1310) \
-    || defined(ARDUINO_SAMD_MKRGSM1400) || defined(ARDUINO_SAMD_MKRNB1500) || defined(ARDUINO_SAMD_MKRVIDOR4000) || defined(__SAMD21G18A__) \
-    || defined(ARDUINO_SAMD_CIRCUITPLAYGROUND_EXPRESS) || defined(__SAMD21E18A__) || defined(__SAMD51__) || defined(__SAMD51J20A__) || defined(__SAMD51J19A__) \
-    || defined(__SAMD51G19A__) || defined(__SAMD51P19A__) || defined(__SAMD21G18A__) )
+      || defined(ARDUINO_SAMD_NANO_33_IOT) || defined(ARDUINO_SAMD_MKRFox1200) || defined(ARDUINO_SAMD_MKRWAN1300) || defined(ARDUINO_SAMD_MKRWAN1310) \
+      || defined(ARDUINO_SAMD_MKRGSM1400) || defined(ARDUINO_SAMD_MKRNB1500) || defined(ARDUINO_SAMD_MKRVIDOR4000) \
+      || defined(ARDUINO_SAMD_CIRCUITPLAYGROUND_EXPRESS) || defined(__SAMD51__) || defined(__SAMD51J20A__) \
+      || defined(__SAMD51J19A__) || defined(__SAMD51G19A__) || defined(__SAMD51P19A__)  \
+      || defined(__SAMD21E15A__) || defined(__SAMD21E16A__) || defined(__SAMD21E17A__) || defined(__SAMD21E18A__) \
+      || defined(__SAMD21G15A__) || defined(__SAMD21G16A__) || defined(__SAMD21G17A__) || defined(__SAMD21G18A__) \
+      || defined(__SAMD21J15A__) || defined(__SAMD21J16A__) || defined(__SAMD21J17A__) || defined(__SAMD21J18A__) )
   #error This code is designed to run on SAMD21/SAMD51 platform! Please check your Tools->Board setting.
 #endif
+
+/////////////////////////////////////////////////////////////////
 
 // These define's must be placed at the beginning before #include "TimerInterrupt_Generic.h"
 // _TIMERINTERRUPT_LOGLEVEL_ from 0 to 4
@@ -54,44 +52,83 @@
 #define TIMER_INTERRUPT_DEBUG         0
 #define _TIMERINTERRUPT_LOGLEVEL_     0
 
+// Select only one to be true for SAMD21. Must must be placed at the beginning before #include "TimerInterrupt_Generic.h"
+#define USING_TIMER_TC3         true      // Only TC3 can be used for SAMD51
+#define USING_TIMER_TC4         false     // Not to use with Servo library
+#define USING_TIMER_TC5         false
+#define USING_TIMER_TCC         false
+#define USING_TIMER_TCC1        false
+#define USING_TIMER_TCC2        false     // Don't use this, can crash on some boards
+
+// Uncomment To test if conflict with Servo library
+//#include "Servo.h"
+
+/////////////////////////////////////////////////////////////////
+
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "TimerInterrupt_Generic.h"
-#include "ISR_Timer_Generic.h"
+
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
+#include "SAMD_ISR_Timer.h"
 
 #include <SimpleTimer.h>              // https://github.com/jfturcot/SimpleTimer
 
 #ifndef LED_BUILTIN
-  #define LED_BUILTIN       13
+#define LED_BUILTIN       13
 #endif
 
 #ifndef LED_BLUE
-  #define LED_BLUE          2
+#define LED_BLUE          2
 #endif
 
 #ifndef LED_RED
-  #define LED_RED           3
+#define LED_RED           3
 #endif
 
+// TC3, TC4, TC5 max permissible HW_TIMER_INTERVAL_US is 1398101 us, larger will overflow, therefore not permitted
+// Use TCC, TCC1, TCC2 for longer HW_TIMER_INTERVAL_US
 #define HW_TIMER_INTERVAL_US      10000L
 
 volatile uint32_t startMillis = 0;
 
-// You can select SAMD Hardware Timer  from SAMD_TIMER_1 or SAMD_TIMER_3
-
-// Depending on the board, you can select SAMD21 Hardware Timer from TC3-TCC
-// SAMD21 Hardware Timer from TC3 or TCC
-// SAMD51 Hardware Timer only TC3
-
-// Init SAMD timer TIMER_TC3
-SAMDTimer ITimer(TIMER_TC3);
+///////////////////////////////////////////////
 
 #if (TIMER_INTERRUPT_USING_SAMD21)
-// Init SAMD timer TIMER_TCC
-//SAMDTimer ITimer(TIMER_TCC);
-#endif
+
+  #if USING_TIMER_TC3
+    #define SELECTED_TIMER      TIMER_TC3
+  #elif USING_TIMER_TC4
+    #define SELECTED_TIMER      TIMER_TC4
+  #elif USING_TIMER_TC5
+    #define SELECTED_TIMER      TIMER_TC5
+  #elif USING_TIMER_TCC
+    #define SELECTED_TIMER      TIMER_TCC
+  #elif USING_TIMER_TCC1
+    #define SELECTED_TIMER      TIMER_TCC1
+  #elif USING_TIMER_TCC2
+    #define SELECTED_TIMER      TIMER_TCC
+  #else
+    #error You have to select 1 Timer  
+  #endif
+
+#else
+
+  #if !(USING_TIMER_TC3)
+    #error You must select TC3 for SAMD51
+  #endif
+  
+  #define SELECTED_TIMER      TIMER_TC3
+
+#endif  
+
+// Init selected SAMD timer
+SAMDTimer ITimer(SELECTED_TIMER);
+
+////////////////////////////////////////////////
 
 // Init SAMD_ISR_Timer
 // Each SAMD_ISR_Timer can service 16 different ISR-based timers
-ISR_Timer SAMD_ISR_Timer;
+SAMD_ISR_Timer ISR_Timer;
 
 #define LED_TOGGLE_INTERVAL_MS        2000L
 
@@ -100,7 +137,7 @@ void TimerHandler()
   static bool toggle  = false;
   static int timeRun  = 0;
 
-  SAMD_ISR_Timer.run();
+  ISR_Timer.run();
 
   // Toggle LED every LED_TOGGLE_INTERVAL_MS = 2000ms = 2s
   if (++timeRun == ((LED_TOGGLE_INTERVAL_MS * 1000) / HW_TIMER_INTERVAL_US) )
@@ -125,39 +162,39 @@ typedef void (*irqCallback)  ();
 
 #if USE_COMPLEX_STRUCT
 
-  typedef struct 
-  {
-    irqCallback   irqCallbackFunc;
-    uint32_t      TimerInterval;
-    unsigned long deltaMillis;
-    unsigned long previousMillis;
-  } ISRTimerData;
-  
-  // In NRF52, avoid doing something fancy in ISR, for example Serial.print()
-  // The pure simple Serial.prints here are just for demonstration and testing. Must be eliminate in working environment
-  // Or you can get this run-time error / crash
-  
-  void doingSomething(int index);
+typedef struct
+{
+  irqCallback   irqCallbackFunc;
+  uint32_t      TimerInterval;
+  unsigned long deltaMillis;
+  unsigned long previousMillis;
+} ISRTimerData;
+
+// In NRF52, avoid doing something fancy in ISR, for example Serial.print()
+// The pure simple Serial.prints here are just for demonstration and testing. Must be eliminate in working environment
+// Or you can get this run-time error / crash
+
+void doingSomething(int index);
 
 #else
 
-  volatile unsigned long deltaMillis    [NUMBER_ISR_TIMERS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  volatile unsigned long previousMillis [NUMBER_ISR_TIMERS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  
-  // You can assign any interval for any timer here, in milliseconds
-  uint32_t TimerInterval[NUMBER_ISR_TIMERS] =
-  {
-    5000L,  10000L,  15000L,  20000L,  25000L,  30000L,  35000L,  40000L,
-    45000L, 50000L,  55000L,  60000L,  65000L,  70000L,  75000L,  80000L
-  };
-  
-  void doingSomething(int index)
-  {
-    unsigned long currentMillis  = millis();
-    
-    deltaMillis[index]    = currentMillis - previousMillis[index];
-    previousMillis[index] = currentMillis;
-  }
+volatile unsigned long deltaMillis    [NUMBER_ISR_TIMERS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long previousMillis [NUMBER_ISR_TIMERS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+// You can assign any interval for any timer here, in milliseconds
+uint32_t TimerInterval[NUMBER_ISR_TIMERS] =
+{
+  5000L,  10000L,  15000L,  20000L,  25000L,  30000L,  35000L,  40000L,
+  45000L, 50000L,  55000L,  60000L,  65000L,  70000L,  75000L,  80000L
+};
+
+void doingSomething(int index)
+{
+  unsigned long currentMillis  = millis();
+
+  deltaMillis[index]    = currentMillis - previousMillis[index];
+  previousMillis[index] = currentMillis;
+}
 
 #endif
 
@@ -247,44 +284,44 @@ void doingSomething15()
 
 #if USE_COMPLEX_STRUCT
 
-  ISRTimerData curISRTimerData[NUMBER_ISR_TIMERS] =
-  {
-    //irqCallbackFunc, TimerInterval, deltaMillis, previousMillis
-    { doingSomething0,    5000L, 0, 0 },
-    { doingSomething1,   10000L, 0, 0 },
-    { doingSomething2,   15000L, 0, 0 },
-    { doingSomething3,   20000L, 0, 0 },
-    { doingSomething4,   25000L, 0, 0 },
-    { doingSomething5,   30000L, 0, 0 },
-    { doingSomething6,   35000L, 0, 0 },
-    { doingSomething7,   40000L, 0, 0 },
-    { doingSomething8,   45000L, 0, 0 },
-    { doingSomething9,   50000L, 0, 0 },
-    { doingSomething10,  55000L, 0, 0 },
-    { doingSomething11,  60000L, 0, 0 },
-    { doingSomething12,  65000L, 0, 0 },
-    { doingSomething13,  70000L, 0, 0 },
-    { doingSomething14,  75000L, 0, 0 },
-    { doingSomething15,  80000L, 0, 0 }
-  };
-  
-  void doingSomething(int index)
-  {
-    unsigned long currentMillis  = millis();
-    
-    curISRTimerData[index].deltaMillis    = currentMillis - curISRTimerData[index].previousMillis;
-    curISRTimerData[index].previousMillis = currentMillis;
-  }
+ISRTimerData curISRTimerData[NUMBER_ISR_TIMERS] =
+{
+  //irqCallbackFunc, TimerInterval, deltaMillis, previousMillis
+  { doingSomething0,    5000L, 0, 0 },
+  { doingSomething1,   10000L, 0, 0 },
+  { doingSomething2,   15000L, 0, 0 },
+  { doingSomething3,   20000L, 0, 0 },
+  { doingSomething4,   25000L, 0, 0 },
+  { doingSomething5,   30000L, 0, 0 },
+  { doingSomething6,   35000L, 0, 0 },
+  { doingSomething7,   40000L, 0, 0 },
+  { doingSomething8,   45000L, 0, 0 },
+  { doingSomething9,   50000L, 0, 0 },
+  { doingSomething10,  55000L, 0, 0 },
+  { doingSomething11,  60000L, 0, 0 },
+  { doingSomething12,  65000L, 0, 0 },
+  { doingSomething13,  70000L, 0, 0 },
+  { doingSomething14,  75000L, 0, 0 },
+  { doingSomething15,  80000L, 0, 0 }
+};
+
+void doingSomething(int index)
+{
+  unsigned long currentMillis  = millis();
+
+  curISRTimerData[index].deltaMillis    = currentMillis - curISRTimerData[index].previousMillis;
+  curISRTimerData[index].previousMillis = currentMillis;
+}
 
 #else
 
-  irqCallback irqCallbackFunc[NUMBER_ISR_TIMERS] =
-  {
-    doingSomething0,  doingSomething1,  doingSomething2,  doingSomething3,
-    doingSomething4,  doingSomething5,  doingSomething6,  doingSomething7,
-    doingSomething8,  doingSomething9,  doingSomething10, doingSomething11,
-    doingSomething12, doingSomething13, doingSomething14, doingSomething15
-  };
+irqCallback irqCallbackFunc[NUMBER_ISR_TIMERS] =
+{
+  doingSomething0,  doingSomething1,  doingSomething2,  doingSomething3,
+  doingSomething4,  doingSomething5,  doingSomething6,  doingSomething7,
+  doingSomething8,  doingSomething9,  doingSomething10, doingSomething11,
+  doingSomething12, doingSomething13, doingSomething14, doingSomething15
+};
 
 #endif
 ///////////////////////////////////////////
@@ -304,13 +341,13 @@ void simpleTimerDoingSomething2s()
 
   unsigned long currMillis = millis();
 
-  Serial.print(F("SimpleTimer : "));Serial.print(SIMPLE_TIMER_MS / 1000);
+  Serial.print(F("SimpleTimer : ")); Serial.print(SIMPLE_TIMER_MS / 1000);
   Serial.print(F(", ms : ")); Serial.print(currMillis);
   Serial.print(F(", Dms : ")); Serial.println(currMillis - previousMillis);
 
   for (uint16_t i = 0; i < NUMBER_ISR_TIMERS; i++)
   {
-#if USE_COMPLEX_STRUCT    
+#if USE_COMPLEX_STRUCT
     Serial.print(F("Timer : ")); Serial.print(i);
     Serial.print(F(", programmed : ")); Serial.print(curISRTimerData[i].TimerInterval);
     Serial.print(F(", actual : ")); Serial.println(curISRTimerData[i].deltaMillis);
@@ -318,7 +355,7 @@ void simpleTimerDoingSomething2s()
     Serial.print(F("Timer : ")); Serial.print(i);
     Serial.print(F(", programmed : ")); Serial.print(TimerInterval[i]);
     Serial.print(F(", actual : ")); Serial.println(deltaMillis[i]);
-#endif    
+#endif
   }
 
   previousMillis = currMillis;
@@ -329,7 +366,9 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
 
   Serial.begin(115200);
-  while (!Serial);
+  while (!Serial && millis() < 5000);
+
+  delay(100);
 
   Serial.print(F("\nStarting ISR_16_Timers_Array_Complex on ")); Serial.println(BOARD_NAME);
   Serial.println(SAMD_TIMER_INTERRUPT_VERSION);
@@ -346,18 +385,18 @@ void setup()
     Serial.println(F("Can't set ITimer. Select another freq. or timer"));
 
   startMillis = millis();
-  
+
   // Just to demonstrate, don't use too many ISR Timers if not absolutely necessary
-  // You can use up to 16 timer for each SAMD_ISR_Timer
+  // You can use up to 16 timer for each ISR_Timer
   for (uint16_t i = 0; i < NUMBER_ISR_TIMERS; i++)
   {
 #if USE_COMPLEX_STRUCT
     curISRTimerData[i].previousMillis = startMillis;
-    SAMD_ISR_Timer.setInterval(curISRTimerData[i].TimerInterval, curISRTimerData[i].irqCallbackFunc);
+    ISR_Timer.setInterval(curISRTimerData[i].TimerInterval, curISRTimerData[i].irqCallbackFunc);
 #else
     previousMillis[i] = millis();
-    SAMD_ISR_Timer.setInterval(TimerInterval[i], irqCallbackFunc[i]);
-#endif    
+    ISR_Timer.setInterval(TimerInterval[i], irqCallbackFunc[i]);
+#endif
   }
 
   // You need this timer for non-critical tasks. Avoid abusing ISR if not absolutely necessary.
@@ -369,12 +408,12 @@ void setup()
 void loop()
 {
   // This unadvised blocking task is used to demonstrate the blocking effects onto the execution and accuracy to Software timer
-  // You see the time elapse of SAMD_ISR_Timer still accurate, whereas very unaccurate for Software Timer
+  // You see the time elapse of ISR_Timer still accurate, whereas very unaccurate for Software Timer
   // The time elapse for 2000ms software timer now becomes 3000ms (BLOCKING_TIME_MS)
-  // While that of SAMD_ISR_Timer is still prefect.
+  // While that of ISR_Timer is still prefect.
   delay(BLOCKING_TIME_MS);
 
   // You need this Software timer for non-critical tasks. Avoid abusing ISR if not absolutely necessary
-  // You don't need to and never call SAMD_ISR_Timer.run() here in the loop(). It's already handled by ISR timer.
+  // You don't need to and never call ISR_Timer.run() here in the loop(). It's already handled by ISR timer.
   simpleTimer.run();
 }
