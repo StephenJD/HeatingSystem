@@ -191,7 +191,7 @@ namespace I2C_Recovery {
 #ifdef REPORT_RECOVER
 							logger() << F("\t\tDevice Failed\n");
 #endif
-							disable();
+							//disable();
 						}
 						device().i2C().setStopMargin(I2C_Talk::WORKING_STOP_TIMEOUT);
 						if (device().testDevice() == _OK) break;
@@ -200,11 +200,13 @@ namespace I2C_Recovery {
 				[[fallthrough]];
 			case S_PowerDown: // 5
 				if (haveBumpedUpMaxStrategyUsed(S_PowerDown)) {
-					//logger() << F("\t\tS_Power-Down") << L_endl;
-					if (status == _BusReleaseTimeout) {
+#ifdef REPORT_RECOVER
+					logger() << F("\t\tS_Power-Down") << L_endl;
+#endif
+					//if (status == _BusReleaseTimeout) {
 						strategyStartTime = micros();
 						call_timeOutFn(device().getAddress());
-					}
+					//}
 					strategy().tryAgain(S_TryAgain);
 					break;
 				}
