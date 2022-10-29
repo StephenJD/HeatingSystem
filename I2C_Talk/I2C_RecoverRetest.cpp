@@ -191,7 +191,7 @@ namespace I2C_Recovery {
 #ifdef REPORT_RECOVER
 							logger() << F("\t\tDevice Failed\n");
 #endif
-							disable();
+							//disable();
 						}
 						device().i2C().setStopMargin(I2C_Talk::WORKING_STOP_TIMEOUT);
 						if (device().testDevice() == _OK) break;
@@ -199,18 +199,16 @@ namespace I2C_Recovery {
 				} //else logger() << F("\t\tTry again S_SpeedTest 0x");
 				[[fallthrough]];
 			case S_PowerDown: // 5
-				if (!I2C_Recovery::HardReset::hasWarmedUp()) {
-					logger() << F("\t\tS_Power-Down - wait to warm-up") << L_endl;
-					break;
-				}				
 				if (haveBumpedUpMaxStrategyUsed(S_PowerDown)) {
-					//logger() << F("\t\tS_Power-Down") << L_endl;
-					if (status == _BusReleaseTimeout) {
+#ifdef REPORT_RECOVER
+					logger() << F("\t\tS_Power-Down") << L_endl;
+#endif
+					//if (status == _BusReleaseTimeout) {
 						strategyStartTime = micros();
 						call_timeOutFn(device().getAddress());
-					}
-					//strategy().tryAgain(S_SlowDown); // when incremented will do a speed-test
-					if (device().testDevice() == _OK) break;
+					//}
+					strategy().tryAgain(S_TryAgain);
+					break;
 				}
 				[[fallthrough]];
 			case S_Disable: // 5

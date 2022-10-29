@@ -86,7 +86,7 @@ void setup() {
 		led_Status.clear();
 		delay(50);
 	}
-
+  led_Status.set(); // turn gas off.
 	delay(500);
 	i2C().onReceive(rl_register_set.receiveI2C);
 	i2C().onRequest(rl_register_set.requestI2C);
