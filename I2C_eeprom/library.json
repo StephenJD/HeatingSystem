@@ -1,7 +1,7 @@
 {
   "name": "I2C_EEPROM",
-  "keywords": "EEPROM,24LC256",
-  "description": "Library for I2C EEPROMS.",
+  "keywords": "EEPROM, 24LC256, 24LC64",
+  "description": "Library for I2C EEPROMS.\n24LC512, 24LC256, 24LC128, 24LC64, 24LC32, 24LC16, 24LC08, 24LC04, 24LC02, 24LC01 and equivalents.",
   "authors":
   [
     {
@@ -13,12 +13,11 @@
   "repository":
   {
     "type": "git",
-    "url": "https://github.com/RobTillaart/Arduino.git"
+    "url": "https://github.com/RobTillaart/I2C_EEPROM.git"
   },
-  "version":"1.2.5",
+  "version": "1.6.1",
+  "license": "MIT",
   "frameworks": "arduino",
   "platforms": "*",
-  "export": {
-    "include": "libraries/I2C_EEPROM"
-  }
+  "headers": "I2C_eeprom.h"
 }
