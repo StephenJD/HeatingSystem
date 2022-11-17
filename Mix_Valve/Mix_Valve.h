@@ -23,6 +23,8 @@
 #include <Flag_Enum.h>
 #include <Static_Deque.h>
 
+constexpr int MAX_VALVE_TIME = 150;
+
 extern i2c_registers::I_Registers& mixV_registers;
 
 namespace HardwareInterfaces {
@@ -76,8 +78,8 @@ public:
 	};
 
 	enum Mode {
-		e_AtTargetPosition, e_Moving, e_WaitingToMove, e_HotLimit, e_ValveOff, e_FindingOff, e_WaitToCool
-		/*These are temporary triggers */, e_findOff, e_newReq, e_swapMutex, e_completedMove, e_reachedLimit, e_Error
+		e_Moving, e_WaitingToMove, e_ValveOff, e_AtTargetPosition, e_FindingOff, e_HotLimit
+		/*These are temporary triggers */, e_findOff, e_swapMutex, e_reachedLimit, e_Error
 	};
 	enum MotorDirection { e_Cooling = -1, e_Stop, e_Heating };
 	enum { PSUV_DIVISOR = 5 };
@@ -94,24 +96,27 @@ public:
 	const __FlashStringHelper* name() const;
 	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
 	// Modifiers
-	void requestNewPosition(int new_pos);
 	int16_t update(int newPos);
-	void check_flow_temp();
+	//void check_flow_temp();
 	void setDefaultRequestTemp();
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
 #ifdef SIM_MIXV
 	static constexpr uint8_t ROOM_TEMP = 20;
 	void set_maxTemp(uint8_t max) { _maxTemp = max; }
+	void setDelay(int delay) { _delay = delay; }
 	void addTempToDelayIntegral();
-	uint8_t calculatedEndPos() { return uint8_t(0.5 + (_currReqTemp - ROOM_TEMP) * 140 / (_maxTemp - ROOM_TEMP)); }
-	int16_t finalTempForPosition_16ths() { return 16 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / 140); }
+	//uint8_t calculatedEndPos() { return uint8_t(0.5f + (_currReqTemp - ROOM_TEMP) * MAX_VALVE_TIME / (_maxTemp - ROOM_TEMP)); }
+	int16_t finalTempForPosition() { return (256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5; }
+	int16_t flowTemp() { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
 	void setFlowTempReg();
+	void setIsTemp(uint8_t temp);
+	float get_Kp() { return MAX_VALVE_TIME / ((_maxTemp - ROOM_TEMP) * 256.f); }
 #endif
 private:
 	friend class TestMixV;
 
 	// Loop Functions
-	bool stateMachine(); // returns true if in transitional-mode
+	void stateMachine(int newPos); // returns true if in transitional-mode
 	// Continuation Functions
 	bool continueMove();
 	// Transition Functions
@@ -121,7 +126,6 @@ private:
 	// Adjustment Functions
 	// New Temp Request Functions
 	bool checkForNewReqTemp();
-	Mode newTempMode();
 	// Non-Algorithmic Functions
 	void setDirection() { _motorDirection = _endPos > _valvePos ? e_Heating : _endPos < _valvePos ? e_Cooling : e_Stop;	}
 	bool valveIsAtLimit();

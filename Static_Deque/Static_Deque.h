@@ -87,15 +87,21 @@ void Deque<CAPACITY, intType>::push(intType val) {
 template <int C, typename intType>
 void Deque<C, intType>::clear() {
 	for (auto& item : _queue) item = intType(0);
+	_noOfValues = 0;
+	_endPos = 0;
 }
 
 template <int C, typename intType>
 void Deque<C, intType>::prime(intType val) {
+	_noOfValues = C;
+	_endPos = 0;
 	for (auto& item : _queue) item = val;
 }
 
 template <int C, typename intType>
 void Deque<C, intType>::prime_n(intType val, int count) {
+	_noOfValues = count;
+	_endPos = trueModulo(_noOfValues, C);;
 	for (auto& item : _queue) {
 		item = val;
 		--count;
@@ -140,10 +146,12 @@ public:
 	intType minVal() const { return _min; }
 	// Modifier
 	void push(intType val);
-
+	void prime(intType val);
+	void prime_n(intType val, int count);
+	void clear();
 private:
-	intType _max = 0;
-	intType _min = 0;
+	intType _max = intType{ 0 };
+	intType _min = intType{ 0 };
 };
 
 template <int C, typename intType>
@@ -151,8 +159,10 @@ bool Fat_Deque<C, intType>::hasChangedDirection() const {
 	auto last = Deque<C, intType>::last();
 	auto prev = Deque<C, intType>::last(-1);
 	if (Deque<C, intType>::size() > 2) {
-		if (prev == _max || prev == _min) {
-			if (last != prev) return true;
+		bool prevWasMaxOrMin = prev == _max || prev == _min;
+		bool lastIsNotMaxOrMin = last != _max && last != _min;
+		if (prevWasMaxOrMin && lastIsNotMaxOrMin) {
+			return true;
 		}
 	}
 	return false;
@@ -168,4 +178,25 @@ void Fat_Deque<C, intType>::push(intType val) {
 		if (val > _max) _max = val;
 		if (val < _min) _min = val;
 	}
+}
+
+template <int C, typename intType>
+void Fat_Deque<C, intType>::prime(intType val) {
+	Deque<C, intType>::prime(val);
+	_max = val;
+	_min = val;
+}
+
+template <int C, typename intType>
+void Fat_Deque<C, intType>::prime_n(intType val, int count) {
+	Deque<C, intType>::prime_n(val, count);
+	_max = val;
+	_min = val;
+}
+
+template <int C, typename intType>
+void Fat_Deque<C, intType>::clear() {
+	Deque<C, intType>::clear();
+	_max = intType{ 0 };
+	_min = intType{ 0 };
 }

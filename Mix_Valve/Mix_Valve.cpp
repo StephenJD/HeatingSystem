@@ -31,32 +31,22 @@ int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.03);
 
 bool Mix_Valve::motor_queued;
 // PID Functions
-void Mix_Valve::requestNewPosition(int newPos) {
-	_endPos = newPos;
-	setDirection();
-}
 
 int16_t Mix_Valve::update(int newPos) {
-	if (newPos != _endPos) requestNewPosition(newPos);
-	stateMachine();
+	stateMachine(newPos); // register last move
 #ifdef SIM_MIXV
 	addTempToDelayIntegral();
 	setFlowTempReg();
 #endif
 	auto reg = registers();
-	auto sensorTemp = reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.f;
+	auto sensorTemp = reg.get(R_FLOW_TEMP) * 256 + reg.get(R_FLOW_TEMP_FRACT);
 	return int16_t(sensorTemp);
 }
 
 // Loop Functions
-void Mix_Valve::check_flow_temp() { // Called once every second. maintains mix valve temp.
-	while (stateMachine());
-	refreshRegisters();
-	log();
-}
 
-bool Mix_Valve::stateMachine() { // returns true if in transitional-mode
-	// Gets new TempReq, finds OFF, stops a limit or moves towards requested posistion.
+void Mix_Valve::stateMachine(int newPos) {
+	// Gets new TempReq, finds OFF, stops at limit or moves towards requested posistion.
 	// Lambda
 	auto moveMode = [this]() {
 		if (motor_mutex == this) return e_Moving;
@@ -65,13 +55,13 @@ bool Mix_Valve::stateMachine() { // returns true if in transitional-mode
 			activateMotor_isMoving();
 			return e_Moving;
 		}
-		else {
-			logger() << name() << L_tabs << F("Mutex") << L_endl;
+		else if (!motor_queued) {
+			logger() << name() << L_tabs << F("Start Mutex") << L_endl;
 			motor_queued = true;
 			_cool_relay->set(false);
 			_heat_relay->set(false);
 			return e_WaitingToMove;
-		}
+		} else return e_WaitingToMove;
 	};
 
 	//Algorithm
@@ -79,40 +69,15 @@ bool Mix_Valve::stateMachine() { // returns true if in transitional-mode
 	auto sensorTemp = reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.;
 	bool isTooCool = sensorTemp < _currReqTemp;
 	auto mode = reg.get(R_MODE);
-	do {
-		if (checkForNewReqTemp()) {
-			if (_newReqTemp <= HardwareInterfaces::MIN_FLOW_TEMP) {
-				mode = e_findOff;
-			}
+	if (checkForNewReqTemp()) {
+		if (_newReqTemp <= HardwareInterfaces::MIN_FLOW_TEMP) {
+			mode = e_findOff;
 		}
+	}
+	bool newPosRequest = newPos != _endPos;
+	do {
 		switch (mode) {
-			// Transitional-modes, immediatly processed
-		case e_findOff:
-			turnValveOff();
-			activateMotor_isMoving();
-			mode = e_FindingOff;
-			break;
-		//case e_newReq:
-		//	logger() << name() << L_tabs << F("New Temp Req:") << _currReqTemp << L_endl;
-		//	mode = newTempMode(); // e_WaitingToMove
-		//	break;
-		case e_reachedLimit:
-			stopMotor();
-			if (_valvePos == 0) {
-				mode = e_ValveOff;
-				setDirection(); // ready to move to requested endpos.
-			}
-			else {
-				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_STORE_TOO_COOL);
-				mode = e_HotLimit;
-			}
-			break;
-		case e_swapMutex:
-			motor_mutex = 0;
-			mode = e_WaitingToMove;
-			break;
-			// Persistant Modes checked once each second
-		case e_FindingOff:
+		// Persistant Modes processed once each second
 		case e_Moving:
 			{
 				auto keepGoing = continueMove();
@@ -128,26 +93,64 @@ bool Mix_Valve::stateMachine() { // returns true if in transitional-mode
 				}
 			}
 			break;
-		case e_WaitingToMove: // try to move
+		case e_WaitingToMove: // was blocked by Mutex
 			mode = moveMode();
+			break;
+		case e_ValveOff:
+			if (isTooCool || _endPos != _valvePos) mode = moveMode();
 			break;
 		case e_AtTargetPosition:
 			break;
+		case e_FindingOff:
+			if (moveMode() == e_Moving) {
+				continueMove();
+				if (valveIsAtLimit()) {
+					mode = e_reachedLimit;
+				}
+			}
+			break; 
 		case e_HotLimit:
 			if (!isTooCool) {
 				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL); // when flow temp increases due to gas boiler on.
-				mode = e_WaitingToMove;
+				mode = moveMode();
 			}
 			break;
-		case e_WaitToCool:
-		case e_ValveOff:
-			if (isTooCool || _endPos != _valvePos) mode = e_WaitingToMove;
-			break;	
+		// transitional modes, immediatly processed
+		case e_findOff:
+			turnValveOff();
+			activateMotor_isMoving();
+			moveMode();
+			mode = e_FindingOff;
+			break;
+		case e_reachedLimit:
+			stopMotor();
+			if (_valvePos == 0) {
+				mode = e_ValveOff;
+				setDirection(); // ready to move to requested endpos.
+			}
+			else {
+				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_STORE_TOO_COOL);
+				mode = e_HotLimit;
+			}
+			break;
+		case e_swapMutex:
+			motor_mutex = 0;
+			mode = e_WaitingToMove;
+			break;
 		}
-
 	} while (mode >= e_findOff);
+	if (newPosRequest) {
+		_endPos = newPos;
+		if (mode != e_FindingOff) {
+			setDirection();
+			if (mode >= e_ValveOff) /*2*/ {
+				if (mode >= e_AtTargetPosition) /*3*/ {
+					mode = moveMode();;
+				} else mode = e_WaitingToMove;
+			}
+		}
+	}	
 	reg.set(R_MODE, mode);
-	return mode >= e_findOff;
 	//logger() << F("Mode:") << mode << L_endl;
 }
 
@@ -226,33 +229,6 @@ bool Mix_Valve::checkForNewReqTemp() { // called every second
 		}
 	}
 	return false;
-}
-
-Mix_Valve::Mode Mix_Valve::newTempMode() {
-	//auto sensorTemp = reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.;
-	//bool isTooWarm = sensorTemp > _currReqTemp;
-	//bool isTooCool = sensorTemp < _currReqTemp;
-	auto mode = e_WaitingToMove;
-	//if (_valvePos == 0 && isTooWarm) {
-	//	startWaiting(); // Keep waiting whilst the pump cools the temp sensor
-	//	return e_WaitToCool;
-	//}
-	//else if (_onTime != 0) { // Re-start waiting and see what happens. 
-	//	startWaiting();
-	//	mode = e_WaitingToMove;
-	//} // is now waiting or checking
-	//if (_journey != e_TempOK) {
-	//	if (isTooCool) { // allow wait to be interrupted
-	//		_journey = e_GoingWarm;
-	//	}
-	//	else if (isTooWarm) { // allow wait to be interrupted
-	//		_journey = e_GoingCool;
-	//	}
-	//	else
-			//_journey = e_NewReq;
-
-	//}
-	return mode;
 }
 
 // Non-Algorithmic Functions
@@ -386,6 +362,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
 	reg.set(R_MODE, e_findOff);
+	stateMachine(0);
 	logger() << name() << F(" TS Speed:") << _temp_sensr.runSpeed() << L_endl;
 }
 
@@ -441,12 +418,9 @@ void Mix_Valve::log() {
 		case Mix_Valve::e_swapMutex: return F("SwM");
 		case Mix_Valve::e_AtTargetPosition: return F("Ok");
 		case Mix_Valve::e_WaitingToMove: return F("Mx");
-		case Mix_Valve::e_newReq: return F("Req");
-		case Mix_Valve::e_WaitToCool: return F("WtC");
 		case Mix_Valve::e_ValveOff: return F("Off");
 		case Mix_Valve::e_reachedLimit: return F("RLm");
 		case Mix_Valve::e_HotLimit: return F("Lim");
-		case Mix_Valve::e_completedMove: return F("Mok");
 		case Mix_Valve::e_findOff:
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
@@ -474,22 +448,26 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& h
 	, _delay(delay)
 	, _maxTemp(maxTemp)
 {
-	_delayLine.prime_n(40 * 16, _delay);
-	_reportedTemp = getAverage(_delayLine) / 16;
+	_delayLine.prime_n(40 * 256, _delay);
+	_reportedTemp = getAverage(_delayLine) / 256.f;
 };
 
 void Mix_Valve::setFlowTempReg() { // must be called only once per second
-	float delayTemp = getAverage(_delayLine) / 16.f;
+	float delayTemp = getAverage(_delayLine) / 256.f;
 	auto reg = registers();
 	_reportedTemp += (delayTemp - _reportedTemp) * (1.f - exp(-(1.f / _timeConst)));
-	auto reported_16t = uint16_t((_reportedTemp + (1.f / 32.f)) * 256.f);
+	auto reported_16t = uint16_t((_reportedTemp + (1.f / 32.f)) * 16) * 16;
 	reg.set(R_FLOW_TEMP, uint8_t(reported_16t >> 8));
 	reg.set(R_FLOW_TEMP_FRACT, uint8_t(reported_16t & 0xF0));
 }
 
 void Mix_Valve::addTempToDelayIntegral() {
-	_delayLine.push(finalTempForPosition_16ths());
+	_delayLine.push(finalTempForPosition());
 	if (_delayLine.size() > _delay) _delayLine.popFirst();
 }
 
+void Mix_Valve::setIsTemp(uint8_t temp) {
+	_delayLine.prime_n(temp * 256, _delay);
+	_reportedTemp = getAverage(_delayLine) / 256.f;
+}
 #endif	
