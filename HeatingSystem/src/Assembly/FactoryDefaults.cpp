@@ -22,8 +22,8 @@ namespace Assembly {
 		{R_Gas
 		,T_GasF
 		,T_TkTop
-		,T_TkUs
-		,T_TkDs
+		,T_TkMixFl
+		,T_TkLower
 		,T_CWin
 		,T_Pdhw
 		,T_DHW
@@ -32,8 +32,8 @@ namespace Assembly {
 	};
 
 	constexpr R_MixValveControl mixValveControl_f[] = {
-		{"US", US_FLOW_TEMPSENS_ADDR, T_TkUs}
-		, {"DS", DS_FLOW_TEMPSENS_ADDR, T_TkDs}
+		{"US", US_FLOW_TEMPSENS_ADDR, T_TkMixFl}
+		, {"DS", DS_FLOW_TEMPSENS_ADDR, T_TkMixFl}
 	};
 
 	constexpr R_Display displays_f[] = {
@@ -63,8 +63,8 @@ namespace Assembly {
 		{ "Pdhw",0x37 },
 		{ "DHot",0x28 },
 		{ "TkTp",0x2D },
-		{ "TkUs",0x2E },
-		{ "TkDs",0x77 },
+		{ "TkMx",0x2E },
+		{ "TkLw",0x77 },
 		{ "Grnd",0x35 },
 
 		{ "TMfl",0x75 },

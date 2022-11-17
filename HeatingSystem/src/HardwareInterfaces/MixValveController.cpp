@@ -308,9 +308,11 @@ namespace HardwareInterfaces {
 
 		int storeTempAtMixer = _storeTempSens->get_temp(); 
 		auto minStoreTemp = isHeating ? _mixCallTemp + THERM_STORE_HYSTERESIS : _mixCallTemp;
-		//if (registers().get(Mix_Valve::R_VALVE_POS) >= VALVE_TRANSIT_TIME && storeTempAtMixer < _mixCallTemp + THERM_STORE_HYSTERESIS) {
-		if (storeTempAtMixer <= minStoreTemp) {
-			profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tStore-Req Is:\t" << storeTempAtMixer << L_endl;
+		auto status_flags = Mix_Valve::I2C_Flags_Obj{ registers().get(Mix_Valve::R_DEVICE_STATE)};
+
+		if (status_flags.is(Mix_Valve::F_STORE_TOO_COOL)) {
+		//if (storeTempAtMixer <= minStoreTemp) {
+			profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tTooCool. Store-T Is:\t" << storeTempAtMixer << L_endl;
 			return true;
 		}
 		return false;
