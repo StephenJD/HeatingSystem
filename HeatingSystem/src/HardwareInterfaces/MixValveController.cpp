@@ -312,7 +312,7 @@ namespace HardwareInterfaces {
 
 		if (status_flags.is(Mix_Valve::F_STORE_TOO_COOL)) {
 		//if (storeTempAtMixer <= minStoreTemp) {
-			profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tStore-Req Is:\t" << storeTempAtMixer << L_endl;
+			profileLogger() << L_time << (index() == M_UpStrs ? "_US" : "_DS") << "_Mix\tTooCool. Store-T Is:\t" << storeTempAtMixer << L_endl;
 			return true;
 		}
 		return false;
