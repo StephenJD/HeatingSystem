@@ -105,9 +105,9 @@ public:
 			step = -step;
 			requestTemp = 60;
 		}
-		else if (requestTemp < 25) {
+		else if (requestTemp < 26) {
 			step = -step;
-			requestTemp = 25;
+			requestTemp = 26;
 			doneOneTempCycle = true;
 		}
 		return requestTemp;
@@ -117,18 +117,18 @@ public:
 		doneOneStepCycle = false;
 		if (step > 16) {
 			step = 16;
-			step_multiplier = 0.5;
+			step_multiplier = 0.5f;
 		}		
 		if (step < 1) {
 			step = 1;
-			step_multiplier = 2;
+			step_multiplier = 2.f;
 			doneOneStepCycle = true;
 		}
 	}
 	bool doneOneTempCycle = false;
 	bool doneOneStepCycle = false;
 	int step = 1;
-	int requestTemp = 25;
+	int requestTemp = 26;
 	float step_multiplier = 2.f;
 };
 
@@ -378,6 +378,8 @@ vector<float> Kd;
 vector<float> Kp;
 vector<int> step;
 vector<float> overshootRatio;
+vector<int> step1;
+vector<float> overshootRatio1;
 
 void clearVectors() {
 	reqPos.clear();
@@ -389,6 +391,8 @@ void clearVectors() {
 	Kp.clear();
 	step.clear();
 	overshootRatio.clear();
+	step1.clear();
+	overshootRatio1.clear();
 }
 
 void appendData(TestMixV& testMV, PID_Controller& pid) {
@@ -412,11 +416,12 @@ void runOneCycle(TestTemps& testTemps, TestMixV& testMV, PID_Controller& pid) {
 		do {
 			auto flowTemp = testMV.update(0, newPos);
 			newPos = pid.adjust(flowTemp);
-			testMV.setVPos(0, newPos); // instant move!
+			//testMV.setVPos(0, newPos); // instant move!
 			// record results
 			appendData(testMV,pid);
 			step.push_back(abs(testTemps.step));
 		} while (--timeAtOneTemp);
+		cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
 		currTempReq = testTemps.nextTempReq();
 		//cout << currTempReq << endl;
 	} while (!testTemps.doneOneTempCycle);
@@ -429,20 +434,23 @@ void changingStepCycle(TestTemps& testTemps, TestMixV& testMV, PID_Controller& p
 	do {
 		testMV.registerReqTemp(0, currTempReq);
 		pid.changeSetpoint(testMV.reqTemp(0) * 256);
-		int timeAtOneTemp = 500;
+		int timeAtOneTemp = 200;
 		do {
 			auto flowTemp = testMV.update(0, newPos);
 			newPos = pid.adjust(flowTemp);
-			testMV.setVPos(0, newPos); // instant move!
+			//testMV.setVPos(0, newPos); // instant move!
 			// record results
 			appendData(testMV, pid);
 			step.push_back(abs(testTemps.step));
 		} while (--timeAtOneTemp);
+		step1.push_back(abs(testTemps.step));
+		overshootRatio1.push_back(pid.overshoot_ratio());
+		cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << endl;
 		++testTemps.step;
 		currTempReq = testTemps.nextTempReq();
-	} while (!testTemps.doneOneTempCycle);
+	} while (abs(testTemps.step) > 1);
 }
-
+/*
 TEST_CASE("PID_ChangeStep", "[MixValve]") {
 	TestMixV testMV{};
 	PID_Controller pid{0,150,256/16,256/8};
@@ -459,7 +467,8 @@ TEST_CASE("PID_ChangeStep", "[MixValve]") {
 	pid.changeSetpoint(Mix_Valve::ROOM_TEMP * 256);
 	// Go...
 	changingStepCycle(testTemps, testMV, pid);
-	plt::clf();
+	//changingStepCycle(testTemps, testMV, pid);
+	//plt::clf();
 
 	plt::figure_size(1400, 700);
 	plt::named_plot("ReqTemp", reqTemp);
@@ -469,47 +478,86 @@ TEST_CASE("PID_ChangeStep", "[MixValve]") {
 	plt::named_plot("Pos", isPos);
 	plt::legend();
 	plt::show();
-}
 
-/*
+	plt::named_plot("Overshoot v Step", step1, overshootRatio1);
+	plt::legend();
+	plt::show();
+
+
+}
+*/
+
 TEST_CASE("PID", "[MixValve]") {
 	TestMixV testMV{};
-	PID_Controller pid{0,150,256/16,256/8};
+	PID_Controller pid{0,150,256/16,256/2};
 	TestTemps testTemps;
 	clearVectors();
 	// ini-MV
 	testMV.setReqTemp(0,Mix_Valve::ROOM_TEMP);
 	testMV.readyToMove(0);
 	testMV.setIsTemp(0, Mix_Valve::ROOM_TEMP);
-	testMV.setMaxTemp(0, 70);
-	testMV.setDelay(0, 1);
+	testMV.setMaxTemp(0, 90);
+	testMV.setDelay(0, 50);
 	// Set req-temp
 	testTemps.step = 1;
 	// Ini PID
 	pid.set_Kp(MAX_VALVE_TIME/50.f/256.f);
 	pid.changeSetpoint(Mix_Valve::ROOM_TEMP * 256);
-	// Go...
+	testTemps.step = 1;
 	runOneCycle(testTemps, testMV, pid);
-    // Go again...
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio()  << "\tKd:\t" << pid.diffConst() << endl;
+
+	testTemps.step = 2;
+	runOneCycle(testTemps, testMV, pid);
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio()  << "\tKd:\t" << pid.diffConst() << endl;
+
+	testTemps.doneOneTempCycle = false;
+	testTemps.step = 3;
+	runOneCycle(testTemps, testMV, pid);	
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
+	
+	testTemps.doneOneTempCycle = false;
+	testTemps.step = 4;
+	runOneCycle(testTemps, testMV, pid);	
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
+	
+	testTemps.doneOneTempCycle = false;
+	testTemps.step = 5;
+	runOneCycle(testTemps, testMV, pid);	
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
+	
+	testTemps.doneOneTempCycle = false;
+	testTemps.step = 6;
+	runOneCycle(testTemps, testMV, pid);	
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
+	
 	testTemps.doneOneTempCycle = false;
 	testTemps.step = 10;
-	runOneCycle(testTemps, testMV, pid);
-	//testTemps.doneOneTempCycle = false;
-	//runOneCycle(testTemps, testMV, pid);	
-	//testTemps.doneOneTempCycle = false;
-	//runOneCycle(testTemps, testMV, pid);	
+	runOneCycle(testTemps, testMV, pid);	
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
+
+	testTemps.doneOneTempCycle = false;
+	testTemps.step = 20;
+	runOneCycle(testTemps, testMV, pid);	
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
+	
+	testTemps.doneOneTempCycle = false;
+	testTemps.step = 30;
+	runOneCycle(testTemps, testMV, pid);	
+	cout << "Step:\t" << abs(testTemps.step) << "\tRatio:\t" << pid.overshoot_ratio() << "\tKd:\t" << pid.diffConst() << endl;
+	
 	//testTemps.doneOneTempCycle = false;
 	//runOneCycle(testTemps, testMV, pid);
-	plt::clf();
+	//plt::clf();
 	plt::figure_size(1400, 700);
 	plt::named_plot("ReqTemp", reqTemp);
 	//plt::named_plot("ReqPos", reqPos);
 	plt::named_plot("Pos", isPos);
 	plt::named_plot("Temp", isTemp);
-	//plt::named_plot("i", i);
-	//plt::named_plot("Kd*100", Kd);
+	plt::named_plot("i", i);
+	plt::named_plot("Kd*100", Kd);
 	//plt::named_plot("Kp*10000", Kp);
-	plt::named_plot("OverShRatio * 10", overshootRatio);
+	//plt::named_plot("OverShRatio * 10", overshootRatio);
 
 	plt::legend();
 	plt::show();
@@ -519,4 +567,3 @@ TEST_CASE("PID", "[MixValve]") {
 	//auto again = string{};
 	//cin >> again;
 }
-*/

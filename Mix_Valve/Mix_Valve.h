@@ -106,7 +106,8 @@ public:
 	void setDelay(int delay) { _delay = delay; }
 	void addTempToDelayIntegral();
 	//uint8_t calculatedEndPos() { return uint8_t(0.5f + (_currReqTemp - ROOM_TEMP) * MAX_VALVE_TIME / (_maxTemp - ROOM_TEMP)); }
-	int16_t finalTempForPosition() { return (256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5; }
+	int16_t finalTempForPosition() { 
+		return (256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5f; }
 	int16_t flowTemp() { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
 	void setFlowTempReg();
 	void setIsTemp(uint8_t temp);

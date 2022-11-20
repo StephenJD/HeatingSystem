@@ -20,13 +20,11 @@ void PID_Controller::changeSetpoint(int val) {
         float debugCurrT = currTemp / 256.f;
         float debuglastTempChange = lastTempChange / 256.f;
         if (abs(lastMove) > 1 && abs(lastTempChange) >= _acceptableError && abs(tempError) > 1.1f / _Kp) {
-            _Kp = 0.010938; // (_Kp + (lastMove / lastTempChange)) / 2; // should be 0.010938
+            _Kp = (_Kp + (lastMove / lastTempChange)) / 2; // should be 0.010938
         }
     }
 
     // Apply new P & D
-    //auto p = _output - (_Kp * tempError);
-    //p += _Kp * errVal;
     auto p = _output + (_Kp * errVal);
     _p = uint8_t(p + .5);
     _statePeriod = uint8_t(abs(p - _output) + .5);
@@ -57,8 +55,7 @@ uint8_t PID_Controller::adjust(int measuredVal) {
     */
     auto errVal = _setPoint - measuredVal;
     _err_past.push(errVal);
-    auto i = _Kp * _i * _Ki;
-    auto newOut = int(_p + i + 0.5);
+    auto newOut = _p + integralPart();
     auto debugSet = _setPoint / 256;
     auto debugLastSet = _lastSetPoint / 256;
 
@@ -75,7 +72,9 @@ uint8_t PID_Controller::adjust(int measuredVal) {
     case MOVE_TO_P:
         --_statePeriod;
         if (_statePeriod <= 0) {
-            _statePeriod = 5;
+            _d_has_overshot = false;
+            _err_past.prime(errVal);
+            _statePeriod = abs(_d) + WAIT_AT_D; // extend time spent at _d
             _state = MOVE_TO_D;
         }
         break;
@@ -120,10 +119,17 @@ uint8_t PID_Controller::adjust(int measuredVal) {
 }
 
 void PID_Controller::constrainD() {
-    if (_Kd > 100.f) 
-        _Kd = 100.f;
-    else if (_Kd < .01f) 
-        _Kd = .01f;
+    if (_Kd > 2) 
+        _Kd = 1.5f;
+    else if (_Kd < .5f) 
+        _Kd = .5f;
+}
+
+int16_t PID_Controller::d_contribution(int16_t errVal) {
+    float step = abs(errVal / 256.f);
+    float stepFactor = .311f + exp(-step * .384f);
+    //stepFactor = 1;
+    return floatToInt_round(_Kp * errVal * OVERSHOOT_FACTOR * _Kd * stepFactor);
 }
 
 void PID_Controller::adjustKd() {
@@ -138,22 +144,22 @@ void PID_Controller::adjustKd() {
         auto attempted_d = _p + _d;
         auto actual_max_d = float(_maxOut - _p);
         if (_setPoint > _lastSetPoint) { // temp increase
-            overshoot = -_err_past.minVal();
+            overshoot = float( - _err_past.minVal());
         }
         else { // temp decrease
-            overshoot = -_err_past.maxVal();
+            overshoot = float(-_err_past.maxVal());
             actual_max_d = float(_p - _minOut);
         }
-        actualOvershoot = overshoot + stepChange;
+        actualOvershoot = int(overshoot + stepChange);
         if (actual_max_d < _d) {
             _Kd *= actual_max_d / _d;
         } else {
             _Kd *= (optimalOvershoot / actualOvershoot);
         }
     } else {
-        _Kd *= 1.2f;
+        _Kd *= 1.05f;
     }
-    _Kd = .7f;
+    //_Kd = 1.0f;
     if (stepChange != 0) _oveshootRatio = float(actualOvershoot) / stepChange;
     constrainD();
 }
