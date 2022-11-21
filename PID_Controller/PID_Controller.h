@@ -44,7 +44,8 @@ private:
 	uint16_t _statePeriod = 0;
 	bool _d_has_overshot = false;
 	PID_State _state = NEW_TEMP;
-	static constexpr float OVERSHOOT_FACTOR = 1.1f;
+	static constexpr float OVERSHOOT_FACTOR = 1.125f;
 	static constexpr int WAIT_AT_D = 5;
+	static constexpr float MIN_KD = .005f;
 };
 

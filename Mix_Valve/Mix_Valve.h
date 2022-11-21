@@ -102,16 +102,20 @@ public:
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
 #ifdef SIM_MIXV
 	static constexpr uint8_t ROOM_TEMP = 20;
+	int16_t finalTempForPosition() const { 
+		return (256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5f; }
+	int16_t flowTemp() const { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
+	float get_Kp() const { return MAX_VALVE_TIME / ((_maxTemp - ROOM_TEMP) * 256.f); }
+	uint16_t get_TC() const { return _timeConst; }
+	uint8_t get_delay() const { return _delay; }
+	// Modifiers
 	void set_maxTemp(uint8_t max) { _maxTemp = max; }
 	void setDelay(int delay) { _delay = delay; }
+	void setTC(int tc) { _timeConst = tc; }
 	void addTempToDelayIntegral();
 	//uint8_t calculatedEndPos() { return uint8_t(0.5f + (_currReqTemp - ROOM_TEMP) * MAX_VALVE_TIME / (_maxTemp - ROOM_TEMP)); }
-	int16_t finalTempForPosition() { 
-		return (256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5f; }
-	int16_t flowTemp() { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
 	void setFlowTempReg();
 	void setIsTemp(uint8_t temp);
-	float get_Kp() { return MAX_VALVE_TIME / ((_maxTemp - ROOM_TEMP) * 256.f); }
 #endif
 private:
 	friend class TestMixV;

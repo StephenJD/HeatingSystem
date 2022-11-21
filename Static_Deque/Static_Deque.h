@@ -142,6 +142,7 @@ template <int CAPACITY, typename intType = int16_t >
 class Fat_Deque : public Deque<CAPACITY, intType> {
 public:
 	bool hasChangedDirection() const;
+	bool hasChangedSign() const { return _max * _min < 0; };
 	intType maxVal() const {return _max;}
 	intType minVal() const { return _min; }
 	// Modifier

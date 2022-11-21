@@ -20,7 +20,8 @@ void PID_Controller::changeSetpoint(int val) {
         float debugCurrT = currTemp / 256.f;
         float debuglastTempChange = lastTempChange / 256.f;
         if (abs(lastMove) > 1 && abs(lastTempChange) >= _acceptableError && abs(tempError) > 1.1f / _Kp) {
-            _Kp = (_Kp + (lastMove / lastTempChange)) / 2; // should be 0.010938
+           // _Kp = (_Kp + (lastMove / lastTempChange)) / 2; // should be 0.010938
+            _Kp = 0.011719;
         }
     }
 
@@ -60,7 +61,7 @@ uint8_t PID_Controller::adjust(int measuredVal) {
     auto debugLastSet = _lastSetPoint / 256;
 
     if (!_d_has_overshot) {
-        if (_err_past.hasChangedDirection()) {
+        if (_err_past.hasChangedDirection() && _err_past.hasChangedSign()) {
             _d_has_overshot = true;
             adjustKd();
         }
@@ -72,8 +73,8 @@ uint8_t PID_Controller::adjust(int measuredVal) {
     case MOVE_TO_P:
         --_statePeriod;
         if (_statePeriod <= 0) {
-            _d_has_overshot = false;
-            _err_past.prime(errVal);
+            //_d_has_overshot = false;
+            //_err_past.prime(errVal);
             _statePeriod = abs(_d) + WAIT_AT_D; // extend time spent at _d
             _state = MOVE_TO_D;
         }
@@ -121,15 +122,15 @@ uint8_t PID_Controller::adjust(int measuredVal) {
 void PID_Controller::constrainD() {
     if (_Kd > 2) 
         _Kd = 1.5f;
-    else if (_Kd < .5f) 
-        _Kd = .5f;
+    else if (_Kd < MIN_KD)
+        _Kd = MIN_KD;
 }
 
 int16_t PID_Controller::d_contribution(int16_t errVal) {
     float step = abs(errVal / 256.f);
-    float stepFactor = .311f + exp(-step * .384f);
-    //stepFactor = 1;
-    return floatToInt_round(_Kp * errVal * OVERSHOOT_FACTOR * _Kd * stepFactor);
+    float stepFactor = .311f + exp(-step * _Kd);
+    //stepFactor = _Kd;
+    return floatToInt_round(_Kp * errVal * OVERSHOOT_FACTOR * stepFactor);
 }
 
 void PID_Controller::adjustKd() {
@@ -153,8 +154,9 @@ void PID_Controller::adjustKd() {
         actualOvershoot = int(overshoot + stepChange);
         if (actual_max_d < _d) {
             _Kd *= actual_max_d / _d;
-        } else {
-            _Kd *= (optimalOvershoot / actualOvershoot);
+        }
+        else {
+            _Kd = (_Kd + _Kd * (optimalOvershoot / actualOvershoot))  / 2;
         }
     } else {
         _Kd *= 1.05f;
