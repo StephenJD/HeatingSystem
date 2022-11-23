@@ -228,31 +228,54 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	testMV.setVPos(0, 0);
 	testMV.setVPos(1, 0);
 	testMV.update(0, 35); // e_FindingOff -> e_WaitingToMove
-	testMV.update(1, 35); // e_FindingOff -> e_WaitingToMove
+	testMV.update(1, 0); // e_FindingOff -> e_ValveOff
 	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
-	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
+	CHECK(testMV.mode(1) == Mix_Valve::e_ValveOff);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.vPos(1) == 0);
 	// [0] Starts with Move
-	testMV.update(0, 35); // -> e_Moving
+	testMV.update(0, 5); // -> e_Moving
 	testMV.update(1, 35); // -> e_WaitingToMove
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.vPos(1) == 0);
 	do {
-		testMV.update(0, 35);
+		testMV.update(0, 5);
 		testMV.update(1, 35);
-	} while (testMV.vPos(0) < 10);
+	} while (testMV.mode(0) == Mix_Valve::e_Moving);
 
+	CHECK(testMV.vPos(0) == 5);
 	CHECK(testMV.vPos(1) == 0);
-	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
+	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
 	
 	do {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
-	} while (testMV.vPos(1) < 10);
+	} while (testMV.mode(1) == Mix_Valve::e_Moving);
+	testMV.update(0, 35);
+	CHECK(testMV.vPos(0) == 5);
+	CHECK(testMV.vPos(1) == 10);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
 
-	CHECK(testMV.vPos(0) == 10);
+	do {
+		testMV.update(0, 35);
+		testMV.update(1, 35);
+	} while (testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.vPos(0) == 15);
+	CHECK(testMV.vPos(1) == 10);
+	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
+	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
+
+	do {
+		testMV.update(0, 35);
+		testMV.update(1, 35);
+	} while (testMV.mode(1) == Mix_Valve::e_Moving);
+	testMV.update(0, 35);
+	CHECK(testMV.vPos(0) == 15);
+	CHECK(testMV.vPos(1) == 20);
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
 
 	do {
 		testMV.update(0, 35);

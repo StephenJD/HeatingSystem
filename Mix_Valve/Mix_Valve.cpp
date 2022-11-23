@@ -30,6 +30,7 @@ int16_t Mix_Valve::_motorsOffV = 1024;
 int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.03);
 
 bool Mix_Valve::motor_queued;
+uint8_t Mix_Valve::mutex_lifetime;
 // PID Functions
 
 int16_t Mix_Valve::update(int newPos) {
@@ -52,6 +53,8 @@ void Mix_Valve::stateMachine(int newPos) {
 		if (motor_mutex == this) return e_Moving;
 		else if (motor_mutex == 0) {
 			motor_mutex = this;
+			static constexpr uint8_t MUTEX_LIFETIME = 10;
+			mutex_lifetime = MUTEX_LIFETIME;
 			activateMotor_isMoving();
 			return e_Moving;
 		}
@@ -88,7 +91,7 @@ void Mix_Valve::stateMachine(int newPos) {
 					stopMotor();
 					mode = e_AtTargetPosition;
 				}
-				else if (motor_queued && _valvePos % 10 == 0) {
+				else if (motor_queued && mutex_lifetime == 0) {
 					mode = e_swapMutex;
 				}
 			}
@@ -157,6 +160,7 @@ void Mix_Valve::stateMachine(int newPos) {
 // Continuation Functions
 bool Mix_Valve::continueMove() { // must be called just once per second
 	_valvePos += _motorDirection;
+	if (mutex_lifetime > 0) --mutex_lifetime;
 	if (_valvePos < 0) {
 		_valvePos = 0;
 	}

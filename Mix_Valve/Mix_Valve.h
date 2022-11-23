@@ -159,9 +159,11 @@ private:
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
-	static bool motor_queued; // timeLeftAsOwner
+	static bool motor_queued; 
+	static uint8_t mutex_lifetime;
 	static int16_t _motorsOffV;
 	static int16_t _motors_off_diff_V;
+	static constexpr uint8_t MUTEX_LIFETIME = 10;
 
 #ifdef SIM_MIXV
 	uint16_t _timeConst = 0;
