@@ -103,11 +103,12 @@ public:
 #ifdef SIM_MIXV
 	static constexpr uint8_t ROOM_TEMP = 20;
 	int16_t finalTempForPosition() const { 
-		return (256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5f; }
+		return int16_t((256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5f); }
 	int16_t flowTemp() const { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
 	float get_Kp() const { return MAX_VALVE_TIME / ((_maxTemp - ROOM_TEMP) * 256.f); }
 	uint16_t get_TC() const { return _timeConst; }
 	uint8_t get_delay() const { return _delay; }
+	uint8_t get_maxTemp() const { return _maxTemp; }
 	// Modifiers
 	void set_maxTemp(uint8_t max) { _maxTemp = max; }
 	void setDelay(int delay) { _delay = delay; }
@@ -158,7 +159,7 @@ private:
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
-	static bool motor_queued; // address of Mix_valve is owner of the mutex
+	static bool motor_queued; // timeLeftAsOwner
 	static int16_t _motorsOffV;
 	static int16_t _motors_off_diff_V;
 

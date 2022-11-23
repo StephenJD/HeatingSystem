@@ -8,10 +8,12 @@ void PID_Controller::changeSetpoint(int val) {
 
     int16_t currTemp = _setPoint - tempError;
     int16_t errVal = val - currTemp;
-    if (_last_output == 255) {
+    if (_last_output == 255) {  // pid is just starting up...
         _setPoint = val;
         currTemp = val;
         errVal = val - currTemp;
+        _d_has_overshot = true;
+    } else if (abs(tempError) > _acceptableError) { // failed to reach requested temp
         _d_has_overshot = true;
     } else {
         // Calculate Kp to match previous result
@@ -19,14 +21,15 @@ void PID_Controller::changeSetpoint(int val) {
         auto lastTempChange = float(currTemp - _lastSetPoint);
         float debugCurrT = currTemp / 256.f;
         float debuglastTempChange = lastTempChange / 256.f;
-        if (abs(lastMove) > 1 && abs(lastTempChange) >= _acceptableError && abs(tempError) > 1.1f / _Kp) {
-           // _Kp = (_Kp + (lastMove / lastTempChange)) / 2; // should be 0.010938
-            _Kp = 0.011719;
+        float tempChangeForOnePosChange = 1.f / _Kp;
+        if (abs(lastMove) > 1 && abs(lastTempChange) >= _acceptableError && abs(tempError) > tempChangeForOnePosChange) {
+            _Kp = (_Kp + (lastMove / lastTempChange)) / 2; // should be 0.011719
+            //_Kp = 0.011719;
         }
     }
-
     // Apply new P & D
     auto p = _output + (_Kp * errVal);
+    if (p < 0) p = 0;
     _p = uint8_t(p + .5);
     _statePeriod = uint8_t(abs(p - _output) + .5);
     //Apply d
@@ -42,7 +45,13 @@ void PID_Controller::changeSetpoint(int val) {
     _last_output = _output;
     _setPoint = val;
     _d_has_overshot = false;
-    _state = MOVE_TO_P;
+    if (val <= _minSetpoint) {
+        _state = MOVE_TO_OFF;
+        _d_has_overshot = true;
+    } else {
+         _state = MOVE_TO_P;
+        _d_has_overshot = false;
+    }
 }
 
 uint8_t PID_Controller::adjust(int measuredVal) {
@@ -69,6 +78,9 @@ uint8_t PID_Controller::adjust(int measuredVal) {
     switch (_state) {
     case NEW_TEMP:
         _state = MOVE_TO_P;
+        break;
+    case MOVE_TO_OFF:
+        newOut = 0;
         break;
     case MOVE_TO_P:
         --_statePeriod;
@@ -107,7 +119,7 @@ uint8_t PID_Controller::adjust(int measuredVal) {
         }        
         break;
     case WAIT_FOR_DRIFT:
-        _i += errVal;
+        //_i += errVal;
         if (abs(errVal) > _acceptableError) {
             _state = GET_BACK_ON_TARGET;
         }
@@ -128,7 +140,7 @@ void PID_Controller::constrainD() {
 
 int16_t PID_Controller::d_contribution(int16_t errVal) {
     float step = abs(errVal / 256.f);
-    float stepFactor = .311f + exp(-step * _Kd);
+    float stepFactor = _Kd * .9f * (.27f + exp(-step * .157f * _Kd));
     //stepFactor = _Kd;
     return floatToInt_round(_Kp * errVal * OVERSHOOT_FACTOR * stepFactor);
 }
