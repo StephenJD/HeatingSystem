@@ -53,7 +53,7 @@ Multi-master mode between AVR and DUE produces 20-times as many I2C errors as in
 //#define DEBUG_SPEED_TEST
 //#define DEBUG_RECOVER
 //#define DEBUG_REGISTERS
-#define REPORT_RECOVER
+//#define REPORT_RECOVER
 //#define SHOW_TWI_DEBUG
 //#define SHOW_TWI_TIMINGS
 //#define DEBUG_TRY_ALL_SPEEDS

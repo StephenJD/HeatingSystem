@@ -67,7 +67,7 @@ namespace Assembly {
 		{ "TkLw",0x77 },
 		{ "Grnd",0x35 },
 
-		{ "TMfl",0x75 },
+		{ "MFBR",0x75 },
 		{ "MFBF",0x2F }
 	};
 	

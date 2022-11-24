@@ -1,10 +1,11 @@
 #include "PID_Controller.h"
 
-void PID_Controller::changeSetpoint(int val) {
+void PID_Controller::changeSetpoint(uint16_t val) {
     //Apply new setpoint
+#ifdef ZSIM
     auto debugTemp = val / 256;
+#endif
     auto tempError = int16_t(getAverage(_err_past));
-    //if (abs(tempError) > 512) tempError = 0;
 
     int16_t currTemp = _setPoint - tempError;
     int16_t errVal = val - currTemp;
@@ -19,11 +20,13 @@ void PID_Controller::changeSetpoint(int val) {
         // Calculate Kp to match previous result
         auto lastMove = float(_output - _last_output);
         auto lastTempChange = float(currTemp - _lastSetPoint);
+#ifdef ZSIM
         float debugCurrT = currTemp / 256.f;
         float debuglastTempChange = lastTempChange / 256.f;
+#endif
         float tempChangeForOnePosChange = 1.f / _Kp;
         if (abs(lastMove) > 1 && abs(lastTempChange) >= _acceptableError && abs(tempError) > tempChangeForOnePosChange) {
-            _Kp = (_Kp + (lastMove / lastTempChange)) / 2; // should be 0.011719
+            _Kp = (_Kp + (lastMove / lastTempChange)) / 2;
             //_Kp = 0.011719;
         }
     }
@@ -54,7 +57,7 @@ void PID_Controller::changeSetpoint(int val) {
     }
 }
 
-uint8_t PID_Controller::adjust(int measuredVal) {
+uint8_t PID_Controller::adjust(int16_t measuredVal) {
     /*
     Output = p + i + d
     p is required output in steady-state with no error.This is set by changeSetpoint().
@@ -66,8 +69,10 @@ uint8_t PID_Controller::adjust(int measuredVal) {
     auto errVal = _setPoint - measuredVal;
     _err_past.push(errVal);
     auto newOut = _p + integralPart();
+#ifdef SIM_MIXV
     auto debugSet = _setPoint / 256;
     auto debugLastSet = _lastSetPoint / 256;
+#endif
 
     if (!_d_has_overshot) {
         if (_err_past.hasChangedDirection() && _err_past.hasChangedSign()) {
@@ -85,8 +90,6 @@ uint8_t PID_Controller::adjust(int measuredVal) {
     case MOVE_TO_P:
         --_statePeriod;
         if (_statePeriod <= 0) {
-            //_d_has_overshot = false;
-            //_err_past.prime(errVal);
             _statePeriod = abs(_d) + WAIT_AT_D; // extend time spent at _d
             _state = MOVE_TO_D;
         }
@@ -119,7 +122,6 @@ uint8_t PID_Controller::adjust(int measuredVal) {
         }        
         break;
     case WAIT_FOR_DRIFT:
-        //_i += errVal;
         if (abs(errVal) > _acceptableError) {
             _state = GET_BACK_ON_TARGET;
         }
@@ -149,8 +151,10 @@ void PID_Controller::adjustKd() {
     // Adjust Kd for _smallestError overshoot.
     auto stepChange = _setPoint - _lastSetPoint;
     auto actualOvershoot = stepChange;
+#ifdef SIM_MIXV
     auto debugSet = _setPoint / 256;
     auto debugLastSet = _lastSetPoint / 256;
+#endif
     if (_d_has_overshot) {
         auto optimalOvershoot = stepChange * OVERSHOOT_FACTOR;
         auto overshoot = 0.f;
@@ -174,6 +178,8 @@ void PID_Controller::adjustKd() {
         _Kd *= 1.05f;
     }
     //_Kd = 1.0f;
-    if (stepChange != 0) _oveshootRatio = float(actualOvershoot) / stepChange;
     constrainD();
+#ifdef SIM_MIXV
+    if (stepChange != 0) _oveshootRatio = float(actualOvershoot) / stepChange;
+#endif
 }

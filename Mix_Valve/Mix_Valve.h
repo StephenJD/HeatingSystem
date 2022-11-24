@@ -57,8 +57,6 @@ public:
 		, R_FLOW_TEMP_FRACT
 		, R_VALVE_POS
 		, R_PSU_V
-		, R_RATIO
-		, R_LAUNCH_POS
 		, R_FLOW_TEMP // Received in Slave-Mode
 		// Receive
 		, R_REQUEST_FLOW_TEMP // also sent to confirm
@@ -70,7 +68,6 @@ public:
 		// Receive
 		R_TS_ADDRESS = MV_VOLATILE_REG_SIZE
 		, R_HALF_TRAVERSE_TIME
-		, R_SETTLE_TIME
 		, R_DEFAULT_FLOW_TEMP
 		, R_VERSION_MONTH
 		, R_VERSION_DAY
@@ -97,9 +94,9 @@ public:
 	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
 	// Modifiers
 	int16_t update(int newPos);
-	//void check_flow_temp();
 	void setDefaultRequestTemp();
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
+	uint16_t currReqTemp_16() const { return uint16_t(_currReqTemp) << 8; }
 #ifdef SIM_MIXV
 	static constexpr uint8_t ROOM_TEMP = 20;
 	int16_t finalTempForPosition() const { 
@@ -109,18 +106,26 @@ public:
 	uint16_t get_TC() const { return _timeConst; }
 	uint8_t get_delay() const { return _delay; }
 	uint8_t get_maxTemp() const { return _maxTemp; }
+	bool waitToSettle() { return _timeAtOneTemp > 0; }
 	// Modifiers
 	void set_maxTemp(uint8_t max) { _maxTemp = max; }
 	void setDelay(int delay) { _delay = delay; }
 	void setTC(int tc) { _timeConst = tc; }
+	void setTestTime() { _timeAtOneTemp = (get_TC() + get_delay()) * 20; }
 	void addTempToDelayIntegral();
-	//uint8_t calculatedEndPos() { return uint8_t(0.5f + (_currReqTemp - ROOM_TEMP) * MAX_VALVE_TIME / (_maxTemp - ROOM_TEMP)); }
 	void setFlowTempReg();
 	void setIsTemp(uint8_t temp);
+	void registerReqTemp(int temp) {
+		registers().set(Mix_Valve::R_REQUEST_FLOW_TEMP, temp);
+		update(_valvePos);
+		registers().set(Mix_Valve::R_REQUEST_FLOW_TEMP, temp);
+		update(_valvePos);
+	}
 #endif
 private:
-	friend class TestMixV;
-
+#ifdef SIM_MIXV
+public:
+#endif
 	// Loop Functions
 	void stateMachine(int newPos); // returns true if in transitional-mode
 	// Continuation Functions
@@ -159,7 +164,6 @@ private:
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
-	static bool motor_queued; 
 	static uint8_t mutex_lifetime;
 	static int16_t _motorsOffV;
 	static int16_t _motors_off_diff_V;
@@ -171,5 +175,6 @@ private:
 	Deque<100,int16_t> _delayLine{};
 	float _reportedTemp = 25.f;
 	uint8_t _maxTemp;
+	int _timeAtOneTemp;
 #endif
 };

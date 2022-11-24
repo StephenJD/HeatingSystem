@@ -2,6 +2,7 @@
 
 //#include <MemoryFree.h>
 #include <Mix_Valve.h>
+#include <PID_Controller.h>
 #include <I2C_Talk.h>
 #include <I2C_Registers.h>
 #include <I2C_Device.h>
@@ -60,8 +61,8 @@ EEPROMClassRE& eeprom() {
 
 extern const uint8_t version_month;
 extern const uint8_t version_day;
-const uint8_t version_month = 10; // change to force re-application of defaults incl temp-sensor addresses
-const uint8_t version_day = 05;
+const uint8_t version_month = 11; // change to force re-application of defaults incl temp-sensor addresses
+const uint8_t version_day = 24;
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
 enum { us_mix, ds_mix };
@@ -102,10 +103,10 @@ auto led_DS_Cool = Pin_Wag(e_DS_Cool, HIGH);
 auto mixV_register_set = i2c_registers::Registers<Mix_Valve::MV_ALL_REG_SIZE * NO_OF_MIXERS>{i2C()};
 i2c_registers::I_Registers& mixV_registers = mixV_register_set;
 
-Mix_Valve  mixValve[] = {
-	{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0}
-  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE}
-};
+Mix_Valve  mixValve_US{ i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0 };
+Mix_Valve  mixValve_DS{ i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE };
+PID_Controller pid_US{ 0,140, 25 * 256, 256 / 16,256 };
+PID_Controller pid_DS{ 0,140, 25 * 256, 256 / 16,256 };
 
 auto nextSecond = Timer_mS(1000);
 
@@ -130,8 +131,8 @@ void setup() {
 		delay(50);
 	}
 
-	mixValve[0].begin(55); // does speed-test for TS
-	mixValve[1].begin(55);
+	mixValve_US.begin(55); // does speed-test for TS
+	mixValve_DS.begin(55);
 	auto speedTest = I2C_SpeedTest{ programmer };
 	speedTest.fastest();
 	i2C().setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
@@ -140,31 +141,7 @@ void setup() {
 	i2C().onReceive(mixV_register_set.receiveI2C);
 	i2C().onRequest(mixV_register_set.requestI2C);
 
-#ifdef DO_PID_TEST
-	uint8_t pid_state = Mix_Valve::findOff;
-	psu_enable.set(true);
 
-	while (pid_state > Mix_Valve::init) {
-		mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
-		mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
-		if (nextSecond) { // once per second
-			nextSecond.repeat();
-			reset_watchdog();
-			pid_state = mixValve[us_mix].getPIDconstants();
-		}
-	}
-	pid_state = Mix_Valve::findOff;
-	while (pid_state > Mix_Valve::init) {
-		mixValve[us_mix].doneI2C_Coms(programmer, nextSecond);
-		mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond);
-		if (nextSecond) { // once per second
-			nextSecond.repeat();
-			reset_watchdog();
-			pid_state = mixValve[ds_mix].getPIDconstants();
-		}
-	}	
-
-#endif
 	logger() << F("Setup complete.") << L_flush;
 }
 
@@ -172,17 +149,21 @@ void loop() {
 	// All I2C transfers are initiated by Master
 	static auto err = Mix_Valve::I2C_Flags_Obj{};
 	static bool multimaster_mode;
-	err.set(Mix_Valve::F_US_TS_FAILED, !mixValve[us_mix].doneI2C_Coms(programmer, nextSecond));
-	err.set(Mix_Valve::F_DS_TS_FAILED, !mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond));
+	err.set(Mix_Valve::F_US_TS_FAILED, !mixValve_US.doneI2C_Coms(programmer, nextSecond));
+	err.set(Mix_Valve::F_DS_TS_FAILED, !mixValve_DS.doneI2C_Coms(programmer, nextSecond));
 
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		reset_watchdog();
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
+		auto flowTemp = mixValve_US.update(pid_US.currOut());
+		pid_US.checkSetpoint(mixValve_US.currReqTemp_16());
+		pid_US.adjust(flowTemp);
 
-		mixValve[us_mix].check_flow_temp();
-		mixValve[ds_mix].check_flow_temp();
+		flowTemp = mixValve_DS.update(pid_DS.currOut());
+		pid_DS.checkSetpoint(mixValve_DS.currReqTemp_16());
+		pid_DS.adjust(flowTemp);
 
 		if (err.flags()) {
 			logger() << showErr(err) << L_endl;
@@ -215,8 +196,8 @@ void roleChanged(Role newRole) {
 	else { // changed to Master
 		psu_enable.set();
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
-		mixValve[us_mix].setDefaultRequestTemp();		
-		mixValve[ds_mix].setDefaultRequestTemp();
+		mixValve_US.setDefaultRequestTemp();
+		mixValve_DS.setDefaultRequestTemp();
 	}
 	role = newRole;
 }

@@ -18,7 +18,7 @@ namespace HardwareInterfaces {
 	typedef int8_t S1_err;
 
 	////////////////// Program Version /////////////////////
-	constexpr uint8_t VERSION = 74;
+	constexpr uint8_t VERSION = 75;
 
 	/////////////////// Pin assignments & misc. ///////////////////
 	constexpr uint8_t RESET_I2C_PIN = 14;  // active low.

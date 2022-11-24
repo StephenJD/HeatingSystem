@@ -162,9 +162,9 @@ void HeatingSystem::run_stateMachine() {
 		_tempController.checkZoneRequests(true); // must be called once every 10 mins and when data changes
 		[[fallthrough]];
 	case SERVICE_BACKBOILER:
-		loopLogger() << L_time << "SERVICE_BACKBOILER" << L_endl;
+		logger() << L_time << "SERVICE_BACKBOILER" << L_endl;
 		_tempController.backBoiler.check();
-		loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
+		logger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
 			//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;

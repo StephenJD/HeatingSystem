@@ -30,7 +30,6 @@ namespace HardwareInterfaces {
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		int8_t relayInControl() const;
 		uint8_t index() const { return _localRegOffset == PROG_REG_MV0_OFFSET ? 0 : 1; }
-		bool tuningMixV();
 		const __FlashStringHelper* showState() const;
 
 		// Modifiers

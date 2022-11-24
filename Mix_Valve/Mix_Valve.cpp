@@ -1,5 +1,5 @@
 // This is the Multi-Master Arduino Mini Controller
-#define SIM_MIXV
+//#define SIM_MIXV
 
 #include <Mix_Valve.h>
 #include <TempSensor.h>
@@ -29,12 +29,13 @@ Mix_Valve* Mix_Valve::motor_mutex = 0;
 int16_t Mix_Valve::_motorsOffV = 1024;
 int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.03);
 
-bool Mix_Valve::motor_queued;
+//bool Mix_Valve::motor_queued;
 uint8_t Mix_Valve::mutex_lifetime;
 // PID Functions
 
 int16_t Mix_Valve::update(int newPos) {
 	stateMachine(newPos); // register last move
+	log();
 #ifdef SIM_MIXV
 	addTempToDelayIntegral();
 	setFlowTempReg();
@@ -51,19 +52,17 @@ void Mix_Valve::stateMachine(int newPos) {
 	// Lambda
 	auto moveMode = [this]() {
 		if (motor_mutex == this) return e_Moving;
-		else if (motor_mutex == 0) {
+		else if (motor_mutex == 0 || mutex_lifetime == 0) {
+			// Steal the mutex. Other valve may still had active relays
+			if (motor_mutex != 0) {
+				logger() << motor_mutex->name() << L_tabs << F("Start wait for Mutex") << L_endl;
+				motor_mutex->_cool_relay->set(false);
+				motor_mutex->_heat_relay->set(false);
+			}
 			motor_mutex = this;
-			static constexpr uint8_t MUTEX_LIFETIME = 10;
 			mutex_lifetime = MUTEX_LIFETIME;
 			activateMotor_isMoving();
 			return e_Moving;
-		}
-		else if (!motor_queued) {
-			logger() << name() << L_tabs << F("Start Mutex") << L_endl;
-			motor_queued = true;
-			_cool_relay->set(false);
-			_heat_relay->set(false);
-			return e_WaitingToMove;
 		} else return e_WaitingToMove;
 	};
 
@@ -82,6 +81,8 @@ void Mix_Valve::stateMachine(int newPos) {
 		switch (mode) {
 		// Persistant Modes processed once each second
 		case e_Moving:
+			mode = moveMode();
+			if (mode != e_Moving) break;
 			{
 				auto keepGoing = continueMove();
 				if (valveIsAtLimit()) {
@@ -90,9 +91,6 @@ void Mix_Valve::stateMachine(int newPos) {
 				else if (!keepGoing) {
 					stopMotor();
 					mode = e_AtTargetPosition;
-				}
-				else if (motor_queued && mutex_lifetime == 0) {
-					mode = e_swapMutex;
 				}
 			}
 			break;
@@ -122,7 +120,6 @@ void Mix_Valve::stateMachine(int newPos) {
 		case e_findOff:
 			turnValveOff();
 			activateMotor_isMoving();
-			moveMode();
 			mode = e_FindingOff;
 			break;
 		case e_reachedLimit:
@@ -174,7 +171,6 @@ bool Mix_Valve::continueMove() { // must be called just once per second
 
 void Mix_Valve::stopMotor() {
 	_motorDirection = e_Stop;
-	motor_queued = false;
 	motor_mutex = 0;
 	activateMotor_isMoving();
 }
@@ -187,16 +183,22 @@ bool Mix_Valve::activateMotor_isMoving() {
 		if (newOffV) {
 			_motorsOffV = newOffV;
 			_motors_off_diff_V = uint16_t(_motorsOffV * 0.03);
-			//logger() << F("New OFF-V: ") << _motorsOffV << L_endl;
+			logger() << F("New OFF-V: ") << _motorsOffV << L_endl;
 		}
 	};
 	// Algorithm
 	auto isMoving = true;
+#ifdef SIM_MIXV
+	if (motor_mutex != this && motor_mutex != 0) {
+		if (motor_mutex->_cool_relay->logicalState() == true || motor_mutex->_heat_relay->logicalState() == true)
+			auto debug = false;
+	}
+#endif
 	_cool_relay->set(_motorDirection == e_Cooling); // turn Cool relay on/off
 	_heat_relay->set(_motorDirection == e_Heating); // turn Heat relay on/off
 	if (_motorDirection == e_Stop) {
-		getPSU_Off_V();
-		enableRelays(motor_queued); // disable if no queued motor.
+		getPSU_Off_V(); // turns PSU on
+		enableRelays(false);
 		isMoving = false;
 	}
 	else {
@@ -345,7 +347,6 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		reg.set(R_VERSION_DAY, version_day);
 		reg.set(R_TS_ADDRESS, _temp_sensr.getAddress());
 		reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME / 2);
-		reg.set(R_SETTLE_TIME, 40);
 		reg.set(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
 		saveToEEPROM();
 		logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
@@ -354,7 +355,6 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		loadFromEEPROM();
 		logger() << F("Loaded from EEPROM") << L_endl;
 	}
-	reg.set(R_RATIO, 30);
 	reg.set(R_FLOW_TEMP, HardwareInterfaces::MIN_FLOW_TEMP);
 	reg.set(R_FLOW_TEMP_FRACT, 0);
 
@@ -380,11 +380,10 @@ void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
 	_temp_sensr.setAddress(reg.get(R_TS_ADDRESS));
 	_ep->update(eepromRegister, reg.get(R_TS_ADDRESS));
 	_ep->update(++eepromRegister, reg.get(R_HALF_TRAVERSE_TIME));
-	_ep->update(++eepromRegister, reg.get(R_SETTLE_TIME));
 	_ep->update(++eepromRegister, reg.get(R_DEFAULT_FLOW_TEMP));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_MONTH));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_DAY));
-	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)reg.get(R_HALF_TRAVERSE_TIME) << (int)reg.get(R_SETTLE_TIME)
+	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)reg.get(R_HALF_TRAVERSE_TIME) 
 		<< (int)reg.get(R_DEFAULT_FLOW_TEMP) << (int)reg.get(R_VERSION_MONTH) << (int)reg.get(R_VERSION_DAY) << L_endl;
 }
 
@@ -393,13 +392,11 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	auto reg = registers();
 #ifdef TEST_MIX_VALVE_CONTROLLER
 	reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME / 2);
-	reg.set(R_SETTLE_TIME, 10);
 	reg.set(R_DEFAULT_FLOW_TEMP, 55);
 #else	
 	_temp_sensr.setAddress(_ep->read(eepromRegister));
 	reg.set(R_TS_ADDRESS, _temp_sensr.getAddress());
 	reg.set(R_HALF_TRAVERSE_TIME, _ep->read(++eepromRegister));
-	reg.set(R_SETTLE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
 	if (reg.get(R_HALF_TRAVERSE_TIME) < (VALVE_TRANSIT_TIME / 2) - 20) reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME / 2);
 #endif
@@ -436,8 +433,8 @@ void Mix_Valve::log() {
 		}
 	};
 
-	logger() << name() << L_tabs << _currReqTemp << reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.
-		<< showState() << _valvePos << L_endl;
+	logger() << name() << L_tabs << F("Req:") << _currReqTemp << F("Is:") << reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.
+		<< showState() << F(" ReqPos:") << _endPos << F(" IsPos:") << _valvePos << L_endl;
 }
 
 #ifdef SIM_MIXV
@@ -468,6 +465,7 @@ void Mix_Valve::setFlowTempReg() { // must be called only once per second
 void Mix_Valve::addTempToDelayIntegral() {
 	_delayLine.push(finalTempForPosition());
 	if (_delayLine.size() > _delay) _delayLine.popFirst();
+	if (_timeAtOneTemp > 0) --_timeAtOneTemp;
 }
 
 void Mix_Valve::setIsTemp(uint8_t temp) {

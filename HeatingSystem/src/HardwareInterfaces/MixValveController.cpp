@@ -52,7 +52,6 @@ namespace HardwareInterfaces {
 	uint8_t MixValveController::sendSlaveIniData(volatile uint8_t& requestINI_flags) {
 #ifdef ZPSIM
 		uint8_t(&debugWire)[30] = reinterpret_cast<uint8_t(&)[30]>(TwoWire::i2CArr[getAddress()]);
-		writeRegValue(Mix_Valve::R_MODE, Mix_Valve::e_Checking);
 #endif
 		auto thisIniFlag = MV_US_REQUESTING_INI << index();
 		if (!(thisIniFlag & requestINI_flags)) return _OK;
@@ -67,11 +66,10 @@ namespace HardwareInterfaces {
 			errCode = writeReg(Mix_Valve::R_DEVICE_STATE);
 			errCode |= writeReg(Mix_Valve::R_REMOTE_REG_OFFSET);
 			errCode |= writeRegValue(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
-			errCode |= writeRegValue(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
 			if (errCode) return errCode;
 
 			loopLogger() <<  F("MixValveController::sendSlaveIniData - WriteRegSet...") << L_endl;
-			errCode = writeRegSet(Mix_Valve::R_RATIO, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_RATIO);
+			errCode = writeRegSet(Mix_Valve::R_FLOW_TEMP, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_FLOW_TEMP);
 			if (errCode == _OK) {
 				requestINI_flags &= ~thisIniFlag;
 				loopLogger() << " New IniStatus:" << requestINI_flags << L_endl;
@@ -110,13 +108,6 @@ namespace HardwareInterfaces {
 		return mixV_OK;
 	}
 
-	bool MixValveController::tuningMixV() {
-		if (registers().get(Mix_Valve::R_ADJUST_MODE) == Mix_Valve::PID_CHECK) {
-			monitorMode();
-			return true;
-		} else return false;
-	}	
-	
 	void MixValveController::monitorMode() {
 		if (reEnable() == _OK) {
 			_relayArr[_controlZoneRelay].set(); // turn call relay ON
@@ -128,19 +119,7 @@ namespace HardwareInterfaces {
 	bool MixValveController::logMixValveOperation(bool logThis) {
 //#ifndef ZPSIM
 		auto reg = registers();
-		// {e_newReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_Error }
-		// enum Tune { init, findOff, waitForCool, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, turnOff, restart };
-		auto adjustMode = [](uint8_t adjust_mode, float & psuV) {
-			switch (adjust_mode) {
-			case Mix_Valve::A_GOOD_RATIO: return "G";
-			case Mix_Valve::A_UNDERSHOT: return "U";
-			case Mix_Valve::A_OVERSHOT: return "O";
-			case Mix_Valve::PID_CHECK:
-				psuV = (psuV/5.f/256.f);
-				return "T";
-			default: return "";
-			}
-		};
+		//e_Moving, e_WaitingToMove, e_ValveOff, e_AtTargetPosition, e_FindingOff, e_HotLimit
 
 		auto algorithmMode = Mix_Valve::Mix_Valve::Mode(reg.get(Mix_Valve::R_MODE));
 		if (algorithmMode >= Mix_Valve::e_Error) {
@@ -153,11 +132,10 @@ namespace HardwareInterfaces {
 			reEnable(true);
 			_previous_valveStatus[valveIndex] = algorithmMode;
 			float psuV = reg.get(Mix_Valve::R_PSU_V) * 5.f;
-			auto adjust_mode = reg.get(Mix_Valve::R_ADJUST_MODE);
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
-				<< showState() << reg.get(Mix_Valve::R_COUNT) << reg.get(Mix_Valve::R_VALVE_POS)
-				<< adjustMode(adjust_mode, psuV) << reg.get(Mix_Valve::R_RATIO) << psuV  << L_endl;
+				<< showState() << reg.get(Mix_Valve::R_VALVE_POS)
+				<< psuV  << L_endl;
 		}
 //#endif
 		return true;
@@ -165,60 +143,24 @@ namespace HardwareInterfaces {
 
 	const __FlashStringHelper* MixValveController::showState() const {
 		auto reg = registers();
-		// e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff
-		// /*These are temporary triggers */, e_newReq, e_swapMutex, e_completedMove, e_overshot, e_reachedLimit, e_Error
-		// enum Tune { init, findOff, waitForCool, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, turnOff, restart };
+		//e_Moving, e_WaitingToMove, e_ValveOff, e_AtTargetPosition, e_FindingOff, e_HotLimit
 
 		auto mv_mode = reg.get(Mix_Valve::R_MODE);
-		if (reg.get(Mix_Valve::R_ADJUST_MODE) == Mix_Valve::PID_CHECK) {
-			switch (mv_mode) {
-			case Mix_Valve::init:
-				return F("Ini");
-			case Mix_Valve::restart:
-				return F("S");
-			case Mix_Valve::findOff:
-				return F("O");
-			case Mix_Valve::waitForCool:
-				return F("C");
-			case Mix_Valve::riseToSetpoint:
-				return F("^");
-			case Mix_Valve::findMax:
-				return F("^^");
-			case Mix_Valve::fallToSetPoint:
-				return F("v");
-			case Mix_Valve::findMin:
-				return F("vv");
-			case Mix_Valve::lastRise:
-				return F(".^");
-			case Mix_Valve::calcPID:
-				return F("?");
-			case Mix_Valve::turnOff:
-				return F("Z");
-			default:
-				return F("Ini");
-			}
-		}
+
 		switch (mv_mode) {
-		case Mix_Valve::e_Wait: return F("Wt");
-		//case Mix_Valve::e_swapMutex: return F("SwM");
-		case Mix_Valve::e_Checking: return F("Ok");
-		case Mix_Valve::e_Mutex: return F("Mx");
-		case Mix_Valve::e_NewReq: return F("Req");
-		case Mix_Valve::e_WaitToCool: return F("WtC");
-		case Mix_Valve::e_ValveOff: return F("Off");
-		//case Mix_Valve::e_reachedLimit: return F("RLm");
-		case Mix_Valve::e_HotLimit: return F("Lim");
-		//case Mix_Valve::e_completedMove: return F("Mok");
-		//case Mix_Valve::e_overshot: return F("OvS");
-		//case Mix_Valve::e_findOff:
-		case Mix_Valve::e_StopHeating:
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
-			case Mix_Valve::e_Moving_Coolest: return F("Min");
 			case Mix_Valve::e_Cooling: return F("Cl");
 			case Mix_Valve::e_Heating: return F("Ht");
 			default: return F("Stp"); // Now stopped!
 			}
+		case Mix_Valve::e_WaitingToMove: return F("Mx");
+		case Mix_Valve::e_ValveOff: return F("Off");
+		case Mix_Valve::e_AtTargetPosition: return F("Tg");
+		case Mix_Valve::e_FindingOff: return F("FO");
+		case Mix_Valve::e_HotLimit: return F("Lim");
+		//case Mix_Valve::e_NewReq: return F("Req");
+		//case Mix_Valve::e_WaitToCool: return F("WtC");
 		default: return F("SEr");
 		}
 	}

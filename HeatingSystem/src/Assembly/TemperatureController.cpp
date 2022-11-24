@@ -110,9 +110,7 @@ namespace Assembly {
 		auto mixV_OK = true;
 		for (auto & mixValveControl : mixValveControllerArr) {
 			//logger() << L_time << "Check mixValveControl" << L_endl;
-			if (!mixValveControl.tuningMixV()) {
-				mixV_OK &= mixValveControl.readReg_and_log();
-			}
+			mixV_OK &= mixValveControl.readReg_and_log();
 			//ui_yield(); 
 		}
 		if (!mixV_OK) status = MV_FAILED;
