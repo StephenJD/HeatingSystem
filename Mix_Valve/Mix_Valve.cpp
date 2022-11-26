@@ -1,5 +1,7 @@
 // This is the Multi-Master Arduino Mini Controller
-//#define SIM_MIXV
+#ifndef __AVR__
+	#define SIM_MIXV
+#endif
 
 #include <Mix_Valve.h>
 #include <TempSensor.h>
@@ -26,28 +28,27 @@ extern const uint8_t version_day;
 
 constexpr int PSU_V_PIN = A3;
 Mix_Valve* Mix_Valve::motor_mutex = 0;
-int16_t Mix_Valve::_motorsOffV = 1024;
-int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.03);
-
-//bool Mix_Valve::motor_queued;
 uint8_t Mix_Valve::mutex_lifetime;
 // PID Functions
 
-int16_t Mix_Valve::update(int newPos) {
-	stateMachine(newPos); // register last move
-	log();
+uint16_t Mix_Valve::update(int newPos) {
 #ifdef SIM_MIXV
 	addTempToDelayIntegral();
 	setFlowTempReg();
 #endif
-	auto reg = registers();
-	auto sensorTemp = reg.get(R_FLOW_TEMP) * 256 + reg.get(R_FLOW_TEMP_FRACT);
-	return int16_t(sensorTemp);
+	return stateMachine(newPos);
 }
 
 // Loop Functions
+uint16_t Mix_Valve::currReqTemp_16() const {
+	if (registers().get(R_MODE) == e_FindingOff)
+		return uint16_t(HardwareInterfaces::MIN_FLOW_TEMP) << 8;
+	else 
+		return uint16_t(_currReqTemp) << 8; 
+}
 
-void Mix_Valve::stateMachine(int newPos) {
+
+uint16_t Mix_Valve::stateMachine(int newPos) {
 	// Gets new TempReq, finds OFF, stops at limit or moves towards requested posistion.
 	// Lambda
 	auto moveMode = [this]() {
@@ -62,14 +63,15 @@ void Mix_Valve::stateMachine(int newPos) {
 			motor_mutex = this;
 			mutex_lifetime = MUTEX_LIFETIME;
 			activateMotor_isMoving();
+			logger() << name() << L_tabs << F("On PSU:") << measurePSUVoltage(NO_OF_EQUAL_PSU_CYCLES) << L_endl;
 			return e_Moving;
 		} else return e_WaitingToMove;
 	};
 
 	//Algorithm
 	auto reg = registers();
-	auto sensorTemp = reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.;
-	bool isTooCool = sensorTemp < _currReqTemp;
+	auto sensorTemp = getSensorTemp_16() ;
+	bool isTooCool = sensorTemp / 256.f < _currReqTemp;
 	auto mode = reg.get(R_MODE);
 	if (checkForNewReqTemp()) {
 		if (_newReqTemp <= HardwareInterfaces::MIN_FLOW_TEMP) {
@@ -152,6 +154,7 @@ void Mix_Valve::stateMachine(int newPos) {
 	}	
 	reg.set(R_MODE, mode);
 	//logger() << F("Mode:") << mode << L_endl;
+	return sensorTemp;
 }
 
 // Continuation Functions
@@ -179,11 +182,14 @@ bool Mix_Valve::activateMotor_isMoving() {
 	// Lambda
 	auto getPSU_Off_V = [this]() {
 		enableRelays(true);
-		auto newOffV = measurePSUVoltage(100);
+		auto newOffV = measurePSUVoltage(NO_OF_EQUAL_PSU_CYCLES);
 		if (newOffV) {
 			_motorsOffV = newOffV;
-			_motors_off_diff_V = uint16_t(_motorsOffV * 0.03);
-			logger() << F("New OFF-V: ") << _motorsOffV << L_endl;
+			_motors_off_diff_V = uint16_t(_motorsOffV * ON_OFF_RATIO);
+			auto reg = registers();
+			reg.set(R_PSU_MIN_OFF_V, reg.get(R_PSU_MIN_V));
+			reg.set(R_PSU_MAX_OFF_V, reg.get(R_PSU_MAX_V));
+			logger() << name() << L_tabs << F("New OFF-V:") << _motorsOffV << L_endl;
 		}
 	};
 	// Algorithm
@@ -244,10 +250,13 @@ bool Mix_Valve::valveIsAtLimit() {
 		return false;
 
 	auto isOff = [this]() {
+#ifndef SIM_MIXV
+		if (digitalRead(LED_BUILTIN)) return false; // only measure when LED off.
+#endif
 		auto psuV = 0;
 		int offCount = 5;
 		do {
-			psuV = measurePSUVoltage();
+			psuV = measurePSUVoltage(NO_OF_EQUAL_PSU_CYCLES);
 			if (psuV > _motorsOffV - _motors_off_diff_V) {
 				--offCount;
 				if (offCount > 1) delay_mS(100);
@@ -262,7 +271,7 @@ bool Mix_Valve::valveIsAtLimit() {
 			_valvePos = 0;
 		}
 		else {
-			if (_valvePos > 100) {
+			if (_valvePos > 140) {
 				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 			}
@@ -273,12 +282,12 @@ bool Mix_Valve::valveIsAtLimit() {
 	return false;
 }
 
-void Mix_Valve::refreshRegisters() {
+uint16_t Mix_Valve::getSensorTemp_16() {
 	// All I2C transfers are initiated by Programmer: Reading status and temps, sending new requests.
-	//lambda
 	auto reg = registers();
 	reg.set(R_MOTOR_ACTIVITY, _motorDirection); // Motor activity: e_Cooling, e_Stop, e_Heating
-	reg.set(R_VALVE_POS, (uint8_t)_valvePos / 2);
+	reg.set(R_VALVE_POS, (uint8_t)_valvePos);
+	return reg.get(R_FLOW_TEMP) * 256 + reg.get(R_FLOW_TEMP_FRACT);
 }
 
 bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // called every loop()
@@ -307,24 +316,41 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 	return ts_status == _OK;
 }
 
-int Mix_Valve::measurePSUVoltage(int period_mS) {
+int Mix_Valve::measurePSUVoltage(int noOfCycles) {
 	// 4v ripple. 3.3v when PSU off, 17-19v when motors off, 16v motor-on
 	// Analogue val = 856-868 PSU on. 920-932 when off.
-	// Detect peak voltage during cycle
+	// Detect peak voltage during cycle - unreliable detection
+	// Detect min voltage during cycle
 	auto psuMaxV = 0;
+	auto psuMinV = 1024;
 #ifdef ZPSIM
 	psuMaxV = _valvePos < 5 && _motorDirection == e_Cooling ? 980 : (_valvePos >= VALVE_TRANSIT_TIME && _motorDirection == e_Heating ? 980 : _motorsOffV - 2 * _motors_off_diff_V);
 	//psuMaxV = 80;
 #else
-	auto testComplete = Timer_mS(period_mS);
+	auto checkAgain = noOfCycles;
 	do {
-		auto thisVoltage = analogRead(PSU_V_PIN);
-		if (thisVoltage < 1024 && thisVoltage > psuMaxV) psuMaxV = thisVoltage;
-	} while (!testComplete);
-	registers().set(R_PSU_V, psuMaxV / PSUV_DIVISOR);
+		auto testComplete = Timer_mS(20);
+		auto thisMaxV = 0;
+		auto thisMinV = 1024;
+		do {
+			auto thisVoltage = analogRead(PSU_V_PIN);
+			if (thisVoltage < 1024 && thisVoltage > thisMaxV) thisMaxV = thisVoltage;
+			if (thisVoltage > 600 && thisVoltage < thisMinV) thisMinV = thisVoltage;
+		} while (!testComplete);
+		if (thisMaxV == psuMaxV) --checkAgain;
+		else {
+			psuMaxV = thisMaxV;
+			psuMinV = thisMinV;
+			checkAgain = noOfCycles;
+		}
+	} while (checkAgain > 0);
+
+	registers().set(R_PSU_MIN_V, psuMinV /4);
+	registers().set(R_PSU_MAX_V, psuMaxV - 800);
 #endif
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
-	return psuMaxV > 500 ? psuMaxV : 0;
+	//return psuMaxV > 800 ? psuMaxV : 0;
+	return psuMaxV > 800 ? psuMaxV : 0;
 }
 
 Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& heatRelay, Pin_Wag& coolRelay, EEPROMClass& ep, int reg_offset)
@@ -357,14 +383,17 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	}
 	reg.set(R_FLOW_TEMP, HardwareInterfaces::MIN_FLOW_TEMP);
 	reg.set(R_FLOW_TEMP_FRACT, 0);
+	reg.set(R_MODE, e_WaitingToMove);
 
 	auto speedTest = I2C_SpeedTest(_temp_sensr);
 	speedTest.fastest();
 
-	auto psuOffV = measurePSUVoltage(200);
-	if (psuOffV) _motorsOffV = psuOffV;
-
-	logger() << F("OffV: ") << _motorsOffV << L_endl;
+	auto psuOffV = measurePSUVoltage(NO_OF_EQUAL_PSU_CYCLES);
+	if (psuOffV) {
+		_motorsOffV = psuOffV;
+		_motors_off_diff_V = int16_t(psuOffV * ON_OFF_RATIO);
+	}
+	logger() << name() << L_tabs << F("OffV:") << _motorsOffV << L_endl;
 	reg.set(R_MODE, e_findOff);
 	stateMachine(0);
 	logger() << name() << F(" TS Speed:") << _temp_sensr.runSpeed() << L_endl;
@@ -410,31 +439,32 @@ void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when m
 	I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_NO_PROGRAMMER);
 }
 
-void Mix_Valve::log() {
+void Mix_Valve::log() const {
+		//e_Moving, e_WaitingToMove, e_ValveOff, e_AtTargetPosition, e_FindingOff, e_HotLimit
+		///*These are temporary triggers */, e_findOff, e_swapMutex, e_reachedLimit, e_Error
+
 	auto reg = registers();
 
 	auto showState = [this]() {
 		auto reg = registers();
 		switch (reg.get(Mix_Valve::R_MODE)) {
-		case Mix_Valve::e_swapMutex: return F("SwM");
-		case Mix_Valve::e_AtTargetPosition: return F("Ok");
-		case Mix_Valve::e_WaitingToMove: return F("Mx");
-		case Mix_Valve::e_ValveOff: return F("Off");
-		case Mix_Valve::e_reachedLimit: return F("RLm");
-		case Mix_Valve::e_HotLimit: return F("Lim");
-		case Mix_Valve::e_findOff:
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
 			case Mix_Valve::e_Cooling: return F("Cl");
 			case Mix_Valve::e_Heating: return F("Ht");
 			default: return F("Stp"); // Now stopped!
 			}
+		case Mix_Valve::e_WaitingToMove: return F("Mx");
+		case Mix_Valve::e_ValveOff: return F("Off");
+		case Mix_Valve::e_AtTargetPosition: return F("Ok");
+		case Mix_Valve::e_FindingOff:
+		case Mix_Valve::e_HotLimit: return F("Lim");
 		default: return F("SEr");
 		}
 	};
 
 	logger() << name() << L_tabs << F("Req:") << _currReqTemp << F("Is:") << reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.
-		<< showState() << F(" ReqPos:") << _endPos << F(" IsPos:") << _valvePos << L_endl;
+		<< showState() << F(" ReqPos:") << _endPos << F(" IsPos:") << _valvePos;
 }
 
 #ifdef SIM_MIXV

@@ -1,4 +1,5 @@
 #include "MixValveController.h"
+#include "PID_Controller.h"
 #include "A__Constants.h"
 #include "..\Assembly\HeatingSystemEnums.h"
 #include <I2C_Talk_ErrorCodes.h>
@@ -131,11 +132,15 @@ namespace HardwareInterfaces {
 		if (logThis || _previous_valveStatus[valveIndex] != algorithmMode /*|| algorithmMode < Mix_Valve::e_Checking*/ ) {
 			reEnable(true);
 			_previous_valveStatus[valveIndex] = algorithmMode;
-			float psuV = reg.get(Mix_Valve::R_PSU_V) * 5.f;
+			int psuMinV = reg.get(Mix_Valve::R_PSU_MIN_V) + 800;
+			int psuMaxV = reg.get(Mix_Valve::R_PSU_MAX_V) + 800;
+			int psuMinOffV = reg.get(Mix_Valve::R_PSU_MIN_OFF_V) + 800;
+			int psuMaxOffV = reg.get(Mix_Valve::R_PSU_MAX_OFF_V) + 800;
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
 				<< showState() << reg.get(Mix_Valve::R_VALVE_POS)
-				<< psuV  << L_endl;
+				<< showPID_State()
+				<< psuMinV << psuMaxV << psuMinOffV << psuMaxOffV << L_endl;
 		}
 //#endif
 		return true;
@@ -164,6 +169,21 @@ namespace HardwareInterfaces {
 		default: return F("SEr");
 		}
 	}
+
+	const __FlashStringHelper* MixValveController::showPID_State() const {
+		auto pid_mode = registers().get(Mix_Valve::R_PID_MODE);
+		switch (pid_mode) {
+		case PID_Controller::NEW_TEMP: return F("NewT");
+		case PID_Controller::MOVE_TO_P: return F("ToP");
+		case PID_Controller::MOVE_TO_D: return F("ToD");
+		case PID_Controller::RETURN_TO_P: return F("FromD");
+		case PID_Controller::WAIT_TO_SETTLE: return F("W_Settle");
+		case PID_Controller::WAIT_FOR_DRIFT: return F("W_Drift");
+		case PID_Controller::GET_BACK_ON_TARGET: return F("GetOnTarget");
+		case PID_Controller::MOVE_TO_OFF: return F("ToOff");
+		default: return F("Err_state");
+		};
+	};
 
 	bool MixValveController::amControlZone(uint8_t newCallTemp, uint8_t maxTemp, uint8_t zoneRelayID) { // highest callflow temp
 		// Lambdas

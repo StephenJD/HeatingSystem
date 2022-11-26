@@ -31,6 +31,7 @@ namespace HardwareInterfaces {
 		int8_t relayInControl() const;
 		uint8_t index() const { return _localRegOffset == PROG_REG_MV0_OFFSET ? 0 : 1; }
 		const __FlashStringHelper* showState() const;
+		const __FlashStringHelper* showPID_State() const;
 
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	

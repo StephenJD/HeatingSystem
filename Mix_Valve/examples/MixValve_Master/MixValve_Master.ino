@@ -109,7 +109,6 @@ void sendSlaveIniData(int i) {
 		setReg(i, Mix_Valve::R_PROG_REG_OFFSET, slaveRegOffset[i]);
 		errCode = writeToValve(i, Mix_Valve::R_PROG_REG_OFFSET, _regOffset[i]);
 		errCode |= writeToValve(i, Mix_Valve::R_TS_ADDRESS, _flowTS_addr[i]);
-		errCode |= writeToValve(i, Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
 		errCode |= writeToValve(i, Mix_Valve::R_MULTI_MASTER_MODE, _is_multimaster);
 		setReg(i, Mix_Valve::R_STATUS, Mix_Valve::MV_OK);
 		setReg(i, Mix_Valve::R_MODE, Mix_Valve::e_Checking);

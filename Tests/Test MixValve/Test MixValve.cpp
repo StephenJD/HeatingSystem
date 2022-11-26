@@ -340,7 +340,7 @@ TEST_CASE("FindOff", "[MixValve]") {
 	do {
 		testMV.setReqTemp(0,40); // try interrupting findOff
 		testMV.update(0, 35);
-	} while (testMV.mode(0) != Mix_Valve::e_ValveOff);
+	} while (testMV.vPos(0) != 0);
 	CHECK(testMV.vPos(0) == 0);
 
 	// Register new temp
@@ -536,7 +536,7 @@ bool changeParams(TestTemps& testTemps, TestMixV& testMV) {
 
 void runOneTemp(TestTemps& testTemps, Mix_Valve& mv, PID_Controller& pid) {
 	auto flowTemp = mv.update(pid.currOut());
-	pid.adjust(flowTemp);
+	pid.adjust(flowTemp, mv.vPos());
 	//testMV.setVPos(0, newPos); // instant move!
 	// record results
 	appendData(mv, pid);

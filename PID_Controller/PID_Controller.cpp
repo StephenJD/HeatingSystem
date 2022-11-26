@@ -1,4 +1,7 @@
 #include "PID_Controller.h"
+#include <Logging.h>
+
+using namespace arduino_logger;
 
 void PID_Controller::changeSetpoint(uint16_t val) {
     //Apply new setpoint
@@ -51,13 +54,19 @@ void PID_Controller::changeSetpoint(uint16_t val) {
     if (val <= _minSetpoint) {
         _state = MOVE_TO_OFF;
         _d_has_overshot = true;
+    }
+    else if (_state == MOVE_TO_OFF) {
+        _p = _Kp * (val - _minSetpoint);
+        _state = MOVE_TO_P;
+        _d_has_overshot = false;
     } else {
          _state = MOVE_TO_P;
         _d_has_overshot = false;
     }
+    logger() << F("PID NewSetPoint") << L_endl;
 }
 
-uint8_t PID_Controller::adjust(int16_t measuredVal) {
+uint8_t PID_Controller::adjust(int16_t measuredVal, uint8_t pos) {
     /*
     Output = p + i + d
     p is required output in steady-state with no error.This is set by changeSetpoint().
@@ -73,7 +82,6 @@ uint8_t PID_Controller::adjust(int16_t measuredVal) {
     auto debugSet = _setPoint / 256;
     auto debugLastSet = _lastSetPoint / 256;
 #endif
-
     if (!_d_has_overshot) {
         if (_err_past.hasChangedDirection() && _err_past.hasChangedSign()) {
             _d_has_overshot = true;
@@ -88,23 +96,27 @@ uint8_t PID_Controller::adjust(int16_t measuredVal) {
         newOut = 0;
         break;
     case MOVE_TO_P:
-        --_statePeriod;
-        if (_statePeriod <= 0) {
-            _statePeriod = abs(_d) + WAIT_AT_D; // extend time spent at _d
+        //--_statePeriod;
+        //if (_statePeriod <= 0) {
+        if (pos == _output) {
+            //_statePeriod = abs(_d) + WAIT_AT_D; // extend time spent at _d
+            _statePeriod = WAIT_AT_D; // extend time spent at _d
             _state = MOVE_TO_D;
         }
         break;
     case MOVE_TO_D:
-        --_statePeriod;
+        //;
         newOut += _d;
-        if (_statePeriod <= 0) {
-            _statePeriod = abs(_p - _output);
+       // if (_statePeriod <= 0) {
+        if (pos == _output && --_statePeriod <= 0) {
+            //_statePeriod = abs(_p - _output);
             _state = RETURN_TO_P;
         }
         break;
     case RETURN_TO_P:
-        --_statePeriod;
-        if (_statePeriod <= 0) {
+        //--_statePeriod;
+        //if (_statePeriod <= 0) {
+        if (pos == _output) {
             _statePeriod = 20;
             _state = WAIT_TO_SETTLE;
         }
@@ -129,8 +141,8 @@ uint8_t PID_Controller::adjust(int16_t measuredVal) {
     }
     if (newOut > _maxOut) newOut = _maxOut;
     else if (newOut < _minOut) newOut = _minOut;
-    _output = newOut;
-    return newOut;
+    _output = uint8_t(newOut);
+    return _output;
 }
 
 void PID_Controller::constrainD() {
@@ -182,4 +194,27 @@ void PID_Controller::adjustKd() {
 #ifdef SIM_MIXV
     if (stepChange != 0) _oveshootRatio = float(actualOvershoot) / stepChange;
 #endif
+}
+
+void PID_Controller::log() const {
+    auto showState = [this]() {
+        switch (_state) {
+        case NEW_TEMP: return F("NewT");
+        case MOVE_TO_P: return F("ToP");
+        case MOVE_TO_D: return F("ToD");
+        case RETURN_TO_P: return F("FromD");
+        case WAIT_TO_SETTLE: return F("W_Settle");
+        case WAIT_FOR_DRIFT: return F("W_Drift");
+        case GET_BACK_ON_TARGET: return F("GetOnTarget");
+        case MOVE_TO_OFF: return F("ToOff");
+        default: return F("Err_state");
+        };
+    };
+    logger() << name() << L_tabs << F("Set:") << _setPoint/256.f 
+        << F("Err is:") << _err_past.last() / 256.f 
+        << F("Out:") << _output 
+        << F("p,i,d is:") << _p << integralPart() << _d 
+        << F("Mode:") << showState()
+        << F("Kp/deg:") << _Kp * 256.f
+        << F("Kd:") << _Kd;
 }

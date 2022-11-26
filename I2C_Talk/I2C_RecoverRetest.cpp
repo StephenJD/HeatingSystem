@@ -132,7 +132,7 @@ namespace I2C_Recovery {
 #endif
 			_strategy.next();
 			if (!HardReset::hasWarmedUp()) {
-				logger() << F("\t\tS_Power-Down - wait to warm-up") << L_endl;
+				//logger() << F("\t\tS_Power-Down - wait to warm-up") << L_endl;
 				strategy().tryAgain(S_TryAgain);
 				return true;
 			}

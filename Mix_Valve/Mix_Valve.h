@@ -56,7 +56,11 @@ public:
 		, R_MOTOR_ACTIVITY	// Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
 		, R_FLOW_TEMP_FRACT
 		, R_VALVE_POS
-		, R_PSU_V
+		, R_PSU_MIN_V
+		, R_PSU_MAX_V
+		, R_PSU_MIN_OFF_V
+		, R_PSU_MAX_OFF_V
+		, R_PID_MODE
 		, R_FLOW_TEMP // Received in Slave-Mode
 		// Receive
 		, R_REQUEST_FLOW_TEMP // also sent to confirm
@@ -92,11 +96,15 @@ public:
 	// Queries
 	const __FlashStringHelper* name() const;
 	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
+	Mode mode() const {	return Mode(registers().get(R_MODE)); }
+	int16_t vPos() const {	return _valvePos; }
+	void log() const;
 	// Modifiers
-	int16_t update(int newPos);
+	uint16_t update(int newPos);
 	void setDefaultRequestTemp();
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
-	uint16_t currReqTemp_16() const { return uint16_t(_currReqTemp) << 8; }
+	uint16_t currReqTemp_16() const;
+	void setRegister(uint8_t regNo, uint8_t val) { registers().set(regNo, val); }
 #ifdef SIM_MIXV
 	static constexpr uint8_t ROOM_TEMP = 20;
 	int16_t finalTempForPosition() const { 
@@ -127,7 +135,7 @@ private:
 public:
 #endif
 	// Loop Functions
-	void stateMachine(int newPos); // returns true if in transitional-mode
+	uint16_t stateMachine(int newPos); // returns flow-temp
 	// Continuation Functions
 	bool continueMove();
 	// Transition Functions
@@ -141,10 +149,9 @@ public:
 	void setDirection() { _motorDirection = _endPos > _valvePos ? e_Heating : _endPos < _valvePos ? e_Cooling : e_Stop;	}
 	bool valveIsAtLimit();
 	void saveToEEPROM();
-	void refreshRegisters();
+	uint16_t getSensorTemp_16();
 	void loadFromEEPROM();
-	int measurePSUVoltage(int period_mS = 25);
-	void log();
+	int measurePSUVoltage(int noOfCycles = NO_OF_EQUAL_PSU_CYCLES);
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;
 	uint8_t _regOffset;
@@ -158,16 +165,18 @@ public:
 	int16_t _endPos = 0;
 
 	// State data
-	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME;
+	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME/2;
 	MotorDirection _motorDirection = e_Stop;
 
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
 	static uint8_t mutex_lifetime;
-	static int16_t _motorsOffV;
-	static int16_t _motors_off_diff_V;
+	int16_t _motorsOffV = 970;
+	int16_t _motors_off_diff_V = _motorsOffV * MUTEX_LIFETIME;
 	static constexpr uint8_t MUTEX_LIFETIME = 10;
+	static constexpr float ON_OFF_RATIO = .06f;
+	static constexpr int NO_OF_EQUAL_PSU_CYCLES = 4;
 
 #ifdef SIM_MIXV
 	uint16_t _timeConst = 0;
