@@ -34,12 +34,22 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 	// 4v ripple. 3.3v when PSU off, 17-19v when motors off, 16v motor-on
 	// Analogue val = 856-868 PSU on. 920-932 when off.
 	// Detect peak voltage during cycle
-	auto testComplete = Timer_mS(period_mS);
 	auto psuMaxV = 0;
+	int noOfCycles = 4;
+	auto checkAgain = noOfCycles;
 	do {
-		auto thisVoltage = analogRead(PSU_V_PIN);
-		if (thisVoltage < 1024 && thisVoltage > psuMaxV) psuMaxV = thisVoltage;
-	} while (!testComplete);
+		auto testComplete = Timer_mS(20);
+		auto thisMaxV = 0;
+		do {
+			auto thisVoltage = analogRead(PSU_V_PIN);
+			if (thisVoltage < 1024 && thisVoltage > thisMaxV) thisMaxV = thisVoltage;
+		} while (!testComplete);
+		if (thisMaxV == psuMaxV) --checkAgain;
+		else {
+			psuMaxV = thisMaxV;
+			checkAgain = noOfCycles;
+		}
+	} while (checkAgain > 0);
 #ifdef ZPSIM
 	if (_motorDirection == e_Stop || _valvePos < 5 || _valvePos >= VALVE_TRANSIT_TIME) psuMaxV = 980;
 	else psuMaxV =  860;
@@ -48,7 +58,7 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 	registers().set(R_PSU_V, psuMaxV / PSUV_DIVISOR);
 
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
-	return psuMaxV > 500 ? psuMaxV : 0;
+	return psuMaxV > 800 ? psuMaxV : 0;
 }
 
 Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset)
