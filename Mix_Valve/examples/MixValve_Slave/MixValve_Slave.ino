@@ -157,15 +157,15 @@ void loop() {
 		reset_watchdog();
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
+		
 		auto flowTemp = mixValve_US.update(pid_US.currOut());
-		if (mixValve_US.mode() != Mix_Valve::e_WaitingToMove) {
-			pid_US.checkSetpoint(mixValve_US.currReqTemp_16());
-			pid_US.adjust(flowTemp, mixValve_US.vPos());
-			mixValve_US.setRegister(Mix_Valve::R_PID_MODE, pid_US.mode());
-			mixValve_US.log();
-			pid_US.log();
-			logger() << L_endl;
-		}
+		pid_US.checkSetpoint(mixValve_US.currReqTemp_16());
+		pid_US.adjust(flowTemp, mixValve_US.atTarget());
+		mixValve_US.setRegister(Mix_Valve::R_PID_MODE, pid_US.mode());
+		mixValve_US.log();
+		pid_US.log();
+		logger() << L_endl;
+
 
 		flowTemp = mixValve_DS.update(pid_DS.currOut());
 		if (mixValve_DS.mode() != Mix_Valve::e_WaitingToMove) {

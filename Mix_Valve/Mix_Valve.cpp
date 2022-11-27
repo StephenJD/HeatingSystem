@@ -78,6 +78,7 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 			mode = e_findOff;
 		}
 	}
+	if (newPos > _endPos && mode == e_HotLimit) newPos = _endPos;
 	bool newPosRequest = newPos != _endPos;
 	do {
 		switch (mode) {
@@ -131,6 +132,7 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 				setDirection(); // ready to move to requested endpos.
 			}
 			else {
+				_endPos = _valvePos;
 				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_STORE_TOO_COOL);
 				mode = e_HotLimit;
 			}
@@ -275,7 +277,6 @@ bool Mix_Valve::valveIsAtLimit() {
 				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 			}
-			else return false;
 		}
 		return true;
 	}
@@ -324,10 +325,16 @@ int Mix_Valve::measurePSUVoltage(int noOfCycles) {
 	auto psuMaxV = 0;
 	auto psuMinV = 1024;
 #ifdef ZPSIM
-	psuMaxV = _valvePos < 5 && _motorDirection == e_Cooling ? 980 : (_valvePos >= VALVE_TRANSIT_TIME && _motorDirection == e_Heating ? 980 : _motorsOffV - 2 * _motors_off_diff_V);
+	if (_valvePos == VALVE_TRANSIT_TIME)
+		bool debug = false;
+	psuMaxV = _valvePos < 5 && _motorDirection == e_Cooling ? 980 : (_valvePos >= VALVE_TRANSIT_TIME && _motorDirection == e_Heating ? 
+		980 
+		: _motorsOffV - 2 * _motors_off_diff_V);
 	//psuMaxV = 80;
 #else
 	auto checkAgain = noOfCycles;
+	auto timeout = Timer_mS(200);
+
 	do {
 		auto testComplete = Timer_mS(20);
 		auto thisMaxV = 0;
@@ -343,14 +350,14 @@ int Mix_Valve::measurePSUVoltage(int noOfCycles) {
 			psuMinV = thisMinV;
 			checkAgain = noOfCycles;
 		}
-	} while (checkAgain > 0);
+	} while (!timeout && checkAgain > 0);
 
 	registers().set(R_PSU_MIN_V, psuMinV /4);
 	registers().set(R_PSU_MAX_V, psuMaxV - 800);
 #endif
 	//logger() << name() << L_tabs << F("PSU_V:") << L_tabs << psuMaxV << L_endl;
 	//return psuMaxV > 800 ? psuMaxV : 0;
-	return psuMaxV > 800 ? psuMaxV : 0;
+	return psuMaxV > 700 ? psuMaxV : 0;
 }
 
 Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& heatRelay, Pin_Wag& coolRelay, EEPROMClass& ep, int reg_offset)

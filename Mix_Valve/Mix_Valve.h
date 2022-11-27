@@ -97,7 +97,7 @@ public:
 	const __FlashStringHelper* name() const;
 	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
 	Mode mode() const {	return Mode(registers().get(R_MODE)); }
-	int16_t vPos() const {	return _valvePos; }
+	bool atTarget() const { return _valvePos == _endPos; }
 	void log() const;
 	// Modifiers
 	uint16_t update(int newPos);
@@ -110,6 +110,7 @@ public:
 	int16_t finalTempForPosition() const { 
 		return int16_t((256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5f); }
 	int16_t flowTemp() const { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
+	int16_t vPos() const {	return _valvePos; }
 	float get_Kp() const { return MAX_VALVE_TIME / ((_maxTemp - ROOM_TEMP) * 256.f); }
 	uint16_t get_TC() const { return _timeConst; }
 	uint8_t get_delay() const { return _delay; }
@@ -170,13 +171,14 @@ public:
 
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
-	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
-	static uint8_t mutex_lifetime;
-	int16_t _motorsOffV = 970;
-	int16_t _motors_off_diff_V = _motorsOffV * MUTEX_LIFETIME;
+	
 	static constexpr uint8_t MUTEX_LIFETIME = 10;
 	static constexpr float ON_OFF_RATIO = .06f;
 	static constexpr int NO_OF_EQUAL_PSU_CYCLES = 4;
+	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
+	static uint8_t mutex_lifetime;
+	int16_t _motorsOffV = 970;
+	int16_t _motors_off_diff_V = _motorsOffV * ON_OFF_RATIO;
 
 #ifdef SIM_MIXV
 	uint16_t _timeConst = 0;

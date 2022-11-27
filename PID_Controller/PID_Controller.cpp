@@ -57,16 +57,16 @@ void PID_Controller::changeSetpoint(uint16_t val) {
     }
     else if (_state == MOVE_TO_OFF) {
         _p = _Kp * (val - _minSetpoint);
-        _state = MOVE_TO_P;
+        _state = NEW_TEMP;
         _d_has_overshot = false;
     } else {
-         _state = MOVE_TO_P;
+         _state = NEW_TEMP;
         _d_has_overshot = false;
     }
     logger() << F("PID NewSetPoint") << L_endl;
 }
 
-uint8_t PID_Controller::adjust(int16_t measuredVal, uint8_t pos) {
+uint8_t PID_Controller::adjust(int16_t measuredVal, bool onTarget) {
     /*
     Output = p + i + d
     p is required output in steady-state with no error.This is set by changeSetpoint().
@@ -89,34 +89,26 @@ uint8_t PID_Controller::adjust(int16_t measuredVal, uint8_t pos) {
         }
     }
     switch (_state) {
-    case NEW_TEMP:
+    case NEW_TEMP: // allow mv to get new pos and report not on-target
         _state = MOVE_TO_P;
         break;
     case MOVE_TO_OFF:
         newOut = 0;
         break;
     case MOVE_TO_P:
-        //--_statePeriod;
-        //if (_statePeriod <= 0) {
-        if (pos == _output) {
-            //_statePeriod = abs(_d) + WAIT_AT_D; // extend time spent at _d
+        if (onTarget) {
             _statePeriod = WAIT_AT_D; // extend time spent at _d
             _state = MOVE_TO_D;
+            newOut += _d;
         }
         break;
     case MOVE_TO_D:
-        //;
-        newOut += _d;
-       // if (_statePeriod <= 0) {
-        if (pos == _output && --_statePeriod <= 0) {
-            //_statePeriod = abs(_p - _output);
+        if (onTarget && --_statePeriod <= 0) {
             _state = RETURN_TO_P;
-        }
+        } else newOut += _d;
         break;
     case RETURN_TO_P:
-        //--_statePeriod;
-        //if (_statePeriod <= 0) {
-        if (pos == _output) {
+        if (onTarget) {
             _statePeriod = 20;
             _state = WAIT_TO_SETTLE;
         }

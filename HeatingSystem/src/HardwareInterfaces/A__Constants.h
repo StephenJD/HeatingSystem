@@ -32,7 +32,7 @@ namespace HardwareInterfaces {
 	constexpr int NO_OF_REMOTES = 3;
 
 	/////////////////// Mixing Valves ///////////////////////////////
-	constexpr uint8_t VALVE_TRANSIT_TIME = 150;
+	constexpr uint8_t VALVE_TRANSIT_TIME = 140;
 	////////////////// EEPROM USAGE /////////////////////
 	// clock : 6 bytes
 	// strategy : 11 bytes

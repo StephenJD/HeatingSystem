@@ -16,7 +16,7 @@ public:
 	uint8_t mode() const {	return _state;	};
 	void changeSetpoint(uint16_t val);
 	void checkSetpoint(uint16_t val) { if (val != _setPoint) changeSetpoint(val);	}
-	uint8_t adjust(int16_t measuredVal, uint8_t pos);
+	uint8_t adjust(int16_t measuredVal, bool onTarget);
 	int32_t integralPart() const { return floatToInt_round(_Kp * _i * _Ki); }
 	const __FlashStringHelper* name() const { return _maxOut == 150 ? F("PID US") : F("PID DS"); }
 #ifdef SIM_MIXV

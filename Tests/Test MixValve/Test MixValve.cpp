@@ -536,7 +536,8 @@ bool changeParams(TestTemps& testTemps, TestMixV& testMV) {
 
 void runOneTemp(TestTemps& testTemps, Mix_Valve& mv, PID_Controller& pid) {
 	auto flowTemp = mv.update(pid.currOut());
-	pid.adjust(flowTemp, mv.vPos());
+	pid.checkSetpoint(mv.currReqTemp_16());
+	pid.adjust(flowTemp, mv.atTarget());
 	//testMV.setVPos(0, newPos); // instant move!
 	// record results
 	appendData(mv, pid);
@@ -549,7 +550,6 @@ void run_n_Temps(int noToRun, TestTemps& testTemps, Mix_Valve& mv, PID_Controlle
 	testTemps.restart_cycle();
 	do {
 		mv.registerReqTemp(currTempReq);
-		pid.changeSetpoint(currTempReq * 256);
 		mv.setTestTime();
 		do {
 			runOneTemp(testTemps, mv, pid);
@@ -754,8 +754,8 @@ TEST_CASE("DualMV_PID_change_params", "[MixValve]") {
 	TestMixV testMV{};
 	auto& mv0 = testMV.mv(0);
 	auto& mv1 = testMV.mv(1);
-	PID_Controller pid0{0,140, 25*256, 256/16,256};
-	PID_Controller pid1{0,140, 25*256, 256/16,256};
+	PID_Controller pid0{0,150, 25*256, 256/16,256};
+	PID_Controller pid1{0,150, 25*256, 256/16,256};
 	TestTemps testTemps0;
 	TestTemps testTemps1;
 	clearVectors();

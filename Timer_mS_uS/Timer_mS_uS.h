@@ -26,7 +26,7 @@ using namespace arduino_logger;
 		// Queries
 		operator bool() const { return int32_t(micros() - _startTime) >= _period; }
 		int32_t timeLeft() const { return _period - timeUsed(); }
-		uint32_t timeUsed() const { return micros() - _startTime; }
+		int32_t timeUsed() const { return micros() - _startTime; } // future start-proof
 		int32_t period() const { return _period; }
 		// Modifiers
 		void set_uS(int32_t period_uS) { _period = period_uS; }
@@ -56,7 +56,7 @@ using namespace arduino_logger;
 			return _timer_uS; 
 		}
 		int32_t timeLeft() const { return _timer_uS.timeLeft() / 1000; }
-		uint32_t timeUsed() const { return _timer_uS.timeUsed() / 1000; }
+		int32_t timeUsed() const { return _timer_uS.timeUsed() / 1000; }
 		int32_t period() const { return _timer_uS.period() / 1000; }
 		// Modifiers
 		void set_mS(int32_t period_mS) { _timer_uS.set_uS(period_mS * 1000); }
