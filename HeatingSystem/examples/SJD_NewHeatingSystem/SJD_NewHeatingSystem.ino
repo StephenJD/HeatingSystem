@@ -168,6 +168,8 @@ void setup() {
 		//logger().begin(SERIAL_RATE);
 		zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 		profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
+		profileLogger() << "Time\tZone\tReq\tIs\tPID\tState\tPos\tPSU_Max\tPSU_OFFMax\tPSU_Min\tPSU_OFF_Min\n";
+
 		//logger() << F("RamFileAddr: ") << (unsigned long)static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
 		reset_watchdog();
 		logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;

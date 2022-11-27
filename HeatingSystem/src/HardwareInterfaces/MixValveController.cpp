@@ -132,15 +132,15 @@ namespace HardwareInterfaces {
 		if (logThis || _previous_valveStatus[valveIndex] != algorithmMode /*|| algorithmMode < Mix_Valve::e_Checking*/ ) {
 			reEnable(true);
 			_previous_valveStatus[valveIndex] = algorithmMode;
-			int psuMinV = reg.get(Mix_Valve::R_PSU_MIN_V) + 800;
+			int psuMinV = reg.get(Mix_Valve::R_PSU_MIN_V) * 4;
 			int psuMaxV = reg.get(Mix_Valve::R_PSU_MAX_V) + 800;
-			int psuMinOffV = reg.get(Mix_Valve::R_PSU_MIN_OFF_V) + 800;
+			int psuMinOffV = reg.get(Mix_Valve::R_PSU_MIN_OFF_V) * 4;
 			int psuMaxOffV = reg.get(Mix_Valve::R_PSU_MAX_OFF_V) + 800;
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
-				<< showState() << reg.get(Mix_Valve::R_VALVE_POS)
 				<< showPID_State()
-				<< psuMinV << psuMaxV << psuMinOffV << psuMaxOffV << L_endl;
+				<< showState() << reg.get(Mix_Valve::R_VALVE_POS)
+				<< psuMaxV << psuMaxOffV << psuMinV << psuMinOffV << L_endl;
 		}
 //#endif
 		return true;

@@ -104,7 +104,7 @@ void printFileHeadings() {
 		<< F("ControlledBy")
 		<< F("IsOn")
 		<< L_endl;
-	profileLogger() << "Time\tZone\tReq\tIs\tState\tPos\tPID\tPSU_Min\tMax\tPSU_OFF_Min\tMax\n";
+	profileLogger() << "Time\tZone\tReq\tIs\tPID\tState\tPos\tPSU_Max\tPSU_OFFMax\tPSU_Min\tPSU_OFF_Min\n";
 }
 
 void flushLogs() {

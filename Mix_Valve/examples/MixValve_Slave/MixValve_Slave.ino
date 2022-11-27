@@ -105,8 +105,8 @@ i2c_registers::I_Registers& mixV_registers = mixV_register_set;
 
 Mix_Valve  mixValve_US{ i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0 };
 Mix_Valve  mixValve_DS{ i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE };
-PID_Controller pid_US{ 0,150, 25 * 256, 256 / 16,256 };
-PID_Controller pid_DS{ 0,140, 25 * 256, 256 / 16,256 };
+PID_Controller pid_US{ 0,150, 25 * 256, 256 / 2,256 };
+PID_Controller pid_DS{ 0,140, 25 * 256, 256 / 2,256 };
 
 auto nextSecond = Timer_mS(1000);
 

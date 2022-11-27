@@ -212,8 +212,8 @@ void PID_Controller::log() const {
     };
     logger() << name() << L_tabs << F("Set:") << _setPoint/256.f 
         << F("Err is:") << _err_past.last() / 256.f 
-        << F("Out:") << _output 
-        << F("p,i,d is:") << _p << integralPart() << _d 
+        << F("Out:") << (int)_output
+        << F("p,i,d is:") << (int)_p << integralPart() << _d
         << F("Mode:") << showState()
         << F("Kp/deg:") << _Kp * 256.f
         << F("Kd:") << _Kd;
