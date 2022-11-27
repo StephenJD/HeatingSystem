@@ -34,6 +34,8 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 	// 4v ripple. 3.3v when PSU off, 17-19v when motors off, 16v motor-on
 	// Analogue val = 856-868 PSU on. 920-932 when off.
 	// Detect peak voltage during cycle
+	auto timeout = Timer_mS(period_mS);
+
 	auto psuMaxV = 0;
 	int noOfCycles = 4;
 	auto checkAgain = noOfCycles;
@@ -49,7 +51,7 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 			psuMaxV = thisMaxV;
 			checkAgain = noOfCycles;
 		}
-	} while (checkAgain > 0);
+	} while (!timeout && checkAgain > 0);
 #ifdef ZPSIM
 	if (_motorDirection == e_Stop || _valvePos < 5 || _valvePos >= VALVE_TRANSIT_TIME) psuMaxV = 980;
 	else psuMaxV =  860;
@@ -427,6 +429,7 @@ bool Mix_Valve::valveIsAtLimit() {
 		return false;
 
 	auto isOff = [this]() {
+		if (digitalRead(LED_BUILTIN)) return false;
 		auto psuV = 0;
 		int offCount = 5;
 		do {
