@@ -26,7 +26,7 @@ extern const uint8_t version_day;
 constexpr int PSU_V_PIN = A3;
 Mix_Valve * Mix_Valve::motor_mutex = 0;
 int16_t Mix_Valve::_motorsOffV = 1024;
-int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.03);
+int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.06);
 
 bool Mix_Valve::motor_queued;
 
@@ -331,7 +331,7 @@ bool Mix_Valve::activateMotor_isMoving() {
 		auto newOffV = measurePSUVoltage(100);
 		if (newOffV) {
 			_motorsOffV = newOffV;
-			_motors_off_diff_V = uint16_t(_motorsOffV * 0.03);
+			_motors_off_diff_V = uint16_t(_motorsOffV * 0.06);
 			//logger() << F("New OFF-V: ") << _motorsOffV << L_endl;
 		}
 	};
@@ -428,7 +428,7 @@ bool Mix_Valve::valveIsAtLimit() {
 	if (!_heat_relay->logicalState() && !_cool_relay->logicalState())
 		return false;
 
-	auto isOff = [this]() {
+	auto isOff = [this]() -> bool {
 		if (digitalRead(LED_BUILTIN)) return false;
 		auto psuV = 0;
 		int offCount = 5;
