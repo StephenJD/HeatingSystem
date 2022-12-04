@@ -17,6 +17,7 @@
 
 #include <TempSensor.h>
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
+#include <PinObject.h>
 #include <Arduino.h>
 #include <EEPROM_RE.h>
 #include <I2C_Registers.h>
@@ -27,12 +28,39 @@ constexpr int MAX_VALVE_TIME = 150;
 
 extern i2c_registers::I_Registers& mixV_registers;
 
-namespace HardwareInterfaces {
-	class Pin_Wag;
-}
 namespace I2C_Recovery {
 	class I2C_Recover;
 }
+
+class PowerSupply;
+extern PowerSupply psu;
+
+class Motor {
+public:
+	enum Direction { e_Cooling = -1, e_Stop, e_Heating };
+	Motor(HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay);
+	Direction direction() const { return _motion; }
+	uint8_t heatPort() const { return _heat_relay->port(); }
+	uint8_t curr_pos() const { return uint8_t(_pos); };
+
+	const __FlashStringHelper* name() const { 
+		return _heat_relay->port() == 11 ? F("US ") : F("DS "); 
+		//return F("US "); 
+	}
+	uint8_t pos(PowerSupply& pwr);
+	bool moving(Direction direction, PowerSupply& pwr);
+	void start(Direction direction);
+	void stop(PowerSupply& pwr);
+
+	void setPosToZero() { _pos = 0; }
+	void setPos(int pos) { 
+		_pos = pos; }
+private:
+	HardwareInterfaces::Pin_Wag* _heat_relay = nullptr;
+	HardwareInterfaces::Pin_Wag* _cool_relay = nullptr;
+	mutable int16_t _pos = HardwareInterfaces::VALVE_TRANSIT_TIME / 2;
+	Direction _motion = e_Stop;
+};
 
 class Mix_Valve
 {
@@ -80,9 +108,8 @@ public:
 
 	enum Mode {
 		e_Moving, e_WaitingToMove, e_ValveOff, e_AtTargetPosition, e_FindingOff, e_HotLimit
-		/*These are temporary triggers */, e_findOff, e_swapMutex, e_reachedLimit, e_Error
+		/*These are temporary triggers */, e_findOff, e_reachedLimit, e_Error
 	};
-	enum MotorDirection { e_Cooling = -1, e_Stop, e_Heating };
 	enum { PSUV_DIVISOR = 5 };
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
 	using I2C_Flags_Ref = flag_enum::FE_Ref<MV_Device_State, _NO_OF_FLAGS>;
@@ -97,7 +124,6 @@ public:
 	const __FlashStringHelper* name() const;
 	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
 	Mode mode() const {	return Mode(registers().get(R_MODE)); }
-	bool atTarget() const { return _valvePos == _endPos; }
 	void log() const;
 	// Modifiers
 	uint16_t update(int newPos);
@@ -106,11 +132,13 @@ public:
 	uint16_t currReqTemp_16() const;
 	void setRegister(uint8_t regNo, uint8_t val) { registers().set(regNo, val); }
 #ifdef SIM_MIXV
+	bool atTarget() { return _motor.curr_pos() == _endPos; }
+	uint8_t pos() { return _motor.pos(psu); }
+	uint8_t curr_pos() const { return _motor.curr_pos(); }
 	static constexpr uint8_t ROOM_TEMP = 20;
-	int16_t finalTempForPosition() const { 
-		return int16_t((256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _valvePos / float(MAX_VALVE_TIME))) +.5f); }
+	int16_t finalTempForPosition() { 
+		return int16_t((256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _motor.pos(psu) / float(MAX_VALVE_TIME))) + .5f); }
 	int16_t flowTemp() const { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
-	int16_t vPos() const {	return _valvePos; }
 	float get_Kp() const { return MAX_VALVE_TIME / ((_maxTemp - ROOM_TEMP) * 256.f); }
 	uint16_t get_TC() const { return _timeConst; }
 	uint8_t get_delay() const { return _delay; }
@@ -118,6 +146,7 @@ public:
 	bool waitToSettle() { return _timeAtOneTemp > 0; }
 	// Modifiers
 	void set_maxTemp(uint8_t max) { _maxTemp = max; }
+	void setPos(int pos) { _motor.setPos(pos); }
 	void setDelay(int delay) { _delay = delay; }
 	void setTC(int tc) { _timeConst = tc; }
 	void setTestTime() { _timeAtOneTemp = (get_TC() + get_delay()) * 20; }
@@ -126,9 +155,9 @@ public:
 	void setIsTemp(uint8_t temp);
 	void registerReqTemp(int temp) {
 		registers().set(Mix_Valve::R_REQUEST_FLOW_TEMP, temp);
-		update(_valvePos);
+		update(_motor.curr_pos());
 		registers().set(Mix_Valve::R_REQUEST_FLOW_TEMP, temp);
-		update(_valvePos);
+		update(_motor.curr_pos());
 	}
 #endif
 private:
@@ -137,17 +166,14 @@ public:
 #endif
 	// Loop Functions
 	uint16_t stateMachine(int newPos); // returns flow-temp
-	// Continuation Functions
-	bool continueMove();
 	// Transition Functions
 	void stopMotor();
-	bool activateMotor_isMoving(); // Return true if is moving
+	void get_PSU_OffV();
 	void turnValveOff();
-	// Adjustment Functions
 	// New Temp Request Functions
 	bool checkForNewReqTemp();
 	// Non-Algorithmic Functions
-	void setDirection() { _motorDirection = _endPos > _valvePos ? e_Heating : _endPos < _valvePos ? e_Cooling : e_Stop;	}
+	void setDirection() { _journey = _endPos > _motor.curr_pos() ? Motor::e_Heating : _endPos < _motor.curr_pos() ? Motor::e_Cooling : Motor::e_Stop;	}
 	bool valveIsAtLimit();
 	void saveToEEPROM();
 	uint16_t getSensorTemp_16();
@@ -158,27 +184,21 @@ public:
 	uint8_t _regOffset;
 
 	// Injected dependancies
-	HardwareInterfaces::Pin_Wag* _heat_relay;
-	HardwareInterfaces::Pin_Wag* _cool_relay;
+	Motor _motor;
+	Motor::Direction _journey = Motor::e_Stop;
 	EEPROMClass* _ep;
 
 	// Algorithm Data
 	int16_t _endPos = 0;
 
 	// State data
-	int16_t _valvePos = HardwareInterfaces::VALVE_TRANSIT_TIME/2;
-	MotorDirection _motorDirection = e_Stop;
-
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	
-	static constexpr uint8_t MUTEX_LIFETIME = 10;
 	static constexpr float ON_OFF_RATIO = .06f;
 	static constexpr int NO_OF_EQUAL_PSU_CYCLES = 4;
-	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
-	static uint8_t mutex_lifetime;
 	int16_t _motorsOffV = 970;
-	int16_t _motors_off_diff_V = _motorsOffV * ON_OFF_RATIO;
+	int16_t _motors_off_diff_V = int16_t(_motorsOffV * ON_OFF_RATIO);
 
 #ifdef SIM_MIXV
 	uint16_t _timeConst = 0;
@@ -188,4 +208,110 @@ public:
 	uint8_t _maxTemp;
 	int _timeAtOneTemp;
 #endif
+};
+
+class PowerSupply {
+public:
+	enum { e_PSU = 6, e_Slave_Sense = 7 };
+	void begin() {
+		_psu_enable.begin(true);
+		_key_requester = nullptr;
+		_key_owner = nullptr;
+	}
+
+	void setOn(bool on) {
+		if (on) _psu_enable.set();
+		else if (!_keep_psu_on) _psu_enable.clear();
+	}
+
+	bool available(const void* requester) { // may be called repeatedly.
+		if (_key_requester == nullptr && requester != _key_owner) {
+			_key_requester = requester;
+		} 
+		if (_key_owner == nullptr) {
+			grantKey();
+		}
+		return (requester == _key_owner);
+	}
+
+	bool requstToRelinquish() {	return _key_time < 0; }
+
+	void relinquishPower() {
+		if (_key_owner) {
+			logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs
+				<< F("relinquishPower at") << static_cast<const Motor*>(_key_owner)->curr_pos() << F("Time:") << millis() << L_endl;
+		}
+		_key_owner = nullptr;
+		if (_key_requester != nullptr && !_keep_psu_on) _psu_enable.clear();
+	}
+
+	int powerPeriod() {
+		//logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs << F("Last OnTime:") << _onTime_uS << L_endl;
+#ifdef SIM_MIXV
+		auto power_period = int(_onTime_uS);
+		if (_doStep) _onTime_uS = 0;
+		else power_period = secondsSinceLastCheck(_onTime_uS);
+#else
+		auto power_period = secondsSinceLastCheck(_onTime_uS);
+#endif
+		if (power_period) {
+			if (_key_time >= power_period) {
+				_key_time -= power_period;
+			}
+			else if (_key_time > 0) { // key not being stolen
+				_key_time = 0;
+			}
+			if (_key_requester != nullptr && _key_time == 0) {
+				_key_time = -1;
+				logger() << static_cast<const Motor*>(_key_owner)->name()
+					<< L_tabs << F("giving way to")
+					<< static_cast<const Motor*>(_key_requester)->name() 
+					<< F("Time:") << millis() << L_endl;
+			}
+		}
+		return power_period;
+	}
+
+	void keepPSU_on(bool keepOn = true) {
+		_keep_psu_on = keepOn;
+		_psu_enable.set(keepOn);
+	}
+#ifdef SIM_MIXV
+	void moveOn1Sec() {if (_doStep) ++_onTime_uS; }
+	void doStep(bool step) {
+		_doStep = step;
+		if (_doStep) _onTime_uS = 0;
+		else _onTime_uS = micros();
+	}
+	void showState() const {
+		logger() << "Owner:" << L_tabs << long(_key_owner) << "Requester:" << long(_key_requester) << "Keytime:" << int(_key_time) << L_endl;
+	}
+private:
+	bool _doStep = false;
+#endif
+private:
+	bool grantKey() {
+		_key_owner = _key_requester;
+		_key_requester = nullptr;
+		if (_key_owner) {
+			_key_time = KEY_TIME;
+			_onTime_uS = micros();
+#ifdef SIM_MIXV
+			if (_doStep) _onTime_uS = 0;
+#endif
+			_psu_enable.set();
+			logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs
+				<< F("granted key at Time:") << millis() << L_endl;
+			return true;
+		}
+		return false;
+	}
+
+	static constexpr int8_t KEY_TIME = 10;
+	const void* _key_owner = nullptr;
+	const void* _key_requester = nullptr;
+	uint32_t _onTime_uS = micros();
+	HardwareInterfaces::Pin_Wag _psu_enable{ e_PSU, LOW, true };
+	int8_t _key_time = 0;
+	bool _keep_psu_on = true;
 };

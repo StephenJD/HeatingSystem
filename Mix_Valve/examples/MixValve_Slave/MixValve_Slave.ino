@@ -65,7 +65,6 @@ const uint8_t version_month = 11; // change to force re-application of defaults 
 const uint8_t version_day = 24;
 
 enum { e_PSU = 6, e_Slave_Sense = 7 };
-enum { us_mix, ds_mix };
 
 enum { e_US_Heat = 11, e_US_Cool = 10, e_DS_Heat = 12, e_DS_Cool = A0, e_Status = 13 };
 
@@ -90,8 +89,6 @@ auto us_coolRelay = Pin_Wag(e_US_Cool, HIGH);
 auto ds_heatRelay = Pin_Wag(e_DS_Heat, HIGH);
 auto ds_coolRelay = Pin_Wag(e_DS_Cool, HIGH);
 
-auto psu_enable = Pin_Wag(e_PSU, LOW, true);
-
 auto led_Status = Pin_Wag(e_Status, HIGH);
 auto led_US_Heat = Pin_Wag(e_US_Heat, HIGH);
 auto led_US_Cool = Pin_Wag(e_US_Cool, HIGH);
@@ -102,7 +99,7 @@ auto led_DS_Cool = Pin_Wag(e_DS_Cool, HIGH);
 // All I2C transfers are initiated by Master
 auto mixV_register_set = i2c_registers::Registers<Mix_Valve::MV_ALL_REG_SIZE * NO_OF_MIXERS>{i2C()};
 i2c_registers::I_Registers& mixV_registers = mixV_register_set;
-
+PowerSupply psu;
 Mix_Valve  mixValve_US{ i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0 };
 Mix_Valve  mixValve_DS{ i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE };
 PID_Controller pid_US{ 0,150, 25 * 256, 256 / 2,256 };
@@ -114,7 +111,7 @@ void setup() {
 	set_watchdog_timeout_mS(8000);
 	logger().begin(SERIAL_RATE);
 	logger() << F("Setup Started") << L_flush;
-	psu_enable.begin(true);
+	psu.begin();
 	role = e_Master; // prevent PSU-Turn-off
 
 	i2C().setAsMaster(MIX_VALVE_I2C_ADDR);
@@ -183,15 +180,15 @@ void loop() {
 	} else showErr(err);
 }
 
-bool relaysOn() {
-	return psu_enable.logicalState();
-}
+//bool relaysOn() {
+//	return psu_enable.logicalState();
+//}
 
-void enableRelays(bool enable) { // called by MixValve.cpp
-	if (role == e_Slave) {
-		psu_enable.set(enable);
-	}
-}
+//void enableRelays(bool enable) { // called by MixValve.cpp
+//	if (role == e_Slave) {
+//		psu_enable.set(enable);
+//	}
+//}
 
 Role getRole() {
 	return digitalRead(e_Slave_Sense) ? e_Slave : e_Master;
@@ -199,14 +196,14 @@ Role getRole() {
 
 void roleChanged(Role newRole) {
 	if (e_Slave == newRole) {
-		psu_enable.clear();
+		psu.keepPSU_on(false);
 		for (int i = 0; i < 10; ++i) {
 			if (programmer.write(R_SLAVE_REQUESTING_INITIALISATION, MV_REQUESTING_INI) == _OK) break;
 		} 
 		logger() << F("Set to Slave") << L_endl;
 	}
 	else { // changed to Master
-		psu_enable.set();
+		psu.keepPSU_on(true);
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
 		mixValve_US.setDefaultRequestTemp();
 		mixValve_DS.setDefaultRequestTemp();

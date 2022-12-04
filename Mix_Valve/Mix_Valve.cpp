@@ -20,21 +20,93 @@ using namespace I2C_Recovery;
 using namespace I2C_Talk_ErrorCodes;
 using namespace flag_enum;
 
-void enableRelays(bool enable); // this function must be defined elsewhere
-bool relaysOn(); // this function must be defined elsewhere
 extern bool receivingNewData;
 extern const uint8_t version_month;
 extern const uint8_t version_day;
 
 constexpr int PSU_V_PIN = A3;
-Mix_Valve* Mix_Valve::motor_mutex = 0;
-uint8_t Mix_Valve::mutex_lifetime;
-// PID Functions
+// Motor Functions
+
+Motor::Motor(HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay) 
+	: _heat_relay(&_heat_relay), _cool_relay(&_cool_relay) 
+{
+	_heat_relay.begin();
+	_cool_relay.begin();
+};
+
+uint8_t Motor::pos(PowerSupply& pwr) {
+	if (_motion != e_Stop) {
+		auto moveTime = pwr.powerPeriod();
+		if (moveTime) {
+			_pos += moveTime * _motion;
+			if (_pos < 0) {
+				_pos = 0;
+			}
+			else if (_pos > 254) {
+				_pos = 254;
+			}
+			logger() << (heatPort() == 11 ? F("US") : F("DS")) << L_tabs << _pos << F("Time:") << millis() << L_endl;
+			if (pwr.requstToRelinquish()) 
+				stop(pwr);
+		}
+	}
+	return uint8_t(_pos);
+}
+
+bool Motor::moving(Direction direction, PowerSupply& pwr) {
+	//if (psu.available(this)) {
+	if (_motion == e_Stop) {
+		if (direction != e_Stop) {
+			if (psu.available(this)) {
+				start(direction);
+				return true;
+			}
+		}
+		return false;
+	} else { // motor moving
+		if (direction == e_Stop) {
+			stop(pwr);
+			return false;
+		} else if (direction != _motion) { // change of direction
+			start(direction);
+		}
+		pos(pwr);
+		return _motion != e_Stop;
+	}
+}
+
+void Motor::start(Direction direction) {
+	logger() << name() << L_tabs
+		<< F("starting at") << millis() << L_endl;
+	_motion = direction;
+	if (_motion == e_Heating && _heat_relay->logicalState() == false) {
+		_cool_relay->clear(); _heat_relay->set();
+	}
+	else if (_motion == e_Cooling && _cool_relay->logicalState() == false) {
+		_heat_relay->clear(); _cool_relay->set();
+	}
+}
+
+void Motor::stop(PowerSupply& pwr) {
+	if (_motion != e_Stop) {
+		pos(pwr);
+		_cool_relay->clear(); _heat_relay->clear();
+		_motion = e_Stop;
+		pwr.relinquishPower();
+		logger() << name() << L_tabs
+			<< F("Stopping at") << millis() << L_endl;
+	}
+}
+
+// Mix_Valve Functions
 
 uint16_t Mix_Valve::update(int newPos) {
 #ifdef SIM_MIXV
 	addTempToDelayIntegral();
 	setFlowTempReg();
+	if (_motor.heatPort() == 11) {
+		psu.moveOn1Sec();
+	}
 #endif
 	return stateMachine(newPos);
 }
@@ -51,21 +123,10 @@ uint16_t Mix_Valve::currReqTemp_16() const {
 uint16_t Mix_Valve::stateMachine(int newPos) {
 	// Gets new TempReq, finds OFF, stops at limit or moves towards requested posistion.
 	// Lambda
-	auto moveMode = [this]() {
-		if (motor_mutex == this) return e_Moving;
-		else if (motor_mutex == 0 || mutex_lifetime == 0) {
-			// Steal the mutex. Other valve may still had active relays
-			if (motor_mutex != 0) {
-				logger() << motor_mutex->name() << L_tabs << F("Start wait for Mutex") << L_endl;
-				motor_mutex->_cool_relay->set(false);
-				motor_mutex->_heat_relay->set(false);
-			}
-			motor_mutex = this;
-			mutex_lifetime = MUTEX_LIFETIME;
-			activateMotor_isMoving();
-			logger() << name() << L_tabs << F("On PSU:") << measurePSUVoltage(NO_OF_EQUAL_PSU_CYCLES) << L_endl;
+	auto tryToMove = [this]() {
+		if (_motor.moving(_journey, psu))
 			return e_Moving;
-		} else return e_WaitingToMove;
+		else return e_WaitingToMove;
 	};
 
 	//Algorithm
@@ -84,30 +145,26 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 		switch (mode) {
 		// Persistant Modes processed once each second
 		case e_Moving:
-			mode = moveMode();
-			if (mode != e_Moving) break;
-			{
-				auto keepGoing = continueMove();
-				if (valveIsAtLimit()) {
-					mode = e_reachedLimit;
-				}
-				else if (!keepGoing) {
-					stopMotor();
-					mode = e_AtTargetPosition;
-				}
+			mode = tryToMove();
+			if (mode == e_Moving && valveIsAtLimit()) {
+				mode = e_reachedLimit;
+			} else if (_motor.curr_pos() == _endPos) {
+				stopMotor();
+				mode = e_AtTargetPosition;
 			}
 			break;
 		case e_WaitingToMove: // was blocked by Mutex
-			mode = moveMode();
+			mode = tryToMove();
 			break;
 		case e_ValveOff:
-			if (isTooCool || _endPos != _valvePos) mode = moveMode();
+			if (isTooCool || _endPos != _motor.curr_pos()) 
+				mode = tryToMove();
 			break;
 		case e_AtTargetPosition:
 			break;
 		case e_FindingOff:
-			if (moveMode() == e_Moving) {
-				continueMove();
+			if (tryToMove() == e_Moving) {
+				//logger() << "Finding off\n";
 				if (valveIsAtLimit()) {
 					mode = e_reachedLimit;
 				}
@@ -116,30 +173,26 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 		case e_HotLimit:
 			if (!isTooCool) {
 				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL); // when flow temp increases due to gas boiler on.
-				mode = moveMode();
+				mode = tryToMove();
 			}
 			break;
 		// transitional modes, immediatly processed
 		case e_findOff:
 			turnValveOff();
-			activateMotor_isMoving();
+			tryToMove();
 			mode = e_FindingOff;
 			break;
 		case e_reachedLimit:
 			stopMotor();
-			if (_valvePos == 0) {
+			if (_motor.curr_pos() == 0) {
 				mode = e_ValveOff;
 				setDirection(); // ready to move to requested endpos.
 			}
 			else {
-				_endPos = _valvePos;
+				_endPos = _motor.curr_pos();
 				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_STORE_TOO_COOL);
 				mode = e_HotLimit;
 			}
-			break;
-		case e_swapMutex:
-			motor_mutex = 0;
-			mode = e_WaitingToMove;
 			break;
 		}
 	} while (mode >= e_findOff);
@@ -148,78 +201,46 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 		if (mode != e_FindingOff) {
 			setDirection();
 			if (mode >= e_ValveOff) /*2*/ {
-				if (mode >= e_AtTargetPosition) /*3*/ {
-					mode = moveMode();;
-				} else mode = e_WaitingToMove;
+				mode = tryToMove();;
 			}
 		}
 	}	
 	reg.set(R_MODE, mode);
-	//logger() << F("Mode:") << mode << L_endl;
-	return sensorTemp;
-}
+	reg.set(R_MOTOR_ACTIVITY, _motor.direction()); // Motor activity: e_Cooling, e_Stop, e_Heating
+	reg.set(R_VALVE_POS, _motor.curr_pos());
 
-// Continuation Functions
-bool Mix_Valve::continueMove() { // must be called just once per second
-	_valvePos += _motorDirection;
-	if (mutex_lifetime > 0) --mutex_lifetime;
-	if (_valvePos < 0) {
-		_valvePos = 0;
-	}
-	else if (_valvePos > 511) {
-		_valvePos = 511;
-	}
-	return _valvePos != _endPos;
+	//logger() << name() << L_tabs << F("Mode:") << mode << L_endl;
+	return sensorTemp;
 }
 
 // Transition Functions
 
 void Mix_Valve::stopMotor() {
-	_motorDirection = e_Stop;
-	motor_mutex = 0;
-	activateMotor_isMoving();
+	_motor.stop(psu);
+	_journey = Motor::e_Stop;
+	logger() << name() << L_tabs << "stopMotor\n";
+	get_PSU_OffV();
 }
 
-bool Mix_Valve::activateMotor_isMoving() {
-	// Lambda
-	auto getPSU_Off_V = [this]() {
-		enableRelays(true);
-		auto newOffV = measurePSUVoltage(NO_OF_EQUAL_PSU_CYCLES);
-		if (newOffV) {
-			_motorsOffV = newOffV;
-			_motors_off_diff_V = uint16_t(_motorsOffV * ON_OFF_RATIO);
-			auto reg = registers();
-			reg.set(R_PSU_MIN_OFF_V, reg.get(R_PSU_MIN_V));
-			reg.set(R_PSU_MAX_OFF_V, reg.get(R_PSU_MAX_V));
-			logger() << name() << L_tabs << F("New OFF-V:") << _motorsOffV << L_endl;
-		}
-	};
-	// Algorithm
-	auto isMoving = true;
-#ifdef SIM_MIXV
-	if (motor_mutex != this && motor_mutex != 0) {
-		if (motor_mutex->_cool_relay->logicalState() == true || motor_mutex->_heat_relay->logicalState() == true)
-			auto debug = false;
+void Mix_Valve::get_PSU_OffV() {
+	psu.setOn(true);
+	auto newOffV = measurePSUVoltage(NO_OF_EQUAL_PSU_CYCLES);
+	if (newOffV) {
+		_motorsOffV = newOffV;
+		_motors_off_diff_V = uint16_t(_motorsOffV * ON_OFF_RATIO);
+		auto reg = registers();
+		reg.set(R_PSU_MIN_OFF_V, reg.get(R_PSU_MIN_V));
+		reg.set(R_PSU_MAX_OFF_V, reg.get(R_PSU_MAX_V));
+		logger() << name() << L_tabs << F("New OFF-V:") << _motorsOffV << L_endl;
 	}
-#endif
-	_cool_relay->set(_motorDirection == e_Cooling); // turn Cool relay on/off
-	_heat_relay->set(_motorDirection == e_Heating); // turn Heat relay on/off
-	if (_motorDirection == e_Stop) {
-		getPSU_Off_V(); // turns PSU on
-		enableRelays(false);
-		isMoving = false;
-	}
-	else {
-		enableRelays(true);
-	}
-	return isMoving;
 }
 
 void Mix_Valve::turnValveOff() { // Move valve to cool to prevent gravity circulation
-	if (_valvePos == 0) _valvePos = 2;
-	_motorDirection = e_Cooling;
+	_journey = Motor::e_Cooling;
 	I2C_Flags_Ref(*registers().ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL);
-	logger() << name() << L_tabs << F("Turn Valve OFF:") << _valvePos << L_endl;
+	logger() << name() << L_tabs << F("Turn Valve OFF:") 
+		<< _motor.curr_pos() 
+		<< L_endl;
 }
 
 // New Temp Request Functions
@@ -248,7 +269,7 @@ bool Mix_Valve::checkForNewReqTemp() { // called every second
 // Non-Algorithmic Functions
 
 bool Mix_Valve::valveIsAtLimit() {
-	if (!_heat_relay->logicalState() && !_cool_relay->logicalState())
+	if (_motor.direction() == Motor::e_Stop)
 		return false;
 
 	auto isOff = [this]() {
@@ -269,13 +290,13 @@ bool Mix_Valve::valveIsAtLimit() {
 	};
 
 	if (isOff()) {
-		if (_motorDirection == e_Cooling) {
-			_valvePos = 0;
+		if (_journey == Motor::e_Cooling) {
+			_motor.setPosToZero();
 		}
 		else {
-			if (_valvePos > 140) {
-				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
-				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
+			if (_motor.curr_pos() > 140) {
+				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_motor.curr_pos() / 2));
+				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_motor.curr_pos() / 2));
 			}
 		}
 		return true;
@@ -286,8 +307,6 @@ bool Mix_Valve::valveIsAtLimit() {
 uint16_t Mix_Valve::getSensorTemp_16() {
 	// All I2C transfers are initiated by Programmer: Reading status and temps, sending new requests.
 	auto reg = registers();
-	reg.set(R_MOTOR_ACTIVITY, _motorDirection); // Motor activity: e_Cooling, e_Stop, e_Heating
-	reg.set(R_VALVE_POS, (uint8_t)_valvePos);
 	return reg.get(R_FLOW_TEMP) * 256 + reg.get(R_FLOW_TEMP_FRACT);
 }
 
@@ -325,11 +344,9 @@ int Mix_Valve::measurePSUVoltage(int noOfCycles) {
 	auto psuMaxV = 0;
 	auto psuMinV = 1024;
 #ifdef ZPSIM
-	if (_valvePos == VALVE_TRANSIT_TIME)
+	if (_motor.curr_pos() == VALVE_TRANSIT_TIME)
 		bool debug = false;
-	psuMaxV = _valvePos < 5 && _motorDirection == e_Cooling ? 980 : (_valvePos >= VALVE_TRANSIT_TIME && _motorDirection == e_Heating ? 
-		980 
-		: _motorsOffV - 2 * _motors_off_diff_V);
+	psuMaxV = _motor.curr_pos() < 5 && _journey == Motor::e_Cooling ? 980 : (_motor.curr_pos() >= VALVE_TRANSIT_TIME && _journey == Motor::e_Heating ? 980 : _motorsOffV - 2 * _motors_off_diff_V);
 	//psuMaxV = 80;
 #else
 	auto checkAgain = noOfCycles;
@@ -362,8 +379,7 @@ int Mix_Valve::measurePSUVoltage(int noOfCycles) {
 
 Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& heatRelay, Pin_Wag& coolRelay, EEPROMClass& ep, int reg_offset)
 	: _temp_sensr(i2C_recover, defaultTSaddr, 40),
-	_heat_relay(&heatRelay),
-	_cool_relay(&coolRelay),
+	_motor{ heatRelay,coolRelay },
 	_ep(&ep),
 	_regOffset(reg_offset)
 {
@@ -390,8 +406,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	}
 	reg.set(R_FLOW_TEMP, HardwareInterfaces::MIN_FLOW_TEMP);
 	reg.set(R_FLOW_TEMP_FRACT, 0);
-	reg.set(R_MODE, e_WaitingToMove);
-
+	_currReqTemp = defaultFlowTemp;
 	auto speedTest = I2C_SpeedTest(_temp_sensr);
 	speedTest.fastest();
 
@@ -407,7 +422,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 }
 
 const __FlashStringHelper* Mix_Valve::name() const {
-	return (_heat_relay->port() == 11 ? F("US ") : F("DS "));
+	return (_motor.heatPort() == 11 ? F("US ") : F("DS "));
 }
 
 void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
@@ -448,7 +463,7 @@ void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when m
 
 void Mix_Valve::log() const {
 		//e_Moving, e_WaitingToMove, e_ValveOff, e_AtTargetPosition, e_FindingOff, e_HotLimit
-		///*These are temporary triggers */, e_findOff, e_swapMutex, e_reachedLimit, e_Error
+		///*These are temporary triggers */, e_findOff, e_reachedLimit, e_Error
 
 	auto reg = registers();
 
@@ -457,8 +472,8 @@ void Mix_Valve::log() const {
 		switch (reg.get(Mix_Valve::R_MODE)) {
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
-			case Mix_Valve::e_Cooling: return F("Cl");
-			case Mix_Valve::e_Heating: return F("Ht");
+			case Motor::e_Cooling: return F("Cl");
+			case Motor::e_Heating: return F("Ht");
 			default: return F("Stp"); // Now stopped!
 			}
 		case Mix_Valve::e_WaitingToMove: return F("Mx");
@@ -471,15 +486,14 @@ void Mix_Valve::log() const {
 	};
 
 	logger() << name() << L_tabs << F("Req:") << _currReqTemp << F("Is:") << reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.
-		<< showState() << F(" ReqPos:") << _endPos << F(" IsPos:") << _valvePos;
+		<< showState() << F(" ReqPos:") << _endPos << F(" IsPos:") << _motor.curr_pos();
 }
 
 #ifdef SIM_MIXV
 Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& heatRelay, Pin_Wag& coolRelay, EEPROMClass& ep, int reg_offset
 	, uint16_t timeConst, uint8_t delay, uint8_t maxTemp)
 	: _temp_sensr(i2C_recover, defaultTSaddr, 40)
-	, _heat_relay(&heatRelay)
-	, _cool_relay(&coolRelay)
+	, _motor {heatRelay, coolRelay}
 	, _ep(&ep)
 	, _regOffset(reg_offset)
 	, _timeConst(timeConst)

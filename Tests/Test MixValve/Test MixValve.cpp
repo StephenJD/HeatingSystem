@@ -16,8 +16,6 @@
 #include <vector>
 #include <conio.h>
 
-bool relaysOn();
-
 char getKey() {
 	char c = _getch();
 	return c;
@@ -52,6 +50,7 @@ auto us_heatRelay = Pin_Wag(e_US_Heat, HIGH);
 auto us_coolRelay = Pin_Wag(e_US_Cool, HIGH);
 auto ds_heatRelay = Pin_Wag(e_DS_Heat, HIGH);
 auto ds_coolRelay = Pin_Wag(e_DS_Cool, HIGH);
+PowerSupply psu;
 
 class TestMixV {
 public:
@@ -59,9 +58,9 @@ public:
 	//uint8_t calcEndPos(int mixInd) { return mixValve[mixInd].calculatedEndPos(); }
 	float getFlowTemp(int mixInd) const { return mixValve[mixInd].flowTemp() / 256.f; }
 	uint8_t reqTemp(int mixInd) const { return  mixValve[mixInd]._currReqTemp; }
-	int vPos(int mixInd) const { return  mixValve[mixInd]._valvePos; }
+	int vPos(int mixInd) const { return  mixValve[mixInd].curr_pos(); }
 	int mode(int mixInd) const { return  mixValve[mixInd].registers().get(Mix_Valve::R_MODE); }
-	int direction(int mixInd) const {	return mixValve[mixInd]._motorDirection; }
+	int direction(int mixInd) const {	return mixValve[mixInd]._journey; }
 	uint8_t status(int mixInd) const { return  mixValve[mixInd].registers().get(Mix_Valve::R_DEVICE_STATE); }
 	uint16_t getTC(int mixInd) const {	return mixValve[mixInd].get_TC(); }
 	int getDelay(int mixInd) const { return mixValve[mixInd].get_delay(); }
@@ -69,7 +68,7 @@ public:
 	// modifiers
 	Mix_Valve& mv(int mixInd) { return mixValve[mixInd]; }
 	void setMaxTemp(int mixInd, int max) { mixValve[mixInd].set_maxTemp(max); }
-	void setVPos(int mixInd, int vpos) { mixValve[mixInd]._valvePos = vpos; }
+	void setVPos(int mixInd, int vpos) { mixValve[mixInd].setPos(vpos); }
 	void setMode(int mixInd, Mix_Valve::Mode mode) { mixValve[mixInd].registers().set(Mix_Valve::R_MODE, mode); }
 	void setReqTemp(int mixInd, int temp) { mixValve[mixInd].registers().set(Mix_Valve::R_REQUEST_FLOW_TEMP, temp); }
 	void setIsTemp(int mixInd, int temp) { mixValve[mixInd].setIsTemp(temp); }
@@ -104,10 +103,11 @@ TestMixV::TestMixV() : mixValve{
 		{i2c_recover, US_FLOW_TEMPSENS_ADDR, us_heatRelay, us_coolRelay, eeprom(), 0,TS_TIME_CONST, TS_DELAY, 70}
 	  , {i2c_recover, DS_FLOW_TEMPSENS_ADDR, ds_heatRelay, ds_coolRelay, eeprom(), Mix_Valve::MV_ALL_REG_SIZE, TS_TIME_CONST, TS_DELAY, 40}
 } {
-	Mix_Valve::motor_mutex = 0;
-	//Mix_Valve::motor_queued = false;
-	mixValve[0].begin(55); // does speed-test for TS
-	mixValve[1].begin(55);
+	psu.begin();
+	mixValve[0].begin(26); // does speed-test for TS
+	mixValve[1].begin(26);
+	//registerReqTemp(0, 26);
+	//registerReqTemp(1, 26);
 }
 
 class TestTemps {
@@ -163,9 +163,17 @@ TEST_CASE("Find Off", "[MixValve]") {
 	TestMixV testMV;
 	testMV.setVPos(0, 30);
 	testMV.setVPos(1, 30);
+	//Timer_mS delay_ms(500);
+	psu.doStep(false);
+	psu.doStep(true);
+	Timer_mS delay_ms(1);
 	do {
 		testMV.update(0,35);
+		while(!delay_ms);
+		delay_ms.repeat();
 		testMV.update(1,35);
+		while(!delay_ms);
+		delay_ms.repeat();
 	} while (testMV.mode(0) == Mix_Valve::e_FindingOff);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
@@ -175,11 +183,15 @@ TEST_CASE("Find Off", "[MixValve]") {
 	} while (testMV.mode(1) == Mix_Valve::e_FindingOff);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.vPos(1) == 0);
+	psu.showState();
 }
 
-TEST_CASE("ChangeDirrection", "[MixValve]") {
+TEST_CASE("ChangeDirection", "[MixValve]") {
 	TestMixV testMV;
+	psu.begin();
+	psu.doStep(true);
 	testMV.readyToMove(0);
+	testMV.update(0, 10); // start moving
 	do {
 		testMV.update(0, 10); // start moving
 	} while (testMV.vPos(0) != 8);
@@ -195,19 +207,25 @@ TEST_CASE("ChangeDirrection", "[MixValve]") {
 
 TEST_CASE("Move1", "[MixValve]") {
 	TestMixV testMV;
+	psu.doStep(true);
 	testMV.setVPos(0, 0);
 	testMV.setVPos(1, 0);
-	testMV.update(0, 0);
+	testMV.update(0, 0); // Off. stopped and relinqished power
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
-	CHECK(testMV.mode(1) == Mix_Valve::e_FindingOff);
-	testMV.update(1, 0);
+	testMV.update(1, 0); // Off. stopped and relinqished power
 	CHECK(testMV.mode(1) == Mix_Valve::e_ValveOff);
 	// Change vpos request
+	logger() << "Move1 US move to 1" << L_endl;
 	testMV.update(0, 1); // start moving
+	testMV.update(1, 1); // wait
 	testMV.update(0, 1); // get there
-	testMV.update(1, 1); // obtain mutex / start moving
-	testMV.update(1, 1); // get there
+	logger() << "Move1 US move at 1" << L_endl;
 	CHECK(testMV.vPos(0) == 1);
+	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
+	CHECK(testMV.vPos(1) == 0);
+	testMV.update(1, 1); // obtain mutex / start moving
+	testMV.update(0, 1); // step-time
+	testMV.update(1, 1); // get there
 	CHECK(testMV.vPos(1) == 1);
 	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
 	CHECK(testMV.mode(1) == Mix_Valve::e_AtTargetPosition);
@@ -219,6 +237,7 @@ TEST_CASE("Move1", "[MixValve]") {
 	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
 	testMV.update(1, 2); // obtain mutex / start moving
 	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
+	testMV.update(0, 2); // step-time
 	testMV.update(1, 2); // get there
 	CHECK(testMV.vPos(0) == 2);
 	CHECK(testMV.vPos(1) == 2);
@@ -228,21 +247,22 @@ TEST_CASE("Move1", "[MixValve]") {
 
 TEST_CASE("MutexSwap", "[MixValve]") {
 	TestMixV testMV;
+	psu.doStep(true);
 	testMV.setVPos(0, 0);
 	testMV.setVPos(1, 0);
-	testMV.update(0, 35); // e_FindingOff -> e_WaitingToMove
-	testMV.update(1, 0); // e_FindingOff -> e_ValveOff
+	testMV.update(0, 35); // Off. stopped and relinqished power
+	testMV.update(1, 0);  // Off. stopped and relinqished power
 	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
 	CHECK(testMV.mode(1) == Mix_Valve::e_ValveOff);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.vPos(1) == 0);
-	CHECK(relaysOn() == false);
 	// [0] Starts with Move
-	testMV.update(0, 5); // -> e_Moving
+	testMV.update(0, 5); // Start -> e_Moving
 	testMV.update(1, 35); // -> e_WaitingToMove
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.vPos(1) == 0);
-	CHECK(relaysOn() == true);
 	do {
 		testMV.update(0, 5);
 		testMV.update(1, 35);
@@ -252,8 +272,7 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	CHECK(testMV.vPos(1) == 0);
 	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
-	CHECK(relaysOn() == true);
-	
+	logger() << "Move[1] from 0 to 9\n";
 	do {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
@@ -261,19 +280,17 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	//testMV.update(0, 35);
 	CHECK(testMV.vPos(0) == 5);
 	CHECK(testMV.vPos(1) == 10);
-	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
 	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
-	CHECK(relaysOn() == true);
 
 	do {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
 	} while (testMV.mode(0) == Mix_Valve::e_Moving);
 	CHECK(testMV.vPos(0) == 15);
-	CHECK(testMV.vPos(1) == 11);
+	CHECK(testMV.vPos(1) == 10);
 	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
-	CHECK(relaysOn() == true);
 
 	do {
 		testMV.update(0, 35);
@@ -281,9 +298,8 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	} while (testMV.mode(1) == Mix_Valve::e_Moving);
 	CHECK(testMV.vPos(0) == 15);
 	CHECK(testMV.vPos(1) == 20);
-	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
 	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
-	CHECK(relaysOn() == true);
 
 	do {
 		testMV.update(0, 35);
@@ -292,25 +308,26 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 
 	CHECK(testMV.vPos(0) == 35);
 	CHECK(testMV.vPos(1) == 30);
-	CHECK(relaysOn() == true);
 	do {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
 	} while (testMV.mode(1) != Mix_Valve::e_AtTargetPosition);
 	CHECK(testMV.vPos(0) == 35);
 	CHECK(testMV.vPos(1) == 35);
-	CHECK(relaysOn() == false);
 }
 
 TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve]") {
 	// e_AtTargetPosition, e_Moving, e_WaitingToMove, e_HotLimit, e_ValveOff, e_FindingOff, e_WaitToCool
+	logger() << "\nRetainMutexAfterOtherValveStopped\n";
 	TestMixV testMV;
+	psu.doStep(true);
 	// Move [0] -> 10
 	testMV.setVPos(0, 0);
 	testMV.setVPos(1, 0);
+	testMV.update(1, 5); // Off. stopped and relinqished power
 	do {
-		testMV.update(0, 35);
-		testMV.update(1, 5);
+		testMV.update(0, 35); // Off. So move.
+		testMV.update(1, 5); // wait
 	} while (testMV.vPos(0) < 10);
 
 	CHECK(testMV.vPos(1) == 0);
@@ -333,6 +350,8 @@ TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve]") {
 
 TEST_CASE("FindOff", "[MixValve]") {
 	TestMixV testMV;
+	psu.begin();
+	psu.doStep(true);
 	testMV.setVPos(0, 10);
 	testMV.update(0, 35);
 	CHECK(testMV.mode(0) == Mix_Valve::e_FindingOff);
@@ -348,13 +367,16 @@ TEST_CASE("FindOff", "[MixValve]") {
 	// Interrupt move with low-temp request
 	do {
 		testMV.update(0, 35);
-		if (testMV.vPos(0) > 10) testMV.setReqTemp(0, 25); // move off
+		if (testMV.vPos(0) > 10) 
+			testMV.setReqTemp(0, 25); // move off
 	} while (testMV.mode(0) != Mix_Valve::e_FindingOff);
-	CHECK(testMV.vPos(0) == 12);
+	CHECK(testMV.vPos(0) == 11);
 }
 
 TEST_CASE("Limit on Heat then OK", "[MixValve]") {
 	TestMixV testMV;
+	psu.begin();
+	psu.doStep(true);
 	testMV.setVPos(0,0);
 	testMV.setIsTemp(0, 40);
 	testMV.setMaxTemp(0, 50);
@@ -445,7 +467,7 @@ void clearVectors() {
 
 void appendData(Mix_Valve& mv, PID_Controller& pid) {
 	reqPos.push_back(pid.currOut());
-	isPos.push_back(mv._valvePos);
+	isPos.push_back(mv.pos());
 	reqTemp.push_back(mv._currReqTemp);
 	isTemp.push_back(mv.flowTemp() / 256.f);
 	i.push_back(pid.integralPart());
@@ -610,6 +632,7 @@ void find_Kd_per_step(TestTemps& testTemps, Mix_Valve& mv, PID_Controller& pid) 
 //
 //TEST_CASE("PID_Step_v_delay", "[MixValve]") {
 //	TestMixV test2MV{};
+//  psu.begin();
 //  auto& testMV = test2MV.mv(0);
 //	PID_Controller pid{0,150,256/16,256/8};
 //	TestTemps testTemps;
@@ -656,6 +679,7 @@ void find_Kd_per_step(TestTemps& testTemps, Mix_Valve& mv, PID_Controller& pid) 
 //
 //TEST_CASE("PID_Step_v_tc", "[MixValve]") {
 //	TestMixV testMV{};
+// psu.begin();
 //	PID_Controller pid{0,150,256/16,256/8};
 //	TestTemps testTemps;
 //	clearVectors();
@@ -705,6 +729,7 @@ void find_Kd_per_step(TestTemps& testTemps, Mix_Valve& mv, PID_Controller& pid) 
 
 //TEST_CASE("PID_change_params", "[MixValve]") {
 //	TestMixV testMV{};
+// psu.begin();
 //	PID_Controller pid{0,150, 25*256, 256/16,256};
 //	TestTemps testTemps;
 //	clearVectors();
@@ -814,6 +839,7 @@ TEST_CASE("DualMV_PID_change_params", "[MixValve]") {
 /*
 TEST_CASE("PID_ChangeStep", "[MixValve]") {
 	TestMixV testMV{};
+	psu.begin();
 	PID_Controller pid{0,150,256/16,256/2};
 	TestTemps testTemps;
 	// ini-MV
@@ -851,6 +877,7 @@ TEST_CASE("PID_ChangeStep", "[MixValve]") {
 
 TEST_CASE("PID_temp_cycle", "[MixValve]") {
 	TestMixV testMV{};
+	psu.begin();
 	PID_Controller pid{0,150,256/16,256/2};
 	TestTemps testTemps;
 	clearVectors();
