@@ -11,7 +11,7 @@ namespace arduino_logger {
 		, _fileNameGenerator(fileNameStem)
 	{
 		// after a reset, the ram is not cleared, so we can recover what was in the ram-file.
-		_filePos = strlen((const char*)_ramFile);
+		_filePos = uint16_t(strlen((const char*)_ramFile));
 		if (_filePos >= ramFile_size) {
 			_filePos = 0;
 			*_ramFile = 0u;
@@ -26,7 +26,7 @@ namespace arduino_logger {
 		, _keepSaving(keepSaving)
 		, _fileNameGenerator(fileNameStem)
 	{
-		_filePos = strlen((const char*)_ramFile);
+		_filePos = uint16_t(strlen((const char*)_ramFile));
 		if (_filePos >= ramFile_size) {
 			_filePos = 0;
 			*_ramFile = 0u;

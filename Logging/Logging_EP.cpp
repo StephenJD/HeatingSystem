@@ -95,7 +95,7 @@ namespace arduino_logger {
 		}
 
 		auto endPos = buffer + size;
-		eeprom().write(_currentAddress + size, 0u);
+		eeprom().write(int(_currentAddress + size), 0u);
 		for (; buffer < endPos; ++_currentAddress, ++buffer) {
 			eeprom().write(_currentAddress, *buffer);
 		}

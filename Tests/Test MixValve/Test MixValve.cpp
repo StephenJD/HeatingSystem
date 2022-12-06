@@ -1,11 +1,14 @@
 // Test MixValve.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#ifndef SIM_MIXV
 #define SIM_MIXV
+#endif
 
 #include <catch.hpp>
 #include <Arduino.h>
 #include <Mix_Valve.h>
+#include <PSU.h>
 #include <PID_Controller.h>
 #include <I2C_RecoverRetest.h>
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
@@ -177,6 +180,7 @@ TEST_CASE("Find Off", "[MixValve]") {
 	} while (testMV.mode(0) == Mix_Valve::e_FindingOff);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.mode(0) == Mix_Valve::e_ValveOff);
+	logger() << "DS last few steps...\n";
 	do {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
@@ -250,35 +254,44 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	psu.doStep(true);
 	testMV.setVPos(0, 0);
 	testMV.setVPos(1, 0);
-	testMV.update(0, 35); // Off. stopped and relinqished power
-	testMV.update(1, 0);  // Off. stopped and relinqished power
-	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
-	CHECK(testMV.mode(1) == Mix_Valve::e_ValveOff);
+	testMV.update(0, 35); // Off -> stopped -> ready to Move to endPos
+	testMV.update(1, 0);  // e_WaitingToMove
+	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
+	CHECK(testMV.mode(1) == Mix_Valve::e_FindingOff);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.vPos(1) == 0);
 	// [0] Starts with Move
 	testMV.update(0, 5); // Start -> e_Moving
 	testMV.update(1, 35); // -> e_WaitingToMove
 	CHECK(testMV.mode(0) == Mix_Valve::e_Moving);
-	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
-	CHECK(testMV.vPos(0) == 0);
+	CHECK(testMV.mode(1) == Mix_Valve::e_FindingOff);
+	CHECK(testMV.vPos(0) == 1);
 	CHECK(testMV.vPos(1) == 0);
 	do {
-		testMV.update(0, 5);
-		testMV.update(1, 35);
+		testMV.update(0, 5); // arrived, released PSU.
+		testMV.update(1, 35); // Finds OFF on last call.
 	} while (testMV.mode(0) == Mix_Valve::e_Moving);
 
 	CHECK(testMV.vPos(0) == 5);
 	CHECK(testMV.vPos(1) == 0);
 	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
-	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
+	CHECK(testMV.mode(1) == Mix_Valve::e_ValveOff);
 	logger() << "Move[1] from 0 to 9\n";
 	do {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
-	} while (testMV.mode(1) == Mix_Valve::e_Moving);
+	} while (testMV.mode(0) == Mix_Valve::e_Moving);
 	//testMV.update(0, 35);
-	CHECK(testMV.vPos(0) == 5);
+	CHECK(testMV.vPos(0) == 15);
+	CHECK(testMV.vPos(1) == 0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
+	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
+
+	do {
+		testMV.update(0, 35);
+		testMV.update(1, 35);
+	} while (testMV.mode(1) == Mix_Valve::e_Moving);
+	CHECK(testMV.vPos(0) == 15);
 	CHECK(testMV.vPos(1) == 10);
 	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
 	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
@@ -287,7 +300,7 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
 	} while (testMV.mode(0) == Mix_Valve::e_Moving);
-	CHECK(testMV.vPos(0) == 15);
+	CHECK(testMV.vPos(0) == 25);
 	CHECK(testMV.vPos(1) == 10);
 	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
 	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
@@ -295,23 +308,8 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	do {
 		testMV.update(0, 35);
 		testMV.update(1, 35);
-	} while (testMV.mode(1) == Mix_Valve::e_Moving);
-	CHECK(testMV.vPos(0) == 15);
-	CHECK(testMV.vPos(1) == 20);
-	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
-	CHECK(testMV.mode(1) == Mix_Valve::e_WaitingToMove);
-
-	do {
-		testMV.update(0, 35);
-		testMV.update(1, 35);
-	} while (testMV.mode(0) != Mix_Valve::e_AtTargetPosition);
-
-	CHECK(testMV.vPos(0) == 35);
-	CHECK(testMV.vPos(1) == 30);
-	do {
-		testMV.update(0, 35);
-		testMV.update(1, 35);
 	} while (testMV.mode(1) != Mix_Valve::e_AtTargetPosition);
+
 	CHECK(testMV.vPos(0) == 35);
 	CHECK(testMV.vPos(1) == 35);
 }
@@ -324,28 +322,31 @@ TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve]") {
 	// Move [0] -> 10
 	testMV.setVPos(0, 0);
 	testMV.setVPos(1, 0);
-	testMV.update(1, 5); // Off. stopped and relinqished power
 	do {
-		testMV.update(0, 35); // Off. So move.
-		testMV.update(1, 5); // wait
+		testMV.update(0, 15); // Off. So move to 10 then yield.
+		testMV.update(1, 35); // wait then find-off and stop.
 	} while (testMV.vPos(0) < 10);
 
 	CHECK(testMV.vPos(1) == 0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_WaitingToMove);
+	CHECK(testMV.mode(1) == Mix_Valve::e_ValveOff);
 
-	// Move [1] -> 5
+	logger() << "Move[0] -> 15\n";
 	do {
-		testMV.update(0, 35);
-		testMV.update(1, 5);
-	} while (testMV.mode(1) == Mix_Valve::e_Moving);
-	CHECK(testMV.vPos(0) == 10);
-	CHECK(testMV.vPos(1) == 5);
-
-	do {
-		testMV.update(0, 35);
-		testMV.update(1, 5);
+		testMV.update(0, 15); 
+		testMV.update(1, 35);
 	} while (testMV.mode(0) == Mix_Valve::e_Moving);
-	CHECK(testMV.vPos(0) == 35);
-	CHECK(testMV.vPos(1) == 5);
+	CHECK(testMV.vPos(0) == 15);
+	CHECK(testMV.vPos(1) == 0);
+	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
+	CHECK(testMV.mode(1) == Mix_Valve::e_Moving);
+
+	do {
+		testMV.update(0, 15);
+		testMV.update(1, 35);
+	} while (testMV.mode(1) == Mix_Valve::e_Moving);
+	CHECK(testMV.vPos(0) == 15);
+	CHECK(testMV.vPos(1) == 35);
 }
 
 TEST_CASE("FindOff", "[MixValve]") {

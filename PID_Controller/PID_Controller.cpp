@@ -56,7 +56,7 @@ void PID_Controller::changeSetpoint(uint16_t val) {
         _d_has_overshot = true;
     }
     else if (_state == MOVE_TO_OFF) {
-        _p = _Kp * (val - _minSetpoint);
+        _p = uint8_t(_Kp * (val - _minSetpoint));
         _state = NEW_TEMP;
         _d_has_overshot = false;
     } else {
@@ -148,7 +148,7 @@ int16_t PID_Controller::d_contribution(int16_t errVal) {
     float step = abs(errVal / 256.f);
     float stepFactor = _Kd * .9f * (.27f + exp(-step * .157f * _Kd));
     //stepFactor = _Kd;
-    return floatToInt_round(_Kp * errVal * OVERSHOOT_FACTOR * stepFactor);
+    return int16_t(floatToInt_round(_Kp * errVal * OVERSHOOT_FACTOR * stepFactor));
 }
 
 void PID_Controller::adjustKd() {

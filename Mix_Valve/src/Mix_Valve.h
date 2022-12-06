@@ -15,6 +15,7 @@
 // 7. Tools->Burn Bootloader
 // 8. Then upload your desired sketch to ordinary MiniPro board. Tools->Board->Arduino Pro Mini / 328/3.3v/8MHz
 
+#include <Motor/Motor.h>
 #include <TempSensor.h>
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 #include <PinObject.h>
@@ -34,33 +35,6 @@ namespace I2C_Recovery {
 
 class PowerSupply;
 extern PowerSupply psu;
-
-class Motor {
-public:
-	enum Direction { e_Cooling = -1, e_Stop, e_Heating };
-	Motor(HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay);
-	Direction direction() const { return _motion; }
-	uint8_t heatPort() const { return _heat_relay->port(); }
-	uint8_t curr_pos() const { return uint8_t(_pos); };
-
-	const __FlashStringHelper* name() const { 
-		return _heat_relay->port() == 11 ? F("US ") : F("DS "); 
-		//return F("US "); 
-	}
-	uint8_t pos(PowerSupply& pwr);
-	bool moving(Direction direction, PowerSupply& pwr);
-	void start(Direction direction);
-	void stop(PowerSupply& pwr);
-
-	void setPosToZero() { _pos = 0; }
-	void setPos(int pos) { 
-		_pos = pos; }
-private:
-	HardwareInterfaces::Pin_Wag* _heat_relay = nullptr;
-	HardwareInterfaces::Pin_Wag* _cool_relay = nullptr;
-	mutable int16_t _pos = HardwareInterfaces::VALVE_TRANSIT_TIME / 2;
-	Direction _motion = e_Stop;
-};
 
 class Mix_Valve
 {
@@ -146,7 +120,7 @@ public:
 	bool waitToSettle() { return _timeAtOneTemp > 0; }
 	// Modifiers
 	void set_maxTemp(uint8_t max) { _maxTemp = max; }
-	void setPos(int pos) { _motor.setPos(pos); }
+	void setPos(int pos);
 	void setDelay(int delay) { _delay = delay; }
 	void setTC(int tc) { _timeConst = tc; }
 	void setTestTime() { _timeAtOneTemp = (get_TC() + get_delay()) * 20; }
@@ -168,7 +142,6 @@ public:
 	uint16_t stateMachine(int newPos); // returns flow-temp
 	// Transition Functions
 	void stopMotor();
-	void get_PSU_OffV();
 	void turnValveOff();
 	// New Temp Request Functions
 	bool checkForNewReqTemp();
@@ -178,12 +151,12 @@ public:
 	void saveToEEPROM();
 	uint16_t getSensorTemp_16();
 	void loadFromEEPROM();
-	int measurePSUVoltage(int noOfCycles = NO_OF_EQUAL_PSU_CYCLES);
+	void recordPSU_V();
+	void recordPSU_Off_V(uint16_t newOffV);
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;
 	uint8_t _regOffset;
 
-	// Injected dependancies
 	Motor _motor;
 	Motor::Direction _journey = Motor::e_Stop;
 	EEPROMClass* _ep;
@@ -195,11 +168,6 @@ public:
 	uint8_t _currReqTemp = 0; // Must have two the same to reduce spurious requests
 	uint8_t _newReqTemp = 0; // Must have two the same to reduce spurious requests
 	
-	static constexpr float ON_OFF_RATIO = .06f;
-	static constexpr int NO_OF_EQUAL_PSU_CYCLES = 4;
-	int16_t _motorsOffV = 970;
-	int16_t _motors_off_diff_V = int16_t(_motorsOffV * ON_OFF_RATIO);
-
 #ifdef SIM_MIXV
 	uint16_t _timeConst = 0;
 	uint8_t _delay;
@@ -208,110 +176,4 @@ public:
 	uint8_t _maxTemp;
 	int _timeAtOneTemp;
 #endif
-};
-
-class PowerSupply {
-public:
-	enum { e_PSU = 6, e_Slave_Sense = 7 };
-	void begin() {
-		_psu_enable.begin(true);
-		_key_requester = nullptr;
-		_key_owner = nullptr;
-	}
-
-	void setOn(bool on) {
-		if (on) _psu_enable.set();
-		else if (!_keep_psu_on) _psu_enable.clear();
-	}
-
-	bool available(const void* requester) { // may be called repeatedly.
-		if (_key_requester == nullptr && requester != _key_owner) {
-			_key_requester = requester;
-		} 
-		if (_key_owner == nullptr) {
-			grantKey();
-		}
-		return (requester == _key_owner);
-	}
-
-	bool requstToRelinquish() {	return _key_time < 0; }
-
-	void relinquishPower() {
-		if (_key_owner) {
-			logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs
-				<< F("relinquishPower at") << static_cast<const Motor*>(_key_owner)->curr_pos() << F("Time:") << millis() << L_endl;
-		}
-		_key_owner = nullptr;
-		if (_key_requester != nullptr && !_keep_psu_on) _psu_enable.clear();
-	}
-
-	int powerPeriod() {
-		//logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs << F("Last OnTime:") << _onTime_uS << L_endl;
-#ifdef SIM_MIXV
-		auto power_period = int(_onTime_uS);
-		if (_doStep) _onTime_uS = 0;
-		else power_period = secondsSinceLastCheck(_onTime_uS);
-#else
-		auto power_period = secondsSinceLastCheck(_onTime_uS);
-#endif
-		if (power_period) {
-			if (_key_time >= power_period) {
-				_key_time -= power_period;
-			}
-			else if (_key_time > 0) { // key not being stolen
-				_key_time = 0;
-			}
-			if (_key_requester != nullptr && _key_time == 0) {
-				_key_time = -1;
-				logger() << static_cast<const Motor*>(_key_owner)->name()
-					<< L_tabs << F("giving way to")
-					<< static_cast<const Motor*>(_key_requester)->name() 
-					<< F("Time:") << millis() << L_endl;
-			}
-		}
-		return power_period;
-	}
-
-	void keepPSU_on(bool keepOn = true) {
-		_keep_psu_on = keepOn;
-		_psu_enable.set(keepOn);
-	}
-#ifdef SIM_MIXV
-	void moveOn1Sec() {if (_doStep) ++_onTime_uS; }
-	void doStep(bool step) {
-		_doStep = step;
-		if (_doStep) _onTime_uS = 0;
-		else _onTime_uS = micros();
-	}
-	void showState() const {
-		logger() << "Owner:" << L_tabs << long(_key_owner) << "Requester:" << long(_key_requester) << "Keytime:" << int(_key_time) << L_endl;
-	}
-private:
-	bool _doStep = false;
-#endif
-private:
-	bool grantKey() {
-		_key_owner = _key_requester;
-		_key_requester = nullptr;
-		if (_key_owner) {
-			_key_time = KEY_TIME;
-			_onTime_uS = micros();
-#ifdef SIM_MIXV
-			if (_doStep) _onTime_uS = 0;
-#endif
-			_psu_enable.set();
-			logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs
-				<< F("granted key at Time:") << millis() << L_endl;
-			return true;
-		}
-		return false;
-	}
-
-	static constexpr int8_t KEY_TIME = 10;
-	const void* _key_owner = nullptr;
-	const void* _key_requester = nullptr;
-	uint32_t _onTime_uS = micros();
-	HardwareInterfaces::Pin_Wag _psu_enable{ e_PSU, LOW, true };
-	int8_t _key_time = 0;
-	bool _keep_psu_on = true;
 };
