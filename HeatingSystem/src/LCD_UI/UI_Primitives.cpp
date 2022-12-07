@@ -327,6 +327,10 @@ namespace LCD_UI {
 		return *this;
 	}
 
+	bool StrWrapper::operator== (const char* strVal) {
+		return strcmp(_str, strVal) == 0;
+	}
+
 	const char * String_Interface::streamData(bool isActiveElement) const {
 		if (_data_formatter == 0) return 0;
 		const StrWrapper * strWrapper(static_cast<const StrWrapper *>(_data_formatter));

@@ -114,23 +114,23 @@ void OLED_Thick_Display::refreshRegisters() {
     deviceFlags.clear(F_PROGRAMMER_CHANGED_DATA);
     auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP); // might have been set by console. When Prog has read it, it gets set to zero, so might not yet be zero.
     if (_state == WAIT_PROG_ACK) {
-        logger() << millis() % 10000 << F(" WPA") << L_endl;
+        //logger() << millis() % 10000 << F(" WPA") << L_endl;
         if (reqTemp == 0 || reqTemp != _tempRequest) {
-            logger() << millis() % 10000 << F(" PA") << L_endl;
+            //logger() << millis() % 10000 << F(" PA") << L_endl;
             _state = REFRESH_DISPLAY;
         }
     } else if (progDataChanged) {
         _state = REFRESH_DISPLAY;
-        logger() << millis() % 10000 << F(" PD ") << reqTemp << L_endl;
+        //logger() << millis() % 10000 << F(" PD ") << reqTemp << L_endl;
     }
     
     if (_state != WAIT_PROG_ACK && reqTemp /*&& reqTemp != _tempRequest*/) { // request sent by programmer
-        logger() << millis() % 10000 << F(" PT ") << reqTemp << L_endl;
+        //logger() << millis() % 10000 << F(" PT ") << reqTemp << L_endl;
         _tempRequest = reqTemp;
         reg.set(R_REQUESTING_ROOM_TEMP, 0);
         _state = REFRESH_DISPLAY;
     } else if (_tempRequest == 0) {
-        logger() << millis() % 10000 << F(" RT") << L_endl;
+        //logger() << millis() % 10000 << F(" RT") << L_endl;
         reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
         _state = WAIT_PROG_ACK;
         wakeDisplay();

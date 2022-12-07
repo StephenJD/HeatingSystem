@@ -161,6 +161,16 @@ namespace HardwareInterfaces {
 
 	bool Zone::advancedToNextProfile() const { return startDateTime() > clock_().now(); };
 
+	bool Zone::backBoilerIsOn() const {
+		return _thermalStore->backBoilerIsHeating();
+		//return  _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
+	}
+
+	int8_t Zone::backBoilerFlowT() const {
+		return _thermalStore->getBackboilerFlowTemp();
+	}
+
+
 	bool Zone::setFlowTemp() { // Called every minute. Sets flow temps. Returns true if needs heat.
 		// TODO: oscillates flow-temp when on margin of +- 0.5 deg error.
 		//decltype(millis()) executionTime[7] = { millis() };
@@ -169,7 +179,7 @@ namespace HardwareInterfaces {
 		double ratio;
 		bool isDHW = isDHWzone();
 		auto outsideTemp = isDHW ? int8_t(20) : _thermalStore->getOutsideTemp();
-		bool backBoilerIsOn = _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
+		bool backBoilerOn = backBoilerIsOn();
 		bool towelRadOn = _thermalStore->demandZone() == R_FlTR || _thermalStore->demandZone() == R_HsTR;
 		bool giveDHW_priority = !isDHW && towelRadOn && _thermalStore->tooCoolRequestOrigin() == NO_OF_MIX_VALVES;
 #ifdef ZPSIM
@@ -177,8 +187,8 @@ namespace HardwareInterfaces {
 #endif
 		// lambdas
 
-		auto startMeasuringRatio = [this, outsideTemp, isDHW, backBoilerIsOn](int tempError, int zoneTemp, int flowTemp ) -> bool {
-			if (backBoilerIsOn) {
+		auto startMeasuringRatio = [this, outsideTemp, isDHW, backBoilerOn](int tempError, int zoneTemp, int flowTemp ) -> bool {
+			if (backBoilerOn) {
 				saveThermalRatio();
 				return false;
 			} else {
@@ -219,13 +229,13 @@ namespace HardwareInterfaces {
 			return zoneRecord().rec().autoRatio;
 		};
 
-		auto logTemps = [this, isDHW, outsideTemp, backBoilerIsOn, measuredThermalRatio, giveDHW_priority](uint16_t currTempReq, int16_t fractionalZoneTemp, int16_t reqFlow, int flowTemp, double ratio) {
+		auto logTemps = [this, isDHW, outsideTemp, backBoilerOn, measuredThermalRatio, giveDHW_priority](uint16_t currTempReq, int16_t fractionalZoneTemp, int16_t reqFlow, int flowTemp, double ratio) {
 			const __FlashStringHelper* controlledBy;
 			if (isDHW) {
 				controlledBy = _thermalStore->principalLoad();
 			} else if (giveDHW_priority) {
 				controlledBy = F("DHW Priority");
-			} else if (backBoilerIsOn) {
+			} else if (backBoilerOn) {
 				controlledBy = F("Back Boiler");
 			} else {
 				controlledBy = _mixValveController->zoneHasControl(_relay->recordID()) ? F("Master") : F("Slave");
@@ -259,7 +269,7 @@ namespace HardwareInterfaces {
 			ratio = MAX_RATIO;
 			tempError = needHeat ? -16 : 16;
 			flowTemp = _thermalStore->getGasFlowTemp();
-			if (_thermalStore->demandZone() >= 0 || backBoilerIsOn) {
+			if (_thermalStore->demandZone() >= 0 || backBoilerOn) {
 				_minsInPreHeat = PREHEAT_ENDED; // prevent TC calculation
 				_minsCooling = 0; // prevent delay measurement
 			}
@@ -312,7 +322,7 @@ namespace HardwareInterfaces {
 			if (_minsCooling < DELAY_COOLING_TIME) ++_minsCooling; // ensure sufficient time cooling before measuring heating delay 
 		} else if (_minsCooling != MEASURING_DELAY) _minsCooling = 0;
 		
-		if (giveDHW_priority) {
+		if (giveDHW_priority || (backBoilerOn && _mixValveController->index() == 1)) {
 			tempError = 16;
 			requestedFlowTemp = MIN_FLOW_TEMP;
 		}

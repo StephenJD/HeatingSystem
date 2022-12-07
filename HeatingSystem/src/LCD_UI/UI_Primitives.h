@@ -70,6 +70,7 @@ namespace LCD_UI {
 		StrWrapper() = default;
 		StrWrapper(const char* strVal, ValRange valRangeArg);
 		StrWrapper & operator= (const char* strVal);
+		bool operator== (const char* strVal);
 
 		I_Streaming_Tool & ui() override;
 		char * str() { return _str; }

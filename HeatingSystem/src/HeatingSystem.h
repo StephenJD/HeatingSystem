@@ -65,6 +65,7 @@ private: // data-member ordering matters!
 public:
 #ifdef ZPSIM
 	State state() { return _state; }
+	void set_MFB_temp(bool on);
 #endif
 	// Public Data Members
 	HardwareInterfaces::LocalDisplay mainDisplay;

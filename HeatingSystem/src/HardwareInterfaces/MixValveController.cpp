@@ -155,8 +155,8 @@ namespace HardwareInterfaces {
 		switch (mv_mode) {
 		case Mix_Valve::e_Moving:
 			switch (int8_t(reg.get(Mix_Valve::R_MOTOR_ACTIVITY))) { // e_Moving_Coolest, e_Cooling = -1, e_Stop, e_Heating
-			case Mix_Valve::e_Cooling: return F("Cl");
-			case Mix_Valve::e_Heating: return F("Ht");
+			case Motor::e_Cooling: return F("Cl");
+			case Motor::e_Heating: return F("Ht");
 			default: return F("Stp"); // Now stopped!
 			}
 		case Mix_Valve::e_WaitingToMove: return F("Mx");

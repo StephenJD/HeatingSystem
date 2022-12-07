@@ -48,14 +48,17 @@ namespace HardwareInterfaces {
 		constexpr int MAX_TRIES = 6;
 		uint16_t newTemp; // MSB = units, LSB = fraction
 		_error = read_verify_2bytes(DS75LX_Temp, newTemp, CONSECUTIVE_COUNT, MAX_TRIES); // Non-Recovery
+#ifdef ZPSIM
+		newTemp = _lastGood;
+#endif
 		checkTemp(newTemp);
 
 #ifdef ZPSIM
 		//  if (getAddress() == 0x70) _error = _NACK_during_data_send;
 			//bool debug = true;
 		//_lastGood += change;
-		if (_lastGood < 2560) change = 256;
-		if (_lastGood > 17920) change = -256;
+		//if (_lastGood < 2560) change = 256;
+		//if (_lastGood > 17920) change = -256;
 		///_error = _NACK_during_address_send;
 #endif
 		if (_error != _OK) {

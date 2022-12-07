@@ -164,7 +164,7 @@ void HeatingSystem::run_stateMachine() {
 	case SERVICE_BACKBOILER:
 		logger() << L_time << "SERVICE_BACKBOILER" << L_endl;
 		_tempController.backBoiler.check();
-		logger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
+		logger() << L_time << "SERVICE_BACKBOILER_Done." << L_endl;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
 			//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
@@ -281,3 +281,10 @@ void HeatingSystem::updateChangedData() {
 
 RelationalDatabase::RDB<Assembly::TB_NoOfTables> & HeatingSystem::getDB() { return db; }
 
+#ifdef ZPSIM
+void HeatingSystem::set_MFB_temp(bool on) {
+	logger() << "MFB:" << on << L_endl;
+	int16_t newTemp = on ? 60 * 256 : 30 * 256;
+	_tempController.tempSensorArr[T_MfF].setTemp(newTemp);
+}
+#endif
