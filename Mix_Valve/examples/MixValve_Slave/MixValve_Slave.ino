@@ -2,6 +2,8 @@
 
 //#include <MemoryFree.h>
 #include <Mix_Valve.h>
+//#include <Mix_Valve\src\PSU\PSU.h>
+#include <PSU.h>
 #include <PID_Controller.h>
 #include <I2C_Talk.h>
 #include <I2C_Registers.h>
@@ -167,7 +169,7 @@ void loop() {
 		flowTemp = mixValve_DS.update(pid_DS.currOut());
 		if (mixValve_DS.mode() != Mix_Valve::e_WaitingToMove) {
 			pid_DS.checkSetpoint(mixValve_DS.currReqTemp_16());
-			pid_DS.adjust(flowTemp, mixValve_DS.vPos());
+			pid_DS.adjust(flowTemp, mixValve_DS.atTarget());
 			mixValve_DS.setRegister(Mix_Valve::R_PID_MODE, pid_DS.mode());
 			mixValve_DS.log();
 			pid_DS.log();

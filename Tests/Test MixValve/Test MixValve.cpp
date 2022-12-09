@@ -187,7 +187,6 @@ TEST_CASE("Find Off", "[MixValve]") {
 	} while (testMV.mode(1) == Mix_Valve::e_FindingOff);
 	CHECK(testMV.vPos(0) == 0);
 	CHECK(testMV.vPos(1) == 0);
-	psu.showState();
 }
 
 TEST_CASE("ChangeDirection", "[MixValve]") {

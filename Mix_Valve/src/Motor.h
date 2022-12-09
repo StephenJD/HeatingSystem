@@ -14,7 +14,6 @@ public:
 
 	const __FlashStringHelper* name() const { 
 		return _heat_relay->port() == 11 ? F("US ") : F("DS "); 
-		//return F("US "); 
 	}
 	uint8_t pos(PowerSupply& pwr);
 	bool moving(Direction direction, PowerSupply& pwr);

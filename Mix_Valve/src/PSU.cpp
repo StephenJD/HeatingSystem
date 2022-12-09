@@ -13,7 +13,7 @@ void PowerSupply::begin() {
 	_key_owner = nullptr;
 
 	auto psuOffV = psu_v();
-	logger() << F("PSU.Begin() OffV: ") << psuOffV << L_endl;
+	//logger() << F("PSU.Begin() OffV: ") << psuOffV << L_endl;
 }
 
 void PowerSupply::setOn(bool on) {
@@ -35,7 +35,7 @@ uint16_t PowerSupply::relinquishPower() {
 	// Motor relays will be OFF.
 	if (_key_owner) {
 		logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs
-			<< F("relinquishPower at") << static_cast<const Motor*>(_key_owner)->curr_pos() << F("Time:") << millis() << L_endl;
+			<< F("PSU_0") << static_cast<const Motor*>(_key_owner)->curr_pos() << millis() << L_endl;
 	}
 	no_load_v(true); // Record PSU-V with status-led ON to mimic relay LED on.
 	_key_owner = nullptr;
@@ -61,9 +61,9 @@ int PowerSupply::powerPeriod() {
 		if (_key_requester != nullptr && _key_time == 0) {
 			_key_time = -1;
 			logger() << static_cast<const Motor*>(_key_owner)->name()
-				<< L_tabs << F("giving way to")
+				<< L_tabs << F("->")
 				<< static_cast<const Motor*>(_key_requester)->name()
-				<< F("Time:") << millis() << L_endl;
+				<< millis() << L_endl;
 		}
 	}
 	return power_period;
@@ -80,9 +80,6 @@ void PowerSupply::doStep(bool step) {
 	if (_doStep) _onTime_uS = 0;
 	else _onTime_uS = micros();
 }
-void PowerSupply::showState() const {
-	logger() << "Owner:" << L_tabs << long(_key_owner) << "Requester:" << long(_key_requester) << "Keytime:" << int(_key_time) << L_endl;
-}
 
 #endif
 
@@ -97,7 +94,7 @@ bool PowerSupply::grantKey() {
 #endif
 		_psu_enable.set();
 		logger() << static_cast<const Motor*>(_key_owner)->name() << L_tabs
-			<< F("granted key at Time:") << millis() << L_endl;
+			<< F("PSU_1") << millis() << L_endl;
 		return true;
 	}
 	return false;
@@ -150,6 +147,7 @@ uint16_t PowerSupply::no_load_v(bool with_satus_LED_on) {
 	if (offV) {
 		_motorsOffV = offV;
 		_motors_off_diff_V = uint16_t(offV * ON_OFF_RATIO);
+		logger() << F("OffV:\t") << _motorsOffV << L_endl;
 	}
 	return offV;
 }

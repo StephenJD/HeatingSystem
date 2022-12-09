@@ -15,7 +15,8 @@
 // 7. Tools->Burn Bootloader
 // 8. Then upload your desired sketch to ordinary MiniPro board. Tools->Board->Arduino Pro Mini / 328/3.3v/8MHz
 
-#include <Motor/Motor.h>
+//#include <Motor/Motor.h>
+#include <Motor.h>
 #include <TempSensor.h>
 #include <../HeatingSystem/src/HardwareInterfaces/A__Constants.h>
 #include <PinObject.h>
@@ -98,6 +99,7 @@ public:
 	const __FlashStringHelper* name() const;
 	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
 	Mode mode() const {	return Mode(registers().get(R_MODE)); }
+	bool atTarget() const { return _motor.curr_pos() == _endPos; }
 	void log() const;
 	// Modifiers
 	uint16_t update(int newPos);
@@ -106,7 +108,6 @@ public:
 	uint16_t currReqTemp_16() const;
 	void setRegister(uint8_t regNo, uint8_t val) { registers().set(regNo, val); }
 #ifdef SIM_MIXV
-	bool atTarget() { return _motor.curr_pos() == _endPos; }
 	uint8_t pos() { return _motor.pos(psu); }
 	uint8_t curr_pos() const { return _motor.curr_pos(); }
 	static constexpr uint8_t ROOM_TEMP = 20;

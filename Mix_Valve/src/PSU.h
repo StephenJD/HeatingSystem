@@ -30,7 +30,6 @@ public:
 #ifdef SIM_MIXV
 	void moveOn1Sec();
 	void doStep(bool step);
-	void showState() const;
 	uint16_t psu_loaded_v() { return _motorsOffV - 2 * _motors_off_diff_V; }
 private:
 	bool _doStep = false;

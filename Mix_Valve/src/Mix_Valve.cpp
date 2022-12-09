@@ -4,7 +4,8 @@
 #endif
 
 #include <Mix_Valve.h>
-#include <PSU.h>
+//#include "Mix_Valve\src\PSU\PSU.h"
+#include "PSU.h"
 #include <TempSensor.h>
 #include "PinObject.h"
 #include <I2C_Talk.h>
@@ -146,7 +147,6 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 void Mix_Valve::stopMotor() {
 	auto offV = _motor.stop(psu);
 	_journey = Motor::e_Stop;
-	logger() << name() << L_tabs << "stopMotor\n";
 	recordPSU_Off_V(offV);
 }
 
@@ -164,7 +164,7 @@ bool Mix_Valve::checkForNewReqTemp() { // called every second
 	auto reg = registers();
 	const auto thisReqTemp = reg.get(R_REQUEST_FLOW_TEMP);
 	//logger() << millis() << L_tabs << name() << F("This-req:") << thisReqTemp << F("Curr:") << _currReqTemp << L_endl;
-	if (thisReqTemp != 0 && thisReqTemp != _currReqTemp) {
+	if (thisReqTemp != 0 && thisReqTemp != 255 && thisReqTemp != _currReqTemp) {
 		logger() << name() << L_tabs;
 		if (_newReqTemp != thisReqTemp) {
 			logger() << F("NewReq:") << thisReqTemp << L_endl;
@@ -262,10 +262,10 @@ Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& h
 }
 
 void Mix_Valve::begin(int defaultFlowTemp) {
-	logger() << name() << F("MixValve begin") << L_endl;
+	//logger() << name() << F("MixValve begin") << L_endl;
 	const bool writeDefaultsToEEPROM = _ep->read(_regOffset + R_VERSION_MONTH) != version_month || _ep->read(_regOffset + R_VERSION_DAY) != version_day;
 	//const bool writeDefaultsToEEPROM = true;
-	logger() << F("regOffset: ") << _regOffset << F(" Saved month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Saved Day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
+	//logger() << F("regOffset: ") << _regOffset << F(" Saved month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Saved Day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
 	auto reg = registers();
 	if (writeDefaultsToEEPROM) {
 		reg.set(R_VERSION_MONTH, version_month);
@@ -274,7 +274,8 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME / 2);
 		reg.set(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
 		saveToEEPROM();
-		logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
+		logger() << F("Saved defaults\n");
+		//logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
 	}
 	else {
 		loadFromEEPROM();
@@ -304,8 +305,8 @@ void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
 	_ep->update(++eepromRegister, reg.get(R_DEFAULT_FLOW_TEMP));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_MONTH));
 	_ep->update(++eepromRegister, reg.get(R_VERSION_DAY));
-	logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)reg.get(R_HALF_TRAVERSE_TIME) 
-		<< (int)reg.get(R_DEFAULT_FLOW_TEMP) << (int)reg.get(R_VERSION_MONTH) << (int)reg.get(R_VERSION_DAY) << L_endl;
+	//logger() << F("MixValve saveToEEPROM at reg ") << _regOffset << F(" to ") << (int)eepromRegister << L_tabs << (int)reg.get(R_HALF_TRAVERSE_TIME) 
+		//<< (int)reg.get(R_DEFAULT_FLOW_TEMP) << (int)reg.get(R_VERSION_MONTH) << (int)reg.get(R_VERSION_DAY) << L_endl;
 }
 
 void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
@@ -349,7 +350,7 @@ void Mix_Valve::log() const {
 		case Mix_Valve::e_WaitingToMove: return F("Mx");
 		case Mix_Valve::e_ValveOff: return F("Off");
 		case Mix_Valve::e_AtTargetPosition: return F("Ok");
-		case Mix_Valve::e_FindingOff:
+		case Mix_Valve::e_FindingOff: return F("->0");
 		case Mix_Valve::e_HotLimit: return F("Lim");
 		default: return F("SEr");
 		}

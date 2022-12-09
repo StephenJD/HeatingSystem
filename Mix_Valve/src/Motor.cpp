@@ -24,7 +24,7 @@ uint8_t Motor::pos(PowerSupply& pwr) {
 			else if (_pos > 254) {
 				_pos = 254;
 			}
-			logger() << (heatPort() == 11 ? F("US") : F("DS")) << L_tabs << _pos << F("Time:") << millis() << L_endl;
+			logger() << name() << L_tabs << _pos << F("at") << millis() << L_endl;
 			if (pwr.requstToRelinquish()) 
 				stop(pwr);
 		}
@@ -55,7 +55,7 @@ bool Motor::moving(Direction direction, PowerSupply& pwr) {
 
 void Motor::start(Direction direction) {
 	logger() << name() << L_tabs
-		<< F("starting at") << millis() << L_endl;
+		<< F("Start") << millis() << L_endl;
 	_motion = direction;
 	if (_motion == e_Heating && _heat_relay->logicalState() == false) {
 		_cool_relay->clear(); _heat_relay->set();
@@ -71,7 +71,7 @@ uint16_t Motor::stop(PowerSupply& pwr) {
 		_cool_relay->clear(); _heat_relay->clear();
 		_motion = e_Stop;
 		logger() << name() << L_tabs
-			<< F("Stopping at") << millis() << L_endl;
+			<< F("Stop") << millis() << L_endl;
 		return pwr.relinquishPower();
 	}
 	return 0;

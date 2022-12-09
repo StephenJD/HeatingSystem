@@ -125,7 +125,7 @@ namespace HardwareInterfaces {
 		auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP); // is zoneReqTemp normally.
 		// times-out before this line
 		loopLogger() << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
-		logger() << L_time << F("State: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << "\t" << millis() % 10000 << L_endl;
+		logger() << L_time << F("State: ") << _state << F(" Remote Req Temp(normally 0): ") << remReqTemp << " Local RegCopy: " << localReqTemp << "\t" << millis() % 10000 << L_endl;
 
 		switch (_state) {
 		case REM_TR:
@@ -259,10 +259,8 @@ namespace HardwareInterfaces {
 			logger() << L_time << "\tRC Room Temp[" << index() << "] = 0!" << I2C_Talk::getStatusMsg(status) << L_flush;
 			reg.set(OLED::R_ROOM_TEMP, roomTemp_was);
 			reg.set(OLED::R_ROOM_TEMP_FRACTION, roomTemp_16th_was);
-			//auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
-			//ini_state |= RC_US_REQUESTING_INI << index();
 #ifndef ZPSIM
-			status = _I2C_ReadDataWrong;
+			if (status != _OK) status = _I2C_ReadDataWrong;
 #endif
 		}
 
