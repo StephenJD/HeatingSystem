@@ -48,6 +48,7 @@ Multi-master mode between AVR and DUE produces 20-times as many I2C errors as in
 	#define VARIANT_MCK F_CPU
 #endif
 
+#ifndef __AVR__
 // Degugging options
 //#define DEBUG_TALK
 //#define DEBUG_SPEED_TEST
@@ -57,6 +58,7 @@ Multi-master mode between AVR and DUE produces 20-times as many I2C errors as in
 //#define SHOW_TWI_DEBUG
 //#define SHOW_TWI_TIMINGS
 //#define DEBUG_TRY_ALL_SPEEDS
+#endif
 
 // The DEFAULT page size for I2C EEPROM.
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64

@@ -3,7 +3,13 @@
 #include <I2C_Device.h>
 #include <I2C_Talk_ErrorCodes.h>
 
-//#define DEBUG_TEST_DEVICE
+#define DEBUG_TEST_DEVICE
+
+#ifdef __AVR__
+#undef DEBUG_TEST_DEVICE
+#undef DEBUG_SPEED_TEST
+#endif
+
 #if defined DEBUG_SPEED_TEST || defined DEBUG_TEST_DEVICE
 #include <Logging.h>
 using namespace arduino_logger;

@@ -104,7 +104,7 @@ void printFileHeadings() {
 		<< F("ControlledBy")
 		<< F("IsOn")
 		<< L_endl;
-	profileLogger() << "Time\tZone\tReq\tIs\tPID\tState\tPos\tPSU_Max\tPSU_OFFMax\tPSU_Min\tPSU_OFF_Min\n";
+	profileLogger() << "Time\tZone\tReq\tIs\tPID\tState\tPos\tPSU_Max\tPSU_OFFMax\tEndPos\tTS_Err\n";
 }
 
 void flushLogs() {
@@ -139,6 +139,8 @@ HeatingSystem::HeatingSystem()
 		_initialiser.i2C_Test();
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
+		_tempController.backBoiler.check();
+		_tempController.checkZoneRequests(true);
 		_state = CHECK_I2C_COMS;
 	}
 

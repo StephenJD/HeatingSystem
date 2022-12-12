@@ -124,7 +124,7 @@ namespace HardwareInterfaces {
 
 		auto algorithmMode = Mix_Valve::Mix_Valve::Mode(reg.get(Mix_Valve::R_MODE));
 		if (algorithmMode >= Mix_Valve::e_Error) {
-			logger() << "MixValve Mode Error: " << algorithmMode << L_endl;
+			logger() << "MixValve Mode Error: " << algorithmMode << L_flush;
 			return false;
 		}
 
@@ -132,15 +132,15 @@ namespace HardwareInterfaces {
 		if (logThis || _previous_valveStatus[valveIndex] != algorithmMode /*|| algorithmMode < Mix_Valve::e_Checking*/ ) {
 			reEnable(true);
 			_previous_valveStatus[valveIndex] = algorithmMode;
-			int psuMinV = reg.get(Mix_Valve::R_PSU_MIN_V) * 4;
+			int endPos = reg.get(Mix_Valve::R_END_POS);
+			int ts_err = reg.get(Mix_Valve::R_TS_ERR);
 			int psuMaxV = reg.get(Mix_Valve::R_PSU_MAX_V) + 800;
-			int psuMinOffV = reg.get(Mix_Valve::R_PSU_MIN_OFF_V) * 4;
 			int psuMaxOffV = reg.get(Mix_Valve::R_PSU_MAX_OFF_V) + 800;
 			profileLogger() << L_time << L_tabs 
 				<< (valveIndex == M_UpStrs ? "_US_Mix" : "_DS_Mix") << _mixCallTemp << flowTemp()
 				<< showPID_State()
 				<< showState() << reg.get(Mix_Valve::R_VALVE_POS)
-				<< psuMaxV << psuMaxOffV << psuMinV << psuMinOffV << L_endl;
+				<< psuMaxV << psuMaxOffV << endPos << ts_err << L_endl;
 		}
 //#endif
 		return true;
@@ -322,12 +322,13 @@ namespace HardwareInterfaces {
 				return false;
 				//status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ);
 			} else if (flowTemp == 255) {
-				logger() << L_time << F("read device 0x") << L_hex << getAddress() << F(" OK. FlowTemp 255! Try again...") << L_endl;
+				logger() << L_time << F("read device 0x") << L_hex << getAddress() << F(" OK. FlowTemp 255! Try again... Was:") << prev_flowTemp << L_endl;
 				status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
 				flowTemp = reg.get(Mix_Valve::R_FLOW_TEMP);
 				if (flowTemp == 255) {
+					logger() << L_time << F("read device 0x") << L_hex << getAddress() << F(" OK. FlowTemp 255! Give up.") << L_endl;
 					reg.set(Mix_Valve::R_FLOW_TEMP, prev_flowTemp);
-					return false;
+					//return false;
 				}
 			}
 			if (reg.get(Mix_Valve::R_REQUEST_FLOW_TEMP) == 0) { // Resend to confirm new temp request

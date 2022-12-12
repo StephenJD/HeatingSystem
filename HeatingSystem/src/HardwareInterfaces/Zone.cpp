@@ -381,7 +381,6 @@ namespace HardwareInterfaces {
 
 	void Zone::preHeatForNextTT() { // must be called once every 10 mins to record temp changes.
 		// Modifies _currProfileTempRequest to allow for heat-up for next event
-		// returns true when actual programmed time has expired.
 		// decltype(millis()) executionTime[8] = { millis() };
 		//logger() << L_time << "preHeatForNextTT" << L_endl;
 		using namespace Date_Time;
@@ -476,7 +475,7 @@ namespace HardwareInterfaces {
 					preheatCallTemp = info.nextTT.temp();
 					saveThermalRatio();
 					profileLogger() << zoneRec.name << " Preheat " << _minsToPreheat
-						<< " mins from " << L_fixed << currTemp_fractional << L_dec << " to " << int(info.nextTT.temp())
+						<< " mins from " << currTemp_fractional/256.f << L_dec << " to " << int(info.nextTT.temp())
 						<< " by " << info.nextEvent
 						<< L_endl;
 				} else if (isDHWzone())
@@ -500,7 +499,7 @@ namespace HardwareInterfaces {
 		*/
 		//executionTime[1] = millis();
 		//logger() << L_time << "\tLambdas_OK" << L_endl;
-		profileLogger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << L_fixed << currTemp_fractional << L_dec << " CurrStart: " << startDateTime() << L_endl;
+		profileLogger() << L_endl << L_time << zoneRec.name << " Get ProfileInfo. Curr Temp: " << currTemp_fractional/256.f << L_dec << " CurrStart: " << startDateTime() << L_endl;
 		//executionTime[2] = millis();
 		//executionTime[3] = millis()-1;
 		//executionTime[4] = millis()-2;
@@ -513,7 +512,7 @@ namespace HardwareInterfaces {
 			auto resultQuality = (currTemp_fractional - _startCallTemp) / 25;
 			profileLogger() << zoneRec.name 
 				<< " Preheat OK. Req " << _preheatCallTemp 
-				<< " is: " << L_fixed  << currTemp_fractional 
+				<< " is: " << currTemp_fractional/256.f 
 				<< L_dec << " Range: " << resultQuality
 				<< " Ratio: " << zoneRec.autoRatio / RATIO_DIVIDER
 				<< " Delay: " << zoneRec.autoDelay
@@ -538,7 +537,7 @@ namespace HardwareInterfaces {
 		}
 		//executionTime[6] = millis();
 		if (newPreheatTemp > _preheatCallTemp) {
-			profileLogger() << "\tStart Preheat " << zoneRec.name << L_endl;
+			profileLogger() << "\tStart Preheat " << zoneRec.name << " at " << newPreheatTemp << L_endl;
 			_startCallTemp = currTemp_fractional;
 			if (_minsCooling == DELAY_COOLING_TIME) _minsCooling = MEASURING_DELAY;
 		} 

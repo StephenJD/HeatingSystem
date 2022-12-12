@@ -59,9 +59,9 @@ public:
 		, R_MOTOR_ACTIVITY	// Motor activity: e_Moving_Coolest, e_Cooling, e_Stop, e_Heating
 		, R_FLOW_TEMP_FRACT
 		, R_VALVE_POS
-		, R_PSU_MIN_V
+		, R_END_POS
 		, R_PSU_MAX_V
-		, R_PSU_MIN_OFF_V
+		, R_TS_ERR
 		, R_PSU_MAX_OFF_V
 		, R_PID_MODE
 		, R_FLOW_TEMP // Received in Slave-Mode
@@ -108,11 +108,11 @@ public:
 	uint16_t currReqTemp_16() const;
 	void setRegister(uint8_t regNo, uint8_t val) { registers().set(regNo, val); }
 #ifdef SIM_MIXV
-	uint8_t pos() { return _motor.pos(psu); }
+	//uint8_t pos() { return _motor.update_pos(psu); }
 	uint8_t curr_pos() const { return _motor.curr_pos(); }
 	static constexpr uint8_t ROOM_TEMP = 20;
 	int16_t finalTempForPosition() { 
-		return int16_t((256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * _motor.pos(psu) / float(MAX_VALVE_TIME))) + .5f); }
+		return int16_t((256 * (ROOM_TEMP + (_maxTemp - ROOM_TEMP) * curr_pos() / float(MAX_VALVE_TIME))) + .5f); }
 	int16_t flowTemp() const { return registers().get(R_FLOW_TEMP) * 256 + registers().get(R_FLOW_TEMP_FRACT); }
 	float get_Kp() const { return MAX_VALVE_TIME / ((_maxTemp - ROOM_TEMP) * 256.f); }
 	uint16_t get_TC() const { return _timeConst; }

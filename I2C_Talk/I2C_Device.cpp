@@ -5,6 +5,11 @@
 #include <I2C_Talk.h>
 
 //#define DEBUG_DEVICE
+
+#ifdef __AVR__
+#undef DEBUG_DEVICE
+#endif
+
 #ifdef DEBUG_DEVICE
 #include <Logging.h>
 namespace arduino_logger {
@@ -43,6 +48,9 @@ auto I_I2Cdevice::read_verify_2bytes(int registerAddress, volatile uint16_t & da
 			//logger() << L_time << "read_verify_2bytes device 0x" << L_hex << getAddress() << " Reg 0x" << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
 			break;
 		}
+#ifdef DEBUG_DEVICE
+		logger() << "read_verify_2bytes Reg:" << L_tabs << registerAddress << "Is:" << newRead << "NeedAnother:" << needAnotherGoodReading << "CanTryAgain:" << canTryAgain << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+#endif
 		--canTryAgain;
 	} while (canTryAgain >= needAnotherGoodReading && needAnotherGoodReading > 1);
 	if (!errorCode) errorCode = needAnotherGoodReading > 1 ? _I2C_ReadDataWrong : _OK;
@@ -59,9 +67,6 @@ auto I_I2Cdevice::read_verify_1byte(int registerAddress, volatile uint8_t & data
 		errorCode = I_I2Cdevice::read(registerAddress, 1, &newRead);
 		newRead &= dataMask;
 		if (!errorCode) {
-#ifdef DEBUG_DEVICE
-			if (getAddress() == 0x13) logger() << "read_verify_1byte Reg: " << registerAddress << " :" << newRead << L_endl;
-#endif
 			if (newRead == dataBuffer) --needAnotherGoodReading;
 			else {
 				needAnotherGoodReading = requiredConsecutiveReads;
@@ -69,7 +74,7 @@ auto I_I2Cdevice::read_verify_1byte(int registerAddress, volatile uint8_t & data
 			}
 		} 
 #ifdef DEBUG_DEVICE
-		else if (getAddress() == 0x13) logger() << "read_verify_1byteReg: " << registerAddress << I2C_Talk::getStatusMsg(errorCode) << L_endl;
+		logger() << "read_verify_1byte Reg:" << L_tabs  << registerAddress << "Is:" << newRead << "NeedAnother:" << needAnotherGoodReading << "CanTryAgain:" << canTryAgain << I2C_Talk::getStatusMsg(errorCode) << L_endl;
 #endif
 		--canTryAgain;
 	} while (canTryAgain >= needAnotherGoodReading && canTryAgain && needAnotherGoodReading > 1);

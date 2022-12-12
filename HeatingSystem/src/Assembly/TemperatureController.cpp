@@ -126,6 +126,12 @@ namespace Assembly {
 		}
 		if (relayController().updateRelays() != _OK) status = RELAYS_FAILED;
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
+		for (auto& zone : zoneArr) { 
+			if (zone.getCallFlowT() > MIN_FLOW_TEMP && !zone.isCallingHeat()) {
+				logger() << L_time << "Zone[" << zone.id() << "]\t should be calling but isn't" << L_endl;
+				zone.setFlowTemp();
+			}
+		}		
 		return status;
 	}
 

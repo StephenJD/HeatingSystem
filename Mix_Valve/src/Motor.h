@@ -15,7 +15,7 @@ public:
 	const __FlashStringHelper* name() const { 
 		return _heat_relay->port() == 11 ? F("US ") : F("DS "); 
 	}
-	uint8_t pos(PowerSupply& pwr);
+	uint8_t update_pos(PowerSupply& pwr);
 	bool moving(Direction direction, PowerSupply& pwr);
 	void start(Direction direction);
 	uint16_t stop(PowerSupply& pwr);
@@ -26,6 +26,6 @@ public:
 private:
 	HardwareInterfaces::Pin_Wag* _heat_relay = nullptr;
 	HardwareInterfaces::Pin_Wag* _cool_relay = nullptr;
-	mutable int16_t _pos = 0;
+	mutable int16_t _pos = 140;
 	Direction _motion = e_Stop;
 };

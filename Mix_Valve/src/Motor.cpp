@@ -13,7 +13,7 @@ Motor::Motor(HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_W
 	_cool_relay.begin();
 };
 
-uint8_t Motor::pos(PowerSupply& pwr) {
+uint8_t Motor::update_pos(PowerSupply& pwr) {
 	if (_motion != e_Stop) {
 		auto moveTime = pwr.powerPeriod();
 		if (moveTime) {
@@ -21,8 +21,8 @@ uint8_t Motor::pos(PowerSupply& pwr) {
 			if (_pos < 0) {
 				_pos = 0;
 			}
-			else if (_pos > 254) {
-				_pos = 254;
+			else if (_pos > 150) {
+				_pos = 150;
 			}
 			logger() << name() << L_tabs << _pos << F("at") << millis() << L_endl;
 			if (pwr.requstToRelinquish()) 
@@ -32,7 +32,7 @@ uint8_t Motor::pos(PowerSupply& pwr) {
 	return uint8_t(_pos);
 }
 
-bool Motor::moving(Direction direction, PowerSupply& pwr) {
+bool Motor::moving(Direction direction, PowerSupply& pwr) { // must update the position
 	if (_motion == e_Stop) {
 		if (direction != e_Stop) {
 			if (psu.available(this)) {
@@ -43,12 +43,13 @@ bool Motor::moving(Direction direction, PowerSupply& pwr) {
 		return false;
 	} else { // motor moving
 		if (direction == e_Stop) {
+			update_pos(pwr);
 			stop(pwr);
 			return false;
 		} else if (direction != _motion) { // change of direction
 			start(direction);
 		}
-		pos(pwr);
+		update_pos(pwr);
 		return _motion != e_Stop;
 	}
 }
@@ -67,12 +68,11 @@ void Motor::start(Direction direction) {
 
 uint16_t Motor::stop(PowerSupply& pwr) {
 	if (_motion != e_Stop) {
-		pos(pwr);
 		_cool_relay->clear(); _heat_relay->clear();
 		_motion = e_Stop;
 		logger() << name() << L_tabs
 			<< F("Stop") << millis() << L_endl;
 		return pwr.relinquishPower();
 	}
-	return 0;
+	return 1023;
 }

@@ -90,6 +90,7 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 				mode = tryToMove();
 			break;
 		case e_AtTargetPosition:
+			//if (_endPos != _motor.curr_pos()) mode = tryToMove(); // shouldn't be necesarry, but PID stuck on ToD!!!
 			break;
 		case e_FindingOff:
 			if (tryToMove() == e_Moving) {
@@ -100,7 +101,7 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 			}
 			break; 
 		case e_HotLimit:
-			if (!isTooCool) {
+			if (!isTooCool || (millis() / 1000) % 60 == 0) {
 				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL); // when flow temp increases due to gas boiler on.
 				mode = tryToMove();
 			}
@@ -137,6 +138,7 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 	reg.set(R_MODE, mode);
 	reg.set(R_MOTOR_ACTIVITY, _motor.direction()); // Motor activity: e_Cooling, e_Stop, e_Heating
 	reg.set(R_VALVE_POS, _motor.curr_pos());
+	reg.set(R_END_POS, _endPos);
 
 	//logger() << name() << L_tabs << F("Mode:") << mode << L_endl;
 	return sensorTemp;
@@ -188,14 +190,18 @@ bool Mix_Valve::valveIsAtLimit() {
 		return false;
 
 	if (psu.has_no_load()) {
+		logger() << F("LimV\t") << registers().get(R_PSU_MAX_V) + 800 << L_endl;
 		if (_journey == Motor::e_Cooling) {
-			_motor.setPosToZero();
+			if (_motor.curr_pos() < 10) {
+				_motor.setPosToZero();
+			} else return false; // detection is still poor. Prevent stopping early.
 		}
 		else {
-			if (_motor.curr_pos() > 140) {
-				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_motor.curr_pos() / 2));
-				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_motor.curr_pos() / 2));
+			if (_motor.curr_pos() > 130) {
+				//registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_motor.curr_pos() / 2));
+				//_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_motor.curr_pos() / 2));
 			}
+			else return false; // detection is still poor. Prevent stopping early.
 		}
 		return true;
 	}
@@ -226,6 +232,8 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 
 		reg.set(R_FLOW_TEMP, _temp_sensr.get_fractional_temp() >> 8);
 		reg.set(R_FLOW_TEMP_FRACT, _temp_sensr.get_fractional_temp() & 0xFF);
+		reg.set(R_TS_ERR, ts_status);
+
 		device_State.clear(F_I2C_NOW);
 		device_State.set(F_DS_TS_FAILED, ts_status);
 		uint8_t clearState = 0;
@@ -356,8 +364,8 @@ void Mix_Valve::log() const {
 		}
 	};
 
-	logger() << name() << L_tabs << F("Req:") << _currReqTemp << F("Is:") << reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.
-		<< showState() << F(" ReqPos:") << _endPos << F(" IsPos:") << _motor.curr_pos();
+	logger() << name() << L_tabs << _currReqTemp << reg.get(R_FLOW_TEMP) + reg.get(R_FLOW_TEMP_FRACT) / 256.
+		<< showState() << _endPos << _motor.curr_pos();
 }
 
 #ifdef SIM_MIXV

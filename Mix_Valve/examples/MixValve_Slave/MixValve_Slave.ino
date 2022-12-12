@@ -112,7 +112,7 @@ auto nextSecond = Timer_mS(1000);
 void setup() {
 	set_watchdog_timeout_mS(8000);
 	logger().begin(SERIAL_RATE);
-	logger() << F("Setup Started") << L_flush;
+	logger() << F("MV\tReq\tIs\tState\tReqPos\tIsPos\tPID\tOut\tp\ti\td\tSetT\tErrT\tKp/deg\tKd") << L_flush;
 	psu.begin();
 	role = e_Master; // prevent PSU-Turn-off
 
@@ -150,6 +150,9 @@ void loop() {
 	static bool multimaster_mode;
 	err.set(Mix_Valve::F_US_TS_FAILED, !mixValve_US.doneI2C_Coms(programmer, nextSecond));
 	err.set(Mix_Valve::F_DS_TS_FAILED, !mixValve_DS.doneI2C_Coms(programmer, nextSecond));
+	
+	auto flowTemp_US = mixValve_US.update(pid_US.currOut());
+	auto flowTemp_DS = mixValve_DS.update(pid_DS.currOut());
 
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
@@ -157,24 +160,22 @@ void loop() {
 		const auto newRole = getRole();
 		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 		
-		auto flowTemp = mixValve_US.update(pid_US.currOut());
 		pid_US.checkSetpoint(mixValve_US.currReqTemp_16());
-		pid_US.adjust(flowTemp, mixValve_US.atTarget());
+		pid_US.adjust(flowTemp_US, mixValve_US.atTarget());
 		mixValve_US.setRegister(Mix_Valve::R_PID_MODE, pid_US.mode());
 		mixValve_US.log();
 		pid_US.log();
 		logger() << L_endl;
 
 
-		flowTemp = mixValve_DS.update(pid_DS.currOut());
-		if (mixValve_DS.mode() != Mix_Valve::e_WaitingToMove) {
+		//if (mixValve_DS.mode() != Mix_Valve::e_WaitingToMove) {
 			pid_DS.checkSetpoint(mixValve_DS.currReqTemp_16());
-			pid_DS.adjust(flowTemp, mixValve_DS.atTarget());
+			pid_DS.adjust(flowTemp_DS, mixValve_DS.atTarget());
 			mixValve_DS.setRegister(Mix_Valve::R_PID_MODE, pid_DS.mode());
 			mixValve_DS.log();
 			pid_DS.log();
 			logger() << L_endl;
-		}
+		//}
 
 		if (err.flags()) {
 			logger() << showErr(err) << L_endl;

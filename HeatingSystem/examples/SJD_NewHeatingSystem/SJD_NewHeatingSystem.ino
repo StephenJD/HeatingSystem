@@ -86,7 +86,7 @@ namespace arduino_logger {
 	
 	Logger& loopLogger() {
 		//static RAM_Logger _log("F", 2000, false, clock_());
-		static Loop_Logger _log("F", SERIAL_RATE, clock_(), L_null);
+		static Loop_Logger _log("F", SERIAL_RATE, clock_()/*, L_null*/);
 		//static EEPROM_Logger _log("F", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
 		return _log;
 		//return logger();
@@ -157,8 +157,8 @@ void setup() {
 		Serial.flush();
 		resetRTC(rtc, rtc_reset_wag); // Before logging to avoid no-date SD logs.
 		logger() << L_flush;
-		logger() << L_time << F(" ****** Arduino Restarted ") << micros()/1000 << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT / 1000 << F("S\n\n") << L_flush;
-		logger() << F("set_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
+		logger() << L_time << F("\t****** Arduino Restarted ") << micros()/1000 << F("mS ago. Timeout: ") << WATCHDOG_TIMOUT / 1000 << F("S\n\n") << L_flush;
+		logger() << F("\tset_watchdog_timeout_mS: ") << WATCHDOG_TIMOUT << L_endl;
 		LocalDisplay tempDisplay{};
 		tempDisplay.setCursor(0, 0);
 		tempDisplay.print("Start ");
@@ -166,9 +166,9 @@ void setup() {
 		tempDisplay.clearFromEnd();
 		//set_watchdog_interrupt_mS(WATCHDOG_TIMOUT);
 		//logger().begin(SERIAL_RATE);
-		zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-		profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-		profileLogger() << "Time\tZone\tReq\tIs\tPID\tState\tPos\tPSU_Max\tPSU_OFFMax\tPSU_Min\tPSU_OFF_Min\n";
+		zTempLogger() << L_time << F("\t****** Arduino Restarted ******\n\n") << L_flush;
+		profileLogger() << L_time << F("\t****** Arduino Restarted ******\n\n") << L_flush;
+		profileLogger() << "Time\tZone\tReq\tIs\tPID\tState\tPos\tPSU_Max\tPSU_OFFMax\tEndPos\tTS_Err\n";
 
 		//logger() << F("RamFileAddr: ") << (unsigned long)static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
 		reset_watchdog();
