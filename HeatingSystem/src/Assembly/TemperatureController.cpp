@@ -105,7 +105,7 @@ namespace Assembly {
 		auto status = ALL_OK;
 
 		//logger() << L_time << "Check TS's" << L_endl;
-		if (!readTemperaturesOK()) status = TS_FAILED;
+		//if (!readTemperaturesOK()) status = TS_FAILED;
 
 		auto mixV_OK = true;
 		for (auto & mixValveControl : mixValveControllerArr) {
@@ -128,6 +128,12 @@ namespace Assembly {
 		}
 		if (relayController().updateRelays() != _OK) status = RELAYS_FAILED;
 		//logger() << L_time << F("RelaysPort::updateRelays done") << L_endl;
+		for (auto& zone : zoneArr) {
+			if (zone.getCallFlowT() > MIN_FLOW_TEMP && !zone.isCallingHeat()) {
+				logger() << L_time << "Zone[" << zone.id() << "]\t should be calling but isn't" << L_endl;
+				zone.setFlowTemp();
+			}
+		}
 		return status;
 	}
 

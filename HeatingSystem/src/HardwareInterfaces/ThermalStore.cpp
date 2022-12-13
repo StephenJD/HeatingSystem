@@ -30,6 +30,11 @@ namespace HardwareInterfaces {
 		return temp;
 	}
 
+	uint8_t ThermalStore::getBackboilerFlowTemp() const {
+		uint8_t temp = _tempSensorArr[Assembly::T_MfF].get_temp();
+		return temp;
+	}
+
 	uint8_t ThermalStore::getTopTemp() const {
 		uint8_t temp = _tempSensorArr[_thermStoreData.OvrHeatTS].get_temp();
 		return temp;

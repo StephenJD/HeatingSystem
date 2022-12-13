@@ -139,6 +139,8 @@ HeatingSystem::HeatingSystem()
 		_initialiser.i2C_Test();
 		i2C.onReceive(_prog_register_set.receiveI2C);
 		i2C.onRequest(_prog_register_set.requestI2C);
+		_tempController.backBoiler.check();
+		_tempController.checkZoneRequests(true);
 		_state = CHECK_I2C_COMS;
 	}
 
@@ -163,6 +165,10 @@ void HeatingSystem::run_stateMachine() {
 		[[fallthrough]];
 	case SERVICE_BACKBOILER:
 		loopLogger() << L_time << "SERVICE_BACKBOILER" << L_endl;
+		if (!_tempController.readTemperaturesOK()) {
+			logger() << L_time << "TS-Failed" << L_flush;
+			_initialiser.requiresINI(Initialiser::TS);
+		}
 		_tempController.backBoiler.check();
 		loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
 		[[fallthrough]];
@@ -180,11 +186,11 @@ void HeatingSystem::run_stateMachine() {
 			logger() << "\t...refresh all Registers done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 			loopLogger() << "...refresh all Registers done: " << status << L_endl;
 			switch (status) {
-			case TS_FAILED:
-				loopLogger() << L_time << "TS-Failed" << L_endl;
-				logger() << L_time << "TS-Failed" << L_flush;
-				_initialiser.requiresINI(Initialiser::TS);
-				break;
+			//case TS_FAILED:
+			//	loopLogger() << L_time << "TS-Failed" << L_endl;
+			//	logger() << L_time << "TS-Failed" << L_flush;
+			//	_initialiser.requiresINI(Initialiser::TS);
+			//	break;
 			case MV_FAILED:
 				loopLogger() << L_time << "MV-Failed" << L_endl;
 				logger() << L_time << "MV-Failed" << L_flush;

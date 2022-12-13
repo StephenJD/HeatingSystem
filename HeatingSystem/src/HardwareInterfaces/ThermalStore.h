@@ -28,7 +28,7 @@ namespace HardwareInterfaces {
 		int8_t tooCoolRequestOrigin() const { return _heatRequestSource; }
 		int8_t demandZone() const { return _demandZone; }
 		const __FlashStringHelper* principalLoad() const;
-
+		uint8_t getBackboilerFlowTemp() const;
 		// Modifier
 		void setMode(int mode) { _mode = mode; }
 		void setLowestCWtemp(bool isFlowing);
