@@ -1,10 +1,12 @@
 #include "I2C_Reset.h"
 #include <Logging.h>
-#include <Logging_Loop.h>
 #include <I2C_Recover.h>
 #include <Watchdog_Timer.h>
 
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
+#include <HeatingSystem.h>
+//#include <Logging_Loop.h>
+extern HeatingSystem* heating_system;
 //namespace arduino_logger {
 //	Logger& loopLogger();
 //}
@@ -13,12 +15,13 @@
 using namespace HardwareInterfaces;
 using namespace I2C_Talk_ErrorCodes;
 
+
 namespace I2C_Recovery {
 
 	/////////////////////////////////////////////////////
 	//              I2C Reset Support                  //
 	/////////////////////////////////////////////////////
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 	Pin_Wag HardReset::_i2c_resetPin{0,false,false };
 	Pin_Wag HardReset::_arduino_resetPin{ 0,false,false };
 	Pin_Wag HardReset::_led_indicatorPin{ 0,false,false };
@@ -95,9 +98,17 @@ namespace I2C_Recovery {
 
 	unsigned long HardReset::_timeOfReset_uS = 1; // must be non-zero at startup
 
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 	void HardReset::arduinoReset(const char * msg) {
 		logger() << L_time << F("\n *** HardReset::arduinoReset called by ") << msg << L_endl << L_flush;
+		heating_system->mainDisplay;
+		heating_system->mainDisplay.setCursor(0, 0);
+		heating_system->mainDisplay.print("Reset called by");
+		heating_system->mainDisplay.clearFromEnd();
+		heating_system->mainDisplay.setCursor(0, 1);
+		heating_system->mainDisplay.print(msg);
+		heating_system->mainDisplay.sendToDisplay();
+		delay(3000);
 		_arduino_resetPin.begin();
 		_arduino_resetPin.set();
 	}
@@ -127,20 +138,20 @@ namespace I2C_Recovery {
 			if (waitTime <= 0) _timeOfReset_uS = 0;
 			else if (wait) {
 				do {
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 					//loopLogger() << L_time << "waitForWarmUp for mS " << waitTime/1000 << L_endl;
 #endif
 					reset_watchdog();
 					delayMicroseconds(10000); // docs say delayMicroseconds cannot be relied upon > 16383uS.
 					waitTime = _timeOfReset_uS + WARMUP_uS - micros();
 				} while (waitTime > 0);
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 				//loopLogger() << L_time << "waitForWarmUp_OK" << L_endl;
 #endif
 				_timeOfReset_uS = 0;
 			}
 			else {
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 				//loopLogger() << L_time << "not WarmedUp..." << L_endl;
 #endif
 				return false;

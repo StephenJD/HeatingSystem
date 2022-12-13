@@ -1,5 +1,5 @@
 #include "Logging_SD.h"
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 #include <Date_Time.h>
 #include <Clock.h>
 #include <MemoryFree.h>

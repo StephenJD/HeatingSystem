@@ -1,5 +1,5 @@
 #include "Logging_Loop.h"
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 
 #include <Watchdog_Timer.h>
 

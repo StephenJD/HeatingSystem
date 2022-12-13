@@ -39,7 +39,7 @@ private:
 	int16_t _acceptableError = 0;
 	int16_t _smallestError = 0;
 	float _Kp = .011719f;
-	float _Ki = .005f; // oscillates on big delay/TC if Ki larger than .005
+	float _Ki = .01f; // oscillates on big delay/TC if Ki larger than .005
 	float _Kd = .8f;
 	Fat_Deque<5, int16_t> _err_past;
 	uint16_t _setPoint = 0;

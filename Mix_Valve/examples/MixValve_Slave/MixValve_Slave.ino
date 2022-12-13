@@ -163,6 +163,7 @@ void loop() {
 		pid_US.checkSetpoint(mixValve_US.currReqTemp_16());
 		pid_US.adjust(flowTemp_US, mixValve_US.atTarget());
 		mixValve_US.setRegister(Mix_Valve::R_PID_MODE, pid_US.mode());
+		mixValve_US.setRegister(Mix_Valve::R_TS_ERR, pid_US.currSetPoint() / 256);
 		mixValve_US.log();
 		pid_US.log();
 		logger() << L_endl;
@@ -172,6 +173,7 @@ void loop() {
 			pid_DS.checkSetpoint(mixValve_DS.currReqTemp_16());
 			pid_DS.adjust(flowTemp_DS, mixValve_DS.atTarget());
 			mixValve_DS.setRegister(Mix_Valve::R_PID_MODE, pid_DS.mode());
+			mixValve_DS.setRegister(Mix_Valve::R_TS_ERR, pid_DS.currSetPoint()/256);
 			mixValve_DS.log();
 			pid_DS.log();
 			logger() << L_endl;

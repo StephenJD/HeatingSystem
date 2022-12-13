@@ -101,7 +101,7 @@ uint16_t Mix_Valve::stateMachine(int newPos) {
 			}
 			break; 
 		case e_HotLimit:
-			if (!isTooCool || (millis() / 1000) % 60 == 0) {
+			if (!isTooCool /*|| (millis() / 1000) % 60 == 0*/) {
 				I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL); // when flow temp increases due to gas boiler on.
 				mode = tryToMove();
 			}
@@ -219,20 +219,22 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 	auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 	uint8_t ts_status = device_State.is(F_DS_TS_FAILED);
 	if (device_State.is(F_NO_PROGRAMMER) && newSecond) device_State.set(F_I2C_NOW);
-
+	constexpr int e_Slave_Sense = 7;
 	if (device_State.is(F_I2C_NOW)) {
+		digitalWrite(e_Slave_Sense, LOW);
+		pinMode(e_Slave_Sense, OUTPUT); // disconnect rest of I2C
 		ts_status = _temp_sensr.readTemperature();
 		if (ts_status == _disabledDevice) {
 			_temp_sensr.reset();
 		}
-
+		pinMode(e_Slave_Sense, INPUT); // reconnect rest of I2C
 		if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
 			<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
 			<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
 
 		reg.set(R_FLOW_TEMP, _temp_sensr.get_fractional_temp() >> 8);
 		reg.set(R_FLOW_TEMP_FRACT, _temp_sensr.get_fractional_temp() & 0xFF);
-		reg.set(R_TS_ERR, ts_status);
+		//reg.set(R_TS_ERR, ts_status);
 
 		device_State.clear(F_I2C_NOW);
 		device_State.set(F_DS_TS_FAILED, ts_status);

@@ -1,5 +1,5 @@
 #include "Logging_EP.h"
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 
 #include "Logging_SD.h"
 #include <Date_Time.h>

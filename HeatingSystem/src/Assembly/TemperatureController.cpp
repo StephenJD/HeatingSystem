@@ -105,7 +105,7 @@ namespace Assembly {
 		auto status = ALL_OK;
 
 		//logger() << L_time << "Check TS's" << L_endl;
-		if (!readTemperaturesOK()) status = TS_FAILED;
+		//if (!readTemperaturesOK()) status = TS_FAILED;
 
 		auto mixV_OK = true;
 		for (auto & mixValveControl : mixValveControllerArr) {

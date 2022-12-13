@@ -115,15 +115,18 @@ namespace Assembly {
 
 	uint8_t Initialiser::ini_TS() {
 		auto status = _OK;
-		logger() << L_time << F("ini_TS...") << L_flush;
+		//logger() << L_time << F("ini_TS...") << L_flush;
 		for (auto& ts : _hs._tempController.tempSensorArr) {
 			if (ts.testDevice() != _OK) {
 				auto speedTest = I2C_SpeedTest{ ts };
 				speedTest.fastest();
-				status |= speedTest.error();
+				if (speedTest.error()) {
+					logger() << L_time << F("Failed ini TS 0x") << L_hex << ts.getAddress() << L_flush;
+					status |= speedTest.error();
+				}
 			}
 		}	
-		logger() << L_time << F("ini_TS-OK") << L_flush;
+		//logger() << L_time << F("ini_TS") << I2C_Talk::getStatusMsg(status) << L_flush;
 		return status;
 	}
 

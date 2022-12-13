@@ -322,7 +322,8 @@ namespace HardwareInterfaces {
 				return false;
 				//status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ);
 			} else if (flowTemp == 255) {
-				logger() << L_time << F("read device 0x") << L_hex << getAddress() << F(" OK. FlowTemp 255! Try again... Was:") << prev_flowTemp << L_endl;
+				logger() << L_time << F("read device 0x") << L_hex << getAddress() << F(" OK. FlowTemp 255! Do I2C.restart()... Was: ") << L_dec << prev_flowTemp << L_endl;
+				i2C().begin();
 				status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
 				flowTemp = reg.get(Mix_Valve::R_FLOW_TEMP);
 				if (flowTemp == 255) {

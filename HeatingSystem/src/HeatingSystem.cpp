@@ -163,30 +163,34 @@ void HeatingSystem::run_stateMachine() {
 		loopLogger() << L_time << "SERVICE_SEQUENCER" << L_endl;
 		_tempController.checkZoneRequests(true); // must be called once every 10 mins and when data changes
 		[[fallthrough]];
-	case SERVICE_BACKBOILER:
-		logger() << L_time << "SERVICE_BACKBOILER" << L_endl;
+	case SERVICE_BACKBOILER: // every minute
+		//logger() << L_time << "SERVICE_BACKBOILER" << L_endl;
+		if (!_tempController.readTemperaturesOK()) {
+			logger() << L_time << "TS-Failed" << L_flush;
+			_initialiser.requiresINI(Initialiser::TS);
+		}
 		_tempController.backBoiler.check();
-		logger() << L_time << "SERVICE_BACKBOILER_Done." << L_endl;
+		//logger() << L_time << "SERVICE_BACKBOILER_Done." << L_endl;
 		[[fallthrough]];
-	case SERVICE_TEMP_CONTROLLER: {
+	case SERVICE_TEMP_CONTROLLER: {// every second
 			//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
 			//logger() << L_cout << "Ram End" << L_endl;
 			//loopLogger().begin();
 			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
-			logger() << L_time << "SERVICE_TEMP_CONTROLLER state(252): " << _initialiser.iniState().flags() << L_endl;
+			//logger() << L_time << "SERVICE_TEMP_CONTROLLER state(252): " << _initialiser.iniState().flags() << L_endl;
 			//thickConsole_Arr[1].sendSlaveIniData(RC_US_REQUESTING_INI << 1);
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
-			logger() << L_time << "...checkAndAdjust done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			//logger() << L_time << "...checkAndAdjust done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 			serviceConsoles_OK();
-			logger() << "\t...refresh all Registers done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			//logger() << "\t...refresh all Registers done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 			loopLogger() << "...refresh all Registers done: " << status << L_endl;
 			switch (status) {
-			case TS_FAILED:
+			/*case TS_FAILED:
 				loopLogger() << L_time << "TS-Failed" << L_endl;
 				logger() << L_time << "TS-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::TS);
-				break;
+				break;*/
 			case MV_FAILED:
 				loopLogger() << L_time << "MV-Failed" << L_endl;
 				logger() << L_time << "MV-Failed" << L_flush;
@@ -244,7 +248,7 @@ bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to k
 				logger() << L_time << "RC-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 			}
-			logger() << L_time << "refresh RC's " << (rc_OK? "OK":"Bad") /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			//logger() << L_time << "refresh RC's " << (rc_OK? "OK":"Bad") /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 		}
 	}
 	if (dataHasChanged) {
@@ -259,7 +263,7 @@ bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to k
 
 bool HeatingSystem::serviceMainConsole() {
 	if (consoleDataHasChanged()) {
-		logger() << L_time << "refreshDisplay s" << (micros() / 1000000) % 10 << L_endl;
+		//logger() << L_time << "refreshDisplay s" << (micros() / 1000000) % 10 << L_endl;
 		_mainConsole.refreshDisplay();
 		return true;
 	}
@@ -276,7 +280,7 @@ bool HeatingSystem::consoleDataHasChanged() {
 
 void HeatingSystem::updateChangedData() {
 	if (_mainConsoleChapters.chapter() == 0) {
-		loopLogger() << L_time << F("updateChangedData\n");
+		//loopLogger() << L_time << F("updateChangedData\n");
 		_tempController.checkZoneRequests(true);
 	}
 }

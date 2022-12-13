@@ -20,7 +20,7 @@
 #include <Logging.h>
 #include <Wire.h>
 
-#include <SD.h>
+//#include <SD.h>
 
 #include <MultiCrystal.h>
 #include <Date_Time.h>

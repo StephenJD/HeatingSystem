@@ -1,5 +1,5 @@
 #pragma once
-#ifndef __AVR_ATmega328P__
+#ifndef __AVR__
 #include <Arduino.h>
 #include <Logging.h>
 #include <Conversions.h>

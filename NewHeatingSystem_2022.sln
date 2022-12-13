@@ -61,10 +61,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AVR", "AVR", "{3A89E558-0F5D-451B-8200-DC46494A3C90}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\EEPROM\src\EEPROM.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\EEPROM\src\EEPROM.h
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.c
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\utility\twi.h
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.cpp
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.4\libraries\Wire\src\Wire.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\utility\twi.c
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\utility\twi.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\Wire.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\Wire.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I2C_Port", "I2C_Talk\examples\I2C_Port\I2C_Port.vcxproj", "{318D372E-3D24-4D43-B60C-BDE037753CB4}"
@@ -112,10 +112,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test MixValve", "..\..\VS_P
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MegaCore", "MegaCore", "{2B0C7988-6A4D-46F3-A187-597B451ED32D}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.c
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\utility\twi.h
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.cpp
-		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.1.2\libraries\Wire\src\Wire.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.2.0\libraries\Wire\src\TwoWire\utility\twi.c = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.2.0\libraries\Wire\src\TwoWire\utility\twi.c
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.2.0\libraries\Wire\src\TwoWire\utility\twi.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.2.0\libraries\Wire\src\TwoWire\utility\twi.h
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\Wire.cpp = ..\..\..\..\..\..\AppData\Local\arduino15\packages\arduino\hardware\avr\1.8.5\libraries\Wire\src\Wire.cpp
+		..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.2.0\libraries\Wire\src\Wire.h = ..\..\..\..\..\..\AppData\Local\arduino15\packages\MegaCore\hardware\avr\2.2.0\libraries\Wire\src\Wire.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_Deque", "..\..\VS_Projects\Test Libraries\Test Deque\Test_Deque\Test_Deque.vcxproj", "{94F2B56B-7A38-4B25-B8E0-84D4B9957BCF}"
