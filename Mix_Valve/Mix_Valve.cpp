@@ -115,7 +115,7 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 
 	auto psuOffV = measurePSUVoltage(200);
 	if (psuOffV) _motorsOffV = psuOffV;
-
+	_valvePos = 140;
 	logger() << F("OffV: ") << _motorsOffV << L_endl;
 	reg.set(R_MODE, e_FindOff);
 	logger() << name() << F(" TS Speed:") << _temp_sensr.runSpeed() << L_endl;
@@ -460,9 +460,10 @@ bool Mix_Valve::valveIsAtLimit() {
 
 	if (isOff()) {
 		if (_motorDirection == e_Cooling) {
-			_valvePos = 0;
+			if (_valvePos < 10) _valvePos = 0;
+			else return false;
 		} else {
-			if (_valvePos > 100) {
+			if (_valvePos > 130) {
 				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 			} else return false;
@@ -489,11 +490,15 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 	if (device_State.is(F_NO_PROGRAMMER) && newSecond) device_State.set(F_I2C_NOW);
 
 	if (device_State.is(F_I2C_NOW)) {
+		constexpr int e_Slave_Sense = 7;
+		digitalWrite(e_Slave_Sense, LOW);
+		pinMode(e_Slave_Sense, OUTPUT);
 		_temp_sensr.setHighRes();
 		ts_status = _temp_sensr.readTemperature();
 		if (ts_status == _disabledDevice) {
 			_temp_sensr.reset();
 		}
+		pinMode(e_Slave_Sense, INPUT);
 
 		if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
 			<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
