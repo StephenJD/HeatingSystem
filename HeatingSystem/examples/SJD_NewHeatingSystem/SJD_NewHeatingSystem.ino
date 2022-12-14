@@ -84,13 +84,13 @@ namespace arduino_logger {
 		return _log;
 	}	
 	
-	Logger& loopLogger() {
-		//static RAM_Logger _log("F", 2000, false, clock_());
-		static Loop_Logger _log("F", SERIAL_RATE, clock_(), L_null);
-		//static EEPROM_Logger _log("F", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
-		return _log;
-		//return logger();
-	}
+	//Logger& loopLogger() {
+	//	//static RAM_Logger _log("F", 2000, false, clock_());
+	//	static Loop_Logger _log("F", SERIAL_RATE, clock_(), L_null);
+	//	//static EEPROM_Logger _log("F", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
+	//	return _log;
+	//	//return logger();
+	//}
 }
 using namespace arduino_logger;
 
