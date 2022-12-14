@@ -212,14 +212,14 @@ void HeatingSystem::run_stateMachine() {
 		case Clock::NEW_HR:
 			//loopLogger().activate(clock_().hrs() % 2 ? true : false);
 		case Clock::NEW_MIN10:
-			_state = SERVICE_SEQUENCER;
+			//_state = SERVICE_SEQUENCER;
 			return;
 		case Clock::NEW_MIN:
-			_state = SERVICE_BACKBOILER;
+			//_state = SERVICE_BACKBOILER;
 			return;
 		case Clock::NEW_SEC10:
 		case Clock::NEW_SEC:
-			_state = SERVICE_TEMP_CONTROLLER;
+			//_state = SERVICE_TEMP_CONTROLLER;
 			return;
 #ifdef ZPSIM
 		default:
