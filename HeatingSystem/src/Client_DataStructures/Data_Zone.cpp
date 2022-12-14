@@ -57,7 +57,7 @@ namespace client_data_structures {
 			if (canDo) {
 				HardwareInterfaces::Zone& z = runTimeData();
 				_isTemp.val = z.getCurrTemp();
-				if (_name == "Stove ") {
+				if (runTimeData().backBoilerIsOn()) {
 					_isTemp.val = z.backBoilerFlowT();
 				}
 			}
