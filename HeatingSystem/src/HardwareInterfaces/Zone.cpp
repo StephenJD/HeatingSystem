@@ -162,8 +162,7 @@ namespace HardwareInterfaces {
 	bool Zone::advancedToNextProfile() const { return startDateTime() > clock_().now(); };
 
 	bool Zone::backBoilerIsOn() const {
-		return _thermalStore->backBoilerIsHeating();
-		//return  _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
+		return  _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
 	}
 
 	int8_t Zone::backBoilerFlowT() const {
