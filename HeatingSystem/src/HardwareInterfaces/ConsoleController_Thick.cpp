@@ -55,7 +55,7 @@ namespace HardwareInterfaces {
 #endif
 		auto thisIniFlag = RC_US_REQUESTING_INI << index();
 		if (!(thisIniFlag & requestINI_flags)) return _OK;
-		loopLogger() << index() << "] Console_sendSlaveIniData..." << L_endl;
+		//loopLogger() << index() << "] Console_sendSlaveIniData..." << L_endl;
 		logger() << L_time << F("Console_sendSlaveIniData: [") << index() << L_flush;
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
@@ -79,7 +79,7 @@ namespace HardwareInterfaces {
 			}
 		}
 		logger() << F("ConsoleController_Thick::sendSlaveIniData()[") << index() << F("] i2CMode: ") << registers().get(OLED::R_DEVICE_STATE) << i2C().getStatusMsg(errCode) << L_endl;
-		loopLogger() << "Console_sendSlaveIniData_OK" << L_endl;
+		//loopLogger() << "Console_sendSlaveIniData_OK" << L_endl;
 		return errCode;
 	}
 
@@ -104,7 +104,7 @@ namespace HardwareInterfaces {
 #endif	
 
 		logger() << L_time << index() << "] refreshRegisters-start 0x" << L_hex << getAddress() << L_endl;
-		loopLogger() << L_time << index() << "] refreshRegisters-start 0x" << L_hex << getAddress() << L_endl;
+		//loopLogger() << L_time << index() << "] refreshRegisters-start 0x" << L_hex << getAddress() << L_endl;
 		if (reEnable(true) != _OK) return false;
 		if (!remoteOffset_OK()) return false;
 		//auto [status, towelrail_req_changed, hotwater_req_changed, remReqTemp] = readRemoteRegisters_OK();
@@ -113,18 +113,18 @@ namespace HardwareInterfaces {
 		auto towelrail_req_changed = std::get<1>(regStatus);
 		auto hotwater_req_changed = std::get<2>(regStatus);
 		auto remReqTemp = std::get<3>(regStatus); // is 0 normally.
-		loopLogger() << "\tGot RemoteRegister" << L_endl;
+		//loopLogger() << "\tGot RemoteRegister" << L_endl;
 
 		if (status != _OK) {
 			logger() << L_time << F("ConsoleController_Thick refreshRegistersOK device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_flush;
-			loopLogger() << F("\tBad data") << L_endl;
+			//loopLogger() << F("\tBad data") << L_endl;
 			// timed-out after this line
 			return false;
 		}
 		auto zoneReqTemp = _zone->currTempRequest();
 		auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP); // is zoneReqTemp normally.
 		// times-out before this line
-		loopLogger() << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
+		//loopLogger() << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
 		logger() << L_time << F("State: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << "\t" << millis() % 10000 << L_endl;
 
 		switch (_state) {
@@ -235,7 +235,7 @@ namespace HardwareInterfaces {
 	}
 
 	std::tuple<uint8_t, int8_t, int8_t, uint8_t> ConsoleController_Thick::readRemoteRegisters_OK() {
-		loopLogger() << "\treadRemoteRegisters..." << L_endl;
+		//loopLogger() << "\treadRemoteRegisters..." << L_endl;
 
 		// Lambdas
 		auto give_RC_Bus = [this](OLED::I2C_Flags_Obj i2c_status) {
@@ -243,15 +243,15 @@ namespace HardwareInterfaces {
 			i2c_status.clear(OLED::F_PROGRAMMER_CHANGED_DATA);
 			i2c_status.set(OLED::F_I2C_NOW);
 			writeRegValue(OLED::R_DEVICE_STATE, i2c_status);
-			loopLogger() << "\tset F_I2C_NOW" << L_endl;
+			//loopLogger() << "\tset F_I2C_NOW" << L_endl;
 		};
 
 		auto reg = registers();
 		auto i2c_status = OLED::I2C_Flags_Obj{ reg.get(OLED::R_DEVICE_STATE) };
-		loopLogger() << "\twait_Devices..." << L_endl;
+		//loopLogger() << "\twait_Devices..." << L_endl;
 		give_RC_Bus(i2c_status); // remote reads TS to its local registers.
 		wait_DevicesToFinish(rawRegisters());
-		loopLogger() << "\treadRegSet..." << L_endl;
+		//loopLogger() << "\treadRegSet..." << L_endl;
 		auto roomTemp_was = reg.get(OLED::R_ROOM_TEMP);
 		auto roomTemp_16th_was = reg.get(OLED::R_ROOM_TEMP_FRACTION);
 		uint8_t status = readRegSet(OLED::R_ROOM_TEMP, 2); // copy remote into local reg.
@@ -269,7 +269,7 @@ namespace HardwareInterfaces {
 		uint8_t towelrail_req_changed = -1;
 		uint8_t hotwater_req_changed = -1;
 		uint8_t remReqTemp = 0;
-		loopLogger() << "\treadRegVerifyValue..." << L_endl;
+		//loopLogger() << "\treadRegVerifyValue..." << L_endl;
 		bool chain = status || _state // evaluate until true
 			|| (status = readRegVerifyValue(OLED::R_REQUESTING_T_RAIL, towelrail_req_changed))
 			|| (_state = reg.update(OLED::R_REQUESTING_T_RAIL, towelrail_req_changed) ? REM_TR : _state)
@@ -278,7 +278,7 @@ namespace HardwareInterfaces {
 			|| (status = readRegVerifyValue(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp))
 			|| (_state = remReqTemp != 0 ? REM_REQ_TEMP : _state);
 
-		loopLogger() << "\treadRemoteRegisters_done: " << status << L_endl;
+		//loopLogger() << "\treadRemoteRegisters_done: " << status << L_endl;
 
 		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(status, towelrail_req_changed, hotwater_req_changed, remReqTemp);
 	}

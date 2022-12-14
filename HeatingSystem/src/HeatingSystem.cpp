@@ -109,11 +109,11 @@ void printFileHeadings() {
 
 void flushLogs() {
 	logger().flush();
-	loopLogger() << "logger flush done" << L_endl;
+	//loopLogger() << "logger flush done" << L_endl;
 	zTempLogger().flush();
-	loopLogger() << "zTempLogger flush done" << L_endl;
+	//loopLogger() << "zTempLogger flush done" << L_endl;
 	profileLogger().flush();
-	loopLogger() << "profileLogger flush done" << L_endl;
+	//loopLogger() << "profileLogger flush done" << L_endl;
 }
 
 HeatingSystem::HeatingSystem()
@@ -146,37 +146,32 @@ HeatingSystem::HeatingSystem()
 
 void HeatingSystem::run_stateMachine() {
 	//TODO: Profile / preheat not done immedietly. Pump shows on for a while.
-	//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
-	//logger() << L_cout << "Ram End" << L_endl;
-	loopLogger().begin();
-	loopLogger() << "State: " << _state << L_endl;
+	//loopLogger().begin();
+	//loopLogger() << "State: " << _state << L_endl;
 	switch (_state) {
 	case CHECK_I2C_COMS: // once per second
 		if (_initialiser.state_machine_OK()) _state = SERVICE_CONSOLES;
 		serviceMainConsole();
 		break;
 	case START_NEW_DAY:
-		loopLogger() << L_time << "START_NEW_DAY" << L_endl;
+		//loopLogger() << L_time << "START_NEW_DAY" << L_endl;
 		printFileHeadings();
 		[[fallthrough]];
 	case SERVICE_SEQUENCER:
-		loopLogger() << L_time << "SERVICE_SEQUENCER" << L_endl;
+		//loopLogger() << L_time << "SERVICE_SEQUENCER" << L_endl;
 		_tempController.checkZoneRequests(true); // must be called once every 10 mins and when data changes
 		[[fallthrough]];
 	case SERVICE_BACKBOILER:
-		loopLogger() << L_time << "SERVICE_BACKBOILER" << L_endl;
+		//loopLogger() << L_time << "SERVICE_BACKBOILER" << L_endl;
 		if (!_tempController.readTemperaturesOK()) {
 			logger() << L_time << "TS-Failed" << L_flush;
 			_initialiser.requiresINI(Initialiser::TS);
 		}
 		_tempController.backBoiler.check();
-		loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
+		//loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
-			//logger() << L_cout << "Ram: " << static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
-			//logger() << L_cout << "Ram End" << L_endl;
-			//loopLogger().begin();
-			loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
+			//loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
 			logger() << L_time << "SERVICE_TEMP_CONTROLLER state(252): " << _initialiser.iniState().flags() << L_endl;
 			//thickConsole_Arr[1].sendSlaveIniData(RC_US_REQUESTING_INI << 1);
 			auto status = ALL_OK;
@@ -184,7 +179,7 @@ void HeatingSystem::run_stateMachine() {
 			logger() << L_time << "...checkAndAdjust done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 			serviceConsoles_OK();
 			logger() << "\t...refresh all Registers done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
-			loopLogger() << "...refresh all Registers done: " << status << L_endl;
+			//loopLogger() << "...refresh all Registers done: " << status << L_endl;
 			switch (status) {
 			//case TS_FAILED:
 			//	loopLogger() << L_time << "TS-Failed" << L_endl;
@@ -192,19 +187,19 @@ void HeatingSystem::run_stateMachine() {
 			//	_initialiser.requiresINI(Initialiser::TS);
 			//	break;
 			case MV_FAILED:
-				loopLogger() << L_time << "MV-Failed" << L_endl;
+				//loopLogger() << L_time << "MV-Failed" << L_endl;
 				logger() << L_time << "MV-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::MIX_V);
 				break;
 			case RELAYS_FAILED:
-				loopLogger() << L_time << "Relay-Failed" << L_endl;
+				//loopLogger() << L_time << "Relay-Failed" << L_endl;
 				logger() << L_time << "Relay-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::RELAYS);
 				break;
 			}
-			loopLogger() << "flushLogs..." << L_endl;
+			//loopLogger() << "flushLogs..." << L_endl;
 			flushLogs();
-			loopLogger() << "flushLogs done" << L_endl;
+			//loopLogger() << "flushLogs done" << L_endl;
 			_state = CHECK_I2C_COMS;
 		}	
 		break;
@@ -244,7 +239,7 @@ bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to k
 		for (auto& remote : thickConsole_Arr) {
 			if (!remote.refreshRegistersOK()) {
 				rc_OK = false;
-				loopLogger() << L_time << "RC-Failed" << L_endl;
+				//loopLogger() << L_time << "RC-Failed" << L_endl;
 				logger() << L_time << "RC-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 			}
@@ -252,9 +247,9 @@ bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to k
 		}
 	}
 	if (dataHasChanged) {
-		loopLogger() << L_time << "...updateChangedData" << L_endl;
+		//loopLogger() << L_time << "...updateChangedData" << L_endl;
 		updateChangedData();
-		loopLogger() << L_time << "Done updateChangedData" << L_endl;
+		//loopLogger() << L_time << "Done updateChangedData" << L_endl;
 		dataHasChanged = false;
 		//logger() << "\tupdateChangedData iniState: " << _initialiser.iniState().flags() << L_endl;
 	}
@@ -280,7 +275,7 @@ bool HeatingSystem::consoleDataHasChanged() {
 
 void HeatingSystem::updateChangedData() {
 	if (_mainConsoleChapters.chapter() == 0) {
-		loopLogger() << L_time << F("updateChangedData\n");
+		//loopLogger() << L_time << F("updateChangedData\n");
 		_tempController.checkZoneRequests(true);
 	}
 }

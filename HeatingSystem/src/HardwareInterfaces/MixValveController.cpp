@@ -62,7 +62,7 @@ namespace HardwareInterfaces {
 		Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 
 		if (errCode == _OK) {
-			loopLogger() << index() <<  F("] MV_sendSlaveIniData - WriteReg...") << L_endl;
+			//loopLogger() << index() <<  F("] MV_sendSlaveIniData - WriteReg...") << L_endl;
 			logger() << index() <<  F("] MV_sendSlaveIniData") << L_endl;
 			errCode = writeReg(Mix_Valve::R_DEVICE_STATE);
 			errCode |= writeReg(Mix_Valve::R_REMOTE_REG_OFFSET);
@@ -70,14 +70,14 @@ namespace HardwareInterfaces {
 			errCode |= writeRegValue(Mix_Valve::R_SETTLE_TIME, VALVE_WAIT_TIME);
 			if (errCode) return errCode;
 
-			loopLogger() <<  F("MixValveController::sendSlaveIniData - WriteRegSet...") << L_endl;
+			//loopLogger() <<  F("MixValveController::sendSlaveIniData - WriteRegSet...") << L_endl;
 			errCode = writeRegSet(Mix_Valve::R_RATIO, Mix_Valve::MV_VOLATILE_REG_SIZE - Mix_Valve::R_RATIO);
 			if (errCode == _OK) {
 				requestINI_flags &= ~thisIniFlag;
-				loopLogger() << " New IniStatus:" << requestINI_flags << L_endl;
+				//loopLogger() << " New IniStatus:" << requestINI_flags << L_endl;
 			}
 		}
-		loopLogger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << " State:" << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
+		//loopLogger() <<  F("MixValveController::sendSlaveIniData()") << I2C_Talk::getStatusMsg(errCode) << " State:" << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
 		return errCode;
 	}
 

@@ -137,10 +137,9 @@ namespace LCD_UI {
  
 void WDT_Handler(void) {
 	reset_watchdog();
-	//Serial.println(strlen(static_cast<RAM_Logger&>(loopLogger()).c_str()));
 	// disable interrupt.
 	//NVIC_DisableIRQ(WDT_IRQn);
-	loopLogger().flush();
+	//loopLogger().flush();
 	// save mem addresses in gen backup registers.
 	pinMode(RESET_5vREF_PIN, OUTPUT);
 	digitalWrite(RESET_5vREF_PIN, LOW);
@@ -168,10 +167,9 @@ void setup() {
 		//logger().begin(SERIAL_RATE);
 		zTempLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 		profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
-		//logger() << F("RamFileAddr: ") << (unsigned long)static_cast<RAM_Logger&>(loopLogger()).c_str() << L_endl;
 		reset_watchdog();
 		logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
-		loopLogger().flush();
+		//loopLogger().flush();
 		pinMode(RESET_LEDP_PIN, OUTPUT);
 		digitalWrite(RESET_LEDP_PIN, HIGH);
 		analogWrite(BRIGHNESS_PWM, BRIGHTNESS);  // Brightness analogRead values go from 0 to 1023, analogWrite values from 0 to 255
