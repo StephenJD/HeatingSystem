@@ -39,9 +39,7 @@ namespace client_data_structures {
 		case e_name:
 			if (canDo) {
 				_name = answer().rec().name;
-				if (_name == "DnStrs") {
-					if (runTimeData().backBoilerIsOn()) _name = "Stove ";
-				}
+				if (runTimeData().backBoilerIsOn()) _name = "Stove ";
 			}
 			return &_name;
 		case e_abbrev:
@@ -59,7 +57,7 @@ namespace client_data_structures {
 			if (canDo) {
 				HardwareInterfaces::Zone& z = runTimeData();
 				_isTemp.val = z.getCurrTemp();
-				if (_name == "Stove ") {
+				if (runTimeData().backBoilerIsOn()) {
 					_isTemp.val = z.backBoilerFlowT();
 				}
 			}
@@ -67,10 +65,7 @@ namespace client_data_structures {
 		case e_isHeating:
 			if (canDo) {
 				HardwareInterfaces::Zone & z = runTimeData();
-				_isHeating = z.isCallingHeat() ? "`!" : "` ";
-				if (_name == "Stove ") {
-					_isHeating = z.backBoilerIsOn() ? "`!" : "` ";
-				}
+				_isHeating = z.backBoilerIsOn() ? "`!" : (z.isCallingHeat() ? "`!" : "` ");
 			}
 			return &_isHeating;
 		case e_ratio:
