@@ -70,15 +70,15 @@ namespace Assembly {
 			break;
 		case RELAYS:
 			//loopLogger() << L_time << "ESTABLISH_RELAY_COMS..." << L_endl;
-			if (ini_relays() == _OK) {
+			//if (ini_relays() == _OK) {
 				_iniState.set(RELAYS);
-			} else { _iniState.clear(I2C_RESET); }
+			//} else { _iniState.clear(I2C_RESET); }
 			break;
 		case MIX_V:
 			//loopLogger() << L_time << "ESTABLISH_MIXV_COMMS..." << L_endl;
-			if (post_initialize_MixV() == _OK) {
+			//if (post_initialize_MixV() == _OK) {
 				_iniState.set(MIX_V);
-			} else { _iniState.clear(I2C_RESET); }
+			//} else { _iniState.clear(I2C_RESET); }
 			break;
 		case REMOTE_CONSOLES:
 			//loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS..." << L_endl;
@@ -190,8 +190,8 @@ namespace Assembly {
 	void Initialiser::i2C_Test() {
 		uint8_t status = _testDevices.speedTestDevices();
 		_iniState.set(I2C_RESET, status);
-		status = _testDevices.testRelays();
-		_iniState.set(RELAYS, status);
+		//status = _testDevices.testRelays();
+		//_iniState.set(RELAYS, status);
 	}
 
 	uint8_t Initialiser::notify_reset() {

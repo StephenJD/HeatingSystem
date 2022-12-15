@@ -31,6 +31,7 @@ namespace HardwareInterfaces {
 	private:
 		enum State {NO_CHANGE, AWAIT_REM_ACK_TEMP, REM_REQ_TEMP, REM_TR, REM_HW, REM_REQ_OFFSET};
 		bool remoteOffset_OK();
+		I2C_Talk_ErrorCodes::Error_codes recover();
 		std::tuple<uint8_t, int8_t, int8_t, uint8_t> readRemoteRegisters_OK();
 		void logRemoteRegisters();
 		bool _hasChanged = false;

@@ -254,15 +254,27 @@ namespace HardwareInterfaces {
 		//loopLogger() << "\treadRegSet..." << L_endl;
 		auto roomTemp_was = reg.get(OLED::R_ROOM_TEMP);
 		auto roomTemp_16th_was = reg.get(OLED::R_ROOM_TEMP_FRACTION);
-		uint8_t status = readRegSet(OLED::R_ROOM_TEMP, 2); // copy remote into local reg.
-		if (status != _OK || reg.get(OLED::R_ROOM_TEMP) == 0) {
-			logger() << L_time << "\tRC Room Temp[" << index() << "] = 0!" << I2C_Talk::getStatusMsg(status) << L_flush;
+		uint8_t status, roomTemp;
+		auto timeout = Timer_mS(150);
+		testDevice(); 
+		do {
+			status = readRegVerifyValue(OLED::R_ROOM_TEMP, roomTemp);
+		} while ((roomTemp == 0 || roomTemp > 50) && status == _OK && !timeout);
+		auto timeused = timeout.timeUsed();
+		if (timeused > 10 && !timeout) logger() << L_time << "RC[" << index() << "] read Room Temp " << roomTemp << " in mS " << timeused << L_endl;
+		reg.set(OLED::R_ROOM_TEMP, roomTemp);
+		status |= readRegVerifyValue(OLED::R_ROOM_TEMP_FRACTION, roomTemp);
+		reg.set(OLED::R_ROOM_TEMP_FRACTION, roomTemp);
+
+		if (status != _OK || timeused > timeout.period()) {
+			logger() << L_time << "\tRC Room Temp[" << index() << "] bad read: " << roomTemp << I2C_Talk::getStatusMsg(status) << L_flush;
 			reg.set(OLED::R_ROOM_TEMP, roomTemp_was);
 			reg.set(OLED::R_ROOM_TEMP_FRACTION, roomTemp_16th_was);
+			status = recover();
 			//auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
 			//ini_state |= RC_US_REQUESTING_INI << index();
 #ifndef ZPSIM
-			status = _I2C_ReadDataWrong;
+			//status = _I2C_ReadDataWrong;
 #endif
 		}
 
@@ -279,7 +291,59 @@ namespace HardwareInterfaces {
 			|| (_state = remReqTemp != 0 ? REM_REQ_TEMP : _state);
 
 		//loopLogger() << "\treadRemoteRegisters_done: " << status << L_endl;
-
+		if (status) status = recover();
 		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(status, towelrail_req_changed, hotwater_req_changed, remReqTemp);
+	}
+
+	I2C_Talk_ErrorCodes::Error_codes ConsoleController_Thick::recover() {
+		// Does the uC respond to I2C request?
+		auto status = testDevice();
+		if (status == _OK) {
+			logger() << L_time << "RC[" << index() << "] responds to I2C request" << L_endl;
+			auto reg = registers();
+			uint8_t roomTemp = 0;
+			auto timeout = Timer_mS(150);
+			do {
+				status = readRegVerifyValue(OLED::R_ROOM_TEMP, roomTemp);
+			} while (roomTemp == 0 && !timeout);
+			if (!timeout) {
+				auto timeused = timeout.timeUsed();
+				reg.set(OLED::R_ROOM_TEMP, roomTemp);
+				logger() << L_time << "RC[" << index() << "] recover Room Temp " << roomTemp << " in mS " << timeused << L_endl;
+				return _OK;
+			}
+			//else {
+			//	auto zoneReqTemp = _zone->currTempRequest();
+			//	auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP); // is zoneReqTemp normally.
+			//	uint8_t remReqTemp = zoneReqTemp - 1;
+			//	reg.set(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp);
+			//	status = writeReg(OLED::R_REQUESTING_ROOM_TEMP);
+			//	timeout.restart();
+			//	do {
+			//		status = readRegVerifyValue(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp);
+			//	} while (remReqTemp != 0 && !timeout);
+			//	if (!timeout) {
+			//		auto timeused = timeout.timeUsed();
+			//		logger() << L_time << "RC[" << index() << "] responds to change Request Temp in mS " << timeused << L_endl;
+			//		remReqTemp = zoneReqTemp;
+			//		reg.set(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp);
+			//		status = writeReg(OLED::R_REQUESTING_ROOM_TEMP);
+			//		timeout.restart();
+			//		do {
+			//			status = readRegVerifyValue(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp);
+			//		} while (remReqTemp != 0 && !timeout);
+			//		if (!timeout) {
+			//			timeused = timeout.timeUsed();
+			//			logger() << L_time << "RC[" << index() << "] responds to reset Request Temp in mS " << timeused << L_endl;
+			//			return _OK;
+			//		}
+			//	}
+			//}
+		}
+		else {
+			logger() << L_time << "RC[" << index() << "] no response to I2C request" << L_endl;
+			set_console_mode(67);
+		}
+		return _I2C_ReadDataWrong;
 	}
 }

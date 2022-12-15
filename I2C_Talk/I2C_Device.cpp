@@ -55,6 +55,7 @@ auto I_I2Cdevice::read_verify_1byte(int registerAddress, volatile uint8_t & data
 	uint8_t newRead;
 	dataBuffer = 0xAA; // 1010 1010
 	auto needAnotherGoodReading = requiredConsecutiveReads;
+	//auto timeout = Timer_mS(10);
 	do {
 		errorCode = I_I2Cdevice::read(registerAddress, 1, &newRead);
 		newRead &= dataMask;
@@ -73,6 +74,7 @@ auto I_I2Cdevice::read_verify_1byte(int registerAddress, volatile uint8_t & data
 #endif
 		--canTryAgain;
 	} while (canTryAgain >= needAnotherGoodReading && canTryAgain && needAnotherGoodReading > 1);
+	//} while (!timeout && needAnotherGoodReading > 1);
 	if (!errorCode) errorCode = needAnotherGoodReading > 1 ? _I2C_ReadDataWrong : _OK;
 	return errorCode;
 }

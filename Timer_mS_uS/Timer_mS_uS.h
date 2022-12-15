@@ -61,8 +61,17 @@ using namespace arduino_logger;
 		// Modifiers
 		void set_mS(int32_t period_mS) { _timer_uS.set_uS(period_mS * 1000); }
 		void set_startTime_mS(int32_t start_mS) { _timer_uS.set_startTime_uS(start_mS * 1000); }
+	/// <summary>
+	/// restart() starts a new period from now.
+	/// </summary>
 		void restart() { _timer_uS.restart(); }
+	/// <summary>
+	/// repeat() adds another period, so there is no timing drift.
+	/// </summary>
 		void repeat() { _timer_uS.repeat(); }
+	/// <summary>
+	/// newLap() continues the original period, but resets timeUsed() from now.
+	/// </summary>
 		void newLap() { _timer_uS.newLap(); }
 	private:
 		Timer_uS _timer_uS;

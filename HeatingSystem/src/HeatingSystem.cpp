@@ -169,6 +169,7 @@ void HeatingSystem::run_stateMachine() {
 		}
 		_tempController.backBoiler.check();
 		//loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
+		break;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
 			//loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
@@ -215,10 +216,11 @@ void HeatingSystem::run_stateMachine() {
 			//_state = SERVICE_SEQUENCER;
 			return;
 		case Clock::NEW_MIN:
-			//_state = SERVICE_BACKBOILER;
+			_state = SERVICE_BACKBOILER;
 			return;
 		case Clock::NEW_SEC10:
 		case Clock::NEW_SEC:
+			_state = CHECK_I2C_COMS;
 			//_state = SERVICE_TEMP_CONTROLLER;
 			return;
 #ifdef ZPSIM

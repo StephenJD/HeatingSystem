@@ -168,7 +168,11 @@ public:
 	
 	// required by template, may as well be publicly available
 	static const int32_t MIN_I2C_FREQ = VARIANT_MCK / 65288 * 2;
-	static auto addressOutOfRange(int addr)->I2C_Talk_ErrorCodes::Error_codes { return (addr > 127) || (addr < 0) ? I2C_Talk_ErrorCodes::_I2C_AddressOutOfRange : I2C_Talk_ErrorCodes::_OK; }
+	static auto addressOutOfRange(int addr)->I2C_Talk_ErrorCodes::Error_codes { 
+		bool outOfRange = addr > 127 || addr <= 0;
+		if (outOfRange) logger() << L_time << F("BadAddr:\t") << addr << L_endl;
+		return outOfRange ? I2C_Talk_ErrorCodes::_I2C_AddressOutOfRange : I2C_Talk_ErrorCodes::_OK;
+	}
 
 private:
 	static int8_t TWI_BUFFER_SIZE;
