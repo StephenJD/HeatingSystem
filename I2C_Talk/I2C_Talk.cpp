@@ -263,6 +263,7 @@ const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 	case _I2C_ReadDataWrong: return F(" I2C Read Data Wrong");
 	case _I2C_AddressOutOfRange: return F(" I2C Address Out of Range");
 	case _I2C_NotBegun: return F(" I2C NotBegun");
+	case _I2C_RegOutOfRange: return F(" I2C Register Out of Range");
 	case 0xFF: return F(" Need modified Wire.cpp/twi.c");
 	default: return F(" Not known");
 	}

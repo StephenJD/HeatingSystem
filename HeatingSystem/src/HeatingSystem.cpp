@@ -168,6 +168,7 @@ void HeatingSystem::run_stateMachine() {
 			_initialiser.requiresINI(Initialiser::TS);
 		}
 		_tempController.backBoiler.check();
+		_state = CHECK_I2C_COMS;
 		//loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
 		break;
 		[[fallthrough]];

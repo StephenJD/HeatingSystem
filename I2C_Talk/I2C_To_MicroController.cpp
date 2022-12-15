@@ -53,6 +53,11 @@ namespace HardwareInterfaces {
 
 	Error_codes I2C_To_MicroController::writeRegSet(int reg, int noToWrite) {
 		auto regset = registers();
+		auto lastReg = _remoteRegOffset + reg + noToWrite - 1;
+		if (lastReg != regset.validReg(lastReg)) {
+			logger() << L_time << "Out of range reg access: " << lastReg << L_flush;
+			return _I2C_RegOutOfRange;
+		};
 		return write_verify(_remoteRegOffset + reg, noToWrite, regset.ptr(reg));
 	}
 
@@ -63,6 +68,11 @@ namespace HardwareInterfaces {
 	
 	Error_codes I2C_To_MicroController::readRegSet(int reg, int noToRead) {
 		auto regset = registers();
+		auto lastReg = _remoteRegOffset + reg + noToRead - 1;
+		if (lastReg != regset.validReg(lastReg)) {
+			logger() << L_time << "Out of range reg access: " << lastReg << L_flush;
+			return _I2C_RegOutOfRange;
+		};
 		return read(_remoteRegOffset + reg, noToRead, regset.ptr(reg)); // recovery
 	}	
 	

@@ -48,15 +48,18 @@ namespace HardwareInterfaces {
 		_maxFlowTemp = zoneRecord.rec().maxFlowTemp;
 		_ttStartDateTime = clock_().now();
 		_ttEndDateTime = _ttStartDateTime;
-		logger() << "Set tt_start/end to: " << _ttStartDateTime << L_endl;
+		logger() << _zoneRecord.rec().name << " Set tt_start/end to: " << _ttStartDateTime << L_endl;
 		uint8_t timeC;
 		if (_zoneRecord.rec().autoQuality == 0) timeC = _zoneRecord.rec().autoDelay;
 		else timeC = _zoneRecord.rec().autoTimeC;
+		logger() << "uncompressTC... " << L_endl;
 		_timeConst = uint16_t(uncompressTC(timeC));
 		if (isDHWzone()) _zoneRecord.rec().autoRatio = uint8_t(MAX_RATIO * RATIO_DIVIDER);
+		logger() << "refresh profile..." << L_endl;
 		refreshProfile(true);
 		_preheatCallTemp = _currProfileTempRequest;
 		_rollingAccumulatedRatio = REQ_ACCUMULATION_PERIOD * _zoneRecord.rec().autoRatio;
+		logger() << "getFractionalCallSensTemp..." << L_endl;
 		_startCallTemp = getFractionalCallSensTemp();
 	}
 

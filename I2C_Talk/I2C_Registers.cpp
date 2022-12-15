@@ -6,6 +6,8 @@ namespace i2c_registers {
 	RegAccess::RegAccess(I_Registers& registers, int regOffset) 
 		: _registers(registers)
 		, _regOffset(regOffset) 
-	{}
+	{
+		if (_regOffset >= registers.noOfRegisters()) _regOffset = 0;
+	}
 }
 
