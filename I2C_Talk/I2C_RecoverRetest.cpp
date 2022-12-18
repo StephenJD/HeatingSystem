@@ -127,15 +127,15 @@ namespace I2C_Recovery {
 		else {
 			shouldTryReadingAgain = true;
 			_isRecovering = true;
-#ifdef REPORT_RECOVER
-			logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
-#endif
 			_strategy.next();
 			if (!HardReset::hasWarmedUp()) {
-				logger() << F("\t\tS_Power-Down - wait to warm-up") << L_endl;
+				//logger() << F("\t\tS_Power-Down - wait to warm-up") << L_endl;
 				strategy().tryAgain(S_TryAgain);
 				return true;
 			}
+#ifdef REPORT_RECOVER
+			else logger() << L_time << F("tryReadWriteAgain: device 0x") << L_hex << device().getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << device().runSpeed() << L_endl;
+#endif
 			switch (_strategy.strategy()) {
 				// A try-once strategy is placed inside an "if (haveBumpedUpMaxStrategyUsed(S_SpeedTest))" block.
 				// Try until exhausted does strategy().tryAgain(S_TryAgain) and a break;
@@ -249,7 +249,11 @@ namespace I2C_Recovery {
 	}
 
 	bool I2C_Recover_Retest::restart(const char* name) {
+#ifdef REPORT_RECOVER
+		logger() << F("\t\tI2C_Recover_Retest::restart 0x") << L_hex << device().getAddress() << L_endl;
+		//i2C().end();
 		i2C().begin();
+#endif
 		return true;
 	}
 
@@ -288,6 +292,7 @@ namespace I2C_Recovery {
 #ifdef DEBUG_RECOVER
 			logger() << F("\n\t***  no Time_OutFn set ***") << L_endl;
 #endif
+			//i2C().end();
 			i2C().begin(); // restart i2c in case this is called after an i2c failure
 		}
 		doingTimeOut = false;

@@ -35,8 +35,8 @@ namespace HardwareInterfaces {
 
 #ifdef ZPSIM
 		mutable int16_t change = 256;
-	//public:
-		//void setTemp(int temp) {_lastGood = temp * 256;}
+	public:
+		void setTemp(int temp) {_lastGood = temp;}
 #endif
 	};
 

@@ -83,7 +83,7 @@ public:
 	I2C_Talk(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000 ) : I2C_Talk(_single_master, wire_port, max_I2Cfreq) {}
 	void ini(TwoWire & wire_port = Wire, int32_t max_I2Cfreq = 400000);
 	bool begin();
-	
+	void end();
 	auto read(int deviceAddr, int registerAddress, int numberBytes, volatile uint8_t *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes; // dataBuffer may not be written to if read fails.
 	auto read(int deviceAddr, int registerAddress, int numberBytes, volatile char *dataBuffer) -> I2C_Talk_ErrorCodes::Error_codes {return read(deviceAddr, registerAddress, numberBytes, (uint8_t *) dataBuffer);}
 	auto write(int deviceAddr, int registerAddress, int numberBytes, volatile const uint8_t *dataBuffer)->I2C_Talk_ErrorCodes::Error_codes;

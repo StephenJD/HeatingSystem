@@ -60,6 +60,15 @@ void I2C_Talk::ini(TwoWire & wire_port, int32_t max_I2Cfreq) {
 }
 
 
+Error_codes I2C_Talk::status(int deviceAddr) const // Returns in slave mode.
+{
+	Error_codes status = beginTransmission(deviceAddr);
+	if (status == _OK) {
+		status = endTransmission();
+	}
+	return status;
+}
+
 Error_codes I2C_Talk::read(int deviceAddr, int registerAddress, int numberBytes, volatile uint8_t *dataBuffer) {
 	auto returnStatus = _OK;
 	returnStatus = beginTransmission(deviceAddr);
@@ -286,15 +295,6 @@ uint8_t I2C_Talk::receiveFromMaster(int howMany, volatile uint8_t *dataBuffer) {
 	return noReceived;
 }
 
-Error_codes I2C_Talk::status(int deviceAddr) const // Returns in slave mode.
-{
-	Error_codes status = beginTransmission(deviceAddr);
-	if (status == _OK) {
-		status = endTransmission();
-	}
-	return status;
-}
-
 // Private Functions
 Error_codes I2C_Talk::beginTransmission(int deviceAddr) const { // return false to inhibit access
 	//auto _exec_time = micros();
@@ -347,6 +347,10 @@ bool I2C_Talk::begin() {
 	setI2CFrequency(_i2cFreq + 1); 
 	_wire().setTimeouts(_slaveByteProcess_uS, _stopMargin_uS, _busRelease_uS);
 	return true;
+}
+
+void I2C_Talk::end() {
+	_wire().end();
 }
 
 uint8_t I2C_Talk::getTWIbufferSize() {

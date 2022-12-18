@@ -70,9 +70,9 @@ namespace Assembly {
 			break;
 		case RELAYS:
 			//loopLogger() << L_time << "ESTABLISH_RELAY_COMS..." << L_endl;
-			//if (ini_relays() == _OK) {
+			if (ini_relays() == _OK) {
 				_iniState.set(RELAYS);
-			//} else { _iniState.clear(I2C_RESET); }
+			} else { _iniState.clear(I2C_RESET); }
 			break;
 		case MIX_V:
 			//loopLogger() << L_time << "ESTABLISH_MIXV_COMMS..." << L_endl;

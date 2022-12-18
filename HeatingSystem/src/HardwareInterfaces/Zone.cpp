@@ -52,15 +52,16 @@ namespace HardwareInterfaces {
 		uint8_t timeC;
 		if (_zoneRecord.rec().autoQuality == 0) timeC = _zoneRecord.rec().autoDelay;
 		else timeC = _zoneRecord.rec().autoTimeC;
-		logger() << "uncompressTC... " << L_endl;
+		//logger() << "uncompressTC... " << L_endl;
 		_timeConst = uint16_t(uncompressTC(timeC));
 		if (isDHWzone()) _zoneRecord.rec().autoRatio = uint8_t(MAX_RATIO * RATIO_DIVIDER);
-		logger() << "refresh profile..." << L_endl;
+		//logger() << "refresh profile..." << L_endl;
 		refreshProfile(true);
 		_preheatCallTemp = _currProfileTempRequest;
 		_rollingAccumulatedRatio = REQ_ACCUMULATION_PERIOD * _zoneRecord.rec().autoRatio;
-		logger() << "getFractionalCallSensTemp..." << L_endl;
+		//logger() << "getFractionalCallSensTemp..." << L_endl;
 		_startCallTemp = getFractionalCallSensTemp();
+		//logger() << "ini-done..." << L_endl;
 	}
 
 	bool Zone::changeCurrTempRequest(int8_t val) { // only allowed on current profile

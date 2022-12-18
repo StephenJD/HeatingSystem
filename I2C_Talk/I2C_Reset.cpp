@@ -32,6 +32,7 @@ namespace I2C_Recovery {
 		{
 			_recover->setTimeoutFn(this);
 			_recover->i2C().begin();
+			//_recover->i2C().end();
 			_recover->i2C().setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT, 10000); // give generous stop-timeout in normal use 
 		}
 
@@ -103,6 +104,7 @@ namespace I2C_Recovery {
 	}
 
 	Error_codes HardReset::operator()(I2C_Talk & i2c, int addr) {
+		//i2c.end();
 		_led_indicatorPin.set();
 		_i2c_resetPin.set();
 		delay_mS(128); // interrupts still serviced
@@ -115,6 +117,7 @@ namespace I2C_Recovery {
 		if (_timeOfReset_uS == 0) _timeOfReset_uS = 1;
 		logger() << L_time << F("Done Hard Reset for 0x") << L_hex << addr << L_flush;
 		_led_indicatorPin.clear();
+		//delay_mS(3000);
 		if (digitalRead(20) == LOW)
 			logger() << "\tData stuck after reset" << L_flush;
 		return _OK;

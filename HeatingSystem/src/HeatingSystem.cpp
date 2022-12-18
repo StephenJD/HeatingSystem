@@ -135,6 +135,8 @@ HeatingSystem::HeatingSystem()
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
+		delay_mS(3000);
+		i2C.begin();
 		_initialiser.initialize_Thick_Consoles();
 		_initialiser.i2C_Test();
 		i2C.onReceive(_prog_register_set.receiveI2C);
@@ -168,9 +170,9 @@ void HeatingSystem::run_stateMachine() {
 			_initialiser.requiresINI(Initialiser::TS);
 		}
 		_tempController.backBoiler.check();
-		_state = CHECK_I2C_COMS;
+		//_state = CHECK_I2C_COMS;
 		//loopLogger() << L_time << "SERVICE_BACKBOILER_Done" << L_endl;
-		break;
+		//break;
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
 			//loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
@@ -190,13 +192,13 @@ void HeatingSystem::run_stateMachine() {
 			//	break;
 			case MV_FAILED:
 				//loopLogger() << L_time << "MV-Failed" << L_endl;
-				logger() << L_time << "MV-Failed" << L_flush;
-				_initialiser.requiresINI(Initialiser::MIX_V);
+				//logger() << L_time << "MV-Failed" << L_flush;
+				//_initialiser.requiresINI(Initialiser::MIX_V);
 				break;
 			case RELAYS_FAILED:
 				//loopLogger() << L_time << "Relay-Failed" << L_endl;
-				logger() << L_time << "Relay-Failed" << L_flush;
-				_initialiser.requiresINI(Initialiser::RELAYS);
+				//logger() << L_time << "Relay-Failed" << L_flush;
+				//_initialiser.requiresINI(Initialiser::RELAYS);
 				break;
 			}
 			//loopLogger() << "flushLogs..." << L_endl;
@@ -214,15 +216,15 @@ void HeatingSystem::run_stateMachine() {
 		case Clock::NEW_HR:
 			//loopLogger().activate(clock_().hrs() % 2 ? true : false);
 		case Clock::NEW_MIN10:
-			//_state = SERVICE_SEQUENCER;
+			_state = SERVICE_SEQUENCER;
 			return;
 		case Clock::NEW_MIN:
 			_state = SERVICE_BACKBOILER;
 			return;
 		case Clock::NEW_SEC10:
 		case Clock::NEW_SEC:
-			_state = CHECK_I2C_COMS;
-			//_state = SERVICE_TEMP_CONTROLLER;
+			//_state = CHECK_I2C_COMS;
+			_state = SERVICE_TEMP_CONTROLLER;
 			return;
 #ifdef ZPSIM
 		default:
@@ -285,3 +287,10 @@ void HeatingSystem::updateChangedData() {
 
 RelationalDatabase::RDB<Assembly::TB_NoOfTables> & HeatingSystem::getDB() { return db; }
 
+#ifdef ZPSIM
+void HeatingSystem::set_MFB_temp(bool on) {
+	logger() << "MFB:" << on << L_endl;
+	int16_t newTemp = on ? 60 * 256 : 30 * 256;
+	_tempController.tempSensorArr[T_MfF].setTemp(newTemp);
+}
+#endif
