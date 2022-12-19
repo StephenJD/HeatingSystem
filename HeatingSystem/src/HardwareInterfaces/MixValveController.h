@@ -30,7 +30,6 @@ namespace HardwareInterfaces {
 		bool zoneHasControl(uint8_t zoneRelayID) const { return _controlZoneRelay == zoneRelayID; }
 		int8_t relayInControl() const;
 		uint8_t index() const { return _localRegOffset == PROG_REG_MV0_OFFSET ? 0 : 1; }
-		bool tuningMixV();
 		const __FlashStringHelper* showState() const;
 
 		// Modifiers
@@ -42,6 +41,7 @@ namespace HardwareInterfaces {
 		void sendRequestFlowTemp(uint8_t callTemp);
 		bool logMixValveOperation(bool logThis);
 		void monitorMode();
+		void readMV_Temps();
 
 //#if defined (ZPSIM)
 //		int16_t getValvePos() const; // public for simulator
@@ -57,6 +57,8 @@ namespace HardwareInterfaces {
 	private:
 		UI_TempSensor * _storeTempSens = 0;
 		UI_Bitwise_Relay * _relayArr = 0;
+		UI_TempSensor  _USFlow{ recovery() ,US_FLOW_TEMPSENS_ADDR };
+		UI_TempSensor  _DSFlow{ recovery() ,DS_FLOW_TEMPSENS_ADDR };
 
 		Mix_Valve::Mode _previous_valveStatus[NO_OF_MIXERS];
 		uint8_t _error = 0;

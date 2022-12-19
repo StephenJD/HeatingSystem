@@ -110,8 +110,8 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 	reg.set(R_RATIO, 30);
 	reg.set(R_FLOW_TEMP, e_MIN_FLOW_TEMP);
 
-	auto speedTest = I2C_SpeedTest(_temp_sensr);
-	speedTest.fastest();
+	//auto speedTest = I2C_SpeedTest(_temp_sensr);
+	//speedTest.fastest();
 
 	auto psuOffV = measurePSUVoltage(200);
 	if (psuOffV) _motorsOffV = psuOffV;
@@ -154,14 +154,19 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	reg.set(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
 	if (reg.get(R_HALF_TRAVERSE_TIME) < (VALVE_TRANSIT_TIME /2) - 20) reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME/2);
 #endif
-	setDefaultRequestTemp();
+	changeRole(false);
 }
 
-void Mix_Valve::setDefaultRequestTemp() { // called by MixValve_Slave.ino when master/slave mode changes
+void Mix_Valve::changeRole(bool isMaster) { // called by MixValve_Slave.ino when master/slave mode changes
 	auto reg = registers();
-	_currReqTemp = reg.get(R_DEFAULT_FLOW_TEMP);
-	reg.set(R_REQUEST_FLOW_TEMP, _currReqTemp);
-	I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_NO_PROGRAMMER);
+	auto state = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
+	state.set(F_NO_PROGRAMMER, isMaster);
+	state.set(R_VALIDATE_READ);
+	state.clear(F_RECEIVED_INI);
+	if (isMaster) {
+		_currReqTemp = reg.get(R_DEFAULT_FLOW_TEMP);
+		reg.set(R_REQUEST_FLOW_TEMP, _currReqTemp);
+	}
 }
 
 void Mix_Valve::stateMachine() {
@@ -484,30 +489,34 @@ void Mix_Valve::refreshRegisters() {
 }
 
 bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // called every loop()
+	constexpr int e_Slave_Sense = 7;
 	auto reg = registers();
 	auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
-	uint8_t ts_status = device_State.is(F_DS_TS_FAILED);
+
+	uint8_t ts_status = _OK;
 	if (device_State.is(F_NO_PROGRAMMER) && newSecond) device_State.set(F_I2C_NOW);
 
 	if (device_State.is(F_I2C_NOW)) {
-		constexpr int e_Slave_Sense = 7;
-		digitalWrite(e_Slave_Sense, LOW);
-		pinMode(e_Slave_Sense, OUTPUT);
+		//digitalWrite(e_Slave_Sense, LOW);
+		//pinMode(e_Slave_Sense, OUTPUT);
 		_temp_sensr.setHighRes();
 		ts_status = _temp_sensr.readTemperature();
 		if (ts_status == _disabledDevice) {
 			_temp_sensr.reset();
 		}
-		pinMode(e_Slave_Sense, INPUT);
+		//pinMode(e_Slave_Sense, INPUT);
 
-		if (ts_status) logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
-			<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
-			<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
-		auto temp = _temp_sensr.get_fractional_temp();
-		reg.set(R_FLOW_TEMP, temp >> 8);
-		_flowTempFract = temp & 0x00FF;
+		if (ts_status) {
+			logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
+				<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
+				<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
+		} else {
+			auto temp = _temp_sensr.get_fractional_temp();
+			reg.set(R_FLOW_TEMP, temp >> 8);
+			_flowTempFract = temp & 0x00FF;
+		}
 		device_State.clear(F_I2C_NOW);
-		device_State.set(F_DS_TS_FAILED, ts_status);
+		device_State.set(_regOffset ? F_DS_TS_FAILED : F_US_TS_FAILED, ts_status);
 		uint8_t clearState = 0;
 		programmer.write(R_DEVICE_STATE, 1, &clearState);
 	}
@@ -519,7 +528,6 @@ bool Mix_Valve::checkForNewReqTemp() { // called every second
 	auto reg = registers();
 	const auto thisReqTemp = reg.get(R_REQUEST_FLOW_TEMP);
 	//logger() << millis() << L_tabs << name() << F("This-req:") << thisReqTemp << F("Curr:") << _currReqTemp << L_endl;
-	//auto i2c_status = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 	if (thisReqTemp != 0 && thisReqTemp != _currReqTemp) {
 		logger() << name() << L_tabs;
 		if (_newReqTemp != thisReqTemp) {

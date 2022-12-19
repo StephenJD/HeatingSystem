@@ -76,9 +76,9 @@ namespace Assembly {
 			break;
 		case MIX_V:
 			//loopLogger() << L_time << "ESTABLISH_MIXV_COMMS..." << L_endl;
-			//if (post_initialize_MixV() == _OK) {
+			if (post_initialize_MixV() == _OK) {
 				_iniState.set(MIX_V);
-			//} else { _iniState.clear(I2C_RESET); }
+			} else { _iniState.clear(I2C_RESET); }
 			break;
 		case REMOTE_CONSOLES:
 			//loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS..." << L_endl;

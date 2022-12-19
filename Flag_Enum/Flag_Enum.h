@@ -36,6 +36,13 @@ namespace flag_enum {
 		FE_Obj() = default;
 		FE_Obj(Base val) : _base(val) {	static_assert(1+(noOfFlags - 1) / 8 <= sizeof(Base),"Type too small" );}
 		FE_Obj(EnumType val) : _base(val) {}
+		static void min_max(FE_Obj& min, FE_Obj& max) {
+			if (min & ~MAX_VALUE > max & ~MAX_VALUE) {
+				Base tempMin = min;
+				min = max;
+				max = tempMin;
+			}
+		}
 		operator EnumType() const { return EnumType(_base); }
 		//bool get(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }
 		bool is(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }

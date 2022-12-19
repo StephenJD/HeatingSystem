@@ -132,8 +132,8 @@ void setup() {
 
 	mixValve[0].begin(55); // does speed-test for TS
 	mixValve[1].begin(55);
-	auto speedTest = I2C_SpeedTest{ programmer };
-	speedTest.fastest();
+	//auto speedTest = I2C_SpeedTest{ programmer };
+	//speedTest.fastest();
 	i2C().setTimeouts(WORKING_SLAVE_BYTE_PROCESS_TIMOUT_uS, I2C_Talk::WORKING_STOP_TIMEOUT, 10000);
 	delay(500);
 	roleChanged(getRole());
@@ -172,14 +172,14 @@ void loop() {
 	// All I2C transfers are initiated by Master
 	static auto err = Mix_Valve::I2C_Flags_Obj{};
 	static bool multimaster_mode;
+	const auto newRole = getRole();
+	if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 	err.set(Mix_Valve::F_US_TS_FAILED, !mixValve[us_mix].doneI2C_Coms(programmer, nextSecond));
 	err.set(Mix_Valve::F_DS_TS_FAILED, !mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond));
 
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		reset_watchdog();
-		const auto newRole = getRole();
-		if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 
 		mixValve[us_mix].check_flow_temp();
 		mixValve[ds_mix].check_flow_temp();
@@ -207,17 +207,14 @@ Role getRole() {
 void roleChanged(Role newRole) {
 	if (e_Slave == newRole) {
 		psu_enable.clear();
-		for (int i = 0; i < 10; ++i) {
-			if (programmer.write(R_SLAVE_REQUESTING_INITIALISATION, MV_REQUESTING_INI) == _OK) break;
-		} 
 		logger() << F("Set to Slave") << L_endl;
 	}
 	else { // changed to Master
 		psu_enable.set();
 		logger() << F("Set to Master - trigger PSU-Restart") << L_endl;
-		mixValve[us_mix].setDefaultRequestTemp();		
-		mixValve[ds_mix].setDefaultRequestTemp();
 	}
+	mixValve[us_mix].changeRole(newRole == e_Master);
+	mixValve[ds_mix].changeRole(newRole == e_Master);
 	role = newRole;
 }
 

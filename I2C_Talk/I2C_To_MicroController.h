@@ -24,10 +24,10 @@ namespace HardwareInterfaces {
 		I2C_Talk_ErrorCodes::Error_codes writeRegValue(int reg, uint8_t value);
 		I2C_Talk_ErrorCodes::Error_codes writeReg(int reg);
 		I2C_Talk_ErrorCodes::Error_codes writeRegSet(int reg, int noToWrite);
-		I2C_Talk_ErrorCodes::Error_codes readReg(int reg);
+		I2C_Talk_ErrorCodes::Error_codes readVerifyReg(int reg);
 		I2C_Talk_ErrorCodes::Error_codes readRegSet(int reg, int noToRead);
 		I2C_Talk_ErrorCodes::Error_codes readRegVerifyValue(int reg, uint8_t& value);
-		I2C_Talk_ErrorCodes::Error_codes recover();
+		I2C_Talk_ErrorCodes::Error_codes getInrangeVal(int regNo, int minVal, int maxVal);
 
 	protected:
 		uint8_t _localRegOffset = 0;

@@ -67,15 +67,15 @@ namespace HardwareInterfaces {
 			reg.set(OLED::R_WARM_UP_ROOM_M10, 10);
 			reg.set(OLED::R_ON_TIME_T_RAIL, 0);
 			reg.set(OLED::R_WARM_UP_DHW_M10, 2);
-			logger() << L_time << F("writeRegSet ReqTRail...") << L_flush;
+			//logger() << L_time << F("writeRegSet ReqTRail...") << L_flush;
 			errCode = writeRegSet(OLED::R_REQUESTING_T_RAIL, OLED::R_DISPL_REG_SIZE - OLED::R_REQUESTING_T_RAIL);
-			logger() << L_time << F("writeRegSet RegOffset...") << L_flush;
+			//logger() << L_time << F("writeRegSet RegOffset...") << L_flush;
 			errCode |= writeRegSet(OLED::R_REMOTE_REG_OFFSET,3); // R_REMOTE_REG_OFFSET, R_DEVICE_STATE, R_ROOM_TS_ADDR
 			_state = AWAIT_REM_ACK_TEMP;
 
 			if (errCode == _OK) {
-				logger() << L_time << F("writeRegSet done.") << L_flush;
-				logger() << L_time << "SendConsIni. IniStatus was:" << requestINI_flags;
+				//logger() << L_time << F("writeRegSet done.") << L_flush;
+				//logger() << L_time << "SendConsIni. IniStatus was:" << requestINI_flags;
 				requestINI_flags &= ~thisIniFlag;
 				logger() << " IniStatus now:" << requestINI_flags << " sent Offset:" << _localRegOffset << L_endl;
 			} else logger() << L_time << F("writeRegSet failed.") << L_flush;
@@ -105,7 +105,7 @@ namespace HardwareInterfaces {
 		uint8_t(&debugWire)[OLED::R_DISPL_REG_SIZE] = reinterpret_cast<uint8_t(&)[OLED::R_DISPL_REG_SIZE]>(TwoWire::i2CArr[getAddress()]);
 #endif	
 
-		logger() << L_time << index() << "] refreshRegisters-start 0x" << L_hex << getAddress() << L_endl;
+		//logger() << L_time << index() << "] refreshRegisters-start 0x" << L_hex << getAddress() << L_endl;
 		//loopLogger() << L_time << index() << "] refreshRegisters-start 0x" << L_hex << getAddress() << L_endl;
 		if (reEnable(true) != _OK) return false;
 		if (!remoteOffset_OK()) return false;
@@ -127,7 +127,7 @@ namespace HardwareInterfaces {
 		auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP); // is zoneReqTemp normally.
 		// times-out before this line
 		//loopLogger() << F("\tState: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << L_endl;
-		logger() << L_time << F("State: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << "\t" << millis() % 10000 << L_endl;
+		//logger() << L_time << F("State: ") << _state << F(" Remote Req Temp: ") << remReqTemp << " Local RegCopy: " << localReqTemp << "\t" << millis() % 10000 << L_endl;
 
 		switch (_state) {
 		case REM_TR:
@@ -213,7 +213,7 @@ namespace HardwareInterfaces {
 			status |= writeRegValue(OLED::R_DEVICE_STATE, devFlags);
 			_hasChanged = false;
 		}
-		logger() << "\trefreshRegisters_Done-status: " << status << L_endl;
+		//logger() << "\trefreshRegisters_Done-status: " << status << L_endl;
 		return status == _OK;
 	}
 
@@ -255,70 +255,56 @@ namespace HardwareInterfaces {
 		wait_DevicesToFinish(rawRegisters());
 		//loopLogger() << "\treadRegSet..." << L_endl;
 		auto roomTemp_was = reg.get(OLED::R_ROOM_TEMP);
-		auto roomTemp_16th_was = reg.get(OLED::R_ROOM_TEMP_FRACTION);
-		uint8_t status, roomTemp;
-		auto timeout = Timer_mS(150);
-		do {
-			testDevice(); 
-			status = readRegVerifyValue(OLED::R_ROOM_TEMP, roomTemp);
-		} while ((roomTemp == 0 || roomTemp > 50) && status == _OK && !timeout);
-		auto timeused = timeout.timeUsed();
-		if (timeused > 30 && !timeout) logger() << L_time << "RC[" << index() << "] read Room Temp " << roomTemp << " in mS " << timeused << L_endl;
-		reg.set(OLED::R_ROOM_TEMP, roomTemp);
-		status |= readRegVerifyValue(OLED::R_ROOM_TEMP_FRACTION, roomTemp);
-		reg.set(OLED::R_ROOM_TEMP_FRACTION, roomTemp);
-
-		if (status != _OK || timeused > timeout.period()) {
-			logger() << L_time << "\tRC Room Temp[" << index() << "] bad read: " << roomTemp << I2C_Talk::getStatusMsg(status) << L_flush;
-			reg.set(OLED::R_ROOM_TEMP, roomTemp_was);
-			reg.set(OLED::R_ROOM_TEMP_FRACTION, roomTemp_16th_was);
-			status = recover();
-			//auto& ini_state = *rawRegisters().ptr(R_SLAVE_REQUESTING_INITIALISATION);
-			//ini_state |= RC_US_REQUESTING_INI << index();
-#ifndef ZPSIM
-			//status = _I2C_ReadDataWrong;
-#endif
-		}
-
+		uint8_t status = getInrangeVal(OLED::R_ROOM_TEMP, 0, 50);
 		uint8_t towelrail_req_changed = -1;
 		uint8_t hotwater_req_changed = -1;
 		uint8_t remReqTemp = 0;
-		//loopLogger() << "\treadRegVerifyValue..." << L_endl;
-		bool chain = status || _state // evaluate until true
-			|| (status = readRegVerifyValue(OLED::R_REQUESTING_T_RAIL, towelrail_req_changed))
-			|| (_state = reg.update(OLED::R_REQUESTING_T_RAIL, towelrail_req_changed) ? REM_TR : _state)
-			|| (status = readRegVerifyValue(OLED::R_REQUESTING_DHW, hotwater_req_changed))
-			|| (_state = reg.update(OLED::R_REQUESTING_DHW, hotwater_req_changed) ? REM_HW : _state)
-			|| (status = readRegVerifyValue(OLED::R_REQUESTING_ROOM_TEMP, remReqTemp))
-			|| (_state = remReqTemp != 0 ? REM_REQ_TEMP : _state);
-
-		//loopLogger() << "\treadRemoteRegisters_done: " << status << L_endl;
-		if (status) status = recover();
+		if (status != _OK) {
+			reg.set(OLED::R_ROOM_TEMP, roomTemp_was);
+			set_console_mode(67); // does sendini.
+		} else {
+			//loopLogger() << "\treadRegVerifyValue..." << L_endl;
+			auto localReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP);
+			bool chain = 
+				(status = readVerifyReg(OLED::R_ROOM_TEMP_FRACTION)) // evaluate until true
+				|| _state 
+				|| (status = readRegVerifyValue(OLED::R_REQUESTING_T_RAIL, towelrail_req_changed))
+				|| (_state = reg.update(OLED::R_REQUESTING_T_RAIL, towelrail_req_changed) ? REM_TR : _state)
+				|| (status = readRegVerifyValue(OLED::R_REQUESTING_DHW, hotwater_req_changed))
+				|| (_state = reg.update(OLED::R_REQUESTING_DHW, hotwater_req_changed) ? REM_HW : _state)
+				|| (status = getInrangeVal(OLED::R_REQUESTING_ROOM_TEMP, 0, 30))
+				|| (_state = ((remReqTemp = reg.get(OLED::R_REQUESTING_ROOM_TEMP)) == 0 ? _state : REM_REQ_TEMP ))
+				;
+			
+			//loopLogger() << "\treadRemoteRegisters_done: " << status << L_endl;
+			if (remReqTemp == 0) reg.set(OLED::R_REQUESTING_ROOM_TEMP, localReqTemp);
+			if (status != _OK) set_console_mode(67); // does sendini.
+		}
 		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(status, towelrail_req_changed, hotwater_req_changed, remReqTemp);
 	}
 
-	I2C_Talk_ErrorCodes::Error_codes ConsoleController_Thick::recover() {
-		// Does the uC respond to I2C request?
-		auto status = testDevice();
-		if (status == _OK) {
-			logger() << L_time << "RC[" << index() << "] responds to I2C request" << L_endl;
-			auto reg = registers();
-			uint8_t roomTemp = 0;
-			auto timeout = Timer_mS(150);
-			do {
-				status = readRegVerifyValue(OLED::R_ROOM_TEMP, roomTemp);
-			} while (roomTemp == 0 && !timeout);
-			if (!timeout) {
-				auto timeused = timeout.timeUsed();
-				reg.set(OLED::R_ROOM_TEMP, roomTemp);
-				logger() << L_time << "RC[" << index() << "] recover Room Temp " << roomTemp << " in mS " << timeused << L_endl;
-				return _OK;
-			}
-		}
-		else {
-			logger() << L_time << "RC[" << index() << "] no response to I2C request" << L_endl;
-		}
-		set_console_mode(67); // does sendini.
-		return _I2C_ReadDataWrong;
-	}
+	//I2C_Talk_ErrorCodes::Error_codes ConsoleController_Thick::recover() {
+	//	// Does the uC respond to I2C request?
+	//	auto status = testDevice();
+	//	if (status == _OK) {
+	//		logger() << L_time << "RC[" << index() << "] responds to I2C request" << L_endl;
+	//		auto reg = registers();
+	//		uint8_t roomTemp = 0;
+	//		auto timeout = Timer_mS(150);
+	//		do {
+	//			status = readRegVerifyValue(OLED::R_ROOM_TEMP, roomTemp);
+	//		} while (roomTemp == 0 && !timeout);
+	//		if (!timeout) {
+	//			auto timeused = timeout.timeUsed();
+	//			reg.set(OLED::R_ROOM_TEMP, roomTemp);
+	//			logger() << L_time << "RC[" << index() << "] recover Room Temp " << roomTemp << " in mS " << timeused << L_endl;
+	//			return _OK;
+	//		}
+	//	}
+	//	else {
+	//		logger() << L_time << "RC[" << index() << "] no response to I2C request" << L_endl;
+	//	}
+	//	set_console_mode(67); // does sendini.
+	//	return _I2C_ReadDataWrong;
+	//}
 }

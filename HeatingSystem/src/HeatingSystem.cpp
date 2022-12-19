@@ -135,7 +135,6 @@ HeatingSystem::HeatingSystem()
 		i2C.setZeroCrossDelay(ZERO_CROSS_DELAY);
 		localKeypad.begin();
 		HardwareInterfaces::localKeypad = &localKeypad;  // required by interrupt handler
-		delay_mS(3000);
 		i2C.begin();
 		_initialiser.initialize_Thick_Consoles();
 		_initialiser.i2C_Test();
@@ -176,13 +175,13 @@ void HeatingSystem::run_stateMachine() {
 		[[fallthrough]];
 	case SERVICE_TEMP_CONTROLLER: {
 			//loopLogger() << L_time << "SERVICE_TEMP_CONTROLLER" << L_endl;
-			logger() << L_time << "SERVICE_TEMP_CONTROLLER state(252): " << _initialiser.iniState().flags() << L_endl;
+			//logger() << L_time << "SERVICE_TEMP_CONTROLLER state(252): " << _initialiser.iniState().flags() << L_endl;
 			//thickConsole_Arr[1].sendSlaveIniData(RC_US_REQUESTING_INI << 1);
 			auto status = ALL_OK;
 			if (_mainConsoleChapters.chapter() == 0) status = _tempController.checkAndAdjust();
-			logger() << L_time << "...checkAndAdjust done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			//logger() << L_time << "...checkAndAdjust done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 			serviceConsoles_OK();
-			logger() << "\t...refresh all Registers done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			//logger() << "\t...refresh all Registers done: " << status /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 			//loopLogger() << "...refresh all Registers done: " << status << L_endl;
 			switch (status) {
 			//case TS_FAILED:
@@ -192,13 +191,13 @@ void HeatingSystem::run_stateMachine() {
 			//	break;
 			case MV_FAILED:
 				//loopLogger() << L_time << "MV-Failed" << L_endl;
-				//logger() << L_time << "MV-Failed" << L_flush;
-				//_initialiser.requiresINI(Initialiser::MIX_V);
+				logger() << L_time << "MV-Failed" << L_flush;
+				_initialiser.requiresINI(Initialiser::MIX_V);
 				break;
 			case RELAYS_FAILED:
 				//loopLogger() << L_time << "Relay-Failed" << L_endl;
-				//logger() << L_time << "Relay-Failed" << L_flush;
-				//_initialiser.requiresINI(Initialiser::RELAYS);
+				logger() << L_time << "Relay-Failed" << L_flush;
+				_initialiser.requiresINI(Initialiser::RELAYS);
 				break;
 			}
 			//loopLogger() << "flushLogs..." << L_endl;
@@ -248,7 +247,7 @@ bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to k
 				logger() << L_time << "RC-Failed" << L_flush;
 				_initialiser.requiresINI(Initialiser::REMOTE_CONSOLES);
 			}
-			logger() << L_time << "refresh RC's " << (rc_OK? "OK":"Bad") /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
+			//logger() << L_time << "refresh RC's " << (rc_OK? "OK":"Bad") /*<< " iniState: " << _initialiser.iniState().flags()*/ << L_endl;
 		}
 	}
 	if (dataHasChanged) {
@@ -263,7 +262,7 @@ bool HeatingSystem::serviceConsoles_OK() {  // called every 50mS to respond to k
 
 bool HeatingSystem::serviceMainConsole() {
 	if (consoleDataHasChanged()) {
-		logger() << L_time << "refreshDisplay s" << (micros() / 1000000) % 10 << L_endl;
+		//logger() << L_time << "refreshDisplay s" << (micros() / 1000000) % 10 << L_endl;
 		_mainConsole.refreshDisplay();
 		return true;
 	}

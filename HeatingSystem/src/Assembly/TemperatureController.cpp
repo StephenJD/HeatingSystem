@@ -109,15 +109,13 @@ namespace Assembly {
 		//logger() << L_time << "Check TS's" << L_endl;
 		//if (!readTemperaturesOK()) status = TS_FAILED;
 
-		//auto mixV_OK = true;
-		//for (auto & mixValveControl : mixValveControllerArr) {
-		//	//logger() << L_time << "Check mixValveControl" << L_endl;
-		//	if (!mixValveControl.tuningMixV()) {
-		//		mixV_OK &= mixValveControl.readReg_and_log();
-		//	}
-		//	//ui_yield(); 
-		//}
-		//if (!mixV_OK) status = MV_FAILED;
+		auto mixV_OK = true;
+		for (auto & mixValveControl : mixValveControllerArr) {
+			//logger() << L_time << "Check mixValveControl" << L_endl;
+			mixV_OK &= mixValveControl.readReg_and_log();
+			//ui_yield(); 
+		}
+		if (!mixV_OK) status = MV_FAILED;
 
 		//logger() << L_time << "Check TRd's" << L_endl;
 		for (auto & towelRail : towelRailArr) {

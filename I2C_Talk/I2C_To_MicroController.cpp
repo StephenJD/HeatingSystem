@@ -61,7 +61,7 @@ namespace HardwareInterfaces {
 		return write_verify(_remoteRegOffset + reg, noToWrite, regset.ptr(reg));
 	}
 
-	Error_codes I2C_To_MicroController::readReg(int reg) {
+	Error_codes I2C_To_MicroController::readVerifyReg(int reg) {
 		auto regset = registers();
 		return read_verify_1byte(_remoteRegOffset + reg, *regset.ptr(reg),2,4); // recovery
 	}	
@@ -79,4 +79,25 @@ namespace HardwareInterfaces {
 	Error_codes I2C_To_MicroController::readRegVerifyValue(int reg, uint8_t& value) {
 		return read_verify_1byte(_remoteRegOffset + reg, value, 2, 4); // recovery
 	}
+
+	Error_codes I2C_To_MicroController::getInrangeVal(int regNo, int minVal, int maxVal) {
+		auto reg = registers();
+		Error_codes status;
+		uint8_t regVal;
+		auto timeout = Timer_mS(150);
+		do {
+			testDevice();
+			status = readVerifyReg(regNo); // recovery
+			regVal = reg.get(regNo);
+		} while ((regVal < minVal || regVal > maxVal) && !timeout);
+		auto timeused = timeout.timeUsed();
+		if (timeused > 50 && !timeout) logger() << L_time << "Read Reg in mS " << timeused << L_endl;
+
+		if (timeused > timeout.period()) {
+			logger() << L_time << F("Read bad Reg 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+			status = status == _OK ? _I2C_ReadDataWrong : status;
+		}
+		return status;
+	}
+
 }

@@ -91,19 +91,19 @@ void Integrator<l, intType>::prime(intType val) {
 class Mix_Valve
 {
 public:
-	enum MV_Device_State { F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, _NO_OF_FLAGS};
+	enum MV_Device_State { F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, R_VALIDATE_READ, _NO_OF_FLAGS};
 	
 	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
 		// Copies of the VOLATILE set provided in Programmer reg-set
 		// All registers are single-byte.
-		// If the valve is set as a multi-master it reads its own temp sensors.
-		// If the valve is set as a slave it obtains the temprrature from its registers.
+		// If the valve is Slave and receives F_I2C_NOW it reads its own temp sensors.
+		// otherwise, Programmer reads TS & writes temps to the registers.
+		// Elsewhere it obtains the temprature from its registers.
 		// All I2C transfers are initiated by Programmer: Reading status & sending new requests.
-		// In multi-master mode, Programmer reads temps from the registers, in slave mode it writes temps to the registers.
 
 		// Receive
-		R_REMOTE_REG_OFFSET // offset in destination reg-set, used my Master
+		R_REMOTE_REG_OFFSET // offset in destination reg-set, used my Master - not used by slave
 		// Send on request
 		, R_DEVICE_STATE	// MV_Device_State FlagEnum	
 		, R_MODE	// Algorithm Mode
@@ -148,7 +148,7 @@ public:
 	void begin(int defaultFlowTemp);
 	const __FlashStringHelper* name() const;
 	void check_flow_temp();
-	void setDefaultRequestTemp();
+	void changeRole(bool isMaster);
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
 	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
 	uint8_t getPIDconstants();
