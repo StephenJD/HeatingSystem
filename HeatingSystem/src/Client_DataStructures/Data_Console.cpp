@@ -28,9 +28,8 @@ namespace client_data_structures {
 			return &_name;
 		case e_console_options:
 			if (canDo) {
-				uint8_t console_mode = answer().rec().timeout >> 7;
-				if (console_mode >= NO_OF_CONSOLE_MODES) console_mode = 1;
-				_console_options.val = console_mode;
+				auto mode = OLED_Thick_Display::I2C_Flags_Obj{ answer().rec().timeout };
+				_console_options.val = mode.is(OLED_Thick_Display::F_ENABLE_KEYBOARD);
 			}
 			return &_console_options;
 		default: return 0;
@@ -50,12 +49,11 @@ namespace client_data_structures {
 		case e_console_options:
 			auto id = answer().id() - 1;
 			if (id >= 0) {
-				auto console_mode = static_cast<uint8_t>(newValue->val) << 7;
-				auto timeout = answer().rec().timeout & 0x0F;
-				timeout |= console_mode;
-				answer().rec().timeout = timeout;
-				logger() << "New ConsoleMode[" << id << "] :" << timeout << L_endl;
-				_thickConsole_Arr[id].set_console_mode(timeout);
+				auto mode = OLED_Thick_Display::I2C_Flags_Obj{ answer().rec().timeout };
+				mode.set(OLED_Thick_Display::F_ENABLE_KEYBOARD, newValue->val)/*.set(OLED_Thick_Display::R_VALIDATE_READ)*/;
+				answer().rec().timeout = mode;
+				logger() << "New ConsoleMode[" << id << "] :" << mode << L_endl;
+				_thickConsole_Arr[id].set_console_mode(mode);
 			} else answer().rec().timeout = (answer().rec().timeout & 0x0F) | 0x40;
 			answer().update();
 			break;

@@ -10,6 +10,7 @@
 #include "..\Client_DataStructures\Data_Profile.h"
 #include "..\Client_DataStructures\Data_Zone.h"
 #include <LCD_Display.h>
+#include <OLED_Thick_Display.h>
 #include <Logging.h>
 #include <EEPROM_RE.h>
 
@@ -36,11 +37,14 @@ namespace Assembly {
 		, {"DS", DS_FLOW_TEMPSENS_ADDR, T_TkMixFl}
 	};
 
+	//constexpr auto MODE_FLAGS = OLED_Thick_Display::I2C_Flags_Obj{0}.set(OLED_Thick_Display::F_ENABLE_KEYBOARD).setValue(3)/*.set(OLED_Thick_Display::R_VALIDATE_READ)*/;
+	constexpr auto MODE_FLAGS = (1 << 7) + 3;
+	
 	constexpr R_Display displays_f[] = {
 		{"Main", 0, 16, 20, 16, 250, 70, 3}
-		,{"US", US_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, 67}
-		,{"DS", DS_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, 67}
-		,{"Flat", FL_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, 67}
+		,{"US", US_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, MODE_FLAGS}
+		,{"DS", DS_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, MODE_FLAGS}
+		,{"Flat", FL_CONSOLE_I2C_ADDR, 0, 0, 0, 0, 0, MODE_FLAGS}
 	};
 
 	constexpr R_Relay relays_f[] = {

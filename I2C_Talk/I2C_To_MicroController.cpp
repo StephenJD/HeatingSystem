@@ -1,10 +1,5 @@
 #include "I2C_To_MicroController.h"
 #include <I2C_Reset.h>
-//#include <Logging_Loop.h>
-//namespace arduino_logger {
-//	Logger& loopLogger();
-//}
-//using namespace arduino_logger;
 
 namespace HardwareInterfaces {
 	using namespace I2C_Recovery;
@@ -28,17 +23,14 @@ namespace HardwareInterfaces {
 
 	Error_codes I2C_To_MicroController::testDevice() { // non-recovery test
 		if (runSpeed() > 100000) {
-			//loopLogger() << "set_runSpeed..." << L_endl;
 			set_runSpeed(100000);
 		}
 		Error_codes status = _OK;
-		uint8_t reg0;
+		uint8_t wasReg0, testReg0 = 3;
 		I2C_Recovery::HardReset::hasWarmedUp(true);
-		//loopLogger() << L_time << "testDevice-read 0x" << L_hex << getAddress() << L_endl;
-		status = I_I2Cdevice::read(0, 1, &reg0); // non-recovery 		
-		//loopLogger() << "testDevice-write: " << status << L_endl;
-		if (status == _OK) status = I_I2Cdevice::write(0, 1, &reg0); // non-recovery
-		//loopLogger() << "testDevice_OK: " << status << L_endl;
+		status = I_I2Cdevice::read(0, 1, &wasReg0); // non-recovery 		
+		if (status == _OK) status = I_I2Cdevice::write_verify(0, 1, &testReg0); // non-recovery
+		I_I2Cdevice::write_verify(0, 1, &wasReg0); // non-recovery
 		return status;
 	}
 
@@ -84,17 +76,18 @@ namespace HardwareInterfaces {
 		auto reg = registers();
 		Error_codes status;
 		uint8_t regVal;
+		I2C_Recovery::HardReset::hasWarmedUp(true);
 		auto timeout = Timer_mS(150);
 		do {
-			testDevice();
+			//testDevice();
 			status = readVerifyReg(regNo); // recovery
 			regVal = reg.get(regNo);
 		} while ((regVal < minVal || regVal > maxVal) && !timeout);
 		auto timeused = timeout.timeUsed();
-		if (timeused > 50 && !timeout) logger() << L_time << "Read Reg in mS " << timeused << L_endl;
+		if (timeused > 100 && !timeout) logger() << L_time << "Read 0x" << L_hex << getAddress() << " Reg 0x" << regNo << " in mS " << timeused << L_endl;
 
 		if (timeused > timeout.period()) {
-			logger() << L_time << F("Read bad Reg 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << L_endl;
+			logger() << L_time << F("Read 0x") << L_hex << getAddress() << " Bad Reg 0x" << regNo << " was:" << L_dec << regVal << I2C_Talk::getStatusMsg(status) << L_endl;
 			status = status == _OK ? _I2C_ReadDataWrong : status;
 		}
 		return status;

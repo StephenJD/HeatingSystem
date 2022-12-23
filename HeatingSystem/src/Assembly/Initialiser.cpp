@@ -18,9 +18,7 @@ using namespace client_data_structures;
 using namespace RelationalDatabase;
 using namespace I2C_Talk_ErrorCodes;
 using namespace HardwareInterfaces;
-namespace arduino_logger {
-	Logger& loopLogger();
-}
+
 using namespace arduino_logger;
 
 namespace Assembly {
@@ -47,7 +45,6 @@ namespace Assembly {
 		auto iniOK = false;
 		auto needs_ini = _iniState.firstNotSet();
 		if (needs_ini <= REMOTE_CONSOLES) {
-			//loopLogger() << L_time << "needs_ini: " << needs_ini << " State: " << _iniState.flags() << L_endl;
 		}
 		switch (needs_ini) {
 		case I2C_RESET:
@@ -57,31 +54,26 @@ namespace Assembly {
 			_iniState.set(I2C_RESET);
 			break;
 		case TS:
-			//loopLogger() << L_time << "ESTABLISH_TS_COMS..." << L_endl;
 			if (ini_TS() == _OK) {
 				_iniState.set(TS);
 			}
 			else { _iniState.clear(I2C_RESET); }
 			break;
 		case POST_RESET_WARMUP:
-			//loopLogger() << L_time << "POST_RESET_WARMUP..." << L_endl;
 			delay_mS(100);
 			_iniState.set(POST_RESET_WARMUP, I2C_Recovery::HardReset::hasWarmedUp());
 			break;
 		case RELAYS:
-			//loopLogger() << L_time << "ESTABLISH_RELAY_COMS..." << L_endl;
 			if (ini_relays() == _OK) {
 				_iniState.set(RELAYS);
 			} else { _iniState.clear(I2C_RESET); }
 			break;
 		case MIX_V:
-			//loopLogger() << L_time << "ESTABLISH_MIXV_COMMS..." << L_endl;
 			if (post_initialize_MixV() == _OK) {
 				_iniState.set(MIX_V);
 			} else { _iniState.clear(I2C_RESET); }
 			break;
 		case REMOTE_CONSOLES:
-			//loopLogger() << L_time << "ESTABLISH_REMOTE_CONSOLE_COMS..." << L_endl;
 			if (post_initialize_Thick_Consoles() == _OK) {
 				_iniState.set(REMOTE_CONSOLES);
 			} else { _iniState.clear(I2C_RESET); }
@@ -137,7 +129,6 @@ namespace Assembly {
 	}
 
 	void Initialiser::initialize_Thick_Consoles() {
-		i2c_registers::RegAccess(_hs._prog_register_set).set(R_SLAVE_REQUESTING_INITIALISATION, ALL_REQUESTING);
 		auto consoleIndex = 0;
 		for (auto& rc : _hs.thickConsole_Arr) {
 			logger() << L_time << F("RemConsole query[] ") << consoleIndex << L_endl;
@@ -155,13 +146,10 @@ namespace Assembly {
 	uint8_t Initialiser::post_initialize_MixV() {
 		uint8_t status = 0;
 		for (auto& mixValveControl : hs().tempController().mixValveControllerArr) {
-			//loopLogger() << L_time << F("post_ini_MixV :") << mixValveControl.index() << L_endl;
 			if (mixValveControl.isUnrecoverable()) { // I2C_Recover_Retest::_deviceWaitingOnFailureFor10Mins set.
 				logger() << L_time << F("arduinoReset(MixValveController)") << L_flush;
-				//loopLogger() << "isUnrecoverable" << L_endl;
 				I2C_Recovery::HardReset::arduinoReset("MixValveController");
 			}
-			status |= mixValveControl.sendSlaveIniData(*i2c_registers::RegAccess(_hs._prog_register_set).ptr(R_SLAVE_REQUESTING_INITIALISATION));
 		}
 		return status;
 	}
@@ -173,16 +161,9 @@ namespace Assembly {
 				logger() << L_time << F("arduinoReset(RemoteConsoles)") << L_flush;
 				I2C_Recovery::HardReset::arduinoReset("RemoteConsoles");
 			}
-			status |= remote.sendSlaveIniData(*i2c_registers::RegAccess(_hs._prog_register_set).ptr(R_SLAVE_REQUESTING_INITIALISATION));
 		}
 		for (auto& remote : _hs.thickConsole_Arr) {
 			remote.refreshRegistersOK();
-			//auto timeout = Timer_mS(3000);
-			//while (!timeout && remote.registers().get(OLED_Thick_Display::R_ROOM_TEMP) == 0);
-#ifndef ZPSIM
-			//if (timeout) 
-				//requiresINI(I2C_RESET);
-#endif
 		}
 		return status;
 	}		

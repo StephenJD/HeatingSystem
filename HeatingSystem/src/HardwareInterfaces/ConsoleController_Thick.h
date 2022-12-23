@@ -19,7 +19,7 @@ namespace HardwareInterfaces {
 		ConsoleController_Thick(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& prog_registers);
 		void initialise(int index, int addr, int roomTS_addr, TowelRail& towelRail, Zone& dhw, Zone& zone, uint8_t console_mode);
 		
-		uint8_t sendSlaveIniData(volatile uint8_t& requestINI_flags);
+		uint8_t sendSlaveIniData();
 		uint8_t index() const { return (_localRegOffset - PROG_REG_RC_US_OFFSET) / OLED_Thick_Display::R_DISPL_REG_SIZE; }
 		bool refreshRegistersOK();
 		bool console_mode_is(int) const;
@@ -30,7 +30,7 @@ namespace HardwareInterfaces {
 		}
 	private:
 		enum State {NO_CHANGE, AWAIT_REM_ACK_TEMP, REM_REQ_TEMP, REM_TR, REM_HW, REM_REQ_OFFSET};
-		bool remoteOffset_OK();
+		//bool remoteOffset_OK();
 		I2C_Talk_ErrorCodes::Error_codes recover();
 		std::tuple<uint8_t, int8_t, int8_t, uint8_t> readRemoteRegisters_OK();
 		void logRemoteRegisters();

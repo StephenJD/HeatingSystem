@@ -48,14 +48,10 @@ void OLED_Thick_Display::begin() { // all registers start as zero.
     i2C().begin();
     setMyI2CAddress();
     set_watchdog_timeout_mS(8000);
-    auto speedTest = I2C_SpeedTest{ *this };
-    speedTest.fastest();
     auto reg = registers();
     _tempSensor.initialise(reg.get(R_ROOM_TS_ADDR));
-    speedTest.fastest(_tempSensor);
-    _tempSensor.setHighRes();
     reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
-    I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_ENABLE_KEYBOARD).setValue(5); // wake-time
+    I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_ENABLE_KEYBOARD).setValue(5)/*.set(R_VALIDATE_READ)*/; // wake-time
     _remoteKeypad.set_console_mode(*reg.ptr(R_DEVICE_STATE));
     _display.begin();
     _display.clear();
@@ -89,6 +85,7 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
     auto reg = registers();
     auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
     if (device_State.is(F_I2C_NOW)) {
+        _tempSensor.setHighRes();
         _tempSensor.readTemperature();
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;

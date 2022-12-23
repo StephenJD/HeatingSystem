@@ -35,7 +35,7 @@ namespace HardwareInterfaces {
 		// Modifiers
 		bool needHeat(bool isHeating); // used by ThermStore.needHeat	
 		bool readRegistersFromValve_OK();
-		uint8_t sendSlaveIniData(volatile uint8_t& requestINI_flags);
+		uint8_t sendSlaveIniData();
 		bool amControlZone(uint8_t callTemp, uint8_t maxTemp, uint8_t zoneRelayID);
 		bool readReg_and_log(bool alwaysLog = false);
 		void sendRequestFlowTemp(uint8_t callTemp);

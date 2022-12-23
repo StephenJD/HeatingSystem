@@ -178,6 +178,7 @@ namespace HardwareInterfaces {
 		//decltype(millis()) executionTime[7] = { millis() };
 
 		int16_t fractionalZoneTemp = getFractionalCallSensTemp(); // get fractional temp. msb is temp is degrees;
+		if (fractionalZoneTemp == 0) return false; // waiting for RC's to get temperatures
 		double ratio;
 		bool isDHW = isDHWzone();
 		auto outsideTemp = isDHW ? int8_t(20) : _thermalStore->getOutsideTemp();

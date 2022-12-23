@@ -83,14 +83,6 @@ namespace arduino_logger {
 		static SD_Logger _log("P", SERIAL_RATE, clock_()/*, L_null*/);
 		return _log;
 	}	
-	
-	//Logger& loopLogger() {
-	//	//static RAM_Logger _log("F", 2000, false, clock_());
-	//	static Loop_Logger _log("F", SERIAL_RATE, clock_(), L_null);
-	//	//static EEPROM_Logger _log("F", EEPROM_LOG_START, EEPROM_LOG_END, false, clock_());
-	//	return _log;
-	//	//return logger();
-	//}
 }
 using namespace arduino_logger;
 
@@ -139,7 +131,6 @@ void WDT_Handler(void) {
 	reset_watchdog();
 	// disable interrupt.
 	//NVIC_DisableIRQ(WDT_IRQn);
-	//loopLogger().flush();
 	// save mem addresses in gen backup registers.
 	pinMode(RESET_5vREF_PIN, OUTPUT);
 	digitalWrite(RESET_5vREF_PIN, LOW);
@@ -169,7 +160,6 @@ void setup() {
 		profileLogger() << L_time << F(" ****** Arduino Restarted ******\n\n") << L_flush;
 		reset_watchdog();
 		logger() << F("RTC Speed: ") << rtc.getI2CFrequency() << L_endl;
-		//loopLogger().flush();
 		pinMode(RESET_LEDP_PIN, OUTPUT);
 		digitalWrite(RESET_LEDP_PIN, HIGH);
 		analogWrite(BRIGHNESS_PWM, BRIGHTNESS);  // Brightness analogRead values go from 0 to 1023, analogWrite values from 0 to 255

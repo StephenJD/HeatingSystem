@@ -43,38 +43,46 @@ namespace flag_enum {
 				max = tempMin;
 			}
 		}
-		operator EnumType() const { return EnumType(_base); }
+		constexpr operator EnumType() const { return EnumType(_base); }
 		//bool get(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }
-		bool is(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }
-		bool is(int pos) const { return _base & (TOP_BIT >> pos); }
-		bool is_not(EnumType pos) const { return !is(pos); }
-		bool is_not(int pos) const { return !is(pos); }
-		bool all() const { return flags() == Base(~MAX_VALUE); }
-		bool any() const { return flags() != 0; }
-		bool none() const {	return flags() == 0; }
-		EnumType firstSet() const { uint16_t pos = 0; while (pos < noOfFlags && not(pos)) ++pos; return EnumType(pos); }
-		EnumType firstNotSet() const { uint16_t pos = 0; while (pos < noOfFlags && is(pos)) ++pos; return EnumType(pos); }
-		Base flags() const { return _base & ~MAX_VALUE; }
+		constexpr bool is(EnumType pos) const { return _base & (TOP_BIT >> int(pos)); }
+		constexpr bool is(int pos) const { return _base & (TOP_BIT >> pos); }
+		constexpr bool is_not(EnumType pos) const { return !is(pos); }
+		constexpr bool is_not(int pos) const { return !is(pos); }
+		constexpr bool all() const { return flags() == Base(~MAX_VALUE); }
+		constexpr bool any() const { return flags() != 0; }
+		constexpr bool none() const {	return flags() == 0; }
+		constexpr EnumType firstSet() const { uint16_t pos = 0; while (pos < noOfFlags && not(pos)) ++pos; return EnumType(pos); }
+		constexpr Base flags() const { return _base & ~MAX_VALUE; }
 		//bool get(int pos) const { return get(EnumType(pos)); }
-		Base value() const { return _base & MAX_VALUE; }
-		explicit operator Base() const { return _base; }
+		constexpr Base value() const { return _base & MAX_VALUE; }
+		constexpr explicit operator Base() const { return _base; }
 
-		FE_Obj& setWhole(Base whole) { _base = whole; return *this; }
-		FE_Obj& setFlags(Base flags) { _base = value() | (flags & ~MAX_VALUE); return *this; }
+		constexpr FE_Obj& setWhole(Base whole) { _base = whole; return *this; }
+//#ifdef __AVR__
+		EnumType firstNotSet() const { uint16_t pos = 0; while (pos < noOfFlags && is(pos)) ++pos; return EnumType(pos); }
 		FE_Obj& set(EnumType pos) { _base |= (TOP_BIT >> int(pos)); return *this; }
-		//void set(int pos) { set(EnumType(pos)); }
 		FE_Obj& set(EnumType pos, bool val) { if (val) set(pos); else clear(pos); return *this; }
-		//void set(int pos, bool val) { set(EnumType(pos), val); }
-		FE_Obj& clear() { _base = value(); return *this; }
 		FE_Obj& clear(EnumType pos) { _base &= ~(TOP_BIT >> int(pos)); return *this; }
+		FE_Obj& setValue(Base val) { _base |= (val & MAX_VALUE); return *this; }
+		FE_Obj& clear() { _base = value(); return *this; }
+		FE_Obj& setFlags(Base flags) { _base = value() | (flags & ~MAX_VALUE); return *this; }
+//#else
+//		constexpr FE_Obj& clear() { _base = value(); return *this; }
+//		constexpr EnumType firstNotSet() const { uint16_t pos = 0; while (pos < noOfFlags && is(pos)) ++pos; return EnumType(pos); }
+//		constexpr FE_Obj& set(EnumType pos) { _base |= (TOP_BIT >> int(pos)); return *this; }
+//		constexpr FE_Obj& set(EnumType pos, bool val) { if (val) set(pos); else clear(pos); return *this; }
+//		constexpr FE_Obj& clear(EnumType pos) { _base &= ~(TOP_BIT >> int(pos)); return *this; }
+//		constexpr FE_Obj& setValue(Base val) { _base |= (val & MAX_VALUE); return *this; }
+//		constexpr FE_Obj& setFlags(Base flags) { _base = value() | (flags & ~MAX_VALUE); return *this; }
+//#endif
 		//void clear(int pos) { clear(EnumType(pos)); }
-		FE_Obj& operator += (EnumType pos) { set(pos); return *this; }
+		constexpr FE_Obj& operator += (EnumType pos) { set(pos); return *this; }
 		//FlagEnum& operator += (int pos) { return (*this) += (EnumType(pos)); }
-		FE_Obj& operator -= (EnumType pos) { clear(pos); return *this; }
+		constexpr FE_Obj& operator -= (EnumType pos) { clear(pos); return *this; }
 		//FlagEnum& operator -= (int pos) { return (*this) -= (EnumType(pos)); }
-		FE_Obj& operator = (Base val) { _base = val; return *this; }
-		FE_Obj& operator = (EnumType val) { _base = val; return *this; }
-		void setValue(Base val) { _base |= (val & MAX_VALUE); }
+		constexpr FE_Obj& operator = (Base val) { _base = val; return *this; }
+		constexpr FE_Obj& operator = (EnumType val) { _base = val; return *this; }
 		static constexpr Base MAX_VALUE = (TOP_BIT >> (noOfFlags - 1)) - Base(1);
 //#ifdef ZPSIM
 //		void printFlags() {

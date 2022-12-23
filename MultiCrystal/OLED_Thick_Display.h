@@ -22,7 +22,7 @@ public:
 
 	enum RemoteRegisterName {	// In Slave-Mode, all are received
 		R_REMOTE_REG_OFFSET		// [0] ini Always read by programmer to check if it needs ini-sending
-		, R_DEVICE_STATE		// [1] ini Flag-Enum { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS } last 4-bits is wake-time/4;
+		, R_DEVICE_STATE		// [1] ini Flag-Enum { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS } Never read by programmer. last 4-bits is wake-time/4;
 		, R_ROOM_TS_ADDR		// [2] ini
 		, R_ROOM_TEMP			// [3] send
 		, R_ROOM_TEMP_FRACTION	// [4] send
@@ -34,9 +34,9 @@ public:
 		, R_WARM_UP_DHW_M10		// [10] If -ve, in 0-60 mins, if +ve in min_10
 		, R_DISPL_REG_SIZE
 	};
-
+	static constexpr uint8_t NO_REG_OFFSET_SET = 170; // 10101010
 	enum { e_Auto, e_On, e_Off };
-	enum I2C_Flags { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, _NO_OF_FLAGS, NO_REG_OFFSET_SET = 255 }; // last 4 - bits is wake - time / 4;
+	enum I2C_Flags { F_ENABLE_KEYBOARD, F_PROGRAMMER_CHANGED_DATA, F_I2C_NOW, /*R_VALIDATE_READ,*/ _NO_OF_FLAGS }; // Never read by programmer.  last 4 - bits is wake - time / 4;
 	using I2C_Flags_Ref = flag_enum::FE_Ref< I2C_Flags, _NO_OF_FLAGS>;
 	using I2C_Flags_Obj = flag_enum::FE_Obj< I2C_Flags, _NO_OF_FLAGS>;
 	// New request temps initiated by the programmer are sent by the programmer.

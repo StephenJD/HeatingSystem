@@ -255,6 +255,7 @@ void I2C_Talk::setStopMargin(uint8_t margin) {
 
 const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 	switch (errorCode) {
+//#ifndef __AVR__
 	case _OK:	return F(" No Error");
 	case _Insufficient_data_returned:	return F(" Insufficient data returned");
 	case _NACK_during_address_send:	return F(" NACK address send");
@@ -274,6 +275,7 @@ const __FlashStringHelper * I2C_Talk::getStatusMsg(int errorCode) {
 	case _I2C_NotBegun: return F(" I2C NotBegun");
 	case _I2C_RegOutOfRange: return F(" I2C Register Out of Range");
 	case 0xFF: return F(" Need modified Wire.cpp/twi.c");
+//#endif
 	default: return F(" Not known");
 	}
 }

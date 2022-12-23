@@ -8,7 +8,7 @@ namespace HardwareInterfaces {
 	void wait_DevicesToFinish(i2c_registers::RegAccess reg);
 
 	enum Register_Constants {
-		R_SLAVE_REQUESTING_INITIALISATION
+		R_SLAVE_REQUESTING_INITIALISATION // Never written to by slaves. Used only during initialisation
 		, R_PROG_WAITING_FOR_REMOTE_I2C_COMS // cleared by remote arduinos after mastering I2C coms.
 		, PROG_REG_MV0_OFFSET
 		, PROG_REG_MV1_OFFSET = PROG_REG_MV0_OFFSET + Mix_Valve::MV_VOLATILE_REG_SIZE
