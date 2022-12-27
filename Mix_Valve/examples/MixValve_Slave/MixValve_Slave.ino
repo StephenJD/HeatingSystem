@@ -174,15 +174,18 @@ void loop() {
 	static bool multimaster_mode;
 	const auto newRole = getRole();
 	if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
-	err.set(Mix_Valve::F_US_TS_FAILED, !mixValve[us_mix].doneI2C_Coms(programmer, nextSecond));
-	err.set(Mix_Valve::F_DS_TS_FAILED, !mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond));
-
+	
+	if (mixValve[us_mix].doneI2C_Coms(programmer, nextSecond)) reset_watchdog();;
+	if (mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond)) reset_watchdog();;
+	
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
-		reset_watchdog();
 
 		mixValve[us_mix].check_flow_temp();
 		mixValve[ds_mix].check_flow_temp();
+
+		err.set(Mix_Valve::F_US_TS_FAILED, !mixValve[us_mix].ts_OK());
+		err.set(Mix_Valve::F_DS_TS_FAILED, !mixValve[ds_mix].ts_OK());
 
 		if (err.flags()) {
 			logger() << showErr(err) << L_endl;

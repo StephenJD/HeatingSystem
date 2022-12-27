@@ -93,4 +93,15 @@ namespace HardwareInterfaces {
 		return status;
 	}
 
+	void wait_DevicesToFinish(i2c_registers::RegAccess reg, int regNo) {
+		if (reg.get(regNo) == DEVICE_CAN_WRITE) {
+			auto timeout = Timer_mS(200);
+			while (!timeout && reg.get(regNo) == DEVICE_CAN_WRITE) {
+			}
+			//auto delayedBy = timeout.timeUsed();
+			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
+			reg.set(regNo, DEVICE_IS_FINISHED);
+		}
+	};
+
 }

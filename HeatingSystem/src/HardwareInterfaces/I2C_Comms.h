@@ -5,8 +5,6 @@
 
 namespace HardwareInterfaces {
 
-	void wait_DevicesToFinish(i2c_registers::RegAccess reg);
-
 	enum Register_Constants {
 		R_SLAVE_REQUESTING_INITIALISATION // Never written to by slaves. Used only during initialisation
 		, R_PROG_WAITING_FOR_REMOTE_I2C_COMS // cleared by remote arduinos after mastering I2C coms.

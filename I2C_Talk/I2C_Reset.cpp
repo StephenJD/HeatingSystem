@@ -47,8 +47,8 @@ namespace I2C_Recovery {
 		_recover->setTimeoutFn(&hardReset);
 		logger() << F("R_setTimeout_OK") << L_endl;
 
-		hardReset(i2c, addr);
-		notify_reset();
+		//hardReset(i2c, addr);
+		//notify_reset();
 		if (addr && !_recover->isRecovering()) {
 			if (_testDevices == 0) {
 				logger() << F("ResetI2C _testDevices is NULL") << L_flush;

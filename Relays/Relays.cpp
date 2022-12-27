@@ -1,7 +1,8 @@
 // This is the Multi-Master Arduino Mini Controller
 
 #include <Relays.h>
-#include "PinObject.h"
+#include <PinObject.h>
+#include <Relay_Bitwise.h>
 #include <I2C_Talk.h>
 #include <I2C_Recover.h>
 #include <I2C_Registers.h>
@@ -88,7 +89,7 @@ void RelaysSlave::setPorts() {
 bool RelaysSlave::verifyConnection() {
 	auto reg = registers();
 	auto& verifyState = *reg.ptr(REG_8PORT_PullUp);
-	if (verifyState == 0xFF) {
+	if (verifyState == VERIFY_CONNECTION) {
 		verifyState = 0;
 		_lastVerifyTime = millis();
 	}

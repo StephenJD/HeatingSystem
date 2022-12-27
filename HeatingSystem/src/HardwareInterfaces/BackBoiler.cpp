@@ -26,5 +26,6 @@ namespace HardwareInterfaces {
 	}
 
 	bool BackBoiler::isOn() const { return _relay->logicalState(); }
+	bool BackBoiler::isWarm() const { return  _flowTS->get_temp() > 40; }
 
 }

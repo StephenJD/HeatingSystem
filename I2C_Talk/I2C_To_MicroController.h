@@ -36,4 +36,7 @@ namespace HardwareInterfaces {
 		i2c_registers::I_Registers* _localRegisters;
 		static constexpr int STOP_MARGIN_TIMEOUT = 15;
 	};
+
+	enum { DEVICE_CAN_WRITE = 0x0F, DEVICE_IS_FINISHED = 0xF0 };
+	void wait_DevicesToFinish(i2c_registers::RegAccess reg, int regNo);
 }

@@ -17,8 +17,8 @@ namespace HardwareInterfaces {
 		// Queries
 		int8_t get_temp() const;
 		int16_t get_fractional_temp() const;
-		bool hasError() { return _error != I2C_Talk_ErrorCodes::_OK; }
-		I2C_Talk_ErrorCodes::Error_codes lastError() { return _error; }
+		bool hasError() const { return _error != I2C_Talk_ErrorCodes::_OK; }
+		I2C_Talk_ErrorCodes::Error_codes lastError() const { return _error; }
 
 		// Modifiers
 		I2C_Talk_ErrorCodes::Error_codes readTemperature();

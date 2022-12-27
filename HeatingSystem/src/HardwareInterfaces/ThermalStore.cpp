@@ -42,6 +42,8 @@ namespace HardwareInterfaces {
 
 	bool ThermalStore::backBoilerIsHeating() const { return _backBoiler.isOn(); }
 
+	bool ThermalStore::backBoilerIsWarm() const { return _backBoiler.isWarm(); }
+
 	void ThermalStore::setLowestCWtemp(bool isFlowing) {
 		if (isFlowing || (_groundT > getGroundTemp())) _groundT = getGroundTemp();
 	}

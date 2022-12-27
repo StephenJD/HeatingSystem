@@ -7,6 +7,7 @@
 
 namespace HardwareInterfaces {
 	// *******  Bitwise-mapped relays *******
+	constexpr uint8_t VERIFY_CONNECTION = 0x0F;
 
 	using RelayPortWidth_T = uint8_t;
 	/// <summary>

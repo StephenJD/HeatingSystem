@@ -91,7 +91,7 @@ void Integrator<l, intType>::prime(intType val) {
 class Mix_Valve
 {
 public:
-	enum MV_Device_State { F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, R_VALIDATE_READ, _NO_OF_FLAGS};
+	enum MV_Device_State {R_VALIDATE_READ, F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, _NO_OF_FLAGS};
 	
 	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
@@ -103,7 +103,7 @@ public:
 		// All I2C transfers are initiated by Programmer: Reading status & sending new requests.
 
 		// Receive
-		R_REMOTE_REG_OFFSET // offset in destination reg-set, used my Master - not used by slave
+		R_REMOTE_REG_OFFSET // offset in destination reg-set, used by Master - not used by slave
 		// Send on request
 		, R_DEVICE_STATE	// MV_Device_State FlagEnum	
 		, R_MODE	// Algorithm Mode
@@ -147,6 +147,7 @@ public:
 #endif
 	void begin(int defaultFlowTemp);
 	const __FlashStringHelper* name() const;
+	bool ts_OK() const;
 	void check_flow_temp();
 	void changeRole(bool isMaster);
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);

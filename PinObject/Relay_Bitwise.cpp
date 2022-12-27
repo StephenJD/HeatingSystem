@@ -92,7 +92,6 @@ namespace HardwareInterfaces {
 		auto status = reEnable(true);
 		if (status == _OK) {
 			//logger() << "write_verify OLAT..." << L_endl;
-			constexpr uint8_t VERIFY_CONNECTION = 0xFF;
 			write(REG_8PORT_PullUp, 1, &VERIFY_CONNECTION);
 			status = write_verify(REG_8PORT_OLAT, 1, &_relayRegister);
 			//logger() << "write_verify OLAT done." << L_endl;

@@ -298,7 +298,7 @@ namespace HardwareInterfaces {
 #endif
 		// Lambdas
 		auto give_MixV_Bus = [this](Mix_Valve::I2C_Flags_Obj i2c_status) {
-			rawRegisters().set(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1);
+			rawRegisters().set(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, DEVICE_CAN_WRITE);
 			i2c_status.set(Mix_Valve::F_I2C_NOW);
 			writeRegValue(Mix_Valve::R_DEVICE_STATE, i2c_status);
 		};
@@ -306,22 +306,23 @@ namespace HardwareInterfaces {
 		// Algorithm
 		uint8_t status = reEnable(true); // see if is disabled
 		if (status == _OK) {
-			wait_DevicesToFinish(rawRegisters()); // check local reg not set.
+			wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS); // check local reg not set.
 			auto reg = registers();
 			auto minStatus = Mix_Valve::I2C_Flags_Obj{0}.set(Mix_Valve::R_VALIDATE_READ);
-			auto maxStatus = Mix_Valve::I2C_Flags_Obj{-1};
+			auto maxStatus = Mix_Valve::I2C_Flags_Obj{uint8_t( - 1)};
 			maxStatus.clear(Mix_Valve::F_I2C_NOW).clear(Mix_Valve::F_NO_PROGRAMMER);
 			status = getInrangeVal(Mix_Valve::R_DEVICE_STATE, minStatus, maxStatus);
 			auto i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
-			if (status != _OK || i2c_status.is_not(Mix_Valve::F_RECEIVED_INI)) {
+			if (status == _OK && i2c_status.is_not(Mix_Valve::F_RECEIVED_INI)) {
 				logger() << L_time << "MV State: 0x" << L_hex << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
 				status = sendSlaveIniData(); // does't cause reset
+				i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 			}
-			bool letMV_read_ts = false;
+			bool letMV_read_ts = true; // must let MV do doneI2C_Coms to reset watchdog timer.
 			if (letMV_read_ts) {
 				auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
 				give_MixV_Bus(i2c_status); // resets ...
-				wait_DevicesToFinish(rawRegisters());
+				wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
 				status = getInrangeVal(Mix_Valve::R_FLOW_TEMP, 10, 80); 
 				if (status != _OK) {
 					logger() << "Reset flowTemp..." << L_flush;

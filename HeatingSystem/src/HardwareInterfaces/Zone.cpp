@@ -165,7 +165,11 @@ namespace HardwareInterfaces {
 
 	bool Zone::advancedToNextProfile() const { return startDateTime() > clock_().now(); };
 	
-	bool Zone::backBoilerIsOn() const {
+	bool Zone::backBoilerIsWarm() const {
+		return  _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsWarm();
+	}
+
+	bool Zone::backBoilerIsHeating() const {
 		return  _relay->recordID() == R_DnSt && _thermalStore->backBoilerIsHeating();
 	}
 
@@ -182,7 +186,7 @@ namespace HardwareInterfaces {
 		double ratio;
 		bool isDHW = isDHWzone();
 		auto outsideTemp = isDHW ? int8_t(20) : _thermalStore->getOutsideTemp();
-		bool backBoilerOn = backBoilerIsOn();
+		bool backBoilerOn = backBoilerIsHeating();
 		bool towelRadOn = _thermalStore->demandZone() == R_FlTR || _thermalStore->demandZone() == R_HsTR;
 		bool giveDHW_priority = !isDHW && towelRadOn && _thermalStore->tooCoolRequestOrigin() == NO_OF_MIX_VALVES;
 #ifdef ZPSIM

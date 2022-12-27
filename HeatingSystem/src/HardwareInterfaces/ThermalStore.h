@@ -24,6 +24,7 @@ namespace HardwareInterfaces {
 		uint8_t getGasFlowTemp() const;
 		int8_t getOutsideTemp() const;
 		bool backBoilerIsHeating() const;
+		bool backBoilerIsWarm() const;
 		bool gasBoilerIsHeating() const { return _isHeating; }
 		int8_t tooCoolRequestOrigin() const { return _heatRequestSource; }
 		int8_t demandZone() const { return _demandZone; }

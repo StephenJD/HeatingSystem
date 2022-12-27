@@ -8,6 +8,7 @@
 #include <I2C_Recover.h>
 #include <I2C_Registers.h>
 #include <I2C_Talk_ErrorCodes.h>
+#include <I2C_To_MicroController.h>
 #include <Logging.h>
 #include <Timer_mS_uS.h>
 
@@ -162,8 +163,9 @@ void Mix_Valve::changeRole(bool isMaster) { // called by MixValve_Slave.ino when
 	auto state = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 	state.set(F_NO_PROGRAMMER, isMaster);
 	state.set(R_VALIDATE_READ);
-	state.clear(F_RECEIVED_INI);
 	if (isMaster) {
+		logger() << F("IsMaster") << L_endl;
+		state.clear(F_RECEIVED_INI);
 		_currReqTemp = reg.get(R_DEFAULT_FLOW_TEMP);
 		reg.set(R_REQUEST_FLOW_TEMP, _currReqTemp);
 	}
@@ -488,15 +490,24 @@ void Mix_Valve::refreshRegisters() {
 	reg.set(R_VALVE_POS, (uint8_t)_valvePos);
 }
 
+bool Mix_Valve::ts_OK() const {
+	return !_temp_sensr.hasError();
+}
+
 bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // called every loop()
 	constexpr int e_Slave_Sense = 7;
 	auto reg = registers();
 	auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 
-	uint8_t ts_status = _OK;
-	if (device_State.is(F_NO_PROGRAMMER) && newSecond) device_State.set(F_I2C_NOW);
+	uint8_t ts_status = 1; // only return true if is(F_I2C_NOW) is sucessful
+	if (device_State.is(F_NO_PROGRAMMER) && newSecond) {
+		device_State.set(F_I2C_NOW);
+		ts_status = _OK;
+	}
 
 	if (device_State.is(F_I2C_NOW)) {
+		//logger() << F("DevState:\t") << device_State << L_endl;
+		//device_State.set(F_RECEIVED_INI); // shouldn't need this, but it is getting cleared somehow!
 		//digitalWrite(e_Slave_Sense, LOW);
 		//pinMode(e_Slave_Sense, OUTPUT);
 		_temp_sensr.setHighRes();
@@ -516,8 +527,9 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 			_flowTempFract = temp & 0x00FF;
 		}
 		device_State.clear(F_I2C_NOW);
+		device_State.set(R_VALIDATE_READ);
 		device_State.set(_regOffset ? F_DS_TS_FAILED : F_US_TS_FAILED, ts_status);
-		uint8_t clearState = 0;
+		uint8_t clearState = DEVICE_IS_FINISHED;
 		programmer.write(R_DEVICE_STATE, 1, &clearState);
 	}
 	return ts_status == _OK;

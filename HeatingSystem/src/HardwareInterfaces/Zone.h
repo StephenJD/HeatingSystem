@@ -54,7 +54,8 @@ namespace HardwareInterfaces {
 		const RelationalDatabase::Answer_R<client_data_structures::R_Zone>& zoneRecord() const { return _zoneRecord; }
 		Date_Time::DateTime startDateTime() const { return _ttStartDateTime; }
 		uint8_t warmUpTime_m10() const {return _minsToPreheat < 0 ? _minsToPreheat : (_minsToPreheat + 5) / 10;}
-		bool backBoilerIsOn() const;
+		bool backBoilerIsWarm() const;
+		bool backBoilerIsHeating() const;
 		int8_t backBoilerFlowT() const;
 		// Modifier
 		Assembly::ProfileInfo refreshProfile(bool reset = true);

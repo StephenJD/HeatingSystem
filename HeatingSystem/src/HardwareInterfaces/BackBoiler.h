@@ -10,6 +10,7 @@ namespace HardwareInterfaces {
 		BackBoiler(UI_TempSensor & flowTS, UI_TempSensor & thrmStrTS, UI_Bitwise_Relay & relay);
 		bool check(); // returns true if ON
 		bool isOn() const;
+		bool isWarm() const;
 	private:
 		UI_TempSensor * _flowTS;
 		UI_TempSensor * _thrmStrTS;

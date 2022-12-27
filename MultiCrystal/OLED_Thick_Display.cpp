@@ -98,10 +98,11 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
         } 
         reg.set(R_ROOM_TEMP_FRACTION, roomTempFract);
         device_State.clear(F_I2C_NOW); // clears local register.
-        uint8_t clearState = 0;
-        write(R_DEVICE_STATE, 1, &clearState); // writes '0' to Programmer Raw-Reg 1 == R_PROG_WAITING_FOR_REMOTE_I2C_COMS
+        uint8_t clearState = DEVICE_IS_FINISHED;
+        write(R_DEVICE_STATE, 1, &clearState); // writes '0xF0' to Programmer Raw-Reg 1 == R_PROG_WAITING_FOR_REMOTE_I2C_COMS
+        return true;
     }
-    return true;
+    return false;
 }
 
 void OLED_Thick_Display::refreshRegisters() {
@@ -304,11 +305,10 @@ void OLED_Thick_Display::processKeys() { // called by loop()
         }
     } else {
         if (newSecond) {
-            reset_watchdog();
             refreshRegisters();
         }
         _remoteKeypad.readKey();
-        doneI2C_Coms(newSecond);
+        if (doneI2C_Coms(newSecond)) reset_watchdog();
 
         auto key = _remoteKeypad.popKey();
         if (key > I_Keypad::NO_KEY) {
