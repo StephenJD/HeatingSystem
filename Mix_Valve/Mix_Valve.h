@@ -92,7 +92,7 @@ class Mix_Valve
 {
 public:
 	enum MV_Device_State {R_VALIDATE_READ, F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, _NO_OF_FLAGS};
-	
+	enum { R_PROG_WAITING_FOR_REMOTE_I2C_COMS  = 1};
 	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
 		// Copies of the VOLATILE set provided in Programmer reg-set

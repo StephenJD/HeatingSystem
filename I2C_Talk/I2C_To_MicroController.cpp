@@ -77,14 +77,16 @@ namespace HardwareInterfaces {
 		Error_codes status;
 		uint8_t regVal;
 		I2C_Recovery::HardReset::hasWarmedUp(true);
-		auto timeout = Timer_mS(150);
+		auto timeout = Timer_mS(300);
 		do {
 			//testDevice();
 			status = readVerifyReg(regNo); // recovery
 			regVal = reg.get(regNo);
-		} while ((regVal < minVal || regVal > maxVal) && !timeout);
+			if (regVal >= minVal && regVal <= maxVal) break;
+			i2C().begin();
+		} while (!timeout);
 		auto timeused = timeout.timeUsed();
-		if (timeused > 100 && !timeout) logger() << L_time << "Read 0x" << L_hex << getAddress() << " Reg 0x" << regNo << " in mS " << timeused << L_endl;
+		if (timeused > 200 && !timeout) logger() << L_time << "Read 0x" << L_hex << getAddress() << " Reg 0x" << regNo << " in mS " << L_dec << timeused << L_endl;
 
 		if (timeused > timeout.period()) {
 			logger() << L_time << F("Read 0x") << L_hex << getAddress() << " Bad Reg 0x" << regNo << " was:" << L_dec << regVal << I2C_Talk::getStatusMsg(status) << L_endl;
@@ -95,12 +97,13 @@ namespace HardwareInterfaces {
 
 	void wait_DevicesToFinish(i2c_registers::RegAccess reg, int regNo) {
 		if (reg.get(regNo) == DEVICE_CAN_WRITE) {
-			auto timeout = Timer_mS(200);
-			while (!timeout && reg.get(regNo) == DEVICE_CAN_WRITE) {
+			auto timeout = Timer_mS(300);
+			while (!timeout && reg.get(regNo) != DEVICE_IS_FINISHED) {
 			}
 			//auto delayedBy = timeout.timeUsed();
 			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
 			reg.set(regNo, DEVICE_IS_FINISHED);
+			if (timeout) logger() << L_time << "wait_DevicesToFinish Timed-out" << L_flush;
 		}
 	};
 

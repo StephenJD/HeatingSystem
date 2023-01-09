@@ -39,6 +39,7 @@ namespace HardwareInterfaces {
 		Zone* _dhw = 0;
 		Zone* _zone = 0;
 		State _state = NO_CHANGE;
+		uint8_t _key_mode = 0;
 	};
 }
 

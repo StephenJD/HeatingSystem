@@ -529,8 +529,9 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 		device_State.clear(F_I2C_NOW);
 		device_State.set(R_VALIDATE_READ);
 		device_State.set(_regOffset ? F_DS_TS_FAILED : F_US_TS_FAILED, ts_status);
+		logger() << F("I2CNow State: ") << reg.get(R_DEVICE_STATE) << L_endl;
 		uint8_t clearState = DEVICE_IS_FINISHED;
-		programmer.write(R_DEVICE_STATE, 1, &clearState);
+		programmer.write(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1, &clearState); // writes '0xF0 (1111,0000)' to Programmer Raw-Reg 1
 	}
 	return ts_status == _OK;
 }

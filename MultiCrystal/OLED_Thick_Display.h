@@ -19,6 +19,7 @@ public:
 		, HotWater
 		, NoOfDisplayModes
 	};
+	enum { R_PROG_WAITING_FOR_REMOTE_I2C_COMS = 1 };
 
 	enum RemoteRegisterName {	// In Slave-Mode, all are received
 		R_REMOTE_REG_OFFSET		// [0] ini Always read by programmer to check if it needs ini-sending

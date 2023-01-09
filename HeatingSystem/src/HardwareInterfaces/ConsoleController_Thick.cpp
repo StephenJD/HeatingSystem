@@ -29,6 +29,7 @@ namespace HardwareInterfaces {
 		auto reg = registers();
 		reg.set(OLED::R_ROOM_TS_ADDR, roomTS_addr);
 		reg.set(OLED::R_DEVICE_STATE, console_mode);
+		_key_mode = console_mode;
 		reg.set(OLED::R_REMOTE_REG_OFFSET, localRegOffset);
 		_towelRail = &towelRail;
 		_dhw = &dhw;
@@ -45,7 +46,8 @@ namespace HardwareInterfaces {
 	}
 
 	void ConsoleController_Thick::set_console_mode(uint8_t mode) {
-		registers().set(OLED::R_DEVICE_STATE, mode);
+		_key_mode = mode;
+		registers().set(OLED::R_DEVICE_STATE, _key_mode);
 		sendSlaveIniData();
 	}
 
@@ -57,6 +59,7 @@ namespace HardwareInterfaces {
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
 			auto reg = registers();
+			reg.set(OLED::R_DEVICE_STATE, _key_mode);
 			auto devFlags = OLED::I2C_Flags_Ref(*reg.ptr(OLED::R_DEVICE_STATE));
 			devFlags.set(OLED::F_PROGRAMMER_CHANGED_DATA)/*.set(OLED::R_VALIDATE_READ)*/;
 
@@ -106,7 +109,7 @@ namespace HardwareInterfaces {
 		auto remReqTemp = std::get<3>(regStatus); // is 0 normally.
 
 		if (status != _OK) {
-			logger() << L_time << F("ConsoleController_Thick refreshRegistersOK device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_flush;
+			//logger() << L_time << F("ConsoleController_Thick refreshRegistersOK device 0x") << L_hex << getAddress() << I2C_Talk::getStatusMsg(status) << " at freq: " << L_dec << runSpeed() << L_flush;
 			return false;
 		}
 		auto zoneReqTemp = _zone->currTempRequest();
