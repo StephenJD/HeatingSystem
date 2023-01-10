@@ -296,12 +296,6 @@ namespace HardwareInterfaces {
 #ifdef ZPSIM
 		//uint8_t (&debugWire)[30] = reinterpret_cast<uint8_t (&)[30]>(TwoWire::i2CArr[getAddress()]);
 #endif
-		// Lambdas
-		auto give_MixV_Bus = [this](Mix_Valve::I2C_Flags_Obj i2c_status) {
-			rawRegisters().set(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, DEVICE_CAN_WRITE);
-			i2c_status.set(Mix_Valve::F_I2C_NOW);
-			writeRegValue(Mix_Valve::R_DEVICE_STATE, i2c_status);
-		};
 
 		// Algorithm
 		uint8_t status = reEnable(true); // see if is disabled
@@ -315,23 +309,20 @@ namespace HardwareInterfaces {
 			auto i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 			if (status == _OK && i2c_status.is_not(Mix_Valve::F_RECEIVED_INI)) {
 				logger() << L_time << "MV State: 0x" << L_hex << reg.get(Mix_Valve::R_DEVICE_STATE) << L_endl;
-				status = sendSlaveIniData(); // does't cause reset
+				status = sendSlaveIniData();
 				i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 			}
-			bool letMV_read_ts = true; // must let MV do doneI2C_Coms to reset watchdog timer.
-			if (letMV_read_ts) {
-				auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
-				give_MixV_Bus(i2c_status); // resets ...
+			// must let MV do doneI2C_Coms to reset watchdog timer.
+			auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
+			i2c_status.set(Mix_Valve::F_I2C_NOW);
+			if (give_I2C_Bus(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS, Mix_Valve::R_DEVICE_STATE, i2c_status)) {
 				wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
-				status = getInrangeVal(Mix_Valve::R_FLOW_TEMP, 10, 80); 
-				if (status != _OK) {
-					logger() << "Reset flowTemp..." << L_flush;
-					reg.set(Mix_Valve::R_FLOW_TEMP, flowTemp_was);
-					return false;
-				}
-			} else {
-				readMV_Temps();
-				status = writeReg(Mix_Valve::R_FLOW_TEMP);
+			}
+			status = getInrangeVal(Mix_Valve::R_FLOW_TEMP, 10, 80); 
+			if (status != _OK) {
+				logger() << "Reset flowTemp..." << L_flush;
+				reg.set(Mix_Valve::R_FLOW_TEMP, flowTemp_was);
+				return false;
 			}
 			if (status == _OK) {
 				status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
@@ -353,15 +344,4 @@ namespace HardwareInterfaces {
 		return status == _OK;
 	}
 
-	void MixValveController::readMV_Temps() {
-		auto& thisTS = index() == 0 ? _USFlow : _DSFlow;
-		thisTS.setHighRes();
-		auto ts_status = thisTS.readTemperature();
-		if (ts_status == _disabledDevice) {
-			thisTS.reset();
-		}
-		auto reg = registers();
-		auto temp = thisTS.get_temp();
-		reg.set(Mix_Valve::R_FLOW_TEMP, temp);
-	}
 }

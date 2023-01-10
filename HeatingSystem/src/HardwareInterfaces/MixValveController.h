@@ -41,7 +41,7 @@ namespace HardwareInterfaces {
 		void sendRequestFlowTemp(uint8_t callTemp);
 		bool logMixValveOperation(bool logThis);
 		void monitorMode();
-		void readMV_Temps();
+		//void readMV_Temps();
 
 //#if defined (ZPSIM)
 //		int16_t getValvePos() const; // public for simulator

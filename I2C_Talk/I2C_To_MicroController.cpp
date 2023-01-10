@@ -33,6 +33,9 @@ namespace HardwareInterfaces {
 		I_I2Cdevice::write_verify(0, 1, &wasReg0); // non-recovery
 		return status;
 	}
+	Error_codes I2C_To_MicroController::writeOnly_RegValue(int reg, uint8_t value) {
+		return write(_remoteRegOffset + reg, 1, &value); // recovery-write;
+	}
 
 	Error_codes  I2C_To_MicroController::writeRegValue(int reg, uint8_t value) {
 		return write_verify(_remoteRegOffset + reg, 1, &value); // recovery-write_verify;
@@ -79,11 +82,11 @@ namespace HardwareInterfaces {
 		I2C_Recovery::HardReset::hasWarmedUp(true);
 		auto timeout = Timer_mS(300);
 		do {
-			//testDevice();
 			status = readVerifyReg(regNo); // recovery
 			regVal = reg.get(regNo);
 			if (regVal >= minVal && regVal <= maxVal) break;
 			i2C().begin();
+			//testDevice();
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
 		if (timeused > 200 && !timeout) logger() << L_time << "Read 0x" << L_hex << getAddress() << " Reg 0x" << regNo << " in mS " << L_dec << timeused << L_endl;
@@ -95,16 +98,87 @@ namespace HardwareInterfaces {
 		return status;
 	}
 
-	void wait_DevicesToFinish(i2c_registers::RegAccess reg, int regNo) {
-		if (reg.get(regNo) == DEVICE_CAN_WRITE) {
+
+	bool I2C_To_MicroController::handShake_send(uint8_t remoteRegNo, const uint8_t data) {
+		/* Hand-shake: DATA_READY = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0
+		* We need to know we have sucessfully written to a remote,
+		* So we write then read-back. If the read-back gives the wrong result we write again.
+		* But the read-back might have failed, causing us to write again and making the remote think we have sent two messages.
+		* So the remote changes its data to show it has seen it. When we read-back we look for the changed data.
+		* Once we see the changed data we know it has been seen. But it might take a while before we are successful at reading the changed data.
+		* So we might keep sending data after it has been seen. The remote needs to know how long to wait for the same data before moving on.
+		* It is not safe for the remote to become master until we have stopped resending data.
+		* So we need to tell the remote we have seen the changed data! So we send EXCHANGE_COMPLETE.
+		* The remote will timeout if it doesn't get EXCHANGE_COMPLETE, so how long do we send it for? - up to 100mS. After that we must let the remote become master.
+		* When remote gets EXCHANGE_COMPLETE it changes its data to DATA_READY. But it knows we will stop sending after 100mS.
+		do {
+			send data + DATA_READY // when receiver sees DATA_READY it sets DATA_READ and clears DATA_READY
+			read data + flags // receiver will not act on new valid-flag if ready-flag is set.
+		} while (read != send OR flags != DATA_READ);
+		do {
+			send data + EXCHANGE_COMPLETE // when receiver sees EXCHANGE_COMPLETE it clears DATA_READ
+			read data + flags 
+		} while (read != send OR flags != DATA_READY);
+		new data can be sent.
+		*/			
+		auto timeout = Timer_mS(300);
+		const uint8_t SEND_DATA = data | DATA_READY & ~DATA_READ;
+		const uint8_t COMPLETE_DATA = data | EXCHANGE_COMPLETE;
+		const uint8_t RECEIVE_OK = data | DATA_READ & ~DATA_READY;
+		uint8_t read_data;
+		do {
+			writeOnly_RegValue(remoteRegNo, SEND_DATA);
+			readRegVerifyValue(remoteRegNo, read_data);
+			if (read_data == RECEIVE_OK) break;
+			i2C().begin();
+		} while (!timeout);
+		auto timeused = timeout.timeUsed();
+		if (timeused > 200 && !timeout) logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << remoteRegNo << F(" in mS ") << L_dec << timeused << L_endl;
+
+		if (timeused > timeout.period()) {
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << " Bad Reg 0x" << remoteRegNo << " Read: 0x" << read_data << L_endl;
+			return false;
+		}
+		timeout.restart();
+		do {
+			writeOnly_RegValue(remoteRegNo, COMPLETE_DATA);
+			readRegVerifyValue(remoteRegNo, read_data);
+			if (read_data == SEND_DATA) break;
+			i2C().begin();
+		} while (!timeout);
+		timeused = timeout.timeUsed();
+		writeOnly_RegValue(remoteRegNo, RECEIVE_OK);
+
+		if (timeused > 200 && !timeout) logger() << L_time << "confirm_data 0x" << L_hex << getAddress() << " Reg 0x" << remoteRegNo << " in mS " << L_dec << timeused << L_endl;
+
+		if (timeused > timeout.period()) {
+			logger() << L_time << F("confirm_data 0x") << L_hex << getAddress() << " Bad Reg 0x" << remoteRegNo << " Read: 0x" << read_data << L_endl;
+			return false;
+		}
+		return true;
+	}
+
+	bool I2C_To_MicroController::give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, const uint8_t i2c_status) {
+		localReg.set(localRegNo, DEVICE_CAN_WRITE);
+		return handShake_send(remoteRegNo, i2c_status); // top-two bits (x,x,...) used in hand-shaking
+	}
+
+	bool I2C_To_MicroController::wait_DevicesToFinish(i2c_registers::RegAccess localReg, int regNo) {
+		bool hasFinished = true;
+		// DATA_READY = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0
+		if (localReg.get(regNo) == DEVICE_CAN_WRITE) {
 			auto timeout = Timer_mS(300);
-			while (!timeout && reg.get(regNo) != DEVICE_IS_FINISHED) {
+			while (!timeout && localReg.get(regNo) != DEVICE_IS_FINISHED) {
+				//i2C().begin();
 			}
 			//auto delayedBy = timeout.timeUsed();
 			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
-			reg.set(regNo, DEVICE_IS_FINISHED);
-			if (timeout) logger() << L_time << "wait_DevicesToFinish Timed-out" << L_flush;
+			localReg.set(regNo, DEVICE_IS_FINISHED);
+			if (timeout) {
+				hasFinished = false;
+				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " Timed-out" << L_flush;
+			}
 		}
-	};
-
+		return hasFinished;
+	}
 }

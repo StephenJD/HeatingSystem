@@ -494,28 +494,63 @@ bool Mix_Valve::ts_OK() const {
 	return !_temp_sensr.hasError();
 }
 
+bool Mix_Valve::receive_handshakeData(uint8_t localeRegNo, I2C_Flags_Ref data) {
+	const uint8_t RECEIVED_DATA = data | DATA_READY & ~DATA_READ;
+	const uint8_t COMPLETE_DATA = data | EXCHANGE_COMPLETE;
+	const uint8_t RECEIVE_OK = data | DATA_READ & ~DATA_READY;
+	if (data == RECEIVED_DATA) {
+		auto timeout = Timer_mS(300);
+		do { // prog will keep sending RECEIVED_DATA until it reads RECEIVE_OK, when it will send COMPLETE_DATA
+			if (data == COMPLETE_DATA) break;
+			if (data != RECEIVE_OK) data.setWhole(RECEIVE_OK);
+		} while (!timeout);
+		auto timeused = timeout.timeUsed();
+		if (timeused > 200 && !timeout) logger() << L_time << F("receive_data Reg 0x") << localeRegNo << F(" in mS ") << L_dec << timeused << L_endl;
+
+		if (timeused > timeout.period()) {
+			logger() << L_time << F("receive_data Bad Reg 0x") << localeRegNo << F(" Read: 0x") << data << L_endl;
+			return false;
+		}
+		timeout.restart();
+		do { // prog will keep sending COMPLETE_DATA until it reads RECEIVED_DATA, when it will send RECEIVE_OK
+			if (data == RECEIVE_OK) break;
+			if (data != RECEIVED_DATA) data.setWhole(RECEIVED_DATA);
+		} while (!timeout);
+		timeused = timeout.timeUsed();
+		if (timeused > 200 && !timeout) logger() << L_time << F("confirm_data Reg 0x") << localeRegNo << " in mS " << L_dec << timeused << L_endl;
+
+		if (timeused > timeout.period()) {
+			logger() << L_time << F("confirm_data Bad Reg 0x") << localeRegNo << " Read: 0x" << data << L_endl;
+			return false;
+		}
+		return true;
+	}
+	return false;
+}
+
 bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // called every loop()
-	constexpr int e_Slave_Sense = 7;
 	auto reg = registers();
+	// DATA_READ = 0x80 (1000,0000), DATA_READY = 0x40 (0100,0000), EXCHANGE_COMPLETE = 0xC0 (1100,0000)
+	// enum MV_Device_State { R_VALIDATE_READ, F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, _NO_OF_FLAGS };
+	// prog sends (0100,0000), MV returns (1000,0000), then prog sends (1100,0000) and MV sends (0100,0000)  
 	auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 
 	uint8_t ts_status = 1; // only return true if is(F_I2C_NOW) is sucessful
+	bool goMaster = false;
 	if (device_State.is(F_NO_PROGRAMMER) && newSecond) {
-		device_State.set(F_I2C_NOW);
 		ts_status = _OK;
+		goMaster = true;
 	}
 
-	if (device_State.is(F_I2C_NOW)) {
+	auto processTime = millis();
+	if (goMaster || receive_handshakeData(R_DEVICE_STATE, device_State)) {
 		//logger() << F("DevState:\t") << device_State << L_endl;
 		//device_State.set(F_RECEIVED_INI); // shouldn't need this, but it is getting cleared somehow!
-		//digitalWrite(e_Slave_Sense, LOW);
-		//pinMode(e_Slave_Sense, OUTPUT);
 		_temp_sensr.setHighRes();
 		ts_status = _temp_sensr.readTemperature();
 		if (ts_status == _disabledDevice) {
-			_temp_sensr.reset();
+			_temp_sensr.reEnable(true);
 		}
-		//pinMode(e_Slave_Sense, INPUT);
 
 		if (ts_status) {
 			logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
@@ -526,12 +561,20 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 			reg.set(R_FLOW_TEMP, temp >> 8);
 			_flowTempFract = temp & 0x00FF;
 		}
-		device_State.clear(F_I2C_NOW);
-		device_State.set(R_VALIDATE_READ);
 		device_State.set(_regOffset ? F_DS_TS_FAILED : F_US_TS_FAILED, ts_status);
-		logger() << F("I2CNow State: ") << reg.get(R_DEVICE_STATE) << L_endl;
-		uint8_t clearState = DEVICE_IS_FINISHED;
-		programmer.write(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1, &clearState); // writes '0xF0 (1111,0000)' to Programmer Raw-Reg 1
+		processTime = millis() - processTime;
+		logger() << F("I2CNow State: ") << reg.get(R_DEVICE_STATE) << F(" at mS ") << millis() << F(" Took: ") << processTime << L_endl;
+		
+		uint8_t clearState = I2C_To_MicroController::DEVICE_IS_FINISHED;
+		auto timeout = Timer_mS(500);
+		do {
+			if (programmer.write_verify(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1, &clearState)) break; // writes '0xF0 (1111,0000)' to Programmer Raw-Reg 1
+			programmer.i2C().begin();
+		} while (!timeout);
+		if (timeout) {
+			logger() << L_time << F("give_I2C_Timeout") << L_endl;
+		}
+		device_State.clear(F_I2C_NOW);
 	}
 	return ts_status == _OK;
 }

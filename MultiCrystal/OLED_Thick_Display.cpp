@@ -97,9 +97,14 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
             _state = REFRESH_DISPLAY;
         } 
         reg.set(R_ROOM_TEMP_FRACTION, roomTempFract);
-        device_State.clear(F_I2C_NOW); // clears local register.
         uint8_t clearState = DEVICE_IS_FINISHED;
-        write(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1, &clearState); // writes '0xF0' to Programmer Raw-Reg 1
+        auto timeout = Timer_mS(300);
+        do {
+           if (writeRegValue(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, clearState)) break;
+            i2C().begin();
+        } while (!timeout);
+        device_State.clear(F_I2C_NOW); // clears local register.
+        logger() << F("I2CNow State: ") << reg.get(R_DEVICE_STATE) << F(" at mS ") << millis() << L_endl;
         return true;
     }
     return false;
