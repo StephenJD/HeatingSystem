@@ -175,12 +175,12 @@ void loop() {
 	const auto newRole = getRole();
 	if (newRole != role) roleChanged(newRole); // Interrupt detection is not reliable!
 	
-	if (mixValve[us_mix].doneI2C_Coms(programmer, nextSecond)) reset_watchdog();;
-	if (mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond)) reset_watchdog();;
+	if (mixValve[us_mix].doneI2C_Coms(programmer, nextSecond)) reset_watchdog();
+	if (mixValve[ds_mix].doneI2C_Coms(programmer, nextSecond)) reset_watchdog();
 	
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
-
+		reset_watchdog();
 		mixValve[us_mix].check_flow_temp();
 		mixValve[ds_mix].check_flow_temp();
 
