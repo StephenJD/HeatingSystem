@@ -116,6 +116,10 @@ public:
 	auto getStatus() const ->I2C_Talk_ErrorCodes::Error_codes override;
 	// Modifiers
 	void disable() override { _lastFailedTime_uS = micros(); _i2c_speed = 0; }
+	
+	/// <summary>
+	/// If attempting enable, it tries findAworkingSpeed.
+	/// </summary>
 	auto reEnable(bool immediatly = false)->I2C_Talk_ErrorCodes::Error_codes override;
 	void reset() override { _i2c_speed = START_SPEED_AFTER_FAILURE;	}
 

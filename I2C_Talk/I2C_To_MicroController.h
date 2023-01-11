@@ -12,7 +12,11 @@ namespace HardwareInterfaces {
 	/// </summary>
 	class I2C_To_MicroController : public I_I2Cdevice_Recovery {
 	public:
-		enum : uint8_t { DEVICE_CAN_WRITE = 0x0F, DEVICE_IS_FINISHED = 0xF0, DATA_READY = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 };
+		enum : uint8_t { 
+			DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+			, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
+			, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
+		};
 		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers) : I2C_To_MicroController(recover, local_registers, 0, 0, 0) {}
 		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers, int address, int localRegOffset, int remoteRegOffset);
 		// Queries

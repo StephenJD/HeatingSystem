@@ -100,83 +100,157 @@ namespace HardwareInterfaces {
 
 
 	bool I2C_To_MicroController::handShake_send(uint8_t remoteRegNo, const uint8_t data) {
-		/* Hand-shake: DATA_READY = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0
-		* We need to know we have sucessfully written to a remote,
-		* So we write then read-back. If the read-back gives the wrong result we write again.
-		* But the read-back might have failed, causing us to write again and making the remote think we have sent two messages.
-		* So the remote changes its data to show it has seen it. When we read-back we look for the changed data.
-		* Once we see the changed data we know it has been seen. But it might take a while before we are successful at reading the changed data.
-		* So we might keep sending data after it has been seen. The remote needs to know how long to wait for the same data before moving on.
-		* It is not safe for the remote to become master until we have stopped resending data.
-		* So we need to tell the remote we have seen the changed data! So we send EXCHANGE_COMPLETE.
-		* The remote will timeout if it doesn't get EXCHANGE_COMPLETE, so how long do we send it for? - up to 100mS. After that we must let the remote become master.
-		* When remote gets EXCHANGE_COMPLETE it changes its data to DATA_READY. But it knows we will stop sending after 100mS.
-		do {
-			send data + DATA_READY // when receiver sees DATA_READY it sets DATA_READ and clears DATA_READY
+		/*
+		* Two people, A & B, arrive on distant hill-tops and want to show they have seen each other.
+		* 1. A arrives and waits till he can see B
+		* 2. A raises his arm and watches B. A needs to wait until he knows he has been seen.
+		* 3. B sees A raised arm and raises his arm. B needs to wait until he knows he has been seen.
+		* 4. A sees B raised arm and drops his arm. He can now carry on because he knows B has seen him.
+		* 5. B can no longer see A, but doesn't know if it is due to fog. He needs to see the empty-hill top to be sure A has seen his raised hand.
+		* B can carry on. A can see B's empty hilltop to confirm the exchange is complete.
+		* This works because B can interrogate A to see he is no longer there.
+		*/
+		/*
+		* Two people, Host & Traveller, need to exchange messages during a postal strike to arrange an island AirBnB rental.
+		* 1. Traveller keeps posting notes to Host saying "Can I book" until he gets a postcard back from Host.
+		* 2. Host receives some of Traveller's notes and each time sends a postcard back saying "Yes, it's available". Host needs to know his acceptance has been received.
+		* 3. Traveller receives some of Host's postcards and starts sending a daily "Thank-you".
+		* 4. Host receives some of Traveller's "Thank-you", so starts sending daily "Confirmed" postcards.
+		* 5. When Traveller receives a "Confirmed" postcard from the host he can set off for the island AirBnB.
+		* 6. But Host doesn't know how long to keep sending "Confirmed", because messages might not get delivered, so the traveller may not have set off.
+		* 7. When the Traveller arrives at the island, he starts sending "Arrived" notes.
+		* 8. Host receives some of Traveller's "Arrived" notes so starts sending "Stop" postcards. This can never end!
+		*/		
+		/*
+		* Two soldiers, Fire & Scout, need to exchange messages to arrange covering fire on the scout's position.
+		* 1. Scout keeps signalling to Fire saying "Can you cover me at 10am?" until 10am.
+		* 2. Fire sees some of Scout's "Cover me" signals and prepares to fire.
+		* 3. At 10am, Scout evacuates, and Fire fires.
+		* 4. Fires and scout need to synchronise watches.
+		*/
+		/*
+		* Two soldiers, Fire & Scout, need to exchange messages to arrange covering fire on the scout's position.
+	* Scout asks for Fire cover.
+		* 1. Scout keeps signalling to Fire saying "Cover me" or times-out after 30mS.
+		* 2. Fire sees some of Scout's "Cover me" signals and keeps replying "Ready" until he sees "Evacuating" or times-out after 30mS.
+		* 3. If Scout sees "Ready" he sends one "Evacuating" signal.
+	* Scout waits for blast.
+		* 4. Scout then evacuates and waits for "Fired" up to 300mS. After that he can assume no fire is coming.
+		* 5. If Fire sees "Evacuating" before the time-out he fires.
+	* Fire sends the "All Clear"
+		* 6. After firing or time-out, Fire keeps signalling for up to 300mS "All Clear" until he sees "Hit" or "Missed".
+		* 7. Whilst Scout sees "All Clear" he keeps sending "Hit" or times-out after 30mS.
+		* 8. Fire keeps sending "All Clear" until he sees "Hit" or times-out after 30mS. Then sends one "No More Firing".
+	* Fire assumes Scout is happy with the result
+		* 9. After seeing "No More Firing" Scout returns to his position.
+		* 10. If Scout doesn't see "No More Firing" he returns to his position after 300mS timeout.
+		*/ 
+		/*
+	* A tells B it can become master
+		* 1. When A wants to send data it keeps sending DATA_SENT until it sees DATA_READ.
+		* 2. Whilst B sees DATA_SENT it keeps sending DATA_READ.
+		* 3. A keeps sending until it sees DATA_READ (or it times-out). Then it sends one "EXCHANGE_COMPLETE".
+	* A assumes B is now Master
+		* 4. A then waits to get DATA_SENT from B for up to 300mS.
+		* 5. If B sees "EXCHANGE_COMPLETE" it processes its data (takes Master control).
+	* B tells A it has finished as Master.
+		* 6. When finished as Master, B keeps sending DATA_SENT to A to say it is completed, until it sees DATA_READ (or it times-out 300mS after ReadTime).
+		* 7. Whilst A sees DATA_SENT it keeps sending DATA_READ.
+		* 8. B keeps sending DATA_SENT until it sees DATA_READ (or it times-out 300mS after start as Master). Then it sends one "EXCHANGE_COMPLETE".
+	* B assumes A is now Master
+		* 9. After seeing "EXCHANGE_COMPLETE" A becomes Master.
+		* 10. If A doesn't see "EXCHANGE_COMPLETE" it resumes Master role after 300mS timeout.
+		*/
+		/* Hand-shake: DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0
+		do { // A tells B it can be Master
+			send data + DATA_SENT // when receiver sees DATA_SENT it sets DATA_READ and clears DATA_SENT
 			read data + flags // receiver will not act on new valid-flag if ready-flag is set.
-		} while (read != send OR flags != DATA_READ);
-		do {
-			send data + EXCHANGE_COMPLETE // when receiver sees EXCHANGE_COMPLETE it clears DATA_READ
-			read data + flags 
-		} while (read != send OR flags != DATA_READY);
-		new data can be sent.
-		*/			
-		auto timeout = Timer_mS(300);
-		const uint8_t SEND_DATA = data | DATA_READY & ~DATA_READ;
-		const uint8_t COMPLETE_DATA = data | EXCHANGE_COMPLETE;
-		const uint8_t RECEIVE_OK = data | DATA_READ & ~DATA_READY;
+			if (read == send AND flags == DATA_READ) break;
+		} while (!timeout_300mS);
+		send data + EXCHANGE_COMPLETE;
+		// A assumes B is Master
+		timeout = 300mS
+		do { // A reads local register
+			if (read == EXCHANGE_COMPLETE) break;
+			if (read = DATA_SENT) read = DATA_READ;
+		} while (!timeout_300mS);
+		// A is Master
+		*/
+
+		//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+		//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
+		//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+
+		const uint8_t SEND_DATA = (data & DATA_MASK) | DATA_SENT;
 		uint8_t read_data;
+		auto timeout = Timer_mS(300);
 		do {
-			writeOnly_RegValue(remoteRegNo, SEND_DATA);
 			readRegVerifyValue(remoteRegNo, read_data);
-			if (read_data == RECEIVE_OK) break;
-			i2C().begin();
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << _remoteRegOffset + remoteRegNo << F(" read: ") << read_data << L_endl;
+			if ((read_data & HANDSHAKE_MASK) == DATA_READ) break;
+			writeOnly_RegValue(remoteRegNo, SEND_DATA);
+			//i2C().begin();
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
-		if (timeused > 200 && !timeout) logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << remoteRegNo << F(" in mS ") << L_dec << timeused << L_endl;
+		//if (timeused > 200 && !timeout) 
+		if (!timeout) 
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << _remoteRegOffset + remoteRegNo << F(" OK mS ") << L_dec << timeused << L_endl;
 
 		if (timeused > timeout.period()) {
-			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << " Bad Reg 0x" << remoteRegNo << " Read: 0x" << read_data << L_endl;
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << " Timeout Reg 0x" << _remoteRegOffset + remoteRegNo << " Read: 0x" << read_data << L_endl;
 			return false;
 		}
-		timeout.restart();
-		do {
-			writeOnly_RegValue(remoteRegNo, COMPLETE_DATA);
-			readRegVerifyValue(remoteRegNo, read_data);
-			if (read_data == SEND_DATA) break;
-			i2C().begin();
-		} while (!timeout);
-		timeused = timeout.timeUsed();
-		writeOnly_RegValue(remoteRegNo, RECEIVE_OK);
-
-		if (timeused > 200 && !timeout) logger() << L_time << "confirm_data 0x" << L_hex << getAddress() << " Reg 0x" << remoteRegNo << " in mS " << L_dec << timeused << L_endl;
-
-		if (timeused > timeout.period()) {
-			logger() << L_time << F("confirm_data 0x") << L_hex << getAddress() << " Bad Reg 0x" << remoteRegNo << " Read: 0x" << read_data << L_endl;
-			return false;
-		}
-		return true;
+		return writeOnly_RegValue(remoteRegNo, (data & DATA_MASK) | EXCHANGE_COMPLETE) == _OK;
 	}
 
 	bool I2C_To_MicroController::give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, const uint8_t i2c_status) {
-		localReg.set(localRegNo, DEVICE_CAN_WRITE);
-		return handShake_send(remoteRegNo, i2c_status); // top-two bits (x,x,...) used in hand-shaking
+		 // top-two bits (x,x,...) used in hand-shaking
+		if (handShake_send(remoteRegNo, i2c_status)) {
+			localReg.set(localRegNo, DEVICE_CAN_WRITE & DATA_MASK);
+			return true;
+		}
+		return false;
 	}
 
 	bool I2C_To_MicroController::wait_DevicesToFinish(i2c_registers::RegAccess localReg, int regNo) {
+		/* A assumes B is Master
+		timeout = 300mS
+		do { // A reads local register
+			if (read == EXCHANGE_COMPLETE) break;
+			if (read = DATA_SENT) read = DATA_READ;
+		} while (!timeout_300mS);
+		// A is Master
+		*/
+
+		//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+		//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
+		//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+
+		const uint8_t COMPLETE_DATA = localReg.get(regNo) | EXCHANGE_COMPLETE;
+		const uint8_t RECEIVE_OK = localReg.get(regNo) | DATA_READ & ~DATA_SENT;
+
 		bool hasFinished = true;
-		// DATA_READY = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0
-		if (localReg.get(regNo) == DEVICE_CAN_WRITE) {
+		if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) {
 			auto timeout = Timer_mS(300);
-			while (!timeout && localReg.get(regNo) != DEVICE_IS_FINISHED) {
-				//i2C().begin();
-			}
+			do {
+				auto regVal = localReg.get(regNo);
+				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: " << regVal << L_flush;
+				if ((regVal & HANDSHAKE_MASK) == EXCHANGE_COMPLETE) break;
+				if ((regVal & HANDSHAKE_MASK) == DATA_SENT) {
+					localReg.set(regNo, (regVal & DATA_MASK) | DATA_READ);
+				}
+				i2C().begin();
+			} while (!timeout);
 			//auto delayedBy = timeout.timeUsed();
 			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
 			localReg.set(regNo, DEVICE_IS_FINISHED);
 			if (timeout) {
 				hasFinished = false;
 				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " Timed-out" << L_flush;
+			}
+			else {
+				auto timeused = timeout.timeUsed();
+				logger() << L_time << F("wait_DevicesToFinish OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
 			}
 		}
 		return hasFinished;
