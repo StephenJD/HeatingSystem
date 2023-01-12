@@ -168,7 +168,9 @@ Error_codes I_I2Cdevice_Recovery::reEnable(bool immediatly) {
 	else if (immediatly || failWaitHasElapsed()) {
 		reset();
 		//logger() << L_time << F("Re-enabling disabled device 0x") << L_hex << getAddress() << L_endl;
-		return i2C().status(getAddress());
-	} else return _disabledDevice;
+		if (i2C().status(getAddress()) == _OK) return _OK;
+		else return recovery().findAworkingSpeed();
+	}
+	else return _disabledDevice;
 }
 

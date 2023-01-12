@@ -102,8 +102,8 @@ namespace HardwareInterfaces {
 
 		//logger() << L_time << index() << "] refreshRegisters-start 0x" << L_hex << getAddress() << L_endl;
 		if (reEnable(true) != _OK) {
-			//logger() << L_time << "refreshRegistersOK: 0x" << getAddress() << " Unrecoverable" << L_endl;
-			//return false;
+			logger() << L_time << "refreshRegistersOK: 0x" << getAddress() << " Unrecoverable" << L_endl;
+			return false;
 		}
 		std::tuple<uint8_t, int8_t, int8_t, uint8_t> regStatus{ readRemoteRegisters_OK() };
 		auto status = std::get<0>(regStatus);
