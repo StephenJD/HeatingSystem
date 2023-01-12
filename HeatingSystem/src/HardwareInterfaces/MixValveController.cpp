@@ -75,13 +75,10 @@ namespace HardwareInterfaces {
 	}
 
 	bool MixValveController::readReg_and_log(bool alwaysLog) { // called once per second
-		bool mixV_OK = true;
-		if (reEnable() == _OK) {
-			mixV_OK &= readRegistersFromValve_OK();
-			if (mixV_OK) {
-				//logMixValveOperation(alwaysLog);
-				logMixValveOperation(true);
-			}
+		bool mixV_OK = readRegistersFromValve_OK();
+		if (mixV_OK) {
+			//logMixValveOperation(alwaysLog);
+			logMixValveOperation(true);
 		}
 		return mixV_OK;
 	}
@@ -314,7 +311,7 @@ namespace HardwareInterfaces {
 			// must let MV do doneI2C_Coms to reset watchdog timer.
 			auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
 			//i2c_status.set(Mix_Valve::F_I2C_NOW);
-			//logger() << "give_I2C_Bus to " << _remoteRegOffset << L_endl;
+			logger() << "give_I2C_Bus to RemOff: " << _remoteRegOffset << " LocalOff: " << _localRegOffset << L_endl;
 			if (give_I2C_Bus(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS, Mix_Valve::R_DEVICE_STATE, i2c_status)) {
 				wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
 			}

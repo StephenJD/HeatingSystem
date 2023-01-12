@@ -111,7 +111,7 @@ namespace Assembly {
 
 		auto mixV_OK = true;
 		for (auto & mixValveControl : mixValveControllerArr) {
-			//logger() << L_time << "Check mixValveControl" << L_endl;
+			//logger() << L_time << "Check mixValveControl: " << mixValveControl.index() << L_endl;
 			mixV_OK &= mixValveControl.readReg_and_log();
 			//ui_yield(); 
 		}

@@ -193,20 +193,26 @@ namespace HardwareInterfaces {
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
 		//if (timeused > 50 && !timeout) 
-		if (!timeout) 
+		if (!timeout) {
 			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" OK mS ") << timeused << L_endl;
+		}
 
 		if (timeused > timeout.period()) {
 			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << " Timeout Reg " << L_dec << _remoteRegOffset + remoteRegNo << " Read: 0x" << L_hex << read_data << L_endl;
 			return false;
 		}
-		return writeOnly_RegValue(remoteRegNo, (data & DATA_MASK) | EXCHANGE_COMPLETE) == _OK;
+		return (writeOnly_RegValue(remoteRegNo, (data & DATA_MASK) | EXCHANGE_COMPLETE) == _OK);
 	}
 
 	bool I2C_To_MicroController::give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, const uint8_t i2c_status) {
 		 // top-two bits (x,x,...) used in hand-shaking
 		if (handShake_send(remoteRegNo, i2c_status)) {
 			localReg.set(localRegNo, EXCHANGE_COMPLETE | DEVICE_CAN_WRITE);
+			return true;
+		}
+		else {
+			localReg.set(localRegNo, EXCHANGE_COMPLETE | DEVICE_CAN_WRITE);
+			logger() << L_time << F("give_I2C_Bus 0x") << L_hex << getAddress() << " EXCHANGE_COMPLETE Reg " << L_dec << _remoteRegOffset + remoteRegNo << " EXCHANGE_COMPLETE err."  << L_endl;
 			return true;
 		}
 		return false;
@@ -233,8 +239,6 @@ namespace HardwareInterfaces {
 		//}
 		//return true;
 
-		const uint8_t COMPLETE_DATA = localReg.get(regNo) | EXCHANGE_COMPLETE;
-		const uint8_t RECEIVE_OK = localReg.get(regNo) | DATA_READ & ~DATA_SENT;
 		if ((localReg.get(regNo) & HANDSHAKE_MASK) != EXCHANGE_COMPLETE) {
 			auto timeout = Timer_mS(300);
 			do {
@@ -256,7 +260,7 @@ namespace HardwareInterfaces {
 				logger() << L_time << F("wait_DevicesToFinish OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
 			}
 		}
-		return (localReg.get(regNo) & DATA_MASK) == DEVICE_IS_FINISHED;
+		return ((localReg.get(regNo) & DATA_MASK) == DEVICE_IS_FINISHED);
 	}
 
 	bool I2C_To_MicroController::receive_handshakeData(volatile uint8_t& data) {
