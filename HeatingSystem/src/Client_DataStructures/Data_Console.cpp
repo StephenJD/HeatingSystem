@@ -50,7 +50,7 @@ namespace client_data_structures {
 			auto id = answer().id() - 1;
 			if (id >= 0) {
 				auto mode = OLED_Thick_Display::I2C_Flags_Obj{ answer().rec().timeout };
-				mode.set(OLED_Thick_Display::F_ENABLE_KEYBOARD, newValue->val)/*.set(OLED_Thick_Display::R_VALIDATE_READ)*/;
+				mode.set(OLED_Thick_Display::F_ENABLE_KEYBOARD, newValue->val).set(OLED_Thick_Display::F_EXCHANGE_COMPLETE);
 				answer().rec().timeout = mode;
 				logger() << "New ConsoleMode[" << id << "] :" << mode << L_endl;
 				_thickConsole_Arr[id].set_console_mode(mode);

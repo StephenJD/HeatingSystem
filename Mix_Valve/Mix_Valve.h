@@ -95,10 +95,10 @@ public:
 	enum : uint8_t {
 		R_PROG_WAITING_FOR_REMOTE_I2C_COMS = 1
 		, DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-		, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-		, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
+		, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+		, HANDSHAKE_MASK = 0xC0, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
 	};
-	enum MV_Device_State {R_VALIDATE_READ, F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, _NO_OF_FLAGS};
+	enum MV_Device_State {F_EXCHANGE_COMPLETE, F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, _NO_OF_FLAGS};
 	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
 		// Copies of the VOLATILE set provided in Programmer reg-set
@@ -191,7 +191,7 @@ private:
 	void moveValveTo(int pos);
 	int measurePSUVoltage(int period_mS = 25);
 	void runPIDstate();
-	bool receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& data);
+	bool receive_handshakeData(volatile uint8_t& data);
 	bool endMaster(I_I2Cdevice& programmer, uint8_t remoteReg);
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;

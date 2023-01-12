@@ -56,10 +56,9 @@ namespace HardwareInterfaces {
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
 			auto reg = registers();
-			auto status_flags = Mix_Valve::I2C_Flags_Ref{ *reg.ptr(Mix_Valve::R_DEVICE_STATE) };
-			status_flags.setFlags(0);
-			status_flags.set(Mix_Valve::F_RECEIVED_INI);
-			status_flags.set(Mix_Valve::R_VALIDATE_READ);
+			auto state_flags = Mix_Valve::I2C_Flags_Ref{ *reg.ptr(Mix_Valve::R_DEVICE_STATE) };
+			state_flags.setFlags(EXCHANGE_COMPLETE);
+			state_flags.set(Mix_Valve::F_RECEIVED_INI);
 			errCode = writeReg(Mix_Valve::R_DEVICE_STATE); // verify & recovery
 			logger() << index() <<  F("] MV_sendSlaveIniData Sent State: ") << reg.get(Mix_Valve::R_DEVICE_STATE) << I2C_Talk::getStatusMsg(errCode) << L_endl;
 			errCode |= writeRegValue(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
@@ -302,9 +301,9 @@ namespace HardwareInterfaces {
 		if (status == _OK) {
 			wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS); // check local reg not set.
 			auto reg = registers();
-			auto minStatus = Mix_Valve::I2C_Flags_Obj{0}.set(Mix_Valve::R_VALIDATE_READ);
+			auto minStatus = Mix_Valve::I2C_Flags_Obj{ 0x40 };
 			auto maxStatus = Mix_Valve::I2C_Flags_Obj{uint8_t( - 1)};
-			maxStatus.clear(Mix_Valve::F_I2C_NOW).clear(Mix_Valve::F_NO_PROGRAMMER);
+			maxStatus.clear(Mix_Valve::F_NO_PROGRAMMER);
 			status = getInrangeVal(Mix_Valve::R_DEVICE_STATE, minStatus, maxStatus);
 			auto i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 			if (status == _OK && i2c_status.is_not(Mix_Valve::F_RECEIVED_INI)) {
@@ -314,7 +313,7 @@ namespace HardwareInterfaces {
 			}
 			// must let MV do doneI2C_Coms to reset watchdog timer.
 			auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
-			i2c_status.set(Mix_Valve::F_I2C_NOW);
+			//i2c_status.set(Mix_Valve::F_I2C_NOW);
 			//logger() << "give_I2C_Bus to " << _remoteRegOffset << L_endl;
 			if (give_I2C_Bus(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS, Mix_Valve::R_DEVICE_STATE, i2c_status)) {
 				wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);

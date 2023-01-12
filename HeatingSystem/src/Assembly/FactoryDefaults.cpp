@@ -37,7 +37,7 @@ namespace Assembly {
 		, {"DS", DS_FLOW_TEMPSENS_ADDR, T_TkMixFl}
 	};
 
-	//constexpr auto MODE_FLAGS = OLED_Thick_Display::I2C_Flags_Obj{0}.set(OLED_Thick_Display::F_ENABLE_KEYBOARD).setValue(3)/*.set(OLED_Thick_Display::R_VALIDATE_READ)*/;
+	//constexpr auto MODE_FLAGS = OLED_Thick_Display::I2C_Flags_Obj{0}.set(OLED_Thick_Display::F_ENABLE_KEYBOARD).setValue(3)/*.set(OLED_Thick_Display::R_EXCHANGE_COMPLETE)*/;
 	constexpr auto MODE_FLAGS = (1 << 7) + 3;
 	
 	constexpr R_Display displays_f[] = {

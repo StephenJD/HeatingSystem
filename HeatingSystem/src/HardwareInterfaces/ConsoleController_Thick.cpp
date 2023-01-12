@@ -60,8 +60,9 @@ namespace HardwareInterfaces {
 		if (errCode == _OK) {
 			auto reg = registers();
 			reg.set(OLED::R_DEVICE_STATE, _key_mode);
-			auto devFlags = OLED::I2C_Flags_Ref(*reg.ptr(OLED::R_DEVICE_STATE));
-			devFlags.set(OLED::F_PROGRAMMER_CHANGED_DATA)/*.set(OLED::R_VALIDATE_READ)*/;
+			auto state_flags = OLED::I2C_Flags_Ref(*reg.ptr(OLED::R_DEVICE_STATE));
+			state_flags.setFlags(EXCHANGE_COMPLETE);
+			state_flags.set(OLED::F_PROGRAMMER_CHANGED_DATA);
 
 			reg.set(OLED::R_REMOTE_REG_OFFSET, _localRegOffset);
 			reg.set(OLED::R_REQUESTING_ROOM_TEMP, _zone->currTempRequest());
@@ -196,7 +197,7 @@ namespace HardwareInterfaces {
 			logger() << L_time << "Set F_PROGRAMMER_CHANGED_DATA: changed:" << _hasChanged << " : warmChange" << haveNewData << "\t" << millis() % 10000 << L_endl;
 			status |= writeRegSet(OLED::R_WARM_UP_ROOM_M10, 3);
 			auto devFlags = OLED::I2C_Flags_Obj(reg.get(OLED::R_DEVICE_STATE));
-			devFlags.set(OLED::F_PROGRAMMER_CHANGED_DATA)/*.set(OLED::R_VALIDATE_READ)*/;
+			devFlags.set(OLED::F_PROGRAMMER_CHANGED_DATA)/*.set(OLED::R_EXCHANGE_COMPLETE)*/;
 			status |= writeRegValue(OLED::R_DEVICE_STATE, devFlags);
 			_hasChanged = false;
 		}
@@ -206,7 +207,7 @@ namespace HardwareInterfaces {
 
 	std::tuple<uint8_t, int8_t, int8_t, uint8_t> ConsoleController_Thick::readRemoteRegisters_OK() {
 		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(_OK, false, false, 0);
-
+		//receive_handshakeData(*rawRegisters().ptr(R_PROG_WAITING_FOR_REMOTE_I2C_COMS), );
 		wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
 		uint8_t status;
 		auto reg = registers();
@@ -218,7 +219,7 @@ namespace HardwareInterfaces {
 
 		auto i2c_status = OLED::I2C_Flags_Obj{ reg.get(OLED::R_DEVICE_STATE) };
 		i2c_status.clear(OLED::F_PROGRAMMER_CHANGED_DATA);
-		i2c_status.set(OLED::F_I2C_NOW);
+		//i2c_status.set(OLED::F_I2C_NOW);
 
 		if (give_I2C_Bus(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS, OLED::R_DEVICE_STATE, i2c_status)) {
 			wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);

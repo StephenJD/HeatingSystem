@@ -51,7 +51,7 @@ void OLED_Thick_Display::begin() { // all registers start as zero.
     auto reg = registers();
     _tempSensor.initialise(reg.get(R_ROOM_TS_ADDR));
     reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
-    I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_ENABLE_KEYBOARD).setValue(5)/*.set(R_VALIDATE_READ)*/; // wake-time
+    I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_ENABLE_KEYBOARD).set(F_EXCHANGE_COMPLETE).setValue(5); // wake-time
     _remoteKeypad.set_console_mode(*reg.ptr(R_DEVICE_STATE));
     _display.begin();
     _display.clear();
@@ -84,7 +84,8 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
     // Only reads TS's and clears I2C-Comms flag on programmer.
     auto reg = registers();
     auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
-    if (device_State.is(F_I2C_NOW)) {
+    //auto processTime = millis();
+    if (receive_handshakeData(*reg.ptr(R_DEVICE_STATE))) {
         _tempSensor.setHighRes();
         _tempSensor.readTemperature();
         auto fractional_temp = _tempSensor.get_fractional_temp();
@@ -97,14 +98,9 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
             _state = REFRESH_DISPLAY;
         } 
         reg.set(R_ROOM_TEMP_FRACTION, roomTempFract);
-        uint8_t clearState = DEVICE_IS_FINISHED;
-        auto timeout = Timer_mS(300);
-        do {
-           if (writeRegValue(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, clearState)) break;
-            i2C().begin();
-        } while (!timeout);
-        device_State.clear(F_I2C_NOW); // clears local register.
-        logger() << F("I2CNow State: ") << reg.get(R_DEVICE_STATE) << F(" at mS ") << millis() << L_endl;
+        handShake_send(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, DEVICE_IS_FINISHED); // only changes remote reg.
+        //processTime = millis() - processTime;
+        //logger() << L_time << F("I2CNow State Reg: ") << _remoteRegOffset << F(" is: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
         return true;
     }
     return false;

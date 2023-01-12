@@ -161,11 +161,10 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 void Mix_Valve::changeRole(bool isMaster) { // called by MixValve_Slave.ino when master/slave mode changes
 	auto reg = registers();
 	auto state = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
+	state.setFlags(F_EXCHANGE_COMPLETE); // clears ini-flag
 	state.set(F_NO_PROGRAMMER, isMaster);
-	state.set(R_VALIDATE_READ);
 	if (isMaster) {
 		logger() << F("IsMaster") << L_endl;
-		state.clear(F_RECEIVED_INI);
 		_currReqTemp = reg.get(R_DEFAULT_FLOW_TEMP);
 		reg.set(R_REQUEST_FLOW_TEMP, _currReqTemp);
 	}
@@ -494,7 +493,7 @@ bool Mix_Valve::ts_OK() const {
 	return !_temp_sensr.hasError();
 }
 
-bool Mix_Valve::receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& data) {
+bool Mix_Valve::receive_handshakeData(volatile uint8_t& data) {
 	/* 
 	do { // Prog tells Remote it can be Master
 		Prog.send data + DATA_SENT // when receiver sees DATA_SENT it sets DATA_READ and clears DATA_SENT
@@ -506,27 +505,28 @@ bool Mix_Valve::receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& dat
 	timeout = 300mS
 	*/
 
-	//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-	//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-	//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+	// DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+	//, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+	//, HANDSHAKE_MASK = 0xC0, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
 
-	if ((data & HANDSHAKE_MASK) == DATA_SENT) {
+	if ((data & HANDSHAKE_MASK) != EXCHANGE_COMPLETE) {
 		auto timeout = Timer_mS(300);
 		do { // prog will keep sending DATA_SENT until it reads DATA_READ, when it will send EXCHANGE_COMPLETE
 			auto handshake = data & HANDSHAKE_MASK;
-			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << localeRegNo << F(" : ") << int(handshake) << L_endl;
+			logger() << millis() << F("\treceive_data Reg ") << int(_regOffset + R_DEVICE_STATE) << F(" is: 0x") << L_hex<< int(handshake) << L_endl;
 			if (handshake == EXCHANGE_COMPLETE) break;
 			if (handshake == DATA_SENT) {
 				data = (data & DATA_MASK) | DATA_READ;
 			}
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
-		//if (timeused > 200 && !timeout) 
+		//if (timeused > 50 && !timeout) 
 		if (!timeout)
-			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << localeRegNo << F(" in mS ") << L_dec << timeused << L_endl;
+			logger() << millis() << F("\treceive_data Reg ") << int(_regOffset + R_DEVICE_STATE) << F(" in mS ") << timeused << L_endl;
 
 		if (timeused > timeout.period()) {
-			logger() << millis() << F("\treceive_data Bad Reg 0x") << L_hex << localeRegNo << F(" Read: 0x") << data << L_endl;
+			logger() << millis() << F("\treceive_data Bad Reg ") << int(_regOffset + R_DEVICE_STATE) << F(" Read: 0x") << L_hex << data << L_endl;
+			data = (data & DATA_MASK) | EXCHANGE_COMPLETE;
 			return false;
 		}
 		return true;
@@ -544,19 +544,19 @@ bool Mix_Valve::endMaster(I_I2Cdevice& programmer, uint8_t remoteReg) {
 	// Prog is now Master
 	*/
 
-	//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-	//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-	//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+	// DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+	//, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+	//, HANDSHAKE_MASK = 0xC0, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
 
 	uint8_t readVal;
-	auto timeout = Timer_mS(500);
+	auto timeout = Timer_mS(300);
 	do {
 		programmer.read(remoteReg, 1, &readVal);
-		logger() << millis() << F("\tendMaster read: ") << L_hex << int(readVal) << L_endl;
+		logger() << millis() << F("\tendMaster ") << int(_regOffset) <<  F(" read: 0x") << L_hex << int(readVal) << L_endl;
 		readVal = readVal & HANDSHAKE_MASK;
 		if (readVal == DATA_READ) break;
 		if (readVal != DATA_SENT) {
-			programmer.write(remoteReg, DEVICE_IS_FINISHED | DATA_SENT); // writes '0xF0 (0100,0111)' to Programmer Raw-Reg 1
+			programmer.write(remoteReg, DEVICE_IS_FINISHED | DATA_SENT); // writes '0xC7 (1100,0111)' to Programmer Raw-Reg 1
 		}
 		//programmer.i2C().begin();
 	} while (!timeout);
@@ -565,7 +565,8 @@ bool Mix_Valve::endMaster(I_I2Cdevice& programmer, uint8_t remoteReg) {
 		return false;
 	}
 	else {
-		logger() << millis() << L_tabs << _regOffset << F("endMaster OK") << L_endl;
+		auto timeused = timeout.timeUsed();
+		logger() << millis() << F("\tendMaster OK in mS ") << timeused << L_endl;
 	}
 	return programmer.write(remoteReg, DEVICE_IS_FINISHED | EXCHANGE_COMPLETE) == _OK;;
 }
@@ -583,7 +584,7 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 	}
 
 	auto processTime = millis();
-	if (goMaster || receive_handshakeData(R_DEVICE_STATE, *reg.ptr(R_DEVICE_STATE))) {
+	if (goMaster || receive_handshakeData(*reg.ptr(R_DEVICE_STATE))) {
 		//logger() << F("DevState:\t") << device_State << L_endl;
 		//device_State.set(F_RECEIVED_INI); // shouldn't need this, but it is getting cleared somehow!
 		_temp_sensr.setHighRes();
@@ -602,10 +603,9 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 			_flowTempFract = temp & 0x00FF;
 		}
 		device_State.set(_regOffset ? F_DS_TS_FAILED : F_US_TS_FAILED, ts_status);
+		if (!goMaster) endMaster(programmer, R_PROG_WAITING_FOR_REMOTE_I2C_COMS); // only changes remote reg.
 		processTime = millis() - processTime;
-		logger() << millis() << F("\tI2CNow State: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
-		endMaster(programmer, R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
-		device_State.clear(F_I2C_NOW);
+		logger() << L_time << F("I2CNow State Reg: ") << _regOffset << F(" is: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
 	}
 	return ts_status == _OK;
 }
