@@ -558,7 +558,7 @@ bool Mix_Valve::endMaster(I_I2Cdevice& programmer, uint8_t remoteReg) {
 		if (readVal != DATA_SENT) {
 			programmer.write(remoteReg, DEVICE_IS_FINISHED | DATA_SENT); // writes '0xC7 (1100,0111)' to Programmer Raw-Reg 1
 		}
-		//programmer.i2C().begin();
+		programmer.i2C().begin();
 	} while (!timeout);
 	if (timeout) {
 		logger() << millis() << F("\tendMaster Timeout") << L_endl;
