@@ -189,7 +189,7 @@ namespace HardwareInterfaces {
 			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << _remoteRegOffset + remoteRegNo << F(" read: ") << read_data << L_endl;
 			if ((read_data & HANDSHAKE_MASK) == DATA_READ) break;
 			writeOnly_RegValue(remoteRegNo, SEND_DATA);
-			i2C().begin();
+			//i2C().begin();
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
 		//if (timeused > 200 && !timeout) 
@@ -239,7 +239,7 @@ namespace HardwareInterfaces {
 				if ((regVal & HANDSHAKE_MASK) == DATA_SENT) {
 					localReg.set(regNo, (regVal & DATA_MASK) | DATA_READ);
 				}
-				i2C().begin();
+				//i2C().begin();
 			} while (!timeout);
 			//auto delayedBy = timeout.timeUsed();
 			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
