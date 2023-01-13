@@ -12,7 +12,7 @@ namespace HardwareInterfaces {
 		, _localRegisters(&local_registers)
 		, _localRegOffset(localRegOffset)
 		, _remoteRegOffset(remoteRegOffset)
-		{}
+	{}
 
 	void I2C_To_MicroController::initialise(int other_microcontroller_address, int localRegOffset, int remoteRegOffset) {
 		I_I2Cdevice_Recovery::setAddress(other_microcontroller_address);
@@ -58,9 +58,9 @@ namespace HardwareInterfaces {
 
 	Error_codes I2C_To_MicroController::readVerifyReg(int reg) {
 		auto regset = registers();
-		return read_verify_1byte(_remoteRegOffset + reg, *regset.ptr(reg),2,4); // recovery
-	}	
-	
+		return read_verify_1byte(_remoteRegOffset + reg, *regset.ptr(reg), 2, 4); // recovery
+	}
+
 	Error_codes I2C_To_MicroController::readRegSet(int reg, int noToRead) {
 		auto regset = registers();
 		auto lastReg = _remoteRegOffset + reg + noToRead - 1;
@@ -69,8 +69,8 @@ namespace HardwareInterfaces {
 			return _I2C_RegOutOfRange;
 		};
 		return read(_remoteRegOffset + reg, noToRead, regset.ptr(reg)); // recovery
-	}	
-	
+	}
+
 	Error_codes I2C_To_MicroController::readRegVerifyValue(int reg, uint8_t& value) {
 		return read_verify_1byte(_remoteRegOffset + reg, value, 2, 4); // recovery
 	}
@@ -98,7 +98,6 @@ namespace HardwareInterfaces {
 		return status;
 	}
 
-
 	bool I2C_To_MicroController::handShake_send(uint8_t remoteRegNo, const uint8_t data) {
 		/*
 		* Two soldiers, Fire & Scout, need to exchange messages at night to arrange covering fire on the scout's position.
@@ -116,7 +115,7 @@ namespace HardwareInterfaces {
 	* Fire assumes Scout is happy with the result
 		* 9. After seeing "No More Firing" Scout returns to his position.
 		* 10. If Scout doesn't see "No More Firing" he returns to his position after 300mS timeout.
-		*/ 
+		*/
 		/*
 	* A tells B it can become master
 		* 1. When A wants to send data it keeps sending DATA_SENT until it sees DATA_READ.
@@ -150,34 +149,35 @@ namespace HardwareInterfaces {
 		*/
 
 		//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-		//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-		//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+		//	, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+		//	, HANDSHAKE_MASK = 0xC0, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
 
 		const uint8_t SEND_DATA = (data & DATA_MASK) | DATA_SENT;
 		uint8_t read_data;
 		auto timeout = Timer_mS(300);
 		do {
 			readRegVerifyValue(remoteRegNo, read_data);
-			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << _remoteRegOffset + remoteRegNo << F(" read: ") << read_data << L_endl;
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" read: 0x") << L_hex << read_data << L_endl;
 			if ((read_data & HANDSHAKE_MASK) == DATA_READ) break;
 			writeOnly_RegValue(remoteRegNo, SEND_DATA);
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
 		//if (timeused > 200 && !timeout) 
-		if (!timeout) 
-			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << _remoteRegOffset + remoteRegNo << F(" OK mS ") << L_dec << timeused << L_endl;
+		if (!timeout) {
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" OK mS ") << timeused << L_endl;
+		}
 
 		if (timeused > timeout.period()) {
-			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << " Timeout Reg 0x" << _remoteRegOffset + remoteRegNo << " Read: 0x" << read_data << L_endl;
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << " Timeout Reg " << L_dec << _remoteRegOffset + remoteRegNo << " Read: 0x" << L_hex << read_data << L_endl;
 			return false;
 		}
 		return writeOnly_RegValue(remoteRegNo, (data & DATA_MASK) | EXCHANGE_COMPLETE) == _OK;
 	}
 
 	bool I2C_To_MicroController::give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, const uint8_t i2c_status) {
-		 // top-two bits (x,x,...) used in hand-shaking
+		// top-two bits (x,x,...) used in hand-shaking
 		if (handShake_send(remoteRegNo, i2c_status)) {
-			localReg.set(localRegNo, DEVICE_CAN_WRITE & DATA_MASK);
+			localReg.set(localRegNo, EXCHANGE_COMPLETE | DEVICE_CAN_WRITE);
 			return true;
 		}
 		return false;
@@ -193,20 +193,27 @@ namespace HardwareInterfaces {
 		// A is Master
 		*/
 
-		//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-		//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-		//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+		// DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+		//, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+		//, HANDSHAKE_MASK = 0xC0, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
 
 		i2C().begin();
+		//if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) {
+			//auto isGood = receive_handshakeData(*localReg.ptr(regNo));
+			//localReg.set(regNo, DEVICE_IS_FINISHED | EXCHANGE_COMPLETE);
+			//if (!isGood) return false;
+		//}
+		//return true;
 
-		bool hasFinished = true;
+		//if ((localReg.get(regNo) & HANDSHAKE_MASK) != EXCHANGE_COMPLETE) {
 		if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) {
 			auto timeout = Timer_mS(300);
 			do {
 				auto regVal = localReg.get(regNo);
-				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: " << regVal << L_flush;
-				if ((regVal & HANDSHAKE_MASK) == EXCHANGE_COMPLETE) break;
-				if ((regVal & HANDSHAKE_MASK) == DATA_SENT) {
+				auto handshake = regVal & HANDSHAKE_MASK;
+				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << regVal << L_flush;
+				if (handshake == EXCHANGE_COMPLETE) break;
+				if (handshake == DATA_SENT) {
 					localReg.set(regNo, (regVal & DATA_MASK) | DATA_READ);
 				}
 			} while (!timeout);
@@ -214,7 +221,6 @@ namespace HardwareInterfaces {
 			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
 			localReg.set(regNo, DEVICE_IS_FINISHED);
 			if (timeout) {
-				hasFinished = false;
 				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " Timed-out" << L_flush;
 			}
 			else {
@@ -222,6 +228,47 @@ namespace HardwareInterfaces {
 				logger() << L_time << F("wait_DevicesToFinish OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
 			}
 		}
-		return hasFinished;
+		return (localReg.get(regNo) & DATA_MASK) == DEVICE_IS_FINISHED;
+	}
+
+	bool I2C_To_MicroController::receive_handshakeData(volatile uint8_t & data) {
+		/*
+		do { // Prog tells Remote it can be Master
+			Prog.send data + DATA_SENT // when receiver sees DATA_SENT it sets DATA_READ and clears DATA_SENT
+			Prog.read data + flags // receiver will not act on new valid-flag if ready-flag is set.
+			if (flags == DATA_READ) break;
+		} while (!timeout_300mS);
+		Prog.send data + EXCHANGE_COMPLETE;
+		// Prog assumes Remote is Master
+		timeout = 300mS
+		*/
+
+		// DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+		//, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+		//, HANDSHAKE_MASK = 0xC0, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+
+		if ((data & HANDSHAKE_MASK) != EXCHANGE_COMPLETE) {
+			auto timeout = Timer_mS(300);
+			do { // prog will keep sending DATA_SENT until it reads DATA_READ, when it will send EXCHANGE_COMPLETE
+				auto handshake = data & HANDSHAKE_MASK;
+				logger() << millis() << F("\treceive_data Reg ") << int(_remoteRegOffset) << F(" is: 0x") << L_hex << int(handshake) << L_endl;
+				if (handshake == EXCHANGE_COMPLETE) break;
+				if (handshake == DATA_SENT) {
+					data = (data & DATA_MASK) | DATA_READ;
+				}
+			} while (!timeout);
+			auto timeused = timeout.timeUsed();
+			//if (timeused > 50 && !timeout) {
+			if (!timeout) {
+				logger() << millis() << F("\treceive_data Reg ") << int(_remoteRegOffset) << F(" in mS ") << timeused << L_endl;
+			}
+			if (timeused > timeout.period()) {
+				logger() << millis() << F("\treceive_data Bad Reg ") << int(_remoteRegOffset) << F(" Read: 0x") << L_hex << data << L_endl;
+				data = (data & DATA_MASK) | EXCHANGE_COMPLETE;
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 }
