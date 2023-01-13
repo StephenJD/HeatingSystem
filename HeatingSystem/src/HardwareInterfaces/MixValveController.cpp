@@ -56,10 +56,9 @@ namespace HardwareInterfaces {
 		uint8_t errCode = reEnable(true);
 		if (errCode == _OK) {
 			auto reg = registers();
-			auto status_flags = Mix_Valve::I2C_Flags_Ref{ *reg.ptr(Mix_Valve::R_DEVICE_STATE) };
-			status_flags.setFlags(0);
-			status_flags.set(Mix_Valve::F_RECEIVED_INI);
-			status_flags.set(Mix_Valve::R_VALIDATE_READ);
+			auto state_flags = Mix_Valve::I2C_Flags_Ref{ *reg.ptr(Mix_Valve::R_DEVICE_STATE) };
+			state_flags.setFlags(EXCHANGE_COMPLETE);
+			state_flags.set(Mix_Valve::F_RECEIVED_INI);
 			errCode = writeReg(Mix_Valve::R_DEVICE_STATE); // verify & recovery
 			logger() << index() << F("] MV_sendSlaveIniData Sent State: ") << reg.get(Mix_Valve::R_DEVICE_STATE) << I2C_Talk::getStatusMsg(errCode) << L_endl;
 			errCode |= writeRegValue(Mix_Valve::R_TS_ADDRESS, _flowTS_addr);
@@ -76,14 +75,11 @@ namespace HardwareInterfaces {
 	}
 
 	bool MixValveController::readReg_and_log(bool alwaysLog) { // called once per second
-		bool mixV_OK = true;
-		//if (reEnable() == _OK) {
-			mixV_OK &= readRegistersFromValve_OK();
-			if (mixV_OK) {
-				//logMixValveOperation(alwaysLog);
-				logMixValveOperation(true);
-			}
-		//}
+		bool mixV_OK = readRegistersFromValve_OK();
+		if (mixV_OK) {
+			//logMixValveOperation(alwaysLog);
+			logMixValveOperation(true);
+		}
 		return mixV_OK;
 	}
 
@@ -313,7 +309,6 @@ namespace HardwareInterfaces {
 				status = sendSlaveIniData();
 				i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 			}
-			// must let MV do doneI2C_Coms to reset watchdog timer.
 			auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
 			i2c_status.set(Mix_Valve::F_I2C_NOW);
 			logger() << "give_I2C_Bus to " << _remoteRegOffset << L_endl;
@@ -326,6 +321,7 @@ namespace HardwareInterfaces {
 				reg.set(Mix_Valve::R_FLOW_TEMP, flowTemp_was);
 				return false;
 			}
+
 			if (status == _OK) {
 				status = readRegSet(Mix_Valve::R_DEVICE_STATE, Mix_Valve::MV_NO_TO_READ); // recovery
 				if (status == _OK) {

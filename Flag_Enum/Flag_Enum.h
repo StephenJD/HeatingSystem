@@ -137,7 +137,7 @@ namespace flag_enum {
 		FE_Ref& operator -= (EnumType pos) { clear(pos); return *this; }
 		FE_Ref& operator = (volatile EnumType& val) = delete;
 		FE_Ref& operator = (volatile Base& val) = delete;
-		void setValue(Base val) { *_base_ptr |= (val & MAX_VALUE); }
+		FE_Ref& setValue(Base val) { *_base_ptr |= (val & MAX_VALUE); return *this;	}
 		static constexpr Base MAX_VALUE = (TOP_BIT >> (noOfFlags - 1)) - Base(1);
 //#ifdef ZPSIM
 //		void printFlags() {

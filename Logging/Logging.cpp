@@ -87,8 +87,11 @@ namespace arduino_logger {
 			else {
 				*this << *_clock;
 			}
-			_flags += L_time;
 		}
+		else {
+			*this << millis() / 1000;
+		}
+		_flags += L_time;
 		return *this;
 	}
 

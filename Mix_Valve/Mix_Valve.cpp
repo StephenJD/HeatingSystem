@@ -162,11 +162,10 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 void Mix_Valve::changeRole(bool isMaster) { // called by MixValve_Slave.ino when master/slave mode changes
 	auto reg = registers();
 	auto state = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
+	state.setFlags(F_EXCHANGE_COMPLETE); // clears ini-flag
 	state.set(F_NO_PROGRAMMER, isMaster);
-	state.set(R_VALIDATE_READ);
 	if (isMaster) {
 		logger() << F("IsMaster") << L_endl;
-		state.clear(F_RECEIVED_INI);
 		_currReqTemp = reg.get(R_DEFAULT_FLOW_TEMP);
 		reg.set(R_REQUEST_FLOW_TEMP, _currReqTemp);
 	}

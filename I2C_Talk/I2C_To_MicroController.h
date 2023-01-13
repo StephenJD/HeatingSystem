@@ -12,10 +12,10 @@ namespace HardwareInterfaces {
 	/// </summary>
 	class I2C_To_MicroController : public I_I2Cdevice_Recovery {
 	public:
-		enum : uint8_t {
+		enum : uint8_t { 
 			DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-			, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-			, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
+			, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+			, HANDSHAKE_MASK = 0xC0, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
 		};
 		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers) : I2C_To_MicroController(recover, local_registers, 0, 0, 0) {}
 		I2C_To_MicroController(I2C_Recovery::I2C_Recover& recover, i2c_registers::I_Registers& local_registers, int address, int localRegOffset, int remoteRegOffset);
@@ -37,6 +37,7 @@ namespace HardwareInterfaces {
 		bool handShake_send(uint8_t remoteRegNo, uint8_t data);
 		bool give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, uint8_t i2c_status);
 		bool wait_DevicesToFinish(i2c_registers::RegAccess reg, int regNo);
+		bool receive_handshakeData(volatile uint8_t& data);
 
 	protected:
 		uint8_t _localRegOffset = 0;
