@@ -501,7 +501,7 @@ bool Mix_Valve::ts_OK() const {
 	return !_temp_sensr.hasError();
 }
 
-bool Mix_Valve::receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& data) {
+bool Mix_Valve::receive_handshakeData(volatile uint8_t& data) {
 	/*
 	do { // Prog tells Remote it can be Master
 		Prog.send data + DATA_SENT // when receiver sees DATA_SENT it sets DATA_READ and clears DATA_SENT
@@ -513,15 +513,16 @@ bool Mix_Valve::receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& dat
 	timeout = 300mS
 	*/
 
-	//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-	//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-	//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+	//R_PROG_WAITING_FOR_REMOTE_I2C_COMS = 1
+	//	, DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+	//	, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+	//	, HANDSHAKE_MASK = 0xC0, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
 
 	if ((data & HANDSHAKE_MASK) == DATA_SENT) {
 		auto timeout = Timer_mS(300);
 		do { // prog will keep sending DATA_SENT until it reads DATA_READ, when it will send EXCHANGE_COMPLETE
 			auto handshake = data & HANDSHAKE_MASK;
-			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << localeRegNo << F(" : ") << int(handshake) << L_endl;
+			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << _regOffset << F(" : ") << int(handshake) << L_endl;
 			if (handshake == EXCHANGE_COMPLETE) break;
 			if (handshake == DATA_SENT) {
 				data = (data & DATA_MASK) | DATA_READ;
@@ -530,10 +531,10 @@ bool Mix_Valve::receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& dat
 		auto timeused = timeout.timeUsed();
 		//if (timeused > 200 && !timeout) 
 		if (!timeout)
-			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << localeRegNo << F(" in mS ") << L_dec << timeused << L_endl;
+			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << _regOffset << F(" in mS ") << L_dec << timeused << L_endl;
 
 		if (timeused > timeout.period()) {
-			logger() << millis() << F("\treceive_data Bad Reg 0x") << L_hex << localeRegNo << F(" Read: 0x") << data << L_endl;
+			logger() << millis() << F("\treceive_data Bad Reg 0x") << L_hex << _regOffset << F(" Read: 0x") << data << L_endl;
 			return false;
 		}
 		return true;
@@ -551,9 +552,10 @@ bool Mix_Valve::endMaster(I_I2Cdevice& programmer, uint8_t remoteReg) {
 	// Prog is now Master
 	*/
 
-	//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
-	//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
-	//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+	//R_PROG_WAITING_FOR_REMOTE_I2C_COMS = 1
+	//	, DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+	//	, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
+	//	, HANDSHAKE_MASK = 0xC0, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
 
 	uint8_t readVal;
 	auto timeout = Timer_mS(500);
@@ -590,7 +592,7 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 	}
 
 	auto processTime = millis();
-	if (goMaster || receive_handshakeData(R_DEVICE_STATE, *reg.ptr(R_DEVICE_STATE))) {
+	if (goMaster || receive_handshakeData(*reg.ptr(R_DEVICE_STATE))) {
 		//logger() << F("DevState:\t") << device_State << L_endl;
 		//device_State.set(F_RECEIVED_INI); // shouldn't need this, but it is getting cleared somehow!
 		_temp_sensr.setHighRes();
