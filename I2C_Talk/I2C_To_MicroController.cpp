@@ -177,8 +177,7 @@ namespace HardwareInterfaces {
 	bool I2C_To_MicroController::give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, const uint8_t i2c_status) {
 		// top-two bits (x,x,...) used in hand-shaking
 		if (handShake_send(remoteRegNo, i2c_status)) {
-			localReg.set(localRegNo, DEVICE_CAN_WRITE);
-			//localReg.set(localRegNo, DEVICE_CAN_WRITE | EXCHANGE_COMPLETE);
+			localReg.set(localRegNo, DEVICE_CAN_WRITE); // must NOT be EXCHANGE_COMPLETE otherwise wait will exit immediatly!!!
 			return true;
 		}
 		return false;
@@ -206,8 +205,7 @@ namespace HardwareInterfaces {
 		//}
 		//return true;
 
-		//if ((localReg.get(regNo) & HANDSHAKE_MASK) != EXCHANGE_COMPLETE) {
-		if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) {
+		if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) { // must get captured immediatly, cos gets called immediatly after giving bus away
 			auto timeout = Timer_mS(300);
 			do {
 				auto regVal = localReg.get(regNo);
@@ -220,9 +218,9 @@ namespace HardwareInterfaces {
 			} while (!timeout);
 			//auto delayedBy = timeout.timeUsed();
 			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
-			localReg.set(regNo, DEVICE_IS_FINISHED);
+			//localReg.set(regNo, DEVICE_IS_FINISHED);
 			if (timeout) {
-				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " Timed-out" << L_flush;
+				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << localReg.get(regNo) << " Timed-out" << L_flush;
 			}
 			else {
 				auto timeused = timeout.timeUsed();
