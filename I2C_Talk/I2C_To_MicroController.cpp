@@ -177,7 +177,8 @@ namespace HardwareInterfaces {
 	bool I2C_To_MicroController::give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, const uint8_t i2c_status) {
 		// top-two bits (x,x,...) used in hand-shaking
 		if (handShake_send(remoteRegNo, i2c_status)) {
-			localReg.set(localRegNo, EXCHANGE_COMPLETE | DEVICE_CAN_WRITE);
+			localReg.set(localRegNo, DEVICE_CAN_WRITE);
+			//localReg.set(localRegNo, DEVICE_CAN_WRITE | EXCHANGE_COMPLETE);
 			return true;
 		}
 		return false;
@@ -210,7 +211,7 @@ namespace HardwareInterfaces {
 			auto timeout = Timer_mS(300);
 			do {
 				auto regVal = localReg.get(regNo);
-				auto handshake = regVal & HANDSHAKE_MASK;
+				uint8_t handshake = regVal & HANDSHAKE_MASK;
 				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << regVal << L_flush;
 				if (handshake == EXCHANGE_COMPLETE) break;
 				if (handshake == DATA_SENT) {
