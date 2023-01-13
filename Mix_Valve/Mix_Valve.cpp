@@ -25,7 +25,7 @@ extern const uint8_t version_month;
 extern const uint8_t version_day;
 
 constexpr int PSU_V_PIN = A3;
-Mix_Valve * Mix_Valve::motor_mutex = 0;
+Mix_Valve* Mix_Valve::motor_mutex = 0;
 int16_t Mix_Valve::_motorsOffV = 1024;
 int16_t Mix_Valve::_motors_off_diff_V = int16_t(_motorsOffV * 0.06);
 
@@ -55,7 +55,7 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 	} while (!timeout && checkAgain > 0);
 #ifdef ZPSIM
 	if (_motorDirection == e_Stop || _valvePos < 5 || _valvePos >= VALVE_TRANSIT_TIME) psuMaxV = 980;
-	else psuMaxV =  860;
+	else psuMaxV = 860;
 	//psuMaxV = 80;
 #endif
 	registers().set(R_PSU_V, psuMaxV / PSUV_DIVISOR);
@@ -64,16 +64,16 @@ int Mix_Valve::measurePSUVoltage(int period_mS) {
 	return psuMaxV > 800 ? psuMaxV : 0;
 }
 
-Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset)
+Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& heatRelay, Pin_Wag& coolRelay, EEPROMClass& ep, int reg_offset)
 	: _temp_sensr(i2C_recover, defaultTSaddr, 40),
 	_heat_relay(&heatRelay),
 	_cool_relay(&coolRelay),
 	_ep(&ep),
 	_regOffset(reg_offset)
-	{}
+{}
 
 #ifdef SIM_MIXV
-Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag & heatRelay, Pin_Wag & coolRelay, EEPROMClass & ep, int reg_offset
+Mix_Valve::Mix_Valve(I2C_Recover& i2C_recover, uint8_t defaultTSaddr, Pin_Wag& heatRelay, Pin_Wag& coolRelay, EEPROMClass& ep, int reg_offset
 	, uint16_t timeConst, uint16_t delay, uint8_t maxTemp)
 	: _temp_sensr(i2C_recover, defaultTSaddr, 40)
 	, _heat_relay(&heatRelay)
@@ -99,12 +99,13 @@ void Mix_Valve::begin(int defaultFlowTemp) {
 		reg.set(R_VERSION_MONTH, version_month);
 		reg.set(R_VERSION_DAY, version_day);
 		reg.set(R_TS_ADDRESS, _temp_sensr.getAddress());
-		reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME/2);
+		reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME / 2);
 		reg.set(R_SETTLE_TIME, 40);
 		reg.set(R_DEFAULT_FLOW_TEMP, defaultFlowTemp);
 		saveToEEPROM();
 		logger() << F("Saved defaults") << F(" Write month: ") << version_month << F(" Read month: ") << _ep->read(_regOffset + R_VERSION_MONTH) << F(" Write Day: ") << version_day << F(" Read day: ") << _ep->read(_regOffset + R_VERSION_DAY) << L_endl;
-	} else {
+	}
+	else {
 		loadFromEEPROM();
 		logger() << F("Loaded from EEPROM") << L_endl;
 	}
@@ -130,7 +131,7 @@ void Mix_Valve::saveToEEPROM() { // returns noOfBytes saved
 	auto eepromRegister = _regOffset + R_TS_ADDRESS;
 	auto reg = registers();
 	_temp_sensr.setAddress(reg.get(R_TS_ADDRESS));
-	_ep->update(  eepromRegister, reg.get(R_TS_ADDRESS));
+	_ep->update(eepromRegister, reg.get(R_TS_ADDRESS));
 	_ep->update(++eepromRegister, reg.get(R_HALF_TRAVERSE_TIME));
 	_ep->update(++eepromRegister, reg.get(R_SETTLE_TIME));
 	_ep->update(++eepromRegister, reg.get(R_DEFAULT_FLOW_TEMP));
@@ -144,7 +145,7 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	auto eepromRegister = _regOffset + R_TS_ADDRESS;
 	auto reg = registers();
 #ifdef TEST_MIX_VALVE_CONTROLLER
-	reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME /2);
+	reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME / 2);
 	reg.set(R_SETTLE_TIME, 10);
 	reg.set(R_DEFAULT_FLOW_TEMP, 55);
 #else	
@@ -153,7 +154,7 @@ void Mix_Valve::loadFromEEPROM() { // returns noOfBytes saved
 	reg.set(R_HALF_TRAVERSE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_SETTLE_TIME, _ep->read(++eepromRegister));
 	reg.set(R_DEFAULT_FLOW_TEMP, _ep->read(++eepromRegister));
-	if (reg.get(R_HALF_TRAVERSE_TIME) < (VALVE_TRANSIT_TIME /2) - 20) reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME/2);
+	if (reg.get(R_HALF_TRAVERSE_TIME) < (VALVE_TRANSIT_TIME / 2) - 20) reg.set(R_HALF_TRAVERSE_TIME, VALVE_TRANSIT_TIME / 2);
 #endif
 	changeRole(false);
 }
@@ -187,7 +188,8 @@ void Mix_Valve::stateMachine() {
 			motor_mutex = this;
 			activateMotor_isMoving();
 			return e_Moving;
-		} else {
+		}
+		else {
 			logger() << name() << L_tabs << F("Mutex") << L_endl;
 			motor_queued = true;
 			_cool_relay->set(false);
@@ -225,11 +227,12 @@ void Mix_Valve::stateMachine() {
 			if (valveIsAtLimit()) {
 				_onTime = 0;
 				stopMotor();
-				motor_mutex = 0; 
+				motor_mutex = 0;
 				if (_valvePos == 0) {
 					mode = e_ValveOff;
 					_journey = e_TempOK;
-				} else {
+				}
+				else {
 					I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE)).set(F_STORE_TOO_COOL);
 					mode = e_HotLimit;
 				}
@@ -237,7 +240,8 @@ void Mix_Valve::stateMachine() {
 			else if (motor_queued && _onTime % 10 == 0) {
 				mode = e_Mutex;
 				motor_mutex = 0;
-			} else if (!activateMotor_isMoving()) motor_mutex = 0;
+			}
+			else if (!activateMotor_isMoving()) motor_mutex = 0;
 		}
 		break;
 	case e_Wait: // can interrupt by under/overshoot
@@ -249,7 +253,8 @@ void Mix_Valve::stateMachine() {
 			}
 			adjustValve(needIncreaseBy_deg);
 			mode = e_Mutex;
-		} else if (needIncreaseBy_deg * _journey > 0 && (_flowTempAtStartOfWait - sensorTemp) * _journey > 0) { // Got worse (undershot) during wait
+		}
+		else if (needIncreaseBy_deg * _journey > 0 && (_flowTempAtStartOfWait - sensorTemp) * _journey > 0) { // Got worse (undershot) during wait
 			reg.set(R_ADJUST_MODE, A_UNDERSHOT);
 			adjustValve(needIncreaseBy_deg);
 			mode = e_Mutex;
@@ -318,7 +323,7 @@ void Mix_Valve::adjustValve(int tempDiff) {
 		I2C_Flags_Ref(*registers().ptr(R_DEVICE_STATE)).clear(F_STORE_TOO_COOL);
 	}
 	else _motorDirection = e_Heating;  // heat valve
-	
+
 	_journey = Journey(_motorDirection);
 	auto reg = registers();
 	const auto curr_ratio = reg.get(R_RATIO);
@@ -333,7 +338,7 @@ void Mix_Valve::adjustValve(int tempDiff) {
 }
 
 bool Mix_Valve::activateMotor_isMoving() {
-	auto getPSU_Off_V = [this]() {		
+	auto getPSU_Off_V = [this]() {
 		enableRelays(true);
 		auto newOffV = measurePSUVoltage(100);
 		if (newOffV) {
@@ -350,7 +355,8 @@ bool Mix_Valve::activateMotor_isMoving() {
 		getPSU_Off_V();
 		enableRelays(motor_queued); // disable if no queued motor.
 		isMoving = false;
-	} else {
+	}
+	else {
 		enableRelays(true);
 	}
 	return isMoving;
@@ -449,7 +455,7 @@ bool Mix_Valve::valveIsAtLimit() {
 		} while (offCount > 1);
 		return offCount == 1;
 	};
-	
+
 	////////// Non-Measure PSU Version ////////////////
 	//if (_journey == e_Moving_Coolest) {
 	//	if (_onTime == 0) {
@@ -469,11 +475,13 @@ bool Mix_Valve::valveIsAtLimit() {
 		if (_motorDirection == e_Cooling) {
 			if (_valvePos < 10) _valvePos = 0;
 			else return false;
-		} else {
+		}
+		else {
 			if (_valvePos > 130) {
 				registers().set(R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
 				_ep->update(_regOffset + R_HALF_TRAVERSE_TIME, uint8_t(_valvePos / 2));
-			} else return false;
+			}
+			else return false;
 		}
 		return true;
 	}
@@ -494,44 +502,119 @@ bool Mix_Valve::ts_OK() const {
 	return !_temp_sensr.hasError();
 }
 
+bool Mix_Valve::receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& data) {
+	/*
+	do { // Prog tells Remote it can be Master
+		Prog.send data + DATA_SENT // when receiver sees DATA_SENT it sets DATA_READ and clears DATA_SENT
+		Prog.read data + flags // receiver will not act on new valid-flag if ready-flag is set.
+		if (flags == DATA_READ) break;
+	} while (!timeout_300mS);
+	Prog.send data + EXCHANGE_COMPLETE;
+	// Prog assumes Remote is Master
+	timeout = 300mS
+	*/
+
+	//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+	//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
+	//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+
+	if ((data & HANDSHAKE_MASK) == DATA_SENT) {
+		auto timeout = Timer_mS(300);
+		do { // prog will keep sending DATA_SENT until it reads DATA_READ, when it will send EXCHANGE_COMPLETE
+			auto handshake = data & HANDSHAKE_MASK;
+			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << localeRegNo << F(" : ") << int(handshake) << L_endl;
+			if (handshake == EXCHANGE_COMPLETE) break;
+			if (handshake == DATA_SENT) {
+				data = (data & DATA_MASK) | DATA_READ;
+			}
+		} while (!timeout);
+		auto timeused = timeout.timeUsed();
+		//if (timeused > 200 && !timeout) 
+		if (!timeout)
+			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << localeRegNo << F(" in mS ") << L_dec << timeused << L_endl;
+
+		if (timeused > timeout.period()) {
+			logger() << millis() << F("\treceive_data Bad Reg 0x") << L_hex << localeRegNo << F(" Read: 0x") << data << L_endl;
+			return false;
+		}
+		return true;
+	}
+	return false;
+}
+
+bool Mix_Valve::endMaster(I_I2Cdevice& programmer, uint8_t remoteReg) {
+	/* Prog assumes Remote is Master
+	timeout = 300mS
+	do { // Prog reads local register
+		if (Prog.flags == EXCHANGE_COMPLETE) break;
+		if (Prog.flags = DATA_SENT) Prog.flags = DATA_READ;
+	} while (!timeout_300mS);
+	// Prog is now Master
+	*/
+
+	//DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+	//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
+	//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
+
+	uint8_t readVal;
+	auto timeout = Timer_mS(500);
+	do {
+		programmer.read(remoteReg, 1, &readVal);
+		logger() << millis() << F("\tendMaster read: ") << L_hex << int(readVal) << L_endl;
+		readVal = readVal & HANDSHAKE_MASK;
+		if (readVal == DATA_READ) break;
+		if (readVal != DATA_SENT) {
+			programmer.write(remoteReg, DEVICE_IS_FINISHED | DATA_SENT); // writes '0xF0 (0100,0111)' to Programmer Raw-Reg 1
+		}
+		//programmer.i2C().begin();
+	} while (!timeout);
+	if (timeout) {
+		logger() << millis() << F("\tendMaster Timeout") << L_endl;
+		return false;
+	}
+	else {
+		logger() << millis() << L_tabs << _regOffset << F("endMaster OK") << L_endl;
+	}
+	return programmer.write(remoteReg, DEVICE_IS_FINISHED | EXCHANGE_COMPLETE) == _OK;;
+}
+
 bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // called every loop()
-	constexpr int e_Slave_Sense = 7;
+
 	auto reg = registers();
 	auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
 
 	uint8_t ts_status = 1; // only return true if is(F_I2C_NOW) is sucessful
+	bool goMaster = false;
 	if (device_State.is(F_NO_PROGRAMMER) && newSecond) {
-		device_State.set(F_I2C_NOW);
 		ts_status = _OK;
+		goMaster = true;
 	}
 
-	if (device_State.is(F_I2C_NOW)) {
+	auto processTime = millis();
+	if (goMaster || receive_handshakeData(R_DEVICE_STATE, *reg.ptr(R_DEVICE_STATE))) {
 		//logger() << F("DevState:\t") << device_State << L_endl;
 		//device_State.set(F_RECEIVED_INI); // shouldn't need this, but it is getting cleared somehow!
-		//digitalWrite(e_Slave_Sense, LOW);
-		//pinMode(e_Slave_Sense, OUTPUT);
 		_temp_sensr.setHighRes();
 		ts_status = _temp_sensr.readTemperature();
 		if (ts_status == _disabledDevice) {
-			_temp_sensr.reset();
+			_temp_sensr.reEnable(true);
 		}
-		//pinMode(e_Slave_Sense, INPUT);
 
 		if (ts_status) {
 			logger() << F("TSAddr:0x") << L_hex << _temp_sensr.getAddress()
 				<< F(" Err:") << I2C_Talk::getStatusMsg(_temp_sensr.lastError())
 				<< F(" Status:") << I2C_Talk::getStatusMsg(ts_status) << L_endl;
-		} else {
+		}
+		else {
 			auto temp = _temp_sensr.get_fractional_temp();
 			reg.set(R_FLOW_TEMP, temp >> 8);
 			_flowTempFract = temp & 0x00FF;
 		}
-		device_State.clear(F_I2C_NOW);
-		device_State.set(R_VALIDATE_READ);
 		device_State.set(_regOffset ? F_DS_TS_FAILED : F_US_TS_FAILED, ts_status);
-		logger() << F("I2CNow State: ") << reg.get(R_DEVICE_STATE) << L_endl;
-		uint8_t clearState = DEVICE_IS_FINISHED;
-		programmer.write(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, 1, &clearState); // writes '0xF0 (1111,0000)' to Programmer Raw-Reg 1
+		processTime = millis() - processTime;
+		logger() << millis() << F("\tI2CNow State: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
+		endMaster(programmer, R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
+		device_State.clear(F_I2C_NOW);
 	}
 	return ts_status == _OK;
 }
@@ -547,7 +630,8 @@ bool Mix_Valve::checkForNewReqTemp() { // called every second
 			logger() << F("NewReq:") << thisReqTemp << L_endl;
 			_newReqTemp = thisReqTemp; // REQUEST TWICE TO REGISTER.
 			reg.set(R_REQUEST_FLOW_TEMP, 0);
-		} else {
+		}
+		else {
 			logger() << F("Confirmed:") << _newReqTemp << F("Curr:") << _currReqTemp << L_endl;
 			_currReqTemp = _newReqTemp;
 			saveToEEPROM();
@@ -564,7 +648,7 @@ void Mix_Valve::moveValveTo(int pos) {
 
 #ifdef SIM_MIXV // must be called only once per second
 void Mix_Valve::simulateFlowTemp() {
-	_actualFlowTemp_16ths = 16 * (25 + (_maxTemp - 25) * _valvePos  / 140);
+	_actualFlowTemp_16ths = 16 * (25 + (_maxTemp - 25) * _valvePos / 140);
 	_delayLine.addValue(_actualFlowTemp_16ths);
 	float delayTemp = _delayLine.getAverage() / 16.;
 	auto reg = registers();
@@ -603,7 +687,7 @@ void Mix_Valve::logPID() {
 		logger() << F("Z"); break;
 	}
 	float flowTemp = registers().get(R_FLOW_TEMP) + _flowTempFract / 256.f;
-	logger() << L_tabs << _valvePos << flowTemp << _min_temp_16ths << _max_temp_16ths << _half_period << _period << registers().get(R_PSU_V) <<L_endl;
+	logger() << L_tabs << _valvePos << flowTemp << _min_temp_16ths << _max_temp_16ths << _half_period << _period << registers().get(R_PSU_V) << L_endl;
 }
 
 uint8_t Mix_Valve::getPIDconstants() {// Called once every second. maintains mix valve temp.
@@ -623,18 +707,18 @@ void Mix_Valve::runPIDstate() {
 
 	auto valveHasReachedWarmPos = [this]() {
 		return (_motorDirection == e_Heating && _onTime == 0) || _motorDirection != e_Heating;
-	};	
-	
+	};
+
 	auto valveHasReachedCoolPos = [this]() {
 		return (_motorDirection == e_Cooling && _onTime == 0) || _motorDirection != e_Cooling;
 	};
 
 	auto changeRate = [=](int16_t sensorTemp_16ths) {
-		logger() << F("Change") << L_tabs << sensorTemp_16ths/16. << (sensorTemp_16ths - lastSensTemp) ;
+		logger() << F("Change") << L_tabs << sensorTemp_16ths / 16. << (sensorTemp_16ths - lastSensTemp);
 		_integrator.addValue(sensorTemp_16ths - lastSensTemp);
 		lastSensTemp = sensorTemp_16ths;
 		auto aveChangeRate = _integrator.getAverage();
-		if (aveChangeRate > fastestTempChange) 
+		if (aveChangeRate > fastestTempChange)
 			fastestTempChange = aveChangeRate;
 		logger() << F("Fastest:") << fastestTempChange << F("Ave:") << aveChangeRate << L_endl;;
 		return aveChangeRate;
@@ -645,7 +729,7 @@ void Mix_Valve::runPIDstate() {
 		setFractReg(uint8_t(change_rate));
 		if (fastestTempChange < 2) {
 			if (valveHasReachedWarmPos()) {
-				_currReqTemp = uint8_t((sensorTemp_16ths + 8)/16);
+				_currReqTemp = uint8_t((sensorTemp_16ths + 8) / 16);
 			}
 			else {
 				change_rate = fastestTempChange; // temp static, still moving to pos.
@@ -673,7 +757,7 @@ void Mix_Valve::runPIDstate() {
 
 	// Algorithm
 	int16_t sensorTemp_16ths = reg.get(R_FLOW_TEMP) * 16 + _flowTempFract / 16;
-	int16_t needIncreaseBy_16ths = (_currReqTemp*16) - sensorTemp_16ths;
+	int16_t needIncreaseBy_16ths = (_currReqTemp * 16) - sensorTemp_16ths;
 
 	if (activateMotor_isMoving()) {
 		if (!continueMove()) stopMotor(); // turns PSU off if stopped.
@@ -702,7 +786,7 @@ void Mix_Valve::runPIDstate() {
 		if (sensorTemp_16ths < 30 * 16) {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5)); // 112
 			fastestTempChange = .2f;
-			_pidState = riseToSetpoint;	
+			_pidState = riseToSetpoint;
 		}
 		break;
 	case riseToSetpoint:
@@ -710,7 +794,7 @@ void Mix_Valve::runPIDstate() {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * .5)); // 37
 			//_period = _integrator.getNoOfValues() / 2;
 			//_currReqTemp = uint8_t((sensorTemp_16ths - (_integrator.getAverage() * _integrator.getNoOfValues() / 2.f) + 0.5f) / 16);
-			_currReqTemp = uint8_t((sensorTemp_16ths + 0.5f)/16);
+			_currReqTemp = uint8_t((sensorTemp_16ths + 0.5f) / 16);
 			if (_currReqTemp < 40) _pidState = calcPID;
 			else _pidState = findMax;
 			logger() << F("Mode") << L_tabs << F("Pos") << F("flowT") << F("min") << F("max") << F("halfP") << F("P") << F("Change") << L_endl;
@@ -720,7 +804,7 @@ void Mix_Valve::runPIDstate() {
 		++_period;
 		if (isRising(sensorTemp_16ths) > 0.f) {
 			_max_temp_16ths = -needIncreaseBy_16ths;
-			reg.set(R_RATIO, uint8_t(_max_temp_16ths/16));
+			reg.set(R_RATIO, uint8_t(_max_temp_16ths / 16));
 			reg.set(R_PSU_V, uint8_t(_max_temp_16ths % 16));
 		}
 		else {
@@ -732,9 +816,11 @@ void Mix_Valve::runPIDstate() {
 		if (!isCooling(sensorTemp_16ths)) {
 			moveValveTo(0);
 			_pidState = turnOff; // abort
-		} else if (needIncreaseBy_16ths <= 0) {
+		}
+		else if (needIncreaseBy_16ths <= 0) {
 			_half_period = _period;
-		} else {
+		}
+		else {
 			moveValveTo(int(reg.get(R_HALF_TRAVERSE_TIME) * 1.5));
 			_pidState = findMin;
 		}

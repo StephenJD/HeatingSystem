@@ -41,7 +41,7 @@ public:
 	float getAverage() const;
 	float getSum() const;
 	intType getVal(int pos) const;
-	uint8_t getNoOfValues() const {	return _noOfValues;	};
+	uint8_t getNoOfValues() const { return _noOfValues; };
 	// Modifiers
 	void setNoOfValues(int noOfValues) { _noOfValues = noOfValues; }
 	void addValue(intType val);
@@ -67,7 +67,7 @@ intType Integrator<l, intType>::getVal(int pos) const {
 
 template <int l, typename intType>
 void Integrator<l, intType>::clear() {
-	for (auto &val : _integrator) val = intType(0);
+	for (auto& val : _integrator) val = intType(0);
 }
 
 template <int l, typename intType>
@@ -91,8 +91,14 @@ void Integrator<l, intType>::prime(intType val) {
 class Mix_Valve
 {
 public:
-	enum MV_Device_State {R_VALIDATE_READ, F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, _NO_OF_FLAGS};
-	enum { R_PROG_WAITING_FOR_REMOTE_I2C_COMS  = 1};
+	// DATA_READ = 0x80 (1000,0000), DATA_SENT = 0x40 (0100,0000), EXCHANGE_COMPLETE = 0xC0 (1100,0000)
+	enum : uint8_t {
+		R_PROG_WAITING_FOR_REMOTE_I2C_COMS = 1
+		, DEVICE_CAN_WRITE = 0x38, DEVICE_IS_FINISHED = 0x07 /* 00,111,000 : 00,000,111 */
+		, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
+		, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
+	};
+	enum MV_Device_State { R_VALIDATE_READ, F_I2C_NOW, F_NO_PROGRAMMER, F_DS_TS_FAILED, F_US_TS_FAILED, F_NEW_TEMP_REQUEST, F_STORE_TOO_COOL, F_RECEIVED_INI, _NO_OF_FLAGS };
 	enum MixValve_Volatile_Register_Names {
 		// Registers provided by MixValve_Slave
 		// Copies of the VOLATILE set provided in Programmer reg-set
@@ -111,7 +117,7 @@ public:
 		, R_COUNT
 		, R_VALVE_POS
 		, R_PSU_V
-		, R_RATIO	
+		, R_RATIO
 		, R_ADJUST_MODE
 		, R_FLOW_TEMP // Received in Slave-Mode
 		// Receive
@@ -122,7 +128,7 @@ public:
 
 	enum MixValve_EEPROM_Register_Names { // Programmer does not have these registers
 		// Receive
-		  R_TS_ADDRESS = MV_VOLATILE_REG_SIZE
+		R_TS_ADDRESS = MV_VOLATILE_REG_SIZE
 		, R_HALF_TRAVERSE_TIME
 		, R_SETTLE_TIME
 		, R_DEFAULT_FLOW_TEMP
@@ -131,19 +137,19 @@ public:
 		, MV_ALL_REG_SIZE // = 17
 	};
 
-	enum Mode {e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
-	enum Tune {init, findOff, waitForCool, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, turnOff, restart };
-	enum Journey {e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth};
-	enum MotorDirection {e_Cooling = -1, e_Stop, e_Heating};
+	enum Mode { e_NewReq, e_Moving, e_Wait, e_Mutex, e_Checking, e_HotLimit, e_WaitToCool, e_ValveOff, e_StopHeating, e_FindOff, e_Error };
+	enum Tune { init, findOff, waitForCool, riseToSetpoint, findMax, fallToSetPoint, findMin, lastRise, calcPID, turnOff, restart };
+	enum Journey { e_Moving_Coolest = -2, e_CoolNorth, e_TempOK, e_WarmSouth };
+	enum MotorDirection { e_Cooling = -1, e_Stop, e_Heating };
 	enum { PSUV_DIVISOR = 5 };
 	enum AdjustMode : uint8_t { A_GOOD_RATIO, A_UNDERSHOT, A_OVERSHOT, PID_CHECK };
 	using I2C_Flags_Obj = flag_enum::FE_Obj<MV_Device_State, _NO_OF_FLAGS>;
 	using I2C_Flags_Ref = flag_enum::FE_Ref<MV_Device_State, _NO_OF_FLAGS>;
 
-	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset);
+	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay, EEPROMClass& ep, int reg_offset);
 #ifdef SIM_MIXV
-	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag & _heat_relay, HardwareInterfaces::Pin_Wag & _cool_relay, EEPROMClass & ep, int reg_offset
-	, uint16_t timeConst, uint16_t delay, uint8_t maxTemp);
+	Mix_Valve(I2C_Recovery::I2C_Recover& i2C_recover, uint8_t defaultTSaddr, HardwareInterfaces::Pin_Wag& _heat_relay, HardwareInterfaces::Pin_Wag& _cool_relay, EEPROMClass& ep, int reg_offset
+		, uint16_t timeConst, uint16_t delay, uint8_t maxTemp);
 #endif
 	void begin(int defaultFlowTemp);
 	const __FlashStringHelper* name() const;
@@ -151,7 +157,7 @@ public:
 	void check_flow_temp();
 	void changeRole(bool isMaster);
 	bool doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond);
-	i2c_registers::RegAccess registers() const {return { mixV_registers, _regOffset };}
+	i2c_registers::RegAccess registers() const { return { mixV_registers, _regOffset }; }
 	uint8_t getPIDconstants();
 	void logPID();
 #ifdef SIM_MIXV
@@ -160,7 +166,7 @@ public:
 #endif
 private:
 	friend class TestMixV;
-	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30};
+	enum { e_MIN_FLOW_TEMP = HardwareInterfaces::MIN_FLOW_TEMP, e_MIN_RATIO = 2, e_MAX_RATIO = 30 };
 
 	//friend void testMixer();
 	//friend void testSlave();
@@ -185,15 +191,16 @@ private:
 	void moveValveTo(int pos);
 	int measurePSUVoltage(int period_mS = 25);
 	void runPIDstate();
-
+	bool receive_handshakeData(uint8_t localeRegNo, volatile uint8_t& data);
+	bool endMaster(I_I2Cdevice& programmer, uint8_t remoteReg);
 	// Object state
 	HardwareInterfaces::TempSensor _temp_sensr;
 	uint8_t _regOffset;
 
 	// Injected dependancies
-	HardwareInterfaces::Pin_Wag * _heat_relay;
-	HardwareInterfaces::Pin_Wag * _cool_relay;
-	EEPROMClass * _ep;
+	HardwareInterfaces::Pin_Wag* _heat_relay;
+	HardwareInterfaces::Pin_Wag* _cool_relay;
+	EEPROMClass* _ep;
 
 	// Temporary Data
 	int16_t _onTime = 0; // +ve to move, -ve to wait.
@@ -220,7 +227,7 @@ private:
 #endif
 
 	// Shared Motor Supply
-	static Mix_Valve * motor_mutex; // address of Mix_valve is owner of the mutex
+	static Mix_Valve* motor_mutex; // address of Mix_valve is owner of the mutex
 	static bool motor_queued; // address of Mix_valve is owner of the mutex
 	static int16_t _motorsOffV;
 	static int16_t _motors_off_diff_V;
