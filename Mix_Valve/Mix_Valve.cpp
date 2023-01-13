@@ -522,15 +522,15 @@ bool Mix_Valve::receive_handshakeData(volatile uint8_t& data) {
 		auto timeout = Timer_mS(300);
 		do { // prog will keep sending DATA_SENT until it reads DATA_READ, when it will send EXCHANGE_COMPLETE
 			auto handshake = data & HANDSHAKE_MASK;
-			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << _regOffset << F(" : ") << int(handshake) << L_endl;
+			//logger() << millis() << F("\treceive_data Reg 0x") << L_hex << _regOffset << F(" : ") << int(handshake) << L_endl;
 			if (handshake == EXCHANGE_COMPLETE) break;
 			if (handshake == DATA_SENT) {
 				data = (data & DATA_MASK) | DATA_READ;
 			}
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
-		//if (timeused > 200 && !timeout) 
-		if (!timeout)
+		if (timeused > 200 && !timeout) 
+		//if (!timeout)
 			logger() << millis() << F("\treceive_data Reg 0x") << L_hex << _regOffset << F(" in mS ") << L_dec << timeused << L_endl;
 
 		if (timeused > timeout.period()) {
@@ -557,25 +557,25 @@ bool Mix_Valve::endMaster(I_I2Cdevice& programmer, uint8_t remoteReg) {
 	//	, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
 	//	, HANDSHAKE_MASK = 0xC0, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
 
+		//programmer.i2C().begin();
 	uint8_t readVal;
 	auto timeout = Timer_mS(500);
 	do {
 		programmer.read(remoteReg, 1, &readVal);
-		logger() << millis() << F("\tendMaster read: ") << L_hex << int(readVal) << L_endl;
+		//logger() << millis() << F("\tendMaster read: ") << L_hex << int(readVal) << L_endl;
 		readVal = readVal & HANDSHAKE_MASK;
 		if (readVal == DATA_READ) break;
 		if (readVal != DATA_SENT) {
 			programmer.write(remoteReg, DEVICE_IS_FINISHED | DATA_SENT); // writes '0xF0 (0100,0111)' to Programmer Raw-Reg 1
 		}
-		//programmer.i2C().begin();
 	} while (!timeout);
 	if (timeout) {
 		logger() << millis() << F("\tendMaster Timeout") << L_endl;
 		return false;
 	}
-	else {
-		logger() << millis() << L_tabs << _regOffset << F("endMaster OK") << L_endl;
-	}
+	//else {
+	//	logger() << millis() << L_tabs << _regOffset << F("endMaster OK") << L_endl;
+	//}
 	return programmer.write(remoteReg, DEVICE_IS_FINISHED | EXCHANGE_COMPLETE) == _OK;;
 }
 
@@ -613,9 +613,8 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 		}
 		device_State.set(_regOffset ? F_DS_TS_FAILED : F_US_TS_FAILED, ts_status);
 		processTime = millis() - processTime;
-		logger() << millis() << F("\tI2CNow State: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
+		logger() << L_time << F("\tI2CNow State: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
 		endMaster(programmer, R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
-		//device_State.clear(F_I2C_NOW);
 	}
 	return ts_status == _OK;
 }
