@@ -154,16 +154,18 @@ namespace HardwareInterfaces {
 
 		const uint8_t SEND_DATA = (data & DATA_MASK) | DATA_SENT;
 		uint8_t read_data;
+		i2C().begin();
 		auto timeout = Timer_mS(300);
 		do {
 			readRegVerifyValue(remoteRegNo, read_data);
-			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" read: 0x") << L_hex << read_data << L_endl;
 			if ((read_data & HANDSHAKE_MASK) == DATA_READ) break;
+			//logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" read: 0x") << L_hex << read_data << L_endl;
 			writeOnly_RegValue(remoteRegNo, SEND_DATA);
+			delay(1);
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
-		//if (timeused > 200 && !timeout) 
-		if (!timeout) {
+		if (timeused > 200 && !timeout) {
+		//if (!timeout) {
 			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" OK mS ") << timeused << L_endl;
 		}
 
@@ -197,39 +199,10 @@ namespace HardwareInterfaces {
 		//, DATA_SENT = 0xC0, DATA_READ = 0x40, EXCHANGE_COMPLETE = 0x80 /* 11,000,000 : 01,000,000 : 10,000,000 */
 		//, HANDSHAKE_MASK = 0xC0, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
 
-		i2C().begin();
-		if ((millis() / 10000) % 2 == 0) {
-			if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) { // must get captured immediatly, cos gets called immediatly after giving bus away
-				//logger() << "receive_handshakeData" << L_endl;
-				/*auto isGood = */receive_handshakeData(*localReg.ptr(regNo));
-				//localReg.set(regNo, DEVICE_IS_FINISHED | EXCHANGE_COMPLETE);
-				//if (!isGood) return false;
-				//else return true;
-			}
-		}
-		else {
-			if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) { // must get captured immediatly, cos gets called immediatly after giving bus away
-				logger() << "old v" << L_endl;
-				auto timeout = Timer_mS(300);
-				do {
-					auto regVal = localReg.get(regNo);
-					auto handshake = regVal & HANDSHAKE_MASK;
-					if (handshake == EXCHANGE_COMPLETE) break;
-					if (handshake == DATA_SENT) {
-						logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << regVal << L_endl;
-						localReg.set(regNo, (regVal & DATA_MASK) | DATA_READ);
-					}
-				} while (!timeout);
-				//auto delayedBy = timeout.timeUsed();
-				//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
-				if (timeout) {
-					logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << localReg.get(regNo) << " Timed-out" << L_endl;
-				}
-				else {
-					auto timeused = timeout.timeUsed();
-					logger() << L_time << F("wait_DevicesToFinish OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
-				}
-			}
+		if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) { // must get captured immediatly, cos gets called immediatly after giving bus away
+			/*auto isGood = */receive_handshakeData(*localReg.ptr(regNo));
+			//if (!isGood) return false;
+			//else return true;
 		}
 		return (localReg.get(regNo) & DATA_MASK) == DEVICE_IS_FINISHED;
 	}
@@ -251,13 +224,15 @@ namespace HardwareInterfaces {
 		//, HANDSHAKE_MASK = 0xC0, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
 
 		if ((data & HANDSHAKE_MASK) != EXCHANGE_COMPLETE) {
+			i2C().begin();
 			auto timeout = Timer_mS(300);
 			do { // prog will keep sending DATA_SENT until it reads DATA_READ, when it will send EXCHANGE_COMPLETE
 				auto handshake = data & HANDSHAKE_MASK;
 				if (handshake == EXCHANGE_COMPLETE) break;
 				if (handshake == DATA_SENT) {
-					logger() << L_time << F("receive_data Reg ") << int(_remoteRegOffset) << F(" is: 0x") << L_hex << int(handshake) << L_endl;
+					//logger() << L_time << F("receive_data Reg ") << int(_remoteRegOffset) << F(" is: 0x") << L_hex << int(handshake) << L_endl;
 					data = (data & DATA_MASK) | DATA_READ;
+					delay(1);
 				}
 			} while (!timeout);
 			if (timeout) {
