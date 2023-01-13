@@ -208,6 +208,7 @@ namespace HardwareInterfaces {
 	}
 
 	std::tuple<uint8_t, int8_t, int8_t, uint8_t> ConsoleController_Thick::readRemoteRegisters_OK() {
+		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(_OK, false, false, 0);
 		// Lambdas
 		auto give_RC_Bus = [this](OLED::I2C_Flags_Obj i2c_status) {
 			rawRegisters().set(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, DEVICE_CAN_WRITE);

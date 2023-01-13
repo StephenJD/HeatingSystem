@@ -284,7 +284,7 @@ void Mix_Valve::stateMachine() {
 		mode = moveMode();
 	}
 	reg.set(R_MODE, mode);
-	//logger() << F("Mode:") << mode << L_endl;
+	logger() << millis() / 1000 << L_tabs << name() << F("Mode:") << mode << L_endl;
 }
 
 Mix_Valve::Mode Mix_Valve::newTempMode() {
@@ -614,7 +614,7 @@ bool Mix_Valve::doneI2C_Coms(I_I2Cdevice& programmer, bool newSecond) { // calle
 		processTime = millis() - processTime;
 		logger() << millis() << F("\tI2CNow State: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
 		endMaster(programmer, R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
-		device_State.clear(F_I2C_NOW);
+		//device_State.clear(F_I2C_NOW);
 	}
 	return ts_status == _OK;
 }
