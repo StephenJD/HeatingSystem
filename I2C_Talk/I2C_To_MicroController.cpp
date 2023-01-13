@@ -101,35 +101,7 @@ namespace HardwareInterfaces {
 
 	bool I2C_To_MicroController::handShake_send(uint8_t remoteRegNo, const uint8_t data) {
 		/*
-		* Two people, A & B, arrive on distant hill-tops and want to show they have seen each other.
-		* 1. A arrives and waits till he can see B
-		* 2. A raises his arm and watches B. A needs to wait until he knows he has been seen.
-		* 3. B sees A raised arm and raises his arm. B needs to wait until he knows he has been seen.
-		* 4. A sees B raised arm and drops his arm. He can now carry on because he knows B has seen him.
-		* 5. B can no longer see A, but doesn't know if it is due to fog. He needs to see the empty-hill top to be sure A has seen his raised hand.
-		* B can carry on. A can see B's empty hilltop to confirm the exchange is complete.
-		* This works because B can interrogate A to see he is no longer there.
-		*/
-		/*
-		* Two people, Host & Traveller, need to exchange messages during a postal strike to arrange an island AirBnB rental.
-		* 1. Traveller keeps posting notes to Host saying "Can I book" until he gets a postcard back from Host.
-		* 2. Host receives some of Traveller's notes and each time sends a postcard back saying "Yes, it's available". Host needs to know his acceptance has been received.
-		* 3. Traveller receives some of Host's postcards and starts sending a daily "Thank-you".
-		* 4. Host receives some of Traveller's "Thank-you", so starts sending daily "Confirmed" postcards.
-		* 5. When Traveller receives a "Confirmed" postcard from the host he can set off for the island AirBnB.
-		* 6. But Host doesn't know how long to keep sending "Confirmed", because messages might not get delivered, so the traveller may not have set off.
-		* 7. When the Traveller arrives at the island, he starts sending "Arrived" notes.
-		* 8. Host receives some of Traveller's "Arrived" notes so starts sending "Stop" postcards. This can never end!
-		*/		
-		/*
-		* Two soldiers, Fire & Scout, need to exchange messages to arrange covering fire on the scout's position.
-		* 1. Scout keeps signalling to Fire saying "Can you cover me at 10am?" until 10am.
-		* 2. Fire sees some of Scout's "Cover me" signals and prepares to fire.
-		* 3. At 10am, Scout evacuates, and Fire fires.
-		* 4. Fires and scout need to synchronise watches.
-		*/
-		/*
-		* Two soldiers, Fire & Scout, need to exchange messages to arrange covering fire on the scout's position.
+		* Two soldiers, Fire & Scout, need to exchange messages at night to arrange covering fire on the scout's position.
 	* Scout asks for Fire cover.
 		* 1. Scout keeps signalling to Fire saying "Cover me" or times-out after 30mS.
 		* 2. Fire sees some of Scout's "Cover me" signals and keeps replying "Ready" until he sees "Evacuating" or times-out after 30mS.
@@ -189,7 +161,6 @@ namespace HardwareInterfaces {
 			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg 0x") << _remoteRegOffset + remoteRegNo << F(" read: ") << read_data << L_endl;
 			if ((read_data & HANDSHAKE_MASK) == DATA_READ) break;
 			writeOnly_RegValue(remoteRegNo, SEND_DATA);
-			//i2C().begin();
 		} while (!timeout);
 		auto timeused = timeout.timeUsed();
 		//if (timeused > 200 && !timeout) 
@@ -226,8 +197,6 @@ namespace HardwareInterfaces {
 		//, DATA_SENT = 0x40, DATA_READ = 0x80, EXCHANGE_COMPLETE = 0xC0 /* 01,000,000 : 10,000,000 : 11,000,000 */
 		//, HANDSHAKE_MASK = EXCHANGE_COMPLETE, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
 
-		const uint8_t COMPLETE_DATA = localReg.get(regNo) | EXCHANGE_COMPLETE;
-		const uint8_t RECEIVE_OK = localReg.get(regNo) | DATA_READ & ~DATA_SENT;
 		i2C().begin();
 
 		bool hasFinished = true;
@@ -240,7 +209,6 @@ namespace HardwareInterfaces {
 				if ((regVal & HANDSHAKE_MASK) == DATA_SENT) {
 					localReg.set(regNo, (regVal & DATA_MASK) | DATA_READ);
 				}
-				//i2C().begin();
 			} while (!timeout);
 			//auto delayedBy = timeout.timeUsed();
 			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
