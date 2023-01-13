@@ -198,33 +198,37 @@ namespace HardwareInterfaces {
 		//, HANDSHAKE_MASK = 0xC0, DATA_MASK = ~HANDSHAKE_MASK /* 11,000,000 : 00,111,111 */
 
 		i2C().begin();
-		//if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) {
-			//auto isGood = receive_handshakeData(*localReg.ptr(regNo));
-			//localReg.set(regNo, DEVICE_IS_FINISHED | EXCHANGE_COMPLETE);
-			//if (!isGood) return false;
-		//}
-		//return true;
-
-		if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) { // must get captured immediatly, cos gets called immediatly after giving bus away
-			auto timeout = Timer_mS(300);
-			do {
-				auto regVal = localReg.get(regNo);
-				uint8_t handshake = regVal & HANDSHAKE_MASK;
-				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << regVal << L_flush;
-				if (handshake == EXCHANGE_COMPLETE) break;
-				if (handshake == DATA_SENT) {
-					localReg.set(regNo, (regVal & DATA_MASK) | DATA_READ);
-				}
-			} while (!timeout);
-			//auto delayedBy = timeout.timeUsed();
-			//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
-			//localReg.set(regNo, DEVICE_IS_FINISHED);
-			if (timeout) {
-				logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << localReg.get(regNo) << " Timed-out" << L_flush;
+		if ((millis() / 10000) % 2 == 0) {
+			if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) { // must get captured immediatly, cos gets called immediatly after giving bus away
+				//logger() << "receive_handshakeData" << L_endl;
+				/*auto isGood = */receive_handshakeData(*localReg.ptr(regNo));
+				//localReg.set(regNo, DEVICE_IS_FINISHED | EXCHANGE_COMPLETE);
+				//if (!isGood) return false;
+				//else return true;
 			}
-			else {
-				auto timeused = timeout.timeUsed();
-				logger() << L_time << F("wait_DevicesToFinish OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
+		}
+		else {
+			if ((localReg.get(regNo) & DATA_MASK) == DEVICE_CAN_WRITE) { // must get captured immediatly, cos gets called immediatly after giving bus away
+				logger() << "old v" << L_endl;
+				auto timeout = Timer_mS(300);
+				do {
+					auto regVal = localReg.get(regNo);
+					auto handshake = regVal & HANDSHAKE_MASK;
+					if (handshake == EXCHANGE_COMPLETE) break;
+					if (handshake == DATA_SENT) {
+						logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << regVal << L_endl;
+						localReg.set(regNo, (regVal & DATA_MASK) | DATA_READ);
+					}
+				} while (!timeout);
+				//auto delayedBy = timeout.timeUsed();
+				//logger() << L_time << "WaitedforI2C: " << delayedBy << L_endl;
+				if (timeout) {
+					logger() << L_time << F("wait_DevicesToFinish 0x") << L_hex << getAddress() << " read: 0x" << localReg.get(regNo) << " Timed-out" << L_endl;
+				}
+				else {
+					auto timeused = timeout.timeUsed();
+					logger() << L_time << F("wait_DevicesToFinish OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
+				}
 			}
 		}
 		return (localReg.get(regNo) & DATA_MASK) == DEVICE_IS_FINISHED;
@@ -250,23 +254,20 @@ namespace HardwareInterfaces {
 			auto timeout = Timer_mS(300);
 			do { // prog will keep sending DATA_SENT until it reads DATA_READ, when it will send EXCHANGE_COMPLETE
 				auto handshake = data & HANDSHAKE_MASK;
-				logger() << millis() << F("\treceive_data Reg ") << int(_remoteRegOffset) << F(" is: 0x") << L_hex << int(handshake) << L_endl;
 				if (handshake == EXCHANGE_COMPLETE) break;
 				if (handshake == DATA_SENT) {
+					logger() << L_time << F("receive_data Reg ") << int(_remoteRegOffset) << F(" is: 0x") << L_hex << int(handshake) << L_endl;
 					data = (data & DATA_MASK) | DATA_READ;
 				}
 			} while (!timeout);
-			auto timeused = timeout.timeUsed();
-			//if (timeused > 50 && !timeout) {
-			if (!timeout) {
-				logger() << millis() << F("\treceive_data Reg ") << int(_remoteRegOffset) << F(" in mS ") << timeused << L_endl;
+			if (timeout) {
+				logger() << L_time << F("receive_data 0x") << L_hex << getAddress() << " read: 0x" << data << " Timed-out" << L_endl;
 			}
-			if (timeused > timeout.period()) {
-				logger() << millis() << F("\treceive_data Bad Reg ") << int(_remoteRegOffset) << F(" Read: 0x") << L_hex << data << L_endl;
-				data = (data & DATA_MASK) | EXCHANGE_COMPLETE;
-				return false;
+			else {
+				auto timeused = timeout.timeUsed();
+				logger() << L_time << F("receive_data OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}
