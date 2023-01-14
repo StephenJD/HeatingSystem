@@ -61,7 +61,6 @@ namespace HardwareInterfaces {
 			auto reg = registers();
 			reg.set(OLED::R_DEVICE_STATE, _key_mode);
 			auto state_flags = OLED::I2C_Flags_Ref(*reg.ptr(OLED::R_DEVICE_STATE));
-			state_flags.setFlags(EXCHANGE_COMPLETE);
 			state_flags.set(OLED::F_PROGRAMMER_CHANGED_DATA);
 
 			reg.set(OLED::R_REMOTE_REG_OFFSET, _localRegOffset);
@@ -209,11 +208,11 @@ namespace HardwareInterfaces {
 	}
 
 	std::tuple<uint8_t, int8_t, int8_t, uint8_t> ConsoleController_Thick::readRemoteRegisters_OK() {
-		return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(_OK, false, false, 0);
-		//receive_handshakeData(*rawRegisters().ptr(R_PROG_WAITING_FOR_REMOTE_I2C_COMS), );
+		//return std::tuple<uint8_t, int8_t, int8_t, uint8_t>(_OK, false, false, 0);
 		wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
 		uint8_t status;
 		auto reg = registers();
+
 		status = getInrangeVal(OLED::R_REMOTE_REG_OFFSET, _localRegOffset, OLED::NO_REG_OFFSET_SET);
 		if (status == _OK && reg.get(OLED::R_REMOTE_REG_OFFSET) == OLED::NO_REG_OFFSET_SET) {
 			logger() << L_time << "RC Offset: " << reg.get(OLED::R_REMOTE_REG_OFFSET) << L_endl;
@@ -222,13 +221,14 @@ namespace HardwareInterfaces {
 
 		auto i2c_status = OLED::I2C_Flags_Obj{ reg.get(OLED::R_DEVICE_STATE) };
 		i2c_status.clear(OLED::F_PROGRAMMER_CHANGED_DATA);
-		//i2c_status.set(OLED::F_I2C_NOW);
-
+		i2c_status.set(OLED::F_I2C_NOW);
 		if (give_I2C_Bus(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS, OLED::R_DEVICE_STATE, i2c_status)) {
-			wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
+			status = !wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS);
 		}
+		else status = _I2C_ReadDataWrong;
+
 		auto roomTemp_was = reg.get(OLED::R_ROOM_TEMP);
-		status = getInrangeVal(OLED::R_ROOM_TEMP, 1, 50);
+		if (status == _OK) status = getInrangeVal(OLED::R_ROOM_TEMP, 1, 50);
 		uint8_t towelrail_req_changed = -1;
 		uint8_t hotwater_req_changed = -1;
 		uint8_t remReqTemp = 0;

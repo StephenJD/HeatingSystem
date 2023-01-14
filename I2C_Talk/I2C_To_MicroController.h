@@ -34,7 +34,7 @@ namespace HardwareInterfaces {
 		I2C_Talk_ErrorCodes::Error_codes readRegSet(int reg, int noToRead);
 		I2C_Talk_ErrorCodes::Error_codes readRegVerifyValue(int reg, uint8_t& value);
 		I2C_Talk_ErrorCodes::Error_codes getInrangeVal(int regNo, int minVal, int maxVal);
-		bool handShake_send(uint8_t remoteRegNo, uint8_t data);
+		bool handShake_send(uint8_t rawRegNo, uint8_t data);
 		bool give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, uint8_t i2c_status);
 		bool wait_DevicesToFinish(i2c_registers::RegAccess reg, int regNo);
 		bool receive_handshakeData(volatile uint8_t& data);

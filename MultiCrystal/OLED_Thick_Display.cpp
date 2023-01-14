@@ -84,10 +84,11 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
     // Only reads TS's and clears I2C-Comms flag on programmer.
     auto reg = registers();
     auto device_State = I2C_Flags_Ref(*reg.ptr(R_DEVICE_STATE));
-    //auto processTime = millis();
     if (receive_handshakeData(*reg.ptr(R_DEVICE_STATE))) {
         _tempSensor.setHighRes();
         _tempSensor.readTemperature();
+        if (!handShake_send(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, DEVICE_IS_FINISHED)) return false; // only changes remote reg.
+        
         auto fractional_temp = _tempSensor.get_fractional_temp();
         auto roomTempDeg = fractional_temp >> 8;
         auto roomTempFract = static_cast<uint8_t>(fractional_temp);
@@ -98,8 +99,6 @@ bool OLED_Thick_Display::doneI2C_Coms(bool newSecond) {
             _state = REFRESH_DISPLAY;
         } 
         reg.set(R_ROOM_TEMP_FRACTION, roomTempFract);
-        handShake_send(R_PROG_WAITING_FOR_REMOTE_I2C_COMS, DEVICE_IS_FINISHED); // only changes remote reg.
-        //processTime = millis() - processTime;
         //logger() << L_time << F("I2CNow State Reg: ") << _remoteRegOffset << F(" is: 0x") << L_hex << reg.get(R_DEVICE_STATE) << F(" Took: ") << L_dec << processTime << L_endl;
         return true;
     }
@@ -113,23 +112,23 @@ void OLED_Thick_Display::refreshRegisters() {
     deviceFlags.clear(F_PROGRAMMER_CHANGED_DATA);
     auto reqTemp = reg.get(R_REQUESTING_ROOM_TEMP); // might have been set by console. When Prog has read it, it gets set to zero, so might not yet be zero.
     if (_state == WAIT_PROG_ACK) {
-        logger() << millis() % 10000 << F(" WPA") << L_endl;
+        //logger() << millis() % 10000 << F(" WPA") << L_endl;
         if (reqTemp == 0 || reqTemp != _tempRequest) {
-            logger() << millis() % 10000 << F(" PA") << L_endl;
+            //logger() << millis() % 10000 << F(" PA") << L_endl;
             _state = REFRESH_DISPLAY;
         }
     } else if (progDataChanged) {
         _state = REFRESH_DISPLAY;
-        logger() << millis() % 10000 << F(" PD ") << reqTemp << L_endl;
+        //logger() << millis() % 10000 << F(" PD ") << reqTemp << L_endl;
     }
     
     if (_state != WAIT_PROG_ACK && reqTemp /*&& reqTemp != _tempRequest*/) { // request sent by programmer
-        logger() << millis() % 10000 << F(" PT ") << reqTemp << L_endl;
+        //logger() << millis() % 10000 << F(" PT ") << reqTemp << L_endl;
         _tempRequest = reqTemp;
         reg.set(R_REQUESTING_ROOM_TEMP, 0);
         _state = REFRESH_DISPLAY;
     } else if (_tempRequest == 0) {
-        logger() << millis() % 10000 << F(" RT") << L_endl;
+       // logger() << millis() % 10000 << F(" RT") << L_endl;
         reg.set(R_REMOTE_REG_OFFSET, NO_REG_OFFSET_SET);
         _state = WAIT_PROG_ACK;
         wakeDisplay();
@@ -164,7 +163,7 @@ void OLED_Thick_Display::startDisplaySleep() {
 }
 
 void OLED_Thick_Display::wakeDisplay() {
-    logger() << F("Wake") << L_endl;
+    //logger() << F("Wake") << L_endl;
     MsTimer2::stop();
     _sleepRow = -1;
 }
@@ -201,7 +200,7 @@ void OLED_Thick_Display::changeValue(int keyCode) {
             _tempRequest += increment;
             reg.set(R_REQUESTING_ROOM_TEMP, _tempRequest);
             _state = NEW_T_REQUEST;
-            logger() << millis() % 10000 << F(" CT ") << _tempRequest << L_endl;
+            //logger() << millis() % 10000 << F(" CT ") << _tempRequest << L_endl;
         } 
         break;
     case TowelRail: 
@@ -299,7 +298,7 @@ void OLED_Thick_Display::processKeys() { // called by loop()
     auto newSecond = _remoteKeypad.oneSecondElapsed();
     if (registers().get(R_REMOTE_REG_OFFSET) == NO_REG_OFFSET_SET) {
         if (newSecond) {
-            logger() << F("WFM") << L_endl;
+            //logger() << F("WFM") << L_endl;
             _display.setCursor(0, 0);
             _display.print(F("Wait for Master"));
             _remoteKeypad.popKey();
@@ -313,7 +312,7 @@ void OLED_Thick_Display::processKeys() { // called by loop()
 
         auto key = _remoteKeypad.popKey();
         if (key > I_Keypad::NO_KEY) {
-            logger() << F("Key:") << key << L_endl;
+            //logger() << F("Key:") << key << L_endl;
             if (key == I_Keypad::KEY_WAKEUP) {
                 wakeDisplay();
                 displayPage();

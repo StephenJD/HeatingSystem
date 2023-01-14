@@ -309,12 +309,13 @@ namespace HardwareInterfaces {
 				status = sendSlaveIniData();
 				i2c_status = Mix_Valve::I2C_Flags_Obj{ reg.get(Mix_Valve::R_DEVICE_STATE) };
 			}
-			auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
 			i2c_status.set(Mix_Valve::F_I2C_NOW);
-			logger() << "give_I2C_Bus to " << _remoteRegOffset << L_endl;
+			//logger() << L_time << "give_I2C_Bus to MV " << _remoteRegOffset << L_endl;
 			if (give_I2C_Bus(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS, Mix_Valve::R_DEVICE_STATE, i2c_status)) {
 				if (!wait_DevicesToFinish(rawRegisters(), R_PROG_WAITING_FOR_REMOTE_I2C_COMS)) return false;
-			}
+			} else return false;
+
+			auto flowTemp_was = reg.get(Mix_Valve::R_FLOW_TEMP);
 			status = getInrangeVal(Mix_Valve::R_FLOW_TEMP, 10, 80);
 			if (status != _OK) {
 				logger() << "Reset flowTemp..." << L_flush;

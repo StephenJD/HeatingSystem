@@ -50,7 +50,9 @@ namespace HardwareInterfaces {
 		auto regset = registers();
 		auto lastReg = _remoteRegOffset + reg + noToWrite - 1;
 		if (lastReg != regset.validReg(lastReg)) {
-			logger() << L_time << "Out of range reg access: " << lastReg << L_flush;
+#ifndef __AVR__
+			logger() << L_time << F("Out of range reg access: ") << lastReg << L_flush;
+#endif
 			return _I2C_RegOutOfRange;
 		};
 		return write_verify(_remoteRegOffset + reg, noToWrite, regset.ptr(reg));
@@ -65,7 +67,9 @@ namespace HardwareInterfaces {
 		auto regset = registers();
 		auto lastReg = _remoteRegOffset + reg + noToRead - 1;
 		if (lastReg != regset.validReg(lastReg)) {
-			logger() << L_time << "Out of range reg access: " << lastReg << L_flush;
+#ifndef __AVR__
+			logger() << L_time << F("Out of range reg access: ") << lastReg << L_flush;
+#endif
 			return _I2C_RegOutOfRange;
 		};
 		return read(_remoteRegOffset + reg, noToRead, regset.ptr(reg)); // recovery
@@ -88,17 +92,20 @@ namespace HardwareInterfaces {
 			i2C().begin();
 			//testDevice();
 		} while (!timeout);
-		auto timeused = timeout.timeUsed();
-		if (timeused > 200 && !timeout) logger() << L_time << "Read 0x" << L_hex << getAddress() << " Reg 0x" << regNo << " in mS " << L_dec << timeused << L_endl;
-
-		if (timeused > timeout.period()) {
-			logger() << L_time << F("Read 0x") << L_hex << getAddress() << " Bad Reg 0x" << regNo << " was:" << L_dec << regVal << I2C_Talk::getStatusMsg(status) << L_endl;
+		if (timeout) {
+#ifndef __AVR__
+			logger() << L_time << F("Read 0x") << L_hex << getAddress() << F(" Bad Reg 0x") << regNo << F(" was:") << L_dec << regVal << I2C_Talk::getStatusMsg(status) << L_endl;
+#endif
 			status = status == _OK ? _I2C_ReadDataWrong : status;
 		}
+#ifndef __AVR__
+		auto timeused = timeout.timeUsed();
+		if (timeused > 200 && !timeout) logger() << L_time << F("Read 0x") << L_hex << getAddress() << F(" Reg 0x") << regNo << F(" in mS ") << L_dec << timeused << L_endl;
+#endif
 		return status;
 	}
 
-	bool I2C_To_MicroController::handShake_send(uint8_t remoteRegNo, const uint8_t data) {
+	bool I2C_To_MicroController::handShake_send(uint8_t rawRegNo, const uint8_t data) {
 		/*
 		* Two soldiers, Fire & Scout, need to exchange messages at night to arrange covering fire on the scout's position.
 	* Scout asks for Fire cover.
@@ -153,32 +160,42 @@ namespace HardwareInterfaces {
 		//	, HANDSHAKE_MASK = 0xC0, DATA_MASK = uint8_t(~HANDSHAKE_MASK) /* 11,000,000 : 00,111,111 */
 
 		const uint8_t SEND_DATA = (data & DATA_MASK) | DATA_SENT;
-		uint8_t read_data;
+		uint8_t readVal;
 		i2C().begin();
 		auto timeout = Timer_mS(300);
 		do {
-			readRegVerifyValue(remoteRegNo, read_data);
-			if ((read_data & HANDSHAKE_MASK) == DATA_READ) break;
-			//logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" read: 0x") << L_hex << read_data << L_endl;
-			writeOnly_RegValue(remoteRegNo, SEND_DATA);
-			delay(1);
+			read_verify_1byte(rawRegNo, readVal,2,4);
+			readVal = readVal & HANDSHAKE_MASK;
+#ifndef __AVR__
+			//logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << rawRegNo << F(" read: 0x") << L_hex << readVal << L_endl;
+#endif
+			if (readVal == DATA_READ) break;
+			if (readVal != DATA_SENT) {
+				write(rawRegNo, 1, &SEND_DATA);
+				delay(1);
+			}
 		} while (!timeout);
-		auto timeused = timeout.timeUsed();
-		if (timeused > 200 && !timeout) {
-		//if (!timeout) {
-			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + remoteRegNo << F(" OK mS ") << timeused << L_endl;
-		}
-
-		if (timeused > timeout.period()) {
-			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << " Timeout Reg " << L_dec << _remoteRegOffset + remoteRegNo << " Read: 0x" << L_hex << read_data << L_endl;
+		if (timeout) {
+#ifndef __AVR__
+			logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + rawRegNo << F(" Read: 0x") << L_hex << readVal << F(" Timeout") << L_endl;
+#endif
 			return false;
 		}
-		return writeOnly_RegValue(remoteRegNo, (data & DATA_MASK) | EXCHANGE_COMPLETE) == _OK;
+#ifndef __AVR__
+		else {
+			auto timeused = timeout.timeUsed();
+			if (timeused > 100 && !timeout) {
+			//if (!timeout) {
+				logger() << L_time << F("send_data 0x") << L_hex << getAddress() << F(" Reg ") << L_dec << _remoteRegOffset + rawRegNo << F(" OK mS ") << timeused << L_endl;
+			}
+		}
+#endif
+		return write(rawRegNo, (data & DATA_MASK) | EXCHANGE_COMPLETE) == _OK;
 	}
 
 	bool I2C_To_MicroController::give_I2C_Bus(i2c_registers::RegAccess localReg, uint8_t localRegNo, uint8_t remoteRegNo, const uint8_t i2c_status) {
 		// top-two bits (x,x,...) used in hand-shaking
-		if (handShake_send(remoteRegNo, i2c_status)) {
+		if (handShake_send(_remoteRegOffset + remoteRegNo, i2c_status)) {
 			localReg.set(localRegNo, DEVICE_CAN_WRITE); // must NOT be EXCHANGE_COMPLETE otherwise wait will exit immediatly!!!
 			return true;
 		}
@@ -230,17 +247,26 @@ namespace HardwareInterfaces {
 				auto handshake = data & HANDSHAKE_MASK;
 				if (handshake == EXCHANGE_COMPLETE) break;
 				if (handshake == DATA_SENT) {
-					//logger() << L_time << F("receive_data Reg ") << int(_remoteRegOffset) << F(" is: 0x") << L_hex << int(handshake) << L_endl;
 					data = (data & DATA_MASK) | DATA_READ;
 					delay(1);
+#ifndef __AVR__
+					//logger() << L_time << F("receive_data Reg ") << int(_remoteRegOffset) << F(" is: 0x") << L_hex << int(handshake) << L_endl;
+#endif
 				}
 			} while (!timeout);
 			if (timeout) {
-				logger() << L_time << F("receive_data 0x") << L_hex << getAddress() << " read: 0x" << data << " Timed-out" << L_endl;
+#ifndef __AVR__
+				logger() << L_time << F("receive_data 0x") << L_hex << getAddress() << F(" read: 0x") << data << F(" Timed-out") << L_endl;
+#endif
 			}
 			else {
+#ifndef __AVR__
 				auto timeused = timeout.timeUsed();
-				logger() << L_time << F("receive_data OK 0x") << L_hex << getAddress() << " in mS: " << L_dec << timeused << L_endl;
+				if (timeused > 100 && !timeout) {
+				//if (!timeout) {
+					logger() << L_time << F("receive_data OK 0x") << L_hex << getAddress() << F(" OK mS: ") << L_dec << timeused << L_endl;
+				}
+#endif
 				return true;
 			}
 		}

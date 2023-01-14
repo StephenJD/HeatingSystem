@@ -181,6 +181,7 @@ void loop() {
 	if (nextSecond) { // once per second
 		nextSecond.repeat();
 		reset_watchdog();
+		i2C().begin();
 		mixValve[us_mix].check_flow_temp();
 		mixValve[ds_mix].check_flow_temp();
 
