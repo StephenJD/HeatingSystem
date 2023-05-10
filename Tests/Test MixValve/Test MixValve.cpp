@@ -15,7 +15,7 @@
 #include <PinObject.h>
 #include <PID_Controller.h>
 #define  WITHOUT_NUMPY
-#include "matplotlibcpp.h"
+#include <matplotlibcpp.h>
 #include <vector>
 #include <conio.h>
 
@@ -162,7 +162,7 @@ TEST_CASE("Plot", "[MixValve]") {
 }
 
 
-TEST_CASE("Find Off", "[MixValve]") {
+TEST_CASE("Find Off", "[MixValve][Basics]") {
 	TestMixV testMV;
 	testMV.setVPos(0, 30);
 	testMV.setVPos(1, 30);
@@ -189,7 +189,7 @@ TEST_CASE("Find Off", "[MixValve]") {
 	CHECK(testMV.vPos(1) == 0);
 }
 
-TEST_CASE("ChangeDirection", "[MixValve]") {
+TEST_CASE("ChangeDirection", "[MixValve][Basics]") {
 	TestMixV testMV;
 	psu.begin();
 	psu.doStep(true);
@@ -208,7 +208,7 @@ TEST_CASE("ChangeDirection", "[MixValve]") {
 	CHECK(testMV.mode(0) == Mix_Valve::e_AtTargetPosition);
 }
 
-TEST_CASE("Move1", "[MixValve]") {
+TEST_CASE("Move1", "[MixValve][Basics]") {
 	TestMixV testMV;
 	psu.doStep(true);
 	testMV.setVPos(0, 0);
@@ -248,7 +248,7 @@ TEST_CASE("Move1", "[MixValve]") {
 	CHECK(testMV.mode(1) == Mix_Valve::e_AtTargetPosition);
 }
 
-TEST_CASE("MutexSwap", "[MixValve]") {
+TEST_CASE("MutexSwap", "[MixValve][Basics]") {
 	TestMixV testMV;
 	psu.doStep(true);
 	testMV.setVPos(0, 0);
@@ -313,7 +313,7 @@ TEST_CASE("MutexSwap", "[MixValve]") {
 	CHECK(testMV.vPos(1) == 35);
 }
 
-TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve]") {
+TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve][Basics]") {
 	// e_AtTargetPosition, e_Moving, e_WaitingToMove, e_HotLimit, e_ValveOff, e_FindingOff, e_WaitToCool
 	logger() << "\nRetainMutexAfterOtherValveStopped\n";
 	TestMixV testMV;
@@ -348,7 +348,7 @@ TEST_CASE("RetainMutexAfterOtherValveStopped", "[MixValve]") {
 	CHECK(testMV.vPos(1) == 35);
 }
 
-TEST_CASE("FindOff", "[MixValve]") {
+TEST_CASE("Interrupted FindOff", "[MixValve][Basics]") {
 	TestMixV testMV;
 	psu.begin();
 	psu.doStep(true);
@@ -373,7 +373,7 @@ TEST_CASE("FindOff", "[MixValve]") {
 	CHECK(testMV.vPos(0) == 11);
 }
 
-TEST_CASE("Limit on Heat then OK", "[MixValve]") {
+TEST_CASE("Limit on Heat then OK", "[MixValve][Basics]") {
 	TestMixV testMV;
 	psu.begin();
 	psu.doStep(true);
@@ -467,7 +467,7 @@ void clearVectors() {
 
 void appendData(Mix_Valve& mv, PID_Controller& pid) {
 	reqPos.push_back(pid.currOut());
-	isPos.push_back(mv.pos());
+	isPos.push_back(mv.curr_pos());
 	reqTemp.push_back(mv._currReqTemp);
 	isTemp.push_back(mv.flowTemp() / 256.f);
 	i.push_back(pid.integralPart());
